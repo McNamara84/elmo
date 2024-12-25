@@ -1,6 +1,6 @@
-# Description
+# ELMO - EPOS Laoratory Metadata Optimizer
 
-This metadata editor is based on a student cooperation project between the University of Applied Sciences Potsdam and the GeoForschungsZentrum Potsdam. The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
+This EPOS Laoratory Metadata Optimizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GeoForschungsZentrum Potsdam](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
 
 ## Main Features
 - Simple mapping of entered data using XSLT.

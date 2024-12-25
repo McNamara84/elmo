@@ -62,7 +62,7 @@ function sendFeedbackMail(
 
         // Email content configuration
         $mail->isHTML(false);
-        $mail->Subject = 'Neues Feedback zu MDE2-MSL';
+        $mail->Subject = 'New Feedback for ELMO';
 
         // Construct email body
         $mail->Body =
