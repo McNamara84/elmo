@@ -1,11 +1,11 @@
 openapi: 3.1.1
 info:
-  title: Metadata Editor 2 - MSL Edition
+  title: ELMO - EPOS Laboratory Metadata Optimizer
   description: |-
-    This is the Metadata Editor API V2 from GFZ Data Services. The API allows management and retrieval of metadata for scientific datasets.
+    This is the ELMO API V2 from GFZ Data Services. The API allows management and retrieval of metadata for scientific datasets.
 
     Some useful links:
-    - [The MDE2-MSL repository](https://github.com/McNamara84/gfz-metadata-editor-msl-v2)
+    - [The ELMO repository](https://github.com/McNamara84/gfz-metadata-editor-msl-v2)
     - [Test Server](https://mde2.cats4future.de)
 
     ### Binary Data

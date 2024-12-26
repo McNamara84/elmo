@@ -1,7 +1,7 @@
 <?php
 $translations = [
     // Allgemeines
-    'logotitle' => 'Metadata Editor 1.9',
+    'logotitle' => 'ELMO - EPOS Laboratory Metadata Optimizer 1.9',
     'choose' => 'Wählen Sie...',
     'valid' => 'Gültig',
     'PleaseChoose_invalid' => 'Bitte wählen Sie',
