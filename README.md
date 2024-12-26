@@ -9,6 +9,7 @@ This metadata editor is based on a student cooperation project between the Unive
 - Always up-to-date controlled vocabularies through regular automatic updates.
 - Easy input of authors and contributors using ORCID preload.
 - Submitting of metadata directly to data curators.
+- Authors can be sorted by drag & drop
 
 ## Installation
 
