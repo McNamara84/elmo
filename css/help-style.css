@@ -58,6 +58,7 @@ ul.nav-pills {
         display: none;
     }
 }
+
 /* Stellt sicher, dass Abschnitt im Guide nicht von Navbar verdeckt werden */
 div[id^="help-"] {
     scroll-margin-top: 120px;
@@ -67,4 +68,11 @@ div[id^="help-"] {
     height: 0;
     margin: 0;
     padding: 0;
+}
+
+/* Navbar */
+.navbar-test {
+    background-color: #005b9d;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
