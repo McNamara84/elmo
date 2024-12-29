@@ -159,4 +159,5 @@ $translations = [
     // Divers
     'saveModalTitle' => 'Sauvegarder en tant que fichier XML',
     'filenameLabel' => 'Nom de fichier',
+    'imprint' => 'Mentions légales',
 ];
