@@ -22,6 +22,7 @@
 - [ ] Neue und bereits vorhandende automatische Unit-Tests werden im Pull Request bestanden
 - [ ] Ich habe, wenn nötig die Selenium-Tests aktualisiert und ggf. neue hinzugefügt
 - [ ] Neue und bereits vorhandene automatisierte Selenium-Tests werden im Pull Request bestanden
+- [ ] Ich habe sicher gestellt, dass die Änderungen den Barrierefreiheitsrichtlinien entsprechen.
 
 
 ## Known Issues
