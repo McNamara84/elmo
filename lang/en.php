@@ -153,5 +153,5 @@ $translations = [
     // Misc
     'saveModalTitle' => 'Save as XML file',
     'filenameLabel' => 'Filename',
-    'imprint' => 'Imprint',
+    'imprint' => 'Legal notice',
 ];

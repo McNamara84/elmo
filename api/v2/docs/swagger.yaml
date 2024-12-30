@@ -7,7 +7,7 @@ info:
     Some useful links:
     - [The ELMO repository](https://github.com/McNamara84/gfz-metadata-editor-msl-v2)
     - [Test Server](https://mde2.cats4future.de)
-    - [Imprint](https://dataservices-cms.gfz-potsdam.de/about-us/imprint)
+    - [Legal notice](https://dataservices-cms.gfz-potsdam.de/about-us/imprint)
 
     ### Binary Data
     Some endpoints return binary data (XML files) for download. These responses use the `application/octet-stream` content type.
