@@ -53,34 +53,6 @@ function checkMandatoryFields() {
         }
     });
 
-    // "FG" Contact person(s)
-    $('#group-contactperson').children('.row').each(function () {
-        var row = $(this);
-        // Defines the relevant fields for the Contact Person section
-        var fields = {
-            lastname: row.find('[id^="input-contactperson-lastname"]'),
-            firstname: row.find('[id^="input-contactperson-firstname"]'),
-            position: row.find('[id^="input-contactperson-position"]'),
-            email: row.find('[id^="input-contactperson-email"]'),
-            website: row.find('[id^="input-contactperson-website"]'),
-            affiliation: row.find('[id^="input-contactperson-affiliation"]')
-        };
-
-        // Checks if any field in the row is filled
-        var isAnyFieldFilled = Object.values(fields).some(field => field.val() && field.val().trim() !== '');
-
-        // Sets or removes the 'required' attribute based on the fill status
-        if (isAnyFieldFilled) {
-            fields.lastname.attr('required', 'required');
-            fields.firstname.attr('required', 'required');
-            fields.email.attr('required', 'required');
-        } else {
-            fields.lastname.removeAttr('required');
-            fields.firstname.removeAttr('required');
-            fields.email.removeAttr('required');
-        }
-    });
-
     // "FG" Funding Reference
     $('#group-fundingreference').children('.row').each(function () {
         var row = $(this);
