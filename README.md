@@ -489,9 +489,9 @@ JSON-Array mit Identifier-Typ-Objekten
 
 - Lastname
 
-  - In diesem Feld kommt der Nachname der Person.
+  - In diesem Feld steht der Nachname der Person.
   - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
+  - Vorkommen: 1
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: familyname in der Tabelle Contact_Person
   - Restriktionen: Optional
   - [gmd Schema-Dokumentation](https://schemas.isotc211.org/19139/-/gmd/1.0/gmd/#element_CI_ResponsibleParty)
@@ -500,9 +500,9 @@ JSON-Array mit Identifier-Typ-Objekten
 
 - Firstname
 
-  - In diesem Feld kommt der Vorname der Person.
+  - In diesem Feld steht der Vorname der Person.
   - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
+  - Vorkommen: 1
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: givenname in der Tabelle Contact_Person
   - Restriktionen: Optional
   - [gmd Schema-Dokumentation](https://schemas.isotc211.org/19139/-/gmd/1.0/gmd/#element_CI_ResponsibleParty)
@@ -511,7 +511,7 @@ JSON-Array mit Identifier-Typ-Objekten
 
 - Position
 
-  - In diesem Feld kommt die Position der Person in der Organisation.
+  - In diesem Feld steht die Position der Person in der Organisation.
   - Datentyp: Zeichenkette
   - Vorkommen: 0-1
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: position in der Tabelle Contact_Person
@@ -522,9 +522,9 @@ JSON-Array mit Identifier-Typ-Objekten
 
 - Email
 
-  - In diesem Feld kommt die E-Mail-Adresse der Person oder Organisation.
+  - In diesem Feld steht die E-Mail-Adresse der Person oder Organisation.
   - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
+  - Vorkommen: 1
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: email in der Tabelle Contact_Person
   - Restriktionen: Optional.
   - [gmd Schema-Dokumentation](https://schemas.isotc211.org/19139/-/gmd/1.0/gmd/#element_CI_ResponsibleParty)
@@ -533,7 +533,7 @@ JSON-Array mit Identifier-Typ-Objekten
 
 - Website
 
-  - In diesem Feld kommt die Website der Organisation.
+  - In diesem Feld steht die Website der Organisation.
   - Datentyp: Zeichenkette
   - Vorkommen: 0-1
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: website in der Tabelle Contact_Person
@@ -946,8 +946,8 @@ Räumliche und zeitliche Einordnung des Datensatzes. Zur einfacheren Erfassung d
 
 ## Datenvalidierung
 
-- Folgende Felder müssen zwingend ausgefüllt werden: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_Nur bei der Angabe des zweiten Titels!_), **Author Lastname**, **Author Firstname**, **Description Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
-- Die restlichen Felder **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Position**, **Contact Person Email**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work alle Felder** und **Funding Reference alle Felder** können optional leer bleiben.✅
+- Folgende Felder müssen zwingend ausgefüllt werden: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_Nur bei der Angabe des zweiten Titels!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email**, **Description Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
+- Die restlichen Felder **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work alle Felder** und **Funding Reference alle Felder** können optional leer bleiben.✅
 
 ## Database structure
 
