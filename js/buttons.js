@@ -186,13 +186,10 @@ $(document).ready(function () {
    * Event handler for the "Add Author" button click.
    * Clones the first author row, resets input fields, and appends it to the author group.
    */
+  const originalAuthorRow = $("#group-author").children().first().clone();
   $("#button-author-add").click(function () {
     var authorGroup = $("#group-author");
-    // First row to be used as a template
-    var firstAuthorLine = authorGroup.children().first();
-
-    // Clone the template
-    var newAuthorRow = firstAuthorLine.clone();
+    var newAuthorRow = originalAuthorRow.clone();
 
     // Clear input fields and remove validation feedback
     newAuthorRow.find("input").val("").removeClass("is-invalid is-valid");
