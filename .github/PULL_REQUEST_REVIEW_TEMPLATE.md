@@ -9,9 +9,12 @@
 - [ ] Die Änderungen verursachen keine Regressionen (alle vorher bestehenden Funktionalitäten sind weiter vorhanden)
 
 ## Tests
-- [ ] Neue Tests wurden hinzugefügt, um die Änderungen abzudecken
+- [ ] Neue Unit Tests wurden hinzugefügt, um die Änderungen abzudecken
+- [ ] Neue Selenium Tests wurden hinzugefügt, um die Änderungen abzudecken
 - [ ] Bestehende Tests wurden angepasst, falls notwendig
-- [ ] Alle Tests laufen erfolgreich durch
+- [ ] Alle Tests laufen lokal erfolgreich durch
+- [ ] automatisierte Unit Tests werden auch beim Pull Request in github bestanden
+- [ ] automatisierte Selenium Tests werden auch beim Pull Request in github bestanden 
 
 ## Dokumentation
 - [ ] Der ELMO Guide wurde aktualisiert, falls notwendig

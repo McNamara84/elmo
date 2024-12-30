@@ -20,6 +20,9 @@
 - [ ] Ich habe Unit-Tests hinzugefügt, die meinen Code abdecken
 - [ ] Neue und bereits vorhandene Unit-Tests werden lokal bestanden
 - [ ] Neue und bereits vorhandende automatische Unit-Tests werden im Pull Request bestanden
+- [ ] Ich habe, wenn nötig die Selenium-Tests aktualisiert und ggf. neue hinzugefügt
+- [ ] Neue und bereits vorhandene automatisierte Selenium-Tests werden im Pull Request bestanden
+
 
 ## Known Issues
 [Welche Probleme mit niedrigerer Priorität bestehen noch?]
