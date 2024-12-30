@@ -55,6 +55,15 @@
             'aliases' => array(),
             'dev_requirement' => true,
         ),
+        'mde2msl/mde2msl' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '875a00a8f22fa1bcfae911af4050f405642ffb13',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'myclabs/deep-copy' => array(
             'pretty_version' => '1.12.1',
             'version' => '1.12.1.0',
