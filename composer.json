@@ -1,6 +1,6 @@
 {
-    "name": "mde2msl/mde2msl",
-    "description": "Editor for research metadata of MSL data.",
+    "name": "elmo/elmo",
+    "description": "EPOS Laboratory Metadata Optimizer. Editor for research metadata of MSL data.",
     "license": "GPL-2.0-only",
     "require": {
         "php": "^8.2 || ^8.3 || ^8.4",

@@ -57,16 +57,14 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="label-changelog-modal">About ELMO - LANGBEZEICHNUNG</h5>
+                <h5 class="modal-title" id="label-changelog-modal">About ELMO - EPOS Laboratory Metadata Optimizer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p class="lead text-center fs-6">
-                    This Metadata Editor was developed in 2024 by students of the University of Applied Sciences Potsdam
-                    in
-                    cooperation with the German Research Centre for Geosciences and is released under the GNU General
-                    Public
-                    License, Version 2.
+                    The ELMO Metadata Editor was developed in 2024 by students of the University of Applied Sciences
+                    Potsdam in cooperation with the German Research Centre for Geosciences and is released under the GNU
+                    General Public License, Version 2.
                 </p>
                 <hr>
                 <!-- Changelog -->
@@ -86,13 +84,17 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="label-saveas-modal"><?php echo $translations['saveModalTitle']; ?></h1>
+                <h1 class="modal-title fs-5" id="label-saveas-modal">
+                    <?php echo $translations['saveModalTitle']; ?>
+                </h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body">
                 <form id="form-saveas-filename">
                     <div class="mb-3">
-                        <label for="input-saveas-filename" class="form-label"><?php echo $translations['filenameLabel']; ?></label>
+                        <label for="input-saveas-filename" class="form-label">
+                            <?php echo $translations['filenameLabel']; ?>
+                        </label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="input-saveas-filename">
                             <span class="input-group-text">.xml</span>
@@ -101,8 +103,12 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo $translations['tsc_cancel']; ?></button>
-                <button type="button" class="btn btn-primary" id="button-saveas-save"><?php echo $translations['saveAs']; ?></button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <?php echo $translations['tsc_cancel']; ?>
+                </button>
+                <button type="button" class="btn btn-primary" id="button-saveas-save">
+                    <?php echo $translations['saveAs']; ?>
+                </button>
             </div>
         </div>
     </div>

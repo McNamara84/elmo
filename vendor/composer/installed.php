@@ -1,6 +1,6 @@
 <?php return array(
     'root' => array(
-        'name' => 'mde2msl/mde2msl',
+        'name' => 'elmo/elmo',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
         'reference' => '875a00a8f22fa1bcfae911af4050f405642ffb13',
@@ -16,6 +16,15 @@
             'reference' => 'c7b0a9dbcb211eb7de03ee99ff5b52d17f2a8e64',
             'type' => 'library',
             'install_path' => __DIR__ . '/../easyrdf/easyrdf',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'elmo/elmo' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '701add01a9dd7a7fd4928b38eb80b8719180c993',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
