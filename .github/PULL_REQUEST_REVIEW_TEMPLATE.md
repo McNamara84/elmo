@@ -25,7 +25,7 @@
 - [ ] Code-Dokumentation nach JSDoc-Standard
 
 ## Sicherheit
-- [ ] Potenzielle Sicherheitsrisiken wurden berücksichtigt und adressiert
+[Potenzielle Sicherheitsrisiken wurden berücksichtigt und adressiert]
 
 ## Probleme
 [Führe hier sämtliche Probleme auf, die aufgetreten sind,  hinzu, möglichst als leere Checkbox-Liste]
