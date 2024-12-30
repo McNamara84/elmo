@@ -16,10 +16,10 @@
 - [ ] Ich habe, wenn nötig, entsprechende Änderungen in der ReadMe vorgenommen.
 - [ ] Ich habe, wenn nötig, entsprechende Änderungen in der API-Dokumentation vorgenommen.
 - [ ] Falls ich ein neues Feature implementiert oder einen Bug gefixt habe, wurde der Changelog erweitert
-- [ ] Meine Änderungen erzeugen keine neuen Warnungen
+- [ ] Meine Änderungen erzeugen keine neuen Warnungen in der Konsole des Testbrowsers
 - [ ] Ich habe Unit-Tests hinzugefügt, die meinen Code abdecken
-- [ ] Neue und bestehende Unit-Tests bestehen lokal
-- [ ] Neue und bestehende automatische Unit-Tests bestehen im Pull Request
+- [ ] Neue und bereits vorhandene Unit-Tests werden lokal bestanden
+- [ ] Neue und bereits vorhandende automatische Unit-Tests werden im Pull Request bestanden
 
 ## Known Issues
 [Welche Probleme mit niedrigerer Priorität bestehen noch?]
