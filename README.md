@@ -486,73 +486,61 @@ JSON-Array mit Identifier-Typ-Objekten
   - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
 
 ### Contact Person(s)
+A Contact Person is saved as a "Contributor" with the role "Contact Person" in the datacite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
 
-- Lastname
+- Last name
 
-  - In diesem Feld steht der Nachname der Person.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: familyname in der Tabelle Contact_Person
-  - Restriktionen: Optional
-  - [gmd Schema-Dokumentation](https://schemas.isotc211.org/19139/-/gmd/1.0/gmd/#element_CI_ResponsibleParty)
-  - Schema Version: "ISO" 2012-07-13
-  - Beispielwerte: `Jemison` `Smith`
+  - This field contains the surname of the person.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: familyname in the Contact_Person table
+  - Restrictions: Mandatory
+  - Example values: `Jemison` `Smith`
 
 - Firstname
 
-  - In diesem Feld steht der Vorname der Person.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: givenname in der Tabelle Contact_Person
-  - Restriktionen: Optional
-  - [gmd Schema-Dokumentation](https://schemas.isotc211.org/19139/-/gmd/1.0/gmd/#element_CI_ResponsibleParty)
-  - Schema Version: "ISO" 2012-07-13
-  - Beispielwerte: `John` `Jane`
+  - This field contains the first name of the person.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: givenname in the table Contact_Person
+  - Restrictions: Mandatory
+  - Example values: `John` `Jane`
 
 - Position
 
-  - In diesem Feld steht die Position der Person in der Organisation.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: position in der Tabelle Contact_Person
-  - Restriktionen: Optional.
-  - [gmd Schema-Dokumentation](https://schemas.isotc211.org/19139/-/gmd/1.0/gmd/#element_CI_ResponsibleParty)
-  - Schema Version: "ISO" 2012-07-13
-  - Beispielwerte: `Arbeitsgruppenleiter` `Projektleiter`
+  - This field contains the position of the person in the organisation.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is saved is called: position in the Contact_Person table
+  - Restrictions: Optional
+  - Example values: `Working group leader` `Project leader`
 
-- Email
+- Email address
 
-  - In diesem Feld steht die E-Mail-Adresse der Person oder Organisation.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: email in der Tabelle Contact_Person
-  - Restriktionen: Optional.
-  - [gmd Schema-Dokumentation](https://schemas.isotc211.org/19139/-/gmd/1.0/gmd/#element_CI_ResponsibleParty)
-  - Schema Version: "ISO" 2012-07-13
-  - Beispielwerte: `ali.mohammed@gfz-potsdam.de` `holger.ehrmann@gfz-potsdam.de`
+  - This field contains the email address of the person or organisation.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: email in the Contact_Person table
+  - Restrictions: Mandatory
+  - Example values: `ali.mohammed@gfz-potsdam.de` `holger.ehrmann@gfz-potsdam.de`
 
 - Website
 
-  - In diesem Feld steht die Website der Organisation.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: website in der Tabelle Contact_Person
-  - Restriktionen: Optional.
-  - [gmd Schema-Dokumentation](https://schemas.isotc211.org/19139/-/gmd/1.0/gmd/#element_CI_ResponsibleParty)
-  - Schema Version: "ISO" 2012-07-13
-  - Beispielwerte: `gfz-potsdam.de` `fh-potsdam.de`
+  - This field contains the organisation's website.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: website in the Contact_Person table
+  - Restrictions: Optional.
+  - Example values: `gfz-potsdam.de` `fh-potsdam.de`
 
 - Affiliation
-
-  - In diesem Feld kommt die Zugehörigkeit der Person.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: name in der Tabelle Affiliation.
-  - Restriktionen: Optimal.
-  - [gmd Schema-Dokumentation](https://schemas.isotc211.org/19139/-/gmd/1.0/gmd/#element_CI_ResponsibleParty)
-  - Schema Version: "ISO" 2012-07-13
-  - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
-  - **Hinweis**: Autocomplete-Funktion für das Eingabefeld Affiliation einsetzen! ähnlich der 'Author' Form group.
+  - This field contains the affiliation of the person.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is saved is called: name in the Affiliation table.
+  - Restrictions:Optimal.
+  - Example values: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+  - Note**: Use autocomplete function for the Affiliation input field! similar to the ‘Author’ form group.
 
 ### Originating Laboratory
 <!-- TODO: Speicherung der Eingaben in der Datenbank dokumentieren! -->
