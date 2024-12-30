@@ -47,7 +47,7 @@
     <div class="dropdown ms-auto me-3 p-1">
       <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
         aria-expanded="false">
-        <i class="bi bi-question-square-fill" id="bd-help-icon"></i>
+        <i class="bi bi-question-square-fill" id="bd-help-icon"></i>  <?php echo $translations['head_help']; ?>
       </button>
       <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-help">
         <li><a href="doc/help.html" class="dropdown-item" target="_blank" id="buttonHelp"><i class="bi bi-book"></i>
@@ -69,7 +69,7 @@
       <!-- Dropdown menu for dark mode settings -->
       <button class="btn btn-primary dropdown-toggle" id="bd-theme" type="button" data-bs-toggle="dropdown"
         aria-expanded="false">
-        <i class="bi bi-circle-half"></i>
+        <i class="bi bi-circle-half"></i>  <?php echo $translations['head_mode']; ?>
       </button>
       <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme">
         <li><a class="dropdown-item active" data-bs-theme-value="auto"><i class="bi bi-circle-half"></i> Auto</a></li>
@@ -81,7 +81,7 @@
       <!-- Dropdown menu for language settings -->
       <button class="btn btn-primary dropdown-toggle" id="bd-lang" type="button" data-bs-toggle="dropdown"
         aria-expanded="false">
-        <i class="bi bi-translate"></i>
+        <i class="bi bi-translate"></i>  <?php echo $translations['head_lang']; ?>
       </button>
       <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-lang">
         <li><a

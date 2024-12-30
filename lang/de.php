@@ -154,4 +154,9 @@ $translations = [
     // Sonstiges
     'saveModalTitle' => 'Datensatz als XML-Datei speichern',
     'filenameLabel' => 'Dateiname',
+
+    // Head
+    'head_help' => 'Hilfe',
+    'head_mode' => 'Modus',
+    'head_lang' => 'Sprache'
 ];

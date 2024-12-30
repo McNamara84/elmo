@@ -154,4 +154,9 @@ $translations = [
     // Misc
     'saveModalTitle' => 'Save as XML file',
     'filenameLabel' => 'Filename',
+
+    // Head
+    'head_help' => 'Help',
+    'head_mode' => 'Mode',
+    'head_lang' => 'Language'
 ];

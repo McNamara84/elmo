@@ -160,4 +160,9 @@ $translations = [
     // Divers
     'saveModalTitle' => 'Sauvegarder en tant que fichier XML',
     'filenameLabel' => 'Nom de fichier',
+
+    // Head
+    'head_help' => 'Aide',
+    'head_mode' => 'Mode',
+    'head_lang' => 'Langue'
 ];
