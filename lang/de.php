@@ -2,6 +2,7 @@
 $translations = [
     // Allgemeines
     'logotitle' => 'ELMO - EPOS Laboratory Metadata Optimizer 1.9',
+    'logotitle_short' => 'ELMO 1.9',
     'choose' => 'Wählen Sie...',
     'valid' => 'Gültig',
     'PleaseChoose_invalid' => 'Bitte wählen Sie',

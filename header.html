@@ -38,8 +38,10 @@
 <body>
   <!-- Fixed Header -->
   <header class="navbar navbar-primary sticky-top bg-primary flex-md-nowrap p-0 shadow">
-    <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3 text-white" href="#" id="headtitle">
-      <?php echo $translations['logotitle']; ?>
+    <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3 text-white" href="#" id="headtitle"
+      data-full-title="<?php echo htmlspecialchars($translations['logotitle']); ?>"
+      data-short-title="<?php echo htmlspecialchars($translations['logotitle_short']); ?>">
+      <?php echo htmlspecialchars($translations['logotitle']); ?>
     </a>
     <!-- Dropdown menu for help -->
     <div class="dropdown ms-auto me-3 p-1">
