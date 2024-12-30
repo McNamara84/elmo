@@ -8,15 +8,6 @@
   <div class="alert alert-info p-2">
     <div class="row">
       <div class="col-11 text-center">Please fill out the form in english.</div>
-      <!-- Feedback Button -->
-      <div class="col-auto text-end">
-        <?php if ($showFeedbackLink): ?>
-        <button type="button" class="btn btn-warning feedback-button blink" id="button-feedback-openmodalheader" data-bs-toggle="modal"
-          data-bs-target="#modal-feedback">
-          <?php echo $translations['feedbackButton']; ?>
-        </button>
-        <?php endif; ?>
-      </div>
     </div>
   </div>
   <!-- Feedback Modal -->
@@ -105,8 +96,8 @@
           <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-resourceinformation-doi"
-                  name="doi" pattern="^10\.\d{4,9}\/[._;\/\(\)\-:A-Za-z0-9]+$" />
+                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                  id="input-resourceinformation-doi" name="doi" pattern="^10\.\d{4,9}\/[._;\/\(\)\-:A-Za-z0-9]+$" />
                 <label for="input-resourceinformation-doi">
                   <?php echo $translations['doi']; ?>
                 </label>
@@ -129,7 +120,8 @@
             <div class="input-group has-validation">
               <div class="form-floating">
                 <input type="text" inputmode="numeric" class="form-control input-with-help input-right-no-round-corners"
-                  name="year" pattern="^(19(0[1-9]|[1-9][0-9])|20[0-9]{2}|21[0-4][0-9]|215[0-5])$" required id="input-resourceinformation-publicationyear" />
+                  name="year" pattern="^(19(0[1-9]|[1-9][0-9])|20[0-9]{2}|21[0-4][0-9]|215[0-5])$" required
+                  id="input-resourceinformation-publicationyear" />
                 <label for="input-resourceinformation-publicationyear">
                   <?php echo $translations['publicationYear']; ?><span class="text-danger">*</span>
                 </label>
@@ -147,8 +139,8 @@
           <div class="col-12 col-sm-12 col-md-12 col-lg-4 p-1">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <select class="form-select input-with-help input-right-no-round-corners" id="input-resourceinformation-resourcetype"
-                  name="resourcetype" required>
+                <select class="form-select input-with-help input-right-no-round-corners"
+                  id="input-resourceinformation-resourcetype" name="resourcetype" required>
                   <option disabled selected hidden value="">
                     <?php echo $translations['choose']; ?>
                   </option>
@@ -163,7 +155,8 @@
               </div>
               <div class="input-group-append">
                 <span class="input-group-text">
-                  <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-resourcetype"></i>
+                  <i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-resourceinformation-resourcetype"></i>
                 </span>
               </div>
             </div>
@@ -172,8 +165,8 @@
           <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-resourceinformation-version"
-                  name="version" pattern="[0-9\.]{0,5}" />
+                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                  id="input-resourceinformation-version" name="version" pattern="[0-9\.]{0,5}" />
                 <label for="input-resourceinformation-version">
                   <?php echo $translations['version']; ?>
                 </label>
@@ -208,8 +201,9 @@
           <div class="col-12 col-sm-12 col-md-11 col-lg-11 p-1">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-resourceinformation-title"
-                  name="title[]" pattern="^[a-zA-ZäöüÄÖÜß 0-9 .\-_()\!?]+$" required />
+                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                  id="input-resourceinformation-title" name="title[]" pattern="^[a-zA-ZäöüÄÖÜß 0-9 .\-_()\!?]+$"
+                  required />
                 <label for="input-resourceinformation-title">
                   <?php echo $translations['title']; ?><span class="text-danger">*</span>
                 </label>
@@ -225,8 +219,8 @@
           <div class="col-10 col-md-3 p-1" id="container-resourceinformation-titletype" style="display:none;">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <select class="form-select input-with-help input-right-no-round-corners" id="input-resourceinformation-titletype"
-                  name="titleType[]" required>
+                <select class="form-select input-with-help input-right-no-round-corners"
+                  id="input-resourceinformation-titletype" name="titleType[]" required>
                   <?php echo $optiontitle_type; ?>
                 </select>
                 <label for="input-resourceinformation-titletype">
@@ -245,7 +239,8 @@
           <!-- Button for cloning new rows for other titles -->
           <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
             <div class="align-items-center">
-              <button type="button" class="btn btn-primary addTitle" id="button-resourceinformation-addtitle" style="width: 36px">
+              <button type="button" class="btn btn-primary addTitle" id="button-resourceinformation-addtitle"
+                style="width: 36px">
                 <?php echo $translations['add']; ?>
               </button>
             </div>
