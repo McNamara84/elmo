@@ -42,7 +42,7 @@
             <div class="input-group has-validation">
               <div class="form-floating">
                 <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                  id="input-contactperson-position" name="cpPosition[]" pattern="^[A-Za-z\/,\-\s&()ÄäÖöÜüß]{1,99}$" />
+                  id="input-contactperson-position" name="cpPosition[]" pattern="[A-Za-zÄäÖöÜüß\-]{1,45}" />
                 <label for="input-contactperson-position">
                   <?php echo $translations['position']; ?>
                 </label>
