@@ -153,4 +153,5 @@ $translations = [
     // Sonstiges
     'saveModalTitle' => 'Datensatz als XML-Datei speichern',
     'filenameLabel' => 'Dateiname',
+    'imprint' => 'Impressum',
 ];
