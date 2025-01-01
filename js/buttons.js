@@ -228,6 +228,11 @@ $(document).ready(function () {
     newAuthorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
     });
+
+    // Reinitialize tooltips for the new row
+    newAuthorRow.find('[data-bs-toggle="tooltip"]').each(function () {
+      const tooltip = new bootstrap.Tooltip(this);
+    });
   });
 
   /**
