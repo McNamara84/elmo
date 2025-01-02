@@ -1,14 +1,13 @@
 $(document).ready(function () {
     /**
-     * Adjusts the size and content of the title and header buttons based on screen width.
-     * Changes title text, font size, and header button sizes depending on current window width.
+     * Adjusts the size and content of the title based on screen width.
+     * Changes title text and font size depending on current window width.
      * 
-     * @function resizeElements
-     * @description Dynamically adapts UI elements for different device screen sizes
+     * @function resizeTitle
+     * @description Dynamically adapts the title for different device screen sizes
      */
-    function resizeElements() {
+    function resizeTitle() {
         let title = document.getElementById("headtitle");
-        let headerButtons = document.querySelectorAll("header .btn");
         let fullTitle = title.dataset.fullTitle;
         let shortTitle = title.dataset.shortTitle;
 
@@ -16,35 +15,52 @@ $(document).ready(function () {
             // For mobile devices
             title.textContent = shortTitle;
             title.style.fontSize = "16px";
-
-            headerButtons.forEach(function (button) {
-                button.style.fontSize = "10px";
-                button.style.padding = "6px 12px";
-            });
         } else if (window.innerWidth < 1024) {
             // For tablets and smaller desktops
             title.textContent = shortTitle;
             title.style.fontSize = "18px";
-
-            headerButtons.forEach(function (button) {
-                button.style.fontSize = "14px";
-                button.style.padding = "8px 16px";
-            });
         } else {
             // For larger desktops
             title.textContent = fullTitle;
             title.style.fontSize = "20px";
-
-            headerButtons.forEach(function (button) {
-                button.style.fontSize = "16px";
-                button.style.padding = "10px 20px";
-            });
         }
     }
 
+    /**
+     * Adjusts the header buttons to show only icons on small screens.
+     * 
+     * @function adjustButtons
+     * @description Hides button text on small screens and shows only icons.
+     */
+    function adjustButtons() {
+        let headerButtons = document.querySelectorAll("header .btn");
+
+        headerButtons.forEach(function (button) {
+            let buttonIcon = button.querySelector("i");
+            let buttonText = button.childNodes[buttonIcon ? 2 : 1];
+
+            if (window.innerWidth < 768) {
+                if (buttonText && buttonText.nodeType === Node.TEXT_NODE) {
+                    if (!button.dataset.fullText) {
+                        button.dataset.fullText = buttonText.textContent.trim();
+                    }
+                    buttonText.textContent = "";
+                }
+            } else {
+                if (button.dataset.fullText) {
+                    buttonText.textContent = " " + button.dataset.fullText;
+                }
+            }
+        });
+    }
+
     // Initial execution
-    resizeElements();
+    resizeTitle();
+    adjustButtons();
 
     // Execute on window resize
-    window.addEventListener('resize', resizeElements);
+    window.addEventListener('resize', function () {
+        resizeTitle();
+        adjustButtons();
+    });
 });
