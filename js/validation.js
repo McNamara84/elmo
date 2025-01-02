@@ -52,9 +52,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const clickedButton = document.activeElement;
     const action = clickedButton.dataset.action;
 
-    if (!form.checkValidity()) {
-      handleInvalidForm(action);
-    } else {
+    if (action === 'submit') {
+      // Strict validation only for submit action
+      if (!form.checkValidity()) {
+        handleInvalidForm();
+        return;
+      }
+    }
+
+    // For both save and submit actions
+    if (action === 'save') {
+      handleValidForm(action);
+    } else if (action === 'submit') {
       handleValidForm(action);
     }
   });
