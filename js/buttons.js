@@ -579,9 +579,8 @@ $(document).ready(function () {
     // Clone the template
     var newRelatedWorkRow = firstRelatedWorkLine.clone();
 
-    // Clear input fields and remove validation feedback
+    // Clear input fields
     newRelatedWorkRow.find("input").val("").removeClass("is-invalid");
-    newRelatedWorkRow.find(".invalid-feedback").hide();
 
     // Remove help buttons
     replaceHelpButtonInClonedRows(newRelatedWorkRow);
