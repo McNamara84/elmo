@@ -12,13 +12,13 @@
             aria-expanded="true" aria-controls="collapse-abstract">
             <?php echo $translations['d_abstract']; ?>
           </button>
-        </h2>
+        </h2>        
         <!-- Input field Abstract -->
         <div id="collapse-abstract" class="accordion-collapse collapse show" data-bs-parent="#accordion-description">
           <div class="accordion-body">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <textarea class="form-control" placeholder="Please enter an abstract..." id="input-abstract"
+                <textarea class="form-control input-with-help input-right-no-round-corners" placeholder="Please enter an abstract..." id="input-abstract"
                   name="descriptionAbstract" style="height: 100px" required></textarea>
                 <label for="input-abstract">
                   <?php echo $translations['d_abstract']; ?><span class="text-danger">*</span>
@@ -42,7 +42,7 @@
           <div class="accordion-body">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <textarea class="form-control" placeholder="Please describe the methods..." id="input-methods"
+                <textarea class="form-control input-with-help input-right-no-round-corners" placeholder="Please describe the methods..." id="input-methods"
                   name="descriptionMethods" style="height: 100px"></textarea>
                 <label for="input-methods">
                   <?php echo $translations['d_methods_tooltip']; ?>
@@ -66,7 +66,7 @@
           <div class="accordion-body">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <textarea class="form-control" placeholder="Please enter technical information..."
+                <textarea class="form-control input-with-help input-right-no-round-corners" placeholder="Please enter technical information..."
                   id="input-technicalinfo" name="descriptionTechnical" style="height: 100px"></textarea>
                 <label for="input-technicalinfo">
                   <?php echo $translations['d_technical_infos_tooltip']; ?>
@@ -90,7 +90,7 @@
           <div class="accordion-body">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <textarea class="form-control" placeholder="Please enter other information..." id="input-other"
+                <textarea class="form-control input-with-help input-right-no-round-corners" placeholder="Please enter other information..." id="input-other"
                   name="descriptionOther" style="height: 100px"></textarea>
                 <label for="input-other">
                   <?php echo $translations['d_other_tooltip']; ?>
