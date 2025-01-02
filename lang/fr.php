@@ -23,7 +23,7 @@ $translations = [
     // Groupe de formulaire Informations sur la ressource
     'resourceInformation' => 'Informations sur la ressource',
     'doi' => 'DOI',
-    'doi_valid'=> 'Un nouveau DOI sera enregistré',
+    'doi_valid' => 'Un nouveau DOI sera enregistré',
     'doi_invalid' => 'Utilisez le format 10.ORGANISATION/ID (ex.: 10.57757/IUGG23-3081) ou laissez vide',
     'publicationYear' => 'Année de publication',
     'publicationYear_invalid' => 'Veuillez fournir une année valide 1901-2155(4 chiffres).',
@@ -64,7 +64,7 @@ $translations = [
     'contributors' => "Contributeurs",
     'Organisation' => 'Nom de l\'organisation',
     'Organisation_invalid' => 'Veuillez entrer un nom d\'organisation valide.',
-    'contributors_ORCID' => 'ORCID', 
+    'contributors_ORCID' => 'ORCID',
     'contributorsPersonZeile' => 'Personne(s) contributrice(s)',
     'contributorsInstitutionZeile' => 'Institution(s) contributrice(s)',
 
@@ -160,10 +160,11 @@ $translations = [
     // Divers
     'saveModalTitle' => 'Sauvegarder en tant que fichier XML',
     'filenameLabel' => 'Nom de fichier',
-    'imprint' => 'Mentions légales',
 
     // Head
     'head_help' => 'Aide',
     'head_mode' => 'Mode',
-    'head_lang' => 'Langue'
+    'head_lang' => 'Langue',
+
+    'imprint' => 'Mentions légales',
 ];

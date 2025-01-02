@@ -154,10 +154,11 @@ $translations = [
     // Misc
     'saveModalTitle' => 'Save as XML file',
     'filenameLabel' => 'Filename',
-    'imprint' => 'Legal notice',
 
     // Head
     'head_help' => 'Help',
     'head_mode' => 'Mode',
-    'head_lang' => 'Language'
+    'head_lang' => 'Language',
+
+    'imprint' => 'Legal notice',
 ];
