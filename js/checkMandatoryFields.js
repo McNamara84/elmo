@@ -190,8 +190,7 @@ $(document).on('blur',
     'input[name="cbPersonLastname[]"], ' +  // Contributor Person Lastname
     'input[name="cbPersonFirstname[]"], ' + // Contributor Person Firstname
     'input[name="cbOrganisationName[]"],' +   // Contributor Organisation Name
-    'input[name="rIdentifier[]"]',            // Related Work Identifier
-
+    'input[name="rIdentifier[]"]' ,            // Related Work Identifier
     function () {
         // Check mandatory fields when user leaves any of these input fields
         checkMandatoryFields();
@@ -208,9 +207,10 @@ $(document).on('change',
     'input[name="cbAffiliation[]"], ' +           // Contributor Person Affiliation
     'input[name="cbOrganisationRoles[]"], ' +     // Contributor Organisation Roles
     'input[name="OrganisationAffiliation[]"], ' + // Contributor Organisation Affiliation
-    'input[name="funder[]"],' +                     // Funder field
-    'input[name="relation[]"],' +             // Related Work Relation
-    'input[name="rIdentifierType[]"]',      // Related Work Identifier Type
+    'select[name="relation[]"], ' +            // Related Work Relation (dropdown)
+    'select[name="rIdentifierType[]"], ' +
+    'input[name="funder[]"]' ,                     // Funder field
+    
     function () {
         // Check mandatory fields when any of these fields' values change
         checkMandatoryFields();
