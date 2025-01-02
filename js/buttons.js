@@ -172,16 +172,24 @@ $(document).ready(function () {
   });
 
   /**
+   * Event handler for drag & drop sorting of author rows.
+   */
+  $("#group-author").sortable({
+    items: "[data-creator-row]",
+    handle: ".drag-handle",
+    axis: "y",
+    tolerance: "pointer",
+    containment: "parent"
+  });
+
+  /**
    * Event handler for the "Add Author" button click.
    * Clones the first author row, resets input fields, and appends it to the author group.
    */
+  const originalAuthorRow = $("#group-author").children().first().clone();
   $("#button-author-add").click(function () {
     var authorGroup = $("#group-author");
-    // First row to be used as a template
-    var firstAuthorLine = authorGroup.children().first();
-
-    // Clone the template
-    var newAuthorRow = firstAuthorLine.clone();
+    var newAuthorRow = originalAuthorRow.clone();
 
     // Clear input fields and remove validation feedback
     newAuthorRow.find("input").val("").removeClass("is-invalid is-valid");
@@ -219,6 +227,11 @@ $(document).ready(function () {
     // Event handler for the remove button
     newAuthorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
+    });
+
+    // Reinitialize tooltips for the new row
+    newAuthorRow.find('[data-bs-toggle="tooltip"]').each(function () {
+      const tooltip = new bootstrap.Tooltip(this);
     });
   });
 

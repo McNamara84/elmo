@@ -159,4 +159,5 @@ $translations = [
     'head_help' => 'Hilfe',
     'head_mode' => 'Modus',
     'head_lang' => 'Sprache'
+    'imprint' => 'Impressum',
 ];
