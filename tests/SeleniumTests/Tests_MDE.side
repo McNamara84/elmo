@@ -7,42 +7,14 @@
     "id": "21e2027f-6eeb-4a2c-b733-1ec31431ed4a",
     "name": "Hilfebuttons",
     "commands": [{
-      "id": "54d2e494-c6fc-4802-8cb2-829726b5cd40",
+      "id": "7d193730-650f-4df0-bcc0-6edaefba7e15",
       "comment": "",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
-      "id": "59245892-dc56-469a-8970-dfa220f68d5d",
-      "comment": "",
-      "command": "click",
-      "target": "id=bd-help-icon",
-      "targets": [
-        ["id=bd-help-icon", "id"],
-        ["css=#bd-help-icon", "css:finder"],
-        ["xpath=//i[@id='bd-help-icon']", "xpath:attributes"],
-        ["xpath=//button[@id='bd-help']/i", "xpath:idRelative"],
-        ["xpath=//i", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "a0b4f82d-da2e-4ea6-8070-01243a91b167",
-      "comment": "",
-      "command": "click",
-      "target": "id=buttonHelpOn",
-      "targets": [
-        ["id=buttonHelpOn", "id"],
-        ["linkText=On", "linkText"],
-        ["css=#buttonHelpOn", "css:finder"],
-        ["xpath=//a[contains(text(),'On')]", "xpath:link"],
-        ["xpath=//a[@id='buttonHelpOn']", "xpath:attributes"],
-        ["xpath=//li[2]/a", "xpath:position"],
-        ["xpath=//a[contains(.,' On')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "3a690e69-830d-4349-ac49-ea8066f175e8",
+      "id": "d204c671-a0e2-4796-b855-abfb5322a525",
       "comment": "",
       "command": "click",
       "target": "css=.card:nth-child(1) .row:nth-child(1) > .col-12:nth-child(1) .bi",
@@ -53,43 +25,42 @@
       ],
       "value": ""
     }, {
-      "id": "fe7b8086-69c6-4f35-9ed4-d492926c9f48",
+      "id": "56b1368b-a224-4cfb-8776-ef98615de24c",
       "comment": "",
       "command": "click",
-      "target": "css=h3",
+      "target": "css=#helpModal .modal-body",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'DOI')]", "xpath:innerText"]
+        ["css=#helpModal .modal-body", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
+        ["xpath=//body/div[2]/div/div/div[2]", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "8fe01456-c671-4dbd-b079-11eff7372b57",
+      "id": "afcbbe95-146e-4cbd-9844-d8e3a6f007dc",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'DOI')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'DOI')]", "xpath:innerText"]
       ],
       "value": "DOI"
     }, {
-      "id": "fb6869b1-0981-44a6-87c7-b6adee13a633",
+      "id": "b9e80373-96d1-4683-8060-e0f6e11d81cc",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "73d17fc1-71c5-44ba-adb3-49a51854feba",
+      "id": "67bc176d-b7f0-4837-91ec-a9317a1e80e6",
       "comment": "",
       "command": "click",
       "target": "css=.col-sm-6:nth-child(2) .bi",
@@ -100,42 +71,31 @@
       ],
       "value": ""
     }, {
-      "id": "928aa374-7cfe-462f-94f3-2e6456650f28",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "db329c07-ddc5-4cbe-8971-5c13952ed1ef",
+      "id": "0518a1f7-746d-4993-9d10-0aefd8dc902e",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Publication Year')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Publication Year')]", "xpath:innerText"]
       ],
       "value": "Publication Year"
     }, {
-      "id": "1e100814-5fb4-4389-9c27-0a952a850d92",
+      "id": "72e8b798-ceee-4ab5-b0d5-5b548f0007d1",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "fb44d30f-265c-4ffd-9c8d-9be0c6f01fca",
+      "id": "091e4f2b-ed11-4c4d-8d73-0900efedbdcd",
       "comment": "",
       "command": "click",
       "target": "css=.col-md-12:nth-child(3) .input-group-append .bi",
@@ -146,207 +106,101 @@
       ],
       "value": ""
     }, {
-      "id": "0b1aa975-d3e7-4625-804a-34e8111968f5",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Resource Type')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "6c51e1f7-dc09-4433-95b3-6e08f3009b29",
+      "id": "2df01206-57b8-4ffa-8ef5-3aaafd7b1baf",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Resource Type')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Resource Type')]", "xpath:innerText"]
       ],
       "value": "Resource Type"
     }, {
-      "id": "010491fe-ef50-4555-b256-1d85f006b57d",
+      "id": "0d387874-1ee1-4882-8fc7-d0658cc557da",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "fdcd9b68-51d1-4221-8d60-90da86da852d",
+      "id": "287cad6d-3edb-4fed-b816-0552f0fe0b09",
       "comment": "",
       "command": "click",
-      "target": "css=.col-12:nth-child(4) .input-group-append .bi",
+      "target": "css=.col-md-11 .input-group-append .bi",
       "targets": [
-        ["css=.col-12:nth-child(4) .input-group-append .bi", "css:finder"],
-        ["xpath=//form[@id='form-mde']/div/div[2]/div/div[4]/div/div[2]/span/i", "xpath:idRelative"],
-        ["xpath=//div[4]/div/div[2]/span/i", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "673571ce-2dca-41c1-8cf0-6ccf6531b979",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Version')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "2f761cbc-fd44-4f36-a2f6-fec34b1fc217",
-      "comment": "",
-      "command": "assertText",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Version')]", "xpath:innerText"]
-      ],
-      "value": "Version"
-    }, {
-      "id": "854415e6-4cf9-4cd5-aea6-800cbf447883",
-      "comment": "",
-      "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
-      "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
-        ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "efaec8d6-cb86-4784-a288-1106bae2e368",
-      "comment": "",
-      "command": "click",
-      "target": "css=.col-md-8 .input-group-append .bi",
-      "targets": [
-        ["css=.col-md-8 .input-group-append .bi", "css:finder"],
+        ["css=.col-md-11 .input-group-append .bi", "css:finder"],
         ["xpath=//form[@id='form-mde']/div/div[2]/div[3]/div/div/div[2]/span/i", "xpath:idRelative"],
         ["xpath=//div[3]/div/div/div[2]/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "068cf82a-dc3a-4ab3-87ff-fc73713e4f55",
+      "id": "c41a6a32-1298-442f-a807-74cbb18487b1",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Title')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Title')]", "xpath:innerText"]
       ],
       "value": "Title"
     }, {
-      "id": "573d3e69-8bdc-4c99-8376-c89b3aa54e70",
+      "id": "49311b2b-d73b-4462-a50e-ec6428f477e9",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "id=helpModal",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
-        ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["id=helpModal", "id"],
+        ["css=#helpModal", "css:finder"],
+        ["xpath=//div[@id='helpModal']", "xpath:attributes"],
+        ["xpath=//body/div[2]", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "c7914609-8c54-4350-8761-9049f93effa5",
+      "id": "5adcff9f-b80c-46ee-b237-10416052a5ba",
       "comment": "",
       "command": "click",
-      "target": "css=.col-10 .input-group-append .bi",
+      "target": "css=.col:nth-child(1) .bi",
       "targets": [
-        ["css=.col-10 .input-group-append .bi", "css:finder"],
-        ["xpath=//form[@id='form-mde']/div/div[2]/div[3]/div[2]/div/div[2]/span/i", "xpath:idRelative"],
-        ["xpath=//div[3]/div[2]/div/div[2]/span/i", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "c56db503-5231-4da7-aac3-260b52bf5676",
-      "comment": "",
-      "command": "assertText",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Title Type')]", "xpath:innerText"]
-      ],
-      "value": "Title Type"
-    }, {
-      "id": "299007d5-4c72-4d48-998c-05170932babe",
-      "comment": "",
-      "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
-      "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
-        ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "2b617db5-a7f1-4cea-9d42-7739c8f9d9f2",
-      "comment": "",
-      "command": "click",
-      "target": "css=.col:nth-child(1) > .input-group .bi",
-      "targets": [
-        ["css=.col:nth-child(1) > .input-group .bi", "css:finder"],
+        ["css=.col:nth-child(1) .bi", "css:finder"],
         ["xpath=//div[@id='group-rights']/div/div/div/div/div[2]/span/i", "xpath:idRelative"],
         ["xpath=//div[2]/div/div/div/div/div[2]/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "c1b4c48a-3c44-477b-a6b8-553542f9b87c",
-      "comment": "",
-      "command": "click",
-      "target": "css=.modal-body > h2",
-      "targets": [
-        ["css=.modal-body > h2", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h2", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]/h2", "xpath:position"],
-        ["xpath=//h2[contains(.,'Licenses and rights')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "cf221223-7088-44dd-84ba-adbc574233e4",
+      "id": "99462cfe-6e65-4435-99aa-3ad5810831c7",
       "comment": "",
       "command": "assertText",
-      "target": "css=.modal-body > h2",
+      "target": "css=h4",
       "targets": [
-        ["css=.modal-body > h2", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h2", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]/h2", "xpath:position"],
-        ["xpath=//h2[contains(.,'Licenses and rights')]", "xpath:innerText"]
+        ["css=h4", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h4", "xpath:idRelative"],
+        ["xpath=//h4", "xpath:position"],
+        ["xpath=//h4[contains(.,'Licenses and rights')]", "xpath:innerText"]
       ],
       "value": "Licenses and rights"
     }, {
-      "id": "2453a546-7371-4854-b9ee-aae6e2e72ce2",
+      "id": "64df4723-6560-4478-9633-f0a06c0b69dc",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "0b8d28fb-7665-46eb-8806-eb73462f800b",
+      "id": "abe59ccd-6c32-407f-a4f4-512c70d154cc",
       "comment": "",
       "command": "click",
       "target": "css=#group-author .col-12 .bi",
@@ -357,78 +211,66 @@
       ],
       "value": ""
     }, {
-      "id": "6e052b93-9862-4649-aede-b77d6ff6f634",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'ORCID')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "0bdb95c0-f0db-4f40-8054-39faa2b92eb8",
+      "id": "8d92277c-3f15-454c-9029-3e9baa367464",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'ORCID')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'ORCID')]", "xpath:innerText"]
       ],
       "value": "ORCID"
     }, {
-      "id": "b6dadc7c-d4a7-4aaa-bce5-9c7cc417d53f",
+      "id": "9365dac3-dc8b-48f1-8592-c29b6476e753",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "a550e7c9-24fc-44ff-9b12-d5c01a60f8d2",
+      "id": "60e54ffb-7f6f-4907-b901-91695a53e5cb",
       "comment": "",
       "command": "click",
-      "target": "css=.col-sm-11 > .input-group > .input-group-text > .bi",
+      "target": "css=.col-sm-11:nth-child(4) .bi",
       "targets": [
-        ["css=.col-sm-11 > .input-group > .input-group-text > .bi", "css:finder"],
+        ["css=.col-sm-11:nth-child(4) .bi", "css:finder"],
         ["xpath=//div[@id='group-author']/div/div[4]/div/span/i", "xpath:idRelative"],
         ["xpath=//div[4]/div/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "ae867ec8-f6c9-4c33-a037-8caf346d92b9",
+      "id": "82ce792d-48e9-4d6f-94f9-a71bbb48522b",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Affiliation')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Affiliation')]", "xpath:innerText"]
       ],
       "value": "Affiliation"
     }, {
-      "id": "342ac11f-3679-4f91-9147-96ab6b660920",
+      "id": "531ec929-cfd8-4102-948a-1e02dc37e7c6",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "a6e574e8-312a-4f17-8527-bf146b68b8e2",
+      "id": "2dd41fb5-6a2d-45eb-86d2-b33bb8630ce4",
       "comment": "",
       "command": "click",
       "target": "css=.col-md-4:nth-child(3) .input-group-append .bi",
@@ -439,31 +281,31 @@
       ],
       "value": ""
     }, {
-      "id": "d26d1aa4-913f-4468-bf7a-be6c14e22793",
+      "id": "34e8cd2f-e6a4-41de-a895-a9ce8d4a6dac",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Position')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Position')]", "xpath:innerText"]
       ],
       "value": "Position"
     }, {
-      "id": "f05a0cfc-6be4-400e-83e5-d7e5a025d525",
+      "id": "2177f76c-e8f8-4aa9-91ff-0fc06161e8e9",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "6636cb39-cb3f-490f-87d0-6feb25e24e23",
+      "id": "b872ca67-1e7b-47e8-9d3e-4157c145dcff",
       "comment": "",
       "command": "click",
       "target": "css=.col-12:nth-child(5) .input-group-append .bi",
@@ -474,54 +316,31 @@
       ],
       "value": ""
     }, {
-      "id": "3db93b8f-6556-459c-8470-f5087a25e665",
-      "comment": "",
-      "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
-      "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
-        ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "1ecbc064-4027-41c8-8e83-dafb8575bf4a",
-      "comment": "",
-      "command": "click",
-      "target": "css=.col-12:nth-child(5) .input-group-append .bi",
-      "targets": [
-        ["css=.col-12:nth-child(5) .input-group-append .bi", "css:finder"],
-        ["xpath=//div[@id='group-contactperson']/div/div[5]/div/div[2]/span/i", "xpath:idRelative"],
-        ["xpath=//div[5]/div/div[2]/span/i", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "ed2ef5ce-df4d-405b-954a-4acb337b6b1d",
+      "id": "08c0f36d-3376-4054-b270-3ebf0f9f60a8",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Website')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Website')]", "xpath:innerText"]
       ],
       "value": "Website"
     }, {
-      "id": "ae4c7c86-4ba8-4159-9a75-f03873d28105",
+      "id": "c7dd9093-79f8-450c-8866-472c049ee530",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "c0095d23-d6c6-4f6a-bafc-6b80a10d89a1",
+      "id": "ac64ebcf-2db5-4d33-894c-1fbe89401dbf",
       "comment": "",
       "command": "click",
       "target": "css=.col-md-11:nth-child(6) .bi",
@@ -532,43 +351,31 @@
       ],
       "value": ""
     }, {
-      "id": "359a21b0-5d0c-4110-9490-bb5d58b743ac",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Affiliation')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "d63d27ac-bc34-4820-b89b-f00da623a499",
+      "id": "023ab87c-5edb-41c8-9e02-c634dab4425f",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Affiliation')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Affiliation')]", "xpath:innerText"]
       ],
       "value": "Affiliation"
     }, {
-      "id": "96a4b93f-c681-4165-9d94-fe60324f61d3",
+      "id": "b4403c21-06f3-468d-8653-ca54858cfb0f",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "17e53897-e408-437e-b432-36c047d19e61",
+      "id": "700b32ab-8788-4d90-8071-603acab6ca79",
       "comment": "",
       "command": "click",
       "target": "css=.input-group-text:nth-child(4) > .bi",
@@ -579,322 +386,241 @@
       ],
       "value": ""
     }, {
-      "id": "db7e37b1-9596-4253-ac8f-607d9d24b781",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Name of the originating laboratory')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "120fe4d8-5b48-4f32-b05f-f5532b91cf6a",
+      "id": "aeb5418c-7d7d-449c-adf7-6d3b1d4373a4",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Name of the originating laboratory')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Name of the originating laboratory')]", "xpath:innerText"]
       ],
       "value": "Name of the originating laboratory"
     }, {
-      "id": "826b1935-0b31-45a8-a13c-b3c46a573cfb",
+      "id": "319f07bc-fb46-40f6-b77c-c0513f499927",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "07486875-4f6f-42d5-ad9f-1df59b4e3e34",
+      "id": "051e75d3-324e-44e7-87ac-dfd911d3e56e",
       "comment": "",
       "command": "click",
       "target": "css=.col-md-4:nth-child(2) .bi",
       "targets": [
         ["css=.col-md-4:nth-child(2) .bi", "css:finder"],
-        ["xpath=//div[@id='group-contributorperson']/div/div/div/div[2]/span/i", "xpath:idRelative"],
-        ["xpath=//div[6]/div[2]/div/div/div/div/div[2]/span/i", "xpath:position"]
+        ["xpath=//div[@id='group-contributorperson']/div/div[2]/div/div[2]/span/i", "xpath:idRelative"],
+        ["xpath=//div[2]/div/div/div[2]/div/div[2]/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "bc179902-e8ce-4b14-af46-167bd41cc10b",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'ORCID')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "cd1b47eb-7cab-4888-891a-f678f9f3f127",
+      "id": "da806587-3193-4205-80a8-8096051b5aef",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'ORCID')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'ORCID')]", "xpath:innerText"]
       ],
       "value": "ORCID"
     }, {
-      "id": "cbdbc8c1-f569-4de0-93fc-cb7eaebd97ab",
+      "id": "93f4f220-9e7b-4ad7-b1e1-6d8019d9321b",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "f6174b07-72ca-4df8-b22f-99d09c4206fb",
+      "id": "168ada75-0de6-46f0-a7ff-0c6d31fa8b47",
       "comment": "",
       "command": "click",
       "target": "css=.col-12:nth-child(5) > .input-group > .input-group-text > .bi",
       "targets": [
         ["css=.col-12:nth-child(5) > .input-group > .input-group-text > .bi", "css:finder"],
-        ["xpath=//div[@id='group-contributorperson']/div/div[4]/div/span/i", "xpath:idRelative"],
-        ["xpath=//div[6]/div[2]/div/div/div[4]/div/span/i", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "d911aad3-82a0-490b-9c40-76dee3321ee9",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "5c3e8a99-3376-437b-ba8e-ec1bf1f48a53",
-      "comment": "",
-      "command": "assertText",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Roles (Person)')]", "xpath:innerText"]
-      ],
-      "value": "Roles (Person)"
-    }, {
-      "id": "5ead4f09-33a2-48ec-a8c8-872368314ddc",
-      "comment": "",
-      "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
-      "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
-        ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "e83bd797-859a-49c9-8513-187ca66daa9a",
-      "comment": "",
-      "command": "click",
-      "target": "css=.col-md-7:nth-child(6) .bi",
-      "targets": [
-        ["css=.col-md-7:nth-child(6) .bi", "css:finder"],
         ["xpath=//div[@id='group-contributorperson']/div/div[5]/div/span/i", "xpath:idRelative"],
         ["xpath=//div[5]/div/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "f4482bba-b4a7-4dc6-b914-daaf35d4200f",
+      "id": "4d1cbd7c-ab33-4208-b8f9-ef18d1ed53d0",
+      "comment": "",
+      "command": "assertText",
+      "target": "css=.modal-body > h5:nth-child(1)",
+      "targets": [
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Roles (Person)')]", "xpath:innerText"]
+      ],
+      "value": "Roles (Person)"
+    }, {
+      "id": "4aeb81d9-96c3-4c28-ba63-73ba3d3352cb",
       "comment": "",
       "command": "click",
-      "target": "css=h3",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Affiliation')]", "xpath:innerText"]
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
+        ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "3b5bc6f5-3ec4-4014-8693-7de5517725af",
+      "id": "e57355f4-f1d8-4496-a94f-3d5ffb2d5144",
+      "comment": "",
+      "command": "click",
+      "target": "css=.col-lg-3 > .has-validation > .input-group-text > .bi",
+      "targets": [
+        ["css=.col-lg-3 > .has-validation > .input-group-text > .bi", "css:finder"],
+        ["xpath=//div[@id='group-contributorperson']/div/div[6]/div/span/i", "xpath:idRelative"],
+        ["xpath=//div[6]/div[2]/div/div/div[6]/div/span/i", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "dd79f19f-7776-468d-bc8e-03e464be88a8",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Affiliation')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Affiliation')]", "xpath:innerText"]
       ],
       "value": "Affiliation"
     }, {
-      "id": "34691576-c8d8-4739-aad0-4ab657e2b5e9",
+      "id": "933edad2-7d84-4f64-9bd2-8885ae3b81a3",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "d060947c-3bbc-4278-9249-1f7b7e83e1df",
+      "id": "3965c62b-5e3a-4e67-9d34-8755f957d5cd",
       "comment": "",
       "command": "click",
       "target": "css=.col-md-12:nth-child(2) .bi",
       "targets": [
         ["css=.col-md-12:nth-child(2) .bi", "css:finder"],
-        ["xpath=//div[@id='group-contributororganisation']/div/div/div/div[2]/span/i", "xpath:idRelative"],
-        ["xpath=//div[3]/div/div/div/div[2]/span/i", "xpath:position"]
+        ["xpath=//div[@id='group-contributororganisation']/div/div[2]/div/div[2]/span/i", "xpath:idRelative"],
+        ["xpath=//div[3]/div/div[2]/div/div[2]/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "6beceabe-0fc3-4b97-8fe8-85e2175da8a5",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "2fb617f3-c353-45a1-9471-a41dbb2a98cc",
+      "id": "ba894f77-9e2e-4ddf-8349-36e30e3d16a2",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Organisation Name')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Organisation Name')]", "xpath:innerText"]
       ],
       "value": "Organisation Name"
     }, {
-      "id": "5c060857-ef34-463f-8924-e4b3e99b3250",
+      "id": "999f54e2-2a67-4efd-8de3-332054349276",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "705a537d-9fcd-4569-8ca6-0ac644c15be4",
+      "id": "650ab5f3-c2d8-4fb0-b0be-3f24f26cf1f2",
       "comment": "",
       "command": "click",
       "target": "css=.col-12:nth-child(3) > .has-validation > .input-group-text > .bi",
       "targets": [
         ["css=.col-12:nth-child(3) > .has-validation > .input-group-text > .bi", "css:finder"],
-        ["xpath=//div[@id='group-contributororganisation']/div/div[2]/div/span/i", "xpath:idRelative"],
-        ["xpath=//div[3]/div/div[2]/div/span/i", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "2d472df2-06ec-417b-9142-ef06dd8f89aa",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "1d37ed5f-d67e-4cdf-823e-a478243e45cc",
-      "comment": "",
-      "command": "assertText",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Roles (Organisation)')]", "xpath:innerText"]
-      ],
-      "value": "Roles (Organisation)"
-    }, {
-      "id": "56e2dace-5642-4bb4-a7bd-988ef1bcdc41",
-      "comment": "",
-      "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
-      "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
-        ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "5941a043-a36b-4dd4-bbd0-c1b735571fca",
-      "comment": "",
-      "command": "click",
-      "target": "css=.\\31 0 .bi",
-      "targets": [
-        ["css=.\\31 0 .bi", "css:finder"],
         ["xpath=//div[@id='group-contributororganisation']/div/div[3]/div/span/i", "xpath:idRelative"],
         ["xpath=//div[3]/div/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "b721e012-1144-434f-91ba-c392b3150111",
+      "id": "d38e76d6-0bb0-4347-9d00-36c6dbe78a2e",
+      "comment": "",
+      "command": "assertText",
+      "target": "css=.modal-body > h5:nth-child(1)",
+      "targets": [
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Roles (Organisation)')]", "xpath:innerText"]
+      ],
+      "value": "Roles (Organisation)"
+    }, {
+      "id": "8da4b20e-031d-4214-a078-c788dafda382",
       "comment": "",
       "command": "click",
-      "target": "css=h3",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Affiliation')]", "xpath:innerText"]
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
+        ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "f3d9109e-39db-45e3-ac15-3d88c08e8262",
+      "id": "6b570198-44dd-4d27-884b-0250bd8a6b03",
+      "comment": "",
+      "command": "click",
+      "target": "css=.col-sm-10:nth-child(4) .bi",
+      "targets": [
+        ["css=.col-sm-10:nth-child(4) .bi", "css:finder"],
+        ["xpath=//div[@id='group-contributororganisation']/div/div[4]/div/span/i", "xpath:idRelative"],
+        ["xpath=//div[3]/div/div[4]/div/span/i", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "f37c2b35-bc7a-4203-98f0-a52ed5ab6da6",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Affiliation')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Affiliation')]", "xpath:innerText"]
       ],
       "value": "Affiliation"
     }, {
-      "id": "6db1a65c-9f25-4f80-88b1-feb4efda085a",
+      "id": "dcdc2432-315a-4d71-aa4a-9de34e2a9903",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "554de01f-a7da-498a-92d7-a85c1122303b",
+      "id": "b4bcf8a6-e188-4f8d-9c5e-eb3986a2aaca",
       "comment": "",
       "command": "click",
       "target": "css=#collapse-abstract .bi",
@@ -905,43 +631,31 @@
       ],
       "value": ""
     }, {
-      "id": "99fcbbb3-c8ab-4ba8-b232-4e2d632cc999",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Abstract')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "0e1e0432-beae-4432-b4af-c76d0bd29c9d",
+      "id": "a00695b3-49e5-48cd-8a0b-ed21402804ab",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Abstract')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Abstract')]", "xpath:innerText"]
       ],
       "value": "Abstract"
     }, {
-      "id": "6c10a1dd-4e87-42a6-bdb3-fe560fcd4567",
+      "id": "845704fc-5e64-48fb-9974-632f977a05d7",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "2e2d7ede-8445-4671-b44a-275132ff1d74",
+      "id": "03b11ba8-9e1d-43df-98ba-ae4c915fa362",
       "comment": "",
       "command": "click",
       "target": "css=.accordion-item:nth-child(2) .accordion-button",
@@ -954,7 +668,7 @@
       ],
       "value": ""
     }, {
-      "id": "ecfc2687-e82e-4bda-960e-c20fb94f80cc",
+      "id": "86ca7830-19b6-421c-9452-2c7566ece27b",
       "comment": "",
       "command": "click",
       "target": "css=#collapse-methods .bi",
@@ -965,43 +679,31 @@
       ],
       "value": ""
     }, {
-      "id": "ce596ef2-11fc-4c04-ae3f-b02229cb6a99",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Methods')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "b02dfad9-5a27-4557-8635-16b4670eaec8",
+      "id": "22b18547-6a53-468e-b6bf-94fe3aa42f2e",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Methods')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Methods')]", "xpath:innerText"]
       ],
       "value": "Methods"
     }, {
-      "id": "1d9fdd21-2a7c-4365-93e8-4c375740f2b2",
+      "id": "3903479a-5e94-4497-acf2-b2328b65a2f1",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "b972a1f6-1b58-444e-8474-5a6f51aca291",
+      "id": "11905d15-e3d3-460e-a9d6-b507a24d0ac5",
       "comment": "",
       "command": "click",
       "target": "css=.accordion-item:nth-child(3) .accordion-button",
@@ -1014,7 +716,7 @@
       ],
       "value": ""
     }, {
-      "id": "1116ab7f-da3d-4e30-a098-8836311c837b",
+      "id": "d4dfa4d8-3265-40f1-851a-9e72b5fd81da",
       "comment": "",
       "command": "click",
       "target": "css=#collapse-technicalinfo .bi",
@@ -1025,43 +727,31 @@
       ],
       "value": ""
     }, {
-      "id": "c35527cc-3fee-441b-8256-5ceb6e9ebaad",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Technical Info')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "db17120c-583d-433c-9100-5ffa5d35eacd",
+      "id": "9a145a8f-f6a0-48f5-a5e2-8eca3d145006",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Technical Info')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Technical Info')]", "xpath:innerText"]
       ],
       "value": "Technical Info"
     }, {
-      "id": "b24a765e-6cad-4cbb-9d4f-4be82b3756d5",
+      "id": "d97768f2-ea1c-4fcc-aabf-53aedddfef9c",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "790184be-0024-4f3a-adc3-1bc70444f6bb",
+      "id": "c3b95f3e-f911-421b-88d5-5f7784b34a22",
       "comment": "",
       "command": "click",
       "target": "css=.accordion-item:nth-child(4) .accordion-button",
@@ -1074,7 +764,7 @@
       ],
       "value": ""
     }, {
-      "id": "93af13bd-94fb-4785-ba6f-955808afb83b",
+      "id": "22b307c9-5eb9-4c40-a9a0-f4d620a3694f",
       "comment": "",
       "command": "click",
       "target": "css=#collapse-other .bi",
@@ -1085,131 +775,77 @@
       ],
       "value": ""
     }, {
-      "id": "40512e3e-cf2d-47d6-bf09-5b70f0bca090",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "e442bad9-ac6b-44fb-80bb-f345cff01e84",
+      "id": "ac18c9a4-0fe5-4a78-8bc9-de647de309e9",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Other')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Other')]", "xpath:innerText"]
       ],
       "value": "Other"
     }, {
-      "id": "e1f16e6f-d795-4396-aec9-f98cb392831c",
+      "id": "0544dee0-5046-427d-9cf5-c0ea97ce6623",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "33c0a695-fc4d-427a-b148-a1019afd7555",
+      "id": "635a364c-6040-4738-aa5e-a68ccccdac5e",
       "comment": "",
       "command": "click",
-      "target": "css=.card:nth-child(8) .bi",
+      "target": "css=.card:nth-child(8) .form-floating .bi",
       "targets": [
-        ["css=.card:nth-child(8) .bi", "css:finder"],
+        ["css=.card:nth-child(8) .form-floating .bi", "css:finder"],
         ["xpath=//form[@id='form-mde']/div[8]/div[2]/div/div/div/span/i", "xpath:idRelative"],
         ["xpath=//div[8]/div[2]/div/div/div/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "2bfc6079-e690-412d-8607-39a5299e37c0",
-      "comment": "",
-      "command": "click",
-      "target": "css=.modal-body > h2",
-      "targets": [
-        ["css=.modal-body > h2", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h2", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]/h2", "xpath:position"],
-        ["xpath=//h2[contains(.,'EPOS Multi-Scale Laboratories Keywords')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "3ac62156-3aa3-4702-8012-efc48b445e91",
+      "id": "65d5e266-f12f-43a2-9fce-34add040d312",
       "comment": "",
       "command": "assertText",
-      "target": "css=.modal-body > h2",
+      "target": "css=h4",
       "targets": [
-        ["css=.modal-body > h2", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h2", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]/h2", "xpath:position"],
-        ["xpath=//h2[contains(.,'EPOS Multi-Scale Laboratories Keywords')]", "xpath:innerText"]
+        ["css=h4", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h4", "xpath:idRelative"],
+        ["xpath=//h4", "xpath:position"],
+        ["xpath=//h4[contains(.,'EPOS Multi-Scale Laboratories Keywords')]", "xpath:innerText"]
       ],
       "value": "EPOS Multi-Scale Laboratories Keywords"
     }, {
-      "id": "caed980a-6f4e-400b-9340-9cff48e82242",
+      "id": "e4e591bd-6106-433d-8390-a6d28fc2c035",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "731c4030-01cd-4973-8410-2b8ddbeb9ba4",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "id=button-mslkeyword-thesaurus",
-      "targets": [
-        ["id=button-mslkeyword-thesaurus", "id"],
-        ["css=#button-mslkeyword-thesaurus", "css:finder"],
-        ["xpath=//button[@id='button-mslkeyword-thesaurus']", "xpath:attributes"],
-        ["xpath=//form[@id='form-mde']/div[8]/div[2]/div/div[2]/button", "xpath:idRelative"],
-        ["xpath=//div[2]/div/div[2]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'Thesaurus')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "9f53445c-a75f-404b-bbc1-57c5f2dcb7f9",
+      "id": "af42ce39-5da4-4aac-b7e5-35166e450e50",
       "comment": "",
       "command": "click",
-      "target": "id=button-mslkeyword-thesaurus",
+      "target": "css=#button-mslkeyword-thesaurus > .bi",
       "targets": [
-        ["id=button-mslkeyword-thesaurus", "id"],
-        ["css=#button-mslkeyword-thesaurus", "css:finder"],
-        ["xpath=//button[@id='button-mslkeyword-thesaurus']", "xpath:attributes"],
-        ["xpath=//form[@id='form-mde']/div[8]/div[2]/div/div[2]/button", "xpath:idRelative"],
-        ["xpath=//div[2]/div/div[2]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'Thesaurus')]", "xpath:innerText"]
+        ["css=#button-mslkeyword-thesaurus > .bi", "css:finder"],
+        ["xpath=//button[@id='button-mslkeyword-thesaurus']/i", "xpath:idRelative"],
+        ["xpath=//div/div[2]/button/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "8aeb3e38-4112-4e8a-b496-a51682ea4324",
-      "comment": "",
-      "command": "mouseOut",
-      "target": "id=button-mslkeyword-thesaurus",
-      "targets": [
-        ["id=button-mslkeyword-thesaurus", "id"],
-        ["css=#button-mslkeyword-thesaurus", "css:finder"],
-        ["xpath=//button[@id='button-mslkeyword-thesaurus']", "xpath:attributes"],
-        ["xpath=//form[@id='form-mde']/div[8]/div[2]/div/div[2]/button", "xpath:idRelative"],
-        ["xpath=//div[2]/div/div[2]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'Thesaurus')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "ef8b4985-e1f7-45f1-be88-076b754b9e25",
+      "id": "b7abb26d-28bd-4c7d-b504-2a4599066990",
       "comment": "",
       "command": "click",
       "target": "css=#modal-mslkeyword .bi",
@@ -1220,43 +856,31 @@
       ],
       "value": ""
     }, {
-      "id": "824de9b6-19ee-41de-934f-759d30775090",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Keyword Viewer')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "f71fcc58-d5c2-45ea-bf0a-ce64a52c41b4",
+      "id": "11e4e5b1-65d5-433f-95ac-f444653bbd96",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Keyword Viewer')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Keyword Viewer')]", "xpath:innerText"]
       ],
       "value": "Keyword Viewer"
     }, {
-      "id": "dfc3cbfc-5267-4a9f-a885-8c641f45a613",
+      "id": "8451d043-c1f1-4884-b46d-49e136d4f743",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "e7c48c5b-273d-40c2-88ba-4bf9c7e4ab6a",
+      "id": "d125fe75-a9d1-484e-a108-b8a6029f12bb",
       "comment": "",
       "command": "click",
       "target": "css=#modal-mslkeyword .btn-close",
@@ -1268,54 +892,42 @@
       ],
       "value": ""
     }, {
-      "id": "12ffb5f8-40e3-460b-9abe-89e9b2c194da",
+      "id": "9bfbb897-d436-4d7e-a99e-fbb4c4b49c2e",
       "comment": "",
       "command": "click",
-      "target": "css=.card:nth-child(10) .bi",
+      "target": "css=.card:nth-child(10) .form-floating .bi",
       "targets": [
-        ["css=.card:nth-child(10) .bi", "css:finder"],
+        ["css=.card:nth-child(10) .form-floating .bi", "css:finder"],
         ["xpath=//form[@id='form-mde']/div[10]/div[2]/div/div/div/span/i", "xpath:idRelative"],
         ["xpath=//div[10]/div[2]/div/div/div/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "d5eb0a0f-a767-430d-a599-29ce9dad1aac",
-      "comment": "",
-      "command": "click",
-      "target": "css=.modal-body > h2",
-      "targets": [
-        ["css=.modal-body > h2", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h2", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]/h2", "xpath:position"],
-        ["xpath=//h2[contains(.,'GCMD Science Keywords')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "3197d0b8-7879-439c-820e-e9df7f2f2340",
+      "id": "d0327080-2e3c-4173-aa23-424d334fc1d0",
       "comment": "",
       "command": "assertText",
-      "target": "css=.modal-body > h2",
+      "target": "css=h4",
       "targets": [
-        ["css=.modal-body > h2", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h2", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]/h2", "xpath:position"],
-        ["xpath=//h2[contains(.,'GCMD Science Keywords')]", "xpath:innerText"]
+        ["css=h4", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h4", "xpath:idRelative"],
+        ["xpath=//h4", "xpath:position"],
+        ["xpath=//h4[contains(.,'GCMD Science Keywords')]", "xpath:innerText"]
       ],
       "value": "GCMD Science Keywords"
     }, {
-      "id": "4e2a9ff1-9847-4642-b38b-6de5f51c3f2c",
+      "id": "7ec2c795-a991-4bd0-9742-d9fcccd58091",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "2b292121-5e8d-42bf-8b69-5585dfd3cd88",
+      "id": "0f1d0ba1-9d70-44d0-83f7-578b33f314bf",
       "comment": "",
       "command": "mouseOver",
       "target": "id=button-sciencekeyword-open",
@@ -1328,7 +940,7 @@
       ],
       "value": ""
     }, {
-      "id": "dcf14499-4346-4cfb-894b-6217c99c8675",
+      "id": "0adaeac7-a4bf-4832-8740-f0c0bc1a01a7",
       "comment": "",
       "command": "click",
       "target": "id=button-sciencekeyword-open",
@@ -1341,7 +953,7 @@
       ],
       "value": ""
     }, {
-      "id": "7fa13d48-d7eb-4437-ad49-03020f87852d",
+      "id": "830bc6dc-3502-49dc-af10-6544fdc3fc4b",
       "comment": "",
       "command": "mouseOut",
       "target": "id=button-sciencekeyword-open",
@@ -1354,7 +966,7 @@
       ],
       "value": ""
     }, {
-      "id": "0b8061b6-31eb-4522-adaa-3d5036462604",
+      "id": "5a2231c0-6c69-4426-92be-929a68639d1f",
       "comment": "",
       "command": "click",
       "target": "css=#modal-sciencekeyword .bi",
@@ -1365,42 +977,31 @@
       ],
       "value": ""
     }, {
-      "id": "52864a8f-5e26-4eeb-b06b-669ffb1da18e",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "c0c8f048-df2d-4e8b-b77a-f7d64b9f0ea5",
+      "id": "99f4a569-1983-4208-a9e5-8d4d1a5f1dfe",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Keyword Viewer')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Keyword Viewer')]", "xpath:innerText"]
       ],
       "value": "Keyword Viewer"
     }, {
-      "id": "ffb74825-e208-4a9b-9abe-71829cd9e911",
+      "id": "1e056554-85c3-47c4-87cb-45671c8c39b7",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "af0cec32-ce11-4651-9ff3-88b8978cea4d",
+      "id": "9d410a4d-40a9-44e4-9c4d-ee4a7bcd5a33",
       "comment": "",
       "command": "click",
       "target": "css=#modal-sciencekeyword .btn-close",
@@ -1412,54 +1013,42 @@
       ],
       "value": ""
     }, {
-      "id": "b851c8cd-b879-434b-a756-127cc12a4135",
+      "id": "fdd7b497-dce9-4e30-9821-d23ad011a4f0",
       "comment": "",
       "command": "click",
-      "target": "css=.row > .input-group .bi",
+      "target": "css=.input-margin-top-bottom > .input-group-text > .bi",
       "targets": [
-        ["css=.row > .input-group .bi", "css:finder"],
+        ["css=.input-margin-top-bottom > .input-group-text > .bi", "css:finder"],
         ["xpath=//div[@id='group-freekeyword']/div/div/span/i", "xpath:idRelative"],
         ["xpath=//div[12]/div[2]/div/div/div/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "5b47b657-ca9a-432a-aae3-3f84faad5400",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Free Keywords')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "1090a3c7-9bc3-4f13-8401-09dc521e4125",
+      "id": "8abffb2d-0cc0-4c23-a4a3-30a9877e1d89",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=h4",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Free Keywords')]", "xpath:innerText"]
+        ["css=h4", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h4", "xpath:idRelative"],
+        ["xpath=//h4", "xpath:position"],
+        ["xpath=//h4[contains(.,'Free Keywords')]", "xpath:innerText"]
       ],
       "value": "Free Keywords"
     }, {
-      "id": "8ca158ac-7e75-472c-9147-cc91685d9f57",
+      "id": "4cc1427c-9af1-45a5-af2d-fe06a1680aa6",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "c39c1957-0818-4fc4-a098-3a469077b114",
+      "id": "3e66b8b9-73ad-4bf0-9078-d5ca0574a455",
       "comment": "",
       "command": "click",
       "target": "css=.col-lg-6:nth-child(1) .bi",
@@ -1470,42 +1059,31 @@
       ],
       "value": ""
     }, {
-      "id": "82ed9c4f-8384-44a0-9b9f-a0e06e7e18d2",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "71e13c67-0772-4d72-b015-bc6d2385b71f",
+      "id": "d1ca5334-9584-4671-a224-2a19d5b8e5c4",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Date created')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Date created')]", "xpath:innerText"]
       ],
       "value": "Date created"
     }, {
-      "id": "5e6bc38d-57bd-4995-9995-b8e480af05ab",
+      "id": "bff6fafc-362c-46be-a72f-7abf6d25f96a",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "d120cddf-2f54-4ba0-b5f8-ff5ee67cd697",
+      "id": "c5eb84af-9987-401a-b00c-22427ae06332",
       "comment": "",
       "command": "click",
       "target": "css=.col-lg-6:nth-child(2) .bi",
@@ -1516,42 +1094,31 @@
       ],
       "value": ""
     }, {
-      "id": "eb3a6f1e-595f-4794-a308-71c8e5a475bf",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "12bb47fb-2cd3-474a-99c2-6fa09e13eb01",
+      "id": "4e6a761e-52f4-415b-b9b4-e1e9a78fccb1",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Embargo until')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Embargo until')]", "xpath:innerText"]
       ],
       "value": "Embargo until"
     }, {
-      "id": "024872f9-1da3-477b-ac07-196f4ba940bd",
+      "id": "e120b776-e6a9-4ddc-b085-9c8d3ec402a8",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "d4404d8b-6ff1-4b70-9e78-88965c1232f9",
+      "id": "399c205e-6846-4b9a-bb23-830f98a7b300",
       "comment": "",
       "command": "click",
       "target": "css=.col-9 > .input-group:nth-child(2) .bi",
@@ -1562,42 +1129,31 @@
       ],
       "value": ""
     }, {
-      "id": "06b3ca9c-3669-41d2-b2ec-51f50f464109",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "03e94c5b-61cb-44ea-950b-65e121706fad",
+      "id": "086b5352-c818-492c-a790-dc95bd1aa324",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Geographic Coverage')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Geographic Coverage')]", "xpath:innerText"]
       ],
       "value": "Geographic Coverage"
     }, {
-      "id": "42f25cd3-7732-4af4-8605-54bb3a6bb28e",
+      "id": "f55482d1-f83c-44e3-a497-63381e50cc9b",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "e60014ac-19d2-4318-9c40-b61feebc95e9",
+      "id": "5701e090-473b-4ce8-a236-e3806d92a885",
       "comment": "",
       "command": "click",
       "target": "css=.col-9 > .input-group:nth-child(4) .bi",
@@ -1608,43 +1164,31 @@
       ],
       "value": ""
     }, {
-      "id": "0d4bf550-d421-42f1-9b0a-e385a639b1d3",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Geographic Coverage')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "b96eb8ac-9cb4-450b-a2c7-82b9d4a419ca",
+      "id": "f5043e61-97db-4900-8a0f-79b51872fb2b",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Geographic Coverage')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Geographic Coverage')]", "xpath:innerText"]
       ],
       "value": "Geographic Coverage"
     }, {
-      "id": "c5be4951-34b5-4290-b80a-e182a567499f",
+      "id": "af1281b6-4e5e-4638-acff-c3e08e4d1d9d",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "545eda3a-4d96-40b6-9764-0d8bd1a30088",
+      "id": "4f8507c8-eab3-46b1-a023-e9b0db547e6d",
       "comment": "",
       "command": "click",
       "target": "css=.col-md-12 > .input-group > .input-group-text > .bi",
@@ -1655,42 +1199,31 @@
       ],
       "value": ""
     }, {
-      "id": "d8a44742-a8db-49ab-b019-2ffc13c9c81a",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "d41229e0-d2ce-4271-a58f-67da5f72c016",
+      "id": "b954ab1d-6bb6-4d14-8d03-d5755602174a",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Description')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Description')]", "xpath:innerText"]
       ],
       "value": "Description"
     }, {
-      "id": "cf9fa14e-dc35-40d6-a871-84ba2a6b6a4d",
+      "id": "1efad48b-32a8-4d13-a06f-39a63fcd780c",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "46239d8d-7762-4479-a86e-17a0647aa8b1",
+      "id": "61b0e948-1b22-4ffd-a952-bbd66f37dfd6",
       "comment": "",
       "command": "click",
       "target": "css=.col-md-8 > .input-group:nth-child(2) .bi",
@@ -1701,42 +1234,42 @@
       ],
       "value": ""
     }, {
-      "id": "049d3279-6e85-4085-abbb-46d2036c8671",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "5f445e57-fcaa-4809-aa50-0a215187453a",
+      "id": "72b04ca6-d593-4160-96e6-99a8a6d66871",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Temporal Coverage')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Temporal Coverage')]", "xpath:innerText"]
       ],
       "value": "Temporal Coverage"
     }, {
-      "id": "9aadbacd-b89e-4dff-b641-d5c5d15a6ed6",
+      "id": "23cedc7c-8ad3-427b-b448-fd14891ed670",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "00869307-d2b1-45e2-96f4-a4a2aff8c364",
+      "id": "c913f819-9dc6-4649-90e0-14dda50c3991",
+      "comment": "",
+      "command": "click",
+      "target": "css=.col-12 > .input-group:nth-child(4) > .input-group-text",
+      "targets": [
+        ["css=.col-12 > .input-group:nth-child(4) > .input-group-text", "css:finder"],
+        ["xpath=//div[@id='group-stc']/div/div/div/div[4]/div[2]/span", "xpath:idRelative"],
+        ["xpath=//div[4]/div[2]/span", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "4348f8c4-83d0-4763-91c3-94149abcf81e",
       "comment": "",
       "command": "click",
       "target": "css=.col-12 > .input-group:nth-child(4) .bi",
@@ -1747,55 +1280,31 @@
       ],
       "value": ""
     }, {
-      "id": "d6da7673-c6b7-4028-b72d-4f6e804be652",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Temporal Coverage')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "70347dc2-dc5c-4d5b-b002-674adc3f8a9a",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Temporal Coverage')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "076d9c86-7a83-48d7-bf18-22bfac43e6f6",
+      "id": "0bc8e9c0-8ed1-4091-bf9e-58321146e402",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Temporal Coverage')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Temporal Coverage')]", "xpath:innerText"]
       ],
       "value": "Temporal Coverage"
     }, {
-      "id": "5a4037c5-b97b-4239-97c3-38271d9b4e7c",
+      "id": "550f7c44-8323-4d44-994d-bb29700e1a0d",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "544b780a-1907-4ac8-8abe-026bdd1db426",
+      "id": "a249835c-b89f-49bd-bee2-5d989e78b2fa",
       "comment": "",
       "command": "click",
       "target": "css=.col-8 .bi",
@@ -1806,227 +1315,171 @@
       ],
       "value": ""
     }, {
-      "id": "e355760b-d0dd-409a-93d3-174c4124daed",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "571ed8f3-67b9-479c-b15e-8475611ceb1f",
+      "id": "c1894a24-0eff-41f2-ab68-aab2fd551ad8",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Temporal Coverage')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Temporal Coverage')]", "xpath:innerText"]
       ],
       "value": "Temporal Coverage"
     }, {
-      "id": "9a55be93-06cb-4ba0-986f-102b4dd8b9aa",
+      "id": "02436d34-f0d1-43ac-b7e5-2c513a43fc21",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "4fc65719-3dd3-4a0b-a612-f0cd0455c92a",
+      "id": "a7bbcfe9-0338-4e93-a277-cad41bd9bcfb",
       "comment": "",
       "command": "click",
-      "target": "css=.col-lg-3:nth-child(1) .input-group-append .bi",
+      "target": "css=#group-relatedwork .col-sm-6 .input-group-append .bi",
       "targets": [
-        ["css=.col-lg-3:nth-child(1) .input-group-append .bi", "css:finder"],
+        ["css=#group-relatedwork .col-sm-6 .input-group-append .bi", "css:finder"],
         ["xpath=//div[@id='group-relatedwork']/div/div/div/div[2]/span/i", "xpath:idRelative"],
         ["xpath=//div[15]/div[2]/div/div/div/div/div[2]/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "b71cdfbe-ae75-4e6e-a05e-9f0bf292cd87",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "5efb354c-d0f0-4f73-b832-52f6702944c9",
+      "id": "06991f58-7a0d-4d0e-8f04-b09931251c3f",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Relation Type')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Relation Type')]", "xpath:innerText"]
       ],
       "value": "Relation Type"
     }, {
-      "id": "d47cc76b-599b-4bc3-a27d-1e1f74a99902",
+      "id": "159ef215-57a9-4c13-a968-d594f53e73b7",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "2e6c0af5-3b9d-469f-874b-e8dcff7eb9da",
+      "id": "c85ff4d7-c254-48d5-afaa-3c09a408eba1",
       "comment": "",
       "command": "click",
       "target": "css=.col:nth-child(2) .input-group-append .bi",
       "targets": [
         ["css=.col:nth-child(2) .input-group-append .bi", "css:finder"],
         ["xpath=//div[@id='group-relatedwork']/div/div[2]/div/div[2]/span/i", "xpath:idRelative"],
-        ["xpath=//div[2]/div/div/div[2]/div/div[2]/span/i", "xpath:position"]
+        ["xpath=//div[15]/div[2]/div/div/div[2]/div/div[2]/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "83c6c87c-d84b-4f76-ac43-006ecc0768d0",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "d77a114d-294e-43d2-af53-7e6ffba397ac",
+      "id": "4a601109-d418-47c8-b31d-e1489d5b1b92",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Identifier')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Identifier')]", "xpath:innerText"]
       ],
       "value": "Identifier"
     }, {
-      "id": "fa76fb93-90d5-46f2-9c3b-65ff973e8b54",
+      "id": "81758670-bcc9-4977-b332-e7bdeef29fd1",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "44a215f6-281f-4a38-a330-150ea48a4a31",
+      "id": "ebb6ed74-fa2e-4a7a-9db3-7d780cc0beec",
       "comment": "",
       "command": "click",
-      "target": "css=.col-sm-6:nth-child(3) .bi",
+      "target": "css=.col-sm-6 > .input-group > .input-group-text > .bi",
       "targets": [
-        ["css=.col-sm-6:nth-child(3) .bi", "css:finder"],
+        ["css=.col-sm-6 > .input-group > .input-group-text > .bi", "css:finder"],
         ["xpath=//div[@id='group-relatedwork']/div/div[3]/div/span/i", "xpath:idRelative"],
         ["xpath=//div[15]/div[2]/div/div/div[3]/div/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "7391f78b-4b25-4b41-899b-2d37b3fe7483",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "92e1952c-334a-4ed8-9cc9-1ddda7dfe87f",
+      "id": "925acf1e-4f43-4625-abd8-e99b1498730b",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Identifier Type')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Identifier Type')]", "xpath:innerText"]
       ],
       "value": "Identifier Type"
     }, {
-      "id": "a1d71fbb-67d5-48f9-92e6-194e3a95eac3",
+      "id": "6d55f6ab-22fa-4bf4-a347-20e51718b8ef",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "9689a224-9164-4f45-b9fc-f1975ceca3ca",
+      "id": "7c7d7359-6f19-499f-9d24-cd25c02a675c",
       "comment": "",
       "command": "click",
-      "target": "css=.col-md-4:nth-child(1) > .input-group > .input-group-text > .bi",
+      "target": "css=#group-fundingreference .col-sm-6 .bi",
       "targets": [
-        ["css=.col-md-4:nth-child(1) > .input-group > .input-group-text > .bi", "css:finder"],
-        ["xpath=//div[@id='group-fundingreference']/div/div/div/span/i", "xpath:idRelative"],
-        ["xpath=//div[16]/div[2]/div/div/div/div/span/i", "xpath:position"]
+        ["css=#group-fundingreference .col-sm-6 .bi", "css:finder"],
+        ["xpath=//div[@id='group-fundingreference']/div/div/div/div[2]/span/i", "xpath:idRelative"],
+        ["xpath=//div[16]/div[2]/div/div/div/div/div[2]/span/i", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "5e060a66-be1c-44ab-8367-69c4d81dba12",
-      "comment": "",
-      "command": "click",
-      "target": "css=h3",
-      "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Funder')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "31af5e46-11b6-4ae6-8fc4-eb8e45000245",
+      "id": "4996e716-64ae-4597-86fd-eccc02556342",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Funder')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Funder')]", "xpath:innerText"]
       ],
       "value": "Funder"
     }, {
-      "id": "277cf07e-e9af-4c23-b992-ca176d7db4bf",
+      "id": "99a6d7d0-1330-4eba-a3d2-43590df3ad93",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "a70de064-b5af-4ca5-ae28-3123b16d0abf",
+      "id": "98adeb76-9218-44ce-b8a8-1d22f3c87ae3",
       "comment": "",
       "command": "click",
       "target": "css=.col:nth-child(2) > .input-group > .input-group-text > .bi",
@@ -2037,42 +1490,31 @@
       ],
       "value": ""
     }, {
-      "id": "add4786a-84fe-4232-b7f5-8692c2645147",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "6f73d322-543b-4d6e-9e88-c11a05cf9f77",
+      "id": "9874fda1-0b1b-4040-a031-3887a68ea8bc",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Grant Number')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Grant Number')]", "xpath:innerText"]
       ],
       "value": "Grant Number"
     }, {
-      "id": "a9ffe3e5-635a-4035-8beb-bf9f6739c132",
+      "id": "ff5c3f3e-fe66-4f16-8ec0-417b7030df4b",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "d179e931-f2d9-45cb-892c-9b34bffe6150",
+      "id": "f0fef1c1-cf5a-45a6-a962-91c8580cfe2f",
       "comment": "",
       "command": "click",
       "target": "css=.col:nth-child(3) .bi",
@@ -2083,38 +1525,27 @@
       ],
       "value": ""
     }, {
-      "id": "26b052fa-83cd-4d8b-a02e-fdcbcb6717d4",
-      "comment": "",
-      "command": "click",
-      "target": "css=#helpModal .modal-body",
-      "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div[2]", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "a8403c08-321b-4f25-bde8-b0ddb9360388",
+      "id": "38b31c44-576f-43ca-b9bf-93f52da0b714",
       "comment": "",
       "command": "assertText",
-      "target": "css=h3",
+      "target": "css=.modal-body > h5:nth-child(1)",
       "targets": [
-        ["css=h3", "css:finder"],
-        ["xpath=//div[@id='helpModal']/div/div/div[2]/h3", "xpath:idRelative"],
-        ["xpath=//h3", "xpath:position"],
-        ["xpath=//h3[contains(.,'Grant Name')]", "xpath:innerText"]
+        ["css=.modal-body > h5:nth-child(1)", "css:finder"],
+        ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
+        ["xpath=//div[2]/h5", "xpath:position"],
+        ["xpath=//h5[contains(.,'Grant Name')]", "xpath:innerText"]
       ],
       "value": "Grant Name"
     }, {
-      "id": "448f4c30-e66c-4550-bd4e-2b47126c2197",
+      "id": "c2c0b584-d7ec-4920-a80b-908fe9131de6",
       "comment": "",
       "command": "click",
-      "target": "css=.modal-lg .btn-close:nth-child(2)",
+      "target": "css=#helpModal .btn-close",
       "targets": [
-        ["css=.modal-lg .btn-close:nth-child(2)", "css:finder"],
-        ["xpath=(//button[@type='button'])[27]", "xpath:attributes"],
+        ["css=#helpModal .btn-close", "css:finder"],
+        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div/div/div/div/button", "xpath:position"]
+        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
       ],
       "value": ""
     }]
@@ -2123,9 +1554,9 @@
     "name": "Default-Einstellungen",
     "commands": [{
       "id": "1a8b360a-affe-4c01-8b09-adc854ac5100",
-      "comment": "",
+      "comment": "this tests, if the default settings are set",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
@@ -2155,9 +1586,9 @@
     "name": "PflichtfelderAusgefüllt",
     "commands": [{
       "id": "1605c797-9579-4c25-918f-92886d6b2e22",
-      "comment": "",
+      "comment": "fills out all madatory fields",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
@@ -2265,6 +1696,48 @@
         ["xpath=//div[2]/div/div/div[2]/div/div/input", "xpath:position"]
       ],
       "value": "Jana"
+    }, {
+      "id": "107b9bd9-2170-45e3-ac9d-7afc6bf5de50",
+      "comment": "",
+      "command": "type",
+      "target": "id=input-contactperson-lastname",
+      "targets": [
+        ["id=input-contactperson-lastname", "id"],
+        ["name=cpLastname[]", "name"],
+        ["css=#input-contactperson-lastname", "css:finder"],
+        ["xpath=//input[@id='input-contactperson-lastname']", "xpath:attributes"],
+        ["xpath=//div[@id='group-contactperson']/div/div/div/div/input", "xpath:idRelative"],
+        ["xpath=//div[4]/div[2]/div/div/div/div/div/input", "xpath:position"]
+      ],
+      "value": "CP"
+    }, {
+      "id": "8811c4a0-4dc8-45e3-a578-c6bbdb4270b1",
+      "comment": "",
+      "command": "type",
+      "target": "id=input-contactperson-firstname",
+      "targets": [
+        ["id=input-contactperson-firstname", "id"],
+        ["name=cpFirstname[]", "name"],
+        ["css=#input-contactperson-firstname", "css:finder"],
+        ["xpath=//input[@id='input-contactperson-firstname']", "xpath:attributes"],
+        ["xpath=//div[@id='group-contactperson']/div/div[2]/div/div/input", "xpath:idRelative"],
+        ["xpath=//div[4]/div[2]/div/div/div[2]/div/div/input", "xpath:position"]
+      ],
+      "value": "CPFIRSTNAME"
+    }, {
+      "id": "29073bdd-f1f8-4d82-b6b2-131a1b39003d",
+      "comment": "",
+      "command": "type",
+      "target": "id=input-contactperson-email",
+      "targets": [
+        ["id=input-contactperson-email", "id"],
+        ["name=cpEmail[]", "name"],
+        ["css=#input-contactperson-email", "css:finder"],
+        ["xpath=//input[@id='input-contactperson-email']", "xpath:attributes"],
+        ["xpath=//div[@id='group-contactperson']/div/div[4]/div/div/input", "xpath:idRelative"],
+        ["xpath=//div[2]/div/div/div[4]/div/div/input", "xpath:position"]
+      ],
+      "value": "cp@cp.de"
     }, {
       "id": "d333f483-f312-4c09-a32a-4a924a1734b4",
       "comment": "",
@@ -2454,41 +1927,15 @@
         ["xpath=//div[4]/div[2]/input", "xpath:position"]
       ],
       "value": "2024-11-05"
-    }, {
-      "id": "fd7425c6-7153-45d7-86a1-c536ceb8b04c",
-      "comment": "",
-      "command": "click",
-      "target": "name=funder[]",
-      "targets": [
-        ["name=funder[]", "name"],
-        ["css=.inputFunder", "css:finder"],
-        ["xpath=//input[@name='funder[]']", "xpath:attributes"],
-        ["xpath=//div[@id='group-fundingreference']/div/div/div/div/input", "xpath:idRelative"],
-        ["xpath=//div[16]/div[2]/div/div/div/div/div/input", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "4dcd05b3-c04c-41de-9003-f572013aa7a6",
-      "comment": "",
-      "command": "type",
-      "target": "name=funder[]",
-      "targets": [
-        ["name=funder[]", "name"],
-        ["css=.inputFunder", "css:finder"],
-        ["xpath=//input[@name='funder[]']", "xpath:attributes"],
-        ["xpath=//div[@id='group-fundingreference']/div/div/div/div/input", "xpath:idRelative"],
-        ["xpath=//div[16]/div[2]/div/div/div/div/div/input", "xpath:position"]
-      ],
-      "value": "Jana"
     }]
   }, {
     "id": "0535f978-2aad-42ee-8e61-4355ea992c55",
     "name": "AlleFelderausgefüllt",
     "commands": [{
       "id": "76cf6088-4394-48fb-bd15-96762d5c2719",
-      "comment": "",
+      "comment": "this test fills out all the input fields",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
@@ -3218,35 +2665,9 @@
       ],
       "value": ""
     }, {
-      "id": "e94b5718-ee94-49ca-b4aa-99db1643da06",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "id=button-sciencekeyword-open",
-      "targets": [
-        ["id=button-sciencekeyword-open", "id"],
-        ["css=#button-sciencekeyword-open", "css:finder"],
-        ["xpath=//button[@id='button-sciencekeyword-open']", "xpath:attributes"],
-        ["xpath=//form[@id='form-mde']/div[10]/div[2]/div/div[2]/button", "xpath:idRelative"],
-        ["xpath=//div[10]/div[2]/div/div[2]/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
       "id": "9103b197-7ffa-4d4e-983c-b687934e54f8",
       "comment": "",
       "command": "click",
-      "target": "id=button-sciencekeyword-open",
-      "targets": [
-        ["id=button-sciencekeyword-open", "id"],
-        ["css=#button-sciencekeyword-open", "css:finder"],
-        ["xpath=//button[@id='button-sciencekeyword-open']", "xpath:attributes"],
-        ["xpath=//form[@id='form-mde']/div[10]/div[2]/div/div[2]/button", "xpath:idRelative"],
-        ["xpath=//div[10]/div[2]/div/div[2]/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "f71799a9-7f75-445c-a20e-fe25e4dc12a2",
-      "comment": "",
-      "command": "mouseOut",
       "target": "id=button-sciencekeyword-open",
       "targets": [
         ["id=button-sciencekeyword-open", "id"],
@@ -3309,17 +2730,6 @@
         ["xpath=(//button[@type='button'])[20]", "xpath:attributes"],
         ["xpath=//div[@id='modal-sciencekeyword']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//div[11]/div/div/div/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "86ab94a3-7146-4742-84b5-474fac69d0a4",
-      "comment": "",
-      "command": "click",
-      "target": "css=.customLook > .tagify__input",
-      "targets": [
-        ["css=.customLook > .tagify__input", "css:finder"],
-        ["xpath=//div[@id='group-freekeyword']/div/div/tags/span", "xpath:idRelative"],
-        ["xpath=//div[12]/div[2]/div/div/div/tags/span", "xpath:position"]
       ],
       "value": ""
     }, {
@@ -3862,9 +3272,9 @@
     "name": "SoftwareLizenzen",
     "commands": [{
       "id": "fd0777d4-18c3-4cbf-8392-201ae4ead119",
-      "comment": "",
+      "comment": "tests, if only software licenses are choosable, when resourceType=Software",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
@@ -4012,9 +3422,9 @@
     "name": "Lizenzen",
     "commands": [{
       "id": "61e17bd7-9fb5-4140-9933-15e39700320e",
-      "comment": "",
+      "comment": "tests, if all licenses can be selected",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
@@ -4155,9 +3565,9 @@
     "name": "MainTitle",
     "commands": [{
       "id": "57f42c04-6196-49cb-aee7-3a718e1edb54",
-      "comment": "",
+      "comment": "checks, if main Title is NOT an option for titleType",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
@@ -4188,20 +3598,6 @@
         ["xpath=//div[3]/div/div/div/input", "xpath:position"]
       ],
       "value": "A Main Title"
-    }, {
-      "id": "7e34dbf9-d853-40bd-a396-e6591681c7bb",
-      "comment": "",
-      "command": "select",
-      "target": "id=input-resourceinformation-titletype",
-      "targets": [],
-      "value": "label=Main Title"
-    }, {
-      "id": "3781c91f-7c56-43d2-8cf2-e7ba75a31ae7",
-      "comment": "",
-      "command": "assertSelectedLabel",
-      "target": "id=input-resourceinformation-titletype",
-      "targets": [],
-      "value": "Main Title"
     }, {
       "id": "f77104a8-66d1-4f06-910f-3488d11f8874",
       "comment": "",
@@ -4566,30 +3962,6 @@
       ],
       "value": ""
     }, {
-      "id": "d4c0fe25-6a43-4358-9456-29a09222cb28",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=.gm-svpc",
-      "targets": [
-        ["css=.gm-svpc", "css:finder"],
-        ["xpath=(//button[@type='button'])[34]", "xpath:attributes"],
-        ["xpath=//div[@id='panel-stc-map']/div/div[3]/div[12]/div/button", "xpath:idRelative"],
-        ["xpath=//div[12]/div/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "1b9d1ef5-8603-4f22-a722-dbd3cae1c0c8",
-      "comment": "",
-      "command": "mouseOut",
-      "target": "css=.gm-svpc",
-      "targets": [
-        ["css=.gm-svpc", "css:finder"],
-        ["xpath=(//button[@type='button'])[34]", "xpath:attributes"],
-        ["xpath=//div[@id='panel-stc-map']/div/div[3]/div[12]/div/button", "xpath:idRelative"],
-        ["xpath=//div[12]/div/button", "xpath:position"]
-      ],
-      "value": ""
-    }, {
       "id": "7a255b99-6825-43d4-b801-30479e99a1ad",
       "comment": "",
       "command": "click",
@@ -4701,32 +4073,6 @@
         ["xpath=//div[4]/div[2]/input", "xpath:position"]
       ],
       "value": "2024-11-13"
-    }, {
-      "id": "8de44498-8ef8-4d7a-af5c-1ed20dbec773",
-      "comment": "",
-      "command": "click",
-      "target": "name=funder[]",
-      "targets": [
-        ["name=funder[]", "name"],
-        ["css=.inputFunder", "css:finder"],
-        ["xpath=//input[@name='funder[]']", "xpath:attributes"],
-        ["xpath=//div[@id='group-fundingreference']/div/div/div/div/input", "xpath:idRelative"],
-        ["xpath=//div[16]/div[2]/div/div/div/div/div/input", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "2ba805f9-b1d7-4126-bb19-a61b5dc90e2e",
-      "comment": "",
-      "command": "type",
-      "target": "name=funder[]",
-      "targets": [
-        ["name=funder[]", "name"],
-        ["css=.inputFunder", "css:finder"],
-        ["xpath=//input[@name='funder[]']", "xpath:attributes"],
-        ["xpath=//div[@id='group-fundingreference']/div/div/div/div/input", "xpath:idRelative"],
-        ["xpath=//div[16]/div[2]/div/div/div/div/div/input", "xpath:position"]
-      ],
-      "value": "Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ"
     }]
   }, {
     "id": "f56a2eb8-c84d-4a67-8b48-ec45f510143d",
@@ -4735,7 +4081,7 @@
       "id": "0fee5fde-40c2-4be4-958d-921adad327fa",
       "comment": "",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
@@ -5299,9 +4645,9 @@
     "name": "ThesaurusModal",
     "commands": [{
       "id": "da900df7-4b74-4d35-9e3a-1c30281da9bb",
-      "comment": "",
+      "comment": "tests if msl keyword modal opens and show the right first node",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
@@ -5341,9 +4687,9 @@
     "name": "dataset2-ausfüllen",
     "commands": [{
       "id": "3ad69f81-5e73-4910-8290-bc287c8d9611",
-      "comment": "",
+      "comment": "fills the form with dataset2",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
@@ -5673,9 +5019,9 @@
     "name": "dataset3-ausfüllen",
     "commands": [{
       "id": "643f955c-5019-4d1a-bb7a-54c76ba5756a",
-      "comment": "",
+      "comment": "fills the form with dataset3",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
@@ -6511,9 +5857,9 @@
     "name": "dataset4-ausfüllen",
     "commands": [{
       "id": "804eb8d0-17f2-48db-add5-641371069e4d",
-      "comment": "",
+      "comment": "fills the form with dataset4",
       "command": "open",
-      "target": "/",
+      "target": "",
       "targets": [],
       "value": ""
     }, {
