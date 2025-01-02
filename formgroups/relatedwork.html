@@ -1,7 +1,7 @@
 <div class="card mb-2">
   <div class="card-header"><b>
       <?php echo $translations['relatedwork']; ?>
-      <i class="bi bi-question-circle-fill"  data-help-section-id="help-relatedwork-fg"></i>
+      <i class="bi bi-question-circle-fill" data-help-section-id="help-relatedwork-fg"></i>
     </b></div>
   <div class="card-body">
     <div id="group-relatedwork">
@@ -29,8 +29,8 @@
         <div class="col-12 col-sm-12 col-md-4 col-lg-5 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
-              <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-relatedwork-identifier"
-                name="rIdentifier[]" />
+              <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                id="input-relatedwork-identifier" name="rIdentifier[]" />
               <label for="input-relatedwork-identifier">
                 <?php echo $translations['r_Identifier']; ?>
               </label>
@@ -49,7 +49,8 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <select class="form-select input-with-help input-right-no-round-corners"
-                aria-label="Default select example" id="input-relatedwork-identifiertype" name="rIdentifierType[]"> </select>
+                aria-label="Default select example" id="input-relatedwork-identifiertype" name="rIdentifierType[]">
+              </select>
               <label for="input-relatedwork-identifiertype">
                 <?php echo $translations['r_identifier_type']; ?>
               </label>
@@ -57,8 +58,10 @@
                 <?php echo $translations['PleaseChoose_invalid']; ?>
               </div>
             </div>
-            <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                data-help-section-id="help-relatedwork-identifiertype"></i></span>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-relatedwork-relation"></i></span>
+            </div>
           </div>
         </div>
         <!-- Clone Related Work row button-->
