@@ -3,7 +3,7 @@
         'name' => 'elmo/elmo',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '875a00a8f22fa1bcfae911af4050f405642ffb13',
+        'reference' => 'f07a84f978b102b084570e1afcbc87b7252c94bc',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
