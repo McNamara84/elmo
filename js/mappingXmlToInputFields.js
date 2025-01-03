@@ -712,6 +712,47 @@ function populateFormWithContributors(personMap, orgMap) {
   }
 }
 
+
+
+/**
+ * Process related identifiers from XML and populate the formgroup Related Works
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processRelatedWorks(xmlDoc, resolver) {
+  const identifierNodes = xmlDoc.evaluate(
+    './/ns:relatedIdentifiers/ns:relatedIdentifier',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let i = 0; i < identifierNodes.snapshotLength; i++) {
+    const identifierNode = identifierNodes.snapshotItem(i);
+    const relationType = identifierNode.getAttribute('relationType');
+    const identifierType = identifierNode.getAttribute('relatedIdentifierType');
+    const identifierValue = identifierNode.textContent;
+
+    // Find last row
+    const $lastRow = $('input[name="rIdentifier[]"]').last().closest('.row');
+
+    // Set values
+    $lastRow.find('input[name="rIdentifier[]"]').val(identifierValue);
+    $lastRow.find('select[name="rIdentifierType[]"]').val(identifierType);
+    // Match relation by visible text instead of value
+    $lastRow.find('select[name="relation[]"]:first option').filter(function () {
+      return $(this).text() === relationType; // Match by visible text
+    }).prop('selected', true);
+
+    // clone row for the next entry, if there is one
+    if (i < identifierNodes.snapshotLength-1) {
+      // Add Related Work
+      $('#button-relatedwork-add').click();
+    }
+  }
+}
+
 /**
  * Process descriptions from XML and populate the form
  * @param {Document} xmlDoc - The parsed XML document
@@ -877,7 +918,7 @@ async function loadXmlToForm(xmlDoc) {
     }
   };
 
-  const nsResolver = xmlDoc.createNSResolver(xmlDoc.documentElement);
+  // const nsResolver = xmlDoc.createNSResolver(xmlDoc.documentElement);
   const defaultNS = resourceNode.namespaceURI || 'http://datacite.org/schema/kernel-4';
 
   function resolver(prefix) {
@@ -924,6 +965,8 @@ async function loadXmlToForm(xmlDoc) {
   processOriginatingLaboratories(xmlDoc, resolver);
   // Process contributors
   processContributors(xmlDoc, resolver);
+  // Process Related Works
+  processRelatedWorks(xmlDoc, resolver);
   // Process descriptions
   processDescriptions(xmlDoc, resolver);
 }

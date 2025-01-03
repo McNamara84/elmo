@@ -761,7 +761,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "EPOS Multi-Scale Laboratories (MSL) " 1.3
   - Beispielwerte: `hydrogeochemistery` `alternating field (AF) demagnetiser`
 
-- hiddenFielder: scheme, schemeURI, valueURI und language
+- hiddenField: scheme, schemeURI, valueURI und language
 
   - hier werden bei Auswahl eines Keywords die zugehörigen versteckten Eingabefeldern wie schemes, schemeURIs, valueURIs und languages gespeichert
   - Datentyp: Zeichenkette
@@ -875,39 +875,42 @@ Räumliche und zeitliche Einordnung des Datensatzes. Zur einfacheren Erfassung d
   - Beispielwerte: `+02:00` `-08:00`
 
 ### Related Work
+This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggregationInfo>` in the ISO scheme. The element is optional in both schemes.
 
 - Relation
 
-  - In dieses Feld kommt der Typ der Relation.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: relation_fk in der Tabelle Related_Work.
-  - Restriktionen: Es muss ein Relation Type ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `IsCitedBy` `IsSupplementTo` `IsContinuedBy`
+  This field contains the type of relation.
+  - Data type: String
+  - Occurrence: 1, if relatedIdentifier is <0
+  - The corresponding field in the database where the value is saved is called: relation_fk in the Related_Work table.
+  - Restrictions: A relation type must be selected, if related work is specified
+  - Relations can be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
+  - Schema version: “DataCite” 4.5
+  - Example values: `IsCitedBy` `IsSupplementTo` `IsContinuedBy`
 
 - Identifier
 
-  - In dieses Feld kommt der Identifikator
-  - Datentyp: Zeichenkette
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Identifier in der Tabelle Related_Work
-  - Restriktionen: Muss angegeben werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/relatedIdentifierType/)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `ark:/13030/tqb3kh97gh8w` `arXiv:0706.0001`
+  - This field contains the identifier
+  - Data type: String
+  - Occurrence: 1, if relatedIdentifier is <0
+  - The corresponding field in the database where the value is stored is called: Identifier in the Related_Work table
+  - Restrictions: Must be specified, if related work specified
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/)
+  - Schema version: “DataCite” 4.5
+  - Example values: `13030/tqb3kh97gh8w`, `0706.0001`, `10.26022/IEDA/112263`
 
 - Identifier Type
 
-  - In diesem Feld kommt der Typ der relatedIdentifier.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: identifier_type_fk in der Tabelle Related_Work.
-  - Restriktionen: Optional
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `ARK` `arXiv` `EAN13`
+  - This field contains the type of the relatedIdentifier.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: identifier_type_fk in the Related_Work table.
+  - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
+  - Restrictions: Must be selected, if related work is specified
+  - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
+  - Schema version: “DataCite” 4.5
+  - Example values: `ARK` `arXiv` `EAN13`
+
 
   ### Funding Reference
 
@@ -936,7 +939,15 @@ Räumliche und zeitliche Einordnung des Datensatzes. Zur einfacheren Erfassung d
 ## Datenvalidierung
 
 - Folgende Felder müssen zwingend ausgefüllt werden: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_Nur bei der Angabe des zweiten Titels!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email**, **Description Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
+
 - Die restlichen Felder **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work alle Felder** und **Funding Reference alle Felder** können optional leer bleiben.✅
+
+- folgende Felder sind "abhängige Pflichtfelder":
+
+**Contributor Role**, **Contributor Lastname**, **Contributor Firstname** werden zu Pflichtfeldern, wenn eines der Felder von Contributor Person ausgefüllt wird
+**Contributor Organisation Name**, **Contributor Organisation Role** werden zu Pflichtfeldern, wenn eines der Felder von Contributor Organisation ausgefüllt wird (auch wenn **Contributor Organisation Affiliation** angegeben wird)
+**Related work alle Felder** werden zum Pflichtfeld, wenn eines der Felder ausgefüllt wird
+**Funder** wird zum Pflichtfeld, wenn **Grant Number** oder **Grant Name** ausgefüllt wird
 
 ## Database structure
 
