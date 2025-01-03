@@ -802,6 +802,48 @@ function processRelatedWorks(xmlDoc, resolver) {
   }
 }
 
+/**
+ * Process fundingReferences from XML and populate the formgroup Funders
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processFunders(xmlDoc, resolver) {
+  // Fetch all fundingReference nodes
+  const funderNodes = xmlDoc.evaluate(
+    './/ns:fundingReferences/ns:fundingReference',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let i = 0; i < funderNodes.snapshotLength; i++) {
+    const funderNode = funderNodes.snapshotItem(i);
+
+    // Extract data from XML
+    const funderName = getNodeText(funderNode, 'ns:funderName', xmlDoc, resolver);
+    const funderId = getNodeText(funderNode, 'ns:funderIdentifier', xmlDoc, resolver);
+    const funderIdTyp = funderNode.querySelector('funderIdentifier')?.getAttribute('funderIdentifierType') || '';
+    const awardTitle = getNodeText(funderNode, 'ns:awardTitle', xmlDoc, resolver);
+    const awardNumber = getNodeText(funderNode, 'ns:awardNumber', xmlDoc, resolver);
+
+    console.log(`Funder Name: ${funderName}, Award Title: ${awardTitle}, Award Number: ${awardNumber}`);
+
+    // Find the last row in the form
+    const $lastRow = $('input[name="funder[]"]').last().closest('.row');
+
+     //Populate fields
+     //TODO: Funder Name und hiddenfields befüllen
+    $lastRow.find('input[name="grantNummer[]"]').val(awardNumber);
+    $lastRow.find('input[name="grantName[]"]').val(awardTitle);
+
+    // Clone a new row if more funding references need to be added
+    if (i < funderNodes.snapshotLength - 1) {
+      $('#button-fundingreference-add').click();
+    }
+  }
+}
+
 
 
 /**
@@ -967,4 +1009,6 @@ async function loadXmlToForm(xmlDoc) {
   processDescriptions(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
+  // Process Funders
+  processFunders(xmlDoc, resolver);
 }
