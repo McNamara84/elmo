@@ -895,7 +895,7 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - Occurrence: 1, if relatedIdentifier is <0
   - The corresponding field in the database where the value is stored is called: Identifier in the Related_Work table
   - Restrictions: Must be specified, if related work specified
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/relatedIdentifierType/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/)
   - Schema version: “DataCite” 4.5
   - Example values: `13030/tqb3kh97gh8w`, `0706.0001`, `10.26022/IEDA/112263`
 
