@@ -1,0 +1,20 @@
+{
+    "header": {
+        "help": "Hilfe",
+        "mode": "Mode",
+        "language": "Sprache",
+        "legalNotice": "Impressum"
+    },
+    "general": {
+        "logoTitle": "ELMO - EPOS Laboratory Metadata Optimizer 2.0RC1",
+        "logoTitleShort": "ELMO 2.0",
+        "choose": "Wählen...",
+        "valid": "Gültig",
+        "pleaseChoose": "Bitte wählen",
+        "lastName": "Nachname",
+        "firstName": "Vorname",
+        "affiliation": "Zugehörigkeit(en)",
+        "roleLabel": "Rolle(n)",
+        "add": "+"
+    }
+}
