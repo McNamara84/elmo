@@ -2,6 +2,7 @@
 $translations = [
     // Allgemeines
     'logotitle' => 'ELMO - EPOS Laboratory Metadata Optimizer 1.9',
+    'logotitle_short' => 'ELMO 1.9',
     'choose' => 'Wählen Sie...',
     'valid' => 'Gültig',
     'PleaseChoose_invalid' => 'Bitte wählen Sie',
@@ -153,5 +154,11 @@ $translations = [
     // Sonstiges
     'saveModalTitle' => 'Datensatz als XML-Datei speichern',
     'filenameLabel' => 'Dateiname',
+
+    // Head
+    'head_help' => 'Hilfe',
+    'head_mode' => 'Modus',
+    'head_lang' => 'Sprache',
+    
     'imprint' => 'Impressum',
 ];

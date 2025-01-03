@@ -11,7 +11,8 @@
           <button class="btn btn-primary m-1" type="button" id="button-form-load" data-action="load">
             <?php echo $translations['load']; ?>
           </button>
-          <button type="submit" class="btn btn-warning m-1" form="form-mde" id="button-form-save" data-action="save" aria-label="<?php echo $translations['saveAs_tooltip']; ?>">
+          <button type="submit" class="btn btn-warning m-1" form="form-mde" id="button-form-save" data-action="save"
+            aria-label="<?php echo $translations['saveAs_tooltip']; ?>">
             <?php echo $translations['saveAs']; ?>
           </button>
           <button type="submit" class="btn btn-success m-1" form="form-mde" id="button-form-submit" data-action="submit"
@@ -19,8 +20,8 @@
             <?php echo $translations['submit']; ?>
           </button>
           <?php if ($showFeedbackLink): ?>
-          <button type="button" class="btn btn-warning m-1" id="button-feedback-openmodalfooter" data-bs-toggle="modal"
-            data-bs-target="#modal-feedback">
+          <button type="button" class="btn feedback-button multi-color-blink m-2" id="button-feedback-openmodalfooter"
+            data-bs-toggle="modal" data-bs-target="#modal-feedback">
             <?php echo $translations['feedbackButton']; ?>
           </button>
           <?php endif; ?>
@@ -59,7 +60,7 @@
 <!-- JS-Karten-Funktionen einbinden -->
 <script src="js/map.js"></script>
 <!-- Titel Verkleinerungsfunktion einbinden -->
-<script src="js/restitle.js"></script>
+<script src="js/headerResponsiveDesign.js"></script>
 <!-- Contributor Pflichtfelder überprüfungsfunktion einbinden -->
 <script src="js/checkMandatoryFields.js"></script>
 <!-- Upload Handler -->
@@ -72,8 +73,8 @@
 <!-- select-Funktionen laden -->
 <script src="js/select.js"></script>
 <!--Tagify-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.32.2/tagify.min.js"
-  integrity="sha512-WyIcqrbjO2qlKYKF0w4jWyEcUC8G+ZDEjZNBDAmDTn3VI4V6zkYq81UOqIPfDVuwK2IpktSC5vVrfpD4Pp2qXA=="
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.33.0/tagify.min.js"
+  integrity="sha512-dXH/57GWYjNdvnJAdbwRPnmWwdRovdld0CbXlJzs2rZ78HHbV6dGzUgODAuXHiG1gjZt9Vbpt4Ywo1hu01CNZQ=="
   crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <!--jsTree-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.17/jstree.min.js"

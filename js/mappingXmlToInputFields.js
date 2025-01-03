@@ -754,6 +754,59 @@ function processRelatedWorks(xmlDoc, resolver) {
 }
 
 /**
+ * Process descriptions from XML and populate the form
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processDescriptions(xmlDoc, resolver) {
+  // Get all description elements
+  const descriptionNodes = xmlDoc.evaluate(
+    './/ns:descriptions/ns:description',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  // Create a mapping of description types to form input IDs
+  const descriptionMapping = {
+    'Abstract': 'input-abstract',
+    'Methods': 'input-methods',
+    'TechnicalInformation': 'input-technicalinfo',
+    'Other': 'input-other'
+  };
+
+  // Reset all description fields first
+  Object.values(descriptionMapping).forEach(inputId => {
+    $(`#${inputId}`).val('');
+  });
+
+  // Process each description node
+  for (let i = 0; i < descriptionNodes.snapshotLength; i++) {
+    const descriptionNode = descriptionNodes.snapshotItem(i);
+    const descriptionType = descriptionNode.getAttribute('descriptionType');
+    const language = descriptionNode.getAttribute('xml:lang') || 'en';
+    const content = descriptionNode.textContent.trim();
+
+    // Find the corresponding input field
+    const inputId = descriptionMapping[descriptionType];
+    if (inputId) {
+      // Set the content in the appropriate textarea
+      $(`#${inputId}`).val(content);
+
+      // If this is not the Abstract, expand the corresponding accordion section
+      if (descriptionType !== 'Abstract') {
+        const collapseId = `collapse-${descriptionType.toLowerCase().replace('information', 'info')}`;
+        $(`#${collapseId}`).addClass('show');
+      }
+    }
+  }
+
+  // Ensure Abstract accordion is always expanded
+  $('#collapse-abstract').addClass('show');
+}
+
+/**
  * Loads XML data into form fields according to mapping configuration
  * @param {Document} xmlDoc - The parsed XML document
  */
@@ -914,4 +967,6 @@ async function loadXmlToForm(xmlDoc) {
   processContributors(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
+  // Process descriptions
+  processDescriptions(xmlDoc, resolver);
 }

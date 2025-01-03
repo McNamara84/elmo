@@ -17,8 +17,8 @@
     integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- CDN for Tagify CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.32.2/tagify.css"
-    integrity="sha512-odd6lal6Yi9bIMoitKrtPFlf1eaQ+kWlW7s0tpkcGh9rsBGaS5Wb/RLGYsWZ1cbKINTNupq4UEv8rU8pXPNtBg=="
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.33.0/tagify.css"
+    integrity="sha512-aGUjmkw9c7PfAFTwp5TUNdYaPeENG2dmSQcttEohCiV35w6jnLw8F4b71+OELp81/HE+FdDkoYfNG2FVoY/y2g=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- CDN for jsTree CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.17/themes/default/style.min.css"
@@ -38,8 +38,10 @@
 <body>
   <!-- Fixed Header -->
   <header class="navbar navbar-primary sticky-top bg-primary flex-md-nowrap p-0 shadow">
-    <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3 text-white" href="#" id="headtitle">
-      <?php echo $translations['logotitle']; ?>
+    <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3 text-white" href="#" id="headtitle"
+      data-full-title="<?php echo htmlspecialchars($translations['logotitle']); ?>"
+      data-short-title="<?php echo htmlspecialchars($translations['logotitle_short']); ?>">
+      <?php echo htmlspecialchars($translations['logotitle']); ?>
     </a>
     <div class="ms-auto d-flex align-items-center me-3 p-1">
       <!-- Link to imprint -->
@@ -47,42 +49,35 @@
         style="text-decoration: none;">
         <?php echo $translations['imprint']; ?>
       </a>
-      <!-- Dropdow menu for help -->
-      <div class="dropdown me-3 p-1">
+      <!-- Dropdown menu for help -->
+      <div class="dropdown ms-auto me-3 p-1">
         <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
           aria-expanded="false">
           <i class="bi bi-question-square-fill" id="bd-help-icon"></i>
+          <?php echo $translations['head_help']; ?>
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-help">
-          <li>
-            <a href="doc/help.html" class="dropdown-item" target="_blank" id="buttonHelp">
-              <i class="bi bi-book"></i> Guide
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" data-bs-theme-value="help-on" id="buttonHelpOn">
-              <i class="bi bi-question-circle-fill"></i>
+          <li><a href="doc/help.html" class="dropdown-item" target="_blank" id="buttonHelp"><i class="bi bi-book"></i>
+              Guide</a></li>
+          <li><a class="dropdown-item" data-bs-theme-value="help-on" id="buttonHelpOn"><i
+                class="bi bi-question-circle-fill"></i>
               <?php echo $translations['helpButtonon']; ?>
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" data-bs-theme-value="help-off" id="buttonHelpOff">
-              <i class="bi bi-question-circle"></i>
+            </a></li>
+          <li><a class="dropdown-item" data-bs-theme-value="help-off" id="buttonHelpOff"><i
+                class="bi bi-question-circle"></i>
               <?php echo $translations['helpButtonoff']; ?>
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" id="button-changelog-show">
-              <i class="bi bi-card-checklist"></i> About
-            </a>
-          </li>
+            </a></li>
+          <li><a class="dropdown-item" id="button-changelog-show"><i class="bi bi-card-checklist"></i>
+              About
+            </a></li>
         </ul>
       </div>
-      <!-- Dropdown menu for dark mode switch -->
       <div class="dropdown me-3 p-1">
+        <!-- Dropdown menu for dark mode settings -->
         <button class="btn btn-primary dropdown-toggle" id="bd-theme" type="button" data-bs-toggle="dropdown"
           aria-expanded="false">
           <i class="bi bi-circle-half"></i>
+          <?php echo $translations['head_mode']; ?>
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme">
           <li><a class="dropdown-item active" data-bs-theme-value="auto"><i class="bi bi-circle-half"></i> Auto</a></li>
@@ -90,37 +85,23 @@
           <li><a class="dropdown-item" data-bs-theme-value="dark"><i class="bi bi-moon-stars-fill"></i> Dark</a></li>
         </ul>
       </div>
-      <!-- Dropdown menu for choosing language -->
       <div class="dropdown me-3 p-1">
+        <!-- Dropdown menu for language settings -->
         <button class="btn btn-primary dropdown-toggle" id="bd-lang" type="button" data-bs-toggle="dropdown"
           aria-expanded="false">
           <i class="bi bi-translate"></i>
+          <?php echo $translations['head_lang']; ?>
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-lang">
-          <li>
-            <a class="dropdown-item <?php echo (!isset($_GET['lang']) && isset($_GET['auto']) && $userLanguage == substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) ? 'active' : ''; ?>"
-              href="?auto=true" data-bs-language-value="auto">
-              <i class="bi bi-gear-fill"></i> Auto
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item <?php echo ($userLanguage == 'en') ? 'active' : ''; ?>" href="?lang=en"
-              data-bs-language-value="en">
-              <i class="bi bi-globe"></i> EN
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item <?php echo ($userLanguage == 'de') ? 'active' : ''; ?>" href="?lang=de"
-              data-bs-language-value="de">
-              <i class="bi bi-globe"></i> DE
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item <?php echo ($userLanguage == 'fr') ? 'active' : ''; ?>" href="?lang=fr"
-              data-bs-language-value="fr">
-              <i class="bi bi-globe"></i> FR
-            </a>
-          </li>
+          <li><a
+              class="dropdown-item <?php echo (!isset($_GET['lang']) && isset($_GET['auto']) && $userLanguage == substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) ? 'active' : ''; ?>"
+              href="?auto=true" data-bs-language-value="auto"><i class="bi bi-gear-fill"></i> Auto</a></li>
+          <li><a class="dropdown-item <?php echo ($userLanguage == 'en') ? 'active' : ''; ?>" href="?lang=en"
+              data-bs-language-value="en"><i class="bi bi-globe"></i> EN</a></li>
+          <li><a class="dropdown-item <?php echo ($userLanguage == 'de') ? 'active' : ''; ?>" href="?lang=de"
+              data-bs-language-value="de"><i class="bi bi-globe"></i> DE</a></li>
+          <li><a class="dropdown-item <?php echo ($userLanguage == 'fr') ? 'active' : ''; ?>" href="?lang=fr"
+              data-bs-language-value="fr"><i class="bi bi-globe"></i> FR</a></li>
         </ul>
       </div>
     </div>
