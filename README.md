@@ -884,7 +884,7 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - Occurrence: 1, if relatedIdentifier is <0
   - The corresponding field in the database where the value is saved is called: relation_fk in the Related_Work table.
   - Restrictions: A relation type must be selected, if related work is specified
-  - Relations can be chosen from a controlled List: DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
+  - Relations can be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
   - Schema version: “DataCite” 4.5
   - Example values: `IsCitedBy` `IsSupplementTo` `IsContinuedBy`
 
@@ -895,7 +895,7 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - Occurrence: 1, if relatedIdentifier is <0
   - The corresponding field in the database where the value is stored is called: Identifier in the Related_Work table
   - Restrictions: Must be specified, if related work specified
-  - DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/relatedIdentifierType/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/relatedIdentifierType/)
   - Schema version: “DataCite” 4.5
   - Example values: `13030/tqb3kh97gh8w`, `0706.0001`, `10.26022/IEDA/112263`
 
@@ -906,7 +906,7 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: identifier_type_fk in the Related_Work table.
   - Restrictions: Must be selected, if related work is specified
-  - must be chosen from a controlled List: DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
+  - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
   - Schema version: “DataCite” 4.5
   - Example values: `ARK` `arXiv` `EAN13`
 
@@ -938,7 +938,15 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
 ## Datenvalidierung
 
 - Folgende Felder müssen zwingend ausgefüllt werden: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_Nur bei der Angabe des zweiten Titels!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email**, **Description Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
+
 - Die restlichen Felder **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work alle Felder** und **Funding Reference alle Felder** können optional leer bleiben.✅
+
+- folgende Felder sind "abhängige Pflichtfelder":
+
+**Contributor Role**, **Contributor Lastname**, **Contributor Firstname** werden zu Pflichtfeldern, wenn eines der Felder von Contributor Person ausgefüllt wird
+**Contributor Organisation Name**, **Contributor Organisation Role** werden zu Pflichtfeldern, wenn eines der Felder von Contributor Organisation ausgefüllt wird (auch wenn **Contributor Organisation Affiliation** angegeben wird)
+**Related work alle Felder** werden zum Pflichtfeld, wenn eines der Felder ausgefüllt wird
+**Funder** wird zum Pflichtfeld, wenn **Grant Number** oder **Grant Name** ausgefüllt wird
 
 ## Database structure
 
