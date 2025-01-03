@@ -38,7 +38,7 @@
 /* Feedback Button */
 .feedback-button {
     z-index: 1000;
-    font-size: 12px;
+    font-size: 16px;
     transition: transform 0.5s ease-in-out;
 }
 
@@ -57,6 +57,20 @@
 .feedback-button.blink {
     animation: blink 2s infinite;
 }
+
+@keyframes multi-color-blink {
+    0% { background-color: #ffc107; }
+    25% { background-color: #dc3545; }
+    50% { background-color: #0dcaf0; }
+    75% { background-color: #198754; }
+    100% { background-color: #ffc107; }
+  }
+  
+  .multi-color-blink {
+    animation: multi-color-blink 2s linear infinite;
+  }
+  
+  
 
 /* Upload Modal */
 .drop-zone {
