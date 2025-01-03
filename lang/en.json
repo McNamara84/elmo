@@ -15,7 +15,24 @@
         "firstName": "First Name",
         "affiliation": "Affiliation(s)",
         "roleLabel": "Role(s)",
-        "add": "+",
-        "noJavaScriptAlert": "JavaScript is disabled. Please enable JavaScript to use this form."
+        "add": "+"
+    },
+    "alerts": {
+        "languageWarning": "JavaScript is disabled. Please enable JavaScript to use this form."
+    },
+    "resourceInfo": {
+        "title": "Resource Information",
+        "doi": "DOI",
+        "doiValid": "A new DOI will be registered",
+        "doiInvalid": "Please use format 10.ORGANISATION/ID (i.e.: 10.57757/IUGG23-3081) or leave empty",
+        "publicationYear": "Publication Year",
+        "publicationYearInvalid": "Please provide a valid year ranging from 1901-2155 (4 digits).",
+        "resourceType": "Resource Type",
+        "version": "Version",
+        "versionInvalid": "If unsure leave blank",
+        "datasetLanguage": "Language of dataset",
+        "resourceTitle": "Title",
+        "resourceTitleInvalid": "Please provide a title",
+        "titleType": "Title Type"
     }
 }
