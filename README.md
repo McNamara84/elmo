@@ -905,6 +905,7 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - Data type: String
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: identifier_type_fk in the Related_Work table.
+  - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
   - Restrictions: Must be selected, if related work is specified
   - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
   - Schema version: “DataCite” 4.5

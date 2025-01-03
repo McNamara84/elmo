@@ -171,9 +171,6 @@ function checkMandatoryFields() {
 };
 
 
-//////////////////////////////// Event handlers  ///////////////////////////////////////////////////////////
-
-
 /**
 * Event handler for blur events on normal input fields.
 * Triggers checkMandatoryFields() when the user leaves these fields.

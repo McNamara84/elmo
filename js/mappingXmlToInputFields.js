@@ -745,7 +745,7 @@ function processRelatedWorks(xmlDoc, resolver) {
       return $(this).text() === relationType; // Match by visible text
     }).prop('selected', true);
 
-    // wenn da noch was kommt, klone schonmal ne Row
+    // clone row for the next entry, if there is one
     if (i < identifierNodes.snapshotLength-1) {
       // Add Related Work
       $('#button-relatedwork-add').click();
