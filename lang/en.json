@@ -1,0 +1,21 @@
+{
+    "header": {
+        "help": "Help",
+        "mode": "Mode",
+        "language": "Language",
+        "legalNotice": "Legal notice"
+    },
+    "general": {
+        "logoTitle": "ELMO - EPOS Laboratory Metadata Optimizer 1.9",
+        "logoTitleShort": "ELMO 1.9",
+        "choose": "Choose...",
+        "valid": "Valid",
+        "pleaseChoose": "Please choose",
+        "lastName": "Last Name",
+        "firstName": "First Name",
+        "affiliation": "Affiliation(s)",
+        "roleLabel": "Role(s)",
+        "add": "+",
+        "noJavaScriptAlert": "JavaScript is disabled. Please enable JavaScript to use this form."
+    }
+}
