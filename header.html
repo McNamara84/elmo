@@ -30,78 +30,72 @@
   <link rel="stylesheet" href="./css/darkmode.css">
   <!-- Favicon -->
   <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <title>
-    <?php echo $translations['logotitle']; ?>
-  </title>
+  <title>ELMO</title>
 </head>
 
 <body>
   <!-- Fixed Header -->
   <header class="navbar navbar-primary sticky-top bg-primary flex-md-nowrap p-0 shadow">
     <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3 text-white" href="#" id="headtitle"
-      data-full-title="<?php echo htmlspecialchars($translations['logotitle']); ?>"
-      data-short-title="<?php echo htmlspecialchars($translations['logotitle_short']); ?>">
-      <?php echo htmlspecialchars($translations['logotitle']); ?>
+      data-translate="general.logoTitle">
+      ELMO
     </a>
     <div class="ms-auto d-flex align-items-center me-3 p-1">
       <!-- Link to imprint -->
       <a href="https://dataservices-cms.gfz-potsdam.de/about-us/imprint" target="_blank" class="text-white me-3"
-        style="text-decoration: none;">
-        <?php echo $translations['imprint']; ?>
-      </a>
+        style="text-decoration: none;" data-translate="footer.imprint">Legal Notice</a>
       <!-- Dropdown menu for help -->
       <div class="dropdown ms-auto me-3 p-1">
         <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
-          aria-expanded="false">
-          <i class="bi bi-question-square-fill" id="bd-help-icon"></i>
-          <?php echo $translations['head_help']; ?>
+          aria-expanded="false" data-translate="header.help">
+          <i class="bi bi-question-square-fill"></i>
+          Help
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-help">
-          <li><a href="doc/help.html" class="dropdown-item" target="_blank" id="buttonHelp"><i class="bi bi-book"></i>
-              Guide</a></li>
-          <li><a class="dropdown-item" data-bs-theme-value="help-on" id="buttonHelpOn"><i
-                class="bi bi-question-circle-fill"></i>
-              <?php echo $translations['helpButtonon']; ?>
-            </a></li>
-          <li><a class="dropdown-item" data-bs-theme-value="help-off" id="buttonHelpOff"><i
-                class="bi bi-question-circle"></i>
-              <?php echo $translations['helpButtonoff']; ?>
-            </a></li>
-          <li><a class="dropdown-item" id="button-changelog-show"><i class="bi bi-card-checklist"></i>
-              About
-            </a></li>
+          <li><a href="doc/help.html" class="dropdown-item" target="_blank" id="buttonHelp"
+              data-translate="buttons.guide">
+              <i class="bi bi-book"></i> Guide</a></li>
+          <li><a class="dropdown-item" data-bs-theme-value="help-on" id="buttonHelpOn" data-translate="buttons.helpOn">
+              <i class="bi bi-question-circle-fill"></i> On</a></li>
+          <li><a class="dropdown-item" data-bs-theme-value="help-off" id="buttonHelpOff"
+              data-translate="buttons.helpOff">
+              <i class="bi bi-question-circle"></i> Off</a></li>
+          <li><a class="dropdown-item" id="button-changelog-show" data-translate="buttons.about">
+              <i class="bi bi-card-checklist"></i> About</a></li>
         </ul>
       </div>
       <div class="dropdown me-3 p-1">
         <!-- Dropdown menu for dark mode settings -->
         <button class="btn btn-primary dropdown-toggle" id="bd-theme" type="button" data-bs-toggle="dropdown"
-          aria-expanded="false">
+          aria-expanded="false" data-translate="header.mode">
           <i class="bi bi-circle-half"></i>
-          <?php echo $translations['head_mode']; ?>
+          Mode
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme">
-          <li><a class="dropdown-item active" data-bs-theme-value="auto"><i class="bi bi-circle-half"></i> Auto</a></li>
-          <li><a class="dropdown-item" data-bs-theme-value="light"><i class="bi bi-sun-fill"></i> Light</a></li>
-          <li><a class="dropdown-item" data-bs-theme-value="dark"><i class="bi bi-moon-stars-fill"></i> Dark</a></li>
+          <li><a class="dropdown-item active" data-bs-theme-value="auto" data-translate="buttons.auto">
+              <i class="bi bi-circle-half"></i> Auto</a></li>
+          <li><a class="dropdown-item" data-bs-theme-value="light" data-translate="buttons.light">
+              <i class="bi bi-sun-fill"></i> Light</a></li>
+          <li><a class="dropdown-item" data-bs-theme-value="dark" data-translate="buttons.dark">
+              <i class="bi bi-moon-stars-fill"></i> Dark</a></li>
         </ul>
       </div>
       <div class="dropdown me-3 p-1">
         <!-- Dropdown menu for language settings -->
         <button class="btn btn-primary dropdown-toggle" id="bd-lang" type="button" data-bs-toggle="dropdown"
-          aria-expanded="false">
+          aria-expanded="false" data-translate="header.language">
           <i class="bi bi-translate"></i>
-          <?php echo $translations['head_lang']; ?>
+          Language
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-lang">
-          <li><a
-              class="dropdown-item <?php echo (!isset($_GET['lang']) && isset($_GET['auto']) && $userLanguage == substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) ? 'active' : ''; ?>"
-              href="?auto=true" data-bs-language-value="auto"><i class="bi bi-gear-fill"></i> Auto</a></li>
-          <li><a class="dropdown-item <?php echo ($userLanguage == 'en') ? 'active' : ''; ?>" href="?lang=en"
-              data-bs-language-value="en"><i class="bi bi-globe"></i> EN</a></li>
-          <li><a class="dropdown-item <?php echo ($userLanguage == 'de') ? 'active' : ''; ?>" href="?lang=de"
-              data-bs-language-value="de"><i class="bi bi-globe"></i> DE</a></li>
-          <li><a class="dropdown-item <?php echo ($userLanguage == 'fr') ? 'active' : ''; ?>" href="?lang=fr"
-              data-bs-language-value="fr"><i class="bi bi-globe"></i> FR</a></li>
+          <li><a class="dropdown-item" data-bs-language-value="auto" data-translate="buttons.langAuto">
+              <i class="bi bi-gear-fill"></i> Auto</a></li>
+          <li><a class="dropdown-item" data-bs-language-value="en" data-translate="buttons.langEN">
+              <i class="bi bi-globe"></i> EN</a></li>
+          <li><a class="dropdown-item" data-bs-language-value="de" data-translate="buttons.langDE">
+              <i class="bi bi-globe"></i> DE</a></li>
+          <li><a class="dropdown-item" data-bs-language-value="fr" data-translate="buttons.langFR">
+              <i class="bi bi-globe"></i> FR</a></li>
         </ul>
       </div>
     </div>
