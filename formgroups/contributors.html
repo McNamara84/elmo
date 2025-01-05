@@ -1,17 +1,13 @@
 <div class="card mb-2">
   <div class="card-header">
-    <b>
-      <?php echo $translations['contributors']; ?>
-    </b>
+    <b data-translate="contributor.title">Contributors</b>
   </div>
   <div class="card-body">
     <div id="group-contributorperson">
       <!-- Row for Contributor Persons -->
       <div class="row" contributor-person-row>
         <!-- Label for row -->
-        <div class="row-label">
-          <?php echo $translations['contributorsPersonZeile']; ?>
-        </div>
+        <div class="row-label" data-translate="contributors.persons">Contributing Person(s)</div>
         <!-- Input field for Contributor ORCID -->
         <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
           <div class="input-group has-validation">
@@ -19,12 +15,8 @@
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
                 id="input-contributor-orcid" name="cbORCID[]" 
                 pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
-              <label for="input-contributor-orcid">
-                <?php echo $translations['contributors_ORCID']; ?>
-              </label>
-              <div class="invalid-feedback">
-                <?php echo $translations['ORCID_invalid']; ?>
-              </div>
+              <label for="input-contributor-orcid" data-translate="general.ORCID">ORCID</label>
+              <div class="invalid-feedback" data-translate="general.orcidInvalid">Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))</div>
             </div>
             <div class="input-group-append">
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -38,14 +30,9 @@
             <div class="form-floating">
               <input type="text" class="form-control" id="input-contributor-lastname" pattern="^[a-zA-ZäöüÄÖÜß \-]*$"
                 name="cbPersonLastname[]"  />
-              <label for="input-contributor-lastname">
-                <?php echo $translations['lastname']; ?>
-              </label>
-              <div class="invalid-feedback">
-                <?php echo $translations['lastname_invalid']; ?>
-              </div>
+              <label for="input-contributor-lastname" data-translate="general.lastName">Last Name</label>
+              <div class="invalid-feedback" data-translate="general.lastNameInvalid">Please provide a lastname. Only letters are allowed.</div>
             </div>
-
           </div>
         </div>
         <!-- Input field for Contributor Firstname -->
@@ -54,12 +41,8 @@
             <div class="form-floating">
               <input type="text" class="form-control" id="input-contributor-firstname" pattern="^[a-zA-ZäöüÄÖÜß \-.]*$"
                 name="cbPersonFirstname[]"  />
-              <label for="input-contributor-firstname">
-                <?php echo $translations['firstname']; ?>
-              </label>
-              <div class="invalid-feedback">
-                <?php echo $translations['firstname_invalid']; ?>
-              </div>
+              <label for="input-contributor-firstname" data-translate="general.firstName">First Name</label>
+              <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
             </div>
           </div>
         </div>
@@ -71,17 +54,14 @@
               placeholder="<?php echo $translations['role_label']; ?>" />
             <span class="input-group-text"><i class="bi bi-question-circle-fill"
                 data-help-section-id="help-contributor-role"></i></span>
-            <div class="invalid-feedback">
-              <?php echo $translations['PleaseChoose_invalid']; ?>
-            </div>
+            <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
           </div>
         </div>
         <!-- Input field for Contributor Affiliation -->
         <div class="col-10 col-sm-10 col-md-7 col-lg-3 p-1">
           <div class="input-group has-validation">
             <input type="text" class="form-control input-with-help input-right-no-round-corners"
-              id="input-contributor-personaffiliation" name="cbAffiliation[]" 
-              placeholder="<?php echo $translations['affiliation']; ?>" />
+              id="input-contributor-personaffiliation" name="cbAffiliation[]" />
             <span class="input-group-text"><i class="bi bi-question-circle-fill"
                 data-help-section-id="help-contributor-affiliation"></i></span>
             <input type="hidden" id="input-contributor-personrorid" name="cbpRorIds[]" />
@@ -90,8 +70,8 @@
         <!-- Button for Cloning Contributor Person row -->
         <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
           <button type="button" class="btn btn-primary addContributorPerson" id="button-contributor-addperson"
-            style="width: 36px">
-            <?php echo $translations['add']; ?>
+            style="width: 36px" data-translate="general.add">
+            +
           </button>
         </div>
       </div>
@@ -102,21 +82,15 @@
     <div id="group-contributororganisation">
       <div class="row" contributors-row>
         <!-- Label for row -->
-        <div class="row-label">
-          <?php echo $translations['contributorsInstitutionZeile']; ?>
-        </div>
+        <div class="row-label" data-translate="contributors.institutions">Contributing Institution(s)</div>
         <!-- Input field for Organisation Name-->
         <div class="col-12 col-sm-12 col-md-12 col-lg-4 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
                 id="input-contributor-name" name="cbOrganisationName[]"  />
-              <label for="input-contributor-name">
-                <?php echo $translations['Organisation']; ?>
-              </label>
-              <div class="invalid-feedback">
-                <?php echo $translations['Organisation_invalid']; ?>
-              </div>
+              <label for="input-contributor-name" data-translate="contributors.organization">Organisation name</label>
+              <div class="invalid-feedback" data-translate="contributors.organizationInvalid">Please enter a valid organization name.</div>
             </div>
             <div class="input-group-append">
               <span class="input-group-text"><i class="bi bi-question-circle-fill"    
@@ -132,17 +106,14 @@
               placeholder="<?php echo $translations['role_label']; ?>" />
             <span class="input-group-text"><i class="bi bi-question-circle-fill"
                 data-help-section-id="help-contributor-organisationrole"></i></span>
-            <div class="invalid-feedback">
-              <?php echo $translations['PleaseChoose_invalid']; ?>
-            </div>
+            <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
           </div>
         </div>
         <!-- Input field for Organisation Affiliation -->
         <div class="col-10 col-sm-10 col-md-7 col-lg-5 p-1">
           <div class="input-group has-validation">
             <input type="text" class="form-control input-with-help input-right-no-round-corners"
-              id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]" 
-              placeholder="<?php echo $translations['affiliation']; ?>" />
+              id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]" />
             <span class="input-group-text"><i class="bi bi-question-circle-fill"
                 data-help-section-id="help-contributor-organisationaffiliation"></i></span>
             <input type="hidden" id="input-contributor-organisationrorid" name="hiddenOrganisationRorId[]" />
@@ -150,8 +121,8 @@
         </div>
         <!-- Button for cloning Contributor row -->
         <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
-          <button type="button" class="btn btn-primary addContributor" id="button-contributor-addorganisation" style="width: 36px">
-            <?php echo $translations['add']; ?>
+          <button type="button" class="btn btn-primary addContributor" id="button-contributor-addorganisation" style="width: 36px" data-translate="general.add">
+            +
           </button>
         </div>
       </div>
