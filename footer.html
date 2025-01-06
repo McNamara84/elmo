@@ -4,25 +4,25 @@
     <div class="row">
       <div class="col d-flex align-items-center justify-content-center">
         <div class="col-auto d-flex align-items-center justify-content-end">
-          <button type="button" class="btn btn-danger m-1" data-bs-toggle="tooltip"
-            data-bs-title="<?php echo $translations['clear_tooltip']; ?>" id="button-form-reset" disabled>
-            <?php echo $translations['clear']; ?>
+          <button type="button" class="btn btn-danger m-1" data-bs-toggle="tooltip" data-translate="buttons.clear"
+            data-bs-title="Delete all entries or content." id="button-form-reset" disabled>
+            Clear
           </button>
-          <button class="btn btn-primary m-1" type="button" id="button-form-load" data-action="load">
-            <?php echo $translations['load']; ?>
+          <button class="btn btn-primary m-1" type="button" id="button-form-load" data-action="load" data-translate="buttons.load">
+            Load
           </button>
           <button type="submit" class="btn btn-warning m-1" form="form-mde" id="button-form-save" data-action="save"
-            aria-label="<?php echo $translations['saveAs_tooltip']; ?>">
-            <?php echo $translations['saveAs']; ?>
+            aria-label="Save the current data or content under a new file name.">
+            Save
           </button>
           <button type="submit" class="btn btn-success m-1" form="form-mde" id="button-form-submit" data-action="submit"
-            disabled aria-label="<?php echo $translations['submit_tooltip']; ?>">
-            <?php echo $translations['submit']; ?>
+            disabled aria-label="Transmit the entered data or content." data-translate="buttons.submit">
+            Submit
           </button>
           <?php if ($showFeedbackLink): ?>
           <button type="button" class="btn feedback-button multi-color-blink m-2" id="button-feedback-openmodalfooter"
-            data-bs-toggle="modal" data-bs-target="#modal-feedback">
-            <?php echo $translations['feedbackButton']; ?>
+            data-bs-toggle="modal" data-bs-target="#modal-feedback" data-translate="feedback.button">
+            Feedback
           </button>
           <?php endif; ?>
         </div>
