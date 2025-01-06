@@ -816,10 +816,11 @@ function processFunders(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-
+  $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
+  $('#group-fundingreference .row[funding-reference-row]:first input').val('');
+  
   for (let i = 0; i < funderNodes.snapshotLength; i++) {
     const funderNode = funderNodes.snapshotItem(i);
-
     // Extract data from XML
     const funderName = getNodeText(funderNode, 'ns:funderName', xmlDoc, resolver);
     const funderId = getNodeText(funderNode, 'ns:funderIdentifier', xmlDoc, resolver);
