@@ -818,7 +818,7 @@ function processFunders(xmlDoc, resolver) {
   );
   $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
   $('#group-fundingreference .row[funding-reference-row]:first input').val('');
-  
+
   for (let i = 0; i < funderNodes.snapshotLength; i++) {
     const funderNode = funderNodes.snapshotItem(i);
     // Extract data from XML
@@ -834,7 +834,10 @@ function processFunders(xmlDoc, resolver) {
     const $lastRow = $('input[name="funder[]"]').last().closest('.row');
 
      //Populate fields
-     //TODO: Funder Name und hiddenfields befüllen
+     $lastRow.find('input[name="funder[]"]').val(funderName);
+     $lastRow.find('input[name="funderId[]"]').val(funderId);
+     $lastRow.find('input[name="funderidtyp[]"]').val(funderIdTyp);
+     
     $lastRow.find('input[name="grantNummer[]"]').val(awardNumber);
     $lastRow.find('input[name="grantName[]"]').val(awardTitle);
 
