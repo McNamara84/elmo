@@ -776,6 +776,58 @@ function processDescriptions(xmlDoc, resolver) {
 }
 
 /**
+ * Process GCMD Science Keywords from XML and populate the Tagify-enabled input field
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processKeywords(xmlDoc, resolver) {
+  const subjectNodes = xmlDoc.evaluate(
+    './/ns:subjects/ns:subject',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  // Access the Tagify instance for the input field
+  //TODO: MSL und Free Keywords einfügen
+  const tagifyInput = $('#input-sciencekeyword')[0];
+  if (!tagifyInput) {
+    console.error("Tagify input field not found for #input-sciencekeyword");
+    return;
+  }
+  const tagify = tagifyInput.tagify || new Tagify(tagifyInput);
+
+  // Clear existing tags before adding new ones
+  tagify.removeAllTags();
+
+  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
+    const subjectNode = subjectNodes.snapshotItem(i);
+    const subjectScheme = subjectNode.getAttribute('subjectScheme') || '';
+    const schemeURI = subjectNode.getAttribute('schemeURI') || '';
+    const valueURI = subjectNode.getAttribute('valueURI') || '';
+    const keyword = subjectNode.textContent.trim();
+
+    // Create the tag data
+    const tagData = {
+      value: keyword,
+      scheme: subjectScheme,
+      schemeURI: schemeURI,
+      valueURI: valueURI
+    };
+    if(schemeURI=="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"){
+    // Add the tag to Tagify
+    tagify.addTags([tagData]);
+    }
+    //TODO: if MSL Keyword und if freeKeyword
+
+  }
+}
+
+
+
+
+/**
  * Process related identifiers from XML and populate the formgroup Related Works
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
@@ -789,8 +841,8 @@ function processRelatedWorks(xmlDoc, resolver) {
     null
   );
   //reset Related Works
-  $('#group-group-relatedwork .row[related-work-row]').not(':first').remove();
-  $('#group-group-relatedwork .row[related-work-row]:first input').val('');
+  $('#group-relatedwork .row[related-work-row]').not(':first').remove();
+  $('#group-relatedwork .row[related-work-row]:first input').val('');
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -1023,6 +1075,8 @@ async function loadXmlToForm(xmlDoc) {
   processContributors(xmlDoc, resolver);
   // Process descriptions
   processDescriptions(xmlDoc, resolver);
+  //Process Keywords
+  processKeywords(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
   // Process Funders
