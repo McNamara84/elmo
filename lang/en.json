@@ -21,7 +21,9 @@
         "firstName": "First Name",
         "affiliation": "Affiliation(s)",
         "roleLabel": "Role(s)",
-        "add": "+"
+        "add": "+",
+        "cancel": "Cancel",
+        "accept": "Accept"
     },
     "feedback": {
         "button": "Feedback",
@@ -104,8 +106,27 @@
         },
         "free": {
             "title": "Free Keywords",
-            "input": "Please enter keywords and separate them by a comma."
-        }
+            "placeholder": "Please enter keywords and separate them by a comma."
+        },
+        "searchPlaceholder": "Search for keywords..."
+    },
+    "dates": {
+        "title": "Dates",
+        "created": "Date created",
+        "dateInvalid": "Please enter a valid date!",
+        "embargoUntil": "Embargo until"
+    },
+    "coverage": {
+        "title": "Spatial and Temporal Coverages",
+        "map": "Map",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "description": "Description",
+        "descriptionPlaceholder": "Please enter the description of the temporal and spatial coverage...",
+        "start": "Start",
+        "end": "End",
+        "timezone": "Timezone",
+        "mapInfo": "(Please choose coordinates with rectangle or marker)"
     },
     "buttons": {
         "clear": "Clear",
