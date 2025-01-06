@@ -822,7 +822,7 @@ function processKeywords(xmlDoc, resolver) {
     // Add the tag to GCMD Science Keyword input field
     tagifyGCMD.addTags([tagData]);
     }
-    else if (schemeURI === "https://epos-msl.uu.nl/voc/materials/1.3/"){ //TODO: alle MSL Thesauri abfragen/einbeziehen
+    else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")){ //TODO: alle MSL Thesauri abfragen/einbeziehen
       //Add the tag to MSL Keyword input field
       tagifyMsl.addTags([tagData]);
 
