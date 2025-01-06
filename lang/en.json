@@ -128,6 +128,13 @@
         "timezone": "Timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)"
     },
+    "relatedWork": {
+        "title": "Related work",
+        "relation": "Relation",
+        "identifierType": "Identifier type",
+        "identifier": "Identifier",
+        "identifierInvalid": "Please enter a valid identifier."
+    },
     "buttons": {
         "clear": "Clear",
         "clearTooltip": "Delete all entries or content.",
