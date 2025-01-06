@@ -844,8 +844,6 @@ function processFunders(xmlDoc, resolver) {
     const awardTitle = getNodeText(funderNode, 'ns:awardTitle', xmlDoc, resolver);
     const awardNumber = getNodeText(funderNode, 'ns:awardNumber', xmlDoc, resolver);
 
-    console.log(`Funder Name: ${funderName}, Award Title: ${awardTitle}, Award Number: ${awardNumber}`);
-
     // Find the last row in the form
     const $lastRow = $('input[name="funder[]"]').last().closest('.row');
 
