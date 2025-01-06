@@ -13,7 +13,11 @@
         "choose": "Choose...",
         "valid": "Valid",
         "pleaseChoose": "Please choose",
+        "orcid": "ORCID",
+        "orcidInvalid": "Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))",
         "lastName": "Last Name",
+        "lastNameInvalid": "Please provide a lastname. Only letters are allowed.",
+        "firstNameInvalid": "Please provide a firstname. Only letters are allowed.",
         "firstName": "First Name",
         "affiliation": "Affiliation(s)",
         "roleLabel": "Role(s)",
@@ -21,6 +25,7 @@
     },
     "feedback": {
         "button": "Feedback",
+        "buttonTooltip": "Send feedback to the developers",
         "label": "User Feedback",
         "question1": "Which functions of the new metadata editor do you find particularly helpful?",
         "question2": "Is there a particular design or user interface change that you like?",
@@ -56,11 +61,27 @@
     },
     "authors": {
         "title": "Author(s)",
-        "lastNameInvalid": "Please provide a lastname. Only letters are allowed.",
-        "firstNameInvalid": "Please provide a firstname. Only letters are allowed.",
-        "orcid": "ORCID",
-        "orcidInvalid": "Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))",
         "affiliationInvalid": "Please provide an affiliation."
+    },
+    "contactPersons": {
+        "title": "Contact Person(s)",
+        "email": "Email address",
+        "emailInvalid": "Please provide a valid email address in the format xxx.xxx@xxx.xxx.",
+        "position": "Position",
+        "positionInvalid": "Please provide a position.",
+        "website": "Website",
+        "websiteInvalid": "Please provide a valid URL."
+    },
+    "laboratory": {
+        "title": "Originating Laboratory",
+        "name": "Name of the originating laboratory"
+    },
+    "contributors": {
+        "title": "Contributors",
+        "organization": "Organisation name",
+        "organizationInvalid": "Please enter a valid organization name.",
+        "persons": "Contributing Person(s)",
+        "institutions": "Contributing Institution(s)"
     },
     "buttons": {
         "clear": "Clear",
