@@ -83,7 +83,7 @@ function processTitles(xmlDoc, resolver) {
     null
   );
 
-  // Reset titles
+  // reset Titles
   $('input[name="title[]"]').closest('.row').not(':first').remove();
   $('input[name="title[]"]:first').val('');
   $('#input-resourceinformation-titletype').val('1');
@@ -250,7 +250,7 @@ function processContactPersons(xmlDoc, resolver) {
     null
   );
 
-  // Reset existing Contact Persons
+  // reset Contact Persons
   $('#group-contactperson .row[contact-person-row]').not(':first').remove();
   $('#group-contactperson .row[contact-person-row]:first input').val('');
 
@@ -445,7 +445,7 @@ function processOriginatingLaboratories(xmlDoc, resolver) {
     null
   );
 
-  // Reset existing laboratories
+  // reset existing laboratories
   $('#group-originatinglaboratory .row[data-laboratory-row]').not(':first').remove();
   $('#group-originatinglaboratory .row[data-laboratory-row]:first input').val('');
 
@@ -527,6 +527,15 @@ function processContributors(xmlDoc, resolver) {
     XPathResult.FIRST_ORDERED_NODE_TYPE,
     null
   ).singleNodeValue;
+
+    // reset Contributor Person 
+    $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
+    $('#group-contributorperson .row[contributor-person-row]:first input').val('');
+
+    // reset Contributor Institution
+    $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
+    $('#group-contributororganisation .row[contributors-row]:first input').val('');
+
 
   if (!contributorsNode) return;
 
@@ -711,6 +720,7 @@ function populateFormWithContributors(personMap, orgMap) {
     orgRow.find('input[name="OrganisationRorIds[]"]').val(org.rorIds.join(','));
   }
 }
+
 /**
  * Process descriptions from XML and populate the form
  * @param {Document} xmlDoc - The parsed XML document
@@ -726,6 +736,7 @@ function processDescriptions(xmlDoc, resolver) {
     null
   );
 
+
   // Create a mapping of description types to form input IDs
   const descriptionMapping = {
     'Abstract': 'input-abstract',
@@ -734,7 +745,7 @@ function processDescriptions(xmlDoc, resolver) {
     'Other': 'input-other'
   };
 
-  // Reset all description fields first
+  // reset all description fields
   Object.values(descriptionMapping).forEach(inputId => {
     $(`#${inputId}`).val('');
   });
@@ -763,6 +774,7 @@ function processDescriptions(xmlDoc, resolver) {
   // Ensure Abstract accordion is always expanded
   $('#collapse-abstract').addClass('show');
 }
+
 /**
  * Process related identifiers from XML and populate the formgroup Related Works
  * @param {Document} xmlDoc - The parsed XML document
@@ -776,6 +788,9 @@ function processRelatedWorks(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
+  //reset Related Works
+  $('#group-group-relatedwork .row[related-work-row]').not(':first').remove();
+  $('#group-group-relatedwork .row[related-work-row]:first input').val('');
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -816,6 +831,7 @@ function processFunders(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
+  // reset Funding References
   $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
   $('#group-fundingreference .row[funding-reference-row]:first input').val('');
 
@@ -847,8 +863,6 @@ function processFunders(xmlDoc, resolver) {
     }
   }
 }
-
-
 
 /**
  * Loads XML data into form fields according to mapping configuration
