@@ -875,17 +875,17 @@ Räumliche und zeitliche Einordnung des Datensatzes. Zur einfacheren Erfassung d
   - Beispielwerte: `+02:00` `-08:00`
 
 ### Related Work
-This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggregationInfo>` in the ISO scheme. The element is optional in both schemes.
+This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggregationInfo>` in the ISO scheme ( TODO !). The element is optional in both schemes.
 
 - Relation
 
   This field contains the type of relation.
   - Data type: String
   - Occurrence: 1, if relatedIdentifier is <0
-  - The corresponding field in the database where the value is saved is called: relation_fk in the Related_Work table.
+  - The corresponding field in the database where the value is saved is called: `relation_fk` in the `Related_Work` table.
   - Restrictions: A relation type must be selected, if related work is specified
   - Relations can be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
-  - Schema version: “DataCite” 4.5
+  - Schema version: DataCite 4.5
   - Example values: `IsCitedBy` `IsSupplementTo` `IsContinuedBy`
 
 - Identifier
@@ -893,10 +893,10 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - This field contains the identifier
   - Data type: String
   - Occurrence: 1, if relatedIdentifier is <0
-  - The corresponding field in the database where the value is stored is called: Identifier in the Related_Work table
+  - The corresponding field in the database where the value is stored is called: `Identifier` in the `Related_Work` table.
   - Restrictions: Must be specified, if related work specified
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/)
-  - Schema version: “DataCite” 4.5
+  - Schema version: DataCite 4.5
   - Example values: `13030/tqb3kh97gh8w`, `0706.0001`, `10.26022/IEDA/112263`
 
 - Identifier Type
@@ -904,37 +904,65 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - This field contains the type of the relatedIdentifier.
   - Data type: String
   - Occurrence: 0-1
-  - The corresponding field in the database where the value is stored is called: identifier_type_fk in the Related_Work table.
+  - The corresponding field in the database where the value is stored is called: `identifier_type_fk` in the `Related_Work` table.
   - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
   - Restrictions: Must be selected, if related work is specified
   - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
-  - Schema version: “DataCite” 4.5
+  - Schema version: DataCite 4.5
   - Example values: `ARK` `arXiv` `EAN13`
 
+### Funding Reference
+This element is optional in the datacite scheme. However, it is a best practice to supply funding information when financial support has been received.
 
-  ### Funding Reference
+- Funder
+  
+  Name of the funding provider.
+  - Data type: String
+  - Occourence: 0-1
+  - The corresponding field in the database where the value is stored is called: `funder` in the `Funding_Reference` table.
+  - Restrictions: If Funding Reference is specified, then funderName is mandatory. Selection from CrossRef funders list is possible, as well as free text
+  - Scheme: DataCite 4.5
+  - Example values: `Gordon and Betty Moore Foundation`, `Ford Foundation`
 
-* Funder
-  In diesem Feld kommt der Name des Finanzierungsanbieters.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Restriktionen: Um Vorschläge über der Api zu erhalten, ist es erforderlich, mindestens die ersten zwei Buchstaben der Funder einzugeben. Zudem besteht die Möglichkeit, die Funder manuell einzutragen.
-  - Schemata: DataCite
-  - Beispielwerte: `Gordon and Betty Moore Foundation` `Ford Foundation`
-* Grant Number
-  In diesem Feld kommt der Code, der dem Geldgeber einer geförderten Zuwendung (Grant) zugewiesen wird.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Restriktionen: Es ist optional.
-  - Schemata: DataCite
-  - Beispielwerte: `GBMF3859.01` `GBMF3859.22`
-* Grant Name
-  In diesem Feld kommt der lesbare Titel oder Name der Auszeichnung (grant).
-  - Datentyp: Text
-  - Vorkommen: 0-1
-  - Restriktionen: Es ist optional.
-  - Schemata: DataCite
-  - Beispielwerte: `Socioenvironmental Monitoring of the Amazon Basin and Xingu` `Grantmaking at a glance`
+- *hiddenField: funderId*
+
+  Uniquely identifies a funding entity, using Crossrefs' [Funder Registry] (https://www.crossref.org/services/funder-registry/)
+  - Data type: String
+  - Occourence: 0-1
+  - The corresponding field in the database where the value is stored is called: `funderId` in the `Funding_Reference` table.
+  - Restrictions: is automatically saved, if a funder is selected from the dropdown list
+  - Scheme: DataCite 4.5
+  - Example values: `http://dx.doi.org/10.13039/100001214`
+
+- *hiddenField: funderidtyp*
+
+  The type of the funderIdentifier. Is either NULL or "Crossref Funder ID"
+  - Data type: String
+  - Occourence: 0-1
+  - The corresponding field in the database where the value is stored is called: `funderId` in the `Funding_Reference` table.
+  - Restrictions: is automatically saved, if a funder is selected from the dropdown list, can only be "Crossref Funder ID" or null
+  - Scheme: DataCite 4.5
+  - Value: `Crossref Funder ID`
+
+- Grant Number
+
+  The code assigned by the funder to a sponsored award (grant).
+  - Data type: String
+  - Occourence: 0-1
+  - The corresponding field in the database where the value is stored is called: `grantnumber` in the `Funding_Reference` table.
+  - Restrictions: None
+  - Scheme: DataCite 4.5
+  - Example values: `GBMF3859.01` `GBMF3859.22`
+
+- Grant Name
+
+  The human readable title or name of the award (grant).
+  - Data type: String
+  - Occourence: 0-1
+  - The corresponding field in the database where the value is stored is called: `grantname` in the `Funding_Reference` table.
+  - Restrictions: None
+  - Scheme: DataCite 4.5
+  - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
 
 ## Datenvalidierung
 
