@@ -1,8 +1,6 @@
 <div class="card mb-2">
     <div class="card-header">
-        <b>
-            <?php echo $translations['tsc_spatialTemporalCoverages']; ?>
-        </b>
+        <b data-translate="coverage.title">Spatial and Temporal Coverages</b>
     </div>
     <div>
         <div class="card-body" id="group-stc">
@@ -13,33 +11,30 @@
                         <div class="col-3 col-sm-3 col-md-2 col-lg-1 d-flex align-items-center">
                             <!-- Button for opening the modal with the map -->
                             <button type="button" class="btn btn-primary" id="button-stc-openmap" data-bs-toggle="modal"
-                                data-bs-target="#modal-stc-map">
-                                <i class="bi bi-geo-alt"></i>
-                                <?php echo $translations['tsc_map']; ?>
+                                data-bs-target="#modal-stc-map" data-translate="coverage.map">
+                                Map
                             </button>
                         </div>
-
                         <div class="col-9 col-sm-9 col-md-10 col-lg-2 p-1">
                             <!-- Input fields for Latitude Min and Max -->
-                            <label for="input-stc-latmin_1" class="form-label">
-                                <?php echo $translations['tsc_latitude']; ?><span class="text-danger">*</span>
-                            </label>
+                            <label for="input-stc-latmin_1" class="form-label mandatory-field" data-translate="coverage.latitude">Latitude</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" id="input-stc-latmin_1" placeholder="Min" name="tscLatitudeMin[]"
-                                    pattern="^-?(90(\.0+)?|[1-8]?\d(\.\d+)?)$" required>
-                                <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-stc-latmax_1" placeholder="Max" name="tscLatitudeMax[]"
+                                <input type="text" class="form-control" id="input-stc-latmin_1" placeholder="Min"
+                                    name="tscLatitudeMin[]" pattern="^-?(90(\.0+)?|[1-8]?\d(\.\d+)?)$" required>
+                                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                                    id="input-stc-latmax_1" placeholder="Max" name="tscLatitudeMax[]"
                                     pattern="^-?(90(\.0+)?|[1-8]?\d(\.\d+)?)$">
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-geographicalcoverage"></i></span>
                             </div>
                             <!-- Input fields for Longitude Min and Max -->
-                            <label for="input-stc-longmin_1" class="form-label">
-                                <?php echo $translations['tsc_longitude']; ?><span class="text-danger">*</span>
-                            </label>
+                            <label for="input-stc-longmin_1" class="form-label mandatory-field" data-translate="coverage.longitude">Longitude</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" id="input-stc-longmin_1" placeholder="Min" name="tscLongitudeMin[]"
-                                    pattern="^-?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$" required>
-                                <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-stc-longmax_1" placeholder="Max" name="tscLongitudeMax[]"
+                                <input type="text" class="form-control" id="input-stc-longmin_1" placeholder="Min"
+                                    name="tscLongitudeMin[]" pattern="^-?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$"
+                                    required>
+                                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                                    id="input-stc-longmax_1" placeholder="Max" name="tscLongitudeMax[]"
                                     pattern="^-?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$">
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-geographicalcoverage"></i></span>
@@ -47,45 +42,45 @@
                         </div>
                         <!-- Input field for Description -->
                         <div class="col-12 col-sm-12 col-md-12 col-lg-2 p-1">
-                            <label for="input-stc-description" class="form-label">
-                                <?php echo $translations['tsc_description']; ?><span class="text-danger">*</span>
-                            </label>
+                            <label for="input-stc-description" class="form-label mandatory-field" data-translate="coverage.description">Description</label>
                             <div class="input-group">
                                 <textarea rows="4"
-                                    placeholder="<?php echo $translations['tsc_description_placeholder']; ?>"
-                                    name="tscDescription[]" class="form-control input-right-no-round-corners input-with-help input-right-with-round-corners" id="input-stc-description" required></textarea>
+                                    placeholder="Please enter the description of the temporal and spatial coverage..."
+                                    data-translate="coverage.descriptionPlaceholder" name="tscDescription[]"
+                                    class="form-control input-right-no-round-corners input-with-help input-right-with-round-corners"
+                                    id="input-stc-description" required></textarea>
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-description"></i></span>
                             </div>
                         </div>
                         <!-- Input fields for Date and Time -->
                         <div class="col-12 col-sm-12 col-md-8 col-lg-3 p-1">
-                            <label for="input-stc-datestart" class="form-label">
-                                <?php echo $translations['tsc_start']; ?><span class="text-danger">*</span>
-                            </label>
+                            <label for="input-stc-datestart" class="form-label mandatory-field" data-translate="coverage.start">Start</label>
                             <div class="input-group">
-                                <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]" required>
-                                <input type="time" class="form-control input-with-help input-right-no-round-corners" id="input-stc-timestart" name="tscTimeStart[]" > 
+                                <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]"
+                                    required>
+                                <input type="time" class="form-control input-with-help input-right-no-round-corners"
+                                    id="input-stc-timestart" name="tscTimeStart[]">
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-temporalcoverage"></i></span>
                             </div>
-                            <label for="input-stc-dateend" class="form-label">
-                                <?php echo $translations['tsc_end']; ?>
-                            </label>
+                            <label for="input-stc-dateend" class="form-label mandatory-field">End</label>
                             <div class="input-group">
-                                <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]" required>
-                                <input type="time" class="form-control input-with-help input-right-no-round-corners" id="input-stc-timeend" name="tscTimeEnd[]" >
+                                <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]"
+                                    required>
+                                <input type="time" class="form-control input-with-help input-right-no-round-corners"
+                                    id="input-stc-timeend" name="tscTimeEnd[]">
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-temporalcoverage"></i></span>
                             </div>
                         </div>
                         <!-- Input field for Timezone -->
                         <div class="col-8 col-sm-8 col-md-3 col-lg-3 p-1">
-                            <label for="input-stc-timezone" class="form-label">
-                                <?php echo $translations['tsc_timezone']; ?><span class="text-danger">*</span>
-                            </label>
+                            <label for="input-stc-timezone" class="form-label mandatory-field" data-translate="coverage.timezone"></label>
                             <div class="input-group">
-                                <select class="form-select input-right-no-round-corners input-with-help input-right-with-round-corners" id="input-stc-timezone" name="tscTimezone[]" required>
+                                <select
+                                    class="form-select input-right-no-round-corners input-with-help input-right-with-round-corners"
+                                    id="input-stc-timezone" name="tscTimezone[]" required>
                                     <!-- Options will be filled with PHP -->
                                 </select>
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -93,10 +88,10 @@
                             </div>
                         </div>
                         <!-- Button for cloning new row -->
-                        <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
-                            <button type="button" class="btn btn-primary addtsc" id="button-stc-add" style="width: 36px">
-                              <?php echo $translations['add']; ?>
-                            </button>
+                        <div
+                            class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
+                            <button type="button" class="btn btn-primary addtsc" id="button-stc-add" style="width: 36px"
+                                data-translate="general.add">+</button>
                         </div>
                     </div>
                 </div>
@@ -111,10 +106,8 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="label-stc-map">
-                        <?php echo $translations['tsc_map']; ?>
-                    </h5><br>&nbsp;&nbsp;&nbsp;
-                    <?php echo $translations['tsc_map_info']; ?>
+                    <h5 class="modal-title" id="label-stc-map" data-translate="coverage.map">Map</h5><br>&nbsp;&nbsp;&nbsp;
+                    <div data-translate="coverage.mapInfo">(Please choose coordinates with rectangle or marker)</div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -123,12 +116,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="button-stc-cancelpanel">
-                        <?php echo $translations['tsc_cancel']; ?>
-                    </button>
-                    <button type="button" class="btn btn-primary" id="button-stc-sendcoords">
-                        <?php echo $translations['tsc_accept']; ?>
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="button-stc-cancelpanel" data-translate="general.cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="button-stc-sendcoords" data-translate="general.accept">Accept</button>
                 </div>
             </div>
         </div>

@@ -118,7 +118,7 @@
 
 /* Marker for mandatory fields */
 label.mandatory-field::after {
-    content: " *";
+    content: "*";
     color: #dc3545;
-    margin-left: 0.25rem;
+    margin-left: 0.1rem;
 }
