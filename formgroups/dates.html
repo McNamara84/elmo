@@ -1,7 +1,5 @@
 <div class="card mb-2">
-  <div class="card-header"><b>
-      <?php echo $translations['dates']; ?>
-    </b></div>
+  <div class="card-header"><b data-translate="dates.title">Dates</b></div>
   <div class="card-body">
     <div class="row">
       <!-- Input field Date Created -->
@@ -9,13 +7,9 @@
         <div class="input-group has-validation">
           <div class="form-floating">
             <input type="date" class="form-control input-with-help input-right-no-round-corners" id="input-date-created"
-              name="dateCreated" required/>
-            <label for="input-date-created">
-              <?php echo $translations['dateCreated']; ?><span class="text-danger">*</span>
-            </label>
-            <div class="invalid-feedback">
-              <?php echo $translations['dateCreated_invalid']; ?>
-            </div>
+              name="dateCreated" required />
+            <label for="input-date-created" class="mandatory-field" data-translate="dates.created">Date created</label>
+            <div class="invalid-feedback" data-translate="dates.dateInvalid">Please enter a valid date!</div>
           </div>
           <div class="input-group-append">
             <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -23,19 +17,14 @@
           </div>
         </div>
       </div>
-
       <!-- Input field Date Embargo -->
       <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1">
         <div class="input-group has-validation">
           <div class="form-floating">
             <input type="date" class="form-control input-with-help input-right-no-round-corners" id="input-date-embargo"
               name="dateEmbargo" />
-            <label for="input-date-embargo">
-              <?php echo $translations['embargoUntil']; ?>
-            </label>
-            <div class="invalid-feedback">
-              <?php echo $translations['embargo_invalid']; ?>
-            </div>
+            <label for="input-date-embargo" data-translate="dates.embargoUntil">Embargo until</label>
+            <div class="invalid-feedback" data-translate="dates.dateInvalid">Please enter a valid date!</div>
           </div>
           <div class="input-group-append">
             <span class="input-group-text"><i class="bi bi-question-circle-fill"
