@@ -119,7 +119,6 @@ function insertFundingReference($connection, $funder, $funderId, $funderIdType, 
 
     if ($existingId) {
         // Return the existing ID if a match is found
-        error_log("Funding reference already exists with ID: " . $existingId);
         return $existingId;
     }
 

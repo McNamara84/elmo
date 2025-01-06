@@ -704,7 +704,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "DataCite" 4.5
   - Beispielwerte: `EARTH SCIENCE` `AGRICULTURE`
 
-- hiddenField scheme
+- *Saved in backend (not visible to user):* scheme
 
   - hier wird bei Auswahl eines Keywords der Name des zugehörigen Schemas gespeichert
   - Datentyp: Zeichenkette
@@ -715,7 +715,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "DataCite" 4.5
   - Beispielwert: `NASA/GCMD Earth Science Keywords`
 
-- hiddenField schemeURI
+- *Saved in backend (not visible to user):* schemeURI
 
   - hier wird bei Auswahl eines Keywords der URI des zugehörigen Schemas gespeichert
   - Datentyp: Zeichenkette
@@ -726,7 +726,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "DataCite" 4.5
   - Beispielwerte: `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords`
 
-- hiddenField valueURI
+- *Saved in backend (not visible to user):* valueURI
 
   - hier wird bei Auswahl eines Keywords der PID, die URI, des Keywords gespeichert
   - Datentyp: Zeichenkette
@@ -737,7 +737,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "DataCite" 4.5
   - Beispielwerte: `https://gcmd.earthdata.nasa.gov/kms/concept/a2cc8e02-3207-4c40-af41-9656404bac0a`
 
-- hiddenField language
+- *Saved in backend (not visible to user):* language
   - hier wird bei Auswahl eines Keywords der URI des zugehörigen Schemas gespeichert
   - Datentyp: Zeichenkette
   - Vorkommen: 0-1
@@ -761,7 +761,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "EPOS Multi-Scale Laboratories (MSL) " 1.3
   - Beispielwerte: `hydrogeochemistery` `alternating field (AF) demagnetiser`
 
-- hiddenField: scheme, schemeURI, valueURI und language
+- *Saved in backend (not visible to user):* scheme, schemeURI, valueURI und language
 
   - hier werden bei Auswahl eines Keywords die zugehörigen versteckten Eingabefeldern wie schemes, schemeURIs, valueURIs und languages gespeichert
   - Datentyp: Zeichenkette
@@ -875,7 +875,7 @@ Räumliche und zeitliche Einordnung des Datensatzes. Zur einfacheren Erfassung d
   - Beispielwerte: `+02:00` `-08:00`
 
 ### Related Work
-This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggregationInfo>` in the ISO scheme ( TODO !). The element is optional in both schemes.
+This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggregationInfo>` in the ISO scheme (not yet implemented). The element is optional in both schemes.
 
 - Relation
 
@@ -921,26 +921,29 @@ This element is optional in the datacite scheme. However, it is a best practice 
   - Occurence: 0-1, if Funding Reference is specified, then funderName is mandatory. 
   - The corresponding field in the database where the value is stored is called: `funder` in the `Funding_Reference` table.
   - Restrictions: Selection from CrossRef funders list is possible, as well as free text
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/)
   - Scheme: DataCite 4.5
   - Example values: `Gordon and Betty Moore Foundation`, `Ford Foundation`
 
-- *hiddenField: funderId*
+- *Saved in backend (not visible to user):* funderId
 
   Uniquely identifies a funding entity, using Crossrefs' [Funder Registry](https://www.crossref.org/services/funder-registry/)
   - Data type: String
   - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `funderid` in the `Funding_Reference` table.
   - Restrictions: is automatically saved, if a funder is selected from the dropdown list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#funderidentifier)
   - Scheme: DataCite 4.5
   - Example values: `http://dx.doi.org/10.13039/100001214`
 
-- *hiddenField: funderidtyp*
+- *Saved in backend (not visible to user):* funderidtyp
 
   The type of the funderIdentifier. Is either NULL or "Crossref Funder ID"
   - Data type: String
   - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `funderidtyp` in the `Funding_Reference` table.
   - Restrictions: can only be "Crossref Funder ID" (if a funder is selected from the dropdown list) or null
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#a-funderidentifiertype)
   - Scheme: DataCite 4.5
   - Value: `Crossref Funder ID`
 
@@ -951,6 +954,7 @@ This element is optional in the datacite scheme. However, it is a best practice 
   - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `grantnumber` in the `Funding_Reference` table.
   - Restrictions: None
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardnumber)
   - Scheme: DataCite 4.5
   - Example values: `GBMF3859.01` `GBMF3859.22`
 
@@ -961,6 +965,7 @@ This element is optional in the datacite scheme. However, it is a best practice 
   - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `grantname` in the `Funding_Reference` table.
   - Restrictions: None
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
   - Scheme: DataCite 4.5
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
 
