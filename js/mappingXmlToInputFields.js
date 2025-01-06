@@ -791,15 +791,18 @@ function processKeywords(xmlDoc, resolver) {
 
   // Access the Tagify instance for the input field
   //TODO: MSL und Free Keywords einfügen
-  const tagifyInput = $('#input-sciencekeyword')[0];
-  if (!tagifyInput) {
-    console.error("Tagify input field not found for #input-sciencekeyword");
-    return;
-  }
-  const tagify = tagifyInput.tagify || new Tagify(tagifyInput);
+  const tagifyInputGCMD = $('#input-sciencekeyword')[0];
+  const tagifyInputMsl = $('#input-mslkeyword')[0];
+  const tagifyInputFree = $('#input-freekeyword')[0];
+
+  const tagifyGCMD = tagifyInputGCMD.tagify || new Tagify(tagifyInputGCMD);
+  const tagifyMsl = tagifyInputMsl.tagify || new Tagify(tagifyInputMsl);
+  const tagifyFree = tagifyInputFree.tagify || new Tagify(tagifyInputFree);
 
   // Clear existing tags before adding new ones
-  tagify.removeAllTags();
+  tagifyGCMD.removeAllTags();
+  tagifyMsl.removeAllTags();
+  tagifyFree.removeAllTags();
 
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
@@ -815,11 +818,19 @@ function processKeywords(xmlDoc, resolver) {
       schemeURI: schemeURI,
       valueURI: valueURI
     };
-    if(schemeURI=="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"){
-    // Add the tag to Tagify
-    tagify.addTags([tagData]);
+    if(schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"){
+    // Add the tag to GCMD Science Keyword input field
+    tagifyGCMD.addTags([tagData]);
     }
-    //TODO: if MSL Keyword und if freeKeyword
+    else if (schemeURI === "https://epos-msl.uu.nl/voc/materials/1.3/"){ //TODO: alle MSL Thesauri abfragen/einbeziehen
+      //Add the tag to MSL Keyword input field
+      tagifyMsl.addTags([tagData]);
+
+    }
+    else{
+      // Add all other Tags to Free Keyword field
+      tagifyFree.addTags([tagData]);
+    }
 
   }
 }
