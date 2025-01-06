@@ -776,7 +776,7 @@ function processDescriptions(xmlDoc, resolver) {
 }
 
 /**
- * Process GCMD Science Keywords from XML and populate the Tagify-enabled input field
+ * Process Subjects from XML and populate the Keyword fields
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
@@ -789,12 +789,12 @@ function processKeywords(xmlDoc, resolver) {
     null
   );
 
-  // Access the Tagify instance for the input field
-  //TODO: MSL und Free Keywords einfügen
+  // Access the input fields
   const tagifyInputGCMD = $('#input-sciencekeyword')[0];
   const tagifyInputMsl = $('#input-mslkeyword')[0];
   const tagifyInputFree = $('#input-freekeyword')[0];
 
+  // Initialize or get existing Tagify instances for each input
   const tagifyGCMD = tagifyInputGCMD.tagify || new Tagify(tagifyInputGCMD);
   const tagifyMsl = tagifyInputMsl.tagify || new Tagify(tagifyInputMsl);
   const tagifyFree = tagifyInputFree.tagify || new Tagify(tagifyInputFree);
@@ -816,27 +816,22 @@ function processKeywords(xmlDoc, resolver) {
       value: keyword,
       scheme: subjectScheme,
       schemeURI: schemeURI,
-      valueURI: valueURI
+      id: valueURI
     };
-    if(schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"){
-    // Add the tag to GCMD Science Keyword input field
-    tagifyGCMD.addTags([tagData]);
-    }
-    else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")){ //TODO: alle MSL Thesauri abfragen/einbeziehen
-      //Add the tag to MSL Keyword input field
-      tagifyMsl.addTags([tagData]);
 
-    }
-    else{
-      // Add all other Tags to Free Keyword field
+    // Check the schemeURI and add the tag to the appropriate Tagify instance
+    if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
+      // Add the tag to the GCMD Science Keyword input field
+      tagifyGCMD.addTags([tagData]);
+    } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) { 
+      // Add the tag to the MSL Keyword input field
+      tagifyMsl.addTags([tagData]);
+    } else {
+      // Add all other tags to the Free Keyword input field
       tagifyFree.addTags([tagData]);
     }
-
   }
 }
-
-
-
 
 /**
  * Process related identifiers from XML and populate the formgroup Related Works
