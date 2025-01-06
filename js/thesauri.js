@@ -141,6 +141,7 @@ $(document).ready(function () {
             var tagify = new Tagify(input, {
                 whitelist: suggestedKeywords,
                 enforceWhitelist: true,
+                placeholder: translations.keywords.thesaurus.label,
                 dropdown: {
                     maxItems: 50,  // max. number of whitelist items shown
                     enabled: 3,    // show whitelist when 3 characters are typed
