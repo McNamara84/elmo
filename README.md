@@ -918,17 +918,17 @@ This element is optional in the datacite scheme. However, it is a best practice 
   
   Name of the funding provider.
   - Data type: String
-  - Occourence: 0-1
+  - Occurence: 0-1, if Funding Reference is specified, then funderName is mandatory. 
   - The corresponding field in the database where the value is stored is called: `funder` in the `Funding_Reference` table.
-  - Restrictions: If Funding Reference is specified, then funderName is mandatory. Selection from CrossRef funders list is possible, as well as free text
+  - Restrictions: Selection from CrossRef funders list is possible, as well as free text
   - Scheme: DataCite 4.5
   - Example values: `Gordon and Betty Moore Foundation`, `Ford Foundation`
 
 - *hiddenField: funderId*
 
-  Uniquely identifies a funding entity, using Crossrefs' [Funder Registry] (https://www.crossref.org/services/funder-registry/)
+  Uniquely identifies a funding entity, using Crossrefs' [Funder Registry](https://www.crossref.org/services/funder-registry/)
   - Data type: String
-  - Occourence: 0-1
+  - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `funderId` in the `Funding_Reference` table.
   - Restrictions: is automatically saved, if a funder is selected from the dropdown list
   - Scheme: DataCite 4.5
@@ -938,7 +938,7 @@ This element is optional in the datacite scheme. However, it is a best practice 
 
   The type of the funderIdentifier. Is either NULL or "Crossref Funder ID"
   - Data type: String
-  - Occourence: 0-1
+  - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `funderId` in the `Funding_Reference` table.
   - Restrictions: is automatically saved, if a funder is selected from the dropdown list, can only be "Crossref Funder ID" or null
   - Scheme: DataCite 4.5
@@ -948,7 +948,7 @@ This element is optional in the datacite scheme. However, it is a best practice 
 
   The code assigned by the funder to a sponsored award (grant).
   - Data type: String
-  - Occourence: 0-1
+  - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `grantnumber` in the `Funding_Reference` table.
   - Restrictions: None
   - Scheme: DataCite 4.5
@@ -958,7 +958,7 @@ This element is optional in the datacite scheme. However, it is a best practice 
 
   The human readable title or name of the award (grant).
   - Data type: String
-  - Occourence: 0-1
+  - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `grantname` in the `Funding_Reference` table.
   - Restrictions: None
   - Scheme: DataCite 4.5
