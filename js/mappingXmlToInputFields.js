@@ -713,6 +713,78 @@ function populateFormWithContributors(personMap, orgMap) {
 }
 
 /**
+ * Process spatial-temporal coverage (STC) data from XML and populate the form.
+ * @param {Document} xmlDoc - The parsed XML document.
+ * @param {Function} resolver - The namespace resolver function.
+ */
+function processSpatialTemporalCoverages(xmlDoc, resolver) {
+  const geoLocationNodes = xmlDoc.evaluate(
+    './/ns:geoLocations/ns:geoLocation',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
+    const geoLocationNode = geoLocationNodes.snapshotItem(i);
+
+    // Extract geoLocation data
+    const place = geoLocationNode.querySelector('geoLocationPlace')?.textContent || '';
+    const boxNode = geoLocationNode.querySelector('geoLocationBox');
+    const pointNode = geoLocationNode.querySelector('geoLocationPoint');
+
+    const westBoundLongitude = boxNode?.querySelector('westBoundLongitude')?.textContent || '';
+    const eastBoundLongitude = boxNode?.querySelector('eastBoundLongitude')?.textContent || '';
+    const southBoundLatitude = boxNode?.querySelector('southBoundLatitude')?.textContent || '';
+    const northBoundLatitude = boxNode?.querySelector('northBoundLatitude')?.textContent || '';
+    const pointLongitude = pointNode?.querySelector('pointLongitude')?.textContent || '';
+    const pointLatitude = pointNode?.querySelector('pointLatitude')?.textContent || '';
+
+    // Determine latitude and longitude values
+    const latitudeMin = southBoundLatitude || pointLatitude;
+    const latitudeMax = northBoundLatitude || pointLatitude;
+    const longitudeMin = westBoundLongitude || pointLongitude;
+    const longitudeMax = eastBoundLongitude || pointLongitude;
+
+    // Find last row
+    const $lastRow = $('textarea[name="tscDescription[]"]').last().closest('.row');
+
+    // Set values
+    $lastRow.find('textarea[name="tscDescription[]"]').val(place);
+    $lastRow.find('input[name="tscLatitudeMin[]"]').val(latitudeMin);
+    $lastRow.find('input[name="tscLatitudeMax[]"]').val(latitudeMax);
+    $lastRow.find('input[name="tscLongitudeMin[]"]').val(longitudeMin);
+    $lastRow.find('input[name="tscLongitudeMax[]"]').val(longitudeMax);
+
+    // Handle timezone
+    const timezoneField = $lastRow.find('select[name="tscTimezone[]"]');
+    timezoneField.val(i === 0 ? '' : 'UTC+00:00 (Africa/Abidjan)');
+
+    // Set date and time if available
+    const dateNode = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(i);
+    if (dateNode) {
+      const [start, end] = dateNode.textContent.split('/');
+      if (start) {
+        const [startDate, startTime] = start.split('T');
+        $lastRow.find('input[name="tscDateStart[]"]').val(startDate);
+        $lastRow.find('input[name="tscTimeStart[]"]').val(startTime.split(/[+-]/)[0]);
+      }
+      if (end) {
+        const [endDate, endTime] = end.split('T');
+        $lastRow.find('input[name="tscDateEnd[]"]').val(endDate);
+        $lastRow.find('input[name="tscTimeEnd[]"]').val(endTime.split(/[+-]/)[0]);
+      }
+    }
+
+    // Clone row for the next entry, if there is one
+    if (i < geoLocationNodes.snapshotLength - 1) {
+      $('#button-stc-add').click();
+    }
+  }
+}
+
+/**
  * Process descriptions from XML and populate the form
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
@@ -926,4 +998,6 @@ async function loadXmlToForm(xmlDoc) {
   processContributors(xmlDoc, resolver);
   // Process descriptions
   processDescriptions(xmlDoc, resolver);
+  // Process Spatial and Temporal Coverages
+  processSpatialTemporalCoverages(xmlDoc, resolver);
 }
