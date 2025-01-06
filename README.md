@@ -929,7 +929,7 @@ This element is optional in the datacite scheme. However, it is a best practice 
   Uniquely identifies a funding entity, using Crossrefs' [Funder Registry](https://www.crossref.org/services/funder-registry/)
   - Data type: String
   - Occurence: 0-1
-  - The corresponding field in the database where the value is stored is called: `funderId` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `funderid` in the `Funding_Reference` table.
   - Restrictions: is automatically saved, if a funder is selected from the dropdown list
   - Scheme: DataCite 4.5
   - Example values: `http://dx.doi.org/10.13039/100001214`
@@ -939,8 +939,8 @@ This element is optional in the datacite scheme. However, it is a best practice 
   The type of the funderIdentifier. Is either NULL or "Crossref Funder ID"
   - Data type: String
   - Occurence: 0-1
-  - The corresponding field in the database where the value is stored is called: `funderId` in the `Funding_Reference` table.
-  - Restrictions: is automatically saved, if a funder is selected from the dropdown list, can only be "Crossref Funder ID" or null
+  - The corresponding field in the database where the value is stored is called: `funderidtyp` in the `Funding_Reference` table.
+  - Restrictions: can only be "Crossref Funder ID" (if a funder is selected from the dropdown list) or null
   - Scheme: DataCite 4.5
   - Value: `Crossref Funder ID`
 
@@ -964,18 +964,18 @@ This element is optional in the datacite scheme. However, it is a best practice 
   - Scheme: DataCite 4.5
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
 
-## Datenvalidierung
+## Data validation
 
-- Folgende Felder müssen zwingend ausgefüllt werden: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_Nur bei der Angabe des zweiten Titels!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email**, **Description Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
+- Mandatory fields: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email**, **Description Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
 
-- Die restlichen Felder **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work alle Felder** und **Funding Reference alle Felder** können optional leer bleiben.✅
+- Other fields **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields** are optional.✅
 
-- folgende Felder sind "abhängige Pflichtfelder":
+- The following field become mandatory in certain cases:
 
-**Contributor Role**, **Contributor Lastname**, **Contributor Firstname** werden zu Pflichtfeldern, wenn eines der Felder von Contributor Person ausgefüllt wird
-**Contributor Organisation Name**, **Contributor Organisation Role** werden zu Pflichtfeldern, wenn eines der Felder von Contributor Organisation ausgefüllt wird (auch wenn **Contributor Organisation Affiliation** angegeben wird)
-**Related work alle Felder** werden zum Pflichtfeld, wenn eines der Felder ausgefüllt wird
-**Funder** wird zum Pflichtfeld, wenn **Grant Number** oder **Grant Name** ausgefüllt wird
+**Contributor Role**, **Contributor Lastname**, **Contributor Firstname** become mandatory, if one of the Contributor Person fields is filled
+**Contributor Organisation Name**, **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled (this includes **Contributor Organisation Affiliation**)
+**Related work all Fields** become mandatory fields, if one of the fields is filled
+**Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
 
 ## Database structure
 
