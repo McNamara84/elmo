@@ -763,17 +763,21 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
 
     // Set date and time if available
     const dateNode = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(i);
-    if (dateNode) {
+    if (dateNode && dateNode.textContent) {
       const [start, end] = dateNode.textContent.split('/');
       if (start) {
-        const [startDate, startTime] = start.split('T');
+        const [startDate, startTime] = start.includes('T') ? start.split('T') : [start, ''];
         $lastRow.find('input[name="tscDateStart[]"]').val(startDate);
-        $lastRow.find('input[name="tscTimeStart[]"]').val(startTime.split(/[+-]/)[0]);
+        if (startTime) {
+          $lastRow.find('input[name="tscTimeStart[]"]').val(startTime.split(/[+-]/)[0]);
+        }
       }
       if (end) {
-        const [endDate, endTime] = end.split('T');
+        const [endDate, endTime] = end.includes('T') ? end.split('T') : [end, ''];
         $lastRow.find('input[name="tscDateEnd[]"]').val(endDate);
-        $lastRow.find('input[name="tscTimeEnd[]"]').val(endTime.split(/[+-]/)[0]);
+        if (endTime) {
+          $lastRow.find('input[name="tscTimeEnd[]"]').val(endTime.split(/[+-]/)[0]);
+        }
       }
     }
 
