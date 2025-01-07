@@ -1,8 +1,6 @@
 <div class="card mb-2">
-  <div class="card-header"><b>
-      <?php echo $translations['relatedwork']; ?>
-      <i class="bi bi-question-circle-fill" data-help-section-id="help-relatedwork-fg"></i>
-    </b></div>
+  <div class="card-header"><b data-translate="relatedWork.title">Related work</b> <i class="bi bi-question-circle-fill"
+      data-help-section-id="help-relatedwork-fg"></i></div>
   <div class="card-body">
     <div id="group-relatedwork">
       <div class="row" related-work-row>
@@ -12,12 +10,8 @@
             <div class="form-floating">
               <select class="form-select input-with-help input-right-no-round-corners"
                 aria-label="Default select example" id="input-relatedwork-relation" name="relation[]"></select>
-              <label for="input-relatedwork-relation">
-                <?php echo $translations['relation']; ?>
-              </label>
-              <div class="invalid-feedback">
-                <?php echo $translations['PleaseChoose_invalid']; ?>
-              </div>
+              <label for="input-relatedwork-relation" data-translate="relatedWork.relation">Relation</label>
+              <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
             </div>
             <div class="input-group-append">
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -31,12 +25,8 @@
             <div class="form-floating">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
                 id="input-relatedwork-identifier" name="rIdentifier[]" />
-              <label for="input-relatedwork-identifier">
-                <?php echo $translations['r_Identifier']; ?>
-              </label>
-              <div class="invalid-feedback">
-                <?php echo $translations['r_Identifier_invalid']; ?>
-              </div>
+              <label for="input-relatedwork-identifier" data-translate="relatedWork.identifier">Identifier</label>
+              <div class="invalid-feedback" data-translate="relatedWork.identifierInvalid">Please enter a valid identifier.</div>
             </div>
             <div class="input-group-append">
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -51,12 +41,8 @@
               <select class="form-select input-with-help input-right-no-round-corners"
                 aria-label="Default select example" id="input-relatedwork-identifiertype" name="rIdentifierType[]">
               </select>
-              <label for="input-relatedwork-identifiertype">
-                <?php echo $translations['r_identifier_type']; ?>
-              </label>
-              <div class="invalid-feedback">
-                <?php echo $translations['PleaseChoose_invalid']; ?>
-              </div>
+              <label for="input-relatedwork-identifiertype" data-translate="relatedWork.identifierType">Identifier type</label>
+              <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
             </div>
             <div class="input-group-append">
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -66,8 +52,8 @@
         </div>
         <!-- Clone Related Work row button-->
         <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
-          <button type="button" class="btn btn-primary addRelatedWork" id="button-relatedwork-add" style="width: 36px">
-            <?php echo $translations['add']; ?>
+          <button type="button" class="btn btn-primary addRelatedWork" id="button-relatedwork-add" style="width: 36px" data-translate="general.add">
+            +
           </button>
         </div>
       </div>

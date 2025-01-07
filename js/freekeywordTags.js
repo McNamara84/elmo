@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Tagify-Instanz erstellen
     var tagify = new Tagify(input, {
         whitelist: [],
+        placeholder: translations.keywords.free.placeholder,
         dropdown: {
             maxItems: 50,
             closeOnSelect: true,

@@ -1,0 +1,163 @@
+{
+    "general": {
+        "logoTitle": "ELMO - EPOS Laboratory Metadata Optimizer 1.9",
+        "logoTitleShort": "ELMO 1.9",
+        "choose": "Choose...",
+        "valid": "Valid",
+        "pleaseChoose": "Please choose",
+        "lastName": "Last Name",
+        "firstName": "First Name",
+        "affiliation": "Affiliation(s)",
+        "roleLabel": "Role(s)",
+        "add": "+",
+        "noJavaScriptAlert": "JavaScript is disabled. Please enable JavaScript to use this form."
+    },
+    "header": {
+        "help": "Help",
+        "mode": "Mode",
+        "language": "Language",
+        "imprint": "Legal notice"
+    },
+    "resourceInfo": {
+        "title": "Resource Information",
+        "doi": "DOI",
+        "doiValid": "A new DOI will be registered",
+        "doiInvalid": "Please use format 10.ORGANISATION/ID (i.e.: 10.57757/IUGG23-3081) or leave empty",
+        "publicationYear": "Publication Year",
+        "publicationYearInvalid": "Please provide a valid year ranging from 1901-2155 (4 digits).",
+        "resourceType": "Resource Type",
+        "version": "Version",
+        "versionInvalid": "If unsure leave blank",
+        "datasetLanguage": "Language of dataset",
+        "resourceTitle": "Title",
+        "resourceTitleInvalid": "Please provide a title",
+        "titleType": "Title Type"
+    },
+    "rights": {
+        "title": "Licenses and Rights",
+        "licenseTitle": "License"
+    },
+    "authors": {
+        "title": "Author(s)",
+        "lastNameInvalid": "Please provide a lastname. Only letters are allowed.",
+        "firstNameInvalid": "Please provide a firstname. Only letters are allowed.",
+        "orcid": "ORCID",
+        "orcidInvalid": "Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))",
+        "affiliationInvalid": "Please provide an affiliation."
+    },
+    "contactPersons": {
+        "title": "Contact Person(s)",
+        "email": "Email address",
+        "emailInvalid": "Please provide a valid email address in the format xxx.xxx@xxx.xxx.",
+        "position": "Position",
+        "positionInvalid": "Please provide a position.",
+        "website": "Website",
+        "websiteInvalid": "Please provide a valid URL."
+    },
+    "laboratory": {
+        "title": "Originating Laboratory",
+        "name": "Name of the originating laboratory",
+        "affiliation": "Affiliation of the originating laboratory"
+    },
+    "contributors": {
+        "title": "Contributors",
+        "organization": "Organisation name",
+        "organizationInvalid": "Please enter a valid organization name.",
+        "orcid": "ORCID",
+        "persons": "Contributing Person(s)",
+        "institutions": "Contributing Institution(s)"
+    },
+    "descriptions": {
+        "title": "Descriptions",
+        "abstract": "Abstract",
+        "abstractTooltip": "Please enter an abstract...",
+        "methods": "Methods",
+        "methodsTooltip": "Please describe the methods...",
+        "technicalInfo": "Technical Information",
+        "technicalInfoTooltip": "Please enter technical information...",
+        "other": "Other",
+        "otherTooltip": "Please enter other information.."
+    },
+    "keywords": {
+        "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
+        "thesaurus": {
+            "title": "GCMD Science Keywords",
+            "name": "Thesaurus",
+            "scienceKeywords": "NASA GCMD Science Keywords",
+            "instruments": "NASA GCMD Instruments",
+            "platforms": "NASA GCMD Platforms",
+            "chrono": "International Chronostratigraphic Chart",
+            "cgi": "CGI Simple Lithology",
+            "gemet": "GEMET Thesaurus",
+            "label": "Open thesaurus to choose keywords or start typing..."
+        },
+        "free": {
+            "title": "Free Keywords",
+            "input": "Please enter keywords and separate them by a comma."
+        }
+    },
+    "dates": {
+        "title": "Dates",
+        "created": "Date created",
+        "createdInvalid": "Please enter a valid date!",
+        "embargoUntil": "Embargo until",
+        "embargoInvalid": "Please enter a valid date!"
+    },
+    "coverage": {
+        "title": "Spatial and Temporal Coverages",
+        "map": "Map",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "description": "Description",
+        "descriptionPlaceholder": "Please enter the description of the temporal and spatial coverage...",
+        "start": "Start",
+        "end": "End",
+        "timezone": "Timezone",
+        "mapInfo": "(Please choose coordinates with rectangle or marker)",
+        "cancel": "Cancel",
+        "accept": "Accept"
+    },
+    "relatedWork": {
+        "title": "Related work",
+        "relation": "Relation",
+        "identifierType": "Identifier type",
+        "identifier": "Identifier",
+        "identifierInvalid": "Please enter a valid identifier."
+    },
+    "funding": {
+        "title": "Funding Reference",
+        "funder": "Funder",
+        "funderInvalid": "Please enter the name of the funder.",
+        "grantNumber": "Grant Number",
+        "grantName": "Grant Name"
+    },
+    "buttons": {
+        "clear": "Clear",
+        "clearTooltip": "Delete all entries or content.",
+        "load": "Load",
+        "loadTooltip": "Load saved data or content.",
+        "saveAs": "Save",
+        "saveAsTooltip": "Save the current data or content under a new file name.",
+        "submit": "Submit",
+        "submitTooltip": "Transmit the entered data or content.",
+        "helpOn": "On",
+        "helpOff": "Off"
+    },
+    "feedback": {
+        "button": "Feedback",
+        "label": "User Feedback",
+        "question1": "Which functions of the new metadata editor do you find particularly helpful?",
+        "question2": "Is there a particular design or user interface change that you like?",
+        "question3": "What do you find positive about the usability of the new editor?",
+        "question4": "Which functions of the new editor do you find difficult to use?",
+        "question5": "Are there any aspects of the user interface that you find confusing or annoying?",
+        "question6": "Do you miss certain functions in the new metadata editor?",
+        "question7": "Is there a specific improvement you would like to see?",
+        "sendButton": "Send Feedback",
+        "thankYouMessage": "Thanks for your feedback!"
+    },
+    "modal": {
+        "saveTitle": "Save as XML file",
+        "filenameLabel": "Filename"
+    }
+}

@@ -755,6 +755,7 @@ $(document).ready(function () {
     var tagifyName = new Tagify(inputName, {
       whitelist: data.map((item) => item.name),
       enforceWhitelist: true,
+      placeholder: translations.laboratory.name,
       maxTags: 1,
       dropdown: {
         maxItems: 20,
@@ -940,10 +941,10 @@ $(document).ready(function () {
    *
    * @param {string} language - The language code to set (e.g., 'en', 'de').
    */
-  function setLanguage(language) {
+  /*function setLanguage(language) {
     localStorage.setItem("userLanguage", language);
     window.location.href = "?lang=" + language;
-  }
+  }*/
 
   /**
    * Automatically sets the language based on the browser's language settings.
