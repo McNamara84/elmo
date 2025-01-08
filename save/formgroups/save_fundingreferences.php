@@ -74,7 +74,7 @@ function saveFundingReferences($connection, $postData, $resource_id)
 }
 
 /**
- * Inserts a funding reference into the database.
+ * Inserts a funding reference into the database if it doesn't already exist.
  *
  * @param mysqli      $connection    The database connection.
  * @param string      $funder        The funder's name.
@@ -83,30 +83,69 @@ function saveFundingReferences($connection, $postData, $resource_id)
  * @param string|null $grantNumber   The grant number.
  * @param string|null $grantName     The grant name.
  *
- * @return int|null Returns the funding reference ID if insertion was successful, otherwise null.
+ * @return int|null Returns the funding reference ID if successful, otherwise null.
  */
 function insertFundingReference($connection, $funder, $funderId, $funderIdType, $grantNumber, $grantName)
 {
-    $stmt = $connection->prepare(
-        "INSERT INTO Funding_Reference (`funder`, `funderid`, `funderidtyp`, `grantnumber`, `grantname`) VALUES (?, ?, ?, ?, ?)"
-    );
-    if (!$stmt) {
-        error_log("Prepare failed: " . $connection->error);
+    // Check if the funding reference already exists
+    $checkQuery = "
+        SELECT funding_reference_id 
+        FROM Funding_Reference 
+        WHERE funder = ? 
+          AND (funderid = ?) 
+          AND (funderidtyp = ?) 
+          AND (grantnumber = ?) 
+          AND (grantname = ?)";
+    $checkStmt = $connection->prepare($checkQuery);
+    if (!$checkStmt) {
+        error_log("Prepare failed for existence check: " . $connection->error);
         return null;
     }
 
-    $stmt->bind_param("sssss", $funder, $funderId, $funderIdType, $grantNumber, $grantName);
+    $checkStmt->bind_param(
+        "sssss", 
+        $funder, 
+        $funderId,
+        $funderIdType,
+        $grantNumber,
+        $grantName
+    );
+    $checkStmt->execute();
+    
+    // Fetch the result and check if any funding reference exists
+    $checkStmt->bind_result($existingId);
+    $checkStmt->fetch();
+    $checkStmt->close();
 
-    if ($stmt->execute()) {
-        $funding_reference_id = $stmt->insert_id;
-        $stmt->close();
+    if ($existingId) {
+        // Return the existing ID if a match is found
+        return $existingId;
+    }
+
+    // Insert a new funding reference if no match is found
+    $insertQuery = "
+        INSERT INTO Funding_Reference (`funder`, `funderid`, `funderidtyp`, `grantnumber`, `grantname`) 
+        VALUES (?, ?, ?, ?, ?)";
+    $insertStmt = $connection->prepare($insertQuery);
+    if (!$insertStmt) {
+        error_log("Prepare failed for insert: " . $connection->error);
+        return null;
+    }
+
+    $insertStmt->bind_param("sssss", $funder, $funderId, $funderIdType, $grantNumber, $grantName);
+
+    if ($insertStmt->execute()) {
+        $funding_reference_id = $insertStmt->insert_id;
+        $insertStmt->close();
         return $funding_reference_id;
     } else {
-        error_log("Error inserting Funding Reference: " . $stmt->error);
-        $stmt->close();
+        error_log("Error inserting Funding Reference: " . $insertStmt->error);
+        $insertStmt->close();
         return null;
     }
 }
+
+
 
 /**
  * Extracts the last ten digits from a given funder ID.

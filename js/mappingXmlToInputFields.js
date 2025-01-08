@@ -83,7 +83,7 @@ function processTitles(xmlDoc, resolver) {
     null
   );
 
-  // Reset titles
+  // reset Titles
   $('input[name="title[]"]').closest('.row').not(':first').remove();
   $('input[name="title[]"]:first').val('');
   $('#input-resourceinformation-titletype').val('1');
@@ -250,7 +250,7 @@ function processContactPersons(xmlDoc, resolver) {
     null
   );
 
-  // Reset existing Contact Persons
+  // reset Contact Persons
   $('#group-contactperson .row[contact-person-row]').not(':first').remove();
   $('#group-contactperson .row[contact-person-row]:first input').val('');
 
@@ -445,7 +445,7 @@ function processOriginatingLaboratories(xmlDoc, resolver) {
     null
   );
 
-  // Reset existing laboratories
+  // reset existing laboratories
   $('#group-originatinglaboratory .row[data-laboratory-row]').not(':first').remove();
   $('#group-originatinglaboratory .row[data-laboratory-row]:first input').val('');
 
@@ -527,6 +527,15 @@ function processContributors(xmlDoc, resolver) {
     XPathResult.FIRST_ORDERED_NODE_TYPE,
     null
   ).singleNodeValue;
+
+    // reset Contributor Person 
+    $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
+    $('#group-contributorperson .row[contributor-person-row]:first input').val('');
+
+    // reset Contributor Institution
+    $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
+    $('#group-contributororganisation .row[contributors-row]:first input').val('');
+
 
   if (!contributorsNode) return;
 
@@ -803,6 +812,7 @@ function processDescriptions(xmlDoc, resolver) {
     null
   );
 
+
   // Create a mapping of description types to form input IDs
   const descriptionMapping = {
     'Abstract': 'input-abstract',
@@ -811,7 +821,7 @@ function processDescriptions(xmlDoc, resolver) {
     'Other': 'input-other'
   };
 
-  // Reset all description fields first
+  // reset all description fields
   Object.values(descriptionMapping).forEach(inputId => {
     $(`#${inputId}`).val('');
   });
@@ -839,6 +849,93 @@ function processDescriptions(xmlDoc, resolver) {
 
   // Ensure Abstract accordion is always expanded
   $('#collapse-abstract').addClass('show');
+}
+
+/**
+ * Process related identifiers from XML and populate the formgroup Related Works
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processRelatedWorks(xmlDoc, resolver) {
+  const identifierNodes = xmlDoc.evaluate(
+    './/ns:relatedIdentifiers/ns:relatedIdentifier',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+  //reset Related Works
+  $('#group-group-relatedwork .row[related-work-row]').not(':first').remove();
+  $('#group-group-relatedwork .row[related-work-row]:first input').val('');
+
+  for (let i = 0; i < identifierNodes.snapshotLength; i++) {
+    const identifierNode = identifierNodes.snapshotItem(i);
+    const relationType = identifierNode.getAttribute('relationType');
+    const identifierType = identifierNode.getAttribute('relatedIdentifierType');
+    const identifierValue = identifierNode.textContent;
+
+    // Find last row
+    const $lastRow = $('input[name="rIdentifier[]"]').last().closest('.row');
+
+    // Set values
+    $lastRow.find('input[name="rIdentifier[]"]').val(identifierValue);
+    $lastRow.find('select[name="rIdentifierType[]"]').val(identifierType);
+    // Match relation by visible text instead of value
+    $lastRow.find('select[name="relation[]"]:first option').filter(function () {
+      return $(this).text() === relationType; // Match by visible text
+    }).prop('selected', true);
+
+    // clone row for the next entry, if there is one
+    if (i < identifierNodes.snapshotLength - 1) {
+      // Add Related Work
+      $('#button-relatedwork-add').click();
+    }
+  }
+}
+
+/**
+ * Process fundingReferences from XML and populate the formgroup Funders
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processFunders(xmlDoc, resolver) {
+  // Fetch all fundingReference nodes
+  const funderNodes = xmlDoc.evaluate(
+    './/ns:fundingReferences/ns:fundingReference',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+  // reset Funding References
+  $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
+  $('#group-fundingreference .row[funding-reference-row]:first input').val('');
+
+  for (let i = 0; i < funderNodes.snapshotLength; i++) {
+    const funderNode = funderNodes.snapshotItem(i);
+    // Extract data from XML
+    const funderName = getNodeText(funderNode, 'ns:funderName', xmlDoc, resolver);
+    const funderId = getNodeText(funderNode, 'ns:funderIdentifier', xmlDoc, resolver);
+    const funderIdTyp = funderNode.querySelector('funderIdentifier')?.getAttribute('funderIdentifierType') || '';
+    const awardTitle = getNodeText(funderNode, 'ns:awardTitle', xmlDoc, resolver);
+    const awardNumber = getNodeText(funderNode, 'ns:awardNumber', xmlDoc, resolver);
+
+    // Find the last row in the form
+    const $lastRow = $('input[name="funder[]"]').last().closest('.row');
+
+     //Populate fields
+     $lastRow.find('input[name="funder[]"]').val(funderName);
+     $lastRow.find('input[name="funderId[]"]').val(funderId);
+     $lastRow.find('input[name="funderidtyp[]"]').val(funderIdTyp);
+     
+    $lastRow.find('input[name="grantNummer[]"]').val(awardNumber);
+    $lastRow.find('input[name="grantName[]"]').val(awardTitle);
+
+    // Clone a new row if more funding references need to be added
+    if (i < funderNodes.snapshotLength - 1) {
+      $('#button-fundingreference-add').click();
+    }
+  }
 }
 
 /**
@@ -953,7 +1050,7 @@ async function loadXmlToForm(xmlDoc) {
     }
   };
 
-  const nsResolver = xmlDoc.createNSResolver(xmlDoc.documentElement);
+  // const nsResolver = xmlDoc.createNSResolver(xmlDoc.documentElement);
   const defaultNS = resourceNode.namespaceURI || 'http://datacite.org/schema/kernel-4';
 
   function resolver(prefix) {
@@ -1004,4 +1101,9 @@ async function loadXmlToForm(xmlDoc) {
   processDescriptions(xmlDoc, resolver);
   // Process Spatial and Temporal Coverages
   processSpatialTemporalCoverages(xmlDoc, resolver);
+  // Process Related Works
+  processRelatedWorks(xmlDoc, resolver);
+  // Process Funders
+  processFunders(xmlDoc, resolver);
+
 }
