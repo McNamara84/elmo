@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
   buttons.saveAsConfirm.addEventListener('click', function () {
     const filename = document.getElementById('input-saveas-filename').value.trim();
     if (!filename) {
-      showNotification('danger', 'Error', 'Please enter a filename');
+      showNotification('danger', translations.alerts.filenameErrorHeading, translations.alerts.filenameError);
       return;
     }
     saveAsModal.hide();
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (firstInvalid) {
       firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
       firstInvalid.focus();
-      showNotification('danger', 'Validation Error', 'Please check your inputs! Some required fields are not filled correctly.');
+      showNotification('danger', translations.alerts.validationErrorheading, translations.alerts.validationError);
     }
   }
 
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
           showNotification('danger', 'Error', 'Failed to prepare file saving');
         });
     } else if (action === 'submit') {
-      showNotification('info', 'Processing...', 'Dataset is being submitted.');
+      showNotification('info', translations.alerts.processingHeading, translations.alerts.processingInfo);
       submitViaAjax();
     }
   }
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function () {
    * @param {string} filename - User-selected filename without extension
    */
   function proceedWithSave(filename) {
-    showNotification('info', 'Processing...', 'Dataset is being saved.');
+    showNotification('info', translations.alerts.savingHeading, translations.alerts.savingInfo);
 
     // Create a hidden form for submission
     const hiddenForm = document.createElement('form');
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
     hiddenForm.submit();
     document.body.removeChild(hiddenForm);
 
-    showNotification('success', 'Success!', 'Dataset saved successfully. The XML file download will start automatically.');
+    showNotification('success', translations.alerts.savingHeading, translations.alerts.savingSuccess);
   }
 
   /**

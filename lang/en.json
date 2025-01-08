@@ -26,7 +26,16 @@
         "accept": "Accept"
     },
     "alerts": {
-        "languageWarning": "Please fill out the form in english."
+        "languageWarning": "Please fill out the form in english.",
+        "validationErrorheading": "Validation Error",
+        "validationError": "Please fill out the form correctly.",
+        "filenameErrorHeading": "Filename Error",
+        "filenameError": "Please enter a filename.",
+        "processingHeading": "Processing...",
+        "processingInfo": "Dataset is being submitted.",
+        "savingHeading": "Saving...",
+        "savingInfo": "Dataset is being saved.",
+        "savingSuccess": "Dataset saved successfully. The XML file download will start automatically."
     },
     "resourceInfo": {
         "title": "Resource Information",
