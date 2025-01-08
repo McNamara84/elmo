@@ -785,19 +785,22 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
 ### Dates
 
 - Date created
-  Datum an welchem der Datensatz ersetellt wurde.
-  - Datentyp: Date
-  - Vorkommen: 0-1
-  - Restriktionen: Datumsformat im Eingabefeld je nach Spracheinstellung des Browsers der Nutzenden.
-  - Schemata: DataCite, ISO
-  - Beispielwerte: `2024-06-05` `1999-04-07`
+  
+  - This field contains the date on which the dataset was created.
+  - Data type: Date
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called:  in the  table
+  - Restrictions: Datumsformat im Eingabefeld je nach Spracheinstellung des Browsers der Nutzenden.
+  - Example values: `2024-06-05` `1999-04-07`
+
 - Embargo until
-  Falls eine Schutzfrist zur Freigabe des Datensatzes vereinbart wurde, das Datum ab wann der Datensatz frei ist.
-  - Datentyp: Date
-  - Vorkommen: 0-1
-  - Restriktionen: Datumsformat im Eingabefeld je nach Spracheinstellung des Browsers der Nutzenden.
-  - Schemata: DataCite
-  - Beispielwerte: `2024-06-15` `2000-12-31`
+
+  <!-- Falls eine Schutzfrist zur Freigabe des Datensatzes vereinbart wurde, das Datum ab wann der Datensatz frei ist. -->
+  - Data typ: Date
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called:  in the  table
+  - Restrictions: Datumsformat im Eingabefeld je nach Spracheinstellung des Browsers der Nutzenden.
+  - Example values: `2024-06-15` `2000-12-31`
 
 ### Spatial and temporal coverage
 
