@@ -161,6 +161,12 @@
             "title": "Changelog",
             "aboutText": "The ELMO Metadata Editor was developed in 2024 by students of the University of Applied Sciences Potsdam in cooperation with the German Research Centre for Geosciences and is released under the GNU General Public License, Version 2.",
             "aboutHeading": "About ELMO - EPOS Laboratory Metadata Optimizer"
+        },
+        "save": {
+            "title": "Save Metadata",
+            "saveAs": "Save as XML",
+            "filename": "Filename",
+            "save": "Save"
         }
     }
 }
