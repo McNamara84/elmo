@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', function () {
             enabled: 3,
         }
     });
-
+            // Explicitly assign the instance to input._tagify
+            input._tagify = tagify;
     /**
     * Loads curated keywords from the API and updates the Tagify whitelist
     * 

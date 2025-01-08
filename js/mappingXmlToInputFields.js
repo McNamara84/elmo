@@ -1,3 +1,4 @@
+
 /**
  * Extracts license identifier from various formats
  * @param {Element} rightsNode - The XML rights element
@@ -528,13 +529,13 @@ function processContributors(xmlDoc, resolver) {
     null
   ).singleNodeValue;
 
-    // reset Contributor Person 
-    $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
-    $('#group-contributorperson .row[contributor-person-row]:first input').val('');
+  // reset Contributor Person 
+  $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
+  $('#group-contributorperson .row[contributor-person-row]:first input').val('');
 
-    // reset Contributor Institution
-    $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
-    $('#group-contributororganisation .row[contributors-row]:first input').val('');
+  // reset Contributor Institution
+  $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
+  $('#group-contributororganisation .row[contributors-row]:first input').val('');
 
 
   if (!contributorsNode) return;
@@ -788,18 +789,29 @@ function processKeywords(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
+  const tagifyInputGCMD = document.querySelector('#input-sciencekeyword');
+  const tagifyInputMsl = document.querySelector('#input-mslkeyword');
+  const tagifyInputFree = document.querySelector('#input-freekeyword');
 
-  // Access the input fields
-  const tagifyInputGCMD = $('#input-sciencekeyword')[0];
-  const tagifyInputMsl = $('#input-mslkeyword')[0];
-  const tagifyInputFree = $('#input-freekeyword')[0];
 
-  // Initialize or get existing Tagify instances for each input
-  const tagifyGCMD = tagifyInputGCMD.tagify || new Tagify(tagifyInputGCMD);
-  const tagifyMsl = tagifyInputMsl.tagify || new Tagify(tagifyInputMsl);
-  const tagifyFree = tagifyInputFree.tagify || new Tagify(tagifyInputFree);
+  // Error handling
+  if (!tagifyInputGCMD?._tagify || !tagifyInputMsl?._tagify || !tagifyInputFree?._tagify) {
+    console.error("One or more Tagify instances are not properly initialized.");
+    return;
+  }
 
-  // Clear existing tags before adding new ones
+  // Retrieve existing Tagify instances
+  const tagifyGCMD = tagifyInputGCMD._tagify;
+  const tagifyMsl = tagifyInputMsl._tagify;
+  const tagifyFree = tagifyInputFree._tagify;
+
+  // Ensure Tagify instances exist
+  if (!tagifyGCMD || !tagifyMsl || !tagifyFree) {
+    console.error("One or more Tagify instances are not initialized.");
+    return;
+  }
+
+  // Clear existing tags
   tagifyGCMD.removeAllTags();
   tagifyMsl.removeAllTags();
   tagifyFree.removeAllTags();
@@ -823,11 +835,11 @@ function processKeywords(xmlDoc, resolver) {
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
       // Add the tag to the GCMD Science Keyword input field
       tagifyGCMD.addTags([tagData]);
-    } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) { 
+    } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
       // Add the tag to the MSL Keyword input field
       tagifyMsl.addTags([tagData]);
     } else {
-      // Add all other tags to the Free Keyword input field
+      //Add all other tags to the Free Keyword input field
       tagifyFree.addTags([tagData]);
     }
   }
@@ -905,11 +917,11 @@ function processFunders(xmlDoc, resolver) {
     // Find the last row in the form
     const $lastRow = $('input[name="funder[]"]').last().closest('.row');
 
-     //Populate fields
-     $lastRow.find('input[name="funder[]"]').val(funderName);
-     $lastRow.find('input[name="funderId[]"]').val(funderId);
-     $lastRow.find('input[name="funderidtyp[]"]').val(funderIdTyp);
-     
+    //Populate fields
+    $lastRow.find('input[name="funder[]"]').val(funderName);
+    $lastRow.find('input[name="funderId[]"]').val(funderId);
+    $lastRow.find('input[name="funderidtyp[]"]').val(funderIdTyp);
+
     $lastRow.find('input[name="grantNummer[]"]').val(awardNumber);
     $lastRow.find('input[name="grantName[]"]').val(awardTitle);
 
