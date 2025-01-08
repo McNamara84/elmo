@@ -1,22 +1,17 @@
 <div class="card mb-2">
-  <div class="card-header">
-    <b>
-      <?php echo $translations['thesaurusKeywords']; ?>
-    </b>
-  </div>
+  <div class="card-header"><b data-translate="keywords.thesaurus.title">GCMD Science Keywords</b></div>
   <div class="card-body reduce-padding">
     <!------------------------------- NASA GCMD SCIENCE KEYWORDS ------------------------------------------------------------>
-    <!--Eingabefeld NASA GCMD Science Keywords-->
+    <!-- Input field -->
     <div class="input-group has-validation input-margin-top-bottom">
       <div class="form-floating">
         <div class="input-group has-validation">
-          <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-sciencekeyword"
-            name="thesaurusKeywords" placeholder="<?php echo $translations['thesaurusLabel']; ?>"/>
+          <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-sciencekeyword" name="thesaurusKeywords"/>
           <span class="input-group-text"><i class="bi bi-question-circle-fill"
               data-help-section-id="help-scienceKeywords-keyword"></i></span>
         </div>
       </div>
-      <!--Button Thesaurus-->
+      <!-- Thesaurus button -->
       <div class="col-auto p-2">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-sciencekeyword"
           id="button-sciencekeyword-open">
@@ -26,8 +21,7 @@
     </div>
   </div>
 </div>
-<!------------------------------------- MODALS ---------------------------------------------------------------------->
-<!-- Modal für Science Keywords -->
+<!-- Modal for Science Keywords -->
 <div class="modal fade <?php if 
       (isset($_SESSION['scienceModal']) && $_SESSION['scienceModal'] == 'true') 
       {echo 'show'; } ?>
@@ -35,14 +29,14 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="label-sciencekeyword-modal">GCMD Science Keywords</h5>
+        <h5 class="modal-title" id="label-sciencekeyword-modal" data-translate="keywords.thesaurus.title">GCMD Science Keywords</h5>
         <span class="input-group-text"><i class="bi bi-question-circle-fill"
             data-help-section-id="help-scienceKeywords-keywordviewer"></i></span>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <div id="panel-sciencekeyword-thesaurus">
-          <input type="text" class="form-control mb-3" id="input-sciencekeyword-search" placeholder="Search for Keyword">
+          <input type="text" class="form-control mb-3" id="input-sciencekeyword-search" data-translate-placeholder="keywords.searchPlaceholder" />
           <div id="jstree-sciencekeyword"></div>
         </div>
       </div>
