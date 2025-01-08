@@ -138,18 +138,24 @@
         "submit": "Submit",
         "submitTooltip": "Transmit the entered data or content."
     },
-    "feedback": {
-        "button": "Feedback",
-        "buttonTooltip": "Send feedback to the developers",
-        "label": "User Feedback",
-        "question1": "Which functions of the new metadata editor do you find particularly helpful?",
-        "question2": "Is there a particular design or user interface change that you like?",
-        "question3": "What do you find positive about the usability of the new editor?",
-        "question4": "Which functions of the new editor do you find difficult to use?",
-        "question5": "Are there any aspects of the user interface that you find confusing or annoying?",
-        "question6": "Do you miss certain functions in the new metadata editor?",
-        "question7": "Is there a specific improvement you would like to see?",
-        "sendButton": "Send Feedback",
-        "thankYouMessage": "Thanks for your feedback!"
+    "modals": {
+        "feedback": {
+            "button": "Feedback",
+            "buttonTooltip": "Send feedback to the developers",
+            "label": "User Feedback",
+            "question1": "Which functions of the new metadata editor do you find particularly helpful?",
+            "question2": "Is there a particular design or user interface change that you like?",
+            "question3": "What do you find positive about the usability of the new editor?",
+            "question4": "Which functions of the new editor do you find difficult to use?",
+            "question5": "Are there any aspects of the user interface that you find confusing or annoying?",
+            "question6": "Do you miss certain functions in the new metadata editor?",
+            "question7": "Is there a specific improvement you would like to see?",
+            "sendButton": "Send Feedback",
+            "thankYouMessage": "Thanks for your feedback!"
+        },
+        "upload": {
+            "title": "Select XML file:",
+            "dropZoneInfo": "Drop XML file here"
+        }
     }
 }
