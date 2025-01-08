@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var input = document.getElementById('input-freekeyword');
 
     // Tagify-Instanz erstellen
-    var tagify = new Tagify(input, {
+    var freeKeywordstagify = new Tagify(input, {
         whitelist: [],
         dropdown: {
             maxItems: 50,
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
             // Explicitly assign the instance to input._tagify
-            input._tagify = tagify;
+            input._tagify = freeKeywordstagify;
     /**
     * Loads curated keywords from the API and updates the Tagify whitelist
     * 
@@ -51,12 +51,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     const whitelist = data.map(item => item.free_keyword);
 
                     // Update Tagify settings
-                    if (typeof tagify !== 'undefined' && tagify.settings) {
-                        tagify.settings.whitelist = whitelist;
+                    if (typeof freeKeywordstagify !== 'undefined' && freeKeywordstagify.settings) {
+                        freeKeywordstagify.settings.whitelist = whitelist;
 
                         // Optional: Update dropdown with new whitelist if it's open
-                        if (tagify.dropdown.visible) {
-                            tagify.dropdown.refilter.call(tagify);
+                        if (freeKeywordstagify.dropdown.visible) {
+                            freeKeywordstagify.dropdown.refilter.call(freeKeywordstagify);
                         }
                     } else {
                         console.error('Tagify instance not found or not properly initialized');
