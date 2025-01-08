@@ -219,15 +219,27 @@ $(document).ready(function () {
   }
 });
 
+
 /**
  * Function to populate the dropdown menu of identifier types.
  * @param {string} id - The ID selector of the dropdown to populate.
  */
 function setupIdentifierTypesDropdown(id) {
+  var select = $(id);
+
+  // Add the "Choose..." placeholder option
+  select.empty().append(
+    $("<option>", {
+      value: "",
+      text: "Choose...", // Placeholder text
+    })
+  );
+
+  // Fetch identifier types from the server
   $.getJSON("./api/v2/validation/identifiertypes", function (response) {
     if (response && response.identifierTypes) {
       response.identifierTypes.forEach(function (type) {
-        $(id).append(
+        select.append(
           $("<option>", {
             value: type.name,
             text: type.name,
@@ -235,6 +247,7 @@ function setupIdentifierTypesDropdown(id) {
           })
         );
       });
+      // Update chosen-style dropdowns if necessary
       $(".chosen-select").trigger("chosen:updated");
     } else {
       console.warn("No identifier types available");
@@ -243,6 +256,7 @@ function setupIdentifierTypesDropdown(id) {
     console.error("Error loading identifier types:", textStatus, errorThrown);
   });
 }
+
 
 /**
  * Function to update the identifier type based on the entered identifier.

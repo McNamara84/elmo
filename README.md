@@ -704,7 +704,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "DataCite" 4.5
   - Beispielwerte: `EARTH SCIENCE` `AGRICULTURE`
 
-- hiddenField scheme
+- *Saved in backend (not visible to user):* scheme
 
   - hier wird bei Auswahl eines Keywords der Name des zugehörigen Schemas gespeichert
   - Datentyp: Zeichenkette
@@ -715,7 +715,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "DataCite" 4.5
   - Beispielwert: `NASA/GCMD Earth Science Keywords`
 
-- hiddenField schemeURI
+- *Saved in backend (not visible to user):* schemeURI
 
   - hier wird bei Auswahl eines Keywords der URI des zugehörigen Schemas gespeichert
   - Datentyp: Zeichenkette
@@ -726,7 +726,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "DataCite" 4.5
   - Beispielwerte: `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords`
 
-- hiddenField valueURI
+- *Saved in backend (not visible to user):* valueURI
 
   - hier wird bei Auswahl eines Keywords der PID, die URI, des Keywords gespeichert
   - Datentyp: Zeichenkette
@@ -737,7 +737,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "DataCite" 4.5
   - Beispielwerte: `https://gcmd.earthdata.nasa.gov/kms/concept/a2cc8e02-3207-4c40-af41-9656404bac0a`
 
-- hiddenField language
+- *Saved in backend (not visible to user):* language
   - hier wird bei Auswahl eines Keywords der URI des zugehörigen Schemas gespeichert
   - Datentyp: Zeichenkette
   - Vorkommen: 0-1
@@ -761,7 +761,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "EPOS Multi-Scale Laboratories (MSL) " 1.3
   - Beispielwerte: `hydrogeochemistery` `alternating field (AF) demagnetiser`
 
-- hiddenFielder: scheme, schemeURI, valueURI und language
+- *Saved in backend (not visible to user):* scheme, schemeURI, valueURI und language
 
   - hier werden bei Auswahl eines Keywords die zugehörigen versteckten Eingabefeldern wie schemes, schemeURIs, valueURIs und languages gespeichert
   - Datentyp: Zeichenkette
@@ -875,68 +875,112 @@ Räumliche und zeitliche Einordnung des Datensatzes. Zur einfacheren Erfassung d
   - Beispielwerte: `+02:00` `-08:00`
 
 ### Related Work
+This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggregationInfo>` in the ISO scheme (not yet implemented). The element is optional in both schemes.
 
 - Relation
 
-  - In dieses Feld kommt der Typ der Relation.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: relation_fk in der Tabelle Related_Work.
-  - Restriktionen: Es muss ein Relation Type ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `IsCitedBy` `IsSupplementTo` `IsContinuedBy`
+  This field contains the type of relation.
+  - Data type: String
+  - Occurrence: 1, if relatedIdentifier is <0
+  - The corresponding field in the database where the value is saved is called: `relation_fk` in the `Related_Work` table.
+  - Restrictions: A relation type must be selected, if related work is specified
+  - Relations can be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
+  - Schema version: DataCite 4.5
+  - Example values: `IsCitedBy` `IsSupplementTo` `IsContinuedBy`
 
 - Identifier
 
-  - In dieses Feld kommt der Identifikator
-  - Datentyp: Zeichenkette
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Identifier in der Tabelle Related_Work
-  - Restriktionen: Muss angegeben werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/relatedIdentifierType/)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `ark:/13030/tqb3kh97gh8w` `arXiv:0706.0001`
+  - This field contains the identifier
+  - Data type: String
+  - Occurrence: 1, if relatedIdentifier is <0
+  - The corresponding field in the database where the value is stored is called: `Identifier` in the `Related_Work` table.
+  - Restrictions: Must be specified, if related work specified
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/)
+  - Schema version: DataCite 4.5
+  - Example values: `13030/tqb3kh97gh8w`, `0706.0001`, `10.26022/IEDA/112263`
 
 - Identifier Type
 
-  - In diesem Feld kommt der Typ der relatedIdentifier.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: identifier_type_fk in der Tabelle Related_Work.
-  - Restriktionen: Optional
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `ARK` `arXiv` `EAN13`
+  - This field contains the type of the relatedIdentifier.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: `identifier_type_fk` in the `Related_Work` table.
+  - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
+  - Restrictions: Must be selected, if related work is specified
+  - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
+  - Schema version: DataCite 4.5
+  - Example values: `ARK` `arXiv` `EAN13`
 
-  ### Funding Reference
+### Funding Reference
+This element is optional in the datacite scheme. However, it is a best practice to supply funding information when financial support has been received.
 
-* Funder
-  In diesem Feld kommt der Name des Finanzierungsanbieters.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Restriktionen: Um Vorschläge über der Api zu erhalten, ist es erforderlich, mindestens die ersten zwei Buchstaben der Funder einzugeben. Zudem besteht die Möglichkeit, die Funder manuell einzutragen.
-  - Schemata: DataCite
-  - Beispielwerte: `Gordon and Betty Moore Foundation` `Ford Foundation`
-* Grant Number
-  In diesem Feld kommt der Code, der dem Geldgeber einer geförderten Zuwendung (Grant) zugewiesen wird.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Restriktionen: Es ist optional.
-  - Schemata: DataCite
-  - Beispielwerte: `GBMF3859.01` `GBMF3859.22`
-* Grant Name
-  In diesem Feld kommt der lesbare Titel oder Name der Auszeichnung (grant).
-  - Datentyp: Text
-  - Vorkommen: 0-1
-  - Restriktionen: Es ist optional.
-  - Schemata: DataCite
-  - Beispielwerte: `Socioenvironmental Monitoring of the Amazon Basin and Xingu` `Grantmaking at a glance`
+- Funder
+  
+  Name of the funding provider.
+  - Data type: String
+  - Occurence: 0-1, if Funding Reference is specified, then funderName is mandatory. 
+  - The corresponding field in the database where the value is stored is called: `funder` in the `Funding_Reference` table.
+  - Restrictions: Selection from CrossRef funders list is possible, as well as free text
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/)
+  - Scheme: DataCite 4.5
+  - Example values: `Gordon and Betty Moore Foundation`, `Ford Foundation`
 
-## Datenvalidierung
+- *Saved in backend (not visible to user):* funderId
 
-- Folgende Felder müssen zwingend ausgefüllt werden: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_Nur bei der Angabe des zweiten Titels!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email**, **Description Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
-- Die restlichen Felder **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work alle Felder** und **Funding Reference alle Felder** können optional leer bleiben.✅
+  Uniquely identifies a funding entity, using Crossrefs' [Funder Registry](https://www.crossref.org/services/funder-registry/)
+  - Data type: String
+  - Occurence: 0-1
+  - The corresponding field in the database where the value is stored is called: `funderid` in the `Funding_Reference` table.
+  - Restrictions: is automatically saved, if a funder is selected from the dropdown list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#funderidentifier)
+  - Scheme: DataCite 4.5
+  - Example values: `http://dx.doi.org/10.13039/100001214`
+
+- *Saved in backend (not visible to user):* funderidtyp
+
+  The type of the funderIdentifier. Is either NULL or "Crossref Funder ID"
+  - Data type: String
+  - Occurence: 0-1
+  - The corresponding field in the database where the value is stored is called: `funderidtyp` in the `Funding_Reference` table.
+  - Restrictions: can only be "Crossref Funder ID" (if a funder is selected from the dropdown list) or null
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#a-funderidentifiertype)
+  - Scheme: DataCite 4.5
+  - Value: `Crossref Funder ID`
+
+- Grant Number
+
+  The code assigned by the funder to a sponsored award (grant).
+  - Data type: String
+  - Occurence: 0-1
+  - The corresponding field in the database where the value is stored is called: `grantnumber` in the `Funding_Reference` table.
+  - Restrictions: None
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardnumber)
+  - Scheme: DataCite 4.5
+  - Example values: `GBMF3859.01` `GBMF3859.22`
+
+- Grant Name
+
+  The human readable title or name of the award (grant).
+  - Data type: String
+  - Occurence: 0-1
+  - The corresponding field in the database where the value is stored is called: `grantname` in the `Funding_Reference` table.
+  - Restrictions: None
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
+  - Scheme: DataCite 4.5
+  - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
+
+## Data validation
+
+- Mandatory fields: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email**, **Description Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
+
+- Other fields **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields** are optional.✅
+
+- The following field become mandatory in certain cases:
+
+**Contributor Role**, **Contributor Lastname**, **Contributor Firstname** become mandatory, if one of the Contributor Person fields is filled
+**Contributor Organisation Name**, **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled (this includes **Contributor Organisation Affiliation**)
+**Related work all Fields** become mandatory fields, if one of the fields is filled
+**Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
 
 ## Database structure
 

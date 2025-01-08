@@ -579,9 +579,12 @@ $(document).ready(function () {
     // Clone the template
     var newRelatedWorkRow = firstRelatedWorkLine.clone();
 
-    // Clear input fields and remove validation feedback
+
+    // Clear input fields
     newRelatedWorkRow.find("input").val("").removeClass("is-invalid");
-    newRelatedWorkRow.find(".invalid-feedback").hide();
+
+    // Remove required attributes initially
+    newRelatedWorkRow.find("input, select").removeAttr("required");
 
     // Remove help buttons
     replaceHelpButtonInClonedRows(newRelatedWorkRow);
@@ -596,6 +599,10 @@ $(document).ready(function () {
     // Event handler for the remove button
     newRelatedWorkRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
+      // Event handler for the remove button
+      newRelatedWorkRow.on("click", ".removeButton", function () {
+        $(this).closest(".row").remove();
+      });
     });
   });
 
