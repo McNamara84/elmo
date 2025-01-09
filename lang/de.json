@@ -70,8 +70,8 @@
         "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
     },
     "laboratory": {
-        "title": "Ursprungslabor",
-        "name": "Name des Ursprungslabors"
+        "title": "Herkunftslabor",
+        "name": "Name des Herkunftslabors"
     },
     "contributors": {
         "title": "Beitragende",
@@ -124,7 +124,7 @@
         "mapInfo": "(Bitte wählen Sie Koordinaten per Rechteck oder Markierung)"
     },
     "relatedWork": {
-        "title": "Verwandte Arbeiten",
+        "title": "Verwandte Werke",
         "relation": "Beziehung",
         "identifierType": "Identifikatortyp",
         "identifier": "Identifikator",
