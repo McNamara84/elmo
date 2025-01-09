@@ -100,10 +100,10 @@
             "label": "Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe..."
         },
         "free": {
-            "title": "Freie Schlagwörter",
-            "placeholder": "Bitte geben Sie Schlagwörter ein und trennen Sie diese durch Kommas."
+            "title": "Freie Schlagworte",
+            "placeholder": "Bitte geben Sie Schlagworte ein und trennen Sie diese durch Kommas."
         },
-        "searchPlaceholder": "Nach Schlagwörtern suchen..."
+        "searchPlaceholder": "Nach Schlagworte suchen..."
     },
     "dates": {
         "title": "Daten",
