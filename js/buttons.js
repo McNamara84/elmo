@@ -951,7 +951,7 @@ $(document).ready(function () {
     if (language === "auto") {
       setAutoLanguage();
     } else {
-      setLanguage(language);
+      localStorage.setItem("userLanguage", language);
     }
   });
 
