@@ -59,6 +59,7 @@ function applyTranslations() {
     // Call resizeTitle and adjustButtons after translations are applied
     resizeTitle();
     adjustButtons();
+    document.dispatchEvent(new Event('translationsLoaded'));
 }
 
 /**
