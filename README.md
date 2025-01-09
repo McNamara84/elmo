@@ -475,7 +475,7 @@ JSON-Array mit Identifier-Typ-Objekten
   - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
 
 ### Contact Person(s)
-A Contact Person is saved as a "Contributor" with the role "Contact Person" in the datacite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
+A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
 
 - Last name
 
@@ -667,7 +667,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Beispielwerte: `This is the description of a data set that does not fit into the categories of abstract, methods or technical information, but is nevertheless extremely necessary.`
 
 ### Keywords
-Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD Science Keywords" and "Free Keywords" are mapped to `<subject>` in the datacite 4.5 scheme and to `<descriptiveKeywords> <MD_Keywords> <keyword>` in the ISO scheme. 
+Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD Science Keywords" and "Free Keywords" are mapped to `<subject>` in the DataCite 4.5 scheme and to `<descriptiveKeywords> <MD_Keywords> <keyword>` in the ISO scheme. 
 
 #### EPOS Multi-Scale Laboratories Keywords
 
@@ -680,7 +680,7 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
   - Occurrence: 0-n
   - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
   - Restrictions: Controlled vocabulary
-  - DataCite [documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
   - Example values: `Material > minerals > chemical elements > selenium`, `Geochemistry > measured property > selenium`
 
 - *Saved in backend (not visible to user):* scheme, schemeURI, valueURI und language
@@ -690,7 +690,7 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
   - Occurence: 1 for controlled (thesaurus) keywords
   - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
   - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
   - Example values: 
     scheme `https://epos-msl.uu.nl/voc/materials/1.3/`, 
     schemeURI `https://epos-msl.uu.nl/voc/materials/1.3/`, 
@@ -699,7 +699,7 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
 
 #### GCMD Science Keywords
 
-Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and Earth Science Services) are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API Documentation](https://mde2.cats4future.de/api/v2/docs/index.html))
+Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and Earth Science Services) are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://mde2.cats4future.de/api/v2/docs/index.html))
 
 - GCMD Science Keyword
 
@@ -708,7 +708,7 @@ Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and
   - Occurrence: 0-n
   - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
   - Restrictions: Terms can be selected from controlled list
-  - DataCite [documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
   - Example Values: `Science Keywords > EARTH SCIENCE > OCEANS > SEA ICE > SEA ICE VOLUME`,`Science Keywords > EARTH SCIENCE > TERRESTRIAL HYDROSPHERE > WATER QUALITY/WATER CHEMISTRY > CONTAMINANTS > SELENIUM`
 
 - *Saved in backend (not visible to user):* scheme, schemeURI, valueURI, language
@@ -718,7 +718,7 @@ Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and
   - Occurence: 1 for controlled (thesaurus) keywords
   - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
   - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
   - Example values: 
     scheme `NASA/GCMD Earth Science Keywords`, 
     schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"`, 
@@ -734,7 +734,7 @@ This field contains free keywords that are not part of a thesaurus.
   - Occurrence: 0-n
   - The corresponding field in the database where the value is saved is called: `free_keyword` in the table `free_keywords`
   - Restrictions: Dublicates are not allowed
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
   - Example values: `Seismic tremor`, `Acoustic Emission`
 
 ### Dates
@@ -828,7 +828,7 @@ Räumliche und zeitliche Einordnung des Datensatzes. Zur einfacheren Erfassung d
   - Beispielwerte: `+02:00` `-08:00`
 
 ### Related Work
-This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggregationInfo>` in the ISO scheme (not yet implemented). The element is optional in both schemes.
+This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggregationInfo>` in the ISO scheme (not yet implemented). The element is optional in both schemes.
 
 - Relation
 
@@ -862,7 +862,7 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - Example values: `ARK` `arXiv` `EAN13`
 
 ### Funding Reference
-This element is optional in the datacite scheme. However, it is a best practice to supply funding information when financial support has been received.
+This element is optional in the DataCite scheme. However, it is a best practice to supply funding information when financial support has been received.
 
 - Funder
   

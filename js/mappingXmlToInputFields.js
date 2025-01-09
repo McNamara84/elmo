@@ -839,7 +839,7 @@ function processKeywords(xmlDoc, resolver) {
       // Add the tag to the MSL Keyword input field
       tagifyMsl.addTags([tagData]);
     } else {
-      //Add all other tags to the Free Keyword input field
+      // Add all other tags to the Free Keyword input field
       tagifyFree.addTags([tagData]);
     }
   }
@@ -917,7 +917,7 @@ function processFunders(xmlDoc, resolver) {
     // Find the last row in the form
     const $lastRow = $('input[name="funder[]"]').last().closest('.row');
 
-    //Populate fields
+    // Populate fields
     $lastRow.find('input[name="funder[]"]').val(funderName);
     $lastRow.find('input[name="funderId[]"]').val(funderId);
     $lastRow.find('input[name="funderidtyp[]"]').val(funderIdTyp);
@@ -1093,7 +1093,7 @@ async function loadXmlToForm(xmlDoc) {
   processContributors(xmlDoc, resolver);
   // Process descriptions
   processDescriptions(xmlDoc, resolver);
-  //Process Keywords
+  // Process Keywords
   processKeywords(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
