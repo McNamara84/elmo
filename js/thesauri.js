@@ -138,7 +138,7 @@ $(document).ready(function () {
             buildWhitelist(filteredData);
 
             // Initialise Tagify
-            var tagify = new Tagify(input, {
+            var thesaurusKeywordstagify = new Tagify(input, {
                 whitelist: suggestedKeywords,
                 enforceWhitelist: true,
                 placeholder: translations.keywords.thesaurus.label,
@@ -150,6 +150,9 @@ $(document).ready(function () {
                 },
                 editTags: false,  // tags can not be edited
             });
+            // Explicitly assign the instance to input._tagify
+            input._tagify = thesaurusKeywordstagify;
+
 
             // Initialise jsTree
             $(config.jsTreeId).jstree({
@@ -206,10 +209,10 @@ $(document).ready(function () {
             */
             $(config.jsTreeId).on("select_node.jstree", function (e, data) {
                 var fullPath = data.instance.get_path(data.node, " > ");
-                var existingTags = tagify.value.map((tag) => tag.value);
+                var existingTags = thesaurusKeywordstagify.value.map((tag) => tag.value);
 
                 if (!existingTags.includes(fullPath)) {
-                    tagify.addTags([fullPath]);
+                    thesaurusKeywordstagify.addTags([fullPath]);
                 }
             });
 
@@ -225,7 +228,7 @@ $(document).ready(function () {
             */
             $(config.jsTreeId).on("deselect_node.jstree", function (e, data) {
                 var fullPath = data.instance.get_path(data.node, " > ");
-                tagify.removeTag(fullPath);
+                thesaurusKeywordstagify.removeTag(fullPath);
             });
 
             /**
@@ -237,7 +240,7 @@ $(document).ready(function () {
             * @param {Object} e.detail.data - The data of the added tag.
             * @param {string} e.detail.data.value - The value of the added tag.
             */
-            tagify.on('add', function (e) {
+            thesaurusKeywordstagify.on('add', function (e) {
                 var tagText = e.detail.data.value;
                 var jsTree = $(config.jsTreeId).jstree(true);
                 var node = findNodeByPath(jsTree, tagText);
@@ -255,7 +258,7 @@ $(document).ready(function () {
             * @param {Object} e.detail.data - The data of the removed tag.
             * @param {string} e.detail.data.value - The value of the removed tag.
             */
-            tagify.on('remove', function (e) {
+            thesaurusKeywordstagify.on('remove', function (e) {
                 var tagText = e.detail.data.value;
                 var jsTree = $(config.jsTreeId).jstree(true);
                 var node = findNodeByPath(jsTree, tagText);
@@ -293,11 +296,11 @@ $(document).ready(function () {
             */
             $(config.jsTreeId).on("select_node.jstree", function (e, data) {
                 var fullPath = data.instance.get_path(data.node, " > ");
-                var existingTags = tagify.value.map((tag) => tag.id);
+                var existingTags = thesaurusKeywordstagify.value.map((tag) => tag.id);
 
                 // Only add the tag if it's not already present
                 if (!existingTags.includes(data.node.id)) {
-                    tagify.addTags([{
+                    thesaurusKeywordstagify.addTags([{
                         value: fullPath,
                         id: data.node.id,
                         scheme: data.node.original.scheme,
