@@ -1,9 +1,11 @@
 {
     "header": {
         "help": "Hilfe",
-        "helpOn": "An",
-        "helpOff": "Aus",
+        "on": "An",
+        "off": "Aus",
         "mode": "Modus",
+        "light": "Hell",
+        "dark": "Dunkel",
         "language": "Sprache",
         "legalNotice": "Impressum"
     },
@@ -131,7 +133,7 @@
         "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein."
     },
     "funding": {
-        "title": "Förderreferenz",
+        "title": "Förderungen",
         "funder": "Förderer",
         "funderInvalid": "Bitte geben Sie den Namen des Förderers ein.",
         "grantNumber": "Fördernummer",
