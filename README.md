@@ -692,10 +692,12 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Beispielwerte: `This is the description of a data set that does not fit into the categories of abstract, methods or technical information, but is nevertheless extremely necessary.`
 
 ### Keywords
+Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD Science Keywords" and "Free Keywords" are mapped to `<subject>` in the datacite 4.5 scheme and to `<descriptiveKeywords> <MD_Keywords> <keyword>` in the ISO scheme. 
 
 #### EPOS Multi-Scale Laboratories Keywords
 
-  - In dieses Feld können Schlagwörter zur inhaltlichen Beschreibung des Datensatzes eingefügt werden
+- EPOS Multi-Scale Laboratories Keyword
+  In dieses Feld können Schlagwörter zur inhaltlichen Beschreibung des Datensatzes eingefügt werden
   - Datentyp: Zeichenkette
   - Vorkommen: 0-n
   - Das zugehörige Feld in der Datenbank heißt: keyword in der Tabelle Thesaurus_Keywords
@@ -717,67 +719,38 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
 
 #### GCMD Science Keywords
 
-  - In dieses Feld können Schlagwörter zur inhaltlichen Beschreibung des Datensatzes eingefügt werden
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank heißt: keyword in der Tabelle Thesaurus_Keywords
-  - Restriktionen: Es stehen (Stand 18.06.2024) nur GCMD Science Keywords (Earth Science und Earth Science Services) zur Auswahl. **Weitere kontrollierte Vokabulare müssen/können/sollten noch hinzugefügt werden.**
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `EARTH SCIENCE` `AGRICULTURE`
+Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and Earth Science Services) are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API Documentation](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-- *Saved in backend (not visible to user):* scheme
+- GCMD Science Keyword
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
+  - Restrictions: Terms can be selected from controlled list
+  - DataCite [documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - Scheme version: datacite 4.5, ISO
+  - Example Values: `Science Keywords > EARTH SCIENCE > OCEANS > SEA ICE > SEA ICE VOLUME`,`Science Keywords > EARTH SCIENCE > TERRESTRIAL HYDROSPHERE > WATER QUALITY/WATER CHEMISTRY > CONTAMINANTS > SELENIUM`
 
-  - hier wird bei Auswahl eines Keywords der Name des zugehörigen Schemas gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank heißt: scheme in der Tabelle Thesaurus_Keywords
-  - Restriktionen: bisher ist nur der Wert `NASA/GCMD Earth Science Keywords` möglich
+- *Saved in backend (not visible to user):* scheme, schemeURI, valueURI, language
+
+  The purpose of these fields is to clearly identify the keyword.
+  - Data type: String
+  - Occurence: 1 for controlled (thesaurus) keywords
+  - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
+  - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwert: `NASA/GCMD Earth Science Keywords`
-
-- *Saved in backend (not visible to user):* schemeURI
-
-  - hier wird bei Auswahl eines Keywords der URI des zugehörigen Schemas gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank heißt: schemeURI in der Tabelle Thesaurus_Keywords
-  - Restriktionen: bisher ist nur der Wert `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords` möglich
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#b-schemeuri)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords`
-
-- *Saved in backend (not visible to user):* valueURI
-
-  - hier wird bei Auswahl eines Keywords der PID, die URI, des Keywords gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank heißt: valueURI in der Tabelle Thesaurus_Keywords
-  - Restriktionen: wird aus der Datei gcmdScienceKeywords.json extrahiert
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#c-valueuri)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `https://gcmd.earthdata.nasa.gov/kms/concept/a2cc8e02-3207-4c40-af41-9656404bac0a`
-
-- *Saved in backend (not visible to user):* language
-  - hier wird bei Auswahl eines Keywords der URI des zugehörigen Schemas gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank heißt: language in der Tabelle Thesaurus_Keywords
-  - Restriktionen: wird aus der Datei gcmdScienceKeywords.json extrahiert
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#subject)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `en` `de`
-
-
-
+  - Scheme Version: "DataCite" 4.5
+  - Example values: 
+    scheme `NASA/GCMD Earth Science Keywords`, 
+    schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"`, 
+    valueURI `https://gcmd.earthdata.nasa.gov/kms/concept/b2318fb3-788c-4f36-a1d1-36670d2da747"`, 
+    language `en`
 
 #### Free Keywords
 
-This field contains free keywords that are not part of a thesaurus. Its contents are mapped to `<subject>` in the datacite 4.5 scheme and to `<descriptiveKeywords> <MD_Keywords> <keyword>` in the ISO scheme 
+This field contains free keywords that are not part of a thesaurus.
   - Data type: Free text
   - Occurrence: 0-n
-  - The corresponding field in the database where the value is saved is called: `free_keyword` in the table 'free_keyword'
+  - The corresponding field in the database where the value is saved is called: `free_keyword` in the table `free_keywords`
   - Restrictions: no duplicates
   - Schema version: DataCite 4.5
 - Example values: `Seismic tremor`, `Acoustic Emission`
