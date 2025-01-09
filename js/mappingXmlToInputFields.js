@@ -805,12 +805,6 @@ function processKeywords(xmlDoc, resolver) {
   const tagifyMsl = tagifyInputMsl._tagify;
   const tagifyFree = tagifyInputFree._tagify;
 
-  // Ensure Tagify instances exist
-  if (!tagifyGCMD || !tagifyMsl || !tagifyFree) {
-    console.error("One or more Tagify instances are not initialized.");
-    return;
-  }
-
   // Clear existing tags
   tagifyGCMD.removeAllTags();
   tagifyMsl.removeAllTags();
