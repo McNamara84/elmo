@@ -1,4 +1,4 @@
-# ELMO - EPOS Laoratory Metadata Optimizer
+# ELMO - EPOS Laboratory Metadata Optimizer
 
 This EPOS Laoratory Metadata Optimizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GeoForschungsZentrum Potsdam](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
 
@@ -691,9 +691,31 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Schema Version: "DataCite" 4.5
   - Beispielwerte: `This is the description of a data set that does not fit into the categories of abstract, methods or technical information, but is nevertheless extremely necessary.`
 
-### Thesaurus Keywords
+### Keywords
 
-- Thesaurus Keyword
+#### EPOS Multi-Scale Laboratories Keywords
+
+  - In dieses Feld können Schlagwörter zur inhaltlichen Beschreibung des Datensatzes eingefügt werden
+  - Datentyp: Zeichenkette
+  - Vorkommen: 0-n
+  - Das zugehörige Feld in der Datenbank heißt: keyword in der Tabelle Thesaurus_Keywords
+  - Restriktionen: Es gibt die Möglichkeit, entweder die gewünschten Keywords in der Suchleiste einzugeben oder direkt in das Eingabefeld zu tippen. Die Auswahloption steht auch zur Verfügung.
+  - [EPOS-Dokumentation](https://epos-msl.uu.nl/about)
+  - Schema Version: "EPOS Multi-Scale Laboratories (MSL) " 1.3
+  - Beispielwerte: `hydrogeochemistery` `alternating field (AF) demagnetiser`
+
+- *Saved in backend (not visible to user):* scheme, schemeURI, valueURI und language
+
+  - hier werden bei Auswahl eines Keywords die zugehörigen versteckten Eingabefeldern wie schemes, schemeURIs, valueURIs und languages gespeichert
+  - Datentyp: Zeichenkette
+  - Vorkommen: 0-1
+  - Die zugehörigen Feldern in der Datenbank heißen: scheme, schemeURI, valueURI und language in der Tabelle Thesaurus_Keywords
+  - Restriktionen: Falls in der Json-Datei die scheme nicht verfügbar ist wird in der Datenbank der eingabefeldname eingetragen `MSLKeywords`, `en` wird in der Tabelle unter language eingetragen, wenn die Sprache in der Json-Datei nicht verfügbar ist 
+  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#subject)
+  - Schema Version: "DataCite" 4.5
+  - Beispielwert: `"scheme": "EPOS WP16 Analogue"// "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/"// "id": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/software-visual_fortran_compaq"// "language": "en"` `"scheme": "EPOS WP16 Analogue"// "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/"// "id": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/software-visual_studio_microsoft"// "language": "en"`
+
+#### GCMD Science Keywords
 
   - In dieses Feld können Schlagwörter zur inhaltlichen Beschreibung des Datensatzes eingefügt werden
   - Datentyp: Zeichenkette
@@ -748,39 +770,17 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Beispielwerte: `en` `de`
 
 
-### MSL Keywords
 
-- MSL Keyword
 
-  - In dieses Feld können Schlagwörter zur inhaltlichen Beschreibung des Datensatzes eingefügt werden
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank heißt: keyword in der Tabelle Thesaurus_Keywords
-  - Restriktionen: Es gibt die Möglichkeit, entweder die gewünschten Keywords in der Suchleiste einzugeben oder direkt in das Eingabefeld zu tippen. Die Auswahloption steht auch zur Verfügung.
-  - [EPOS-Dokumentation](https://epos-msl.uu.nl/about)
-  - Schema Version: "EPOS Multi-Scale Laboratories (MSL) " 1.3
-  - Beispielwerte: `hydrogeochemistery` `alternating field (AF) demagnetiser`
+#### Free Keywords
 
-- *Saved in backend (not visible to user):* scheme, schemeURI, valueURI und language
-
-  - hier werden bei Auswahl eines Keywords die zugehörigen versteckten Eingabefeldern wie schemes, schemeURIs, valueURIs und languages gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Die zugehörigen Feldern in der Datenbank heißen: scheme, schemeURI, valueURI und language in der Tabelle Thesaurus_Keywords
-  - Restriktionen: Falls in der Json-Datei die scheme nicht verfügbar ist wird in der Datenbank der eingabefeldname eingetragen `MSLKeywords`, `en` wird in der Tabelle unter language eingetragen, wenn die Sprache in der Json-Datei nicht verfügbar ist 
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#subject)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwert: `"scheme": "EPOS WP16 Analogue"// "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/"// "id": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/software-visual_fortran_compaq"// "language": "en"` `"scheme": "EPOS WP16 Analogue"// "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/"// "id": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/software-visual_studio_microsoft"// "language": "en"`
-
-### Free Keywords
-
-- In dieses Feld kommen freie Schlagwörter, diese sind nicht an einen Thesaurus gebunden.
-  - Datentyp: Freitext
-  - Vorkommen: 0-n
-- Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: free_keywords
-  - Restriktionen: keine Duplikate
-  - Schema Version:
-- Beispielwerte: carbon dioxide emission, CO2 emission, methane emission, CH4 emission, peatland, wetland, eddy covariance, rewetting, emission factor, mitigation, Test
+This field contains free keywords that are not part of a thesaurus. Its contents are mapped to `<subject>` in the datacite 4.5 scheme and to `<descriptiveKeywords> <MD_Keywords> <keyword>` in the ISO scheme 
+  - Data type: Free text
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is saved is called: `free_keyword` in the table 'free_keyword'
+  - Restrictions: no duplicates
+  - Schema version: DataCite 4.5
+- Example values: `Seismic tremor`, `Acoustic Emission`
 
 ### Dates
 
