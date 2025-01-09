@@ -696,26 +696,35 @@ Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD
 
 #### EPOS Multi-Scale Laboratories Keywords
 
+Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies). Can be updated from the repository via API (see [API Documentation](https://mde2.cats4future.de/api/v2/docs/index.html)).
+
 - EPOS Multi-Scale Laboratories Keyword
-  In dieses Feld können Schlagwörter zur inhaltlichen Beschreibung des Datensatzes eingefügt werden
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank heißt: keyword in der Tabelle Thesaurus_Keywords
-  - Restriktionen: Es gibt die Möglichkeit, entweder die gewünschten Keywords in der Suchleiste einzugeben oder direkt in das Eingabefeld zu tippen. Die Auswahloption steht auch zur Verfügung.
-  - [EPOS-Dokumentation](https://epos-msl.uu.nl/about)
-  - Schema Version: "EPOS Multi-Scale Laboratories (MSL) " 1.3
-  - Beispielwerte: `hydrogeochemistery` `alternating field (AF) demagnetiser`
+
+  This field contains keywords to describe the content of the resource
+
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
+  - Restrictions: Controlled vocabulary
+  - [EPOS documentation](https://epos-msl.uu.nl/about)
+  - Schema version: DataCite 4.5
+  - Example values: `Material > minerals > chemical elements > selenium`, `Geochemistry > measured property > selenium`
 
 - *Saved in backend (not visible to user):* scheme, schemeURI, valueURI und language
 
-  - hier werden bei Auswahl eines Keywords die zugehörigen versteckten Eingabefeldern wie schemes, schemeURIs, valueURIs und languages gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Die zugehörigen Feldern in der Datenbank heißen: scheme, schemeURI, valueURI und language in der Tabelle Thesaurus_Keywords
-  - Restriktionen: Falls in der Json-Datei die scheme nicht verfügbar ist wird in der Datenbank der eingabefeldname eingetragen `MSLKeywords`, `en` wird in der Tabelle unter language eingetragen, wenn die Sprache in der Json-Datei nicht verfügbar ist 
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#subject)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwert: `"scheme": "EPOS WP16 Analogue"// "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/"// "id": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/software-visual_fortran_compaq"// "language": "en"` `"scheme": "EPOS WP16 Analogue"// "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/"// "id": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/software-visual_studio_microsoft"// "language": "en"`
+ The purpose of these fields is to clearly identify the keyword.
+
+  - Data type: String
+  - Occurence: 1 for controlled (thesaurus) keywords
+  - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
+  - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
+  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - Scheme Version: "DataCite" 4.5
+  - Example values: 
+    scheme `https://epos-msl.uu.nl/voc/materials/1.3/`, 
+    schemeURI `https://epos-msl.uu.nl/voc/materials/1.3/`, 
+    valueURI `https://epos-msl.uu.nl/voc/materials/1.3/minerals-chemical_elements-selenium`, 
+    language `en`
 
 #### GCMD Science Keywords
 
@@ -747,13 +756,16 @@ Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and
 
 #### Free Keywords
 
+- Free Keyword
+
 This field contains free keywords that are not part of a thesaurus.
+
   - Data type: Free text
   - Occurrence: 0-n
   - The corresponding field in the database where the value is saved is called: `free_keyword` in the table `free_keywords`
   - Restrictions: no duplicates
   - Schema version: DataCite 4.5
-- Example values: `Seismic tremor`, `Acoustic Emission`
+  - Example values: `Seismic tremor`, `Acoustic Emission`
 
 ### Dates
 
