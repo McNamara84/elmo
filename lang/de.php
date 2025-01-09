@@ -92,11 +92,11 @@ $translations = [
     'chrono' => 'International Chronostratigraphic Chart',
     'cgi' => 'CGI Simple Lithology',
     'Gemet' => 'GEMET Thesaurus',
-    'thesaurusLabel' => 'Thesaurus öffnen, um Schlagwörter auszuwählen oder anfangen zu tippen...',
+    'thesaurusLabel' => 'Thesaurus öffnen, um Schlagworte auszuwählen oder anfangen zu tippen...',
 
     // Free Keywords
-    'freekeywords' => 'Freie Schlagwörter',
-    'freekeywords_input' => 'Bitte Schlagwörter eintragen und durch ein Komma trennen.',
+    'freekeywords' => 'Freie Schlagworte',
+    'freekeywords_input' => 'Bitte Schlagworte eintragen und durch ein Komma trennen.',
 
     // Form Group Spatial and Temporal Coverages
     'tsc_spatialTemporalCoverages' => 'Räumliche und zeitliche Erfassungsbereiche',
