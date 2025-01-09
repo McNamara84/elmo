@@ -1,9 +1,11 @@
 {
     "header": {
         "help": "Help",
-        "helpOn": "On",
-        "helpOff": "Off",
+        "on": "On",
+        "off": "Off",
         "mode": "Mode",
+        "light": "Light",
+        "dark": "Dark",
         "language": "Language",
         "legalNotice": "Legal notice"
     },
