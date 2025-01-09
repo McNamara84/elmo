@@ -802,6 +802,8 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
 ### Spatial and temporal coverage
 
 Spatial and temporal coverage specifies the geographic region and time frame that the dataset encompasses, providing essential context for its relevance and applicability.
+In the DataCite scheme: The data from Latitude, Longitude and Description are mapped to `<geoLocations>`, while Start Date/Time and End Date/Time are mapped to `<date dateType="Collected">`.
+In the ISO scheme: All field data are mapped to `<EX_Extent>`.
 
 - Latitude Min
   
