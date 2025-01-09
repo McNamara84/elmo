@@ -942,6 +942,23 @@ $(document).ready(function () {
   }
 
   /**
+   * Automatically sets the language based on the browser's language settings.
+   */
+  function setAutoLanguage() {
+    var userLang = navigator.language || navigator.userLanguage;
+    userLang = userLang.substring(0, 2);
+    if (userLang !== "en" && userLang !== "de") {
+      userLang = "en"; // Default to English if the language is not supported
+    }
+    localStorage.setItem("userLanguage", userLang);
+  }
+
+  // Check if a language is set in localStorage; if not, default to English
+  if (!localStorage.getItem("userLanguage")) {
+    localStorage.setItem("userLanguage", "en");
+  }
+
+  /**
    * Event handler for clicks on language selection buttons.
    * Sets the language or auto-detects it based on browser settings.
    */
