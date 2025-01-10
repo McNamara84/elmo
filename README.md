@@ -754,78 +754,118 @@ This field contains free keywords that are not part of a thesaurus.
 
 ### Spatial and temporal coverage
 
-Räumliche und zeitliche Einordnung des Datensatzes. Zur einfacheren Erfassung der geografischen Angaben wird Google Maps genutzt. Wird auf der Karte ein Rechteck gezeichnet, werden die Koordinaten dieses Rechtecks an die Eingabefelder `Latitude Min` und `Latitude Max` sowie `Longitude Min` und `Longitude Max` übergeben. Die Speicherung dieser Koordinaten geschieht erst zusammen mit der Speicherung des gesamten Formulars. Wird lediglich ein Marker auf der Karte gesetzt, werden die Felder `Latitude Min` und `Longitude Min` befüllt, während `Latitude Max` und `Longitude Max` leer bleiben.
+Spatial and temporal coverage specifies the geographic region and time frame that the dataset encompasses, providing essential context for its relevance and applicability.
+In the DataCite scheme: The data from Latitude, Longitude and Description are mapped to `<geoLocations>`, while Start Date/Time and End Date/Time are mapped to `<date dateType="Collected">`.
+In the ISO scheme: All field data are mapped to `<EX_Extent>`.
 
 - Latitude Min
-  Geographische Breite einer Einzelkoordinate oder die kleinere geographische Breite eines Rechtecks als Fließkommazahl mit Punkt als Trennzeichen.
-  - Datentyp: Fließkommazahl
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: Nur positve und negative Zahlen im Wertebereich von -90 bis +90
-  - XML-Schemata: DataCite, ISO und DIF
-  - Beispielwerte: `52.0317983498743` `-3.234`
+  
+  - This field contains the geographic latitude of a single coordinate or the smaller geographic latitude of a rectangle.
+  - Data type: Floating-point number
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: latitudeMin in the spatial_temporal_coverage table
+  - Restrictions: Only positive and negative numbers in the value range from -90 to +90
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#southboundlatitude)
+  - Schema version: DataCite 4.5
+  - Example values: `52.0317983498743` `-3.234`
+
 - Latitude Max
-  Geographische Breite eines Rechtecks als Fließkommazahl mit Punkt als Trennzeichen.
-  - Datentyp: Fließkommazahl
-  - Vorkommen: 0-1
-  - Restriktionen: Nur positve und negative Zahlen im Wertebereich von -90 bis +90
-  - XML-Schemata: DataCite, ISO und DIF
-  - Beispielwerte: `49.72437624376` `-32.82438824398`
+  
+  - This field contains the larger geographic latitude of a rectangle.
+  - Data type: Floating-point number
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: latitudeMax in the spatial_temporal_coverage table
+  - Restrictions: Only positive and negative numbers in the value range from -90 to +90
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#northboundlatitude)
+  - Schema version: DataCite 4.5
+  - Example values: `49.72437624376` `-32.82438824398`
+  
 - Longitude Min
-  Geographische Länge einer Einzelkoordinate oder die kleinere geographische Länge eines Rechtecks als Fließkommazahl mit Punkt als Trennzeichen.
-  - Datentyp: Fließkommazahl
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: Nur positve und negative Zahlen im Wertebereich von -180 bis +180
-  - XML-Schemata: DataCite, ISO und DIF
-  - Beispielwerte: `108.0317983498743` `-3.04`
+  
+  - This field contains the geographic longitude of a single coordinate or the smaller geographic longitude of a rectangle.
+  - Data type: Floating-point number
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: longitudeMin in the spatial_temporal_coverage table
+  - Restrictions: Only positive and negative numbers in the value range from -180 to +180
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#westboundlongitude)
+  - Schema version: DataCite 4.5
+  - Example values: `108.0317983498743` `-3.04`
+  
 - Longitude Max
-  Geographische Länge eines Rechtecks als Fließkommazahl mit Punkt als Trennzeichen.
-  - Datentyp: Fließkommazahl
-  - Vorkommen: 0-1
-  - Restriktionen: Nur positve und negative Zahlen im Wertebereich von -180 bis +180
-  - XML-Schemata: DataCite, ISO und DIF
-  - Beispielwerte: `99.037543735498743` `-6.4`
+  
+  - This field contains the larger geographic longitude of a rectangle.
+  - Data type: Floating-point number
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: longitudeMax in the spatial_temporal_coverage table
+  - Restrictions: Only positive and negative numbers in the value range from -180 to +180
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#eastboundlongitude)
+  - Schema version: DataCite 4.5
+  - Example values: `99.037543735498743` `-6.4`
+  
 - Description
-  Freitextfeld zur Erklärung des geographischen und zeitlichen Zusammenhangs.
-  - Datentyp: Feitext
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: keine
-  - XML-Schemata: DataCite und ISO
-  - Beispielwerte: `Several boreholes at regular intervals distributed over the entire surface.`
+
+  - This field contains a free-text explanation of the geographic and temporal context.
+  - Data type: Free text
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
+  - Restrictions: none
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#geolocationplace)
+  - Schema version: DataCite 4.5
+  - Example values: `Several boreholes at regular intervals distributed over the entire surface.`
+  
 - Start Date
-  Datum des Beginns der zeitlichen Einordnung des Datensatzes.
-  - Datentyp: Datum
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: YYYY-MM-DD
-  - XML-Schemata: DataCite und ISO
-  - Beispielwerte: `2024-01-02` `1999-08-07`
+  
+  - This field contains the starting date of the temporal classification of the dataset.
+  - Data type: DATE
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
+  - Restrictions: YYYY-MM-DD
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - Schema version: DataCite 4.5
+  - Example values: `2024-01-02` `1999-08-07`
+  
 - Start Time
-  Zeitangabe im Format hh:mm:ss
-  - Datentyp: String
-  - Vorkommen: 0-1
-  - Restriktionen: hh:mm:ss
-  - XML-Schemata: DataCite, ISO
-  - Beispielwerte: `10:43:50` `04:00:00`
+  
+  - This field contains the starting time.
+  - Data type: TIME  
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
+  - Restrictions: hh:mm:ss
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - Schema version: DataCite 4.5
+  - Example values: `10:43:50` `04:00:00`
+  
 - End Date
-  Datum des Endes der zeitlichen Einordnung des Datensatzes.
-  - Datentyp: Datum
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: YYYY-MM-DD
-  - XML-Schemata: DataCite und ISO
-  - Beispielwerte: `1998-01-02` `2001-07-08`
+  
+  - This field contains the ending date of the temporal classification of the dataset.
+  - Data type: DATE
+  - Occurrence: 1 
+  - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
+  - Restrictions: YYYY-MM-DD
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - Schema version: DataCite 4.5
+  - Example values: `1998-01-02` `2001-07-08`
+  
 - End Time
-  Zeitangabe im Format hh:mm:ss
-  - Datentyp: String
-  - Vorkommen: 0-1
-  - Restriktionen: hh:mm:ss
-  - XML-Schemata: DataCite, ISO
-  - Beispielwerte: `11:34:56` `09:00:00`
+  
+  - This field contains the ending time.
+  - Data type: TIME 
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
+  - Restrictions: hh:mm:ss
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - Schema version: DataCite 4.5
+  - Example values: `11:34:56` `09:00:00`
+  
 - Timezone
-  Zeitzone ab UTC in der Start Time und End Time angegeben sind. Alle möglichen Zeitzonen werden regelmäßig über die API mit `getTimezones` aktualisiert, wenn ein CronJob auf dem Server eingerichtet wurde. Wichtig: API-Schlüssel für timezonedb.com muss in den Einstellungen angegeben werden um die automatische Aktualisierung nutzen zu können!
-  - Datentyp: Zeichenkette (Auswahl aus Liste)
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: Lediglich Werte aus Liste sind erlaubt
-  - XML-Schemata: ISO
-  - Beispielwerte: `+02:00` `-08:00`
+  
+  - This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
+  - Data type: Zeichenkette (Auswahl aus Liste)
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
+  - Restrictions: Only values from the list are permitted
+  - ISO documentation
+  - Example values: `+02:00` `-08:00`
 
 ### Related Work
 This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggregationInfo>` in the ISO scheme (not yet implemented). The element is optional in both schemes.

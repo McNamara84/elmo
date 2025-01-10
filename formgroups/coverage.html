@@ -1,6 +1,7 @@
 <div class="card mb-2">
     <div class="card-header">
         <b data-translate="coverage.title">Spatial and Temporal Coverages</b>
+        <i class="bi bi-question-circle-fill" data-help-section-id="help-stc-fg"></i>
     </div>
     <div>
         <div class="card-body" id="group-stc">
@@ -49,6 +50,10 @@
                                     data-translate="coverage.descriptionPlaceholder" name="tscDescription[]"
                                     class="form-control input-right-no-round-corners input-with-help input-right-with-round-corners"
                                     id="input-stc-description" required></textarea>
+                                    placeholder="Please enter the description of the temporal and spatial coverage..."
+                                    data-translate="coverage.descriptionPlaceholder" name="tscDescription[]"
+                                    class="form-control input-right-no-round-corners input-with-help input-right-with-round-corners"
+                                    id="input-stc-description" required></textarea>
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-description"></i></span>
                             </div>
@@ -61,11 +66,19 @@
                                     required>
                                 <input type="time" class="form-control input-with-help input-right-no-round-corners"
                                     id="input-stc-timestart" name="tscTimeStart[]">
+                                <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]"
+                                    required>
+                                <input type="time" class="form-control input-with-help input-right-no-round-corners"
+                                    id="input-stc-timestart" name="tscTimeStart[]">
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-temporalcoverage"></i></span>
                             </div>
                             <label for="input-stc-dateend" class="form-label mandatory-field" data-translate="coverage.end">End</label>
                             <div class="input-group">
+                                <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]"
+                                    required>
+                                <input type="time" class="form-control input-with-help input-right-no-round-corners"
+                                    id="input-stc-timeend" name="tscTimeEnd[]">
                                 <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]"
                                     required>
                                 <input type="time" class="form-control input-with-help input-right-no-round-corners"
@@ -81,6 +94,9 @@
                                 <select
                                     class="form-select input-right-no-round-corners input-with-help input-right-with-round-corners"
                                     id="input-stc-timezone" name="tscTimezone[]" required>
+                                <select
+                                    class="form-select input-right-no-round-corners input-with-help input-right-with-round-corners"
+                                    id="input-stc-timezone" name="tscTimezone[]" required>
                                     <!-- Options will be filled with PHP -->
                                 </select>
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -88,6 +104,10 @@
                             </div>
                         </div>
                         <!-- Button for cloning new row -->
+                        <div
+                            class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
+                            <button type="button" class="btn btn-primary addtsc" id="button-stc-add" style="width: 36px"
+                                data-translate="general.add">+</button>
                         <div
                             class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
                             <button type="button" class="btn btn-primary addtsc" id="button-stc-add" style="width: 36px"

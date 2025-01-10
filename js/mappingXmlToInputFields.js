@@ -723,6 +723,103 @@ function populateFormWithContributors(personMap, orgMap) {
 }
 
 /**
+ * Parse temporal data from a date node.
+ * This helper function simplifies the processing of temporal data in the main `processSpatialTemporalCoverages` function. 
+ * It parses date strings and returns the extracted start and end dates and times as separate components.
+ * @param {Node} dateNode - The XML node containing temporal data.
+ * @returns {Object} An object containing startDate, startTime, endDate, and endTime.
+ */
+function parseTemporalData(dateNode) {
+  const result = {
+    startDate: '',
+    startTime: '',
+    endDate: '',
+    endTime: '',
+  };
+
+  if (!dateNode || !dateNode.textContent) return result;
+
+  const [start, end] = dateNode.textContent.split('/');
+  if (start) {
+    const [startDate, startTime] = start.includes('T') ? start.split('T') : [start, ''];
+    result.startDate = startDate;
+    result.startTime = startTime ? startTime.split(/[+-]/)[0] : '';
+  }
+  if (end) {
+    const [endDate, endTime] = end.includes('T') ? end.split('T') : [end, ''];
+    result.endDate = endDate;
+    result.endTime = endTime ? endTime.split(/[+-]/)[0] : '';
+  }
+
+  return result;
+}
+
+/**
+ * Process spatial-temporal coverage (STC) data from XML and populate the form.
+ * @param {Document} xmlDoc - The parsed XML document.
+ * @param {Function} resolver - The namespace resolver function.
+ */
+function processSpatialTemporalCoverages(xmlDoc, resolver) {
+  const geoLocationNodes = xmlDoc.evaluate(
+    './/ns:geoLocations/ns:geoLocation',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
+    const geoLocationNode = geoLocationNodes.snapshotItem(i);
+
+    // Extract geoLocation data
+    const place = geoLocationNode.querySelector('geoLocationPlace')?.textContent || '';
+    const boxNode = geoLocationNode.querySelector('geoLocationBox');
+    const pointNode = geoLocationNode.querySelector('geoLocationPoint');
+
+    const westBoundLongitude = boxNode?.querySelector('westBoundLongitude')?.textContent || '';
+    const eastBoundLongitude = boxNode?.querySelector('eastBoundLongitude')?.textContent || '';
+    const southBoundLatitude = boxNode?.querySelector('southBoundLatitude')?.textContent || '';
+    const northBoundLatitude = boxNode?.querySelector('northBoundLatitude')?.textContent || '';
+    const pointLongitude = pointNode?.querySelector('pointLongitude')?.textContent || '';
+    const pointLatitude = pointNode?.querySelector('pointLatitude')?.textContent || '';
+
+    // Determine latitude and longitude values
+    const latitudeMin = southBoundLatitude || pointLatitude;
+    const latitudeMax = northBoundLatitude || pointLatitude;
+    const longitudeMin = westBoundLongitude || pointLongitude;
+    const longitudeMax = eastBoundLongitude || pointLongitude;
+
+    // Find last row
+    const $lastRow = $('textarea[name="tscDescription[]"]').last().closest('.row');
+
+    // Set values
+    $lastRow.find('textarea[name="tscDescription[]"]').val(place);
+    $lastRow.find('input[name="tscLatitudeMin[]"]').val(latitudeMin);
+    $lastRow.find('input[name="tscLatitudeMax[]"]').val(latitudeMax);
+    $lastRow.find('input[name="tscLongitudeMin[]"]').val(longitudeMin);
+    $lastRow.find('input[name="tscLongitudeMax[]"]').val(longitudeMax);
+
+    // Handle timezone
+    const timezoneField = $lastRow.find('select[name="tscTimezone[]"]');
+    timezoneField.val(i === 0 ? '' : 'UTC+00:00 (Africa/Abidjan)');
+
+    // Set date and time if available
+    const dateNode = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(i);
+    const temporalData = parseTemporalData(dateNode);
+
+    $lastRow.find('input[name="tscDateStart[]"]').val(temporalData.startDate);
+    $lastRow.find('input[name="tscTimeStart[]"]').val(temporalData.startTime);
+    $lastRow.find('input[name="tscDateEnd[]"]').val(temporalData.endDate);
+    $lastRow.find('input[name="tscTimeEnd[]"]').val(temporalData.endTime);
+
+    // Clone row for the next entry, if there is one
+    if (i < geoLocationNodes.snapshotLength - 1) {
+      $('#button-stc-add').click();
+    }
+  }
+}
+
+/**
  * Process descriptions from XML and populate the form
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
@@ -1087,10 +1184,13 @@ async function loadXmlToForm(xmlDoc) {
   processContributors(xmlDoc, resolver);
   // Process descriptions
   processDescriptions(xmlDoc, resolver);
+  // Process Spatial and Temporal Coverages
+  processSpatialTemporalCoverages(xmlDoc, resolver);
   // Process Keywords
   processKeywords(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
   // Process Funders
   processFunders(xmlDoc, resolver);
+
 }
