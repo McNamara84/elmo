@@ -783,23 +783,29 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
 - Beispielwerte: carbon dioxide emission, CO2 emission, methane emission, CH4 emission, peatland, wetland, eddy covariance, rewetting, emission factor, mitigation, Test
 
 ### Dates
+In the DataCite scheme: All field data are mapped to `<dates>`, with `dateType dateType="Available">` for the Embargo and `dateType="Created"` for the Date created.
+In the ISO scheme: The data from Date created are mapped to `<date>`, while Embargo until are mapped to `<gml:endPosition>`.
 
 - Date created
   
   - This field contains the date on which the dataset was created.
   - Data type: Date
   - Occurrence: 0-1
-  - The corresponding field in the database where the value is stored is called:  in the  table
-  - Restrictions: Datumsformat im Eingabefeld je nach Spracheinstellung des Browsers der Nutzenden.
+  - The corresponding field in the database where the value is stored is called: `dateCreated` in the `resource` table
+  - Restrictions: This field must be a valid calendar date in the format YYYY-MM-DD.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#created)
+  - Scheme version: DataCite 4.5
   - Example values: `2024-06-05` `1999-04-07`
 
 - Embargo until
 
-  <!-- Falls eine Schutzfrist zur Freigabe des Datensatzes vereinbart wurde, das Datum ab wann der Datensatz frei ist. -->
+  -This field contains the date the resource is made publicly available, marking the end of an embargo period.
   - Data typ: Date
   - Occurrence: 0-1
-  - The corresponding field in the database where the value is stored is called:  in the  table
-  - Restrictions: Datumsformat im Eingabefeld je nach Spracheinstellung des Browsers der Nutzenden.
+  - The corresponding field in the database where the value is stored is called: `dateEmbargoUntil` in the `resource` table
+  - Restrictions: This field must be a valid calendar date in the format YYYY-MM-DD.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#available)
+  - Scheme version: DataCite 4.5
   - Example values: `2024-06-15` `2000-12-31`
 
 ### Spatial and temporal coverage
