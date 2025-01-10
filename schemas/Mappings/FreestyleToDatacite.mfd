@@ -1874,6 +1874,51 @@
 						</comment>
 					</data>
 				</component>
+				<component name="string-length" library="core" uid="371" kind="5">
+					<sources>
+						<datapoint pos="0" key="745"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="746"/>
+					</targets>
+					<view ltx="240" lty="990" rbx="355" rby="1027"/>
+				</component>
+				<component name="greater" library="core" uid="373" kind="5">
+					<sources>
+						<datapoint pos="0" key="747"/>
+						<datapoint pos="1" key="748"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="749"/>
+					</targets>
+					<view ltx="288" lty="913" rbx="376" rby="966"/>
+					<data>
+						<comment>
+							<text>Orcid length &gt;0?</text>
+						</comment>
+					</data>
+				</component>
+				<component name="logical-and" library="core" uid="375" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="750"/>
+						<datapoint pos="1" key="751"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="752"/>
+					</targets>
+					<view ltx="392" lty="956" rbx="498" rby="1010"/>
+				</component>
+				<component name="if-else" library="core" uid="368" kind="4">
+					<sources>
+						<datapoint pos="0" key="737"/>
+						<datapoint pos="1" key="738"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="735"/>
+					</targets>
+					<view ltx="508" lty="886" rbx="602" rby="957"/>
+				</component>
 				<component name="FreestyleSchemaDB" library="xml" uid="2" kind="14">
 					<properties XSLTTargetEncoding="UTF-8"/>
 					<view ltx="-2" lty="-8" rbx="198" rby="2305"/>
@@ -2044,51 +2089,6 @@
 						</root>
 						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\dataset3.xml" outputinstance="..\..\xml\dataset3.xml"/>
 					</data>
-				</component>
-				<component name="string-length" library="core" uid="371" kind="5">
-					<sources>
-						<datapoint pos="0" key="745"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="746"/>
-					</targets>
-					<view ltx="240" lty="990" rbx="355" rby="1027"/>
-				</component>
-				<component name="greater" library="core" uid="373" kind="5">
-					<sources>
-						<datapoint pos="0" key="747"/>
-						<datapoint pos="1" key="748"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="749"/>
-					</targets>
-					<view ltx="288" lty="913" rbx="376" rby="966"/>
-					<data>
-						<comment>
-							<text>Orcid length &gt;0?</text>
-						</comment>
-					</data>
-				</component>
-				<component name="logical-and" library="core" uid="375" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="750"/>
-						<datapoint pos="1" key="751"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="752"/>
-					</targets>
-					<view ltx="392" lty="956" rbx="498" rby="1010"/>
-				</component>
-				<component name="if-else" library="core" uid="368" kind="4">
-					<sources>
-						<datapoint pos="0" key="737"/>
-						<datapoint pos="1" key="738"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="735"/>
-					</targets>
-					<view ltx="508" lty="886" rbx="602" rby="957"/>
 				</component>
 			</children>
 			<graph directed="1">

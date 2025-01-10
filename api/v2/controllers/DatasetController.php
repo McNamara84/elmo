@@ -869,25 +869,28 @@ class DatasetController
 
         // Funding References
         $fundingReferences = $this->getFundingReferences($connection, $id);
-        $fundingReferencesXml = $xml->addChild('FundingReferences');
-        foreach ($fundingReferences as $reference) {
-            $referenceXml = $fundingReferencesXml->addChild('FundingReference');
-            foreach ($reference as $key => $value) {
-                if ($key === 'funderid' && (empty($value) || $value === null)) {
-                    continue;
+        if ($fundingReferences){
+            $fundingReferencesXml = $xml->addChild('FundingReferences');
+            foreach ($fundingReferences as $reference) {
+                $referenceXml = $fundingReferencesXml->addChild('FundingReference');
+                foreach ($reference as $key => $value) {
+                    if ($key === 'funderid' && (empty($value) || $value === null)) {
+                        continue;
+                    }
+                    if ($key === 'funderidtyp' && (empty($value) || $value === null)) {
+                        continue;
+                    }
+                    if ($key === 'grantnumber' && (empty($value) || $value === null)) {
+                        continue;
+                    }
+                    if ($key === 'grantname' && (empty($value) || $value === null)) {
+                        continue;
+                    }
+                    $referenceXml->addChild($key, htmlspecialchars($value ?? ''));
                 }
-                if ($key === 'funderidtyp' && (empty($value) || $value === null)) {
-                    continue;
-                }
-                if ($key === 'grantnumber' && (empty($value) || $value === null)) {
-                    continue;
-                }
-                if ($key === 'grantname' && (empty($value) || $value === null)) {
-                    continue;
-                }
-                $referenceXml->addChild($key, htmlspecialchars($value ?? ''));
             }
         }
+
 
 
 
