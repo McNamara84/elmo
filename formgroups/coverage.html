@@ -18,11 +18,11 @@
                         </div>
                         <div class="col-9 col-sm-9 col-md-10 col-lg-2 p-1">
                             <!-- Input fields for Latitude Min and Max -->
-                            <label for="input-stc-latmin_1" class="form-label mandatory-field"
+                            <label for="input-stc-latmin_1" class="form-label"
                                 data-translate="coverage.latitude">Latitude</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="input-stc-latmin_1" placeholder="Min"
-                                    name="tscLatitudeMin[]" pattern="^-?(90(\.0+)?|[1-8]?\d(\.\d+)?)$" required>
+                                    name="tscLatitudeMin[]" pattern="^-?(90(\.0+)?|[1-8]?\d(\.\d+)?)$">
                                 <input type="text" class="form-control input-with-help input-right-no-round-corners"
                                     id="input-stc-latmax_1" placeholder="Max" name="tscLatitudeMax[]"
                                     pattern="^-?(90(\.0+)?|[1-8]?\d(\.\d+)?)$">
@@ -30,12 +30,11 @@
                                         data-help-section-id="help-tsc-geographicalcoverage"></i></span>
                             </div>
                             <!-- Input fields for Longitude Min and Max -->
-                            <label for="input-stc-longmin_1" class="form-label mandatory-field"
+                            <label for="input-stc-longmin_1" class="form-label"
                                 data-translate="coverage.longitude">Longitude</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="input-stc-longmin_1" placeholder="Min"
-                                    name="tscLongitudeMin[]" pattern="^-?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$"
-                                    required>
+                                    name="tscLongitudeMin[]" pattern="^-?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$">
                                 <input type="text" class="form-control input-with-help input-right-no-round-corners"
                                     id="input-stc-longmax_1" placeholder="Max" name="tscLongitudeMax[]"
                                     pattern="^-?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$">
@@ -45,43 +44,39 @@
                         </div>
                         <!-- Input field for Description -->
                         <div class="col-12 col-sm-12 col-md-12 col-lg-2 p-1">
-                            <label for="input-stc-description" class="form-label mandatory-field"
+                            <label for="input-stc-description" class="form-label"
                                 data-translate="coverage.description">Description</label>
                             <div class="input-group">
                                 <textarea rows="4"
                                     placeholder="Please enter the description of the temporal and spatial coverage..."
                                     data-translate="coverage.descriptionPlaceholder" name="tscDescription[]"
                                     class="form-control input-right-no-round-corners input-with-help input-right-with-round-corners"
-                                    id="input-stc-description" required></textarea>
+                                    id="input-stc-description"></textarea>
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-description"></i></span>
                             </div>
                         </div>
                         <!-- Input fields for Date and Time -->
                         <div class="col-12 col-sm-12 col-md-8 col-lg-3 p-1">
-                            <label for="input-stc-datestart" class="form-label mandatory-field"
+                            <label for="input-stc-datestart" class="form-label"
                                 data-translate="coverage.start">Start</label>
                             <div class="input-group">
-                                <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]"
-                                    required>
+                                <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]">
                                 <input type="time" class="form-control input-with-help input-right-no-round-corners"
                                     id="input-stc-timestart" name="tscTimeStart[]">
-                                <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]"
-                                    required>
+                                <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]">
                                 <input type="time" class="form-control input-with-help input-right-no-round-corners"
                                     id="input-stc-timestart" name="tscTimeStart[]">
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-temporalcoverage"></i></span>
                             </div>
-                            <label for="input-stc-dateend" class="form-label mandatory-field"
+                            <label for="input-stc-dateend" class="form-label"
                                 data-translate="coverage.end">End</label>
                             <div class="input-group">
-                                <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]"
-                                    required>
+                                <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]">
                                 <input type="time" class="form-control input-with-help input-right-no-round-corners"
                                     id="input-stc-timeend" name="tscTimeEnd[]">
-                                <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]"
-                                    required>
+                                <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]">
                                 <input type="time" class="form-control input-with-help input-right-no-round-corners"
                                     id="input-stc-timeend" name="tscTimeEnd[]">
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -90,15 +85,15 @@
                         </div>
                         <!-- Input field for Timezone -->
                         <div class="col-8 col-sm-8 col-md-3 col-lg-3 p-1">
-                            <label for="input-stc-timezone" class="form-label mandatory-field"
+                            <label for="input-stc-timezone" class="form-label"
                                 data-translate="coverage.timezone"></label>
                             <div class="input-group">
                                 <select
                                     class="form-select input-right-no-round-corners input-with-help input-right-with-round-corners"
-                                    id="input-stc-timezone" name="tscTimezone[]" required>
+                                    id="input-stc-timezone" name="tscTimezone[]">
                                     <select
                                         class="form-select input-right-no-round-corners input-with-help input-right-with-round-corners"
-                                        id="input-stc-timezone" name="tscTimezone[]" required>
+                                        id="input-stc-timezone" name="tscTimezone[]">
                                         <!-- Options will be filled with PHP -->
                                     </select>
                                     <span class="input-group-text"><i class="bi bi-question-circle-fill"
