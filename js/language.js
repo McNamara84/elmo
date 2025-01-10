@@ -77,8 +77,8 @@ function changeLanguage(lang) {
  */
 $(document).ready(function () {
     const savedLanguage = localStorage.getItem('userLanguage');
-    const browserLanguage = navigator.language.substring(0, 2);
-    const initialLanguage = savedLanguage || browserLanguage || 'en';
+    // Set default to English or user setting if saved
+    const initialLanguage = savedLanguage || 'en';
 
     loadTranslations(initialLanguage);
 
@@ -86,7 +86,8 @@ $(document).ready(function () {
         e.preventDefault();
         const lang = $(this).data('bs-language-value');
         if (lang === 'auto') {
-            changeLanguage(navigator.language.substring(0, 2));
+            // Load English als default language
+            changeLanguage('en');
         } else {
             changeLanguage(lang);
         }
