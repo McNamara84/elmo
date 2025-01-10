@@ -1,7 +1,9 @@
 /**
- * Form validation and submission handling
- * Manages form validation, file saving with custom filename, and dataset submission
+ * @description Form validation and submission handling for dataset metadata
+ * @requires bootstrap
+ * @requires jquery
  */
+
 document.addEventListener('DOMContentLoaded', function () {
   /**
    * Main form element containing the dataset metadata
@@ -10,24 +12,16 @@ document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('form-mde');
 
   /**
-   * Modal for notifications
-   * @type {bootstrap.Modal}
+   * Bootstrap modals for notifications and file saving
+   * @type {Object.<string, bootstrap.Modal>}
    */
-  const notificationModal = new bootstrap.Modal(document.getElementById('notificationModal'));
+  const modals = {
+    notification: new bootstrap.Modal(document.getElementById('notificationModal')),
+    saveAs: new bootstrap.Modal(document.getElementById('modal-saveas'))
+  };
 
   /**
-   * Modal for filename selection
-   * @type {bootstrap.Modal}
-   */
-  const saveAsModal = new bootstrap.Modal(document.getElementById('modal-saveas'));
-
-  // Add event listener for modal cancel
-  document.getElementById('modal-saveas').addEventListener('hidden.bs.modal', function () {
-    notificationModal.hide();
-  });
-
-  /**
-   * Collection of form button elements
+   * Form control buttons
    * @type {Object.<string, HTMLButtonElement>}
    */
   const buttons = {
@@ -36,44 +30,41 @@ document.addEventListener('DOMContentLoaded', function () {
     saveAsConfirm: document.getElementById('button-saveas-save')
   };
 
-  // Enable buttons
-  buttons.save.disabled = false;
-  buttons.submit.disabled = false;
+  // Initialize buttons and event listeners
+  initializeFormControls();
 
   /**
-   * Form submit event handler
-   * Determines action based on clicked button
-   * @param {Event} e - Submit event object
+   * Initialize form controls and event listeners
    */
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
+  function initializeFormControls() {
+    buttons.save.disabled = false;
+    buttons.submit.disabled = false;
 
-    // Determine which button was clicked
-    const clickedButton = document.activeElement;
-    const action = clickedButton.dataset.action;
+    document.getElementById('modal-saveas').addEventListener('hidden.bs.modal', () => {
+      modals.notification.hide();
+    });
+
+    form.addEventListener('submit', handleFormSubmit);
+    buttons.saveAsConfirm.addEventListener('click', handleSaveConfirm);
+  }
+
+  /**
+   * Handle form submission
+   * @param {Event} e - The submit event
+   */
+  function handleFormSubmit(e) {
+    e.preventDefault();
+    const action = document.activeElement.dataset.action;
 
     if (!form.checkValidity()) {
-      handleInvalidForm(action);
+      handleInvalidForm();
     } else {
       handleValidForm(action);
     }
-  });
+  }
 
   /**
-   * Save confirmation button click handler
-   */
-  buttons.saveAsConfirm.addEventListener('click', function () {
-    const filename = document.getElementById('input-saveas-filename').value.trim();
-    if (!filename) {
-      showNotification('danger', translations.alerts.filenameErrorHeading, translations.alerts.filenameError);
-      return;
-    }
-    saveAsModal.hide();
-    proceedWithSave(filename);
-  });
-
-  /**
-   * Handles form validation errors
+   * Handle form validation errors
    */
   function handleInvalidForm() {
     form.classList.add('was-validated');
@@ -87,46 +78,17 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /**
-   * Generates a filename suggestion based on resource ID and current timestamp
-   * @param {string} resourceId - The ID of the saved resource
-   * @returns {string} Suggested filename without extension
+   * Handle valid form submission
+   * @param {string} action - The form action ('save' or 'submit')
    */
-  function generateFilenameSuggestion(resourceId) {
-    const now = new Date();
-    const date = now.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
-    const time = now.toTimeString().split(' ')[0].replace(/:/g, ''); // HHMMSS
-    return `dataset${resourceId}_${date}${time}`;
-  }
-
-  /**
-   * Handles successful form validation
-   * @param {string} action - Type of submission ('save' or 'submit')
-   */
-  function handleValidForm(action) {
+  async function handleValidForm(action) {
     if (action === 'save') {
-      // First save the data to get the resource_id
-      const formData = new FormData(form);
-      formData.append('action', 'save');
-      formData.append('get_resource_id', '1'); // Flag to indicate we want the resource_id
-
-      fetch('save/save_data.php', {
-        method: 'POST',
-        body: formData
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.resource_id) {
-            const suggestedFilename = generateFilenameSuggestion(data.resource_id);
-            document.getElementById('input-saveas-filename').value = suggestedFilename;
-            saveAsModal.show();
-          } else {
-            showNotification('danger', 'Error', 'Failed to generate filename suggestion');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          showNotification('danger', 'Error', 'Failed to prepare file saving');
-        });
+      showNotification('info', 'Processing...', 'Preparing file for download.');
+      const suggestedFilename = await generateFilename();
+      if (suggestedFilename) {
+        document.getElementById('input-saveas-filename').value = suggestedFilename;
+        modals.saveAs.show();
+      }
     } else if (action === 'submit') {
       showNotification('info', translations.alerts.processingHeading, translations.alerts.processingInfo);
       submitViaAjax();
@@ -134,43 +96,77 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /**
-   * Proceeds with saving the form data and downloading XML
-   * @param {string} filename - User-selected filename without extension
+   * Generate filename for saving
+   * @returns {Promise<string|null>} The generated filename or null if error
    */
-  function proceedWithSave(filename) {
-    showNotification('info', translations.alerts.savingHeading, translations.alerts.savingInfo);
-
-    // Create a hidden form for submission
-    const hiddenForm = document.createElement('form');
-    hiddenForm.method = 'POST';
-    hiddenForm.action = 'save/save_data.php';
-
-    // Add filename to form data
-    const filenameInput = document.createElement('input');
-    filenameInput.type = 'hidden';
-    filenameInput.name = 'filename';
-    filenameInput.value = filename;
-    hiddenForm.appendChild(filenameInput);
-
-    // Add all form data
-    const formData = new FormData(form);
-    for (const [key, value] of formData.entries()) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = value;
-      hiddenForm.appendChild(input);
+  async function generateFilename() {
+    try {
+      const timestamp = new Date().toISOString()
+        .replace(/[-:]/g, '')
+        .replace(/[T.]/g, '_')
+        .slice(0, 15);
+      return `dataset_${timestamp}`;
+    } catch (error) {
+      console.error('Error generating filename:', error);
+      showNotification('danger', 'Error', 'Failed to generate filename');
+      return null;
     }
-
-    document.body.appendChild(hiddenForm);
-    hiddenForm.submit();
-    document.body.removeChild(hiddenForm);
-
-    showNotification('success', translations.alerts.savingHeading, translations.alerts.savingSuccess);
   }
 
   /**
-   * Submits form data via AJAX for email submission
+   * Handle save confirmation
+   */
+  async function handleSaveConfirm() {
+    const filename = document.getElementById('input-saveas-filename').value.trim();
+    if (!filename) {
+      showNotification('danger', 'Error', 'Please enter a filename');
+      return;
+    }
+
+    modals.saveAs.hide();
+    await saveAndDownload(filename);
+  }
+
+  /**
+   * Save data and trigger download
+   * @param {string} filename - The chosen filename
+   */
+  async function saveAndDownload(filename) {
+    showNotification('info', 'Processing...', 'Saving dataset and preparing download...');
+
+    try {
+      const formData = new FormData(form);
+      formData.append('filename', filename);
+      formData.append('action', 'save_and_download');
+
+      const response = await fetch('save/save_data.php', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Handle the XML file download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.xml`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showNotification('success', 'Success!', translations.alerts.savingHeading, translations.alerts.savingSuccess);
+    } catch (error) {
+      console.error('Error saving dataset:', error);
+      showNotification('danger', 'Error', 'Failed to save dataset');
+    }
+  }
+
+  /**
+   * Submit form data via AJAX
    */
   function submitViaAjax() {
     $.ajax({
@@ -187,23 +183,32 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       },
       error: function (xhr, status, error) {
-        let errorMessage = 'Failed to submit dataset';
-        try {
-          const response = JSON.parse(xhr.responseText);
-          errorMessage = response.message || errorMessage;
-          console.error('Error details:', response.debug);
-        } catch (e) {
-          errorMessage += ': ' + error;
-          console.error('Response:', xhr.responseText);
-        }
-        showNotification('danger', 'Error!', errorMessage);
+        handleAjaxError(xhr, error);
       }
     });
   }
 
   /**
-   * Shows a notification in the modal
-   * @param {string} type - Notification type (success, danger, info)
+   * Handle AJAX errors
+   * @param {XMLHttpRequest} xhr - The XHR object
+   * @param {string} error - The error message
+   */
+  function handleAjaxError(xhr, error) {
+    let errorMessage = 'Failed to submit dataset';
+    try {
+      const response = JSON.parse(xhr.responseText);
+      errorMessage = response.message || errorMessage;
+      console.error('Error details:', response.debug);
+    } catch (e) {
+      errorMessage += ': ' + error;
+      console.error('Response:', xhr.responseText);
+    }
+    showNotification('danger', 'Error!', errorMessage);
+  }
+
+  /**
+   * Show notification modal
+   * @param {string} type - Message type ('success', 'danger', 'info')
    * @param {string} title - Modal title
    * @param {string} message - Notification message
    */
@@ -211,22 +216,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalTitle = document.getElementById('notificationModalLabel');
     const modalBody = document.getElementById('notificationModalBody');
 
-    // Set modal content
     modalTitle.textContent = title;
     modalBody.innerHTML = `
-      <div class="alert alert-${type} mb-0">
-        ${message}
-      </div>
-    `;
+          <div class="alert alert-${type} mb-0">
+              ${message}
+          </div>
+      `;
 
-    // Show modal
-    notificationModal.show();
+    modals.notification.show();
 
-    // Auto-hide for success messages after 3 seconds
     if (type === 'success') {
-      setTimeout(() => {
-        notificationModal.hide();
-      }, 3000);
+      setTimeout(() => modals.notification.hide(), 3000);
     }
   }
 });
