@@ -51,7 +51,7 @@
         "versionInvalid": "If unsure leave blank",
         "datasetLanguage": "Language of dataset",
         "resourceTitle": "Title",
-        "resourceTitleInvalid": "Please provide a title",
+        "resourceTitleInvalid": "Please provide a descriptive title (that does not repeat the paper title, but describes the data)",
         "titleType": "Title Type"
     },
     "rights": {

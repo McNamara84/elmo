@@ -51,7 +51,7 @@
         "versionInvalid": "Bei Unsicherheit leer lassen",
         "datasetLanguage": "Sprache des Datensatzes",
         "resourceTitle": "Titel",
-        "resourceTitleInvalid": "Bitte geben Sie einen Titel ein",
+        "resourceTitleInvalid": "Bitte geben Sie einen beschreibenden Titel an (der nicht den Titel der Arbeit wiederholt, sondern die Daten beschreibt)",
         "titleType": "Titeltyp"
     },
     "rights": {

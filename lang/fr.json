@@ -51,7 +51,7 @@
         "versionInvalid": "Laissez vide en cas de doute",
         "datasetLanguage": "Langue du jeu de données",
         "resourceTitle": "Titre",
-        "resourceTitleInvalid": "Veuillez saisir un titre",
+        "resourceTitleInvalid": "Veuillez fournir un titre descriptif (qui ne répète pas le titre de l'article, mais qui décrit les données)",
         "titleType": "Type de titre"
     },
     "rights": {
