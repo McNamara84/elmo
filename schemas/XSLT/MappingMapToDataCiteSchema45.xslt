@@ -182,11 +182,13 @@ http://www.altova.com/mapforce
 									<familyName>
 										<xsl:value-of select="$var13_cur/*[local-name()='familyname' and namespace-uri()='']"/>
 									</familyName>
-									<nameIdentifier>
-										<xsl:attribute name="nameIdentifierScheme" namespace="">ORCID</xsl:attribute>
-										<xsl:attribute name="schemeURI" namespace="">https://orcid.org/</xsl:attribute>
-										<xsl:value-of select="$var13_cur/*[local-name()='orcid' and namespace-uri()='']"/>
-									</nameIdentifier>
+									<xsl:if test="(true() and (string-length(string($var13_cur/*[local-name()='orcid' and namespace-uri()=''])) &gt; 0))">
+										<nameIdentifier>
+											<xsl:attribute name="nameIdentifierScheme" namespace="">https://orcid.org/</xsl:attribute>
+											<xsl:attribute name="schemeURI" namespace="">https://orcid.org/</xsl:attribute>
+											<xsl:value-of select="$var13_cur/*[local-name()='orcid' and namespace-uri()='']"/>
+										</nameIdentifier>
+									</xsl:if>
 									<xsl:for-each select="$var13_cur/*[local-name()='Affiliations' and namespace-uri()='']/*[local-name()='Affiliation' and namespace-uri()='']">
 										<xsl:variable name="var15_cur" select="."/>
 										<affiliation>
