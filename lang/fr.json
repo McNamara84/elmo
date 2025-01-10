@@ -35,6 +35,7 @@
         "filenameError": "Veuillez saisir un nom de fichier.",
         "processingHeading": "Traitement en cours...",
         "processingInfo": "L'ensemble de données est en cours de soumission.",
+        "submitSuccess": "Ensemble de données transmis avec succès.",
         "savingHeading": "Enregistrement...",
         "savingInfo": "L'ensemble de données est en cours d'enregistrement.",
         "savingSuccess": "Ensemble de données enregistré avec succès. Le téléchargement XML démarrera automatiquement."

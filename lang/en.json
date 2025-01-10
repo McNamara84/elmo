@@ -35,6 +35,7 @@
         "filenameError": "Please enter a filename.",
         "processingHeading": "Processing...",
         "processingInfo": "Dataset is being submitted.",
+        "submitSuccess": "Dataset successfully transmitted.",
         "savingHeading": "Saving...",
         "savingInfo": "Dataset is being saved.",
         "savingSuccess": "Dataset saved successfully. The XML file download will start automatically."
