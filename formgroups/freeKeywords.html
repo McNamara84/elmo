@@ -1,16 +1,13 @@
 <div class="card mb-2">
   <div class="card-header">
-    <b>
-      <?php echo $translations['freekeywords']; ?>
-    </b>
+    <b data-translate="keywords.free.title">Free Keywords</b>
   </div>
   <div class="card-body reduce-padding">
     <div id="group-freekeyword" class="form-floating">
       <div class="row align-items-center">
-        <!-- Input field Free Keywords -->
+        <!-- Input field -->
         <div class="input-group input-margin-top-bottom">
-          <input name="freekeywords[]" type="text" class="form-control input-with-help input-right-no-round-corners"
-            placeholder="<?php echo $translations['freekeywords_input']; ?>" id="input-freekeyword">
+          <input type="text" class="form-control input-with-help input-right-no-round-corners" name="freekeywords[]" id="input-freekeyword" data-translate-placeholder="keywords.free.input">
           <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-freeKeywords"></i>
           </span>
         </div>

@@ -144,6 +144,7 @@ $(document).ready(function () {
         $("<option>", {
           value: "",
           text: "Choose...",
+          "data-translate": "general.choose"
         })
       );
 
@@ -232,6 +233,7 @@ function setupIdentifierTypesDropdown(id) {
     $("<option>", {
       value: "",
       text: "Choose...", // Placeholder text
+      "data-translate": "general.choose"
     })
   );
 

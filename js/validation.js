@@ -73,8 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (firstInvalid) {
       firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
       firstInvalid.focus();
-      showNotification('danger', 'Validation Error',
-        'Please check your inputs! Some required fields are not filled correctly.');
+      showNotification('danger', translations.alerts.validationErrorheading, translations.alerts.validationError);
     }
   }
 
@@ -91,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
         modals.saveAs.show();
       }
     } else if (action === 'submit') {
-      showNotification('info', 'Processing...', 'Dataset is being submitted.');
+      showNotification('info', translations.alerts.processingHeading, translations.alerts.processingInfo);
       submitViaAjax();
     }
   }
@@ -159,9 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-
-      showNotification('success', 'Success!',
-        'Dataset saved successfully. The XML file download should start automatically.');
+      showNotification('success', 'Success!', translations.alerts.savingHeading, translations.alerts.savingSuccess);
     } catch (error) {
       console.error('Error saving dataset:', error);
       showNotification('danger', 'Error', 'Failed to save dataset');

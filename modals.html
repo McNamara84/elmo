@@ -5,17 +5,17 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modal-uploadxml">Load XML Data</h5>
+                <h5 class="modal-title" id="modal-uploadxml"></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="input-uploadxml-file" class="form-label">Select XML file:</label>
+                    <label for="input-uploadxml-file" class="form-label" data-translate="modals.upload.title">Select XML file:</label>
                     <input class="form-control" type="file" id="input-uploadxml-file" accept=".xml">
                 </div>
 
                 <div class="drop-zone mb-3 p-5 border rounded text-center" id="panel-uploadxml-dropfile">
-                    <p class="mb-0">Drop XML file here</p>
+                    <p class="mb-0" data-translate="modals.upload.dropZoneInfo">Drop XML file here</p>
                 </div>
                 <div class="alert alert-info d-none" id="xml-upload-status"></div>
             </div>
@@ -26,11 +26,11 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="helpModalLabel">Help Information</h5>
+                <h5 class="modal-title" id="helpModalLabel" data-translate="header.help">Help</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Hier wird der Inhalt des Guides dynamisch eingefügt -->
+                <!-- Section of guide is inserted dynamically here -->
             </div>
         </div>
     </div>
@@ -57,18 +57,18 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="label-changelog-modal">About ELMO - EPOS Laboratory Metadata Optimizer</h5>
+                <h5 class="modal-title" id="label-changelog-modal" data-translate="modals.changelog.aboutHeading">About ELMO - EPOS Laboratory Metadata Optimizer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="lead text-center fs-6">
+                <p class="lead text-center fs-6" data-translate="modals.changelog.aboutText">
                     The ELMO Metadata Editor was developed in 2024 by students of the University of Applied Sciences
                     Potsdam in cooperation with the German Research Centre for Geosciences and is released under the GNU
                     General Public License, Version 2.
                 </p>
                 <hr>
                 <!-- Changelog -->
-                <h5>Changelog</h5>
+                <h5 data-translate="modals.changelog.title">Changelog</h5>
                 <div id="panel-changelog-content">
                     <!-- Content will be loaded from doc/changelog.html -->
                 </div>
@@ -84,16 +84,16 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="label-saveas-modal">
-                    <?php echo $translations['saveModalTitle']; ?>
+                <h1 class="modal-title fs-5" id="label-saveas-modal"data-translate="modals.save.saveAs">
+                    Save as XML
                 </h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body">
                 <form id="form-saveas-filename">
                     <div class="mb-3">
-                        <label for="input-saveas-filename" class="form-label">
-                            <?php echo $translations['filenameLabel']; ?>
+                        <label for="input-saveas-filename" class="form-label" data-translate="modals.save.filename">
+                            Filename
                         </label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="input-saveas-filename">
@@ -103,12 +103,76 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <?php echo $translations['tsc_cancel']; ?>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="general.cancel">
+                    Cancel
                 </button>
-                <button type="button" class="btn btn-primary" id="button-saveas-save">
-                    <?php echo $translations['saveAs']; ?>
+                <button type="button" class="btn btn-primary" id="button-saveas-save" data-translate="modals.save.save">
+                    Save
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Feedback Modal -->
+<div class="modal fade" id="modal-feedback" tabindex="-1" aria-labelledby="label-feedbackmodal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="label-feedbackmodal" data-translate="modals.feedback.title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="panel-feedback-status"></div>
+                <div id="panel-feedback-message"
+                    style="display: none; color: green; font-size: 1.2em; text-align: center; margin-bottom: 20px;"
+                    data-translate="modals.feedback.thankYou"></div>
+
+                <form id="form-feedback" method="POST" action="send_feedback_mail.php">
+                    <div class="mb-3">
+                        <label for="input-feedback-question1" class="form-label"
+                            data-translate="modals.feedback.question1"></label>
+                        <textarea class="form-control" id="input-feedback-question1" name="feedbackQuestion1" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question2" class="form-label"
+                            data-translate="modals.feedback.question2"></label>
+                        <textarea class="form-control" id="input-feedback-question2" name="feedbackQuestion2" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question3" class="form-label"
+                            data-translate="modals.feedback.question3"></label>
+                        <textarea class="form-control" id="input-feedback-question3" name="feedbackQuestion3" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question4" class="form-label"
+                            data-translate="modals.feedback.question4"></label>
+                        <textarea class="form-control" id="input-feedback-question4" name="feedbackQuestion4" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question5" class="form-label"
+                            data-translate="modals.feedback.question5"></label>
+                        <textarea class="form-control" id="input-feedback-question5" name="feedbackQuestion5" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question6" class="form-label"
+                            data-translate="modals.feedback.question6"></label>
+                        <textarea class="form-control" id="input-feedback-question6" name="feedbackQuestion6" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question7" class="form-label"
+                            data-translate="modals.feedback.question7"></label>
+                        <textarea class="form-control" id="input-feedback-question7" name="feedbackQuestion7" rows="3"
+                            required></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="button-feedback-send" style="margin-left: auto; display: block;"
+                        data-translate="modals.feedback.sendButton"></button>
+                </form>
             </div>
         </div>
     </div>

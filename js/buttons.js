@@ -762,6 +762,7 @@ $(document).ready(function () {
     var tagifyName = new Tagify(inputName, {
       whitelist: data.map((item) => item.name),
       enforceWhitelist: true,
+      placeholder: translations.laboratory.name,
       maxTags: 1,
       dropdown: {
         maxItems: 20,
@@ -940,18 +941,6 @@ $(document).ready(function () {
     });
   }
 
-  //////////////////////////////// LANGUAGE BUTTONS ///////////////////////////////////////////////////////////
-
-  /**
-   * Sets the language preference in localStorage and reloads the page with the selected language.
-   *
-   * @param {string} language - The language code to set (e.g., 'en', 'de').
-   */
-  function setLanguage(language) {
-    localStorage.setItem("userLanguage", language);
-    window.location.href = "?lang=" + language;
-  }
-
   /**
    * Automatically sets the language based on the browser's language settings.
    */
@@ -962,7 +951,6 @@ $(document).ready(function () {
       userLang = "en"; // Default to English if the language is not supported
     }
     localStorage.setItem("userLanguage", userLang);
-    window.location.href = "?lang=" + userLang;
   }
 
   // Check if a language is set in localStorage; if not, default to English
@@ -980,7 +968,7 @@ $(document).ready(function () {
     if (language === "auto") {
       setAutoLanguage();
     } else {
-      setLanguage(language);
+      localStorage.setItem("userLanguage", language);
     }
   });
 

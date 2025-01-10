@@ -1,6 +1,6 @@
 <?php
 /**
- * This script initializes the application, handles error reporting, sets up language preferences,
+ * This script initializes the application, handles error reporting,
  * includes necessary HTML components, and processes form submissions.
  *
  */
@@ -61,27 +61,6 @@ $optiontitle_type = generateOptions(
     "name"
 );
 
-// Determine user language preference
-if (isset($_GET['lang'])) {
-    $userLanguage = $_GET['lang'];
-} elseif (isset($_GET['auto'])) {
-    $userLanguage = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
-    if (!in_array($userLanguage, ['en', 'de', 'fr'])) {
-        $userLanguage = 'en';
-    }
-} else {
-    // Default to English if no language is set
-    $userLanguage = 'en';
-}
-
-// Set language and include language file
-$languageFile = "lang/" . $userLanguage . '.php';
-if (!file_exists($languageFile)) {
-    $languageFile = 'lang/en.php'; // Default language is English
-    $userLanguage = 'en';
-}
-include $languageFile;
-
 // Include HTML components
 include("header.html");
 include("formgroups/resourceInformation.html");
@@ -95,7 +74,7 @@ include("formgroups/mslKeywords.html");
 include("formgroups/thesaurusKeywords.html");
 include("formgroups/freeKeywords.html");
 include("formgroups/dates.html");
-include("formgroups/spatialtemporalcoverage.html");
+include("formgroups/coverage.html");
 include("formgroups/relatedwork.html");
 include("formgroups/fundingreference.html");
 include("modals.html");

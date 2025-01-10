@@ -1,0 +1,184 @@
+{
+    "header": {
+        "help": "Hilfe",
+        "on": "An",
+        "off": "Aus",
+        "mode": "Modus",
+        "light": "Hell",
+        "dark": "Dunkel",
+        "language": "Sprache",
+        "legalNotice": "Impressum"
+    },
+    "general": {
+        "logoTitle": "ELMO - EPOS Labor Metadaten-Optimierer 2.0RC1",
+        "logoTitleShort": "ELMO 2.0",
+        "choose": "Auswählen...",
+        "valid": "Gültig",
+        "pleaseChoose": "Bitte auswählen",
+        "orcid": "ORCID",
+        "orcidInvalid": "Bitte geben Sie eine gültige ORCID ein (XXXX-XXXX-XXXX-XXX(X))",
+        "lastName": "Nachname",
+        "lastNameInvalid": "Bitte geben Sie einen Nachnamen ein. Nur Buchstaben sind erlaubt.",
+        "firstNameInvalid": "Bitte geben Sie einen Vornamen ein. Nur Buchstaben sind erlaubt.",
+        "firstName": "Vorname",
+        "affiliation": "Zugehörigkeit(en)",
+        "roleLabel": "Rolle(n)",
+        "add": "+",
+        "cancel": "Abbrechen",
+        "accept": "Übernehmen"
+    },
+    "alerts": {
+        "languageWarning": "Bitte füllen Sie das Formular auf Englisch aus.",
+        "validationErrorheading": "Validierungsfehler",
+        "validationError": "Bitte füllen Sie das Formular korrekt aus.",
+        "filenameErrorHeading": "Dateinamenfehler",
+        "filenameError": "Bitte geben Sie einen Dateinamen ein.",
+        "processingHeading": "Verarbeitung...",
+        "processingInfo": "Datensatz wird übermittelt.",
+        "submitSuccess": "Datensatz wurde erfolgreich übermittelt.",
+        "savingHeading": "Speichern...",
+        "savingInfo": "Datensatz wird gespeichert.",
+        "savingSuccess": "Datensatz erfolgreich gespeichert. Der XML-Download startet automatisch."
+    },
+    "resourceInfo": {
+        "title": "Ressourceninformationen",
+        "doi": "DOI",
+        "doiValid": "Eine neue DOI wird registriert",
+        "doiInvalid": "Bitte verwenden Sie das Format 10.ORGANISATION/ID (z.B.: 10.57757/IUGG23-3081) oder lassen Sie es leer",
+        "publicationYear": "Erscheinungsjahr",
+        "publicationYearInvalid": "Bitte geben Sie ein gültiges Jahr zwischen 1901-2155 ein (4 Ziffern).",
+        "resourceType": "Ressourcentyp",
+        "version": "Version",
+        "versionInvalid": "Bei Unsicherheit leer lassen",
+        "datasetLanguage": "Sprache des Datensatzes",
+        "resourceTitle": "Titel",
+        "resourceTitleInvalid": "Bitte geben Sie einen beschreibenden Titel an (der nicht den Titel der Arbeit wiederholt, sondern die Daten beschreibt)",
+        "titleType": "Titeltyp"
+    },
+    "rights": {
+        "title": "Lizenzen und Rechte",
+        "licenseTitle": "Lizenz"
+    },
+    "authors": {
+        "title": "Autor(en)",
+        "affiliationInvalid": "Bitte geben Sie eine Zugehörigkeit an."
+    },
+    "contactPersons": {
+        "title": "Kontaktperson(en)",
+        "email": "E-Mail-Adresse",
+        "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse im Format xxx.xxx@xxx.xxx ein.",
+        "position": "Position",
+        "positionInvalid": "Bitte geben Sie eine Position an.",
+        "website": "Webseite",
+        "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
+    },
+    "laboratory": {
+        "title": "Herkunftslabor",
+        "name": "Name des Herkunftslabors"
+    },
+    "contributors": {
+        "title": "Beitragende",
+        "organization": "Name der Organisation",
+        "organizationInvalid": "Bitte geben Sie einen gültigen Organisationsnamen ein.",
+        "persons": "Beitragende Person(en)",
+        "institutions": "Beitragende Institution(en)"
+    },
+    "descriptions": {
+        "title": "Beschreibungen",
+        "abstract": "Abstract",
+        "abstractTooltip": "Bitte geben Sie eine Zusammenfassung ein...",
+        "methods": "Methoden",
+        "methodsTooltip": "Bitte beschreiben Sie die Methoden...",
+        "technicalInfo": "Technische Informationen",
+        "technicalInfoTooltip": "Bitte geben Sie technische Informationen ein...",
+        "other": "Sonstiges",
+        "otherTooltip": "Bitte geben Sie sonstige Informationen ein.."
+    },
+    "keywords": {
+        "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
+        "thesaurus": {
+            "title": "GCMD Science Keywords",
+            "name": "Thesaurus",
+            "scienceKeywords": "NASA GCMD Science Keywords",
+            "label": "Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe..."
+        },
+        "free": {
+            "title": "Freie Schlagworte",
+            "placeholder": "Bitte geben Sie Schlagworte ein und trennen Sie diese durch Kommas."
+        },
+        "searchPlaceholder": "Nach Schlagworte suchen..."
+    },
+    "dates": {
+        "title": "Daten",
+        "created": "Erstellungsdatum",
+        "dateInvalid": "Bitte geben Sie ein gültiges Datum ein!",
+        "embargoUntil": "Embargo bis"
+    },
+    "coverage": {
+        "title": "Räumliche und zeitliche Abdeckung",
+        "map": "Karte",
+        "latitude": "Breitengrad",
+        "longitude": "Längengrad",
+        "description": "Beschreibung",
+        "descriptionPlaceholder": "Bitte geben Sie die Beschreibung der zeitlichen und räumlichen Abdeckung ein...",
+        "start": "Start",
+        "end": "Ende",
+        "timezone": "Zeitzone",
+        "mapInfo": "(Bitte wählen Sie Koordinaten per Rechteck oder Markierung)"
+    },
+    "relatedWork": {
+        "title": "Verwandte Werke",
+        "relation": "Beziehung",
+        "identifierType": "Identifikatortyp",
+        "identifier": "Identifikator",
+        "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein."
+    },
+    "funding": {
+        "title": "Förderungen",
+        "funder": "Förderer",
+        "funderInvalid": "Bitte geben Sie den Namen des Förderers ein.",
+        "grantNumber": "Fördernummer",
+        "grantName": "Förderbezeichnung"
+    },
+    "buttons": {
+        "clear": "Löschen",
+        "clearTooltip": "Alle Einträge oder Inhalte löschen.",
+        "load": "Laden",
+        "loadTooltip": "Gespeicherte Daten oder Inhalte laden.",
+        "saveAs": "Speichern",
+        "saveAsTooltip": "Aktuelle Daten oder Inhalte unter neuem Dateinamen speichern.",
+        "submit": "Absenden",
+        "submitTooltip": "Eingegebene Daten oder Inhalte übermitteln."
+    },
+    "modals": {
+        "feedback": {
+            "button": "Feedback",
+            "buttonTooltip": "Feedback an die Entwickler senden",
+            "label": "Nutzer-Feedback",
+            "question1": "Welche Funktionen des neuen Metadateneditors finden Sie besonders hilfreich?",
+            "question2": "Gibt es eine bestimmte Design- oder Oberflächenänderung, die Ihnen gefällt?",
+            "question3": "Was finden Sie an der Bedienbarkeit des neuen Editors positiv?",
+            "question4": "Welche Funktionen des neuen Editors finden Sie schwierig zu bedienen?",
+            "question5": "Gibt es Aspekte der Benutzeroberfläche, die Sie verwirrend oder störend finden?",
+            "question6": "Vermissen Sie bestimmte Funktionen im neuen Metadateneditor?",
+            "question7": "Gibt es eine spezifische Verbesserung, die Sie sich wünschen?",
+            "sendButton": "Feedback senden",
+            "thankYouMessage": "Vielen Dank für Ihr Feedback!"
+        },
+        "upload": {
+            "title": "XML-Datei auswählen:",
+            "dropZoneInfo": "XML-Datei hier ablegen"
+        },
+        "changelog": {
+            "title": "Änderungsprotokoll",
+            "aboutText": "Der ELMO Metadateneditor wurde 2024 von Studierenden der Fachhochschule Potsdam in Zusammenarbeit mit dem Deutschen GeoForschungsZentrum entwickelt und wird unter der GNU General Public License, Version 2 veröffentlicht.",
+            "aboutHeading": "Über ELMO - EPOS Labor Metadaten-Optimierer"
+        },
+        "save": {
+            "title": "Metadaten speichern",
+            "saveAs": "Als XML speichern",
+            "filename": "Dateiname",
+            "save": "Speichern"
+        }
+    }
+}

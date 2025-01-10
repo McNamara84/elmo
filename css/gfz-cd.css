@@ -59,18 +59,32 @@
 }
 
 @keyframes multi-color-blink {
-    0% { background-color: #ffc107; }
-    25% { background-color: #dc3545; }
-    50% { background-color: #0dcaf0; }
-    75% { background-color: #198754; }
-    100% { background-color: #ffc107; }
-  }
-  
-  .multi-color-blink {
+    0% {
+        background-color: #ffc107;
+    }
+
+    25% {
+        background-color: #dc3545;
+    }
+
+    50% {
+        background-color: #0dcaf0;
+    }
+
+    75% {
+        background-color: #198754;
+    }
+
+    100% {
+        background-color: #ffc107;
+    }
+}
+
+.multi-color-blink {
     animation: multi-color-blink 2s linear infinite;
-  }
-  
-  
+}
+
+
 
 /* Upload Modal */
 .drop-zone {
@@ -100,4 +114,11 @@
 [data-creator-row].ui-sortable-helper {
     background: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Marker for mandatory fields */
+label.mandatory-field::after {
+    content: "*";
+    color: #dc3545;
+    margin-left: 0.1rem;
 }
