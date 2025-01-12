@@ -304,45 +304,130 @@ class SaveResourceInformationAndRightsTest extends TestCase
     }
 
     /**
-     * Testet die Verhinderung von doppelten Ressourcen-Speicherungen.
+     * Tests the update functionality when saving a resource with an existing DOI.
+     * 
+     * @return void
      */
-    public function testPreventDuplicateResourceSave()
+    public function testUpdateExistingResource()
     {
         if (!function_exists('saveResourceInformationAndRights')) {
             require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
         }
 
-        $postData = [
-            "doi" => "10.5880/GFZ.DUPLICATE.TEST",
+        // Initial data
+        $initialData = [
+            "doi" => "10.5880/GFZ.UPDATE.TEST",
             "year" => 2023,
             "dateCreated" => "2023-06-01",
-            "dateEmbargo" => "2024-12-31",
             "resourcetype" => 1,
             "version" => 1.0,
             "language" => 1,
             "Rights" => 1,
-            "title" => ["Duplicate Test Dataset"],
+            "title" => ["Original Title"],
             "titleType" => [1]
         ];
 
-        // Ersten Datensatz speichern
-        $first_resource_id = saveResourceInformationAndRights($this->connection, $postData);
-        $this->assertIsInt($first_resource_id, "Die erste Speicherung sollte eine gültige Resource ID zurückgeben.");
-        $this->assertGreaterThan(0, $first_resource_id, "Die erste Resource ID sollte größer als 0 sein.");
+        // Save initial resource
+        $first_resource_id = saveResourceInformationAndRights($this->connection, $initialData);
+        $this->assertIsInt($first_resource_id, "Initial save should return a valid resource ID");
 
-        // Versuchen, denselben Datensatz erneut zu speichern
-        $second_resource_id = saveResourceInformationAndRights($this->connection, $postData);
+        // Updated data with same DOI but different values
+        $updatedData = [
+            "doi" => "10.5880/GFZ.UPDATE.TEST",
+            "year" => 2024,
+            "dateCreated" => "2024-01-01",
+            "resourcetype" => 2,
+            "version" => 2.0,
+            "language" => 2,
+            "Rights" => 2,
+            "title" => ["Updated Title"],
+            "titleType" => [1]
+        ];
 
-        $this->assertFalse($second_resource_id, "Die Funktion sollte false zurückgeben, wenn versucht wird, eine doppelte DOI zu speichern");
+        // Save updated resource
+        $updated_resource_id = saveResourceInformationAndRights($this->connection, $updatedData);
 
-        // Überprüfen, ob nur ein Datensatz in der Datenbank existiert
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource WHERE doi = ?");
-        $stmt->bind_param("s", $postData["doi"]);
+        // Should return the same resource ID
+        $this->assertEquals($first_resource_id, $updated_resource_id, "Update should return the same resource ID");
+
+        // Verify updated values
+        $stmt = $this->connection->prepare("SELECT * FROM Resource WHERE resource_id = ?");
+        $stmt->bind_param("i", $updated_resource_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        $count = $result->fetch_assoc()['count'];
+        $row = $result->fetch_assoc();
 
-        $this->assertEquals(1, $count, "Es sollte nur ein Datensatz mit dieser DOI in der Datenbank existieren");
+        $this->assertEquals($updatedData["year"], $row["year"]);
+        $this->assertEquals($updatedData["dateCreated"], $row["dateCreated"]);
+        $this->assertEquals($updatedData["resourcetype"], $row["Resource_Type_resource_name_id"]);
+        $this->assertEquals($updatedData["version"], $row["version"]);
+        $this->assertEquals($updatedData["language"], $row["Language_language_id"]);
+        $this->assertEquals($updatedData["Rights"], $row["Rights_rights_id"]);
+
+        // Verify updated title
+        $stmt = $this->connection->prepare("SELECT * FROM Title WHERE Resource_resource_id = ?");
+        $stmt->bind_param("i", $updated_resource_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+
+        $this->assertEquals($updatedData["title"][0], $row["text"]);
+    }
+
+    /**
+     * Tests saving multiple resources without DOIs.
+     * 
+     * @return void
+     */
+    public function testSaveMultipleResourcesWithoutDoi()
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        // Create base data structure
+        $baseData = [
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "titleType" => [1]
+        ];
+
+        // Save multiple resources without DOI
+        $resourceIds = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $data = $baseData;
+            $data["title"] = ["Resource Without DOI #" . $i];
+            $data["doi"] = null;
+
+            $resource_id = saveResourceInformationAndRights($this->connection, $data);
+            $this->assertIsInt($resource_id, "Should return valid resource ID for resource #$i");
+            $this->assertGreaterThan(0, $resource_id);
+            $resourceIds[] = $resource_id;
+        }
+
+        // Verify all resources were saved with unique IDs
+        $this->assertCount(3, array_unique($resourceIds), "Should create three distinct resources");
+
+        // Verify each resource in database
+        foreach ($resourceIds as $index => $id) {
+            $stmt = $this->connection->prepare("SELECT * FROM Resource WHERE resource_id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+
+            $this->assertNull($row["doi"], "DOI should be NULL for resource #" . ($index + 1));
+
+            // Verify title
+            $stmt = $this->connection->prepare("SELECT text FROM Title WHERE Resource_resource_id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $titleRow = $stmt->get_result()->fetch_assoc();
+            $this->assertEquals("Resource Without DOI #" . ($index + 1), $titleRow["text"]);
+        }
     }
 
     /**
