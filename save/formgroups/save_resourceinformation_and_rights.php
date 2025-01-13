@@ -110,6 +110,7 @@ function prepareResourceData($postData)
 
 /**
  * Handles existing resources, updating them if found.
+ * Cleans up all related entries before update.
  *
  * @param mysqli $connection The database connection
  * @param array $resourceData The prepared resource data
@@ -133,6 +134,27 @@ function handleExistingResource($connection, $resourceData)
     $row = $result->fetch_assoc();
     $resource_id = $row['resource_id'];
 
+    // Delete all existing relationships
+    $relationTables = [
+        'Title',
+        'Resource_has_Author',
+        'Resource_has_Contributor_Person',
+        'Resource_has_Contributor_Institution',
+        'Resource_has_Contact_Person',
+        'Resource_has_Funding_Reference',
+        'Resource_has_Originating_Laboratory',
+        'Resource_has_Related_Work',
+        'Resource_has_Spatial_Temporal_Coverage',
+        'Resource_has_Thesaurus_Keywords',
+        'Resource_has_Free_Keywords'
+    ];
+
+    foreach ($relationTables as $table) {
+        $stmt = $connection->prepare("DELETE FROM " . $table . " WHERE Resource_resource_id = ?");
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+    }
+
     // Update existing resource
     $stmt = $connection->prepare("UPDATE Resource SET 
         version = ?, year = ?, dateCreated = ?, dateEmbargoUntil = ?,
@@ -151,11 +173,6 @@ function handleExistingResource($connection, $resourceData)
         $resource_id
     );
 
-    $stmt->execute();
-
-    // Delete existing titles for this resource
-    $stmt = $connection->prepare("DELETE FROM Title WHERE Resource_resource_id = ?");
-    $stmt->bind_param("i", $resource_id);
     $stmt->execute();
 
     return $resource_id;
