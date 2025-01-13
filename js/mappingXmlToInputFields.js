@@ -861,6 +861,38 @@ function processDescriptions(xmlDoc, resolver) {
 }
 
 /**
+ * Process dates from XML and populate the form.
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processDates(xmlDoc, resolver) {
+  const dateNodes = xmlDoc.evaluate(
+    '//ns:dates/ns:date',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+  
+  // Reset date fields
+  $('input[name="dateCreated"]').val('');
+  $('input[name="dateEmbargo"]').val('');
+
+  for (let i = 0; i < dateNodes.snapshotLength; i++) {
+    const dateNode = dateNodes.snapshotItem(i);
+    const dateType = dateNode.getAttribute('dateType');
+    const dateValue = dateNode.textContent.trim();
+
+    // Set values based on date type
+    if (dateType === 'Created') {
+      $('input[name="dateCreated"]').val(dateValue);
+    } else if (dateType === 'Available') {
+      $('input[name="dateEmbargo"]').val(dateValue);
+    }
+  }
+}
+
+ /**
  * Process Subjects from XML and populate the Keyword fields
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
@@ -1179,5 +1211,7 @@ async function loadXmlToForm(xmlDoc) {
   processRelatedWorks(xmlDoc, resolver);
   // Process Funders
   processFunders(xmlDoc, resolver);
+  // Process Dates
+  processDates(xmlDoc, resolver);
 
 }
