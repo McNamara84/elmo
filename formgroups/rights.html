@@ -1,8 +1,6 @@
 <div class="card mb-2">
   <div class="card-header">
-    <b>
-      <?php echo $translations['rights']; ?>
-    </b>
+    <b data-translate="rights.title">Licenses and Rights</b>
   </div>
   <div id="group-rights">
     <div class="card-body">
@@ -10,12 +8,11 @@
         <div class="col p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
-              <select class="form-select input-with-help input-right-no-round-corners" id="input-rights-license" name="Rights"
-                required>
+              <select class="form-select input-with-help input-right-no-round-corners" id="input-rights-license"
+                name="Rights" required>
               </select>
-              <label for="input-rights-license">
-                <?php echo $translations['rightsTitle']; ?><span class="text-danger">*</span>
-              </label>
+              <label for="input-rights-license"><span data-translate="rights.licenseTitle">License</span><span
+                  class="text-danger">*</span></label>
             </div>
             <div class="input-group-append">
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -26,5 +23,4 @@
       </div>
     </div>
   </div>
-</div>
 </div>

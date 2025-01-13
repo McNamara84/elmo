@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <Resource>
-  <currentDate>2024-12-09</currentDate>
+  <currentDate>2025-01-10</currentDate>
   <year>1956</year>
-  <dateCreated>1956-12-31</dateCreated>
+  <dateCreated>2025-01-09</dateCreated>
   <Rights>
     <rights_id>1</rights_id>
     <text>Creative Commons Attribution 4.0 International</text>
@@ -34,6 +34,13 @@
       <Affiliations/>
     </Author>
   </Authors>
+  <ContactPersons>
+    <ContactPerson>
+      <familyname>Naja</familyname>
+      <givenname>Jana</givenname>
+      <email>contact@person.com</email>
+    </ContactPerson>
+  </ContactPersons>
   <Descriptions>
     <Description>
       <type>Abstract</type>
@@ -42,22 +49,15 @@
   </Descriptions>
   <SpatialTemporalCoverages>
     <SpatialTemporalCoverage>
-      <spatial_temporal_coverage_id>7</spatial_temporal_coverage_id>
+      <spatial_temporal_coverage_id>30</spatial_temporal_coverage_id>
       <latitudeMin>51.8395</latitudeMin>
+      <latitudeMax>51.8395</latitudeMax>
       <longitudeMin>38.0269</longitudeMin>
+      <longitudeMax>38.0269</longitudeMax>
       <description>Auch in fg STC werden nur die Pflichtfelder ausgef&#xFC;llt</description>
       <dateStart>1956-01-01</dateStart>
       <dateEnd>1956-12-31</dateEnd>
-      <timezone>+00:00</timezone>
+      <timezone>+01:00</timezone>
     </SpatialTemporalCoverage>
   </SpatialTemporalCoverages>
-  <FundingReferences>
-    <FundingReference>
-      <Resource_has_Funding_Reference_id>7</Resource_has_Funding_Reference_id>
-      <Resource_resource_id>7</Resource_resource_id>
-      <Funding_Reference_funding_reference_id>7</Funding_Reference_funding_reference_id>
-      <funding_reference_id>7</funding_reference_id>
-      <funder>Pflichtangabe Funder</funder>
-    </FundingReference>
-  </FundingReferences>
 </Resource>

@@ -1,0 +1,184 @@
+{
+    "header": {
+        "help": "Aide",
+        "on": "Actif",
+        "off": "Inactif",
+        "mode": "Mode",
+        "light": "Clair",
+        "dark": "Sombre",
+        "language": "Langue",
+        "legalNotice": "Mentions légales"
+    },
+    "general": {
+        "logoTitle": "ELMO - Optimiseur de métadonnées de laboratoire EPOS 2.0RC1",
+        "logoTitleShort": "ELMO 2.0",
+        "choose": "Sélectionner...",
+        "valid": "Valide",
+        "pleaseChoose": "Veuillez sélectionner",
+        "orcid": "ORCID",
+        "orcidInvalid": "Veuillez saisir un ORCID valide (XXXX-XXXX-XXXX-XXX(X))",
+        "lastName": "Nom",
+        "lastNameInvalid": "Veuillez saisir un nom. Seules les lettres sont autorisées.",
+        "firstNameInvalid": "Veuillez saisir un prénom. Seules les lettres sont autorisées.",
+        "firstName": "Prénom",
+        "affiliation": "Affiliation(s)",
+        "roleLabel": "Rôle(s)",
+        "add": "+",
+        "cancel": "Annuler",
+        "accept": "Accepter"
+    },
+    "alerts": {
+        "languageWarning": "Veuillez remplir le formulaire en anglais.",
+        "validationErrorheading": "Erreur de validation",
+        "validationError": "Veuillez remplir correctement le formulaire.",
+        "filenameErrorHeading": "Erreur de nom de fichier",
+        "filenameError": "Veuillez saisir un nom de fichier.",
+        "processingHeading": "Traitement en cours...",
+        "processingInfo": "L'ensemble de données est en cours de soumission.",
+        "submitSuccess": "Ensemble de données transmis avec succès.",
+        "savingHeading": "Enregistrement...",
+        "savingInfo": "L'ensemble de données est en cours d'enregistrement.",
+        "savingSuccess": "Ensemble de données enregistré avec succès. Le téléchargement XML démarrera automatiquement."
+    },
+    "resourceInfo": {
+        "title": "Informations sur la ressource",
+        "doi": "DOI",
+        "doiValid": "Un nouveau DOI sera enregistré",
+        "doiInvalid": "Veuillez utiliser le format 10.ORGANISATION/ID (ex.: 10.57757/IUGG23-3081) ou laisser vide",
+        "publicationYear": "Année de publication",
+        "publicationYearInvalid": "Veuillez saisir une année valide entre 1901-2155 (4 chiffres).",
+        "resourceType": "Type de ressource",
+        "version": "Version",
+        "versionInvalid": "Laissez vide en cas de doute",
+        "datasetLanguage": "Langue du jeu de données",
+        "resourceTitle": "Titre",
+        "resourceTitleInvalid": "Veuillez fournir un titre descriptif (qui ne répète pas le titre de l'article, mais qui décrit les données)",
+        "titleType": "Type de titre"
+    },
+    "rights": {
+        "title": "Licences et droits",
+        "licenseTitle": "Licence"
+    },
+    "authors": {
+        "title": "Auteur(s)",
+        "affiliationInvalid": "Veuillez indiquer une affiliation."
+    },
+    "contactPersons": {
+        "title": "Personne(s) à contacter",
+        "email": "Adresse e-mail",
+        "emailInvalid": "Veuillez saisir une adresse e-mail valide au format xxx.xxx@xxx.xxx.",
+        "position": "Poste",
+        "positionInvalid": "Veuillez indiquer un poste.",
+        "website": "Site web",
+        "websiteInvalid": "Veuillez saisir une URL valide."
+    },
+    "laboratory": {
+        "title": "Laboratoire d'origine",
+        "name": "Nom du laboratoire d'origine"
+    },
+    "contributors": {
+        "title": "Contributeurs",
+        "organization": "Nom de l'organisation",
+        "organizationInvalid": "Veuillez saisir un nom d'organisation valide.",
+        "persons": "Personne(s) contributrice(s)",
+        "institutions": "Institution(s) contributrice(s)"
+    },
+    "descriptions": {
+        "title": "Descriptions",
+        "abstract": "Résumé",
+        "abstractTooltip": "Veuillez saisir un résumé...",
+        "methods": "Méthodes",
+        "methodsTooltip": "Veuillez décrire les méthodes...",
+        "technicalInfo": "Informations techniques",
+        "technicalInfoTooltip": "Veuillez saisir les informations techniques...",
+        "other": "Autre",
+        "otherTooltip": "Veuillez saisir d'autres informations.."
+    },
+    "keywords": {
+        "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
+        "thesaurus": {
+            "title": "GCMD Science Keywords",
+            "name": "Thésaurus",
+            "scienceKeywords": "NASA GCMD Science Keywords",
+            "label": "Ouvrez le thésaurus pour choisir des mots-clés ou commencez à taper..."
+        },
+        "free": {
+            "title": "Mots-clés libres",
+            "placeholder": "Veuillez saisir des mots-clés séparés par des virgules."
+        },
+        "searchPlaceholder": "Rechercher des mots-clés..."
+    },
+    "dates": {
+        "title": "Dates",
+        "created": "Date de création",
+        "dateInvalid": "Veuillez saisir une date valide !",
+        "embargoUntil": "Embargo jusqu'au"
+    },
+    "coverage": {
+        "title": "Couverture spatiale et temporelle",
+        "map": "Carte",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "description": "Description",
+        "descriptionPlaceholder": "Veuillez saisir la description de la couverture temporelle et spatiale...",
+        "start": "Début",
+        "end": "Fin",
+        "timezone": "Fuseau horaire",
+        "mapInfo": "(Veuillez choisir les coordonnées par rectangle ou marqueur)"
+    },
+    "relatedWork": {
+        "title": "Travaux connexes",
+        "relation": "Relation",
+        "identifierType": "Type d'identifiant",
+        "identifier": "Identifiant",
+        "identifierInvalid": "Veuillez saisir un identifiant valide."
+    },
+    "funding": {
+        "title": "Références de financement",
+        "funder": "Organisme de financement",
+        "funderInvalid": "Veuillez saisir le nom de l'organisme de financement.",
+        "grantNumber": "Numéro de subvention",
+        "grantName": "Nom de la subvention"
+    },
+    "buttons": {
+        "clear": "Effacer",
+        "clearTooltip": "Supprimer toutes les entrées ou le contenu.",
+        "load": "Charger",
+        "loadTooltip": "Charger les données ou le contenu sauvegardés.",
+        "saveAs": "Enregistrer",
+        "saveAsTooltip": "Enregistrer les données ou le contenu actuels sous un nouveau nom de fichier.",
+        "submit": "Soumettre",
+        "submitTooltip": "Transmettre les données ou le contenu saisis."
+    },
+    "modals": {
+        "feedback": {
+            "button": "Retour",
+            "buttonTooltip": "Envoyer un retour aux développeurs",
+            "label": "Retour utilisateur",
+            "question1": "Quelles fonctionnalités du nouvel éditeur de métadonnées trouvez-vous particulièrement utiles ?",
+            "question2": "Y a-t-il un changement de design ou d'interface particulier qui vous plaît ?",
+            "question3": "Que trouvez-vous positif dans l'utilisation du nouvel éditeur ?",
+            "question4": "Quelles fonctionnalités du nouvel éditeur trouvez-vous difficiles à utiliser ?",
+            "question5": "Y a-t-il des aspects de l'interface utilisateur que vous trouvez déroutants ou gênants ?",
+            "question6": "Manque-t-il certaines fonctionnalités dans le nouvel éditeur de métadonnées ?",
+            "question7": "Y a-t-il une amélioration spécifique que vous souhaiteriez voir ?",
+            "sendButton": "Envoyer le retour",
+            "thankYouMessage": "Merci pour votre retour !"
+        },
+        "upload": {
+            "title": "Sélectionner un fichier XML :",
+            "dropZoneInfo": "Déposer le fichier XML ici"
+        },
+        "changelog": {
+            "title": "Journal des modifications",
+            "aboutText": "L'éditeur de métadonnées ELMO a été développé en 2024 par des étudiants de l'Université des Sciences Appliquées de Potsdam en coopération avec le Centre de Recherche Allemand en Géosciences et est publié sous la licence GNU General Public License, Version 2.",
+            "aboutHeading": "À propos d'ELMO - Optimiseur de métadonnées de laboratoire EPOS"
+        },
+        "save": {
+            "title": "Enregistrer les métadonnées",
+            "saveAs": "Enregistrer en XML",
+            "filename": "Nom du fichier",
+            "save": "Enregistrer"
+        }
+    }
+}

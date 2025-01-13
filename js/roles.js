@@ -31,6 +31,7 @@ function setupRolesDropdown(roletypes, inputSelector) {
             whitelist: uniqueSortedRoles,
             enforceWhitelist: true,
             maxTags: 10,
+            placeholder: translations.general.roleLabel,
             dropdown: {
               maxItems: 20,
               classname: "tags-look",

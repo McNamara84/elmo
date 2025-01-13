@@ -1,3 +1,4 @@
+
 /**
  * Extracts license identifier from various formats
  * @param {Element} rightsNode - The XML rights element
@@ -528,13 +529,13 @@ function processContributors(xmlDoc, resolver) {
     null
   ).singleNodeValue;
 
-    // reset Contributor Person 
-    $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
-    $('#group-contributorperson .row[contributor-person-row]:first input').val('');
+  // reset Contributor Person 
+  $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
+  $('#group-contributorperson .row[contributor-person-row]:first input').val('');
 
-    // reset Contributor Institution
-    $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
-    $('#group-contributororganisation .row[contributors-row]:first input').val('');
+  // reset Contributor Institution
+  $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
+  $('#group-contributororganisation .row[contributors-row]:first input').val('');
 
 
   if (!contributorsNode) return;
@@ -722,6 +723,103 @@ function populateFormWithContributors(personMap, orgMap) {
 }
 
 /**
+ * Parse temporal data from a date node.
+ * This helper function simplifies the processing of temporal data in the main `processSpatialTemporalCoverages` function. 
+ * It parses date strings and returns the extracted start and end dates and times as separate components.
+ * @param {Node} dateNode - The XML node containing temporal data.
+ * @returns {Object} An object containing startDate, startTime, endDate, and endTime.
+ */
+function parseTemporalData(dateNode) {
+  const result = {
+    startDate: '',
+    startTime: '',
+    endDate: '',
+    endTime: '',
+  };
+
+  if (!dateNode || !dateNode.textContent) return result;
+
+  const [start, end] = dateNode.textContent.split('/');
+  if (start) {
+    const [startDate, startTime] = start.includes('T') ? start.split('T') : [start, ''];
+    result.startDate = startDate;
+    result.startTime = startTime ? startTime.split(/[+-]/)[0] : '';
+  }
+  if (end) {
+    const [endDate, endTime] = end.includes('T') ? end.split('T') : [end, ''];
+    result.endDate = endDate;
+    result.endTime = endTime ? endTime.split(/[+-]/)[0] : '';
+  }
+
+  return result;
+}
+
+/**
+ * Process spatial-temporal coverage (STC) data from XML and populate the form.
+ * @param {Document} xmlDoc - The parsed XML document.
+ * @param {Function} resolver - The namespace resolver function.
+ */
+function processSpatialTemporalCoverages(xmlDoc, resolver) {
+  const geoLocationNodes = xmlDoc.evaluate(
+    './/ns:geoLocations/ns:geoLocation',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
+    const geoLocationNode = geoLocationNodes.snapshotItem(i);
+
+    // Extract geoLocation data
+    const place = geoLocationNode.querySelector('geoLocationPlace')?.textContent || '';
+    const boxNode = geoLocationNode.querySelector('geoLocationBox');
+    const pointNode = geoLocationNode.querySelector('geoLocationPoint');
+
+    const westBoundLongitude = boxNode?.querySelector('westBoundLongitude')?.textContent || '';
+    const eastBoundLongitude = boxNode?.querySelector('eastBoundLongitude')?.textContent || '';
+    const southBoundLatitude = boxNode?.querySelector('southBoundLatitude')?.textContent || '';
+    const northBoundLatitude = boxNode?.querySelector('northBoundLatitude')?.textContent || '';
+    const pointLongitude = pointNode?.querySelector('pointLongitude')?.textContent || '';
+    const pointLatitude = pointNode?.querySelector('pointLatitude')?.textContent || '';
+
+    // Determine latitude and longitude values
+    const latitudeMin = southBoundLatitude || pointLatitude;
+    const latitudeMax = northBoundLatitude || pointLatitude;
+    const longitudeMin = westBoundLongitude || pointLongitude;
+    const longitudeMax = eastBoundLongitude || pointLongitude;
+
+    // Find last row
+    const $lastRow = $('textarea[name="tscDescription[]"]').last().closest('.row');
+
+    // Set values
+    $lastRow.find('textarea[name="tscDescription[]"]').val(place);
+    $lastRow.find('input[name="tscLatitudeMin[]"]').val(latitudeMin);
+    $lastRow.find('input[name="tscLatitudeMax[]"]').val(latitudeMax);
+    $lastRow.find('input[name="tscLongitudeMin[]"]').val(longitudeMin);
+    $lastRow.find('input[name="tscLongitudeMax[]"]').val(longitudeMax);
+
+    // Handle timezone
+    const timezoneField = $lastRow.find('select[name="tscTimezone[]"]');
+    timezoneField.val(i === 0 ? '' : 'UTC+00:00 (Africa/Abidjan)');
+
+    // Set date and time if available
+    const dateNode = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(i);
+    const temporalData = parseTemporalData(dateNode);
+
+    $lastRow.find('input[name="tscDateStart[]"]').val(temporalData.startDate);
+    $lastRow.find('input[name="tscTimeStart[]"]').val(temporalData.startTime);
+    $lastRow.find('input[name="tscDateEnd[]"]').val(temporalData.endDate);
+    $lastRow.find('input[name="tscTimeEnd[]"]').val(temporalData.endTime);
+
+    // Clone row for the next entry, if there is one
+    if (i < geoLocationNodes.snapshotLength - 1) {
+      $('#button-stc-add').click();
+    }
+  }
+}
+
+/**
  * Process descriptions from XML and populate the form
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
@@ -788,7 +886,7 @@ function processDates(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-
+  
   // Reset date fields
   $('input[name="dateCreated"]').val('');
   $('input[name="dateEmbargo"]').val('');
@@ -807,6 +905,69 @@ function processDates(xmlDoc, resolver) {
   }
 }
 
+ /**
+ * Process Subjects from XML and populate the Keyword fields
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processKeywords(xmlDoc, resolver) {
+  const subjectNodes = xmlDoc.evaluate(
+    './/ns:subjects/ns:subject',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+  const tagifyInputGCMD = document.querySelector('#input-sciencekeyword');
+  const tagifyInputMsl = document.querySelector('#input-mslkeyword');
+  const tagifyInputFree = document.querySelector('#input-freekeyword');
+
+
+  // Error handling
+  if (!tagifyInputGCMD?._tagify || !tagifyInputMsl?._tagify || !tagifyInputFree?._tagify) {
+    console.error("One or more Tagify instances are not properly initialized.");
+    return;
+  }
+
+  // Retrieve existing Tagify instances
+  const tagifyGCMD = tagifyInputGCMD._tagify;
+  const tagifyMsl = tagifyInputMsl._tagify;
+  const tagifyFree = tagifyInputFree._tagify;
+
+  // Clear existing tags
+  tagifyGCMD.removeAllTags();
+  tagifyMsl.removeAllTags();
+  tagifyFree.removeAllTags();
+
+  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
+    const subjectNode = subjectNodes.snapshotItem(i);
+    const subjectScheme = subjectNode.getAttribute('subjectScheme') || '';
+    const schemeURI = subjectNode.getAttribute('schemeURI') || '';
+    const valueURI = subjectNode.getAttribute('valueURI') || '';
+    const keyword = subjectNode.textContent.trim();
+
+    // Create the tag data
+    const tagData = {
+      value: keyword,
+      scheme: subjectScheme,
+      schemeURI: schemeURI,
+      id: valueURI
+    };
+
+    // Check the schemeURI and add the tag to the appropriate Tagify instance
+    if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
+      // Add the tag to the GCMD Science Keyword input field
+      tagifyGCMD.addTags([tagData]);
+    } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
+      // Add the tag to the MSL Keyword input field
+      tagifyMsl.addTags([tagData]);
+    } else {
+      // Add all other tags to the Free Keyword input field
+      tagifyFree.addTags([tagData]);
+    }
+  }
+}
+
 /**
  * Process related identifiers from XML and populate the formgroup Related Works
  * @param {Document} xmlDoc - The parsed XML document
@@ -821,8 +982,8 @@ function processRelatedWorks(xmlDoc, resolver) {
     null
   );
   //reset Related Works
-  $('#group-group-relatedwork .row[related-work-row]').not(':first').remove();
-  $('#group-group-relatedwork .row[related-work-row]:first input').val('');
+  $('#group-relatedwork .row[related-work-row]').not(':first').remove();
+  $('#group-relatedwork .row[related-work-row]:first input').val('');
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -879,11 +1040,11 @@ function processFunders(xmlDoc, resolver) {
     // Find the last row in the form
     const $lastRow = $('input[name="funder[]"]').last().closest('.row');
 
-     //Populate fields
-     $lastRow.find('input[name="funder[]"]').val(funderName);
-     $lastRow.find('input[name="funderId[]"]').val(funderId);
-     $lastRow.find('input[name="funderidtyp[]"]').val(funderIdTyp);
-     
+    // Populate fields
+    $lastRow.find('input[name="funder[]"]').val(funderName);
+    $lastRow.find('input[name="funderId[]"]').val(funderId);
+    $lastRow.find('input[name="funderidtyp[]"]').val(funderIdTyp);
+
     $lastRow.find('input[name="grantNummer[]"]').val(awardNumber);
     $lastRow.find('input[name="grantName[]"]').val(awardTitle);
 
@@ -1055,10 +1216,15 @@ async function loadXmlToForm(xmlDoc) {
   processContributors(xmlDoc, resolver);
   // Process descriptions
   processDescriptions(xmlDoc, resolver);
+  // Process Spatial and Temporal Coverages
+  processSpatialTemporalCoverages(xmlDoc, resolver);
+  // Process Keywords
+  processKeywords(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
   // Process Funders
   processFunders(xmlDoc, resolver);
   // Process Dates
   processDates(xmlDoc, resolver);
+
 }

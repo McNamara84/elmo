@@ -1,9 +1,5 @@
 <div class="card mb-2">
-    <div class="card-header">
-        <b>
-            <?php echo $translations['originatingLaboratoryLabel']; ?>
-        </b>
-    </div>
+    <div class="card-header"><b data-translate="laboratory.title">Originating Laboratory</b></div>
     <div class="card-body">
         <div id="group-originatinglaboratory">
             <div class="row" data-laboratory-row>
@@ -11,8 +7,7 @@
                 <div class="col-sm-11 col-md-11 col-lg-11 p-1">
                     <div class="input-group has-validation">
                         <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                            id="input-originatinglaboratory-name" name="laboratoryName[]"
-                            placeholder="<?php echo $translations['originatingLaboratoryName']; ?>" />
+                            id="input-originatinglaboratory-name" name="laboratoryName[]" data-translate-placeholder="laboratory.name" />
                         <input type="hidden" class="LabId" name="LabId[]">
                         <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                 data-help-section-id="help-originatinglaboratory-name"></i></span>
@@ -22,10 +17,8 @@
                 <div class="col-sm-5 col-md-5 col-lg-4 p-1 d-none">
                     <div class="input-group has-validation">
                         <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                            id="input-originatinglaboratory-affiliation" name="laboratoryAffiliation[]"
-                            placeholder="<?php echo $translations['originatingLaboratoryAffiliation']; ?>" />
-                        <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                                data-help-section-id="LaboratoryAffiliationHelp"></i></span>
+                            id="input-originatinglaboratory-affiliation" name="laboratoryAffiliation[]" />
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill"></i></span>
                         <input type="hidden" id="input-originatinglaboratory-rorid" name="laboratoryRorIds[]" />
                     </div>
                 </div>
@@ -33,9 +26,7 @@
                 <div class="col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
                     <div class="align-items-center">
                         <button type="button" class="btn btn-primary addLaboratory" id="button-originatinglaboratory-add"
-                            style="width: 36px">
-                            <?php echo $translations['add']; ?>
-                        </button>
+                            style="width: 36px" data-translate="general.add">+</button>
                     </div>
                 </div>
             </div>

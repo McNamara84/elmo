@@ -1,4 +1,4 @@
-# ELMO - EPOS Laoratory Metadata Optimizer
+# ELMO - EPOS Laboratory Metadata Optimizer
 
 This EPOS Laoratory Metadata Optimizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GeoForschungsZentrum Potsdam](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
 
@@ -361,7 +361,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: doi in der Tabelle Resource.
   - Restriktionen: Muss im Format "prefix/suffix" sein.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/identifier/)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `10.5880/GFZ.3.1.2024.002` `10.5880/pik.2024.001`
 
 - Publication Year
@@ -372,7 +371,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: year in der Tabelle Resource.
   - Restriktionen: A year in four-digit format. Values allowed in four-digit format: 1901 to 2155 (due to data type YEAR)
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/publicationyear/)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `1998` `2018` `1901`
 
 - Resource Type
@@ -383,7 +381,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: resource_type_general in der Tabelle Resource_Type.
   - Restriktionen: Muss ein „Recource Type“ ausgewählt werden.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/resourcetype/#a-resourcetypegeneral)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Dataset` `Audiovisual` `Book`
 
 - Version
@@ -394,7 +391,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: version in der Tabelle Resource.
   - Restriktionen: Zahl Punkt Zahl.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/version/)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `1.0` `2.1` `3.5`
 
 - Language of Dataset
@@ -405,7 +401,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: name in der Tabelle Language.
   - Restriktionen: Muss eine „Sprache“ ausgewählt werden.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/language/)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `"en" Englisch` `"de" Deutsch` `"fr" Französisch`
 
 - Title
@@ -416,7 +411,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: text in der Tabelle title.
   - Restriktionen: Muss angegeben werden.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Drone based photogrammetry data at the Geysir geothermal field, Iceland`
 
 - Title Type
@@ -426,7 +420,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: title in der Tabelle Title_Type.
   - Restriktionen: Muss ein „Title Type“ ausgewählt werden.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/#a-titletype)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Main` `Subtitle` `Translated Title`
 
 ### Rights
@@ -438,7 +431,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: text und rightsIdentifier in der Tabelle Rights.
   - Restriktionen: Muss eine „Linzenz“ ausgewählt werden.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
 
 ### Authors
@@ -451,7 +443,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: familyname in der Tabelle Author.
   - Restriktionen: Muss angegeben werden.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#familyname)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Jemison` `Smith`
 
 - Firstname
@@ -462,7 +453,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: givenname in der Tabelle Author.
   - Restriktionen: Muss angegeben werden.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `John` `Jane`
 
 - Author ORCID
@@ -473,7 +463,6 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: orcid in der Tabelle Author.
   - Restriktionen: Muss im Format "xxxx-xxxx-xxxx-xxxx" sein.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `1452-9875-4521-7893` `0082-4781-1312-884x`
 
 - Affiliation
@@ -483,11 +472,10 @@ JSON-Array mit Identifier-Typ-Objekten
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: name in der Tabelle Affiliation.
   - Restriktionen: Es ist optional.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
 
 ### Contact Person(s)
-A Contact Person is saved as a "Contributor" with the role "Contact Person" in the datacite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
+A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
 
 - Last name
 
@@ -565,7 +553,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: familyname in der Tabelle Contributor_Person
   - Restriktionen: Optional.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#familyname)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Jemison` `Smith`
 
 - Firstname
@@ -576,7 +563,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: givenname in der Tabelle Contributor_Person
   - Restriktionen: Optional.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#givenname)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `John` `Jane`
 
 - Role
@@ -587,7 +573,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Role_role_id in der Tabelle Contributor_Person_has_Role
   - Restriktionen: muss mindestens eine Rolle ausgewählt werden./muss nur eine Rolle ausgewählt werden.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Data Manager` `Project Manager`
 
 - ORCID
@@ -598,7 +583,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: orcid in der Tabelle Contributor_Person
   - Restriktionen: Muss im Format "xxxx-xxxx-xxxx-xxxx" sein.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nameidentifierscheme)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `1452-9875-4521-7893` `0082-4781-1312-884x`
 
 - Affiliation
@@ -610,7 +594,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
 
   - Restriktionen: Es ist optional.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-affiliationidentifier)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
 
 - _Organisational_
@@ -622,7 +605,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!**
   - Restriktionen: Es ist optional.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nametype)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `University of Applied Sciences Potsdam` `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
 - Role
@@ -632,7 +614,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!**
   - Restriktionen: muss mindestens eine Rolle ausgewählt werden./muss nur eine Rolle ausgewählt werden.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Data Collector` `Data Curator`
   
 - Affiliation
@@ -641,10 +622,8 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Datentyp: Zeichenkette
   - Vorkommen: 0-n
   - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Affiliation_affiliation_id in der Tabelle Contributor_Institution_has_Affiliation
-
   - Restriktionen: Es ist optional.
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-affiliationidentifier)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Education and Science Workers' Union` `Institute of Science and Ethics`
 
 
@@ -657,7 +636,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   **Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!\*\*
 - Restriktionen: keine - Freitext
 - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#abstract)
-- Schema Version: "DataCite" 4.5
 - Beispielwerte: `The dataset contains a subset of an airborne hyperspectral HyMap image over the Cabo de Gata-Nίjar Natural Park in Spain from 15.06.2005, and soil wet chemistry data based on in-situ soil sampling. The Cabo de Gata-Nίjar Natural Park is a semi-arid mediterranean area in Southern Spain, sparsely populated and with a range of landscape patterns.`
 
 - Methods
@@ -668,7 +646,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
     **Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!\*\*
   - Restriktionen: keine - Freitext
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#methods)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Graphical representation of the steps used to reconstruct sequence alignments of the Nudix superfamily, as described in the Materials and Methods section. (A) The pipeline to build the 78-PDB structure guided sequence alignment. (B) The pipeline to build the 324-core sequence alignment guided by the 78-PDB sequence alignment. (C) The pipeline to build the alignment of the complete Nudix clan (38,950 sequences). (D) Illustration of how to combine two alignment into one guided by a scaffold alignment.`
 
 - TechnicalInfo
@@ -679,7 +656,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
     **Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!\*\*
   - Restriktionen: keine - Freitext
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#technicalinfo)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `Scripts written and run using Wolfram Mathematica (confirmed with versions 10.2 to 11.1). Assumes raw data matches format produced by a LTQ Orbitrap Velos mass spectrometer and exported by the proprietary software (Xcalibur) to a comma-separated values (.csv) file. The .csv files are the expected input into the Mathematica scripts. `
 
 - Other
@@ -688,99 +664,78 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
     **Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!\*\*
   - Restriktionen: keine - Freitext
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#other)
-  - Schema Version: "DataCite" 4.5
   - Beispielwerte: `This is the description of a data set that does not fit into the categories of abstract, methods or technical information, but is nevertheless extremely necessary.`
 
-### Thesaurus Keywords
+### Keywords
+Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD Science Keywords" and "Free Keywords" are mapped to `<subject>` in the DataCite 4.5 scheme and to `<descriptiveKeywords> <MD_Keywords> <keyword>` in the ISO scheme. 
 
-- Thesaurus Keyword
+#### EPOS Multi-Scale Laboratories Keywords
 
-  - In dieses Feld können Schlagwörter zur inhaltlichen Beschreibung des Datensatzes eingefügt werden
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank heißt: keyword in der Tabelle Thesaurus_Keywords
-  - Restriktionen: Es stehen (Stand 18.06.2024) nur GCMD Science Keywords (Earth Science und Earth Science Services) zur Auswahl. **Weitere kontrollierte Vokabulare müssen/können/sollten noch hinzugefügt werden.**
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `EARTH SCIENCE` `AGRICULTURE`
+Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://mde2.cats4future.de/api/v2/docs/index.html)).
 
-- *Saved in backend (not visible to user):* scheme
+- EPOS Multi-Scale Laboratories Keyword
 
-  - hier wird bei Auswahl eines Keywords der Name des zugehörigen Schemas gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank heißt: scheme in der Tabelle Thesaurus_Keywords
-  - Restriktionen: bisher ist nur der Wert `NASA/GCMD Earth Science Keywords` möglich
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwert: `NASA/GCMD Earth Science Keywords`
-
-- *Saved in backend (not visible to user):* schemeURI
-
-  - hier wird bei Auswahl eines Keywords der URI des zugehörigen Schemas gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank heißt: schemeURI in der Tabelle Thesaurus_Keywords
-  - Restriktionen: bisher ist nur der Wert `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords` möglich
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#b-schemeuri)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords`
-
-- *Saved in backend (not visible to user):* valueURI
-
-  - hier wird bei Auswahl eines Keywords der PID, die URI, des Keywords gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank heißt: valueURI in der Tabelle Thesaurus_Keywords
-  - Restriktionen: wird aus der Datei gcmdScienceKeywords.json extrahiert
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#c-valueuri)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `https://gcmd.earthdata.nasa.gov/kms/concept/a2cc8e02-3207-4c40-af41-9656404bac0a`
-
-- *Saved in backend (not visible to user):* language
-  - hier wird bei Auswahl eines Keywords der URI des zugehörigen Schemas gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank heißt: language in der Tabelle Thesaurus_Keywords
-  - Restriktionen: wird aus der Datei gcmdScienceKeywords.json extrahiert
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#subject)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwerte: `en` `de`
-
-
-### MSL Keywords
-
-- MSL Keyword
-
-  - In dieses Feld können Schlagwörter zur inhaltlichen Beschreibung des Datensatzes eingefügt werden
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank heißt: keyword in der Tabelle Thesaurus_Keywords
-  - Restriktionen: Es gibt die Möglichkeit, entweder die gewünschten Keywords in der Suchleiste einzugeben oder direkt in das Eingabefeld zu tippen. Die Auswahloption steht auch zur Verfügung.
-  - [EPOS-Dokumentation](https://epos-msl.uu.nl/about)
-  - Schema Version: "EPOS Multi-Scale Laboratories (MSL) " 1.3
-  - Beispielwerte: `hydrogeochemistery` `alternating field (AF) demagnetiser`
+  This field contains keywords to describe the content of the resource.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
+  - Restrictions: Controlled vocabulary
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - Example values: `Material > minerals > chemical elements > selenium`, `Geochemistry > measured property > selenium`
 
 - *Saved in backend (not visible to user):* scheme, schemeURI, valueURI und language
 
-  - hier werden bei Auswahl eines Keywords die zugehörigen versteckten Eingabefeldern wie schemes, schemeURIs, valueURIs und languages gespeichert
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Die zugehörigen Feldern in der Datenbank heißen: scheme, schemeURI, valueURI und language in der Tabelle Thesaurus_Keywords
-  - Restriktionen: Falls in der Json-Datei die scheme nicht verfügbar ist wird in der Datenbank der eingabefeldname eingetragen `MSLKeywords`, `en` wird in der Tabelle unter language eingetragen, wenn die Sprache in der Json-Datei nicht verfügbar ist 
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#subject)
-  - Schema Version: "DataCite" 4.5
-  - Beispielwert: `"scheme": "EPOS WP16 Analogue"// "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/"// "id": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/software-visual_fortran_compaq"// "language": "en"` `"scheme": "EPOS WP16 Analogue"// "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/"// "id": "https:\/\/epos-msl.uu.nl\/voc\/analoguemodelling\/1.3\/software-visual_studio_microsoft"// "language": "en"`
+  The purpose of these fields is to clearly identify the keyword.
+  - Data type: String
+  - Occurence: 1 for controlled (thesaurus) keywords
+  - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
+  - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - Example values: 
+    scheme `https://epos-msl.uu.nl/voc/materials/1.3/`, 
+    schemeURI `https://epos-msl.uu.nl/voc/materials/1.3/`, 
+    valueURI `https://epos-msl.uu.nl/voc/materials/1.3/minerals-chemical_elements-selenium`, 
+    language `en`
 
-### Free Keywords
+#### GCMD Science Keywords
 
-- In dieses Feld kommen freie Schlagwörter, diese sind nicht an einen Thesaurus gebunden.
-  - Datentyp: Freitext
-  - Vorkommen: 0-n
-- Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: free_keywords
-  - Restriktionen: keine Duplikate
-  - Schema Version:
-- Beispielwerte: carbon dioxide emission, CO2 emission, methane emission, CH4 emission, peatland, wetland, eddy covariance, rewetting, emission factor, mitigation, Test
+Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and Earth Science Services) are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+- GCMD Science Keyword
+
+  This field contains keywords to describe the content of the resource
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
+  - Restrictions: Terms can be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - Example Values: `Science Keywords > EARTH SCIENCE > OCEANS > SEA ICE > SEA ICE VOLUME`,`Science Keywords > EARTH SCIENCE > TERRESTRIAL HYDROSPHERE > WATER QUALITY/WATER CHEMISTRY > CONTAMINANTS > SELENIUM`
+
+- *Saved in backend (not visible to user):* scheme, schemeURI, valueURI, language
+
+  The purpose of these fields is to clearly identify the keyword.
+  - Data type: String
+  - Occurence: 1 for controlled (thesaurus) keywords
+  - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
+  - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - Example values: 
+    scheme `NASA/GCMD Earth Science Keywords`, 
+    schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"`, 
+    valueURI `https://gcmd.earthdata.nasa.gov/kms/concept/b2318fb3-788c-4f36-a1d1-36670d2da747"`, 
+    language `en`
+
+#### Free Keywords
+
+- Free Keyword
+
+This field contains free keywords that are not part of a thesaurus.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is saved is called: `free_keyword` in the table `free_keywords`
+  - Restrictions: Dublicates are not allowed
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - Example values: `Seismic tremor`, `Acoustic Emission`
 
 ### Dates
 In the DataCite scheme: All field data are mapped to `<dates>`, with `dateType dateType="Available">` for the Embargo and `dateType="Created"` for the Date created.
@@ -810,81 +765,121 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
 
 ### Spatial and temporal coverage
 
-Räumliche und zeitliche Einordnung des Datensatzes. Zur einfacheren Erfassung der geografischen Angaben wird Google Maps genutzt. Wird auf der Karte ein Rechteck gezeichnet, werden die Koordinaten dieses Rechtecks an die Eingabefelder `Latitude Min` und `Latitude Max` sowie `Longitude Min` und `Longitude Max` übergeben. Die Speicherung dieser Koordinaten geschieht erst zusammen mit der Speicherung des gesamten Formulars. Wird lediglich ein Marker auf der Karte gesetzt, werden die Felder `Latitude Min` und `Longitude Min` befüllt, während `Latitude Max` und `Longitude Max` leer bleiben.
+Spatial and temporal coverage specifies the geographic region and time frame that the dataset encompasses, providing essential context for its relevance and applicability.
+In the DataCite scheme: The data from Latitude, Longitude and Description are mapped to `<geoLocations>`, while Start Date/Time and End Date/Time are mapped to `<date dateType="Collected">`.
+In the ISO scheme: All field data are mapped to `<EX_Extent>`.
 
 - Latitude Min
-  Geographische Breite einer Einzelkoordinate oder die kleinere geographische Breite eines Rechtecks als Fließkommazahl mit Punkt als Trennzeichen.
-  - Datentyp: Fließkommazahl
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: Nur positve und negative Zahlen im Wertebereich von -90 bis +90
-  - XML-Schemata: DataCite, ISO und DIF
-  - Beispielwerte: `52.0317983498743` `-3.234`
+  
+  - This field contains the geographic latitude of a single coordinate or the smaller geographic latitude of a rectangle.
+  - Data type: Floating-point number
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: latitudeMin in the spatial_temporal_coverage table
+  - Restrictions: Only positive and negative numbers in the value range from -90 to +90
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#southboundlatitude)
+  - Schema version: DataCite 4.5
+  - Example values: `52.0317983498743` `-3.234`
+
 - Latitude Max
-  Geographische Breite eines Rechtecks als Fließkommazahl mit Punkt als Trennzeichen.
-  - Datentyp: Fließkommazahl
-  - Vorkommen: 0-1
-  - Restriktionen: Nur positve und negative Zahlen im Wertebereich von -90 bis +90
-  - XML-Schemata: DataCite, ISO und DIF
-  - Beispielwerte: `49.72437624376` `-32.82438824398`
+  
+  - This field contains the larger geographic latitude of a rectangle.
+  - Data type: Floating-point number
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: latitudeMax in the spatial_temporal_coverage table
+  - Restrictions: Only positive and negative numbers in the value range from -90 to +90
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#northboundlatitude)
+  - Schema version: DataCite 4.5
+  - Example values: `49.72437624376` `-32.82438824398`
+  
 - Longitude Min
-  Geographische Länge einer Einzelkoordinate oder die kleinere geographische Länge eines Rechtecks als Fließkommazahl mit Punkt als Trennzeichen.
-  - Datentyp: Fließkommazahl
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: Nur positve und negative Zahlen im Wertebereich von -180 bis +180
-  - XML-Schemata: DataCite, ISO und DIF
-  - Beispielwerte: `108.0317983498743` `-3.04`
+  
+  - This field contains the geographic longitude of a single coordinate or the smaller geographic longitude of a rectangle.
+  - Data type: Floating-point number
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: longitudeMin in the spatial_temporal_coverage table
+  - Restrictions: Only positive and negative numbers in the value range from -180 to +180
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#westboundlongitude)
+  - Schema version: DataCite 4.5
+  - Example values: `108.0317983498743` `-3.04`
+  
 - Longitude Max
-  Geographische Länge eines Rechtecks als Fließkommazahl mit Punkt als Trennzeichen.
-  - Datentyp: Fließkommazahl
-  - Vorkommen: 0-1
-  - Restriktionen: Nur positve und negative Zahlen im Wertebereich von -180 bis +180
-  - XML-Schemata: DataCite, ISO und DIF
-  - Beispielwerte: `99.037543735498743` `-6.4`
+  
+  - This field contains the larger geographic longitude of a rectangle.
+  - Data type: Floating-point number
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: longitudeMax in the spatial_temporal_coverage table
+  - Restrictions: Only positive and negative numbers in the value range from -180 to +180
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#eastboundlongitude)
+  - Schema version: DataCite 4.5
+  - Example values: `99.037543735498743` `-6.4`
+  
 - Description
-  Freitextfeld zur Erklärung des geographischen und zeitlichen Zusammenhangs.
-  - Datentyp: Feitext
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: keine
-  - XML-Schemata: DataCite und ISO
-  - Beispielwerte: `Several boreholes at regular intervals distributed over the entire surface.`
+
+  - This field contains a free-text explanation of the geographic and temporal context.
+  - Data type: Free text
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
+  - Restrictions: none
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#geolocationplace)
+  - Schema version: DataCite 4.5
+  - Example values: `Several boreholes at regular intervals distributed over the entire surface.`
+  
 - Start Date
-  Datum des Beginns der zeitlichen Einordnung des Datensatzes.
-  - Datentyp: Datum
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: YYYY-MM-DD
-  - XML-Schemata: DataCite und ISO
-  - Beispielwerte: `2024-01-02` `1999-08-07`
+  
+  - This field contains the starting date of the temporal classification of the dataset.
+  - Data type: DATE
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
+  - Restrictions: YYYY-MM-DD
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - Schema version: DataCite 4.5
+  - Example values: `2024-01-02` `1999-08-07`
+  
 - Start Time
-  Zeitangabe im Format hh:mm:ss
-  - Datentyp: String
-  - Vorkommen: 0-1
-  - Restriktionen: hh:mm:ss
-  - XML-Schemata: DataCite, ISO
-  - Beispielwerte: `10:43:50` `04:00:00`
+  
+  - This field contains the starting time.
+  - Data type: TIME  
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
+  - Restrictions: hh:mm:ss
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - Schema version: DataCite 4.5
+  - Example values: `10:43:50` `04:00:00`
+  
 - End Date
-  Datum des Endes der zeitlichen Einordnung des Datensatzes.
-  - Datentyp: Datum
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: YYYY-MM-DD
-  - XML-Schemata: DataCite und ISO
-  - Beispielwerte: `1998-01-02` `2001-07-08`
+  
+  - This field contains the ending date of the temporal classification of the dataset.
+  - Data type: DATE
+  - Occurrence: 1 
+  - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
+  - Restrictions: YYYY-MM-DD
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - Schema version: DataCite 4.5
+  - Example values: `1998-01-02` `2001-07-08`
+  
 - End Time
-  Zeitangabe im Format hh:mm:ss
-  - Datentyp: String
-  - Vorkommen: 0-1
-  - Restriktionen: hh:mm:ss
-  - XML-Schemata: DataCite, ISO
-  - Beispielwerte: `11:34:56` `09:00:00`
+  
+  - This field contains the ending time.
+  - Data type: TIME 
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
+  - Restrictions: hh:mm:ss
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - Schema version: DataCite 4.5
+  - Example values: `11:34:56` `09:00:00`
+  
 - Timezone
-  Zeitzone ab UTC in der Start Time und End Time angegeben sind. Alle möglichen Zeitzonen werden regelmäßig über die API mit `getTimezones` aktualisiert, wenn ein CronJob auf dem Server eingerichtet wurde. Wichtig: API-Schlüssel für timezonedb.com muss in den Einstellungen angegeben werden um die automatische Aktualisierung nutzen zu können!
-  - Datentyp: Zeichenkette (Auswahl aus Liste)
-  - Vorkommen: 1 (Pflichtfeld)
-  - Restriktionen: Lediglich Werte aus Liste sind erlaubt
-  - XML-Schemata: ISO
-  - Beispielwerte: `+02:00` `-08:00`
+  
+  - This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
+  - Data type: Zeichenkette (Auswahl aus Liste)
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
+  - Restrictions: Only values from the list are permitted
+  - ISO documentation
+  - Example values: `+02:00` `-08:00`
 
 ### Related Work
-This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggregationInfo>` in the ISO scheme (not yet implemented). The element is optional in both schemes.
+This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggregationInfo>` in the ISO scheme (not yet implemented). The element is optional in both schemes.
 
 - Relation
 
@@ -894,7 +889,6 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - The corresponding field in the database where the value is saved is called: `relation_fk` in the `Related_Work` table.
   - Restrictions: A relation type must be selected, if related work is specified
   - Relations can be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
-  - Schema version: DataCite 4.5
   - Example values: `IsCitedBy` `IsSupplementTo` `IsContinuedBy`
 
 - Identifier
@@ -905,7 +899,6 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - The corresponding field in the database where the value is stored is called: `Identifier` in the `Related_Work` table.
   - Restrictions: Must be specified, if related work specified
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/)
-  - Schema version: DataCite 4.5
   - Example values: `13030/tqb3kh97gh8w`, `0706.0001`, `10.26022/IEDA/112263`
 
 - Identifier Type
@@ -917,11 +910,10 @@ This is mapped to `<relatedIdentifier>` in the datacite scheme and to `<gmd:aggr
   - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
   - Restrictions: Must be selected, if related work is specified
   - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
-  - Schema version: DataCite 4.5
   - Example values: `ARK` `arXiv` `EAN13`
 
 ### Funding Reference
-This element is optional in the datacite scheme. However, it is a best practice to supply funding information when financial support has been received.
+This element is optional in the DataCite scheme. However, it is a best practice to supply funding information when financial support has been received.
 
 - Funder
   
@@ -931,7 +923,6 @@ This element is optional in the datacite scheme. However, it is a best practice 
   - The corresponding field in the database where the value is stored is called: `funder` in the `Funding_Reference` table.
   - Restrictions: Selection from CrossRef funders list is possible, as well as free text
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/)
-  - Scheme: DataCite 4.5
   - Example values: `Gordon and Betty Moore Foundation`, `Ford Foundation`
 
 - *Saved in backend (not visible to user):* funderId
@@ -942,7 +933,6 @@ This element is optional in the datacite scheme. However, it is a best practice 
   - The corresponding field in the database where the value is stored is called: `funderid` in the `Funding_Reference` table.
   - Restrictions: is automatically saved, if a funder is selected from the dropdown list
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#funderidentifier)
-  - Scheme: DataCite 4.5
   - Example values: `http://dx.doi.org/10.13039/100001214`
 
 - *Saved in backend (not visible to user):* funderidtyp
@@ -953,7 +943,6 @@ This element is optional in the datacite scheme. However, it is a best practice 
   - The corresponding field in the database where the value is stored is called: `funderidtyp` in the `Funding_Reference` table.
   - Restrictions: can only be "Crossref Funder ID" (if a funder is selected from the dropdown list) or null
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#a-funderidentifiertype)
-  - Scheme: DataCite 4.5
   - Value: `Crossref Funder ID`
 
 - Grant Number
@@ -964,7 +953,6 @@ This element is optional in the datacite scheme. However, it is a best practice 
   - The corresponding field in the database where the value is stored is called: `grantnumber` in the `Funding_Reference` table.
   - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardnumber)
-  - Scheme: DataCite 4.5
   - Example values: `GBMF3859.01` `GBMF3859.22`
 
 - Grant Name
@@ -975,7 +963,6 @@ This element is optional in the datacite scheme. However, it is a best practice 
   - The corresponding field in the database where the value is stored is called: `grantname` in the `Funding_Reference` table.
   - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
-  - Scheme: DataCite 4.5
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
 
 ## Data validation

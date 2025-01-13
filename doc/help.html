@@ -46,7 +46,7 @@
                             Laboratory</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-contributors">Contributors</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-descriptions">Descriptions</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-mslkeywords">MSL-Keywords</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#help-mslkeywords">EPOS MSL Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-scienceKeywords">GCMD Science Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-freeKeywords">Free Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-dates">Dates</a></li>
@@ -55,9 +55,9 @@
                     <li class="nav-item"><a class="nav-link" href="#help-fundingreference">Funding Reference</a></li>
                 </ul>
             </nav>
-            <!-- Inhalt der Seite -->
+            <!-- page content -->
             <div class="col-xs-12 col-md-9">
-                <!-- Inhalt aus Section 1 -->
+                <!-- Introduction -->
                 <div id="help-introduction" class="section-content">
                     <h4>Introduction</h4>
                     <p class="lead">Translations exist for the metadata editor in various languages. You can see whether
@@ -67,7 +67,7 @@
                         a switch for changing from light mode to dark mode for better contrast ratios.</p>
                 </div>
                 <div class="section-divider"></div>
-                <!-- Inhalt aus Section 2 -->
+                <!-- formgroup resource information -->
                 <div id="help-resourceinformation" class="section-content">
                     <h4>Resource Information</h4>
                     <p>General metadata for the data set is specified in the Resource Information section. In
@@ -81,7 +81,6 @@
                             If you have no DOI for your dataset yet, you can leave this field empty and a DOI will be
                             registered.</p>
                     </div>
-                    <!-- Inhalt aus Section 4 -->
                     <div id="help-resourceinformation-publicationyear">
                         <h5>Publication Year</h5>
                         <p>The year when the data was or will be made publicly available. In the case of datasets,
@@ -96,7 +95,6 @@
                                 citation perspective.</li>
                         </ul>
                     </div>
-                    <!-- Inhalt aus Section 5 -->
                     <div id="help-resourceinformation-resourcetype">
                         <h5>Resource Type</h5>
                         <p>The data record is classified in the Resource Type form field. The following different
@@ -171,7 +169,6 @@
                             <li><strong>Sound:</strong> A resource primarily intended to be heard.</li>
                         </ul>
                     </div>
-                    <!-- Inhalt aus Section 6 -->
                     <div id="help-resourceinformation-version">
                         <h5>Version</h5>
                         <p>The version number or other identifier of the dataset. If your dataset is published for the
@@ -184,13 +181,11 @@
                                 leave
                                 blank.</em></p>
                     </div>
-                    <!-- Inhalt aus Section 7 -->
                     <div id="help-resourceinformation-language">
                         <h5>Language of dataset</h5>
                         <p>The primary language of the dataset. Choose from a list of supported languages. Default is
                             English.</p>
                     </div>
-                    <!-- Inhalt aus Section 8 -->
                     <div id="help-resourceinformation-title">
                         <h5>Title</h5>
                         <p>The main title of the dataset. The first row is reserved for the main title. You can specify
@@ -199,7 +194,6 @@
                             or translations.
                         </p>
                     </div>
-                    <!-- Inhalt aus Section 9 -->
                     <div id="help-resourceinformation-titletype">
                         <h5>Title Type</h5>
                         <p>Indicates the type of title being provided, such as an alternative title or translated title.
@@ -221,14 +215,14 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
-                <!-- Inhalt aus Section -->
+                <!-- formgroup rights & licenses -->
                 <div id="help-rights" class="section-content">
                     <h4>Licenses and rights</h4>
                     <p>Rights information for the data set. We recommend a Creative Commons Attribution 4.0 (CC-BY)
                         licence whenever possible.</p>
                 </div>
                 <div class="section-divider"></div>
-                <!-- Inhalt aus Section -->
+                <!-- formgroup authors -->
                 <div id="help-authors" class="section-content">
                     <h4>Authors</h4>
                     If possible, you should enter all authors of the dataset here, ideally with an ORCID. Entering an
@@ -252,6 +246,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup contactperson -->
                 <div id="help-contactperson" class="section-content">
                     <div id="help-contactperson-fg">
                         <h4>Contact Person(s)</h4>
@@ -277,6 +272,7 @@
                     <div class="section-divider"></div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup originating laboratory -->
                 <div id="help-originatinglaboratory" class="section-content">
                     <h4>Originating Laboratory</h4>
                     <div id="help-originatinglaboratory-name">
@@ -288,6 +284,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup contributors -->
                 <div id="help-contributors" class="section-content">
                     <h4>Contributors</h4>
                     <div id="help-contributor-role">
@@ -473,6 +470,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup descriptions -->
                 <div id="help-descriptions" class="section-content">
                     <h4>Descriptions</h4>
                     <div id="help-description-abstract">
@@ -496,18 +494,38 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup MSL Keywords -->
                 <div id="help-mslkeywords" class="section-content">
-                    <h4>EPOS Multi-Scale Laboratories Keywords</h4>
-                    <p>Please click on the Thesaurus button to the right to select keywords from the thesaurus or
-                        start typing to use the autocomplete function.
-                    <div class="section-divider"></div>
-                    The selectable keywords are taken from <a target="_blank"
-                        href="https://epos-msl.uu.nl/vocabularies">EPOS Multi-Scale Laboratories vocabularies</a>,
-                    available on <a target="_blank"
-                        href="https://github.com/UtrechtUniversity/msl_vocabularies">GitHub</a>.
-                    </p>
+                    <div id="help-mslKeywords-keyword">
+                        <h4>EPOS Multi-Scale Laboratories Keywords</h4>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the thesaurus or
+                            start typing to use the autocomplete function. By adding terms like these, you make it much
+                            easier for us to find your data and to make it discoverable in this catalogue and the EPOS
+                            data
+                            portal.</p>
+                        <p>
+                            The selectable keywords are taken from <a target="_blank"
+                                href="https://epos-msl.uu.nl/vocabularies">EPOS Multi-Scale Laboratories
+                                vocabularies</a>,
+                            available on <a target="_blank"
+                                href="https://github.com/UtrechtUniversity/msl_vocabularies">GitHub</a>.
+                        </p>
+                    </div>
+                    <div id="help-mslKeywords-keywordviewer">
+                        <h5>Keyword Viewer</h5>
+                        <p>Please try to choose your keywords as specific as possible. Always check if there is a
+                            more fitting keyword further down the hierarchy. Definitions of keywords can be read via
+                            mouse
+                            over, if provided by the thesaurus maintainer.</p>
+                        <p>To open the hierarchy ("tree"), click on the small arrow or double-click the keyword.
+                            Choose a keyword by clicking on it and thereby checking the checkbox. The keyword is than
+                            automatically added. Selected keywords have a checkmark in their checkbox.</p>
+                        <p>You can also use the search bar on top. It searches the keywords and their definitions or
+                            descriptions.</p>
+                    </div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup GCMD Science Keywords -->
                 <div id="help-scienceKeywords" class="section-content">
                     <div id="help-scienceKeywords-keyword">
                         <h4>GCMD Science Keywords</h4>
@@ -519,24 +537,22 @@
                             your
                             dataset (you are welcome to add more if relevant).</p>
                     </div>
+                    <!-- Explains use of thesaurus modal and the Keyword "tree"-->
                     <div id="help-scienceKeywords-keywordviewer">
                         <h5>Keyword Viewer</h5>
-                        <!--hier wird die Nutzung des Keyword-Baums im Thesaurus Modal erklärt-->
                         <p>Please try to choose your keywords as specific as possible. Always check if there is a
-                            more
-                            fitting keyword
-                            further down the hierarchy. Definitions of keywords can be read via mouse over, if
-                            provided
-                            by the thesaurus maintainer.</p>
+                            more fitting keyword further down the hierarchy. Definitions of keywords can be read via
+                            mouse
+                            over, if provided by the thesaurus maintainer.</p>
                         <p>To open the hierarchy ("tree"), click on the small arrow or double-click the keyword.
-                            Choose
-                            a keyword by clicking on it and thereby checking the checkbox. The keyword is than
+                            Choose a keyword by clicking on it and thereby checking the checkbox. The keyword is than
                             automatically added. Selected keywords have a checkmark in their checkbox.</p>
                         <p>You can also use the search bar on top. It searches the keywords and their definitions or
                             descriptions.</p>
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup descriptions -->
                 <div id="help-freeKeywords" class="section-content">
                     <h4>Free Keywords</h4>
                     <p>Free keywords are user-defined tags that complement predefined thesaurus terms.
@@ -546,6 +562,7 @@
                         thesauri above.</p>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup descriptions -->
                 <div id="help-dates" class="section-content">
                     <div id="help-dates-fg">
                         <h4>Dates</h4>
@@ -574,8 +591,18 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup temporal and spacial coverage -->
                 <div id="help-tsc" class="section-content">
-                    <h4>Spatial and temporal coverage</h4>
+                    <div id="help-stc-fg">
+                        <h4>Spatial and temporal coverage</h4>
+                        <p>
+                            Geographic location and time period covered by the dataset. Includes coordinates
+                            (latitude/longitude), dates, times, and time zones. Essential for data discovery and
+                            relevance assessment. Enables users to search for datasets in specific regions or time
+                            frames. Please provide accurate information to enhance the findability and usability of your
+                            research data in our repository.
+                        </p>
+                    </div>
                     <div id="help-tsc-geographicalcoverage">
                         <h5>Geographic Coverage</h5>
                         <p>If you draw a rectangle on the map, the coordinates of this rectangle will be transferred
@@ -642,9 +669,9 @@
                                 via
                                 the
                                 time picker.</li>
-                            <li><strong>Timezone:</strong> Timezone from UTC in which Start Time and End Time are
-                                specified.
-                                All worldwide time zones can be selected. Required field.</li>
+                            <li><strong>Timezone:</strong> Specifies the UTC-based time zone for Start and End Times.
+                                This field allows selection from all worldwide time zones to accurately represent the
+                                temporal details of your data. </li>
                         </ul>
                     </div>
                 </div>
@@ -768,6 +795,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup funding reference -->
                 <div id="help-fundingreference" class="section-content">
                     <div id="help-fundingreference-fg">
                         <h4>Funding Reference</h4>
@@ -789,7 +817,7 @@
                         <p>Free text field for entering the title or name of the grant.</p>
                     </div>
                 </div>
-                <!-- Damit das scrollen besser funktioniert und unter dem letzten Selector Platz nach unten ist -->
+                <!-- for better scrolling -->
                 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
             </div>
         </div>

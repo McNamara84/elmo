@@ -1,95 +1,17 @@
 <main class="container-fluid my-3 pb-5">
-  <!-- Info if JS is deactivated -->
+  <!-- Warning if JS is deactivated -->
   <noscript>
-    <div class="alert alert-danger text-center">
-      <?php echo $translations['no_javascript_alert']; ?>
-    </div>
+    <div class="alert alert-danger text-center">JavaScript is disabled. Please
+      enable JavaScript to use this form.</div>
   </noscript>
   <div class="alert alert-info p-2">
     <div class="row">
-      <div class="col-11 text-center">Please fill out the form in english.</div>
-    </div>
-  </div>
-  <!-- Feedback Modal -->
-  <div class="modal fade" id="modal-feedback" tabindex="-1" aria-labelledby="label-feedbackmodal" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="label-feedbackmodal">
-            <?php echo $translations['feedbackLabel']; ?>
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div id="panel-feedback-status"></div>
-          <div id="panel-feedback-message"
-            style="display: none; color: green; font-size: 1.2em; text-align: center; margin-bottom: 20px;">
-            <?php echo $translations['thankYouMessage']; ?>
-          </div>
-
-          <form id="form-feedback" method="POST" action="send_feedback_mail.php">
-            <div class="mb-3">
-              <label for="input-feedback-question1" class="form-label">
-                <?php echo $translations['feedbackQuestion1']; ?>
-              </label>
-              <textarea class="form-control" id="input-feedback-question1" name="feedbackQuestion1" rows="3"
-                required></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="input-feedback-question2" class="form-label">
-                <?php echo $translations['feedbackQuestion2']; ?>
-              </label>
-              <textarea class="form-control" id="input-feedback-question2" name="feedbackQuestion2" rows="3"
-                required></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="input-feedback-question3" class="form-label">
-                <?php echo $translations['feedbackQuestion3']; ?>
-              </label>
-              <textarea class="form-control" id="input-feedback-question3" name="feedbackQuestion3" rows="3"
-                required></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="input-feedback-question4" class="form-label">
-                <?php echo $translations['feedbackQuestion4']; ?>
-              </label>
-              <textarea class="form-control" id="input-feedback-question4" name="feedbackQuestion4" rows="3"
-                required></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="input-feedback-question5" class="form-label">
-                <?php echo $translations['feedbackQuestion5']; ?>
-              </label>
-              <textarea class="form-control" id="input-feedback-question5" name="feedbackQuestion5" rows="3"
-                required></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="input-feedback-question6" class="form-label">
-                <?php echo $translations['feedbackQuestion6']; ?>
-              </label>
-              <textarea class="form-control" id="input-feedback-question6" name="feedbackQuestion6" rows="3"
-                required></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="input-feedback-question7" class="form-label">
-                <?php echo $translations['feedbackQuestion7']; ?>
-              </label>
-              <textarea class="form-control" id="input-feedback-question7" name="feedbackQuestion7" rows="3"
-                required></textarea>
-            </div>
-            <button class="btn btn-primary" id="button-feedback-send" style="margin-left: auto; display: block;">
-              <?php echo $translations['feedbackSendButton']; ?>
-            </button>
-          </form>
-        </div>
-      </div>
+      <div class="col-11 text-center" data-translate="alerts.languageWarning">Please fill out the form in english.</div>
     </div>
   </div>
   <form id="form-mde" method="post" action="index.php" class="needs-validation" novalidate>
     <div class="card mb-2">
-      <div class="card-header"><b>
-          <?php echo $translations['resourceInformation']; ?>
-        </b></div>
+      <div class="card-header"><b data-translate="resourceInfo.title"></b></div>
       <div class="card-body">
         <div class="row">
           <!-- Input field for DOI -->
@@ -98,15 +20,9 @@
               <div class="form-floating">
                 <input type="text" class="form-control input-with-help input-right-no-round-corners"
                   id="input-resourceinformation-doi" name="doi" pattern="^10\.\d{4,9}\/[._;\/\(\)\-:A-Za-z0-9]+$" />
-                <label for="input-resourceinformation-doi">
-                  <?php echo $translations['doi']; ?>
-                </label>
-                <div class="invalid-feedback">
-                  <?php echo $translations['doi_invalid']; ?>
-                </div>
-                <div class="valid-feedback">
-                  <?php echo $translations['doi_valid']; ?>
-                </div>
+                <label for="input-resourceinformation-doi" data-translate="resourceInfo.doi"></label>
+                <div class="invalid-feedback" data-translate="resourceInfo.doiInvalid"></div>
+                <div class="valid-feedback" data-translate="resourceInfo.doiValid"></div>
               </div>
               <div class="input-group-append">
                 <span class="input-group-text">
@@ -123,15 +39,15 @@
                   name="year" pattern="^(19(0[1-9]|[1-9][0-9])|20[0-9]{2}|21[0-4][0-9]|215[0-5])$" required
                   id="input-resourceinformation-publicationyear" />
                 <label for="input-resourceinformation-publicationyear">
-                  <?php echo $translations['publicationYear']; ?><span class="text-danger">*</span>
+                  <span data-translate="resourceInfo.publicationYear"></span><span class="text-danger">*</span>
                 </label>
-                <div class="invalid-feedback">
-                  <?php echo $translations['publicationYear_invalid']; ?>
-                </div>
+                <div class="invalid-feedback" data-translate="resourceInfo.publicationYearInvalid"></div>
               </div>
               <div class="input-group-append">
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-resourceinformation-publicationyear"></i></span>
+                <span class="input-group-text">
+                  <i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-resourceinformation-publicationyear"></i>
+                </span>
               </div>
             </div>
           </div>
@@ -141,17 +57,13 @@
               <div class="form-floating">
                 <select class="form-select input-with-help input-right-no-round-corners"
                   id="input-resourceinformation-resourcetype" name="resourcetype" required>
-                  <option disabled selected hidden value="">
-                    <?php echo $translations['choose']; ?>
-                  </option>
+                  <option disabled selected hidden value="" data-translate="general.choose"></option>
                   <?php echo $optionresourcentype; ?>
                 </select>
                 <label for="input-resourceinformation-resourcetype">
-                  <?php echo $translations['resourceType']; ?><span class="text-danger">*</span>
+                  <span data-translate="resourceInfo.resourceType"></span><span class="text-danger">*</span>
                 </label>
-                <div class="invalid-feedback">
-                  <?php echo $translations['PleaseChoose_invalid']; ?>
-                </div>
+                <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
               </div>
               <div class="input-group-append">
                 <span class="input-group-text">
@@ -167,16 +79,13 @@
               <div class="form-floating">
                 <input type="text" class="form-control input-with-help input-right-no-round-corners"
                   id="input-resourceinformation-version" name="version" pattern="[0-9\.]{0,5}" />
-                <label for="input-resourceinformation-version">
-                  <?php echo $translations['version']; ?>
-                </label>
-                <div class="invalid-feedback">
-                  <?php echo $translations['version_invalid']; ?>
-                </div>
+                <label for="input-resourceinformation-version" data-translate="resourceInfo.version"></label>
+                <div class="invalid-feedback" data-translate="resourceInfo.versionInvalid"></div>
               </div>
               <div class="input-group-append">
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-resourceinformation-version"></i></span>
+                <span class="input-group-text">
+                  <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-version"></i>
+                </span>
               </div>
             </div>
           </div>
@@ -188,7 +97,7 @@
                   <?php echo $optionlanguage; ?>
                 </select>
                 <label for="input-resourceinformation-language">
-                  <?php echo $translations['languageofdataset']; ?><span class="text-danger">*</span>
+                  <span data-translate="resourceInfo.datasetLanguage"></span><span class="text-danger">*</span>
                 </label>
               </div>
             </div>
@@ -202,17 +111,18 @@
             <div class="input-group has-validation">
               <div class="form-floating">
                 <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                  id="input-resourceinformation-title" name="title[]" pattern="^[a-zA-ZäöüÄÖÜß 0-9 .\-_()\!?]+$"
+                  id="input-resourceinformation-title" name="title[]" pattern="^[a-zA-ZäÄöÖ_ßüÜ0-9.\(\)\!\?\- ]+$"
                   required />
                 <label for="input-resourceinformation-title">
-                  <?php echo $translations['title']; ?><span class="text-danger">*</span>
+                  <span data-translate="resourceInfo.resourceTitle"></span><span class="text-danger">*</span>
                 </label>
-                <div class="invalid-feedback">
-                  <?php echo $translations['title_invalid']; ?>
-                </div>
+                <div class="invalid-feedback" data-translate="resourceInfo.resourceTitleInvalid"></div>
               </div>
-              <div class="input-group-append"><span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-resourceinformation-title"></i></span></div>
+              <div class="input-group-append">
+                <span class="input-group-text">
+                  <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-title"></i>
+                </span>
+              </div>
             </div>
           </div>
           <!-- Input field for Title Type (hidden until second title) -->
@@ -224,15 +134,14 @@
                   <?php echo $optiontitle_type; ?>
                 </select>
                 <label for="input-resourceinformation-titletype">
-                  <?php echo $translations['titleType']; ?><span class="text-danger">*</span>
+                  <span data-translate="resourceInfo.titleType"></span><span class="text-danger">*</span>
                 </label>
-                <div class="invalid-feedback">
-                  <?php echo $translations['PleaseChoose_invalid']; ?>
-                </div>
+                <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
               </div>
               <div class="input-group-append">
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-resourceinformation-titletype"></i></span>
+                <span class="input-group-text">
+                  <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-titletype"></i>
+                </span>
               </div>
             </div>
           </div>
@@ -240,9 +149,7 @@
           <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
             <div class="align-items-center">
               <button type="button" class="btn btn-primary addTitle" id="button-resourceinformation-addtitle"
-                style="width: 36px">
-                <?php echo $translations['add']; ?>
-              </button>
+                style="width: 36px" data-translate="general.add"></button>
             </div>
           </div>
         </div>

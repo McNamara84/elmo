@@ -38,6 +38,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   var tagify = new Tagify(inputElement[0], {
     enforceWhitelist: false,
     duplicates: false,
+    placeholder: translations.general.affiliation,
     whitelist: data.map((item) => item.name),
     dropdown: {
       maxItems: 20,
