@@ -747,7 +747,7 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
   - Data type: Date
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: `dateCreated` in the `resource` table
-  - Restrictions: This field must be a valid calendar date in the format YYYY-MM-DD.
+  - Restrictions: This field must be a valid calendar date.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#created)
   - Scheme version: DataCite 4.5
   - Example values: `2024-06-05` `1999-04-07`
@@ -758,7 +758,7 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
   - Data typ: Date
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `dateEmbargoUntil` in the `resource` table
-  - Restrictions: This field must be a valid calendar date in the format YYYY-MM-DD.
+  - Restrictions: This field must be a valid calendar date.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#available)
   - Scheme version: DataCite 4.5
   - Example values: `2024-06-15` `2000-12-31`
