@@ -134,9 +134,20 @@ function handleExistingResource($connection, $resourceData)
     $row = $result->fetch_assoc();
     $resource_id = $row['resource_id'];
 
-    // Delete all existing relationships
+    // Delete entries from tables with direct resource_id reference
+    $directTables = [
+        'Description' => 'resource_id',  // Table name => column name
+        'Title' => 'Resource_resource_id'
+    ];
+
+    foreach ($directTables as $table => $columnName) {
+        $stmt = $connection->prepare("DELETE FROM " . $table . " WHERE " . $columnName . " = ?");
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+    }
+
+    // Delete entries from relationship tables
     $relationTables = [
-        'Title',
         'Resource_has_Author',
         'Resource_has_Contributor_Person',
         'Resource_has_Contributor_Institution',
