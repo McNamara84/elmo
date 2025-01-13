@@ -745,7 +745,7 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
   
   - This field contains the date on which the dataset was created.
   - Data type: Date
-  - Occurrence: 0-1
+  - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: `dateCreated` in the `resource` table
   - Restrictions: This field must be a valid calendar date in the format YYYY-MM-DD.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#created)
