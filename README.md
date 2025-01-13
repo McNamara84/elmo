@@ -743,7 +743,7 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
 
 - Date created
   
-  - This field contains the date on which the dataset was created.
+  - This field contains the date the resource itself was put together; this could refer to a timeframe in ancient history, a date range, or a single date for a final component, e.g., the finalized file with all the data.
   - Data type: Date
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: `dateCreated` in the `resource` table
