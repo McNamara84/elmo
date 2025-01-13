@@ -240,68 +240,60 @@ function processCreators(xmlDoc, resolver) {
 /**
  * Process contact persons from XML and populate the form
  * @param {Document} xmlDoc - The parsed XML document
- * @param {Function} resolver - The namespace resolver function
  */
-function processContactPersons(xmlDoc, resolver) {
+function processContactPersons(xmlDoc) {
+  // Namespace resolver for ISO metadata
+  function nsResolver(prefix) {
+    const ns = {
+      'gmd': 'http://www.isotc211.org/2005/gmd',
+      'gco': 'http://www.isotc211.org/2005/gco'
+    };
+    return ns[prefix] || null;
+  }
+
   const contactPersonNodes = xmlDoc.evaluate(
-    './/ns:contributors/ns:contributor[@contributorType="ContactPerson"]',
+    '//gmd:pointOfContact/gmd:CI_ResponsibleParty',
     xmlDoc,
-    resolver,
+    nsResolver,
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
 
-  // reset Contact Persons
+  // Reset existing contact persons
   $('#group-contactperson .row[contact-person-row]').not(':first').remove();
   $('#group-contactperson .row[contact-person-row]:first input').val('');
-
-  let validContactPersonCount = 0;
 
   for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
     const contactPersonNode = contactPersonNodes.snapshotItem(i);
 
-    // Extract relevant data
-    const givenName = getNodeText(contactPersonNode, 'ns:givenName', xmlDoc, resolver);
-    const familyName = getNodeText(contactPersonNode, 'ns:familyName', xmlDoc, resolver);
+    // Extract Contact Person details
+    const fullName = getNodeText(contactPersonNode, 'gmd:individualName/gco:CharacterString', xmlDoc, nsResolver);
+    const [familyName, givenName] = fullName.split(', ');
 
-    // Skip this contact person if either given name or family name is missing
     if (!givenName || !familyName) {
       continue;
     }
 
-    // Extract additional data
-    const position = getNodeText(contactPersonNode, 'ns:position', xmlDoc, resolver);
-    const email = getNodeText(contactPersonNode, 'ns:email', xmlDoc, resolver);
-    const website = getNodeText(contactPersonNode, 'ns:onlineResource', xmlDoc, resolver);
-
-    // Get all affiliations for this contact person
+    const position = getNodeText(contactPersonNode, 'gmd:positionName/gco:CharacterString', xmlDoc, nsResolver);
+    const email = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString', xmlDoc, nsResolver);
+    const website = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL', xmlDoc, nsResolver);
+    
+    // Extract affiliations
     const affiliationNodes = xmlDoc.evaluate(
-      'ns:affiliation',
+      'gmd:organisationName/gco:CharacterString',
       contactPersonNode,
-      resolver,
+      nsResolver,
       XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
       null
     );
 
-    // Create array of affiliations and ROR IDs
     const affiliations = [];
-    const rorIds = [];
-
     for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
-      const affNode = affiliationNodes.snapshotItem(j);
-      const affiliationName = affNode.textContent;
-      const rorId = affNode.getAttribute('affiliationIdentifier');
-
-      if (affiliationName) {
-        affiliations.push(affiliationName);
-        if (rorId) {
-          rorIds.push(rorId.replace('https://ror.org/', '')); // Remove URL prefix if present
-        }
-      }
+      affiliations.push(affiliationNodes.snapshotItem(j).textContent);
     }
 
-    if (validContactPersonCount === 0) {
-      // First valid Contact Person - use the existing row
+    if (i === 0) {
+      // First Contact Person - use existing row
       const firstRow = $('#group-contactperson .row[contact-person-row]:first');
       firstRow.find('input[name="cpFirstname[]"]').val(givenName);
       firstRow.find('input[name="cpLastname[]"]').val(familyName);
@@ -309,20 +301,20 @@ function processContactPersons(xmlDoc, resolver) {
       firstRow.find('input[name="cpEmail[]"]').val(email);
       firstRow.find('input[name="cpOnlineResource[]"]').val(website);
 
-      // Affiliation mit Tagify
+      // Initialize Tagify for affiliations
       const affiliationInput = firstRow.find('input[name="cpAffiliation[]"]')[0];
       if (affiliationInput && affiliationInput.tagify) {
         affiliationInput.tagify.removeAllTags();
-        affiliationInput.tagify.addTags(affiliations.map(aff => ({ value: aff })));
+        affiliationInput.tagify.addTags(affiliations.map(a => ({ value: a })));
       }
-
-      // Set ROR IDs
-      firstRow.find('input[name="cpRorIds[]"]').val(rorIds.join(','));
-
     } else {
-      // Additional valid Contact Persons - clone a new row
+      // Additional contact persons - simulate button click
       $('#button-contactperson-add').click();
+      
+      // Find newly added row
       const newRow = $('#group-contactperson .row[contact-person-row]').last();
+      
+      // Set values
       newRow.find('input[name="cpFirstname[]"]').val(givenName);
       newRow.find('input[name="cpLastname[]"]').val(familyName);
       newRow.find('input[name="cpPosition[]"]').val(position);
@@ -334,15 +326,10 @@ function processContactPersons(xmlDoc, resolver) {
         const affiliationInput = newRow.find('input[name="cpAffiliation[]"]')[0];
         if (affiliationInput && affiliationInput.tagify) {
           affiliationInput.tagify.removeAllTags();
-          affiliationInput.tagify.addTags(affiliations.map(aff => ({ value: aff })));
+          affiliationInput.tagify.addTags(affiliations.map(a => ({ value: a })));
         }
-
-        // Set ROR IDs
-        newRow.find('input[name="cpRorIds[]"]').val(rorIds.join(','));
       }, 100);
     }
-
-    validContactPersonCount++;
   }
 }
 
@@ -1177,7 +1164,7 @@ async function loadXmlToForm(xmlDoc) {
   // Processing Creators
   processCreators(xmlDoc, resolver);
   // Process Contact Persons
-  processContactPersons(xmlDoc, resolver);
+  processContactPersons(xmlDoc);
   // Process Originating Laboratories
   processOriginatingLaboratories(xmlDoc, resolver);
   // Process contributors
