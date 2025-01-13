@@ -476,15 +476,17 @@ class SaveResourceInformationAndRightsTest extends TestCase
     }
 
     /**
-     * Testet ob doppelte DOIs abgelehnt, und doppelte leere DOIs und null-DOIs sind erlaubt.
+     * Tests handling of DOIs: updating existing DOIs and allowing multiple empty/null DOIs
+     * 
+     * @return void
      */
-    public function testEmptyDois()
+    public function testDoiHandling()
     {
         if (!function_exists('saveResourceInformationAndRights')) {
             require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
         }
 
-        // Test 1: Verhindern von doppelten DOIs
+        // Test 1: Updating existing DOI
         $postDataWithDOI = [
             "doi" => "10.5880/GFZ.DOI.TEST",
             "year" => 2023,
@@ -496,15 +498,17 @@ class SaveResourceInformationAndRightsTest extends TestCase
             "titleType" => [1]
         ];
 
-        // Ersten Datensatz mit DOI speichern
+        // Save first dataset with DOI
         $first_id = saveResourceInformationAndRights($this->connection, $postDataWithDOI);
-        $this->assertIsInt($first_id, "Die erste Speicherung sollte eine gültige Resource ID zurückgeben.");
+        $this->assertIsInt($first_id, "First save should return a valid resource ID");
 
-        // Versuchen, denselben Datensatz erneut zu speichern
-        $duplicate_id = saveResourceInformationAndRights($this->connection, $postDataWithDOI);
-        $this->assertFalse($duplicate_id, "Die Funktion sollte false zurückgeben bei doppelter DOI");
+        // Update the same DOI with different data
+        $postDataWithDOI["year"] = 2024;
+        $postDataWithDOI["title"] = ["Updated DOI Test Dataset"];
+        $updated_id = saveResourceInformationAndRights($this->connection, $postDataWithDOI);
+        $this->assertEquals($first_id, $updated_id, "Update should return the same resource ID");
 
-        // Test 2: Mehrere Datensätze ohne DOI (null) sollten erlaubt sein
+        // Test 2: Multiple datasets with null DOI
         $postDataWithNullDOI = [
             "doi" => null,
             "year" => 2023,
@@ -516,16 +520,16 @@ class SaveResourceInformationAndRightsTest extends TestCase
             "titleType" => [1]
         ];
 
-        // Ersten Datensatz mit null DOI speichern
+        // Save first dataset with null DOI
         $first_null_id = saveResourceInformationAndRights($this->connection, $postDataWithNullDOI);
-        $this->assertIsInt($first_null_id, "Die erste Speicherung mit null DOI sollte eine gültige Resource ID zurückgeben.");
+        $this->assertIsInt($first_null_id, "First save with null DOI should return valid ID");
 
-        // Zweiten Datensatz mit null DOI speichern
+        // Save second dataset with null DOI
         $second_null_id = saveResourceInformationAndRights($this->connection, $postDataWithNullDOI);
-        $this->assertIsInt($second_null_id, "Die zweite Speicherung mit null DOI sollte eine gültige Resource ID zurückgeben.");
-        $this->assertNotEquals($first_null_id, $second_null_id, "Die IDs der Datensätze mit null DOI sollten unterschiedlich sein.");
+        $this->assertIsInt($second_null_id, "Second save with null DOI should return valid ID");
+        $this->assertNotEquals($first_null_id, $second_null_id, "Null DOI datasets should have different IDs");
 
-        // Test 3: Mehrere Datensätze mit leerem String als DOI sollten erlaubt sein
+        // Test 3: Multiple datasets with empty string DOI
         $postDataWithEmptyDOI = [
             "doi" => "",
             "year" => 2023,
@@ -537,37 +541,44 @@ class SaveResourceInformationAndRightsTest extends TestCase
             "titleType" => [1]
         ];
 
-        // Ersten Datensatz mit leerem String als DOI speichern
+        // Save first dataset with empty DOI
         $first_empty_id = saveResourceInformationAndRights($this->connection, $postDataWithEmptyDOI);
-        $this->assertIsInt($first_empty_id, "Die erste Speicherung mit leerem DOI sollte eine gültige Resource ID zurückgeben.");
+        $this->assertIsInt($first_empty_id, "First save with empty DOI should return valid ID");
 
-        // Zweiten Datensatz mit leerem String als DOI speichern
+        // Save second dataset with empty DOI
         $second_empty_id = saveResourceInformationAndRights($this->connection, $postDataWithEmptyDOI);
-        $this->assertIsInt($second_empty_id, "Die zweite Speicherung mit leerem DOI sollte eine gültige Resource ID zurückgeben.");
-        $this->assertNotEquals($first_empty_id, $second_empty_id, "Die IDs der Datensätze mit leerem DOI sollten unterschiedlich sein.");
+        $this->assertIsInt($second_empty_id, "Second save with empty DOI should return valid ID");
+        $this->assertNotEquals($first_empty_id, $second_empty_id, "Empty DOI datasets should have different IDs");
 
-        // Überprüfen der Anzahl der Datensätze mit verschiedenen DOI-Werten
+        // Verify database state
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource WHERE doi = ?");
         $doi = "10.5880/GFZ.DOI.TEST";
         $stmt->bind_param("s", $doi);
         $stmt->execute();
         $count_with_doi = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(1, $count_with_doi, "Es sollte genau ein Datensatz mit der spezifischen DOI existieren");
+        $this->assertEquals(1, $count_with_doi, "Should have exactly one dataset with specific DOI");
+
+        // Check title was updated
+        $stmt = $this->connection->prepare("SELECT text FROM Title WHERE Resource_resource_id = ?");
+        $stmt->bind_param("i", $first_id);
+        $stmt->execute();
+        $title = $stmt->get_result()->fetch_assoc()['text'];
+        $this->assertEquals("Updated DOI Test Dataset", $title, "Title should be updated for existing DOI");
 
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource WHERE doi IS NULL");
         $stmt->execute();
         $count_null_doi = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(2, $count_null_doi, "Es sollten genau zwei Datensätze mit null DOI existieren");
+        $this->assertEquals(2, $count_null_doi, "Should have exactly two datasets with null DOI");
 
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource WHERE doi = ''");
         $stmt->execute();
         $count_empty_doi = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(2, $count_empty_doi, "Es sollten genau zwei Datensätze mit leerem DOI existieren");
+        $this->assertEquals(2, $count_empty_doi, "Should have exactly two datasets with empty DOI");
 
-        // Überprüfen der Gesamtanzahl der Datensätze
+        // Verify total count
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource");
         $stmt->execute();
         $total_count = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(5, $total_count, "Es sollten insgesamt fünf Datensätze existieren");
+        $this->assertEquals(5, $total_count, "Should have five datasets in total");
     }
 }
