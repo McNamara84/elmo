@@ -4986,33 +4986,61 @@
       ],
       "value": "51.839518768704075"
     }, {
-      "id": "ce2e39cf-350d-4947-8f37-b1f12e4f0534",
+      "id": "6978a414-2e24-4f28-bf2d-c078170785ae",
       "comment": "",
       "command": "click",
-      "target": "id=input-funder",
+      "target": "id=input-contactperson-lastname",
       "targets": [
-        ["id=input-funder", "id"],
-        ["name=funder[]", "name"],
-        ["css=#input-funder", "css:finder"],
-        ["xpath=//input[@id='input-funder']", "xpath:attributes"],
-        ["xpath=//div[@id='group-fundingreference']/div/div/div/div/input", "xpath:idRelative"],
-        ["xpath=//div[16]/div[2]/div/div/div/div/div/input", "xpath:position"]
+        ["id=input-contactperson-lastname", "id"],
+        ["name=cpLastname[]", "name"],
+        ["css=#input-contactperson-lastname", "css:finder"],
+        ["xpath=//input[@id='input-contactperson-lastname']", "xpath:attributes"],
+        ["xpath=//div[@id='group-contactperson']/div/div/div/div/input", "xpath:idRelative"],
+        ["xpath=//div[4]/div[2]/div/div/div/div/div/input", "xpath:position"]
       ],
       "value": ""
     }, {
-      "id": "c1d6fc10-8a71-4998-bfcc-adbb71632796",
+      "id": "50f6787e-8ba5-4452-b759-1db99bb6971f",
       "comment": "",
       "command": "type",
-      "target": "id=input-funder",
+      "target": "id=input-contactperson-lastname",
       "targets": [
-        ["id=input-funder", "id"],
-        ["name=funder[]", "name"],
-        ["css=#input-funder", "css:finder"],
-        ["xpath=//input[@id='input-funder']", "xpath:attributes"],
-        ["xpath=//div[@id='group-fundingreference']/div/div/div/div/input", "xpath:idRelative"],
-        ["xpath=//div[16]/div[2]/div/div/div/div/div/input", "xpath:position"]
+        ["id=input-contactperson-lastname", "id"],
+        ["name=cpLastname[]", "name"],
+        ["css=#input-contactperson-lastname", "css:finder"],
+        ["xpath=//input[@id='input-contactperson-lastname']", "xpath:attributes"],
+        ["xpath=//div[@id='group-contactperson']/div/div/div/div/input", "xpath:idRelative"],
+        ["xpath=//div[4]/div[2]/div/div/div/div/div/input", "xpath:position"]
       ],
-      "value": "Pflichtangabe Funder"
+      "value": "CPLASTNAME"
+    }, {
+      "id": "9fb5cc91-4370-41d2-b53c-0124a9645b7b",
+      "comment": "",
+      "command": "type",
+      "target": "id=input-contactperson-firstname",
+      "targets": [
+        ["id=input-contactperson-firstname", "id"],
+        ["name=cpFirstname[]", "name"],
+        ["css=#input-contactperson-firstname", "css:finder"],
+        ["xpath=//input[@id='input-contactperson-firstname']", "xpath:attributes"],
+        ["xpath=//div[@id='group-contactperson']/div/div[2]/div/div/input", "xpath:idRelative"],
+        ["xpath=//div[4]/div[2]/div/div/div[2]/div/div/input", "xpath:position"]
+      ],
+      "value": "CPFIRSTNAME"
+    }, {
+      "id": "d1ded7d3-53a2-4e44-bde3-738e61719be1",
+      "comment": "",
+      "command": "type",
+      "target": "id=input-contactperson-email",
+      "targets": [
+        ["id=input-contactperson-email", "id"],
+        ["name=cpEmail[]", "name"],
+        ["css=#input-contactperson-email", "css:finder"],
+        ["xpath=//input[@id='input-contactperson-email']", "xpath:attributes"],
+        ["xpath=//div[@id='group-contactperson']/div/div[4]/div/div/input", "xpath:idRelative"],
+        ["xpath=//div[2]/div/div/div[4]/div/div/input", "xpath:position"]
+      ],
+      "value": "contact@person.com"
     }]
   }, {
     "id": "fafe99a0-a4e5-4c53-ae6b-eb156a37ad0f",
@@ -5024,34 +5052,6 @@
       "target": "",
       "targets": [],
       "value": ""
-    }, {
-      "id": "e800304b-c6d3-40f9-b76e-864915d2ed75",
-      "comment": "",
-      "command": "click",
-      "target": "id=input-resourceinformation-doi",
-      "targets": [
-        ["id=input-resourceinformation-doi", "id"],
-        ["name=doi", "name"],
-        ["css=#input-resourceinformation-doi", "css:finder"],
-        ["xpath=//input[@id='input-resourceinformation-doi']", "xpath:attributes"],
-        ["xpath=//form[@id='form-mde']/div/div[2]/div/div/div/div/input", "xpath:idRelative"],
-        ["xpath=//input", "xpath:position"]
-      ],
-      "value": ""
-    }, {
-      "id": "9a77c7b1-aa60-4f7c-80e5-81ca9d3de8e8",
-      "comment": "",
-      "command": "type",
-      "target": "id=input-resourceinformation-doi",
-      "targets": [
-        ["id=input-resourceinformation-doi", "id"],
-        ["name=doi", "name"],
-        ["css=#input-resourceinformation-doi", "css:finder"],
-        ["xpath=//input[@id='input-resourceinformation-doi']", "xpath:attributes"],
-        ["xpath=//form[@id='form-mde']/div/div[2]/div/div/div/div/input", "xpath:idRelative"],
-        ["xpath=//input", "xpath:position"]
-      ],
-      "value": "10.5880/GFZ."
     }, {
       "id": "b33d12c6-d677-40c3-90c9-bb4166fe3110",
       "comment": "",
@@ -6146,7 +6146,7 @@
         ["xpath=//div[@id='group-contactperson']/div/div[3]/div/div/input", "xpath:idRelative"],
         ["xpath=//div[4]/div[2]/div/div/div[3]/div/div/input", "xpath:position"]
       ],
-      "value": "CP_POSITION"
+      "value": "CPPOSITION"
     }, {
       "id": "a96c9c18-c0b1-4080-a578-31d957472016",
       "comment": "",

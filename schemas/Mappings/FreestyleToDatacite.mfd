@@ -54,27 +54,6 @@
 						</comment>
 					</data>
 				</component>
-				<component name="constant" library="core" uid="38" kind="2">
-					<targets>
-						<datapoint pos="0" key="69"/>
-					</targets>
-					<view ltx="526" lty="541" rbx="642" rby="557"/>
-					<data>
-						<constant value=", " datatype="string"/>
-					</data>
-				</component>
-				<component name="constant" library="core" uid="40" kind="2">
-					<targets>
-						<datapoint pos="0" key="72"/>
-					</targets>
-					<view ltx="859" lty="-461" rbx="1049" rby="-445"/>
-					<data>
-						<constant value="https://orcid.org/" datatype="string"/>
-						<comment>
-							<text>Default nameIdentifierSchemeUri</text>
-						</comment>
-					</data>
-				</component>
 				<component name="constant" library="core" uid="39" kind="2">
 					<targets>
 						<datapoint pos="0" key="70"/>
@@ -252,30 +231,6 @@
 						</comment>
 					</data>
 				</component>
-				<component name="constant" library="core" uid="170" kind="2">
-					<targets>
-						<datapoint pos="0" key="444"/>
-					</targets>
-					<view ltx="860" lty="-32" rbx="996" rby="-16"/>
-					<data>
-						<constant value="EPOS" datatype="string"/>
-						<comment>
-							<text>Default value for subjects o EPOS projects</text>
-						</comment>
-					</data>
-				</component>
-				<component name="constant" library="core" uid="172" kind="2">
-					<targets>
-						<datapoint pos="0" key="460"/>
-					</targets>
-					<view ltx="859" lty="-734" rbx="1068" rby="-718"/>
-					<data>
-						<constant value="https://ror.org/04z8jg394" datatype="string"/>
-						<comment>
-							<text>Default publisher ROR ID for GFZ</text>
-						</comment>
-					</data>
-				</component>
 				<component name="if-else" library="core" uid="75" kind="4">
 					<sources>
 						<datapoint pos="0" key="238"/>
@@ -286,18 +241,6 @@
 						<datapoint pos="0" key="241"/>
 					</targets>
 					<view ltx="1080" lty="946" rbx="1174" rby="1017"/>
-				</component>
-				<component name="constant" library="core" uid="171" kind="2">
-					<targets>
-						<datapoint pos="0" key="445"/>
-					</targets>
-					<view ltx="860" lty="3" rbx="1069" rby="19"/>
-					<data>
-						<constant value="multi-scale laboratories" datatype="string"/>
-						<comment>
-							<text>Default value for subjects in MSL projects</text>
-						</comment>
-					</data>
 				</component>
 				<component name="constant" library="core" uid="169" kind="2">
 					<targets>
@@ -419,28 +362,6 @@
 						</comment>
 					</data>
 				</component>
-				<component name="concat" library="core" uid="271" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="564"/>
-						<datapoint pos="1" key="565"/>
-						<datapoint pos="2" key="566"/>
-						<datapoint pos="3" key="567"/>
-						<datapoint pos="4" key="568"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="569"/>
-					</targets>
-					<view ltx="517" lty="1167" rbx="602" rby="1271"/>
-				</component>
-				<component name="constant" library="core" uid="166" kind="2">
-					<targets>
-						<datapoint pos="0" key="511"/>
-					</targets>
-					<view ltx="368" lty="1202" rbx="483" rby="1218"/>
-					<data>
-						<constant value="/" datatype="string"/>
-					</data>
-				</component>
 				<component name="concat" library="core" uid="61" kind="5" growable="1" growablebasename="value">
 					<sources>
 						<datapoint pos="0" key="159"/>
@@ -493,17 +414,6 @@
 						</comment>
 					</data>
 				</component>
-				<component name="if-else" library="core" uid="74" kind="4">
-					<sources>
-						<datapoint pos="0" key="236"/>
-						<datapoint pos="1" key="234"/>
-						<datapoint pos="2" key="231"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="233"/>
-					</targets>
-					<view ltx="1080" lty="876" rbx="1174" rby="947"/>
-				</component>
 				<component name="concat" library="core" uid="37" kind="5" growable="1" growablebasename="value">
 					<sources>
 						<datapoint pos="0" key="86"/>
@@ -520,18 +430,6 @@
 						</comment>
 					</data>
 				</component>
-				<component name="constant" library="core" uid="41" kind="2">
-					<targets>
-						<datapoint pos="0" key="71"/>
-					</targets>
-					<view ltx="859" lty="-495" rbx="1001" rby="-479"/>
-					<data>
-						<constant value="ORCID" datatype="string"/>
-						<comment>
-							<text>Default nameIdentifierScheme</text>
-						</comment>
-					</data>
-				</component>
 				<component name="constant" library="core" uid="81" kind="2">
 					<targets>
 						<datapoint pos="0" key="270"/>
@@ -543,26 +441,6 @@
 							<text>Deafult publisher at GFZ</text>
 						</comment>
 					</data>
-				</component>
-				<component name="exists" library="core" uid="208" kind="5">
-					<sources>
-						<datapoint pos="0" key="481"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="482"/>
-					</targets>
-					<view ltx="810" lty="1324" rbx="890" rby="1361"/>
-				</component>
-				<component name="spatial_temporal_coverage..." library="core" uid="206" kind="3">
-					<sources>
-						<datapoint pos="0" key="483"/>
-						<datapoint pos="1" key="484"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="485"/>
-						<datapoint pos="1" key="486"/>
-					</targets>
-					<view ltx="973" lty="1309" rbx="1157" rby="1362"/>
 				</component>
 				<component name="logical-and" library="core" uid="151" kind="5" growable="1" growablebasename="value">
 					<sources>
@@ -585,15 +463,6 @@
 					</targets>
 					<view ltx="389" lty="-32" rbx="490" rby="21"/>
 				</component>
-				<component name="constant" library="core" uid="29" kind="2">
-					<targets>
-						<datapoint pos="0" key="38"/>
-					</targets>
-					<view ltx="422" lty="468" rbx="536" rby="484"/>
-					<data>
-						<constant value=" " datatype="string"/>
-					</data>
-				</component>
 				<component name="if-else" library="core" uid="292" kind="4">
 					<sources>
 						<datapoint pos="0" key="596"/>
@@ -604,18 +473,6 @@
 						<datapoint pos="0" key="598"/>
 					</targets>
 					<view ltx="1277" lty="-365" rbx="1371" rby="-294"/>
-				</component>
-				<component name="constant" library="core" uid="33" kind="2">
-					<targets>
-						<datapoint pos="0" key="63"/>
-					</targets>
-					<view ltx="859" lty="-633" rbx="981" rby="-617"/>
-					<data>
-						<constant value="en" datatype="string"/>
-						<comment>
-							<text>Default language</text>
-						</comment>
-					</data>
 				</component>
 				<component name="concat" library="core" uid="31" kind="5" growable="1" growablebasename="value">
 					<sources>
@@ -653,24 +510,6 @@
 					</targets>
 					<view ltx="374" lty="170" rbx="468" rby="223"/>
 				</component>
-				<component name="exists" library="core" uid="213" kind="5">
-					<sources>
-						<datapoint pos="0" key="489"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="490"/>
-					</targets>
-					<view ltx="218" lty="1398" rbx="298" rby="1435"/>
-				</component>
-				<component name="exists" library="core" uid="211" kind="5">
-					<sources>
-						<datapoint pos="0" key="487"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="488"/>
-					</targets>
-					<view ltx="506" lty="1358" rbx="586" rby="1395"/>
-				</component>
 				<component name="if-else" library="core" uid="156" kind="4">
 					<sources>
 						<datapoint pos="0" key="398"/>
@@ -681,15 +520,6 @@
 						<datapoint pos="0" key="404"/>
 					</targets>
 					<view ltx="1183" lty="1382" rbx="1277" rby="1453"/>
-				</component>
-				<component name="exists" library="core" uid="241" kind="5">
-					<sources>
-						<datapoint pos="0" key="553"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="528"/>
-					</targets>
-					<view ltx="230" lty="1475" rbx="310" rby="1512"/>
 				</component>
 				<component name="concat" library="core" uid="255" kind="5" growable="1" growablebasename="value">
 					<sources>
@@ -712,26 +542,6 @@
 					</targets>
 					<view ltx="592" lty="1475" rbx="686" rby="1546"/>
 				</component>
-				<component name="constant" library="core" uid="268" kind="2">
-					<targets>
-						<datapoint pos="0" key="527"/>
-					</targets>
-					<view ltx="445" lty="1541" rbx="556" rby="1557"/>
-					<data>
-						<constant datatype="string"/>
-					</data>
-				</component>
-				<component name="timeStart" library="core" uid="263" kind="3">
-					<sources>
-						<datapoint pos="0" key="554"/>
-						<datapoint pos="1" key="555"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="556"/>
-						<datapoint/>
-					</targets>
-					<view ltx="346" lty="1476" rbx="447" rby="1529"/>
-				</component>
 				<component name="if-else" library="core" uid="163" kind="4">
 					<sources>
 						<datapoint pos="0" key="419"/>
@@ -743,36 +553,6 @@
 					</targets>
 					<view ltx="592" lty="1399" rbx="686" rby="1470"/>
 				</component>
-				<component name="concat" library="core" uid="258" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="559"/>
-						<datapoint pos="1" key="560"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="561"/>
-					</targets>
-					<view ltx="471" lty="1571" rbx="556" rby="1625"/>
-				</component>
-				<component name="if-else" library="core" uid="269" kind="4">
-					<sources>
-						<datapoint pos="0" key="531"/>
-						<datapoint pos="1" key="529"/>
-						<datapoint pos="2" key="530"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="563"/>
-					</targets>
-					<view ltx="592" lty="1571" rbx="686" rby="1642"/>
-				</component>
-				<component name="exists" library="core" uid="247" kind="5">
-					<sources>
-						<datapoint pos="0" key="557"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="558"/>
-					</targets>
-					<view ltx="219" lty="1523" rbx="299" rby="1560"/>
-				</component>
 				<component name="constant" library="core" uid="244" kind="2">
 					<targets>
 						<datapoint pos="0" key="513"/>
@@ -781,17 +561,6 @@
 					<data>
 						<constant value="T" datatype="string"/>
 					</data>
-				</component>
-				<component name="timeEnd" library="core" uid="264" kind="3">
-					<sources>
-						<datapoint pos="0" key="550"/>
-						<datapoint pos="1" key="551"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="552"/>
-						<datapoint/>
-					</targets>
-					<view ltx="346" lty="1570" rbx="447" rby="1623"/>
 				</component>
 				<component name="if-else" library="core" uid="157" kind="4">
 					<sources>
@@ -826,98 +595,6 @@
 					</targets>
 					<view ltx="1183" lty="1593" rbx="1277" rby="1664"/>
 				</component>
-				<component name="concat" library="core" uid="303" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="601"/>
-						<datapoint pos="1" key="602"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="603"/>
-					</targets>
-					<view ltx="368" lty="1873" rbx="453" rby="1927"/>
-				</component>
-				<component name="if-else" library="core" uid="301" kind="4">
-					<sources>
-						<datapoint pos="0" key="604"/>
-						<datapoint pos="1" key="605"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="606"/>
-					</targets>
-					<view ltx="592" lty="1848" rbx="686" rby="1919"/>
-				</component>
-				<component name="exists" library="core" uid="300" kind="5">
-					<sources>
-						<datapoint pos="0" key="599"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="600"/>
-					</targets>
-					<view ltx="244" lty="1824" rbx="324" rby="1861"/>
-				</component>
-				<component name="if-else" library="core" uid="287" kind="4">
-					<sources>
-						<datapoint pos="0" key="584"/>
-						<datapoint pos="1" key="585"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="586"/>
-					</targets>
-					<view ltx="592" lty="1706" rbx="686" rby="1777"/>
-				</component>
-				<component name="constant" library="core" uid="80" kind="2">
-					<targets>
-						<datapoint pos="0" key="261"/>
-					</targets>
-					<view ltx="310" lty="1739" rbx="523" rby="1755"/>
-					<data>
-						<constant value="https://www.crossref.org/services/funder-registry/" datatype="string"/>
-						<comment>
-							<text>Default schemeURI for FunderIdScheme</text>
-						</comment>
-					</data>
-				</component>
-				<component name="exists" library="core" uid="275" kind="5">
-					<sources>
-						<datapoint pos="0" key="532"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="533"/>
-					</targets>
-					<view ltx="244" lty="1772" rbx="324" rby="1809"/>
-				</component>
-				<component name="greater" library="core" uid="310" kind="5">
-					<sources>
-						<datapoint pos="0" key="613"/>
-						<datapoint pos="1" key="614"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="615"/>
-					</targets>
-					<view ltx="578" lty="2006" rbx="666" rby="2059"/>
-				</component>
-				<component name="if-else" library="core" uid="291" kind="4">
-					<sources>
-						<datapoint pos="0" key="589"/>
-						<datapoint pos="1" key="590"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="591"/>
-					</targets>
-					<view ltx="592" lty="1772" rbx="686" rby="1843"/>
-				</component>
-				<component name="string" library="core" uid="313" kind="5">
-					<sources>
-						<datapoint pos="0" key="619"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="620"/>
-					</targets>
-					<view ltx="230" lty="1675" rbx="312" rby="1712"/>
-				</component>
 				<component name="substring-before" library="core" uid="28" kind="5">
 					<sources>
 						<datapoint pos="0" key="40"/>
@@ -928,16 +605,6 @@
 					</targets>
 					<view ltx="404" lty="241" rbx="536" rby="294"/>
 				</component>
-				<component name="substring-after" library="core" uid="26" kind="5">
-					<sources>
-						<datapoint pos="0" key="54"/>
-						<datapoint pos="1" key="55"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="56"/>
-					</targets>
-					<view ltx="585" lty="400" rbx="709" rby="453"/>
-				</component>
 				<component name="constant" library="core" uid="42" kind="2">
 					<targets>
 						<datapoint pos="0" key="90"/>
@@ -946,17 +613,6 @@
 					<data>
 						<constant value="https://ror.org/" datatype="string"/>
 					</data>
-				</component>
-				<component name="if-else" library="core" uid="152" kind="4">
-					<sources>
-						<datapoint pos="0" key="393"/>
-						<datapoint pos="1" key="401"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="402"/>
-					</targets>
-					<view ltx="838" lty="1381" rbx="932" rby="1452"/>
 				</component>
 				<component name="concat" library="core" uid="49" kind="5" growable="1" growablebasename="value">
 					<sources>
@@ -985,20 +641,6 @@
 					<data>
 						<comment>
 							<text>Author RorID vervollständigen mit URI</text>
-						</comment>
-					</data>
-				</component>
-				<component name="exists" library="core" uid="315" kind="5">
-					<sources>
-						<datapoint pos="0" key="621"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="641"/>
-					</targets>
-					<view ltx="217" lty="490" rbx="297" rby="527"/>
-					<data>
-						<comment>
-							<text>Author Affiliation rorId</text>
 						</comment>
 					</data>
 				</component>
@@ -1189,20 +831,6 @@
 						</comment>
 					</data>
 				</component>
-				<component name="exists" library="core" uid="317" kind="5">
-					<sources>
-						<datapoint pos="0" key="623"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="651"/>
-					</targets>
-					<view ltx="208" lty="1005" rbx="288" rby="1042"/>
-					<data>
-						<comment>
-							<text>ContributorPerson Affiliation rorId</text>
-						</comment>
-					</data>
-				</component>
 				<component name="if-else" library="core" uid="330" kind="4">
 					<sources>
 						<datapoint pos="0" key="664"/>
@@ -1265,17 +893,406 @@
 						</comment>
 					</data>
 				</component>
-				<component name="constant" library="core" uid="46" kind="2">
+				<component name="logical-and" library="core" uid="306" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="616"/>
+						<datapoint pos="1" key="617"/>
+					</sources>
 					<targets>
-						<datapoint pos="0" key="102"/>
+						<datapoint pos="0" key="618"/>
 					</targets>
-					<view ltx="1102" lty="699" rbx="1278" rby="715"/>
+					<view ltx="709" lty="1993" rbx="815" rby="2047"/>
+				</component>
+				<component name="string-length" library="core" uid="308" kind="5">
+					<sources>
+						<datapoint pos="0" key="610"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="611"/>
+					</targets>
+					<view ltx="445" lty="2104" rbx="560" rby="2141"/>
+				</component>
+				<component name="grantname" library="core" uid="286" kind="3">
+					<sources>
+						<datapoint pos="0" key="547"/>
+						<datapoint pos="1" key="548"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="549"/>
+						<datapoint/>
+					</targets>
+					<view ltx="778" lty="2264" rbx="884" rby="2317"/>
+				</component>
+				<component name="string-length" library="core" uid="336" kind="5">
+					<sources>
+						<datapoint pos="0" key="670"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="671"/>
+					</targets>
+					<view ltx="268" lty="2383" rbx="383" rby="2420"/>
+				</component>
+				<component name="greater" library="core" uid="338" kind="5">
+					<sources>
+						<datapoint pos="0" key="672"/>
+						<datapoint pos="1" key="675"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="676"/>
+					</targets>
+					<view ltx="434" lty="2414" rbx="522" rby="2467"/>
+				</component>
+				<component name="string-length" library="core" uid="339" kind="5">
+					<sources>
+						<datapoint pos="0" key="673"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="674"/>
+					</targets>
+					<view ltx="336" lty="2289" rbx="451" rby="2326"/>
+				</component>
+				<component name="exists" library="core" uid="282" kind="5">
+					<sources>
+						<datapoint pos="0" key="572"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="546"/>
+					</targets>
+					<view ltx="268" lty="2243" rbx="348" rby="2280"/>
+				</component>
+				<component name="logical-and" library="core" uid="341" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="683"/>
+						<datapoint pos="1" key="685"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="684"/>
+					</targets>
+					<view ltx="609" lty="2123" rbx="715" rby="2177"/>
+				</component>
+				<component name="greater" library="core" uid="340" kind="5">
+					<sources>
+						<datapoint pos="0" key="680"/>
+						<datapoint pos="1" key="679"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="678"/>
+					</targets>
+					<view ltx="490" lty="2256" rbx="578" rby="2309"/>
+				</component>
+				<component name="constant" library="core" uid="311" kind="2">
+					<targets>
+						<datapoint pos="0" key="612"/>
+					</targets>
+					<view ltx="445" lty="2164" rbx="554" rby="2180"/>
 					<data>
-						<constant value="https://ror.org" datatype="string"/>
+						<constant value="0" datatype="decimal"/>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="285" kind="5">
+					<sources>
+						<datapoint pos="0" key="573"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="574"/>
+					</targets>
+					<view ltx="268" lty="2338" rbx="348" rby="2375"/>
+				</component>
+				<component name="logical-and" library="core" uid="334" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="677"/>
+						<datapoint pos="1" key="681"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="682"/>
+					</targets>
+					<view ltx="578" lty="2264" rbx="684" rby="2318"/>
+				</component>
+				<component name="concat" library="core" uid="258" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="559"/>
+						<datapoint pos="1" key="560"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="561"/>
+					</targets>
+					<view ltx="471" lty="1571" rbx="556" rby="1625"/>
+				</component>
+				<component name="if-else" library="core" uid="269" kind="4">
+					<sources>
+						<datapoint pos="0" key="531"/>
+						<datapoint pos="1" key="529"/>
+						<datapoint pos="2" key="530"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="563"/>
+					</targets>
+					<view ltx="592" lty="1546" rbx="686" rby="1617"/>
+				</component>
+				<component name="constant" library="core" uid="166" kind="2">
+					<targets>
+						<datapoint pos="0" key="511"/>
+					</targets>
+					<view ltx="420" lty="1435" rbx="535" rby="1451"/>
+					<data>
+						<constant value="/" datatype="string"/>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="208" kind="5">
+					<sources>
+						<datapoint pos="0" key="481"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="482"/>
+					</targets>
+					<view ltx="810" lty="1324" rbx="890" rby="1361"/>
+				</component>
+				<component name="timeStart" library="core" uid="263" kind="3">
+					<sources>
+						<datapoint pos="0" key="554"/>
+						<datapoint pos="1" key="555"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="556"/>
+						<datapoint/>
+					</targets>
+					<view ltx="346" lty="1476" rbx="447" rby="1529"/>
+				</component>
+				<component name="if-else" library="core" uid="345" kind="4">
+					<sources>
+						<datapoint pos="0" key="691"/>
+						<datapoint pos="1" key="692"/>
+						<datapoint pos="2" key="693"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="694"/>
+					</targets>
+					<view ltx="585" lty="1616" rbx="679" rby="1687"/>
+					<data>
 						<comment>
-							<text>Default schemeURI for Affiliations</text>
+							<text>timezone for timeStart</text>
 						</comment>
 					</data>
+				</component>
+				<component name="if-else" library="core" uid="287" kind="4">
+					<sources>
+						<datapoint pos="0" key="584"/>
+						<datapoint pos="1" key="585"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="586"/>
+					</targets>
+					<view ltx="592" lty="1775" rbx="686" rby="1846"/>
+				</component>
+				<component name="logical-and" library="core" uid="347" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="703"/>
+						<datapoint pos="1" key="704"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="697"/>
+					</targets>
+					<view ltx="385" lty="1639" rbx="491" rby="1693"/>
+					<data>
+						<comment>
+							<text>timeStart AND timezone</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="80" kind="2">
+					<targets>
+						<datapoint pos="0" key="261"/>
+					</targets>
+					<view ltx="368" lty="1845" rbx="581" rby="1861"/>
+					<data>
+						<constant value="https://www.crossref.org/services/funder-registry/" datatype="string"/>
+						<comment>
+							<text>Default schemeURI for FunderIdScheme</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="300" kind="5">
+					<sources>
+						<datapoint pos="0" key="599"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="600"/>
+					</targets>
+					<view ltx="292" lty="2178" rbx="372" rby="2215"/>
+				</component>
+				<component name="exists" library="core" uid="275" kind="5">
+					<sources>
+						<datapoint pos="0" key="532"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="533"/>
+					</targets>
+					<view ltx="244" lty="1901" rbx="324" rby="1938"/>
+				</component>
+				<component name="timeEnd" library="core" uid="264" kind="3">
+					<sources>
+						<datapoint pos="0" key="550"/>
+						<datapoint pos="1" key="551"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="552"/>
+						<datapoint/>
+					</targets>
+					<view ltx="346" lty="1570" rbx="447" rby="1623"/>
+				</component>
+				<component name="logical-and" library="core" uid="349" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="707"/>
+						<datapoint pos="1" key="705"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="706"/>
+					</targets>
+					<view ltx="385" lty="1729" rbx="491" rby="1783"/>
+					<data>
+						<comment>
+							<text>timeEnd AND timezone</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="268" kind="2">
+					<targets>
+						<datapoint pos="0" key="527"/>
+					</targets>
+					<view ltx="445" lty="1541" rbx="556" rby="1557"/>
+					<data>
+						<constant datatype="string"/>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="348" kind="4">
+					<sources>
+						<datapoint pos="0" key="701"/>
+						<datapoint pos="1" key="702"/>
+						<datapoint pos="2" key="700"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="699"/>
+					</targets>
+					<view ltx="593" lty="1704" rbx="687" rby="1775"/>
+					<data>
+						<comment>
+							<text>timezone for timeEnd</text>
+						</comment>
+					</data>
+				</component>
+				<component name="concat" library="core" uid="271" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="564"/>
+						<datapoint pos="1" key="565"/>
+						<datapoint pos="2" key="696"/>
+						<datapoint pos="3" key="566"/>
+						<datapoint pos="4" key="567"/>
+						<datapoint pos="5" key="568"/>
+						<datapoint pos="6" key="708"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="569"/>
+					</targets>
+					<view ltx="778" lty="1487" rbx="863" rby="1625"/>
+				</component>
+				<component name="exists" library="core" uid="315" kind="5">
+					<sources>
+						<datapoint pos="0" key="621"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="641"/>
+					</targets>
+					<view ltx="230" lty="540" rbx="310" rby="577"/>
+					<data>
+						<comment>
+							<text>Author Affiliation rorId</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="38" kind="2">
+					<targets>
+						<datapoint pos="0" key="69"/>
+					</targets>
+					<view ltx="478" lty="541" rbx="594" rby="557"/>
+					<data>
+						<constant value=", " datatype="string"/>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="29" kind="2">
+					<targets>
+						<datapoint pos="0" key="38"/>
+					</targets>
+					<view ltx="422" lty="468" rbx="536" rby="484"/>
+					<data>
+						<constant value=" " datatype="string"/>
+					</data>
+				</component>
+				<component name="substring-after" library="core" uid="26" kind="5">
+					<sources>
+						<datapoint pos="0" key="54"/>
+						<datapoint pos="1" key="55"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="56"/>
+					</targets>
+					<view ltx="592" lty="442" rbx="716" rby="495"/>
+				</component>
+				<component name="exists" library="core" uid="350" kind="5">
+					<sources>
+						<datapoint pos="0" key="709"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="710"/>
+					</targets>
+					<view ltx="240" lty="400" rbx="320" rby="437"/>
+					<data>
+						<comment>
+							<text>Author NameIdentifier ORCID</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="360" kind="4">
+					<sources>
+						<datapoint pos="0" key="716"/>
+						<datapoint pos="1" key="718"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="717"/>
+					</targets>
+					<view ltx="1089" lty="275" rbx="1183" rby="346"/>
+				</component>
+				<component name="logical-and" library="core" uid="359" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="719"/>
+						<datapoint pos="1" key="720"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="715"/>
+					</targets>
+					<view ltx="459" lty="398" rbx="565" rby="452"/>
+				</component>
+				<component name="if-else" library="core" uid="351" kind="4">
+					<sources>
+						<datapoint pos="0" key="721"/>
+						<datapoint pos="1" key="722"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="723"/>
+					</targets>
+					<view ltx="404" lty="316" rbx="498" rby="387"/>
+				</component>
+				<component name="greater" library="core" uid="356" kind="5">
+					<sources>
+						<datapoint pos="0" key="724"/>
+						<datapoint pos="1" key="725"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="726"/>
+					</targets>
+					<view ltx="317" lty="448" rbx="405" rby="501"/>
 				</component>
 				<component name="constant" library="core" uid="45" kind="2">
 					<targets>
@@ -1289,11 +1306,101 @@
 						</comment>
 					</data>
 				</component>
+				<component name="constant" library="core" uid="46" kind="2">
+					<targets>
+						<datapoint pos="0" key="102"/>
+					</targets>
+					<view ltx="1102" lty="699" rbx="1278" rby="715"/>
+					<data>
+						<constant value="https://ror.org" datatype="string"/>
+						<comment>
+							<text>Default schemeURI for Affiliations</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="33" kind="2">
+					<targets>
+						<datapoint pos="0" key="63"/>
+					</targets>
+					<view ltx="859" lty="-633" rbx="981" rby="-617"/>
+					<data>
+						<constant value="en" datatype="string"/>
+						<comment>
+							<text>Default language</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="170" kind="2">
+					<targets>
+						<datapoint/>
+					</targets>
+					<view ltx="860" lty="-32" rbx="996" rby="-16"/>
+					<data>
+						<constant value="EPOS" datatype="string"/>
+						<comment>
+							<text>Default value for subjects o EPOS projects</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="171" kind="2">
+					<targets>
+						<datapoint/>
+					</targets>
+					<view ltx="860" lty="3" rbx="1069" rby="19"/>
+					<data>
+						<constant value="multi-scale laboratories" datatype="string"/>
+						<comment>
+							<text>Default value for subjects in MSL projects</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="241" kind="5">
+					<sources>
+						<datapoint pos="0" key="553"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="528"/>
+					</targets>
+					<view ltx="243" lty="1747" rbx="323" rby="1784"/>
+					<data>
+						<comment>
+							<text>if timeStart exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="247" kind="5">
+					<sources>
+						<datapoint pos="0" key="557"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="558"/>
+					</targets>
+					<view ltx="244" lty="1807" rbx="324" rby="1844"/>
+					<data>
+						<comment>
+							<text>timeEnd</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="343" kind="5">
+					<sources>
+						<datapoint pos="0" key="687"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="686"/>
+					</targets>
+					<view ltx="243" lty="1844" rbx="323" rby="1881"/>
+					<data>
+						<comment>
+							<text>if timezone exists</text>
+						</comment>
+					</data>
+				</component>
 				<component name="constant" library="core" uid="77" kind="2">
 					<targets>
 						<datapoint pos="0" key="244"/>
 					</targets>
-					<view ltx="161" lty="1972" rbx="368" rby="1988"/>
+					<view ltx="185" lty="2113" rbx="392" rby="2129"/>
 					<data>
 						<constant value="http://dx.doi.org/10.13039/" datatype="string"/>
 						<comment>
@@ -1301,11 +1408,239 @@
 						</comment>
 					</data>
 				</component>
+				<component name="string" library="core" uid="313" kind="5">
+					<sources>
+						<datapoint pos="0" key="619"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="620"/>
+					</targets>
+					<view ltx="310" lty="2129" rbx="392" rby="2166"/>
+				</component>
+				<component name="concat" library="core" uid="303" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="601"/>
+						<datapoint pos="1" key="602"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="603"/>
+					</targets>
+					<view ltx="396" lty="2026" rbx="481" rby="2080"/>
+				</component>
+				<component name="greater" library="core" uid="310" kind="5">
+					<sources>
+						<datapoint pos="0" key="613"/>
+						<datapoint pos="1" key="614"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="615"/>
+					</targets>
+					<view ltx="598" lty="2060" rbx="686" rby="2113"/>
+				</component>
+				<component name="if-else" library="core" uid="291" kind="4">
+					<sources>
+						<datapoint pos="0" key="589"/>
+						<datapoint pos="1" key="590"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="591"/>
+					</targets>
+					<view ltx="911" lty="2016" rbx="1005" rby="2087"/>
+				</component>
+				<component name="if-else" library="core" uid="301" kind="4">
+					<sources>
+						<datapoint pos="0" key="604"/>
+						<datapoint pos="1" key="605"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="606"/>
+					</targets>
+					<view ltx="945" lty="2123" rbx="1039" rby="2194"/>
+				</component>
+				<component name="grantnumber" library="core" uid="283" kind="3">
+					<sources>
+						<datapoint pos="0" key="543"/>
+						<datapoint pos="1" key="544"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="545"/>
+						<datapoint/>
+					</targets>
+					<view ltx="778" lty="2190" rbx="894" rby="2243"/>
+				</component>
+				<component name="exists" library="core" uid="363" kind="5">
+					<sources>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint/>
+					</targets>
+					<view ltx="1036" lty="1753" rbx="1116" rby="1790"/>
+					<data>
+						<comment>
+							<text>if dateStart exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="364" kind="5">
+					<sources>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint/>
+					</targets>
+					<view ltx="1036" lty="1824" rbx="1116" rby="1861"/>
+					<data>
+						<comment>
+							<text>if dateEnd exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="spatial_temporal_coverage..." library="core" uid="206" kind="3">
+					<sources>
+						<datapoint pos="0" key="483"/>
+						<datapoint pos="1" key="484"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="485"/>
+						<datapoint pos="1" key="486"/>
+					</targets>
+					<view ltx="973" lty="1309" rbx="1157" rby="1362"/>
+				</component>
+				<component name="exists" library="core" uid="365" kind="5">
+					<sources>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint/>
+					</targets>
+					<view ltx="1036" lty="1893" rbx="1116" rby="1930"/>
+					<data>
+						<comment>
+							<text>if description exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="152" kind="4">
+					<sources>
+						<datapoint pos="0" key="393"/>
+						<datapoint pos="1" key="401"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="402"/>
+					</targets>
+					<view ltx="838" lty="1381" rbx="932" rby="1452"/>
+				</component>
+				<component name="exists" library="core" uid="211" kind="5">
+					<sources>
+						<datapoint pos="0" key="487"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="488"/>
+					</targets>
+					<view ltx="252" lty="1656" rbx="332" rby="1693"/>
+					<data>
+						<comment>
+							<text>if latitudeMin exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="366" kind="5">
+					<sources>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint/>
+					</targets>
+					<view ltx="1028" lty="1686" rbx="1108" rby="1723"/>
+					<data>
+						<comment>
+							<text>if longitudeMax exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="213" kind="5">
+					<sources>
+						<datapoint pos="0" key="489"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="490"/>
+					</targets>
+					<view ltx="244" lty="1704" rbx="324" rby="1741"/>
+					<data>
+						<comment>
+							<text>if longitudeMin exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="317" kind="5">
+					<sources>
+						<datapoint pos="0" key="623"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="651"/>
+					</targets>
+					<view ltx="230" lty="1097" rbx="310" rby="1134"/>
+					<data>
+						<comment>
+							<text>ContributorPerson Affiliation rorId</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="74" kind="4">
+					<sources>
+						<datapoint pos="0" key="236"/>
+						<datapoint pos="1" key="234"/>
+						<datapoint pos="2" key="231"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="233"/>
+					</targets>
+					<view ltx="1080" lty="876" rbx="1174" rby="947"/>
+				</component>
+				<component name="constant" library="core" uid="41" kind="2">
+					<targets>
+						<datapoint pos="0" key="71"/>
+					</targets>
+					<view ltx="859" lty="-495" rbx="1001" rby="-479"/>
+					<data>
+						<constant value="ORCID" datatype="string"/>
+						<comment>
+							<text>Default nameIdentifierScheme</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="353" kind="4">
+					<sources>
+						<datapoint pos="0" key="712"/>
+						<datapoint pos="1" key="713"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="714"/>
+					</targets>
+					<view ltx="1080" lty="186" rbx="1174" rby="257"/>
+				</component>
+				<component name="constant" library="core" uid="40" kind="2">
+					<targets>
+						<datapoint pos="0" key="72"/>
+					</targets>
+					<view ltx="859" lty="-461" rbx="1049" rby="-445"/>
+					<data>
+						<constant value="https://orcid.org/" datatype="string"/>
+						<comment>
+							<text>Default nameIdentifierSchemeUri</text>
+						</comment>
+					</data>
+				</component>
 				<component name="DataCiteSchema45" library="xml" uid="3" kind="14">
 					<properties XSLTTargetEncoding="UTF-8" XSLTDefaultOutput="1"/>
-					<view ltx="1470" lty="-99" rbx="2054" rby="2035"/>
+					<view ltx="1470" lty="-99" rbx="2074" rby="2689"/>
 					<data>
-						<root scrollposition="44">
+						<root>
 							<header>
 								<namespaces>
 									<namespace/>
@@ -1345,19 +1680,14 @@
 											</entry>
 										</entry>
 										<entry name="publisher" ns="1" inpkey="271" expanded="1">
-											<entry name="publisherIdentifier" type="attribute" inpkey="461"/>
-											<entry name="publisherIdentifierScheme" type="attribute" inpkey="462"/>
-											<entry name="schemeURI" type="attribute" inpkey="463"/>
 											<entry name="lang" ns="2" type="attribute" inpkey="272"/>
 										</entry>
 										<entry name="publicationYear" ns="1" inpkey="22"/>
 										<entry name="resourceType" ns="1" inpkey="26" expanded="1">
 											<entry name="resourceTypeGeneral" type="attribute" inpkey="27"/>
 										</entry>
-										<entry name="subjects" ns="1">
-											<entry name="subject" ns="1" inpkey="452" expanded="1"/>
-											<entry name="subject" ns="1" inpkey="453" expanded="1" clone="1"/>
-											<entry name="subject" ns="1" inpkey="454" expanded="1" clone="1">
+										<entry name="subjects" ns="1" expanded="1">
+											<entry name="subject" ns="1" inpkey="454" expanded="1">
 												<entry name="subjectScheme" type="attribute" inpkey="455"/>
 												<entry name="schemeURI" type="attribute" inpkey="456"/>
 												<entry name="valueURI" type="attribute" inpkey="457"/>
@@ -1371,6 +1701,7 @@
 												<entry name="contributorName" ns="1" inpkey="113" expanded="1"/>
 												<entry name="givenName" ns="1" inpkey="114"/>
 												<entry name="familyName" ns="1" inpkey="115"/>
+												<entry name="nameIdentifier" ns="1" expanded="1"/>
 												<entry name="affiliation" ns="1" inpkey="116" expanded="1">
 													<entry name="affiliationIdentifier" type="attribute" inpkey="117"/>
 													<entry name="affiliationIdentifierScheme" type="attribute" inpkey="118"/>
@@ -1384,7 +1715,7 @@
 												</entry>
 												<entry name="givenName" ns="1" inpkey="164"/>
 												<entry name="familyName" ns="1" inpkey="165"/>
-												<entry name="nameIdentifier" ns="1" inpkey="166">
+												<entry name="nameIdentifier" ns="1" inpkey="166" expanded="1">
 													<entry name="nameIdentifierScheme" type="attribute" inpkey="167"/>
 													<entry name="schemeURI" type="attribute" inpkey="168"/>
 												</entry>
@@ -1489,64 +1820,104 @@
 						<document schema="..\DataCite\DataCiteSchema45.xsd" instanceroot="{http://datacite.org/schema/kernel-4}resource" inputinstance="..\DataCite\DataCiteExample45.xml" outputinstance="..\DataCite\DataCiteExample45.xml"/>
 					</data>
 				</component>
-				<component name="logical-and" library="core" uid="306" kind="5" growable="1" growablebasename="value">
+				<component name="string-length" library="core" uid="362" kind="5">
 					<sources>
-						<datapoint pos="0" key="616"/>
-						<datapoint pos="1" key="617"/>
+						<datapoint pos="0" key="727"/>
 					</sources>
 					<targets>
-						<datapoint pos="0" key="618"/>
+						<datapoint pos="0" key="728"/>
 					</targets>
-					<view ltx="709" lty="1993" rbx="815" rby="2047"/>
+					<view ltx="230" lty="490" rbx="345" rby="527"/>
 				</component>
-				<component name="string-length" library="core" uid="308" kind="5">
-					<sources>
-						<datapoint pos="0" key="610"/>
-					</sources>
+				<component name="constant" library="core" uid="357" kind="2">
 					<targets>
-						<datapoint pos="0" key="611"/>
+						<datapoint pos="0" key="711"/>
 					</targets>
-					<view ltx="421" lty="1963" rbx="536" rby="2000"/>
+					<view ltx="202" lty="316" rbx="311" rby="332"/>
+					<data>
+						<constant value="0" datatype="decimal"/>
+					</data>
 				</component>
-				<component name="exists" library="core" uid="285" kind="5">
+				<component name="if-else" library="core" uid="369" kind="4">
 					<sources>
-						<datapoint pos="0" key="573"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="574"/>
-					</targets>
-					<view ltx="244" lty="2197" rbx="324" rby="2234"/>
-				</component>
-				<component name="grantname" library="core" uid="286" kind="3">
-					<sources>
-						<datapoint pos="0" key="547"/>
-						<datapoint pos="1" key="548"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="549"/>
+						<datapoint pos="0" key="740"/>
+						<datapoint pos="1" key="739"/>
 						<datapoint/>
-					</targets>
-					<view ltx="778" lty="2264" rbx="884" rby="2317"/>
-				</component>
-				<component name="grantnumber" library="core" uid="283" kind="3">
-					<sources>
-						<datapoint pos="0" key="543"/>
-						<datapoint pos="1" key="544"/>
 					</sources>
 					<targets>
-						<datapoint pos="0" key="545"/>
+						<datapoint pos="0" key="741"/>
+					</targets>
+					<view ltx="518" lty="981" rbx="612" rby="1052"/>
+				</component>
+				<component name="if-else" library="core" uid="370" kind="4">
+					<sources>
+						<datapoint pos="0" key="743"/>
+						<datapoint pos="1" key="742"/>
 						<datapoint/>
-					</targets>
-					<view ltx="767" lty="2102" rbx="883" rby="2155"/>
-				</component>
-				<component name="string-length" library="core" uid="336" kind="5">
-					<sources>
-						<datapoint pos="0" key="670"/>
 					</sources>
 					<targets>
-						<datapoint pos="0" key="671"/>
+						<datapoint pos="0" key="744"/>
 					</targets>
-					<view ltx="244" lty="2242" rbx="359" rby="2279"/>
+					<view ltx="518" lty="1063" rbx="612" rby="1134"/>
+				</component>
+				<component name="exists" library="core" uid="367" kind="5">
+					<sources>
+						<datapoint pos="0" key="733"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="734"/>
+					</targets>
+					<view ltx="240" lty="1041" rbx="320" rby="1078"/>
+					<data>
+						<comment>
+							<text>ContributorPerson ORCID</text>
+						</comment>
+					</data>
+				</component>
+				<component name="string-length" library="core" uid="371" kind="5">
+					<sources>
+						<datapoint pos="0" key="745"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="746"/>
+					</targets>
+					<view ltx="240" lty="990" rbx="355" rby="1027"/>
+				</component>
+				<component name="greater" library="core" uid="373" kind="5">
+					<sources>
+						<datapoint pos="0" key="747"/>
+						<datapoint pos="1" key="748"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="749"/>
+					</targets>
+					<view ltx="288" lty="913" rbx="376" rby="966"/>
+					<data>
+						<comment>
+							<text>Orcid length &gt;0?</text>
+						</comment>
+					</data>
+				</component>
+				<component name="logical-and" library="core" uid="375" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="750"/>
+						<datapoint pos="1" key="751"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="752"/>
+					</targets>
+					<view ltx="392" lty="956" rbx="498" rby="1010"/>
+				</component>
+				<component name="if-else" library="core" uid="368" kind="4">
+					<sources>
+						<datapoint pos="0" key="737"/>
+						<datapoint pos="1" key="738"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="735"/>
+					</targets>
+					<view ltx="508" lty="886" rbx="602" rby="957"/>
 				</component>
 				<component name="FreestyleSchemaDB" library="xml" uid="2" kind="14">
 					<properties XSLTTargetEncoding="UTF-8"/>
@@ -1689,6 +2060,7 @@
 												<entry name="timeStart" outkey="577"/>
 												<entry name="dateEnd" outkey="578"/>
 												<entry name="timeEnd" outkey="579"/>
+												<entry name="timezone" outkey="698"/>
 											</entry>
 										</entry>
 										<entry name="RelatedWorks" outkey="262" expanded="1">
@@ -1715,75 +2087,8 @@
 								</entry>
 							</entry>
 						</root>
-						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\dataset2.xml" outputinstance="..\..\xml\dataset2.xml"/>
+						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\dataset3.xml" outputinstance="..\..\xml\dataset3.xml"/>
 					</data>
-				</component>
-				<component name="greater" library="core" uid="338" kind="5">
-					<sources>
-						<datapoint pos="0" key="672"/>
-						<datapoint pos="1" key="675"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="676"/>
-					</targets>
-					<view ltx="410" lty="2273" rbx="498" rby="2326"/>
-				</component>
-				<component name="string-length" library="core" uid="339" kind="5">
-					<sources>
-						<datapoint pos="0" key="673"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="674"/>
-					</targets>
-					<view ltx="312" lty="2148" rbx="427" rby="2185"/>
-				</component>
-				<component name="constant" library="core" uid="311" kind="2">
-					<targets>
-						<datapoint pos="0" key="612"/>
-					</targets>
-					<view ltx="421" lty="2023" rbx="530" rby="2039"/>
-					<data>
-						<constant value="3" datatype="decimal"/>
-					</data>
-				</component>
-				<component name="logical-and" library="core" uid="334" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="677"/>
-						<datapoint pos="1" key="681"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="682"/>
-					</targets>
-					<view ltx="578" lty="2264" rbx="684" rby="2318"/>
-				</component>
-				<component name="greater" library="core" uid="340" kind="5">
-					<sources>
-						<datapoint pos="0" key="680"/>
-						<datapoint pos="1" key="679"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="678"/>
-					</targets>
-					<view ltx="466" lty="2115" rbx="554" rby="2168"/>
-				</component>
-				<component name="exists" library="core" uid="282" kind="5">
-					<sources>
-						<datapoint pos="0" key="572"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="546"/>
-					</targets>
-					<view ltx="244" lty="2102" rbx="324" rby="2139"/>
-				</component>
-				<component name="logical-and" library="core" uid="341" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="683"/>
-						<datapoint pos="1" key="685"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="684"/>
-					</targets>
-					<view ltx="609" lty="2123" rbx="715" rby="2177"/>
 				</component>
 			</children>
 			<graph directed="1">
@@ -1974,21 +2279,19 @@
 							<edge vertexkey="86"/>
 						</edges>
 					</vertex>
-					<vertex vertexkey="95">
+					<vertex vertexkey="723">
 						<edges>
 							<edge vertexkey="79"/>
 						</edges>
 					</vertex>
-					<vertex vertexkey="71">
+					<vertex vertexkey="714">
 						<edges>
 							<edge vertexkey="80"/>
-							<edge vertexkey="167"/>
 						</edges>
 					</vertex>
-					<vertex vertexkey="72">
+					<vertex vertexkey="717">
 						<edges>
 							<edge vertexkey="81"/>
-							<edge vertexkey="168"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="96">
@@ -2182,9 +2485,19 @@
 							<edge vertexkey="162"/>
 						</edges>
 					</vertex>
-					<vertex vertexkey="176">
+					<vertex vertexkey="735">
 						<edges>
 							<edge vertexkey="166"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="741">
+						<edges>
+							<edge vertexkey="167"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="744">
+						<edges>
+							<edge vertexkey="168"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="177">
@@ -2490,16 +2803,6 @@
 							<edge vertexkey="442"/>
 						</edges>
 					</vertex>
-					<vertex vertexkey="444">
-						<edges>
-							<edge vertexkey="452"/>
-						</edges>
-					</vertex>
-					<vertex vertexkey="445">
-						<edges>
-							<edge vertexkey="453"/>
-						</edges>
-					</vertex>
 					<vertex vertexkey="446">
 						<edges>
 							<edge vertexkey="454"/>
@@ -2528,31 +2831,6 @@
 					<vertex vertexkey="451">
 						<edges>
 							<edge vertexkey="459"/>
-						</edges>
-					</vertex>
-					<vertex vertexkey="460">
-						<edges>
-							<edge vertexkey="461"/>
-						</edges>
-					</vertex>
-					<vertex vertexkey="101">
-						<edges>
-							<edge vertexkey="462"/>
-							<edge vertexkey="630"/>
-							<edge vertexkey="637"/>
-							<edge vertexkey="654"/>
-							<edge vertexkey="657"/>
-							<edge vertexkey="668"/>
-						</edges>
-					</vertex>
-					<vertex vertexkey="102">
-						<edges>
-							<edge vertexkey="463"/>
-							<edge vertexkey="634"/>
-							<edge vertexkey="644"/>
-							<edge vertexkey="650"/>
-							<edge vertexkey="658"/>
-							<edge vertexkey="662"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="486">
@@ -2617,6 +2895,7 @@
 						<edges>
 							<edge vertexkey="524"/>
 							<edge vertexkey="555"/>
+							<edge vertexkey="704"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="518">
@@ -2628,6 +2907,8 @@
 						<edges>
 							<edge vertexkey="526"/>
 							<edge vertexkey="530"/>
+							<edge vertexkey="693"/>
+							<edge vertexkey="700"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="561">
@@ -2639,6 +2920,7 @@
 						<edges>
 							<edge vertexkey="531"/>
 							<edge vertexkey="551"/>
+							<edge vertexkey="705"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="247">
@@ -2812,11 +3094,36 @@
 							<edge vertexkey="633"/>
 						</edges>
 					</vertex>
+					<vertex vertexkey="101">
+						<edges>
+							<edge vertexkey="630"/>
+							<edge vertexkey="637"/>
+							<edge vertexkey="654"/>
+							<edge vertexkey="657"/>
+							<edge vertexkey="668"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="102">
+						<edges>
+							<edge vertexkey="634"/>
+							<edge vertexkey="650"/>
+							<edge vertexkey="658"/>
+							<edge vertexkey="662"/>
+						</edges>
+					</vertex>
 					<vertex vertexkey="641">
 						<edges>
 							<edge vertexkey="636"/>
 							<edge vertexkey="638"/>
 							<edge vertexkey="642"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="72">
+						<edges>
+							<edge vertexkey="644"/>
+							<edge vertexkey="718"/>
+							<edge vertexkey="739"/>
+							<edge vertexkey="742"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="651">
@@ -2865,6 +3172,108 @@
 					<vertex vertexkey="546">
 						<edges>
 							<edge vertexkey="685"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="698">
+						<edges>
+							<edge vertexkey="687"/>
+							<edge vertexkey="692"/>
+							<edge vertexkey="702"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="697">
+						<edges>
+							<edge vertexkey="691"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="694">
+						<edges>
+							<edge vertexkey="696"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="706">
+						<edges>
+							<edge vertexkey="701"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="686">
+						<edges>
+							<edge vertexkey="703"/>
+							<edge vertexkey="707"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="699">
+						<edges>
+							<edge vertexkey="708"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="95">
+						<edges>
+							<edge vertexkey="709"/>
+							<edge vertexkey="722"/>
+							<edge vertexkey="727"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="715">
+						<edges>
+							<edge vertexkey="712"/>
+							<edge vertexkey="716"/>
+							<edge vertexkey="721"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="71">
+						<edges>
+							<edge vertexkey="713"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="726">
+						<edges>
+							<edge vertexkey="719"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="710">
+						<edges>
+							<edge vertexkey="720"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="728">
+						<edges>
+							<edge vertexkey="724"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="711">
+						<edges>
+							<edge vertexkey="725"/>
+							<edge vertexkey="748"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="176">
+						<edges>
+							<edge vertexkey="733"/>
+							<edge vertexkey="738"/>
+							<edge vertexkey="745"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="752">
+						<edges>
+							<edge vertexkey="737"/>
+							<edge vertexkey="740"/>
+							<edge vertexkey="743"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="746">
+						<edges>
+							<edge vertexkey="747"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="734">
+						<edges>
+							<edge vertexkey="750"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="749">
+						<edges>
+							<edge vertexkey="751"/>
 						</edges>
 					</vertex>
 				</vertices>
