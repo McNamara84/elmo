@@ -749,7 +749,6 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
   - The corresponding field in the database where the value is stored is called: `dateCreated` in the `resource` table
   - Restrictions: This field must be a valid calendar date.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#created)
-  - Scheme version: DataCite 4.5
   - Example values: `2024-06-05` `1999-04-07`
 
 - Embargo until
@@ -760,7 +759,6 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
   - The corresponding field in the database where the value is stored is called: `dateEmbargoUntil` in the `resource` table
   - Restrictions: This field must be a valid calendar date.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#available)
-  - Scheme version: DataCite 4.5
   - Example values: `2024-06-15` `2000-12-31`
 
 ### Spatial and temporal coverage
@@ -777,7 +775,6 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   - The corresponding field in the database where the value is stored is called: latitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -90 to +90
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#southboundlatitude)
-  - Schema version: DataCite 4.5
   - Example values: `52.0317983498743` `-3.234`
 
 - Latitude Max
@@ -788,7 +785,6 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   - The corresponding field in the database where the value is stored is called: latitudeMax in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -90 to +90
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#northboundlatitude)
-  - Schema version: DataCite 4.5
   - Example values: `49.72437624376` `-32.82438824398`
   
 - Longitude Min
@@ -799,7 +795,6 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   - The corresponding field in the database where the value is stored is called: longitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#westboundlongitude)
-  - Schema version: DataCite 4.5
   - Example values: `108.0317983498743` `-3.04`
   
 - Longitude Max
@@ -810,7 +805,6 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   - The corresponding field in the database where the value is stored is called: longitudeMax in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#eastboundlongitude)
-  - Schema version: DataCite 4.5
   - Example values: `99.037543735498743` `-6.4`
   
 - Description
@@ -821,7 +815,6 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
   - Restrictions: none
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#geolocationplace)
-  - Schema version: DataCite 4.5
   - Example values: `Several boreholes at regular intervals distributed over the entire surface.`
   
 - Start Date
@@ -832,7 +825,6 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
-  - Schema version: DataCite 4.5
   - Example values: `2024-01-02` `1999-08-07`
   
 - Start Time
@@ -843,7 +835,6 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
-  - Schema version: DataCite 4.5
   - Example values: `10:43:50` `04:00:00`
   
 - End Date
@@ -854,7 +845,6 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
-  - Schema version: DataCite 4.5
   - Example values: `1998-01-02` `2001-07-08`
   
 - End Time
@@ -865,7 +855,6 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
-  - Schema version: DataCite 4.5
   - Example values: `11:34:56` `09:00:00`
   
 - Timezone
