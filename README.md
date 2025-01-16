@@ -434,45 +434,57 @@ JSON-Array mit Identifier-Typ-Objekten
   - Beispielwerte: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
 
 ### Authors
+Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsiblePart>` in the ISO scheme.
+Occurrence is: 1-n
 
-- Lastname
+- Last Name 
 
-  - In diesem Feld kommt der Nachname des Autors.
-  - Datentyp: Text
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: familyname in der Tabelle Author.
-  - Restriktionen: Muss angegeben werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#familyname)
-  - Beispielwerte: `Jemison` `Smith`
+This field contains the author's surname.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: `familyname` in the table `author`.
+  - Restrictions: mandatory field, only letters allowed
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#familyname)
+  - Example values: `Jemison` `Smith`
 
-- Firstname
+- First Name
 
-  - In diesem Feld kommt der Vorname des Autors.
-  - Datentyp: Text
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: givenname in der Tabelle Author.
-  - Restriktionen: Muss angegeben werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
-  - Beispielwerte: `John` `Jane`
+  This field contains the author's first name.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: `givenname` in the table `author`.
+  - Restrictions: mandatory field, only letters allowed
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
+  - Example values: `Jemison` `Smith`
 
 - Author ORCID
 
-  - In diesem Feld kommt die ORCID des Autors (Open Researcher and Contributor ID).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: orcid in der Tabelle Author.
-  - Restriktionen: Muss im Format "xxxx-xxxx-xxxx-xxxx" sein.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
-  - Beispielwerte: `1452-9875-4521-7893` `0082-4781-1312-884x`
+  This field contains the author's ORCID (Open Researcher and Contributor ID).
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: `orcid` in the table `author`.
+  - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
+  - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
 
 - Affiliation
-  - In diesem Feld kommt die Zugehörigkeit des Autors.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: name in der Tabelle Affiliation.
-  - Restriktionen: Es ist optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
-  - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+ 
+ This field contains the author's affiliation.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `name` in the table `affiliation`.
+  - Restrictions: None, can be chosen from the dropdown menu or given as free text
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
+  - Example values: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+
+- *Saved in backend (not visible to user):* rorId
+
+  If an affiliation is chosen from the dropdown menu, which contains the entry from the Research Organization Registry (ROR), the assiciated ROR-ID is saved.
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `rorId` in the table `affiliation`.
+  - Restrictions: is automatically saved when an affiliation is chosen
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#a-affiliationidentifier)
+  - Example values: `03v4gjf40`, `04z8jg394`
 
 ### Contact Person(s)
 A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
