@@ -79,7 +79,10 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 
 [Interaktive Dokumentation](https://mde2.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
 <details>
-  <summary> GCMD Science Keywords (deprecated)</summary>
+  <summary> 
+  
+  GCMD Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  </summary>
 
   ### GCMD Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
   GET ?action=getGcmdScienceKeywords
@@ -97,7 +100,10 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 </details>
 
 <details>
-  <summary>Zeitzonen aktualisieren (deprecated)</summary>
+  <summary>
+
+  Zeitzonen aktualisieren (deprecated)[APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  </summary>
 
   ### 2. Zeitzonen aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
@@ -112,7 +118,9 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 </details>
 
 <details>
-  <summary>NASA Science Keywords (deprecated)</summary>
+  <summary>
+  
+  NASA Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
 
   ### 3. NASA Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
@@ -148,19 +156,31 @@ Aktualisiert die Auswahloptionen im Funders-Dropdown-Feld.
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
 
-### 6. Resource als DataCite XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>  
+  
+  Resource as DataCite XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
+  ### 6. Resource als DataCite XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
+  GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
 
-Exportiert einen Datensatz als XML-Datei gemäß dem DataCite-Schema (Version 4.5).
+  Exportiert einen Datensatz als XML-Datei gemäß dem DataCite-Schema (Version 4.5).
 
-**Parameter:**
+  **Parameter:**
 
-- `id`: ID des Datensatzes (erforderlich)
-- `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
+  - `id`: ID des Datensatzes (erforderlich)
+  - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
 
-**Antwort:**
-XML-Datei oder XML-Inhalt
+  **Antwort:**
+  XML-Datei oder XML-Inhalt
+</details>
+
+<details>
+<summary>
+
+Resource as ISO XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+</summary>
 
 ### 7. Resource als ISO XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
@@ -175,33 +195,50 @@ Exportiert einen Datensatz als XML-Datei gemäß dem ISO-Standard.
 
 **Antwort:**
 XML-Datei oder XML-Inhalt
+</details>
 
-### 8. Resource als DIF XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>
 
-GET ?action=getResourceAsDifXml&id={resource_id}&download={true|false}
+  Resource as DIF XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
-Exportiert einen Datensatz als XML-Datei gemäß dem DIF-Format.
+  </summary>
 
-**Parameter:**
+  ### 8. Resource als DIF XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-- `id`: ID des Datensatzes (erforderlich)
-- `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
+  GET ?action=getResourceAsDifXml&id={resource_id}&download={true|false}
 
-**Antwort:**
-XML-Datei oder XML-Inhalt
+  Exportiert einen Datensatz als XML-Datei gemäß dem DIF-Format.
 
-### 9. Alle Ressourcen als eine XML-Datei (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Parameter:**
 
-GET ?action=getResourcesAsOneFile&id={resource_id}
+  - `id`: ID des Datensatzes (erforderlich)
+  - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
 
-Exportiert einen Datensatz in allen drei XML-Formaten (DataCite, ISO, DIF) in einer einzigen XML-Datei.
+  **Antwort:**
+  XML-Datei oder XML-Inhalt
+</details>
 
-**Parameter:**
+<details>
+  <summary>
 
-- `id`: ID des Datensatzes (erforderlich)
+  All resources as one XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
-**Antwort:**
-XML-Datei zum Download
+  </summary>
+
+  ### 9. Alle Ressourcen als eine XML-Datei (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  GET ?action=getResourcesAsOneFile&id={resource_id}
+
+  Exportiert einen Datensatz in allen drei XML-Formaten (DataCite, ISO, DIF) in einer einzigen XML-Datei.
+
+  **Parameter:**
+
+  - `id`: ID des Datensatzes (erforderlich)
+
+  **Antwort:**
+  XML-Datei zum Download
+</details>
 
 ### 10. MSL Vokabulare aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
