@@ -1,8 +1,6 @@
 <div class="card mb-2">
-  <div class="card-header">
-    <b data-translate="authors.title">
-      Author(s)
-    </b>
+  <div class="card-header" data-translate="contactPersons.translate"><b>Author(s)</b>
+    <i class="bi bi-question-circle-fill" data-help-section-id="help-authors-fg"></i>
   </div>
   <div class="card-body">
     <div id="group-author">
@@ -32,7 +30,8 @@
             <div class="form-floating">
               <input type="text" class="form-control" id="input-author-lastname" name="familynames[]"
                 pattern="^[a-zA-ZäöüÄÖÜß \-]*$" required />
-              <label for="input-author-lastname"><span data-translate="general.lastName">Last Name</span><span class="text-danger">*</span></label>
+              <label for="input-author-lastname"><span data-translate="general.lastName">Last Name</span><span
+                  class="text-danger">*</span></label>
               <div class="invalid-feedback" data-translate="general.lastNameInvalid">
                 Please provide a lastname. Only letters are allowed.
               </div>
@@ -45,7 +44,8 @@
             <div class="form-floating">
               <input type="text" class="form-control" id="input-author-firstname" name="givennames[]"
                 pattern="^[a-zA-ZäöüÄÖÜß \-.]*$" required />
-              <label for="input-author-firstname"><span data-translate="general.firstName">First Name</span><span class="text-danger">*</span></label>
+              <label for="input-author-firstname"><span data-translate="general.firstName">First Name</span><span
+                  class="text-danger">*</span></label>
               <div class="invalid-feedback" data-translate="authors.firstNameInvalid">
                 Please provide a firstname. Only letters are allowed.
               </div>
