@@ -78,8 +78,9 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 ## API-Endpunkte
 
 [Interaktive Dokumentation](https://mde2.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
-
-### 1. GCMD Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+<summary>### 1. GCMD Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+</summary>
 
 GET ?action=getGcmdScienceKeywords
 
@@ -95,6 +96,7 @@ JSON-Array mit Objekten, die folgende Schlüssel enthalten:
 - `schemeURI`: URI des Schemas
 - `description`: Beschreibung
 - `children`: Array von Unterkategorien mit der gleichen Struktur
+</details>
 
 ### 2. Zeitzonen aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
