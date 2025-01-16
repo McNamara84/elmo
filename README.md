@@ -81,7 +81,7 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary> 
   
-  GCMD Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  1. GCMD Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
   </summary>
 
   ### GCMD Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
@@ -102,7 +102,7 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary>
 
-  Zeitzonen aktualisieren (deprecated)[APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  2. Zeitzonen aktualisieren (deprecated)[APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
   </summary>
 
   ### 2. Zeitzonen aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
@@ -120,7 +120,7 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary>
   
-  NASA Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
+  3. NASA Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
 
   ### 3. NASA Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
@@ -159,7 +159,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>  
   
-  Resource as DataCite XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
+  6. Resource as DataCite XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
   ### 6. Resource als DataCite XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
@@ -178,7 +178,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
 <summary>
 
-Resource as ISO XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+7. Resource as ISO XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
 </summary>
 
@@ -200,7 +200,7 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-  Resource as DIF XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  8. Resource as DIF XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
   </summary>
 
@@ -222,7 +222,7 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-  All resources as one XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  9. All resources as one XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
   </summary>
 
@@ -240,28 +240,45 @@ XML-Datei oder XML-Inhalt
   XML-Datei zum Download
 </details>
 
-### 10. MSL Vokabulare aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>
 
-GET ?action=getMslVocab&type={vocab_type}
+ 10. MSL Vokabulare aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
-Aktualisiert die kontrollierten Vokabulare des Materials Science Laboratory (MSL).
+  </summary>
 
-**Parameter:**
+  ### 10. MSL Vokabulare aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-- `type`: Typ des Vokabulars (erforderlich)
-  - Mögliche Werte: `all`, `analogue`, `geochemistry`, `geologicalage`, `geologicalsetting`, `materials`, `microscopy`, `paleomagnetism`, `porefluids`, `rockphysics`
+  GET ?action=getMslVocab&type={vocab_type}
 
-**Antwort:**
-JSON-Objekt mit Aktualisierungsstatus für jedes Vokabular
+  Aktualisiert die kontrollierten Vokabulare des Materials Science Laboratory (MSL).
 
-### 11. MSL Labs aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Parameter:**
 
-GET ?action=getMslLabs
+  - `type`: Typ des Vokabulars (erforderlich)
+    - Mögliche Werte: `all`, `analogue`, `geochemistry`, `geologicalage`, `geologicalsetting`, `materials`, `microscopy`, `paleomagnetism`, `porefluids`, `rockphysics`
 
-Aktualisiert die Liste der MSL Labs.
+  **Antwort:**
+  JSON-Objekt mit Aktualisierungsstatus für jedes Vokabular
+</details>
 
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
+<details>
+  <summary>
+
+  11. MSL Labs aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+
+  </summary>
+
+  ### 11. MSL Labs aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  GET ?action=getMslLabs
+
+  Aktualisiert die Liste der MSL Labs.
+
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+
+</details>
 
 ### 12. CGI Keywords aktualisieren
 
@@ -290,51 +307,85 @@ Aktualisiert die Konzepte des GEMET Thesaurus.
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
 
-### 15. Rollen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>
 
-GET ?action=getRoles&type={role_type}
+  15.  Rollen abrufen (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
-Ruft Rollen aus der Datenbank ab.
+  </summary>
 
-**Parameter:**
+  ### 15. Rollen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-- `type`: Typ der Rollen (erforderlich)
-  - Mögliche Werte: `all`, `person`, `institution`, `both`
+  GET ?action=getRoles&type={role_type}
 
-**Antwort:**
-JSON-Array mit Rollen-Objekten
+  Ruft Rollen aus der Datenbank ab.
 
-### 16. NASA Instruments Keywords aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Parameter:**
 
-GET ?action=getNasaInstrumentsKeywords
+  - `type`: Typ der Rollen (erforderlich)
+    - Mögliche Werte: `all`, `person`, `institution`, `both`
 
-Aktualisiert die NASA/GCMD Instruments Keywords.
+  **Antwort:**
+  JSON-Array mit Rollen-Objekten
+</details>
 
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
+<details>
+  <summary>
 
-### 17. NASA Platforms Keywords aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  16.  NASA Instruments Keywords aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
-GET ?action=getNasaPlatformsKeywords
+  </summary
+  	
+    ### 16. NASA Instruments Keywords aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-Aktualisiert die NASA/GCMD Earth Platforms Keywords.
+  GET ?action=getNasaInstrumentsKeywords
 
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
+  Aktualisiert die NASA/GCMD Instruments Keywords.
 
-### 18. Lizenzen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
 
-GET ?action=getLicenses&resourcetype={license_type}
+<details>
+  <summary>
 
-Ruft Lizenzen aus der Datenbank ab.
+  17.  NASA Platforms Keywords aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
-**Parameter:**
+  </summary
 
-- `resourcetype`: Typ der Lizenzen (erforderlich)
-  - Mögliche Werte: `all`, `software`
+  ### 17. NASA Platforms Keywords aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-**Antwort:**
-JSON-Array mit Lizenz-Objekten
+  GET ?action=getNasaPlatformsKeywords
+
+  Aktualisiert die NASA/GCMD Earth Platforms Keywords.
+
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+  </details>
+
+<details>
+  <summary>
+
+  18. Lizenzen abrufen (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+
+  </summary
+
+
+  ### 18. Lizenzen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  GET ?action=getLicenses&resourcetype={license_type}
+
+  Ruft Lizenzen aus der Datenbank ab.
+
+  **Parameter:**
+
+  - `resourcetype`: Typ der Lizenzen (erforderlich)
+    - Mögliche Werte: `all`, `software`
+
+  **Antwort:**
+  JSON-Array mit Lizenz-Objekten
+</details>
+
 
 ### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
