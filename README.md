@@ -81,10 +81,9 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary> 
   
-  1. GCMD Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+ ### 1. GCMD Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
   </summary>
 
-  ### GCMD Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
   GET ?action=getGcmdScienceKeywords
   Liefert das kontrollierte Vokabular der GCMD Science Keywords.
   **Antwort:**
@@ -102,10 +101,8 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary>
 
-  2. Zeitzonen aktualisieren (deprecated)[APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 2. Zeitzonen aktualisieren (deprecated)[APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
   </summary>
-
-  ### 2. Zeitzonen aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   GET ?action=getTimezones
 
@@ -120,9 +117,7 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary>
   
-  3. NASA Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
-
-  ### 3. NASA Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 3. NASA Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
 
   GET ?action=getNasaScienceKeywords
 
@@ -159,9 +154,8 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>  
   
-  6. Resource as DataCite XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
-  ### 6. Resource als DataCite XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
+ ### 6. Resource as DataCite XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
+  
   GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
 
   Exportiert einen Datensatz als XML-Datei gemäß dem DataCite-Schema (Version 4.5).
@@ -178,11 +172,9 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
 <summary>
 
-7. Resource as ISO XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+### 7. Resource as ISO XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
 </summary>
-
-### 7. Resource als ISO XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
 GET ?action=getResourceAsIsoXml&id={resource_id}&download={true|false}
 
@@ -200,11 +192,9 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-  8. Resource as DIF XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 8. Resource as DIF XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
   </summary>
-
-  ### 8. Resource als DIF XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   GET ?action=getResourceAsDifXml&id={resource_id}&download={true|false}
 
@@ -222,11 +212,9 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-  9. All resources as one XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 9. All resources as one XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
   </summary>
-
-  ### 9. Alle Ressourcen als eine XML-Datei (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   GET ?action=getResourcesAsOneFile&id={resource_id}
 
@@ -243,11 +231,9 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
- 10. MSL Vokabulare aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+ ### 10. MSL Vokabulare aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
   </summary>
-
-  ### 10. MSL Vokabulare aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   GET ?action=getMslVocab&type={vocab_type}
 
@@ -265,11 +251,9 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-  11. MSL Labs aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+ ### 11. MSL Labs aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
   </summary>
-
-  ### 11. MSL Labs aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   GET ?action=getMslLabs
 
@@ -310,11 +294,9 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  15.  Rollen abrufen (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 15.  Rollen abrufen (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
   </summary>
-
-  ### 15. Rollen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   GET ?action=getRoles&type={role_type}
 
@@ -332,12 +314,10 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  16.  NASA Instruments Keywords aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 16.  NASA Instruments Keywords aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
   </summary
   	
-    ### 16. NASA Instruments Keywords aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
   GET ?action=getNasaInstrumentsKeywords
 
   Aktualisiert die NASA/GCMD Instruments Keywords.
@@ -349,11 +329,9 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  17.  NASA Platforms Keywords aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 17.  NASA Platforms Keywords aktualisieren (deprecated),  neue Version in  [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
   </summary
-
-  ### 17. NASA Platforms Keywords aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   GET ?action=getNasaPlatformsKeywords
 
@@ -366,12 +344,9 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  18. Lizenzen abrufen (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 18. Lizenzen abrufen (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
 
   </summary
-
-
-  ### 18. Lizenzen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   GET ?action=getLicenses&resourcetype={license_type}
 
@@ -386,64 +361,83 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   JSON-Array mit Lizenz-Objekten
 </details>
 
+<details>
+  <summary>
+  
+  ### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  GET ?action=getKeywords&curationType={curation_type}
 
-GET ?action=getKeywords&curationType={curation_type}
+  Ruft Keywords aus der Datenbank ab.
 
-Ruft Keywords aus der Datenbank ab.
+  **Parameter:**
 
-**Parameter:**
+  - `curationType`: Typ der Kuration (optional)
+    - Mögliche Werte: `all`, `isCurated`
 
-- `curationType`: Typ der Kuration (optional)
-  - Mögliche Werte: `all`, `isCurated`
+  **Antwort:**
+  JSON-Array mit Keyword-Objekten
+</details>
 
-**Antwort:**
-JSON-Array mit Keyword-Objekten
+<details>
+  <summary>
+  
+  ### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  GET ?action=getRelations
 
-GET ?action=getRelations
+  Ruft alle Relationen aus der Datenbank ab.
 
-Ruft alle Relationen aus der Datenbank ab.
+  **Antwort:**
+  JSON-Array mit Relation-Objekten
+</details>
 
-**Antwort:**
-JSON-Array mit Relation-Objekten
+<details>
+  <summary>
+  
+  ### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  GET ?action=getIdentifierType&identifier={identifier_string}
 
-GET ?action=getIdentifierType&identifier={identifier_string}
+  Ermittelt den Typ eines gegebenen Identifiers.
 
-Ermittelt den Typ eines gegebenen Identifiers.
+  **Parameter:**
 
-**Parameter:**
+  - `identifier`: Der zu prüfende Identifier-String (erforderlich)
 
-- `identifier`: Der zu prüfende Identifier-String (erforderlich)
+  **Antwort:**
+  JSON-Objekt mit dem ermittelten Identifier-Typ oder einer Fehlermeldung
+</details>
 
-**Antwort:**
-JSON-Objekt mit dem ermittelten Identifier-Typ oder einer Fehlermeldung
+<details>
+  <summary>
+  
+  ### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  GET ?action=getPattern&type={identifier_type}
 
-GET ?action=getPattern&type={identifier_type}
+  Ruft das Regex-Pattern für einen bestimmten Identifier-Typ ab.
 
-Ruft das Regex-Pattern für einen bestimmten Identifier-Typ ab.
+  **Parameter:**
 
-**Parameter:**
+  - `type`: Der Identifier-Typ (erforderlich)
 
-- `type`: Der Identifier-Typ (erforderlich)
+  **Antwort:**
+  JSON-Objekt mit dem Regex-Pattern oder einer Fehlermeldung
+</details>
 
-**Antwort:**
-JSON-Objekt mit dem Regex-Pattern oder einer Fehlermeldung
+<details>
+  <summary>
+  
+  ### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  GET ?action=getIdentifierTypes
 
-GET ?action=getIdentifierTypes
+  Ruft alle verfügbaren Identifier-Typen aus der Datenbank ab.
 
-Ruft alle verfügbaren Identifier-Typen aus der Datenbank ab.
-
-**Antwort:**
-JSON-Array mit Identifier-Typ-Objekten
+  **Antwort:**
+  JSON-Array mit Identifier-Typ-Objekten
+</details>
 
 ## Formularfelder
 
