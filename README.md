@@ -529,7 +529,7 @@ Occurrence is: 1-n
 
 - Last Name 
 
-This field contains the author's surname.
+  This field contains the author's surname.
   - Data type: String
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: `familyname` in the table `author`.
@@ -559,7 +559,7 @@ This field contains the author's surname.
 
 - Affiliation
  
- This field contains the author's affiliation.
+  This field contains the author's affiliation.
   - Data type: String
   - Occurrence: 0-n
   - The corresponding field in the database where the value is stored is called: `name` in the table `affiliation`.
