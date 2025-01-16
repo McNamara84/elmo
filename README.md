@@ -81,7 +81,7 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary> 
   
- ### 1. GCMD Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+ ### 1. GCMD Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
   </summary>
 
   GET ?action=getGcmdScienceKeywords
@@ -101,7 +101,7 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary>
 
-  ### 2. Zeitzonen aktualisieren (deprecated)[APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 2. Zeitzonen aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
   </summary>
 
   GET ?action=getTimezones
@@ -117,7 +117,7 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary>
   
-  ### 3. NASA Science Keywords (deprecated) [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
+  ### 3. NASA Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
   GET ?action=getNasaScienceKeywords
 
@@ -154,7 +154,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>  
   
- ### 6. Resource as DataCite XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)</summary>
+ ### 6. Resource as DataCite XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
   
   GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
 
@@ -192,7 +192,7 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-  ### 8. Resource as DIF XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 8. Resource as DIF XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   </summary>
 
@@ -212,7 +212,7 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-  ### 9. All resources as one XML (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 9. All resources as one XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   </summary>
 
@@ -231,7 +231,7 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
- ### 10. MSL Vokabulare aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+ ### 10. MSL Vokabulare aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   </summary>
 
@@ -251,7 +251,7 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
- ### 11. MSL Labs aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+ ### 11. MSL Labs aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   </summary>
 
@@ -294,7 +294,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  ### 15.  Rollen abrufen (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 15.  Rollen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   </summary>
 
@@ -314,7 +314,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  ### 16.  NASA Instruments Keywords aktualisieren (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 16.  NASA Instruments Keywords aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   </summary
   	
@@ -329,7 +329,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  ### 17.  NASA Platforms Keywords aktualisieren (deprecated),  neue Version in  [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 17.  NASA Platforms Keywords aktualisieren (deprecated,  neue Version in  [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   </summary
 
@@ -344,7 +344,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  ### 18. Lizenzen abrufen (deprecated), use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html)
+  ### 18. Lizenzen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
   </summary
 
@@ -524,7 +524,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   - Beispielwerte: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
 
 ### Authors
-Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsiblePart>` in the ISO scheme.
+Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsibleParty>` in the ISO scheme.
 Occurrence is: 1-n
 
 - Last Name 
