@@ -79,46 +79,52 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 
 [Interaktive Dokumentation](https://mde2.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
 <details>
-<summary>### 1. GCMD Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-</summary>
+  <summary> GCMD Science Keywords (deprecated)</summary>
 
-GET ?action=getGcmdScienceKeywords
+  ### GCMD Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  GET ?action=getGcmdScienceKeywords
+  Liefert das kontrollierte Vokabular der GCMD Science Keywords.
+  **Antwort:**
+  JSON-Array mit Objekten, die folgende Schlüssel enthalten:
 
-Liefert das kontrollierte Vokabular der GCMD Science Keywords.
-
-**Antwort:**
-JSON-Array mit Objekten, die folgende Schlüssel enthalten:
-
-- `id`: Eindeutige Kennung
-- `text`: Bezeichnung des Keywords
-- `language`: Sprachcode
-- `scheme`: Name des Schemas
-- `schemeURI`: URI des Schemas
-- `description`: Beschreibung
-- `children`: Array von Unterkategorien mit der gleichen Struktur
+  - `id`: Eindeutige Kennung
+  - `text`: Bezeichnung des Keywords
+  - `language`: Sprachcode
+  - `scheme`: Name des Schemas
+  - `schemeURI`: URI des Schemas
+  - `description`: Beschreibung
+  - `children`: Array von Unterkategorien mit der gleichen Struktur
 </details>
 
-### 2. Zeitzonen aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>Zeitzonen aktualisieren (deprecated)</summary>
 
-GET ?action=getTimezones
+  ### 2. Zeitzonen aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-Aktualisiert die Liste der Zeitzonen für das Feld `Timezones` in der Gruppe `Spatial and temporal coverage`.
+  GET ?action=getTimezones
 
-**Empfohlener Ausführungsintervall:** Monatlich
+  Aktualisiert die Liste der Zeitzonen für das Feld `Timezones` in der Gruppe `Spatial and temporal coverage`.
 
-**Antwort:**
+  **Empfohlener Ausführungsintervall:** Monatlich
+
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
+
+<details>
+  <summary>NASA Science Keywords (deprecated)</summary>
+
+  ### 3. NASA Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  GET ?action=getNasaScienceKeywords
+
+  Aktualisiert den Thesaurus für die NASA Science Keywords.
+
+  **Empfohlener Ausführungsintervall:** Wöchentlich
+
+  **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-### 3. NASA Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
-GET ?action=getNasaScienceKeywords
-
-Aktualisiert den Thesaurus für die NASA Science Keywords.
-
-**Empfohlener Ausführungsintervall:** Wöchentlich
-
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
 
 ### 4. ROR Affiliations
 
