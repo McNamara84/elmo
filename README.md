@@ -475,7 +475,7 @@ This field contains the author's surname.
   - The corresponding field in the database where the value is stored is called: `name` in the table `affiliation`.
   - Restrictions: None, can be chosen from the dropdown menu or given as free text
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
-  - Example values: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+  - Example values: `Technische Universität Berlin` `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
 - *Saved in backend (not visible to user):* rorId
 
