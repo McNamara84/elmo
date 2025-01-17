@@ -118,7 +118,7 @@ Aktualisiert den Thesaurus für die NASA Science Keywords.
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
 
-### 4. ROR Affiliations
+### 4. ROR Affiliations (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
 GET ?action=getRorAffiliations
 

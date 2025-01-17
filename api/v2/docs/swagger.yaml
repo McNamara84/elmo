@@ -22,7 +22,7 @@ info:
   license:
     name: GPL-2.0-only
     url: https://raw.githubusercontent.com/McNamara84/gfz-metadata-editor-msl-v2/refs/heads/main/LICENSE.md
-  version: 1.9.0
+  version: 2.0.0
 externalDocs:
   description: Documentation of the API V1 at GitHub
   url: https://github.com/McNamara84/gfz-metadata-editor-msl-v2#api-endpunkte
@@ -56,6 +56,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TimezonesUpdateResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /update/ror:
+    get:
+      tags:
+        - update
+      summary: Update ROR affiliations
+      description: |-
+        Updates the ROR (Research Organization Registry) affiliations saving them as JSON for autocomplete functionality
+      operationId: getRorAffiliations
+      responses:
+        "200":
+          description: ROR affiliations successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+                    example: "ROR affiliations successfully updated"
+                  count:
+                    type: integer
+                    description: Number of affiliations processed
+                    example: 111808
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Time of update
+                    example: "2025-01-15T14:30:00Z"
+                required:
+                  - message
+                  - count
+                  - timestamp
         "500":
           description: Internal server error
           content:

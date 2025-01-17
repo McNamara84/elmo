@@ -752,6 +752,7 @@ if ($_GET['action'] == 'getIdentifierTypes') {
     exit();
 }
 
+/* Deprecated. Use APIv2 instead. */
 // API-Endpunkt für die Rückgabe aller Affiliation-Einträge unter ROR, abgerufen über den Data Dump von ror.org
 // Beispielhafter API-Aufruf: api.php?action=getRorAffiliations
 // JSON-Antwort: id, name
