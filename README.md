@@ -458,62 +458,70 @@ This field contains the DOI (Digital Object Identifier) that identifies the reso
 
 - Publication Year
 
-  - In diesem Feld kommt das Veröffentlichungsjahr der Ressource.
-  - Datentyp: Year
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: year in der Tabelle Resource.
-  - Restriktionen: A year in four-digit format. Values allowed in four-digit format: 1901 to 2155 (due to data type YEAR)
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/publicationyear/)
-  - Beispielwerte: `1998` `2018` `1901`
+    This field contains the publication year of the resource.
+    - Data type: Year
+    - Occurrence: 1
+    - The corresponding field in the database where the value is saved is called: `year` in the table `year`.
+    - Restrictions: A year in four-digit format. Values allowed in four-digit format: 1901 to 2155 (due to data type YEAR)
+    - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/publicationyear/#publicationyear)
+    - Example values: `1998`, `2018`
+    - Mapping: is mapped to `<publicationYear>` in the DataCite scheme
+
 
 - Resource Type
 
-  - In diesem Feld kommt der Typ der Ressource.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: resource_type_general in der Tabelle Resource_Type.
-  - Restriktionen: Muss ein „Recource Type“ ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/resourcetype/#a-resourcetypegeneral)
-  - Beispielwerte: `Dataset` `Audiovisual` `Book`
+  This field contains the type of resource.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is saved is called: `resource_type_general` in the table `Resource_Type`.
+  - Restrictions: must be selected from [controlled list](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/#resourcetypegeneral) 
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/resourcetype/#a-resourcetypegeneral)
+  - Example values: `Dataset` `Audiovisual` `Book`
+  - Mapping: mapped to `<resourceType resourceTypeGeneral="XX">` in the DataCite scheme
 
 - Version
 
-  - In diesem Feld kommt die Versionsnummer der Ressource.
-  - Datentyp: FLOAT
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: version in der Tabelle Resource.
-  - Restriktionen: Zahl Punkt Zahl.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/version/)
-  - Beispielwerte: `1.0` `2.1` `3.5`
+  This field contains the version number of the resource.
+  - Data type: Float
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is saved is called: `version` in the table `Resource`.
+  - Restrictions: - 
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/version/)
+  - Example values: `1.0` `2.1` `3.5`
+  - Mapping: mapped to `<version>` in DataCite scheme
 
 - Language of Dataset
 
-  - In diesem Feld kommt die Sprache des Datensatzes.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: name in der Tabelle Language.
-  - Restriktionen: Muss eine „Sprache“ ausgewählt werden.
+ This field contains the language of the dataset
+  - Data type: String
+  - Occurence: 1
+  - The corresponding field in the database where the value is saved is called: `name` in the table `Language`.
+  - Restrictions: must be selected from controlled list
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/language/)
-  - Beispielwerte: `"en" Englisch` `"de" Deutsch` `"fr" Französisch`
+  - Beispielwerte: `Englisch`, `German`, `French`
+  - Mapping: mapped to `<language>` element in DataCite scheme and to `<gmd:language>` in ISO scheme 
 
 - Title
 
-  - In diesem Feld kommt der Titel der Ressource.
-  - Datentyp: Text
-  - Vorkommen: 1-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: text in der Tabelle title.
-  - Restriktionen: Muss angegeben werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)
-  - Beispielwerte: `Drone based photogrammetry data at the Geysir geothermal field, Iceland`
+  This field contains the title of the resource.
+  - Data type: String
+  - Occurrence: 1-n, with n=$maxTitles specified in the settings.php
+  - The corresponding field in the database where the value is stored is called: `text` in the table `title`.
+  - Restrictions: Must be specified.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)
+  - Example values: `Drone based photogrammetry data at the Geysir`
+  - Mapping: mapped to `<titles> <title>` in DataCite scheme and `<identificationInfo> <MD_DataIdentification> <citation> <CI_Citation> <title>` or `...<alternateTitle` depending on the title type
 
 - Title Type
-  - In diesem Feld kommt die Art des Titels (außer dem Haupttitel).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: title in der Tabelle Title_Type.
-  - Restriktionen: Muss ein „Title Type“ ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/#a-titletype)
-  - Beispielwerte: `Main` `Subtitle` `Translated Title`
+
+  This field contains the type of title (other than the main title).
+  - Data type: String
+  - Occurrence: 1, if the corresponding title is not the main title
+  - The corresponding field in the database where the value is stored is called: `title` in the table `Title_Type`.
+  - Restrictions: must be sleected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/#a-titletype)
+  - Example values: `Translated Title`
+  - Mapping: mapped to `<title titleType="TranslatedTitle">` in the datacite scheme
 
 ### Licenses & Rights
 
