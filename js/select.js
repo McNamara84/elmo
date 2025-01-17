@@ -7,7 +7,7 @@
  */
 async function getTimezoneApiKey() {
   try {
-    const response = await fetch('api/getTimezoneApiKey.php');
+    const response = await fetch('getTimezoneApiKey.php');
     const data = await response.json();
     return data.apiKey;
   } catch (error) {
