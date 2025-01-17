@@ -1,5 +1,5 @@
 <?php
-require_once('settings.php');
+require_once('../settings.php');
 
 header('Content-Type: application/json');
 header('Cache-Control: no-cache, must-revalidate');
