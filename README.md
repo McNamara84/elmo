@@ -1075,8 +1075,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 
 The following ER diagram shows the relationships and structures of the tables in the database.
 
-[![ER-Diagramm](doc/ER-Modell.jpg)](https://raw.githubusercontent.com/McNamara84/gfz-metadata-editor-msl-v2/feature/msl-frontend/doc/ER-Modell.jpg)
-
+![ER-Diagramm](doc/ER-Diagram.jpg)
 ## Contributing
 
 We appreciate every contribution to this project! You can use the feedback back form on the test server [link], create an issue on github or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template (only available in german right now!), so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.
