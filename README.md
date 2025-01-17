@@ -447,13 +447,14 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 
 - DOI
 
-  - In diesem Feld kommt die DOI (Digital Object Identifier), die die Ressource identifiziert.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: doi in der Tabelle Resource.
-  - Restriktionen: Muss im Format "prefix/suffix" sein.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/identifier/)
-  - Beispielwerte: `10.5880/GFZ.3.1.2024.002` `10.5880/pik.2024.001`
+This field contains the DOI (Digital Object Identifier) that identifies the resource.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: `doi` in the table `Resource`.
+  - Restrictions: Must be in “prefix/suffix” format.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/identifier/)
+  - Example values: `10.5880/GFZ.3.1.2024.002` `10.5880/pik.2024.001`
+  - Mapping: is mapped to `<identifier>` in the DataCite scheme and to `<gmd:fileIdentifier>` as well as `<gmd:identifier> <gmd:MD_Identifier> <gmd:code>` and `<gmd:distributionInfo> <gmd:MD_Distribution> <gmd:transferOptions> <gmd:MD_DigitalTransferOptions> <gmd:onLine> <gmd:CI_OnlineResource>` in the ISO scheme.
 
 - Publication Year
 
