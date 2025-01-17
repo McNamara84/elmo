@@ -85,7 +85,9 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
   </summary>
 
   GET ?action=getGcmdScienceKeywords
+
   Liefert das kontrollierte Vokabular der GCMD Science Keywords.
+
   **Antwort:**
   JSON-Array mit Objekten, die folgende Schlüssel enthalten:
 
@@ -512,16 +514,32 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/#a-titletype)
   - Beispielwerte: `Main` `Subtitle` `Translated Title`
 
-### Rights
+### Licenses & Rights
 
 - Rights Title
-  - In diesem Feld kommt der Titel der Lizenz mit ihrer Abkürzung.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: text und rightsIdentifier in der Tabelle Rights.
-  - Restriktionen: Muss eine „Linzenz“ ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/)
-  - Beispielwerte: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
+The content of this field is mapped to `<rights>` in the DataCite scheme and to `<resourceConstraints> <gmd:MD_Constraints> <gmd:useLimitation>` as well as `<gmd:resourceConstraints> <gmd:MD_LegalConstraints>` in the ISO scheme.
+
+  This field contains the title of the license with its abbreviation.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding fields in the database where the value is stored is called: `text`and `rightsIdentifier` in the table `Rights`.
+  - Restrictions: Mandatory field. Must be selected from controlled list.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/)
+  - Example values: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
+
+- *Saved in backend (not visible to user):* rightsURI
+
+  This field contains the URI of the License.
+  - Data Type: String
+  - Occurence: 1
+  - The corresponding fields in the database where the value is stored is called: `rightsURI` in the table `Rights`.
+  - Restrictions: Mandatory field. Must be selected from controlled list.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/#a-rightsuri)
+  - Example values: `https://creativecommons.org/licenses/by/4.0/legalcode`
+
+- *Saved in backend (not visible to user):* forSoftware
+
+  This field specifies if the license is used for software (forSoftware=1) or not (forSoftware=0). The controlled list changes for users based on this parameter when resource type Software is chosen.
 
 ### Authors
 Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsibleParty>` in the ISO scheme.
