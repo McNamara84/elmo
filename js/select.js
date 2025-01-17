@@ -86,22 +86,15 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
      * @returns {Promise<string|null>} Timezone string or null if geolocation fails
      */
     async function getUserTimezoneByLocation() {
-      try {
-        const apiKey = await getTimezoneApiKey();
-        const position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            timeout: 10000 // 10 second timeout
-          });
+      const apiKey = await getTimezoneApiKey();
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 10000 // 10 second timeout
         });
-
-        const response = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=${apiKey}&format=json&by=position&lat=${position.coords.latitude}&lng=${position.coords.longitude}`);
-        const data = await response.json();
-
-        return data.zoneName;
-      } catch (error) {
-        console.log('Geolocation or API request failed:', error);
-        return null;
-      }
+      });
+      const response = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=${apiKey}&format=json&by=position&lat=${position.coords.latitude}&lng=${position.coords.longitude}`);
+      const data = await response.json();
+      return data.zoneName;
     }
 
     // First set timezone based on system settings
