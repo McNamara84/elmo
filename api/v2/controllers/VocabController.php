@@ -883,4 +883,134 @@ class VocabController
             echo json_encode(['error' => 'An error occurred while retrieving uncurated keywords']);
         }
     }
+
+    /**
+     * Updates ROR affiliations by downloading and processing the latest ROR data dump
+     * 
+     * This function:
+     * 1. Fetches metadata about the latest ROR data dump from Zenodo
+     * 2. Downloads and extracts the ZIP file
+     * 3. Processes the CSV file to extract organization IDs and names
+     * 4. Saves the data as JSON
+     * 5. Cleans up temporary files
+     * 
+     * @return void Outputs JSON response directly
+     * @throws Exception If file operations or API requests fail
+     */
+    public function getRorAffiliations(): void
+    {
+        try {
+            // Fetch latest ROR data dump metadata from Zenodo
+            $rorDataDumpUrl = 'https://zenodo.org/api/communities/ror-data/records?q=&sort=newest';
+            $metadataJson = @file_get_contents($rorDataDumpUrl);
+
+            if ($metadataJson === false) {
+                throw new Exception('Failed to fetch ROR data dump metadata from Zenodo');
+            }
+
+            $metadata = json_decode($metadataJson, true);
+            if (!isset($metadata['hits']['hits'][0]['files'][0])) {
+                throw new Exception('Invalid metadata structure from Zenodo');
+            }
+
+            // Get download URL and filename
+            $latestDataDumpUrl = $metadata['hits']['hits'][0]['files'][0]['links']['self'];
+            $zipFileName = $metadata['hits']['hits'][0]['files'][0]['key'];
+
+            // Download and extract ZIP file
+            if (@file_put_contents($zipFileName, @file_get_contents($latestDataDumpUrl)) === false) {
+                throw new Exception('Failed to download ROR data dump');
+            }
+
+            $zip = new ZipArchive();
+            if ($zip->open($zipFileName) !== true) {
+                throw new Exception('Failed to open ZIP file');
+            }
+
+            $zip->extractTo('./');
+            $zip->close();
+
+            // Find and process CSV file
+            $csvFiles = glob('*-ror-data.csv');
+            if (empty($csvFiles)) {
+                throw new Exception('CSV file not found in ZIP archive');
+            }
+
+            $csvFileName = $csvFiles[0];
+            $csvFile = @fopen($csvFileName, 'r');
+            if ($csvFile === false) {
+                throw new Exception('Failed to open CSV file');
+            }
+
+            // Process CSV data
+            $affiliations = [];
+            $header = fgetcsv($csvFile); // Skip header row
+            while (($row = fgetcsv($csvFile)) !== false) {
+                $affiliations[] = [
+                    'id' => $row[0],
+                    'name' => $row[1]
+                ];
+            }
+            fclose($csvFile);
+
+            // Ensure json directory exists
+            if (!is_dir('json')) {
+                if (!mkdir('json', 0755, true)) {
+                    throw new Exception('Failed to create json directory');
+                }
+            }
+
+            // Save JSON file
+            if (
+                file_put_contents(
+                    '../json/affiliations.json',
+                    json_encode($affiliations, JSON_PRETTY_PRINT)
+                ) === false
+            ) {
+                throw new Exception('Failed to save affiliations.json');
+            }
+
+            // Clean up temporary files
+            $this->cleanupFiles($zipFileName, $csvFileName);
+
+            // Send success response
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'message' => 'ROR affiliations successfully updated',
+                'count' => count($affiliations),
+                'timestamp' => date('c')
+            ]);
+
+        } catch (Exception $e) {
+            error_log("API Error in getRorAffiliations: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Cleans up temporary files created during ROR data processing
+     * 
+     * @param string $zipFileName Name of the downloaded ZIP file
+     * @param string $csvFileName Name of the extracted CSV file
+     * @return void
+     */
+    private function cleanupFiles(string $zipFileName, string $csvFileName): void
+    {
+        $filesToDelete = [
+            $zipFileName,
+            $csvFileName,
+            str_replace('-ror-data.csv', '-ror-data_schema_v2.csv', $csvFileName),
+            str_replace('-ror-data.csv', '-ror-data_schema_v2.json', $csvFileName),
+            str_replace('-ror-data.csv', '-ror-data.json', $csvFileName)
+        ];
+
+        foreach ($filesToDelete as $file) {
+            if (file_exists($file)) {
+                @unlink($file);
+            }
+        }
+    }
 }

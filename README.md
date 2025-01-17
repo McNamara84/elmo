@@ -78,47 +78,58 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 ## API-Endpunkte
 
 [Interaktive Dokumentation](https://mde2.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
+<details>
+  <summary> 
+  
+ ### 1. GCMD Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  </summary>
 
-### 1. GCMD Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  GET ?action=getGcmdScienceKeywords
+  Liefert das kontrollierte Vokabular der GCMD Science Keywords.
+  **Antwort:**
+  JSON-Array mit Objekten, die folgende Schlüssel enthalten:
 
-GET ?action=getGcmdScienceKeywords
+  - `id`: Eindeutige Kennung
+  - `text`: Bezeichnung des Keywords
+  - `language`: Sprachcode
+  - `scheme`: Name des Schemas
+  - `schemeURI`: URI des Schemas
+  - `description`: Beschreibung
+  - `children`: Array von Unterkategorien mit der gleichen Struktur
+</details>
 
-Liefert das kontrollierte Vokabular der GCMD Science Keywords.
+<details>
+  <summary>
 
-**Antwort:**
-JSON-Array mit Objekten, die folgende Schlüssel enthalten:
+  ### 2. Zeitzonen aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  </summary>
 
-- `id`: Eindeutige Kennung
-- `text`: Bezeichnung des Keywords
-- `language`: Sprachcode
-- `scheme`: Name des Schemas
-- `schemeURI`: URI des Schemas
-- `description`: Beschreibung
-- `children`: Array von Unterkategorien mit der gleichen Struktur
+  GET ?action=getTimezones
 
-### 2. Zeitzonen aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  Aktualisiert die Liste der Zeitzonen für das Feld `Timezones` in der Gruppe `Spatial and temporal coverage`.
 
-GET ?action=getTimezones
+  **Empfohlener Ausführungsintervall:** Monatlich
 
-Aktualisiert die Liste der Zeitzonen für das Feld `Timezones` in der Gruppe `Spatial and temporal coverage`.
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
 
-**Empfohlener Ausführungsintervall:** Monatlich
+<details>
+  <summary>
+  
+  ### 3. NASA Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-**Antwort:**
+  GET ?action=getNasaScienceKeywords
+
+  Aktualisiert den Thesaurus für die NASA Science Keywords.
+
+  **Empfohlener Ausführungsintervall:** Wöchentlich
+
+  **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
 
-### 3. NASA Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
-GET ?action=getNasaScienceKeywords
-
-Aktualisiert den Thesaurus für die NASA Science Keywords.
-
-**Empfohlener Ausführungsintervall:** Wöchentlich
-
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-### 4. ROR Affiliations
+### 4. ROR Affiliations (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
 GET ?action=getRorAffiliations
 
@@ -140,21 +151,30 @@ Aktualisiert die Auswahloptionen im Funders-Dropdown-Feld.
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
 
-### 6. Resource als DataCite XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>  
+  
+ ### 6. Resource as DataCite XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+  
+  GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
 
-GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
+  Exportiert einen Datensatz als XML-Datei gemäß dem DataCite-Schema (Version 4.5).
 
-Exportiert einen Datensatz als XML-Datei gemäß dem DataCite-Schema (Version 4.5).
+  **Parameter:**
 
-**Parameter:**
+  - `id`: ID des Datensatzes (erforderlich)
+  - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
 
-- `id`: ID des Datensatzes (erforderlich)
-- `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
+  **Antwort:**
+  XML-Datei oder XML-Inhalt
+</details>
 
-**Antwort:**
-XML-Datei oder XML-Inhalt
+<details>
+<summary>
 
-### 7. Resource als ISO XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+### 7. Resource as ISO XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+</summary>
 
 GET ?action=getResourceAsIsoXml&id={resource_id}&download={true|false}
 
@@ -167,56 +187,82 @@ Exportiert einen Datensatz als XML-Datei gemäß dem ISO-Standard.
 
 **Antwort:**
 XML-Datei oder XML-Inhalt
+</details>
 
-### 8. Resource als DIF XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>
 
-GET ?action=getResourceAsDifXml&id={resource_id}&download={true|false}
+  ### 8. Resource as DIF XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-Exportiert einen Datensatz als XML-Datei gemäß dem DIF-Format.
+  </summary>
 
-**Parameter:**
+  GET ?action=getResourceAsDifXml&id={resource_id}&download={true|false}
 
-- `id`: ID des Datensatzes (erforderlich)
-- `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
+  Exportiert einen Datensatz als XML-Datei gemäß dem DIF-Format.
 
-**Antwort:**
-XML-Datei oder XML-Inhalt
+  **Parameter:**
 
-### 9. Alle Ressourcen als eine XML-Datei (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  - `id`: ID des Datensatzes (erforderlich)
+  - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
 
-GET ?action=getResourcesAsOneFile&id={resource_id}
+  **Antwort:**
+  XML-Datei oder XML-Inhalt
+</details>
 
-Exportiert einen Datensatz in allen drei XML-Formaten (DataCite, ISO, DIF) in einer einzigen XML-Datei.
+<details>
+  <summary>
 
-**Parameter:**
+  ### 9. All resources as one XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-- `id`: ID des Datensatzes (erforderlich)
+  </summary>
 
-**Antwort:**
-XML-Datei zum Download
+  GET ?action=getResourcesAsOneFile&id={resource_id}
 
-### 10. MSL Vokabulare aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  Exportiert einen Datensatz in allen drei XML-Formaten (DataCite, ISO, DIF) in einer einzigen XML-Datei.
 
-GET ?action=getMslVocab&type={vocab_type}
+  **Parameter:**
 
-Aktualisiert die kontrollierten Vokabulare des Materials Science Laboratory (MSL).
+  - `id`: ID des Datensatzes (erforderlich)
 
-**Parameter:**
+  **Antwort:**
+  XML-Datei zum Download
+</details>
 
-- `type`: Typ des Vokabulars (erforderlich)
-  - Mögliche Werte: `all`, `analogue`, `geochemistry`, `geologicalage`, `geologicalsetting`, `materials`, `microscopy`, `paleomagnetism`, `porefluids`, `rockphysics`
+<details>
+  <summary>
 
-**Antwort:**
-JSON-Objekt mit Aktualisierungsstatus für jedes Vokabular
+ ### 10. MSL Vokabulare aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-### 11. MSL Labs aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  </summary>
 
-GET ?action=getMslLabs
+  GET ?action=getMslVocab&type={vocab_type}
 
-Aktualisiert die Liste der MSL Labs.
+  Aktualisiert die kontrollierten Vokabulare des Materials Science Laboratory (MSL).
 
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
+  **Parameter:**
+
+  - `type`: Typ des Vokabulars (erforderlich)
+    - Mögliche Werte: `all`, `analogue`, `geochemistry`, `geologicalage`, `geologicalsetting`, `materials`, `microscopy`, `paleomagnetism`, `porefluids`, `rockphysics`
+
+  **Antwort:**
+  JSON-Objekt mit Aktualisierungsstatus für jedes Vokabular
+</details>
+
+<details>
+  <summary>
+
+ ### 11. MSL Labs aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  </summary>
+
+  GET ?action=getMslLabs
+
+  Aktualisiert die Liste der MSL Labs.
+
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+
+</details>
 
 ### 12. CGI Keywords aktualisieren
 
@@ -245,109 +291,153 @@ Aktualisiert die Konzepte des GEMET Thesaurus.
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
 
-### 15. Rollen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>
 
-GET ?action=getRoles&type={role_type}
+  ### 15.  Rollen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-Ruft Rollen aus der Datenbank ab.
+  </summary>
 
-**Parameter:**
+  GET ?action=getRoles&type={role_type}
 
-- `type`: Typ der Rollen (erforderlich)
-  - Mögliche Werte: `all`, `person`, `institution`, `both`
+  Ruft Rollen aus der Datenbank ab.
 
-**Antwort:**
-JSON-Array mit Rollen-Objekten
+  **Parameter:**
 
-### 16. NASA Instruments Keywords aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  - `type`: Typ der Rollen (erforderlich)
+    - Mögliche Werte: `all`, `person`, `institution`, `both`
 
-GET ?action=getNasaInstrumentsKeywords
+  **Antwort:**
+  JSON-Array mit Rollen-Objekten
+</details>
 
-Aktualisiert die NASA/GCMD Instruments Keywords.
+<details>
+  <summary>
 
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
+  ### 16.  NASA Instruments Keywords aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-### 17. NASA Platforms Keywords aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  </summary
+  	
+  GET ?action=getNasaInstrumentsKeywords
 
-GET ?action=getNasaPlatformsKeywords
+  Aktualisiert die NASA/GCMD Instruments Keywords.
 
-Aktualisiert die NASA/GCMD Earth Platforms Keywords.
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
 
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
+<details>
+  <summary>
 
-### 18. Lizenzen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 17.  NASA Platforms Keywords aktualisieren (deprecated,  neue Version in  [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-GET ?action=getLicenses&resourcetype={license_type}
+  </summary
 
-Ruft Lizenzen aus der Datenbank ab.
+  GET ?action=getNasaPlatformsKeywords
 
-**Parameter:**
+  Aktualisiert die NASA/GCMD Earth Platforms Keywords.
 
-- `resourcetype`: Typ der Lizenzen (erforderlich)
-  - Mögliche Werte: `all`, `software`
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+  </details>
 
-**Antwort:**
-JSON-Array mit Lizenz-Objekten
+<details>
+  <summary>
 
-### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 18. Lizenzen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-GET ?action=getKeywords&curationType={curation_type}
+  </summary
 
-Ruft Keywords aus der Datenbank ab.
+  GET ?action=getLicenses&resourcetype={license_type}
 
-**Parameter:**
+  Ruft Lizenzen aus der Datenbank ab.
 
-- `curationType`: Typ der Kuration (optional)
-  - Mögliche Werte: `all`, `isCurated`
+  **Parameter:**
 
-**Antwort:**
-JSON-Array mit Keyword-Objekten
+  - `resourcetype`: Typ der Lizenzen (erforderlich)
+    - Mögliche Werte: `all`, `software`
 
-### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Antwort:**
+  JSON-Array mit Lizenz-Objekten
+</details>
 
-GET ?action=getRelations
+<details>
+  <summary>
+  
+  ### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-Ruft alle Relationen aus der Datenbank ab.
+  GET ?action=getKeywords&curationType={curation_type}
 
-**Antwort:**
-JSON-Array mit Relation-Objekten
+  Ruft Keywords aus der Datenbank ab.
 
-### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Parameter:**
 
-GET ?action=getIdentifierType&identifier={identifier_string}
+  - `curationType`: Typ der Kuration (optional)
+    - Mögliche Werte: `all`, `isCurated`
 
-Ermittelt den Typ eines gegebenen Identifiers.
+  **Antwort:**
+  JSON-Array mit Keyword-Objekten
+</details>
 
-**Parameter:**
+<details>
+  <summary>
+  
+  ### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-- `identifier`: Der zu prüfende Identifier-String (erforderlich)
+  GET ?action=getRelations
 
-**Antwort:**
-JSON-Objekt mit dem ermittelten Identifier-Typ oder einer Fehlermeldung
+  Ruft alle Relationen aus der Datenbank ab.
 
-### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Antwort:**
+  JSON-Array mit Relation-Objekten
+</details>
 
-GET ?action=getPattern&type={identifier_type}
+<details>
+  <summary>
+  
+  ### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-Ruft das Regex-Pattern für einen bestimmten Identifier-Typ ab.
+  GET ?action=getIdentifierType&identifier={identifier_string}
 
-**Parameter:**
+  Ermittelt den Typ eines gegebenen Identifiers.
 
-- `type`: Der Identifier-Typ (erforderlich)
+  **Parameter:**
 
-**Antwort:**
-JSON-Objekt mit dem Regex-Pattern oder einer Fehlermeldung
+  - `identifier`: Der zu prüfende Identifier-String (erforderlich)
 
-### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Antwort:**
+  JSON-Objekt mit dem ermittelten Identifier-Typ oder einer Fehlermeldung
+</details>
 
-GET ?action=getIdentifierTypes
+<details>
+  <summary>
+  
+  ### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-Ruft alle verfügbaren Identifier-Typen aus der Datenbank ab.
+  GET ?action=getPattern&type={identifier_type}
 
-**Antwort:**
-JSON-Array mit Identifier-Typ-Objekten
+  Ruft das Regex-Pattern für einen bestimmten Identifier-Typ ab.
+
+  **Parameter:**
+
+  - `type`: Der Identifier-Typ (erforderlich)
+
+  **Antwort:**
+  JSON-Objekt mit dem Regex-Pattern oder einer Fehlermeldung
+</details>
+
+<details>
+  <summary>
+  
+  ### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+
+  GET ?action=getIdentifierTypes
+
+  Ruft alle verfügbaren Identifier-Typen aus der Datenbank ab.
+
+  **Antwort:**
+  JSON-Array mit Identifier-Typ-Objekten
+</details>
 
 ## Formularfelder
 
@@ -434,45 +524,57 @@ JSON-Array mit Identifier-Typ-Objekten
   - Beispielwerte: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
 
 ### Authors
+Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsibleParty>` in the ISO scheme.
+Occurrence is: 1-n
 
-- Lastname
+- Last Name 
 
-  - In diesem Feld kommt der Nachname des Autors.
-  - Datentyp: Text
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: familyname in der Tabelle Author.
-  - Restriktionen: Muss angegeben werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#familyname)
-  - Beispielwerte: `Jemison` `Smith`
+  This field contains the author's surname.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: `familyname` in the table `author`.
+  - Restrictions: mandatory field, only letters allowed
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#familyname)
+  - Example values: `Jemison` `Smith`
 
-- Firstname
+- First Name
 
-  - In diesem Feld kommt der Vorname des Autors.
-  - Datentyp: Text
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: givenname in der Tabelle Author.
-  - Restriktionen: Muss angegeben werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
-  - Beispielwerte: `John` `Jane`
+  This field contains the author's first name.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: `givenname` in the table `author`.
+  - Restrictions: mandatory field, only letters allowed
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
+  - Example values: `Jemison` `Smith`
 
 - Author ORCID
 
-  - In diesem Feld kommt die ORCID des Autors (Open Researcher and Contributor ID).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: orcid in der Tabelle Author.
-  - Restriktionen: Muss im Format "xxxx-xxxx-xxxx-xxxx" sein.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
-  - Beispielwerte: `1452-9875-4521-7893` `0082-4781-1312-884x`
+  This field contains the author's ORCID (Open Researcher and Contributor ID).
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: `orcid` in the table `author`.
+  - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
+  - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
 
 - Affiliation
-  - In diesem Feld kommt die Zugehörigkeit des Autors.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: name in der Tabelle Affiliation.
-  - Restriktionen: Es ist optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
-  - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+ 
+  This field contains the author's affiliation.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `name` in the table `affiliation`.
+  - Restrictions: None, can be chosen from the dropdown menu or given as free text
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
+  - Example values: `Technische Universität Berlin` `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
+
+- *Saved in backend (not visible to user):* rorId
+
+  If an affiliation is chosen from the dropdown menu, which contains the entry from the Research Organization Registry (ROR), the assiciated ROR-ID is saved.
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `rorId` in the table `affiliation`.
+  - Restrictions: is automatically saved when an affiliation is chosen
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#a-affiliationidentifier)
+  - Example values: `03v4gjf40`, `04z8jg394`
 
 ### Contact Person(s)
 A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
@@ -973,8 +1075,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 
 The following ER diagram shows the relationships and structures of the tables in the database.
 
-[![ER-Diagramm](doc/ER-Modell.jpg)](https://raw.githubusercontent.com/McNamara84/gfz-metadata-editor-msl-v2/feature/msl-frontend/doc/ER-Modell.jpg)
-
+![ER-Diagramm](doc/ER-Diagram.jpg)
 ## Contributing
 
 We appreciate every contribution to this project! You can use the feedback back form on the test server [link], create an issue on github or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template (only available in german right now!), so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.

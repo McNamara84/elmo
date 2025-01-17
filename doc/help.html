@@ -40,12 +40,12 @@
                     <li class="nav-item"><a class="nav-link" href="#help-resourceinformation">Resource Information</a>
                     </li>
                     <li class="nav-item"><a class="nav-link" href="#help-rights">Licenses and rights</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-authors">Authors</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-contactperson">Contact Persons</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#help-authors">Author(s)</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#help-contactperson">Contact Person(s)</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-originatinglaboratory">Originating
                             Laboratory</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-contributors">Contributors</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-descriptions">Descriptions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#help-contributors">Contributor(s)</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#help-descriptions">Description(s)</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-mslkeywords">EPOS MSL Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-scienceKeywords">GCMD Science Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-freeKeywords">Free Keywords</a></li>
@@ -224,10 +224,12 @@
                 <div class="section-divider"></div>
                 <!-- formgroup authors -->
                 <div id="help-authors" class="section-content">
-                    <h4>Authors</h4>
-                    If possible, you should enter all authors of the dataset here, ideally with an ORCID. Entering an
-                    ORCID loads data from the corresponding ORCID profile. The order of the authors can also be changed
-                    later using drag & drop.
+                    <div id="help-authors-fg">
+                        <h4>Author(s)</h4>
+                        <p> Please enter authors of the dataset here, ideally with an ORCID. Entering an ORCID loads
+                            data from the corresponding ORCID profile. The order of the authors can also be changed
+                            using drag & drop. </p>
+                    </div>
                     <div id="help-author-orcid">
                         <h5>ORCID</h5>
                         <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
@@ -235,8 +237,7 @@
                             have an ORCID iD yet, you can learn about it and register
                             <a href="https://orcid.org/register" target="_blank">here</a>. If you enter a valid ORCID,
                             an attempt will be made to fill in the remaining required fields automatically. Results are
-                            depending on the information provided in the ORCID profile.
-                        </p>
+                            depending on the information provided in the ORCID profile.</p>
                     </div>
                     <div id="help-author-affiliation">
                         <h5>Affiliation</h5>
@@ -675,6 +676,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup related work-->
                 <div id="help-relatedwork" class="section-content">
                     <div id="help-relatedwork-fg">
                         <h4>Related Work</h4>
