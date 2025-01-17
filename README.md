@@ -85,7 +85,9 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
   </summary>
 
   GET ?action=getGcmdScienceKeywords
+
   Liefert das kontrollierte Vokabular der GCMD Science Keywords.
+
   **Antwort:**
   JSON-Array mit Objekten, die folgende Schlüssel enthalten:
 
@@ -515,7 +517,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 ### Licenses & Rights
 
 - Rights Title
-The content of this field is mapped to `<rights>` in the DataCite scheme and to `<resourceConstraints><gmd:MD_Constraints> <gmd:useLimitation>` as well as `<gmd:resourceConstraints><gmd:MD_LegalConstraints>` in the ISO scheme.
+The content of this field is mapped to `<rights>` in the DataCite scheme and to `<resourceConstraints> <gmd:MD_Constraints> <gmd:useLimitation>` as well as `<gmd:resourceConstraints> <gmd:MD_LegalConstraints>` in the ISO scheme.
 
   This field contains the title of the license with its abbreviation.
   - Data type: String
@@ -536,6 +538,7 @@ The content of this field is mapped to `<rights>` in the DataCite scheme and to 
   - Example values: `https://creativecommons.org/licenses/by/4.0/legalcode`
 
 - *Saved in backend (not visible to user):* forSoftware
+
   This field specifies if the license is used for software (forSoftware=1) or not (forSoftware=0). The controlled list changes for users based on this parameter when resource type Software is chosen.
 
 ### Authors
