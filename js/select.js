@@ -106,9 +106,7 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
     if (locationTimezone) {
       setTimezoneInDropdown(locationTimezone);
     }
-
   } catch (error) {
-    console.error('Error initializing timezone dropdown:', error);
   }
 }
 
