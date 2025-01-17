@@ -7,11 +7,36 @@
     "id": "21e2027f-6eeb-4a2c-b733-1ec31431ed4a",
     "name": "Hilfebuttons",
     "commands": [{
-      "id": "7d193730-650f-4df0-bcc0-6edaefba7e15",
+      "id": "958d4663-b2da-42d9-a2f2-cab84c1b9805",
       "comment": "",
       "command": "open",
       "target": "",
       "targets": [],
+      "value": ""
+    }, {
+      "id": "a7ac4bb4-6ad0-44da-be6e-2b5d0d998566",
+      "comment": "",
+      "command": "click",
+      "target": "id=bd-help",
+      "targets": [
+        ["id=bd-help", "id"],
+        ["css=#bd-help", "css:finder"],
+        ["xpath=//button[@id='bd-help']", "xpath:attributes"],
+        ["xpath=//button", "xpath:position"],
+        ["xpath=//button[contains(.,' Help')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "79a44c29-8194-4cc5-9000-11b96769ad05",
+      "comment": "",
+      "command": "click",
+      "target": "css=#buttonHelpOn > span",
+      "targets": [
+        ["css=#buttonHelpOn > span", "css:finder"],
+        ["xpath=//a[@id='buttonHelpOn']/span", "xpath:idRelative"],
+        ["xpath=//span", "xpath:position"],
+        ["xpath=//span[contains(.,'On')]", "xpath:innerText"]
+      ],
       "value": ""
     }, {
       "id": "d204c671-a0e2-4796-b855-abfb5322a525",
@@ -165,14 +190,14 @@
       ],
       "value": ""
     }, {
-      "id": "5adcff9f-b80c-46ee-b237-10416052a5ba",
+      "id": "09430268-b970-4019-81ce-50dac80dc25e",
       "comment": "",
       "command": "click",
-      "target": "css=.col:nth-child(1) .bi",
+      "target": "css=.card:nth-child(2) .bi",
       "targets": [
-        ["css=.col:nth-child(1) .bi", "css:finder"],
-        ["xpath=//div[@id='group-rights']/div/div/div/div/div[2]/span/i", "xpath:idRelative"],
-        ["xpath=//div[2]/div/div/div/div/div[2]/span/i", "xpath:position"]
+        ["css=.card:nth-child(2) .bi", "css:finder"],
+        ["xpath=//form[@id='form-mde']/div[2]/div/i", "xpath:idRelative"],
+        ["xpath=//div/i", "xpath:position"]
       ],
       "value": ""
     }, {
@@ -324,7 +349,7 @@
         ["css=.modal-body > h5:nth-child(1)", "css:finder"],
         ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
         ["xpath=//div[2]/h5", "xpath:position"],
-        ["xpath=//h5[contains(.,'Website')]", "xpath:innerText"]
+        ["xpath=//h5[contains(.,'Position')]", "xpath:innerText"]
       ],
       "value": "Website"
     }, {
@@ -1083,7 +1108,7 @@
       ],
       "value": ""
     }, {
-      "id": "c5eb84af-9987-401a-b00c-22427ae06332",
+      "id": "0d3434f0-5d42-484f-b7c5-8404acf1e55c",
       "comment": "",
       "command": "click",
       "target": "css=.col-lg-6:nth-child(2) .bi",
@@ -1102,7 +1127,7 @@
         ["css=.modal-body > h5:nth-child(1)", "css:finder"],
         ["xpath=//div[@id='helpModal']/div/div/div[2]/h5", "xpath:idRelative"],
         ["xpath=//div[2]/h5", "xpath:position"],
-        ["xpath=//h5[contains(.,'Embargo until')]", "xpath:innerText"]
+        ["xpath=//h5[contains(.,'Date created')]", "xpath:innerText"]
       ],
       "value": "Embargo until"
     }, {
@@ -1342,9 +1367,9 @@
       "id": "a7bbcfe9-0338-4e93-a277-cad41bd9bcfb",
       "comment": "",
       "command": "click",
-      "target": "css=#group-relatedwork .col-sm-6 .input-group-append .bi",
+      "target": "css=#group-relatedwork .col-12:nth-child(1) .bi",
       "targets": [
-        ["css=#group-relatedwork .col-sm-6 .input-group-append .bi", "css:finder"],
+        ["css=#group-relatedwork .col-12:nth-child(1) .bi", "css:finder"],
         ["xpath=//div[@id='group-relatedwork']/div/div/div/div[2]/span/i", "xpath:idRelative"],
         ["xpath=//div[15]/div[2]/div/div/div/div/div[2]/span/i", "xpath:position"]
       ],
@@ -1377,9 +1402,9 @@
       "id": "c85ff4d7-c254-48d5-afaa-3c09a408eba1",
       "comment": "",
       "command": "click",
-      "target": "css=.col:nth-child(2) .input-group-append .bi",
+      "target": "css=.col-lg-5 .input-group-append .bi",
       "targets": [
-        ["css=.col:nth-child(2) .input-group-append .bi", "css:finder"],
+        ["css=.col-lg-5 .input-group-append .bi", "css:finder"],
         ["xpath=//div[@id='group-relatedwork']/div/div[2]/div/div[2]/span/i", "xpath:idRelative"],
         ["xpath=//div[15]/div[2]/div/div/div[2]/div/div[2]/span/i", "xpath:position"]
       ],
