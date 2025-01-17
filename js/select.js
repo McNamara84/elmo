@@ -1,23 +1,130 @@
 /**
+ * Fetches the TimeZoneDB API key from the server
+ * @async
+ * @function getTimezoneApiKey
+ * @returns {Promise<string>} The API key
+ * @throws {Error} If the API key cannot be retrieved
+ */
+async function getTimezoneApiKey() {
+  try {
+    const response = await fetch('api/getTimezoneApiKey.php');
+    const data = await response.json();
+    return data.apiKey;
+  } catch (error) {
+    console.error('Error fetching API key:', error);
+    throw error;
+  }
+}
+
+/**
+* Fills the timezone dropdown and sets the default timezone based on system settings and user's location
+* @async
+* @function initializeTimezoneDropdown
+* @param {string} dropdownSelector - The selector for the timezone dropdown element
+* @param {string} jsonPath - Path to the timezones JSON file
+* @returns {Promise<void>}
+*/
+async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezone', jsonPath = 'json/timezones.json') {
+  try {
+    // Fetch timezone data from JSON file
+    const response = await fetch(jsonPath);
+    const timezones = await response.json();
+
+    // Clear and populate dropdown with timezone options
+    const $dropdown = $(dropdownSelector);
+    $dropdown.empty();
+
+    timezones.forEach(timezone => {
+      $dropdown.append(
+        $('<option>', {
+          value: timezone.value,
+          text: timezone.label
+        })
+      );
+    });
+
+    /**
+     * Gets system timezone from browser
+     * @returns {string} System timezone string
+     */
+    function getSystemTimezone() {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+
+    /**
+     * Sets the dropdown value to the specified timezone
+     * @param {string} timezone - The timezone to set
+     * @returns {boolean} True if timezone was set successfully
+     */
+    function setTimezoneInDropdown(timezone) {
+      if (!timezone) return false;
+
+      // Try direct match
+      $dropdown.val(timezone);
+
+      // If direct match fails, try matching by UTC offset
+      if (!$dropdown.val()) {
+        const userOffset = new Date().getTimezoneOffset();
+        const matchingTimezone = timezones.find(tz => {
+          const tempDate = new Date().toLocaleString("en-US", { timeZone: tz.value });
+          const tzOffset = (new Date(tempDate).getTimezoneOffset());
+          return tzOffset === userOffset;
+        });
+
+        if (matchingTimezone) {
+          $dropdown.val(matchingTimezone.value);
+          return true;
+        }
+        return false;
+      }
+      return true;
+    }
+
+    /**
+     * Gets user's timezone based on geolocation
+     * @async
+     * @returns {Promise<string|null>} Timezone string or null if geolocation fails
+     */
+    async function getUserTimezoneByLocation() {
+      try {
+        const apiKey = await getTimezoneApiKey();
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 10000 // 10 second timeout
+          });
+        });
+
+        const response = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=${apiKey}&format=json&by=position&lat=${position.coords.latitude}&lng=${position.coords.longitude}`);
+        const data = await response.json();
+
+        return data.zoneName;
+      } catch (error) {
+        console.log('Geolocation or API request failed:', error);
+        return null;
+      }
+    }
+
+    // First set timezone based on system settings
+    const systemTimezone = getSystemTimezone();
+    setTimezoneInDropdown(systemTimezone);
+
+    // Then try to get more accurate location-based timezone
+    const locationTimezone = await getUserTimezoneByLocation();
+    if (locationTimezone) {
+      setTimezoneInDropdown(locationTimezone);
+    }
+
+  } catch (error) {
+    console.error('Error initializing timezone dropdown:', error);
+  }
+}
+
+/**
  * This script handles the setup and initialization of various dropdowns, event listeners, and autocomplete functions for the metadata editor.
  */
 
 $(document).ready(function () {
-  /**
-   * Loads time zones and populates the time zone select field.
-   */
-  $.getJSON("json/timezones.json", function (data) {
-    var timezoneSelect = $("#input-stc-timezone");
-    $.each(data, function (index, timezone) {
-      var label = timezone.label;
-      var utcOffset = label.substring(3, 9); // Extracts "+01:00" or "-04:00"
-
-      var option = $("<option></option>").attr("value", utcOffset).text(label);
-      timezoneSelect.append(option);
-    });
-  }).fail(function () {
-    console.error("Error loading time zones. Did you execute API call getTimezones (see documentation)?");
-  });
+  initializeTimezoneDropdown();
 
   /**
   * Populates the select field with ID input-rights-license with options created via an API call.
