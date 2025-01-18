@@ -1,6 +1,6 @@
 {
     "name": "elmo/elmo",
-    "description": "EPOS Laboratory Metadata Optimizer. Editor for research metadata of MSL data.",
+    "description": "ELMO - Enhanced Laboratory Metadata Organizer. A metadata editor for research metadata of EPOS MSL data.",
     "license": "GPL-2.0-only",
     "require": {
         "php": "^8.2 || ^8.3 || ^8.4",
