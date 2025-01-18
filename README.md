@@ -1,4 +1,4 @@
-# ELMO - EPOS Laboratory Metadata Optimizer
+# ELMO - Enhanced Laboratory Metadata Organizer
 
 This EPOS Laoratory Metadata Optimizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GeoForschungsZentrum Potsdam](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
 
