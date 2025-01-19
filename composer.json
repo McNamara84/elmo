@@ -1,7 +1,6 @@
 {
     "name": "elmo/elmo",
     "description": "ELMO - Enhanced Laboratory Metadata Organizer. A metadata editor for research metadata of EPOS MSL data.",
-    "version": "2.0.0-RC2",
     "type": "project",
     "keywords": [
         "editor",
