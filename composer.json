@@ -30,7 +30,7 @@
     ],
     "support": {
         "email": "ehrmann@gfz.de",
-        "issues:": "https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer/issues",
+        "issues": "https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer/issues",
         "docs": "https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer"
     },
     "require": {
