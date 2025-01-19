@@ -1,7 +1,38 @@
 {
     "name": "elmo/elmo",
     "description": "ELMO - Enhanced Laboratory Metadata Organizer. A metadata editor for research metadata of EPOS MSL data.",
+    "version": "2.0.0-RC2",
+    "type": "project",
+    "keywords": [
+        "editor",
+        "research",
+        "metadata",
+        "epos",
+        "msl"
+    ],
+    "homepage": "https://mde2.cats4future.de/",
+    "readme": "README.md",
+    "time": "2025-02-03",
     "license": "GPL-2.0-only",
+    "authors": [
+        {
+            "name": "Holger Ehrmann",
+            "email": "ehrmann@gfz.de",
+            "homepage": "https://gfz.de",
+            "role": "Developer"
+        },
+        {
+            "name": "M. Musterperson",
+            "email": "musterperson@muster.de",
+            "homepage": "https://muster.de",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "email": "ehrmann@gfz.de",
+        "issues:": "https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer/issues",
+        "docs": "https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer"
+    },
     "require": {
         "php": "^8.2 || ^8.3 || ^8.4",
         "easyrdf/easyrdf": "^1.1",
