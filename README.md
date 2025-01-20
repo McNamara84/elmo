@@ -517,7 +517,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   This field contains the type of title (other than the main title).
   - Data type: String
   - Occurrence: 1, if the corresponding title is not the main title
-  - The corresponding field in the database where the value is stored is called: `title` in the table `Title_Type`.
+  - The corresponding field in the database where the value is stored is called: `name` in the table `Title_Type`.
   - Restrictions: must be sleected from controlled list
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/#a-titletype)
   - Example values: `Translated Title`
