@@ -26,6 +26,12 @@
             "homepage": "https://muster.de",
             "role": "Developer"
         }
+        {
+            "name": "Nina Rethfeldt",
+            "email": "nina.rethfeldt@fh-potsdam.de",
+            "homepage": "https://www.fh-potsdam.de/",
+            # "role": "Developer"
+        }
     ],
     "support": {
         "email": "ehrmann@gfz.de",
