@@ -10,9 +10,9 @@ authors:
   - family-names: "Mohammed"
     given-names: "Ali"
     orcid: "https://orcid.org/0009-0007-2910-0469"
-#  - family-names: "Rethfeld"
-#    given-names: "Nina"
-#    orcid: "https://orcid.org/xxxx-xxxx-xxxx-xxxx"
+  - family-names: "Rethfeldt"
+    given-names: "Nina"
+    orcid: "https://orcid.org/0009-0006-5992-0559"
 title: "ELMO - Enhanced Laboratory Metadata Organizer"
 version: 2.0.0
 #doi: 10.5880/GFZ.XXXXXX
