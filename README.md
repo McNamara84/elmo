@@ -65,17 +65,17 @@ In addition to the access data for the database, other settings can also be adju
 - `$feedbackAddress`: Email Address to which the feedback is sent
 - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent
 
-# API-Dokumentation
+## API-Dokumentation
 
 Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data Services Webanwendung. Sie richtet sich an Administratoren und Techniker, die diese Anwendung auf einem eigenen Webserver installieren und verwalten möchten.
 
-## Allgemeine Informationen
+### Allgemeine Informationen
 
 - Basis-URL: `https://mde2.cats4future.de/api.php`
 - Alle Anfragen sollten via HTTPS erfolgen
 - Antworten werden im JSON-Format zurückgegeben, sofern nicht anders angegeben
 
-## API-Endpunkte
+### API-Endpunkte
 
 [Interaktive Dokumentation](https://mde2.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
 <details>
@@ -447,7 +447,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 
 - DOI
 
-This field contains the DOI (Digital Object Identifier) that identifies the resource.
+  This field contains the DOI (Digital Object Identifier) that identifies the resource.
   - Data type: String
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `doi` in the table `Resource`.
@@ -492,7 +492,7 @@ This field contains the DOI (Digital Object Identifier) that identifies the reso
 
 - Language of Dataset
 
- This field contains the language of the dataset
+  This field contains the language of the dataset
   - Data type: String
   - Occurence: 1
   - The corresponding field in the database where the value is saved is called: `name` in the table `Language`.
