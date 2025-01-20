@@ -1,22 +1,4 @@
 /**
- * Fetches the TimeZoneDB API key from the server
- * @async
- * @function getTimezoneApiKey
- * @returns {Promise<string>} The API key
- * @throws {Error} If the API key cannot be retrieved
- */
-async function getTimezoneApiKey() {
-  try {
-    const response = await fetch('api/getTimezoneApiKey.php');
-    const data = await response.json();
-    return data.apiKey;
-  } catch (error) {
-    console.error('Error fetching API key:', error);
-    throw error;
-  }
-}
-
-/**
  * Fills the timezone dropdown and sets the default timezone based on system settings and user's location
  * @async
  * @function initializeTimezoneDropdown
