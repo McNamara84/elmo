@@ -104,12 +104,12 @@ $(document).ready(function () {
     // Check if the current number of titles is below the allowed maximum.
     if (titlesNumber < maxTitles) {
       // Clone the existing title row and reset its input fields.
-      var newTitleRow = $addTitleBtn.closest(".row").clone();
-
-      // Remove help buttons from the cloned row.
-      deleteHelpButtonFromClonedRows(newTitleRow);
+      var newTitleRow = $addTitleBtn.closest(".row").clone(true,true);
       $(newTitleRow).find("input").val("");
-
+      
+      // Ensure help buttons are retained
+      $(newTitleRow).find(".bi-question-circle-fill").closest(".input-group-append").show();
+      
       // Adjust the column layout classes for the cloned row.
       newTitleRow.find(".col-12.col-sm-12.col-md-11.col-lg-11")
         .removeClass("col-md-11 col-lg-11")
@@ -133,6 +133,7 @@ $(document).ready(function () {
       var $select = $(newTitleRow).find("select");
       $select.html(optionTitleTypeHTML);
       $select.find("option[value='" + mainTitleType + "']").remove(); // Remove the main title type
+      $select.find("option[value='3']").remove(); //Remove subtitle type
       $select.val(""); // Reset the dropdown selection
 
       // Create a remove button for the new row.
