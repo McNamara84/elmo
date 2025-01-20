@@ -69,105 +69,42 @@
                 <div class="section-divider"></div>
                 <!-- formgroup resource information -->
                 <div id="help-resourceinformation" class="section-content">
-                    <h4>Resource Information</h4>
-                    <p>General metadata for the data set is specified in the Resource Information section. In
-                        detail,these are the form fields DOI, Publication Year, Resource Type, Version, Language of
-                        dataset, Title and Title Type. Up to
-                        <?php echo $maxTitles; ?> different titles can be specified.
-                    </p>
+                    <div id="help-resourceinformation-fg">
+                        <h4>Resource Information</h4>
+                        <p>Please specity general metadata for the data set here. Mandatory
+                            fields are: Publication Year, Resource Type, Language of Dataset, Title.
+                        </p>
+                        <p>By default, GFZ Data Services is the publisher. If this should not be the case, e.g. in some
+                            cooperation projects, please contact us for further advice. Note: the
+                            publisher will be named in the citation of the dataset as requested by the citation
+                            guidelines of DataCite.
+                        </p>
+                    </div>
                     <div id="help-resourceinformation-doi">
                         <h5>DOI</h5>
                         <p>The DOI is a unique string that identifies a resource. Format should be 10.ORGANISATION/ID.
-                            If you have no DOI for your dataset yet, you can leave this field empty and a DOI will be
-                            registered.</p>
+                            If you have no DOI for your dataset yet, please leave this field empty and a DOI will be
+                            registered by GFZ Data Services.</p>
                     </div>
                     <div id="help-resourceinformation-publicationyear">
                         <h5>Publication Year</h5>
                         <p>The year when the data was or will be made publicly available. In the case of datasets,
-                            “publish”
-                            is understood to mean making the data available on a specific date to the community of
-                            researchers. Values between 1901 and 2155 are allowed.</p>
+                            “publish” is understood to mean making the data available on a specific date to the
+                            community of researchers. Values between 1901 and 2155 are allowed.</p>
                         <ul>
                             <li>If that date cannot be determined, use the date of registration.</li>
-                            <li>If an embargo period has been in effect, use the date when the embargo period ends.</li>
+                            <li>If an embargo period is in effect, use the date when the embargo period ends.</li>
                             <li>If there is no standard publication year value, use the date that would be preferred
-                                from a
-                                citation perspective.</li>
+                                from a citation perspective.</li>
                         </ul>
                     </div>
                     <div id="help-resourceinformation-resourcetype">
                         <h5>Resource Type</h5>
-                        <p>The data record is classified in the Resource Type form field. The following different
-                            resource
-                            types are available for selection.</p>
-                        <ul>
-                            <li><strong>Audiovisual:</strong> A series of visual representations that, when shown in
-                                sequence, give
-                                the impression of movement. May or may not include sound.</li>
-                            <li><strong>Book:</strong> A non-serial publication that is complete in one volume or a
-                                designated
-                                finite number of volumes.</li>
-                            <li><strong>BookChapter:</strong> A defined chapter or section of a book.</li>
-                            <li><strong>Collection:</strong> An aggregation of resources, which can be any aggregation
-                                of
-                                resources
-                                such as datasets, documents, etc.</li>
-                            <li><strong>ComputationalNotebook:</strong> An interactive document containing code, data,
-                                and
-                                text that
-                                is used for conducting and documenting computational research.</li>
-                            <li><strong>ConferencePaper:</strong> A paper that was presented at a conference.</li>
-                            <li><strong>ConferenceProceeding:</strong> A collection of papers presented at a conference.
-                            </li>
-                            <li><strong>DataPaper:</strong> A scholarly publication describing a dataset, published in a
-                                data
-                                journal.</li>
-                            <li><strong>Dataset:</strong> A structured collection of data generally associated with a
-                                unique
-                                body of
-                                work.</li>
-                            <li><strong>Dissertation:</strong> A formal and lengthy discourse or treatise on a
-                                particular
-                                subject,
-                                based on original research, and submitted for an academic degree.</li>
-                            <li><strong>Event:</strong> A non-persistent, time-based occurrence.</li>
-                            <li><strong>Image:</strong> A visual representation other than text.</li>
-                            <li><strong>Instrument:</strong> A device or tool used for scientific purposes.</li>
-                            <li><strong>InteractiveResource:</strong> A resource that requires interaction from the user
-                                to
-                                be
-                                understood, executed, or experienced.</li>
-                            <li><strong>Journal:</strong> A periodic publication that contains articles on current
-                                research,
-                                usually
-                                published in issues and volumes.</li>
-                            <li><strong>JournalArticle:</strong> A publication in a journal.</li>
-                            <li><strong>Model:</strong> An abstract, conceptual, graphical, or mathematical
-                                representation
-                                of
-                                processes or entities.</li>
-                            <li><strong>OutputManagementPlan:</strong> A document describing data outputs, management
-                                and
-                                sharing
-                                practices, and policies.</li>
-                            <li><strong>PeerReview:</strong> A review of a resource that has been conducted by experts
-                                in
-                                the field.
-                            </li>
-                            <li><strong>PhysicalObject:</strong> An inanimate, three-dimensional object or substance.
-                            </li>
-                            <li><strong>Preprint:</strong> A version of a scholarly or scientific paper that precedes
-                                formal
-                                peer
-                                review and publication in a peer-reviewed scholarly or scientific journal.</li>
-                            <li><strong>Report:</strong> A formal account of an investigation, research, or event.</li>
-                            <li><strong>Service:</strong> A system that provides one or more functions to users, such as
-                                a
-                                web
-                                service.</li>
-                            <li><strong>Software:</strong> A computer program in source or compiled form.</li>
-                            <li><strong>Sound:</strong> A resource primarily intended to be heard.</li>
-                        </ul>
+                        <p>Please specify the type of Dataset here. See <a
+                                href="https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/"
+                                target="_blank">DataCite Documentation</a> for definition of the controlled list and
+                            examples.</p>
+
                     </div>
                     <div id="help-resourceinformation-version">
                         <h5>Version</h5>
@@ -218,26 +155,8 @@
                 <!-- formgroup rights & licenses -->
                 <div id="help-rights" class="section-content">
                     <h4>Licenses and rights</h4>
-                    <p>Rights information for the data set. Following the Guidelines for the Handling of Research Data
-                        of the GFZ German Research Centre for Geosciences for open science, we recommend a Creative
-                        Commons Attribution 4.0 (CC-BY) license whenever possible.</p>
-                    <p>
-                        Please chose between:
-                    <ul>
-                        <li><a href="https://creativecommons.org/licenses/by/4.0/legalcode" target="_blank">Creative
-                                Commons Attribution 4.0 International</a></li>
-                        <li><a href="https://creativecommons.org/publicdomain/zero/1.0/legalcode"
-                                target="_blank">Creative Commons Zero v1.0 Universal</a></li>
-                        <li><a href="https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt"
-                                target="_blank">European Union Public License 2.0</a></li>
-                        <li><a href="https://www.gnu.org/licenses/gpl-3.0-standalone.html" target="_blank">GNU General
-                                Public License v3.0 or later</a> (for Software)</li>
-                        <li><a href="https://opensource.org/license/mit/" target="_blank">MIT License</a> (for Software)
-                        </li>
-                        <li><a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License 2.0</a>
-                            (for Software)</li>
-                    </ul>
-                    </p>
+                    <p>Rights information for the data set. We recommend a Creative Commons Attribution 4.0 (CC-BY)
+                        licence whenever possible.</p>
                 </div>
                 <div class="section-divider"></div>
                 <!-- formgroup authors -->
