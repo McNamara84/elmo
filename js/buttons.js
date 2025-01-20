@@ -498,6 +498,9 @@ $(document).ready(function () {
     var tscGroup = $("#group-stc");
     var lastTscLine = tscGroup.children().last();
 
+    // Store the selected timezone value before cloning
+    var selectedTimezone = lastTscLine.find('select[name="tscTimezone[]"]').find(':selected').text();
+
     // Increment the unique row counter
     tscRowIdCounter++;
 
@@ -532,9 +535,15 @@ $(document).ready(function () {
     // Update the overlay labels
     updateOverlayLabels();
 
-    // Initialize timezone for the new row
+    // Set the same timezone option in the new row
     const timezoneSelect = newTscLine.find('select[name="tscTimezone[]"]');
-    await initializeTimezoneDropdown(timezoneSelect);
+    timezoneSelect.find('option').each(function () {
+      if ($(this).text() === selectedTimezone) {
+        $(this).prop('selected', true);
+      } else {
+        $(this).prop('selected', false);
+      }
+    });
   });
 
   /**
