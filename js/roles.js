@@ -27,7 +27,7 @@ function setupRolesDropdown(roletypes, inputSelector) {
           inputElement[0].tagify.settings.whitelist = uniqueSortedRoles;
           inputElement[0].tagify.dropdown.show.call(inputElement[0].tagify);
         } else {
-          new Tagify(inputElement[0], {
+          const rolesTagify = new Tagify(inputElement[0], {
             whitelist: uniqueSortedRoles,
             enforceWhitelist: true,
             maxTags: 10,
@@ -36,13 +36,18 @@ function setupRolesDropdown(roletypes, inputSelector) {
               maxItems: 20,
               classname: "tags-look",
               enabled: 0,
-              closeOnSelect: false
-            }
+              closeOnSelect: false,
+            },
+            editTags: false,
           });
+          
+          // Explicitly assign the instance to input._tagify
+          inputElement[0]._tagify = rolesTagify;
         }
       }
     })
 }
+
 
 $(document).ready(function () {
   setupRolesDropdown(["person", "both"], "#input-contributor-personrole");
