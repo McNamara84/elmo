@@ -563,7 +563,7 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
   const contributorName = getNodeText(contributor, 'ns:contributorName', xmlDoc, resolver);
   const givenName = getNodeText(contributor, 'ns:givenName', xmlDoc, resolver);
   const familyName = getNodeText(contributor, 'ns:familyName', xmlDoc, resolver);
-  const orcid = getNodeText(contributor, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver);
+  const orcid = getNodeText(contributor, 'ns:nameIdentifier[@schemeURI="https://orcid.org/"]', xmlDoc, resolver);
 
   // Get affiliations
   const affiliationNodes = xmlDoc.evaluate(
