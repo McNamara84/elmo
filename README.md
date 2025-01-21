@@ -27,7 +27,7 @@ Following conditions are required for installation:
 1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
 2. The XSL and ZIP extensions for PHP must be installed and enabled.
 3. Don't forget to start Apache and MySQL.
-4. Create a new empty sql database in (e.g. using phpMyAdmin) an copy the name of the database.
+4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
 5. Copy the content of the file `sample_settings.php` into a new file `settings.php` and adjust the settings for the database connection.
 6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `settings.php`.
 7. Create a Google Maps JS API key and paste it into the `settings.php` file as well.
