@@ -159,10 +159,10 @@ class SaveResourceInformationAndRightsTest extends TestCase
             "Rights" => 2,
             "title" => [
                 "Main Title for Multiple Title Test",
-                "Subtitle for Multiple Title Test",
-                "Alternative Title for Multiple Title Test"
+                "Alternative for Multiple Title Test",
+                "Translated Title for Multiple Title Test"
             ],
-            "titleType" => [1, 2, 3]  // Angenommen, 1 = Main, 2 = Subtitle, 3 = Alternative
+            "titleType" => [1, 2, 3]  // Angenommen, 1 = Main, 2 = Alternative, 3 = Translated
         ];
 
         $resource_id = saveResourceInformationAndRights($this->connection, $postData);

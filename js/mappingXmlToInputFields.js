@@ -64,8 +64,7 @@ function mapTitleType(titleType) {
   const typeMap = {
     undefined: '1', // Main Title
     'AlternativeTitle': '2',
-    'Subtitle': '3',
-    'TranslatedTitle': '4'
+    'TranslatedTitle': '3'
   };
   return typeMap[titleType] || '1';
 }

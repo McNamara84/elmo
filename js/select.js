@@ -1,23 +1,147 @@
 /**
+ * Fills the timezone dropdown and sets the default timezone based on system settings and user's location
+ * @async
+ * @function initializeTimezoneDropdown
+ * @param {string|jQuery|HTMLElement} dropdownSelector - The selector for the timezone dropdown element
+ * @param {string} jsonPath - Path to the timezones JSON file
+ * @returns {Promise<void>}
+ */
+async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezone', jsonPath = 'json/timezones.json') {
+  try {
+    const $dropdown = $(dropdownSelector);
+    if ($dropdown.length === 0) return;
+
+    /**
+     * Gets system timezone from browser settings
+     * @param {jQuery} $select - The jQuery select element
+     * @returns {string} Timezone offset in format "+HH:MM" or "-HH:MM"
+     */
+    function getSystemTimezone($select) {
+      try {
+        const timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        if (timezoneName) {
+          const options = $select.find('option').get();
+          const date = new Date();
+          const offset = -date.getTimezoneOffset();
+          const hours = Math.floor(Math.abs(offset) / 60).toString().padStart(2, '0');
+          const minutes = (Math.abs(offset) % 60).toString().padStart(2, '0');
+          const offsetStr = `${offset >= 0 ? '+' : '-'}${hours}:${minutes}`;
+
+          let bestMatch = null;
+
+          for (const option of options) {
+            const optionText = $(option).text();
+            const optionValue = $(option).val();
+
+            if (optionText.includes(`(${timezoneName})`)) {
+              return optionValue;
+            }
+
+            if (optionValue === offsetStr && optionText.includes(timezoneName.split('/')[0])) {
+              bestMatch = optionValue;
+              break;
+            }
+
+            if (optionValue === offsetStr && !bestMatch) {
+              bestMatch = optionValue;
+            }
+          }
+
+          if (bestMatch) return bestMatch;
+        }
+
+        const date = new Date();
+        const offset = -date.getTimezoneOffset();
+        const hours = Math.floor(Math.abs(offset) / 60).toString().padStart(2, '0');
+        const minutes = (Math.abs(offset) % 60).toString().padStart(2, '0');
+        return `${offset >= 0 ? '+' : '-'}${hours}:${minutes}`;
+
+      } catch (error) {
+        console.error('Error getting system timezone:', error);
+        return null;
+      }
+    }
+
+    if ($dropdown.find('option').length > 0) {
+      const systemTimezone = getSystemTimezone($dropdown);
+      setTimezoneInDropdown($dropdown, systemTimezone);
+      return;
+    }
+
+    const response = await fetch(jsonPath);
+    const timezones = await response.json();
+
+    /**
+     * Extracts UTC offset from timezone label
+     * @param {string} label - The timezone label (e.g., "UTC+00:00 (Africa/Abidjan)")
+     * @returns {string} The UTC offset (e.g., "+00:00")
+     */
+    function extractUTCOffset(label) {
+      const match = label.match(/UTC([+-]\d{2}:\d{2})/);
+      return match ? match[1] : '';
+    }
+
+    $dropdown.empty();
+    timezones.forEach(timezone => {
+      $dropdown.append(
+        $('<option>', {
+          value: extractUTCOffset(timezone.label),
+          text: timezone.label
+        })
+      );
+    });
+
+    /**
+     * Sets the dropdown value to the specified timezone option
+     * @param {jQuery} $select - The jQuery select element
+     * @param {string} timezoneName - The timezone name (e.g., "Europe/Berlin")
+     * @returns {boolean} True if timezone was set successfully
+     */
+    function setTimezoneInDropdown($select, timezoneName) {
+      if (!timezoneName) return false;
+
+      const allOptions = Array.from($select.find('option'));
+      const exactMatch = allOptions.find(option =>
+        option.text.includes(`(${timezoneName})`)
+      );
+
+      if (exactMatch) {
+        $select.find('option').prop('selected', false);
+        $(exactMatch).prop('selected', true);
+        return true;
+      }
+
+      const region = timezoneName.split('/')[0];
+      const regionMatch = allOptions.find(option =>
+        option.text.includes(`(${region}/`)
+      );
+
+      if (regionMatch) {
+        $select.find('option').prop('selected', false);
+        $(regionMatch).prop('selected', true);
+        return true;
+      }
+
+      return false;
+    }
+
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (browserTimezone) {
+      setTimezoneInDropdown($dropdown, browserTimezone);
+    }
+
+  } catch (error) {
+    console.error('Error initializing timezone dropdown:', error);
+  }
+}
+
+/**
  * This script handles the setup and initialization of various dropdowns, event listeners, and autocomplete functions for the metadata editor.
  */
 
 $(document).ready(function () {
-  /**
-   * Loads time zones and populates the time zone select field.
-   */
-  $.getJSON("json/timezones.json", function (data) {
-    var timezoneSelect = $("#input-stc-timezone");
-    $.each(data, function (index, timezone) {
-      var label = timezone.label;
-      var utcOffset = label.substring(3, 9); // Extracts "+01:00" or "-04:00"
-
-      var option = $("<option></option>").attr("value", utcOffset).text(label);
-      timezoneSelect.append(option);
-    });
-  }).fail(function () {
-    console.error("Error loading time zones. Did you execute API call getTimezones (see documentation)?");
-  });
+  initializeTimezoneDropdown();
 
   /**
   * Populates the select field with ID input-rights-license with options created via an API call.
