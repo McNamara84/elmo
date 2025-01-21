@@ -276,7 +276,7 @@ function processContactPersons(xmlDoc) {
     const position = getNodeText(contactPersonNode, 'gmd:positionName/gco:CharacterString', xmlDoc, nsResolver);
     const email = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString', xmlDoc, nsResolver);
     const website = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL', xmlDoc, nsResolver);
-    
+
     // Extract affiliations
     const affiliationNodes = xmlDoc.evaluate(
       'gmd:organisationName/gco:CharacterString',
@@ -309,10 +309,10 @@ function processContactPersons(xmlDoc) {
     } else {
       // Additional contact persons - simulate button click
       $('#button-contactperson-add').click();
-      
+
       // Find newly added row
       const newRow = $('#group-contactperson .row[contact-person-row]').last();
-      
+
       // Set values
       newRow.find('input[name="cpFirstname[]"]').val(givenName);
       newRow.find('input[name="cpLastname[]"]').val(familyName);
@@ -526,9 +526,9 @@ function processContributors(xmlDoc, resolver) {
 
   if (!contributorsNode) return;
 
-  // Get all contributors except ContactPerson and HostingInstitution
+  // Get all contributors except ContactPerson and Contributers with nameIdentifierScheme labid, because those are loaded into fg Contact Person and fg Originating Laboratory
   const contributorNodes = xmlDoc.evaluate(
-    'ns:contributor[not(@contributorType="ContactPerson") and not(@contributorType="HostingInstitution")]',
+    'ns:contributor[not(@contributorType="ContactPerson") and not(ns:nameIdentifier[@nameIdentifierScheme="labid"])]',
     contributorsNode,
     resolver,
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
@@ -872,7 +872,7 @@ function processDates(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-  
+
   // Reset date fields
   $('input[name="dateCreated"]').val('');
   $('input[name="dateEmbargo"]').val('');
@@ -891,11 +891,11 @@ function processDates(xmlDoc, resolver) {
   }
 }
 
- /**
- * Process Subjects from XML and populate the Keyword fields
- * @param {Document} xmlDoc - The parsed XML document
- * @param {Function} resolver - The namespace resolver function
- */
+/**
+* Process Subjects from XML and populate the Keyword fields
+* @param {Document} xmlDoc - The parsed XML document
+* @param {Function} resolver - The namespace resolver function
+*/
 function processKeywords(xmlDoc, resolver) {
   const subjectNodes = xmlDoc.evaluate(
     './/ns:subjects/ns:subject',
