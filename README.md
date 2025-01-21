@@ -142,7 +142,10 @@ Aktualisiert die Daten für die Auswahlfelder der Affiliations von Personen.
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
 
-### 5. CrossRef Funders
+<details>
+  <summary>
+
+### 5. CrossRef Funders (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
 GET ?action=getCrossRefFunders
 
@@ -152,6 +155,7 @@ Aktualisiert die Auswahloptionen im Funders-Dropdown-Feld.
 
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
 
 <details>
   <summary>  
