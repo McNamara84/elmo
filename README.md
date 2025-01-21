@@ -658,7 +658,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - The corresponding field in the database where the value is saved is called: name in the Affiliation table.
   - Restrictions: Optional
   - Example values: `Technische Universität Berlin`, `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
-  - Note**: Use autocomplete function for the Affiliation input field! similar to the ‘Author’ form group.
+  - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
 ### Originating Laboratory
 <!-- TODO: Speicherung der Eingaben in der Datenbank dokumentieren! -->
@@ -674,7 +674,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
 ### Contributors
 
 #### _Person_
-Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="Role">` in the DataCite scheme.
+Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="ROLE">` with `<contributorName nameType="Personal">` in the DataCite scheme.
 
 - ORCID
 
@@ -711,7 +711,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   This field contains the role(s) of the contributor(s).
   - Data type: String
   - Occurrence: 1-10, if a contributor person is specified
-  - The corresponding field in the database where the value is stored is called: `Role_role_id` in the `Contributor_Person_has_Role` table
+  - The corresponding field in the database where the value is stored is called: `name` in the `Role` table
   - Restrictions: must be selcted from controlled list
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
   - Example values: `Data Manager`, `Project Manager`
@@ -721,43 +721,46 @@ Contributor fields are optional. Only when one of the fields is filled the field
   This field contains the affiliation of the contributor(s).
   - Data type: String
   - Occurrence: 0-n
-  - The corresponding field in the database where the value is stored is called: `Affiliation_affiliation_id` in the table `Contributor_Person_has_Affiliation`
+  - The corresponding field in the database where the value is stored is called: `name` in the table `Affiliation`
   - Restrictions: None, can be selected from list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-affiliationidentifier)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#affiliation)
   - Example values: `Technische Universität Berlin`, `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+    - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
-####  _Organisation_
+#### _Organisation_
+Contributor fields are optional. Only when one of the fields is filled the fields "Organisation Name" and "Role" become mandatory. The contents of the fields are mapped to `<contributor contributorType="ROLE">` in the DataCite scheme with `<contributorName nameType="Organizational">`
 
 - Organisation Name
 
-  - In diesem Feld kommt der Name der Institution.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!**
-  - Restriktionen: Es ist optional
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nametype)
-  - Beispielwerte: `University of Applied Sciences Potsdam` `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
+  This field contains the name of the institution.
+  - Data type: String
+  - Occurrence: 1, if contributing organisation is specified
+  - The corresponding field in the database where the value is saved is called: `name` in the table `contributor_institution`
+  - Restrictions: -
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#contributorname)
+  - Example values: `University of Applied Sciences Potsdam`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
 - Role
-  - In diesem Feld kommt die Rolle/ Rollen der Institution.
-  - Datentyp: Text
-  - Vorkommen: 0-10
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!**
-  - Restriktionen: muss mindestens eine Rolle ausgewählt werden./muss nur eine Rolle ausgewählt werden
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
-  - Beispielwerte: `Data Collector` `Data Curator`
+
+  This field contains the role/roles of the institution.
+  - Data type: String
+  - Occurrence: 1-10
+  - The corresponding field in the database where the value is stored is called: `name` in the table `Role`
+  - Restrictions: must be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
+  - Example values: `Data Collector`, `Data Curator`.
   
 - Affiliation
 
-  - In diesem Feld kommt die Zugehörigkeit der/des Mitwirkenden(Organisation).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Affiliation_affiliation_id in der Tabelle Contributor_Institution_has_Affiliation
-  - Restriktionen: Es ist optional
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-affiliationidentifier)
-  - Beispielwerte: `Education and Science Workers' Union` `Institute of Science and Ethics`
-
-
+  This field contains the affiliation of the contributing institution.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `name` in the `Affiliation` table
+  - Restrictions: None, can be selected from list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#affiliation)
+  - Example values: `Education and Science Workers' Union`, `Institute of Science and Ethics`
+  - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
+ 
 ### Description
 
 - Abstract
