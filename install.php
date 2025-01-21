@@ -533,7 +533,6 @@ function insertTestDataIntoMainTables($connection)
                 "Title_Type" => [
                         ["name" => "Main Title"],
                         ["name" => "Alternative Title"],
-                        ["name" => "Subtitle"],
                         ["name" => "Translated Title"]
                 ],
                 "Title" => [

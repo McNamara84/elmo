@@ -2179,7 +2179,7 @@
       "command": "select",
       "target": "css=.row:nth-child(4) #input-resourceinformation-titletype",
       "targets": [],
-      "value": "label=Subtitle"
+      "value": "label=Alternativ Title"
     }, {
       "id": "15dd45b2-98ce-4ce8-b805-8a9a931b36c1",
       "comment": "",
@@ -3660,7 +3660,7 @@
         ["xpath=//form[@id='form-mde']/div/div[2]/div[4]/div/div/div/input", "xpath:idRelative"],
         ["xpath=//div[4]/div/div/div/input", "xpath:position"]
       ],
-      "value": "A Subtitle"
+      "value": "Another Title"
     }, {
       "id": "7ebaf955-44cf-43c4-b14c-b7cc27139e7e",
       "comment": "",
@@ -3679,7 +3679,7 @@
       "command": "select",
       "target": "css=.row:nth-child(4) #input-resourceinformation-titletype",
       "targets": [],
-      "value": "label=Subtitle"
+      "value": "label=Alternative Title"
     }, {
       "id": "919da425-1caf-4006-85cf-620f70770ce2",
       "comment": "",

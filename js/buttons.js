@@ -105,11 +105,11 @@ $(document).ready(function () {
     if (titlesNumber < maxTitles) {
       // Clone the existing title row and reset its input fields.
       var newTitleRow = $addTitleBtn.closest(".row").clone();
-
-      // Remove help buttons from the cloned row.
-      deleteHelpButtonFromClonedRows(newTitleRow);
       $(newTitleRow).find("input").val("");
-
+      
+      // Ensure help buttons are retained
+      $(newTitleRow).find(".bi-question-circle-fill").closest(".input-group-append").show();
+      
       // Adjust the column layout classes for the cloned row.
       newTitleRow.find(".col-12.col-sm-12.col-md-11.col-lg-11")
         .removeClass("col-md-11 col-lg-11")
