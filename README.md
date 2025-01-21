@@ -11,7 +11,7 @@ This EPOS Laoratory Metadata Optimizer (ELMO) is based on a student cooperation 
 - Submitting of metadata directly to data curators.
 - Authors can be sorted by drag & drop
 
-## Installation
+## Quick installation guide
 
 1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
 2. The XSL and ZIP extensions for PHP must be installed and enabled.
