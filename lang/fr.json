@@ -10,7 +10,7 @@
         "legalNotice": "Mentions légales"
     },
     "general": {
-        "logoTitle": "ELMO - Optimiseur de métadonnées de laboratoire EPOS 2.0RC1",
+        "logoTitle": "ELMO - Enhanced Laboratory Metadata Organizer 2.0RC2",
         "logoTitleShort": "ELMO 2.0",
         "choose": "Sélectionner...",
         "valid": "Valide",
@@ -172,7 +172,7 @@
         "changelog": {
             "title": "Journal des modifications",
             "aboutText": "L'éditeur de métadonnées ELMO a été développé en 2024 par des étudiants de l'Université des Sciences Appliquées de Potsdam en coopération avec le Centre de Recherche Allemand en Géosciences et est publié sous la licence GNU General Public License, Version 2.",
-            "aboutHeading": "À propos d'ELMO - Optimiseur de métadonnées de laboratoire EPOS"
+            "aboutHeading": "À propos d'ELMO - Enhanced Laboratory Metadata Organizer"
         },
         "save": {
             "title": "Enregistrer les métadonnées",

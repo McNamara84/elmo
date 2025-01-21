@@ -1,11 +1,11 @@
 openapi: 3.1.1
 info:
-  title: ELMO - EPOS Laboratory Metadata Optimizer
+  title: ELMO - Enhanced Laboratory Metadata Organizer
   description: |-
     This is the ELMO API V2 from GFZ Data Services. The API allows management and retrieval of metadata for scientific datasets.
 
     Some useful links:
-    - [The ELMO repository](https://github.com/McNamara84/gfz-metadata-editor-msl-v2)
+    - [The ELMO repository](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer)
     - [Test Server](https://mde2.cats4future.de)
     - [Legal notice](https://dataservices-cms.gfz-potsdam.de/about-us/imprint)
 
@@ -17,7 +17,7 @@ info:
   termsOfService: https://github.com/McNamara84/gfz-metadata-editor-msl-v2
   contact:
     name: Holger Ehrmann
-    email: ehrmann@gfz-potsdam.de
+    email: ehrmann@gfz.de
     url: https://mde2.cats4future.de
   license:
     name: GPL-2.0-only
