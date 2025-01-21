@@ -133,7 +133,6 @@ $(document).ready(function () {
       var $select = $(newTitleRow).find("select");
       $select.html(optionTitleTypeHTML);
       $select.find("option[value='" + mainTitleType + "']").remove(); // Remove the main title type
-      $select.find("option[value='3']").remove(); //Remove subtitle type
       $select.val(""); // Reset the dropdown selection
 
       // Create a remove button for the new row.
