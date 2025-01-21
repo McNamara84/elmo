@@ -104,7 +104,7 @@ $(document).ready(function () {
     // Check if the current number of titles is below the allowed maximum.
     if (titlesNumber < maxTitles) {
       // Clone the existing title row and reset its input fields.
-      var newTitleRow = $addTitleBtn.closest(".row").clone(true,true);
+      var newTitleRow = $addTitleBtn.closest(".row").clone();
       $(newTitleRow).find("input").val("");
       
       // Ensure help buttons are retained
