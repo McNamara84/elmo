@@ -18,7 +18,6 @@
     </creators>
     <titles>
         <title xml:lang="en">Example Title</title>
-        <title titleType="Subtitle" xml:lang="en">Example Subtitle</title>
         <title titleType="TranslatedTitle" xml:lang="fr">Example TranslatedTitle</title>
         <title titleType="AlternativeTitle" xml:lang="en">Example AlternativeTitle</title>
     </titles>
