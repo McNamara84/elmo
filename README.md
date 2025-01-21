@@ -38,6 +38,47 @@ Following conditions are required for installation:
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
 
+<details> 
+  <summary> 
+
+  ### Detailed example installation on Windows 10
+  </summary>
+
+  This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10 using PHP and MySQL.
+  The following conditions are required for installation:
+  - PHP > 8.2
+  - MySQL (or MariaDB)
+  - a paket manager as development environment (f.e. XAMPP, WampServer)
+  - for a local development environment, localhost-based access to the server is usually sufficient
+  #### 1. Setting up the development environment
+  - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP > 8.2).
+  - Install [MySQL](https://dev.mysql.com/downloads/installer/) or MariaDB.
+  - Install and enable the XSL and ZIP extensions for PHP. Therefore, open the `php.ini` file and uncomment the line for the required extensions.
+  #### 2. Starting Apache and MySQL
+  - If you're using an all-in-one solutions such as XAMPP or WampServer, you can start Apache directly from the XAMPP or WampServer control panel.
+  - Alternatively, you can manually start Apache by navigating to the `bin` directory of Apache (e.g., `C:\xampp\apache\bin`) and running `httpd.exe`.
+  #### 3. Creating an empty SQL database
+  - Using phpMyAdmin: If you're using XAMPP or WampServer, phpMyAdmin is already installed. You can access it by going to `http://localhost/phpmyadmin` in your browser.
+  - Create a new database and remember the name of it, as you'll need it later in the next step.
+  #### 4. Setting up the `settings.php`file
+  - Create `settings.php`:
+    - Copy the entire contents of `sample_settings.php` and save it as `settings.php` in the same directory.
+  - Adjust the database connection:
+    - Open the `settings.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root' while the host value typically remains as 'localhost'.
+  #### 5. Creating an API key for the automatically generated time zone selection
+  - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
+  - Insert your API key in `settings.php`in the according line.
+  #### 6. Creating a Google Maps JS API key
+  - Get a Google Maps JS API key via the [Google Cloud Console](https://console.cloud.google.com). Therefore, create a project, enable the Google Maps JavaScript API and get your API key.
+  - Insert your Google Maps API key in the corresponding line in the `settings-php`file. 
+  #### 7. Setting up the application
+  - Download all files from this repository into the `htdocs`or`www`folder of your webserver.
+  - Access the installation script in your browser as follows: `http://localhost/your_directory/install.php`. This script will automatically create the required tables in the database you specified in step 3.
+  #### 8. Accessing the metadata editor
+  - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
+  - Settings may be modified in `settings.php`.
+</details>
+
 ## Dependencies
 
 The following third-party dependencies are included in header.html and footer.html:
