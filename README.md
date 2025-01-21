@@ -673,59 +673,61 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
 
 ### Contributors
 
-- _Personal_
-- Lastname
-
-  - In diesem Feld kommt der Nachname der/des Mitwirkenden.
-  - Datentyp: Text
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: familyname in der Tabelle Contributor_Person
-  - Restriktionen: Optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#familyname)
-  - Beispielwerte: `Jemison` `Smith`
-
-- Firstname
-
-  - In diesem Feld kommt der Vorname der/des Mitwirkenden.
-  - Datentyp: Text
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: givenname in der Tabelle Contributor_Person
-  - Restriktionen: Optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#givenname)
-  - Beispielwerte: `John` `Jane`
-
-- Role
-
-  - In diesem Feld kommt die Rolle/ Rollen der/des Mitwirkenden.
-  - Datentyp: Text
-  - Vorkommen: 0-10
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Role_role_id in der Tabelle Contributor_Person_has_Role
-  - Restriktionen: muss mindestens eine Rolle ausgewählt werden./muss nur eine Rolle ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
-  - Beispielwerte: `Data Manager` `Project Manager`
+#### _Person_
+Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="Role">` in the DataCite scheme.
 
 - ORCID
 
-  - In diesem Feld kommt die ORCID der/des Mitwirkenden (Open Researcher and Contributor ID).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: orcid in der Tabelle Contributor_Person
-  - Restriktionen: Muss im Format "xxxx-xxxx-xxxx-xxxx" sein.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nameidentifierscheme)
-  - Beispielwerte: `1452-9875-4521-7893` `0082-4781-1312-884x`
+  This field contains the ORCID of the contributor (Open Researcher and Contributor ID).
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: `orcid` in the `Contributor_Person` table
+  - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nameidentifierscheme)
+  - Example values: `1452-9875-4521-7893` `0082-4781-1312-884x`
+
+- Last Name 
+
+  This field contains the contributpr's surname.
+  - Data type: String
+  - Occurrence: 1, if a contributor person is specified
+  - The corresponding field in the database where the value is stored is called: `familyname` in the table `Contributor_Person`.
+  - Restrictions: Only letters are allowed.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#familyname)
+  - Example values: `Jemison` `Smith`
+
+- First Name
+
+  This field contains the contributpr's surname.
+  - Data type: String
+  - Occurrence: 1, if a contributor person is specified
+  - The corresponding field in the database where the value is stored is called: `givenname` in the table `Contributor_Person`.
+  - Restrictions: Only letters are allowed
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#givenname)
+  - Example values: `John` `Jane`
+
+- Role
+
+  This field contains the role(s) of the contributor(s).
+  - Data type: String
+  - Occurrence: 1-10, if a contributor person is specified
+  - The corresponding field in the database where the value is stored is called: `Role_role_id` in the `Contributor_Person_has_Role` table
+  - Restrictions: must be selcted from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
+  - Example values: `Data Manager` `Project Manager`
 
 - Affiliation
 
-  - In diesem Feld kommt die Zugehörigkeit der/des Mitwirkenden(Personal).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Affiliation_affiliation_id in der Tabelle Contributor_Person_has_Affiliation
+  This field contains the affiliation of the contributor(s).
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `Affiliation_affiliation_id` in the table `Contributor_Person_has_Affiliation`
+  - Restrictions: None, can be selected from list.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-affiliationidentifier)
+  - Example values: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
 
-  - Restriktionen: Es ist optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-affiliationidentifier)
-  - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+####  _Organisation_
 
-- _Organisational_
 - Organisation Name
 
   - In diesem Feld kommt der Name der Institution.
