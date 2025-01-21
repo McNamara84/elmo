@@ -11,7 +11,18 @@ This EPOS Laoratory Metadata Optimizer (ELMO) is based on a student cooperation 
 - Submitting of metadata directly to data curators.
 - Authors can be sorted by drag & drop
 
-## Quick installation guide
+## Installation
+
+### Requirements
+
+The installation of ELMO is possible on operating systems such as recent Windows versions (f.e. Windows 10/11) and the most common Linux distributions (f.e. Ubuntu, Debian).
+Following conditions are required for installation:
+- PHP > 8.2
+	- incl. a webserver able to perform PHP operations (such as Apache or Nginx)
+	- extensions needed: XSL, ZIP
+- MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/8.0/en/installing-and-configuration.html)) or MariaDB
+
+### Quick installation guide
 
 1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
 2. The XSL and ZIP extensions for PHP must be installed and enabled.
