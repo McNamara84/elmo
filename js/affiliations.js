@@ -31,11 +31,19 @@ $.getJSON("json/affiliations.json", function (data) {
  * @param {Affiliation[]} data - The affiliation data array used for autocompletion.
  */
 function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
-  var inputElement = $("#" + inputFieldId);
-  var hiddenField = $("#" + hiddenFieldId);
+  const inputElement = $("#" + inputFieldId)[0]; // Direct DOM element
+  const hiddenField = $("#" + hiddenFieldId);
 
-  // Initialize Tagify on the input element with specified options
-  var tagify = new Tagify(inputElement[0], {
+  // Check if the input element is already Tagified
+  if (inputElement._tagify) {
+    // Update the whitelist of the existing Tagify instance
+    inputElement._tagify.settings.whitelist = data.map((item) => item.name);
+    inputElement._tagify.dropdown.show.call(inputElement._tagify); // Show updated dropdown if applicable
+    return;
+  }
+
+  // Initialize Tagify on the input element
+  const tagify = new Tagify(inputElement, {
     enforceWhitelist: false,
     duplicates: false,
     placeholder: translations.general.affiliation,
@@ -54,52 +62,29 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   });
 
   /**
-   * Hides the Tagify dropdown menu.
-   */
-  function closeDropdown() {
-    tagify.dropdown.hide.call(tagify.dropdown);
-  }
-
-  /**
    * Updates the hidden input field with the IDs of the selected affiliations.
    */
   function updateHiddenField() {
-    var allSelectedItems = tagify.value
-      .map(function (tag) {
-        var item = data.find(function (affiliationItem) {
-          return affiliationItem.name === tag.value;
-        });
-        return item ? item.id : "";
-      })
-    hiddenField.val(allSelectedItems.join(','));
+    if (!hiddenField.length) {
+      return; // Hidden field is not present, skip updating it
+    }
+
+    const allSelectedItems = tagify.value.map((tag) => {
+      const item = data.find((affiliationItem) => affiliationItem.name === tag.value);
+      return item ? item.id : "";
+    });
+    hiddenField.val(allSelectedItems.join(","));
   }
 
   // Event listener for when a tag is added
-  tagify.on("add", function (e) {
-    updateHiddenField();
-
-    var selectedName = e.detail.data.value;
-    var isOnWhitelist = tagify.whitelist.some((item) => item === selectedName);
-    if (!isOnWhitelist) {
-      closeDropdown();
-    }
-  });
+  tagify.on("add", updateHiddenField);
 
   // Event listener for when a tag is removed
-  tagify.on("remove", function (e) {
-    updateHiddenField();
-  });
-
-  // Event listener for input changes to adjust the input field width
-  tagify.on("input", function (e) {
-    tagify.DOM.input.style.width = (e.detail.value.length + 1) * 8 + "px";
-  });
-
-  // Remove all tags if the input field is not among the known fields
-  if (!["input-author-affiliation", "input-contactperson-affiliation", "input-contributor-personaffiliation", "input-contributor-organisationaffiliation"].includes(inputFieldId)) {
-    tagify.removeAllTags();
-  }
+  tagify.on("remove", updateHiddenField);
 
   // Store the Tagify instance in the DOM element for later access
-  inputElement[0].tagify = tagify;
+  inputElement._tagify = tagify;
 }
+
+
+

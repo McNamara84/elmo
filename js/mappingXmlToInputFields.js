@@ -473,6 +473,15 @@ function processOriginatingLaboratories(xmlDoc, resolver) {
   }
 }
 
+/**
+ * Normalize contributorType by adding whitespace between words.
+ * @param {string} contributorType - The contributorType from the XML.
+ * @returns {string} - Normalized role with spaces between words.
+ */
+function normalizeRole(contributorType) {
+  return contributorType.replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
 // Helper function to get or create a new organization row
 function getOrCreateOrgRow(index) {
   const container = $('#group-contributororganisation');
@@ -601,14 +610,14 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
       givenName,
       familyName,
       orcid,
-      roles: [contributorType],
+      roles: [normalizeRole(contributorType)], // Use normalized role
       affiliations,
       rorIds
     });
   } else {
     updateContributorMap(orgMap, contributorName, {
       name: contributorName,
-      roles: [contributorType],
+      roles: [normalizeRole(contributorType)], // Use normalized role
       affiliations,
       rorIds
     });
@@ -642,6 +651,7 @@ function updateContributorMap(map, key, newData) {
   }
 }
 
+
 /**
  * Populate the form with processed contributor data
  * @param {Map} personMap - Map containing person contributors
@@ -651,62 +661,76 @@ function populateFormWithContributors(personMap, orgMap) {
   let personIndex = 0;
   let orgIndex = 0;
 
+  // Helper function to initialize Tagify if needed
+  function initializeTagify(inputElement) {
+    if (!inputElement) return null;
+    if (!inputElement._tagify) {
+      inputElement._tagify = new Tagify(inputElement);
+    }
+    return inputElement._tagify;
+  }
+
   // Process persons
   for (const person of personMap.values()) {
     const personRow = getOrCreatePersonRow(personIndex++);
+    
+    // Roles
+    const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
+    const tagifyRoles = initializeTagify(roleInput);
+    if (tagifyRoles) {
+      tagifyRoles.removeAllTags();
+      tagifyRoles.addTags(person.roles.map(role => ({ value: role })));
+    }
 
-    // Set ORCID if available
+    // ORCID
     if (person.orcid) {
       personRow.find('input[name="cbORCID[]"]').val(person.orcid);
     }
 
-    // Set names
+    // Names
     personRow.find('input[name="cbPersonLastname[]"]').val(person.familyName);
     personRow.find('input[name="cbPersonFirstname[]"]').val(person.givenName);
 
-    // Set roles using Tagify
-    const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
-    if (roleInput && roleInput.tagify) {
-      roleInput.tagify.removeAllTags();
-      roleInput.tagify.addTags(person.roles.map(role => ({ value: role })));
-    }
-
-    // Set affiliations using Tagify
+    // Affiliations
     const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
-    if (affiliationInput && affiliationInput.tagify) {
-      affiliationInput.tagify.removeAllTags();
-      affiliationInput.tagify.addTags(person.affiliations.map(aff => ({ value: aff })));
+    const tagifyAffiliations = initializeTagify(affiliationInput);
+    if (tagifyAffiliations) {
+      tagifyAffiliations.removeAllTags();
+      tagifyAffiliations.addTags(person.affiliations.map(aff => ({ value: aff })));
     }
 
-    // Set ROR IDs
+    // ROR IDs
     personRow.find('input[name="cbRorIds[]"]').val(person.rorIds.join(','));
   }
 
   // Process organizations
   for (const org of orgMap.values()) {
     const orgRow = getOrCreateOrgRow(orgIndex++);
+    
+    // Roles
+    const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
+    const tagifyRoles = initializeTagify(roleInput);
+    if (tagifyRoles) {
+      tagifyRoles.removeAllTags();
+      tagifyRoles.addTags(org.roles.map(role => ({ value: role })));
+    }
 
-    // Set organization name
+    // Organization name
     orgRow.find('input[name="cbOrganisationName[]"]').val(org.name);
 
-    // Set roles using Tagify
-    const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
-    if (roleInput && roleInput.tagify) {
-      roleInput.tagify.removeAllTags();
-      roleInput.tagify.addTags(org.roles.map(role => ({ value: role })));
-    }
-
-    // Set affiliations using Tagify
+    // Affiliations
     const affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
-    if (affiliationInput && affiliationInput.tagify) {
-      affiliationInput.tagify.removeAllTags();
-      affiliationInput.tagify.addTags(org.affiliations.map(aff => ({ value: aff })));
+    const tagifyAffiliations = initializeTagify(affiliationInput);
+    if (tagifyAffiliations) {
+      tagifyAffiliations.removeAllTags();
+      tagifyAffiliations.addTags(org.affiliations.map(aff => ({ value: aff })));
     }
 
-    // Set ROR IDs
+    // ROR IDs
     orgRow.find('input[name="OrganisationRorIds[]"]').val(org.rorIds.join(','));
   }
 }
+
 
 /**
  * Parse temporal data from a date node.
