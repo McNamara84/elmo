@@ -92,6 +92,12 @@
           <Role>
             <name>Data Manager</name>
           </Role>
+          <Role>
+            <name>Editor</name>
+          </Role>
+          <Role>
+            <name>Producer</name>
+          </Role>
         </Roles>
       </Person>
       <Person>
@@ -136,7 +142,7 @@
   </Descriptions>
   <SpatialTemporalCoverages>
     <SpatialTemporalCoverage>
-      <spatial_temporal_coverage_id>4</spatial_temporal_coverage_id>
+      <spatial_temporal_coverage_id>5</spatial_temporal_coverage_id>
       <latitudeMin>67.358</latitudeMin>
       <latitudeMax>67.358</latitudeMax>
       <longitudeMin>3.22221</longitudeMin>
