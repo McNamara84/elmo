@@ -58,9 +58,9 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - Alternatively, using the Windows PowerShell: 
     - Start MySQL in the Shell while being in your SQL directory: `mysql -u root -p`
     - Create a database: `CREATE DATABASE your_database;`
-    - Create a new MySQL-user for the installation and grant rights to the database: `CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';
-    `GRANT CREATE ON your_database.* TO 'user'@'localhost';`
-    - Optional: confirm the creation of the database: `SHOW DATABASES;`
+    - Create a new MySQL-user for the installation: `CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';`
+    - Granting rights to this user: `GRANT CREATE ON your_database.* TO 'username'@'localhost';` and save with `FLUSH PRIVILEGES;`
+    - Optional: confirm the creation of the database while being logged in as the new user: `SHOW DATABASES;`
   #### 4. Setting up the `settings.php` file
   - Download all files from this repository into the `htdocs`or`www`folder of your webserver.
   - Create `settings.php`:
