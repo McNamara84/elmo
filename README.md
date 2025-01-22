@@ -44,7 +44,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
   ### Detailed example installation on Windows 10/11
   </summary>
 
-  This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10 using PHP and MySQL. An installation on Windows 11 identical. For a local development environment, localhost-based access to the server is usually sufficient.
+  This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10/11 using PHP and MySQL. For a local development environment, localhost-based access to the server is usually sufficient.
   #### 1. Setting up the development environment
   - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP > 8.2).
   - Install [MySQL](https://dev.mysql.com/downloads/installer/) or MariaDB.
