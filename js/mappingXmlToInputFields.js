@@ -645,8 +645,8 @@ function populateFormWithContributors(personMap, orgMap) {
   let personIndex = 0;
   let orgIndex = 0;
 
-  // Helper function to initialize Tagify if needed
-  function initializeTagify(inputElement) {
+  // Helper function to get the Tagify instance (or initialize it if not already initialized)
+  function getTagifyInstance(inputElement) {
     if (!inputElement) return null;
     if (!inputElement._tagify) {
       inputElement._tagify = new Tagify(inputElement);
@@ -660,7 +660,7 @@ function populateFormWithContributors(personMap, orgMap) {
     
     // Roles
     const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
-    const tagifyRoles = initializeTagify(roleInput);
+    const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
     if (tagifyRoles) {
       tagifyRoles.removeAllTags();
       tagifyRoles.addTags(person.roles.map(role => ({ value: role })));
@@ -677,7 +677,7 @@ function populateFormWithContributors(personMap, orgMap) {
 
     // Affiliations
     const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
-    const tagifyAffiliations = initializeTagify(affiliationInput);
+    const tagifyAffiliations = getTagifyInstance(affiliationInput);  // Get or initialize Tagify
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
       tagifyAffiliations.addTags(person.affiliations.map(aff => ({ value: aff })));
@@ -693,7 +693,7 @@ function populateFormWithContributors(personMap, orgMap) {
     
     // Roles
     const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
-    const tagifyRoles = initializeTagify(roleInput);
+    const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
     if (tagifyRoles) {
       tagifyRoles.removeAllTags();
       tagifyRoles.addTags(org.roles.map(role => ({ value: role })));
@@ -704,7 +704,7 @@ function populateFormWithContributors(personMap, orgMap) {
 
     // Affiliations
     const affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
-    const tagifyAffiliations = initializeTagify(affiliationInput);
+    const tagifyAffiliations = getTagifyInstance(affiliationInput);  // Get or initialize Tagify
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
       tagifyAffiliations.addTags(org.affiliations.map(aff => ({ value: aff })));
@@ -714,6 +714,8 @@ function populateFormWithContributors(personMap, orgMap) {
     orgRow.find('input[name="OrganisationRorIds[]"]').val(org.rorIds.join(','));
   }
 }
+
+
 
 
 /**
