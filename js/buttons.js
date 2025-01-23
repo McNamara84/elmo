@@ -807,12 +807,12 @@ $(document).ready(function () {
         tagifyAffiliation.addTags([lab.affiliation]);
         hiddenRorId.value = lab.ror_id || "";
         hiddenLabId.value = lab.id;
-        tagifyAffiliation.setReadOnly(true);
+        tagifyAffiliation.setReadonly(true);
       } else {
         tagifyAffiliation.removeAllTags();
         hiddenRorId.value = "";
         hiddenLabId.value = "";
-        tagifyAffiliation.setReadOnly(false);
+        tagifyAffiliation.setReadonly(false);
       }
     });
 
@@ -820,7 +820,7 @@ $(document).ready(function () {
       tagifyAffiliation.removeAllTags();
       hiddenRorId.value = "";
       hiddenLabId.value = "";
-      tagifyAffiliation.setReadOnly(false);
+      tagifyAffiliation.setReadonly(false);
     });
 
     tagifyName.on("input", function (e) {
@@ -830,7 +830,7 @@ $(document).ready(function () {
         if (!lab) {
           tagifyAffiliation.removeAllTags();
           hiddenRorId.value = "";
-          tagifyAffiliation.setReadOnly(false);
+          tagifyAffiliation.setReadonly(false);
         }
       }
     });
