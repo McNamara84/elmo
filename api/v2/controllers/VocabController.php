@@ -1,12 +1,13 @@
 <?php
 use EasyRdf\Graph;
 /**
- * VocabController.php
  *
  * This controller provides endpoints for fetching vocabularies via the API.
  *
  */
 
+// Set Max Execution Time to 300 seconds
+ini_set('max_execution_time', 300);
 // Include settings.php so that variables are available
 require_once __DIR__ . '/../../../settings.php';
 
