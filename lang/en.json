@@ -179,6 +179,13 @@
             "saveAs": "Save as XML",
             "filename": "Filename",
             "save": "Save"
+        },
+        "submit": {
+            "title": "Submit Dataset",
+            "urgency": "Urgency",
+            "url": "URL to data",
+            "dataDescription": "Data description (as mentioned in the data description template)",
+            "privacypolice": "I have read the privacy policy and agree to the processing of my data."
         }
     }
 }
