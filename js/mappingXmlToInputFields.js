@@ -163,7 +163,7 @@ function processCreators(xmlDoc, resolver) {
   for (let i = 0; i < creatorNodes.snapshotLength; i++) {
     const creatorNode = creatorNodes.snapshotItem(i);
 
-    // Extract Creators
+    // Extract Creator Data
     const givenName = getNodeText(creatorNode, 'ns:givenName', xmlDoc, resolver);
     const familyName = getNodeText(creatorNode, 'ns:familyName', xmlDoc, resolver);
     const orcid = getNodeText(
@@ -198,43 +198,27 @@ function processCreators(xmlDoc, resolver) {
       }
     }
 
-    if (i === 0) {
-      // First Author - use existing row
-      const firstRow = $('#group-author .row[data-creator-row]:first');
-      firstRow.find('input[name="orcids[]"]').val(orcid);
-      firstRow.find('input[name="familynames[]"]').val(familyName);
-      firstRow.find('input[name="givennames[]"]').val(givenName);
+    // Find the last row in the form
+    const $lastRow = $('input[name="familynames[]"]').last().closest('.row');
 
-      // Initialize Tagify for first row
-      const tagifyInput = firstRow.find('input[name="affiliation[]"]')[0];
-      if (tagifyInput) {
-        const tagify = new Tagify(tagifyInput);
-        tagify.addTags(affiliations.map(a => ({ value: a })));
-        firstRow.find('input[name="authorRorIds[]"]').val(rorIds.join(','));
-      }
-    } else {
-      // Additional authors - simulate button click
+    // Populate fields
+    $lastRow.find('input[name="orcids[]"]').val(orcid);
+    $lastRow.find('input[name="familynames[]"]').val(familyName);
+    $lastRow.find('input[name="givennames[]"]').val(givenName);
+
+    const tagifyInput = $lastRow.find('input[name="affiliation[]"]')[0];
+    if (tagifyInput && tagifyInput.tagify) {
+      tagifyInput.tagify.addTags(affiliations.map(a => ({ value: a })));
+      $lastRow.find('input[name="authorRorIds[]"]').val(rorIds.join(','));
+    }
+
+    // Clone a new row if more creators need to be added
+    if (i < creatorNodes.snapshotLength - 1) {
       $('#button-author-add').click();
-
-      // Find newly added row
-      const newRow = $('#group-author .row[data-creator-row]').last();
-
-      // Set values
-      newRow.find('input[name="orcids[]"]').val(orcid);
-      newRow.find('input[name="familynames[]"]').val(familyName);
-      newRow.find('input[name="givennames[]"]').val(givenName);
-
-      // Wait briefly for Tagify initialization
-      setTimeout(() => {
-        const tagifyInput = newRow.find('input[name="affiliation[]"]')[0];
-        if (tagifyInput && tagifyInput.tagify) {
-          tagifyInput.tagify.addTags(affiliations.map(a => ({ value: a })));
-          newRow.find('input[name="authorRorIds[]"]').val(rorIds.join(','));
-        }
-      }, 100);
     }
   }
 }
+
 
 /**
  * Process contact persons from XML and populate the form
