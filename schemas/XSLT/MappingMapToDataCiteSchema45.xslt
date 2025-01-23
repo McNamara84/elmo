@@ -48,7 +48,7 @@ http://www.altova.com/mapforce
 										<xsl:attribute name="affiliationIdentifierScheme" namespace="">ROR</xsl:attribute>
 									</xsl:if>
 									<xsl:if test="*[local-name()='rorId' and namespace-uri()='']">
-										<xsl:attribute name="schemeURI" namespace="">https://orcid.org/</xsl:attribute>
+										<xsl:attribute name="schemeURI" namespace="">https://ror.org/</xsl:attribute>
 									</xsl:if>
 									<xsl:if test="*[local-name()='rorId' and namespace-uri()='']">
 										<xsl:for-each select="*[local-name()='rorId' and namespace-uri()='']">

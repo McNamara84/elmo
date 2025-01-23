@@ -259,31 +259,6 @@
 						<constant value="DOI" datatype="string"/>
 					</data>
 				</component>
-				<component name="if-else" library="core" uid="12" kind="4">
-					<sources>
-						<datapoint pos="0" key="13"/>
-						<datapoint pos="1" key="14"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="15"/>
-					</targets>
-					<view ltx="685" lty="-8" rbx="779" rby="63"/>
-					<data>
-						<comment>
-							<text>Wurde version befüllt?</text>
-						</comment>
-					</data>
-				</component>
-				<component name="exists" library="core" uid="236" kind="5">
-					<sources>
-						<datapoint pos="0" key="505"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="506"/>
-					</targets>
-					<view ltx="241" lty="78" rbx="321" rby="115"/>
-				</component>
 				<component name="exists" library="core" uid="215" kind="5">
 					<sources>
 						<datapoint pos="0" key="507"/>
@@ -590,15 +565,6 @@
 					</targets>
 					<view ltx="404" lty="241" rbx="536" rby="294"/>
 				</component>
-				<component name="constant" library="core" uid="42" kind="2">
-					<targets>
-						<datapoint pos="0" key="90"/>
-					</targets>
-					<view ltx="756" lty="510" rbx="936" rby="526"/>
-					<data>
-						<constant value="https://ror.org/" datatype="string"/>
-					</data>
-				</component>
 				<component name="concat" library="core" uid="49" kind="5" growable="1" growablebasename="value">
 					<sources>
 						<datapoint pos="0" key="107"/>
@@ -626,38 +592,6 @@
 					<data>
 						<comment>
 							<text>Author RorID vervollständigen mit URI</text>
-						</comment>
-					</data>
-				</component>
-				<component name="if-else" library="core" uid="323" kind="4">
-					<sources>
-						<datapoint pos="0" key="636"/>
-						<datapoint pos="1" key="637"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="635"/>
-					</targets>
-					<view ltx="1278" lty="350" rbx="1372" rby="421"/>
-					<data>
-						<comment>
-							<text>Author affiliationIdentifierScheme</text>
-						</comment>
-					</data>
-				</component>
-				<component name="if-else" library="core" uid="324" kind="4">
-					<sources>
-						<datapoint pos="0" key="642"/>
-						<datapoint pos="1" key="644"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="643"/>
-					</targets>
-					<view ltx="1297" lty="442" rbx="1391" rby="513"/>
-					<data>
-						<comment>
-							<text>Author Affiliation SchemeUri</text>
 						</comment>
 					</data>
 				</component>
@@ -1223,20 +1157,6 @@
 					</targets>
 					<view ltx="592" lty="442" rbx="716" rby="495"/>
 				</component>
-				<component name="exists" library="core" uid="350" kind="5">
-					<sources>
-						<datapoint pos="0" key="709"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="710"/>
-					</targets>
-					<view ltx="240" lty="400" rbx="320" rby="437"/>
-					<data>
-						<comment>
-							<text>Author NameIdentifier ORCID</text>
-						</comment>
-					</data>
-				</component>
 				<component name="if-else" library="core" uid="360" kind="4">
 					<sources>
 						<datapoint pos="0" key="716"/>
@@ -1678,6 +1598,133 @@
 						</comment>
 					</data>
 				</component>
+				<component name="if-else" library="core" uid="368" kind="4">
+					<sources>
+						<datapoint pos="0" key="737"/>
+						<datapoint pos="1" key="738"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="735"/>
+					</targets>
+					<view ltx="508" lty="886" rbx="602" rby="957"/>
+					<data>
+						<comment>
+							<text>Contributor Person NameIdentifier</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="370" kind="4">
+					<sources>
+						<datapoint pos="0" key="743"/>
+						<datapoint pos="1" key="742"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="744"/>
+					</targets>
+					<view ltx="518" lty="1063" rbx="612" rby="1134"/>
+					<data>
+						<comment>
+							<text>Contributor Person schemeURI for NameIdentifier</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="369" kind="4">
+					<sources>
+						<datapoint pos="0" key="740"/>
+						<datapoint pos="1" key="739"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="741"/>
+					</targets>
+					<view ltx="518" lty="982" rbx="612" rby="1053"/>
+					<data>
+						<comment>
+							<text>Contributor Person NameIdentifierScheme</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="41" kind="2">
+					<targets>
+						<datapoint pos="0" key="71"/>
+					</targets>
+					<view ltx="859" lty="-495" rbx="1001" rby="-479"/>
+					<data>
+						<constant value="ORCID" datatype="string"/>
+						<comment>
+							<text>Default nameIdentifierScheme</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="350" kind="5">
+					<sources>
+						<datapoint pos="0" key="709"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="710"/>
+					</targets>
+					<view ltx="240" lty="400" rbx="320" rby="437"/>
+					<data>
+						<comment>
+							<text>Author NameIdentifier ORCID</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="323" kind="4">
+					<sources>
+						<datapoint pos="0" key="636"/>
+						<datapoint pos="1" key="637"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="635"/>
+					</targets>
+					<view ltx="1278" lty="350" rbx="1372" rby="421"/>
+					<data>
+						<comment>
+							<text>Author affiliationIdentifierScheme</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="40" kind="2">
+					<targets>
+						<datapoint pos="0" key="72"/>
+					</targets>
+					<view ltx="859" lty="-461" rbx="1049" rby="-445"/>
+					<data>
+						<constant value="https://orcid.org/" datatype="string"/>
+						<comment>
+							<text>Default nameIdentifierSchemeUri</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="324" kind="4">
+					<sources>
+						<datapoint pos="0" key="642"/>
+						<datapoint pos="1" key="644"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="643"/>
+					</targets>
+					<view ltx="1297" lty="442" rbx="1391" rby="513"/>
+					<data>
+						<comment>
+							<text>Author Affiliation SchemeUri</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="42" kind="2">
+					<targets>
+						<datapoint pos="0" key="90"/>
+					</targets>
+					<view ltx="756" lty="510" rbx="936" rby="526"/>
+					<data>
+						<constant value="https://ror.org/" datatype="string"/>
+					</data>
+				</component>
 				<component name="FreestyleSchemaDB" library="xml" uid="2" kind="14">
 					<properties XSLTTargetEncoding="UTF-8"/>
 					<view ltx="-2" lty="-8" rbx="198" rby="2305"/>
@@ -1849,19 +1896,28 @@
 						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\dataset3.xml" outputinstance="..\..\xml\dataset3.xml"/>
 					</data>
 				</component>
-				<component name="if-else" library="core" uid="368" kind="4">
+				<component name="exists" library="core" uid="236" kind="5">
 					<sources>
-						<datapoint pos="0" key="737"/>
-						<datapoint pos="1" key="738"/>
+						<datapoint pos="0" key="505"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="506"/>
+					</targets>
+					<view ltx="241" lty="78" rbx="321" rby="115"/>
+				</component>
+				<component name="if-else" library="core" uid="12" kind="4">
+					<sources>
+						<datapoint pos="0" key="13"/>
+						<datapoint pos="1" key="14"/>
 						<datapoint/>
 					</sources>
 					<targets>
-						<datapoint pos="0" key="735"/>
+						<datapoint pos="0" key="15"/>
 					</targets>
-					<view ltx="508" lty="886" rbx="602" rby="957"/>
+					<view ltx="685" lty="-8" rbx="779" rby="63"/>
 					<data>
 						<comment>
-							<text>Contributor Person NameIdentifier</text>
+							<text>Wurde version befüllt?</text>
 						</comment>
 					</data>
 				</component>
@@ -2047,62 +2103,6 @@
 							</entry>
 						</root>
 						<document schema="..\DataCite\DataCiteSchema45.xsd" instanceroot="{http://datacite.org/schema/kernel-4}resource" inputinstance="..\DataCite\DataCiteExample45.xml" outputinstance="..\DataCite\DataCiteExample45.xml"/>
-					</data>
-				</component>
-				<component name="if-else" library="core" uid="370" kind="4">
-					<sources>
-						<datapoint pos="0" key="743"/>
-						<datapoint pos="1" key="742"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="744"/>
-					</targets>
-					<view ltx="518" lty="1063" rbx="612" rby="1134"/>
-					<data>
-						<comment>
-							<text>Contributor Person schemeURI for NameIdentifier</text>
-						</comment>
-					</data>
-				</component>
-				<component name="constant" library="core" uid="40" kind="2">
-					<targets>
-						<datapoint pos="0" key="72"/>
-					</targets>
-					<view ltx="859" lty="-461" rbx="1049" rby="-445"/>
-					<data>
-						<constant value="https://orcid.org/" datatype="string"/>
-						<comment>
-							<text>Default nameIdentifierSchemeUri</text>
-						</comment>
-					</data>
-				</component>
-				<component name="if-else" library="core" uid="369" kind="4">
-					<sources>
-						<datapoint pos="0" key="740"/>
-						<datapoint pos="1" key="739"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="741"/>
-					</targets>
-					<view ltx="518" lty="982" rbx="612" rby="1053"/>
-					<data>
-						<comment>
-							<text>Contributor Person NameIdentifierScheme</text>
-						</comment>
-					</data>
-				</component>
-				<component name="constant" library="core" uid="41" kind="2">
-					<targets>
-						<datapoint pos="0" key="71"/>
-					</targets>
-					<view ltx="859" lty="-495" rbx="1001" rby="-479"/>
-					<data>
-						<constant value="ORCID" datatype="string"/>
-						<comment>
-							<text>Default nameIdentifierScheme</text>
-						</comment>
 					</data>
 				</component>
 			</children>
@@ -2343,6 +2343,7 @@
 							<edge vertexkey="125"/>
 							<edge vertexkey="148"/>
 							<edge vertexkey="199"/>
+							<edge vertexkey="644"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="640">
@@ -3133,13 +3134,6 @@
 							<edge vertexkey="642"/>
 						</edges>
 					</vertex>
-					<vertex vertexkey="72">
-						<edges>
-							<edge vertexkey="644"/>
-							<edge vertexkey="718"/>
-							<edge vertexkey="742"/>
-						</edges>
-					</vertex>
 					<vertex vertexkey="651">
 						<edges>
 							<edge vertexkey="648"/>
@@ -3239,6 +3233,12 @@
 						<edges>
 							<edge vertexkey="713"/>
 							<edge vertexkey="739"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="72">
+						<edges>
+							<edge vertexkey="718"/>
+							<edge vertexkey="742"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="726">
