@@ -13,10 +13,21 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 
 ## Installation
 
+### Requirements
+
+The installation of ELMO is possible on operating systems such as recent Windows versions (e.g. Windows 10/11) and the most common Linux distributions (e.g. Ubuntu, Debian).
+Following conditions are required for installation:
+- PHP ≥ 8.2 and ≤ 8.4
+	- incl. a webserver able to perform PHP operations (such as Apache or Nginx)
+	- extensions needed: XSL, ZIP
+- MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/8.0/en/installing-and-configuration.html)) or MariaDB
+
+### Quick installation guide
+
 1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
 2. The XSL and ZIP extensions for PHP must be installed and enabled.
 3. Don't forget to start Apache and MySQL.
-4. Create a new empty sql database in (e.g. using phpMyAdmin) an copy the name of the database.
+4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
 5. Copy the content of the file `sample_settings.php` into a new file `settings.php` and adjust the settings for the database connection.
 6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `settings.php`.
 7. Create a Google Maps JS API key and paste it into the `settings.php` file as well.
@@ -26,6 +37,48 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 11. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
+
+<details> 
+  <summary> 
+
+  ### Detailed example installation on Windows 10/11
+  </summary>
+
+  This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10/11 using PHP and MySQL. For a local development environment, localhost-based access to the server is usually sufficient.
+  #### 1. Setting up the development environment
+  - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP > 8.2).
+  - Install [MySQL](https://dev.mysql.com/downloads/installer/) or MariaDB.
+  - Install and enable the XSL and ZIP extensions for PHP. In order to do that, open the `php.ini` file and uncomment the line for the required extensions.
+  #### 2. Starting Apache and MySQL
+  - If you're using an all-in-one solutions such as XAMPP or WampServer, you can start Apache directly from the XAMPP or WampServer control panel.
+  - Alternatively, you can manually start Apache by navigating to the `bin` directory of Apache (e.g., `C:\xampp\apache\bin`) and running `httpd.exe`.
+  #### 3. Creating an empty SQL database
+  - Using phpMyAdmin: If you're using XAMPP or WampServer, phpMyAdmin is already installed. You can access it by going to `http://localhost/phpmyadmin` in your browser.
+  - Create a new database and remember the name of it, as you'll need it later in the next step.
+  - Alternatively, using the Windows PowerShell: 
+    - Start MySQL in the Shell while being in your SQL directory: `mysql -u root -p`
+    - Create a database: `CREATE DATABASE your_database;`
+    - Create a new MySQL-user for the installation: `CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';`
+    - Granting rights to this user: `GRANT CREATE ON your_database.* TO 'username'@'localhost';` and save with `FLUSH PRIVILEGES;`
+    - Optional: confirm the creation of the database while being logged in as the new user: `SHOW DATABASES;`
+  #### 4. Setting up the `settings.php` file
+  - Download all files from this repository into the `htdocs`or`www`folder of your webserver.
+  - Create `settings.php`:
+    - Copy the entire contents of `sample_settings.php` which is located in the first level of the ELMO repository and save it as `settings.php` in the same directory.
+  - Adjust the database connection:
+    - Open the `settings.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
+  #### 5. Setting up the application
+  - Access the installation script in your browser as follows: `http://localhost/your_directory/install.php`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.php`.
+  #### 6. (Optional) Creating an API key for the automatically generated time zone selection
+  - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
+  - Insert your API key in `settings.php`in the according line.
+  #### 7. Creating a Google Maps JS API key
+  - Get a Google Maps JS API key via the [Google Cloud Console](https://console.cloud.google.com). To do this, create a project, enable the Google Maps JavaScript API and get your API key.
+  - Insert your Google Maps API key in the corresponding line in the `settings.php`file. 
+  #### 8. Accessing the metadata editor
+  - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
+  - Settings may be modified in `settings.php`.
+</details>
 
 ## Dependencies
 
