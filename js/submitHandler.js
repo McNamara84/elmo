@@ -57,12 +57,13 @@ class SubmitHandler {
      */
     async handleModalSubmit() {
         const submitData = new FormData(this.$form[0]);
-        submitData.append('input-submit-urgency', $('#input-submit-urgency').val());
-        submitData.append('input-submit-dataurl', $('#input-submit-dataurl').val());
+
+        submitData.append('urgency', $('#input-submit-urgency').val());
+        submitData.append('dataUrl', $('#input-submit-dataurl').val());
 
         const dataDescriptionFile = $('#input-submit-datadescription')[0].files[0];
         if (dataDescriptionFile) {
-            submitData.append('input-submit-datadescription', dataDescriptionFile);
+            submitData.append('dataDescription', dataDescriptionFile);
         }
 
         this.modals.submit.hide();
