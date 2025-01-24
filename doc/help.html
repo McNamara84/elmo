@@ -16,7 +16,7 @@
     <nav class="navbar navbar-expand navbar-light navbar-help-header sticky-top">
         <div class="container">
             <a class="navbar-brand text-white m-3" href="#">
-                EPOS Laboratory Metadata Optimizer - Guide
+                Enhanced Laboratory Metadata Optimizer - Guide
             </a>
             <!-- Link to imprint -->
             <div class="navbar-collapse justify-content-end" id="navbar-help-menu">
@@ -40,12 +40,12 @@
                     <li class="nav-item"><a class="nav-link" href="#help-resourceinformation">Resource Information</a>
                     </li>
                     <li class="nav-item"><a class="nav-link" href="#help-rights">Licenses and rights</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-authors">Authors</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-contactperson">Contact Persons</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#help-authors">Author(s)</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#help-contactperson">Contact Person(s)</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-originatinglaboratory">Originating
                             Laboratory</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-contributors">Contributors</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-descriptions">Descriptions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#help-contributors">Contributor(s)</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#help-descriptions">Description(s)</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-mslkeywords">EPOS MSL Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-scienceKeywords">GCMD Science Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-freeKeywords">Free Keywords</a></li>
@@ -69,117 +69,52 @@
                 <div class="section-divider"></div>
                 <!-- formgroup resource information -->
                 <div id="help-resourceinformation" class="section-content">
-                    <h4>Resource Information</h4>
-                    <p>General metadata for the data set is specified in the Resource Information section. In
-                        detail,these are the form fields DOI, Publication Year, Resource Type, Version, Language of
-                        dataset, Title and Title Type. Up to
-                        <?php echo $maxTitles; ?> different titles can be specified.
-                    </p>
+                    <div id="help-resourceinformation-fg">
+                        <h4>Resource Information</h4>
+                        <p>Please specify general metadata for the data set here. Mandatory
+                            fields are: Publication Year, Resource Type, Language of dataset, Title.
+                        </p>
+                        <p>By default, GFZ Data Services is the publisher. If this should not be the case, e.g. in some
+                            cooperation projects, please contact us for further advice. Note: the
+                            publisher will be named in the citation of the dataset as requested by the citation
+                            guidelines of DataCite.
+                        </p>
+                    </div>
                     <div id="help-resourceinformation-doi">
                         <h5>DOI</h5>
                         <p>The DOI is a unique string that identifies a resource. Format should be 10.ORGANISATION/ID.
-                            If you have no DOI for your dataset yet, you can leave this field empty and a DOI will be
-                            registered.</p>
+                            If you have no DOI for your dataset yet, please leave this field empty and a DOI will be
+                            registered by GFZ Data Services.</p>
                     </div>
                     <div id="help-resourceinformation-publicationyear">
                         <h5>Publication Year</h5>
                         <p>The year when the data was or will be made publicly available. In the case of datasets,
-                            “publish”
-                            is understood to mean making the data available on a specific date to the community of
-                            researchers. Values between 1901 and 2155 are allowed.</p>
+                            “publish” is understood to mean making the data available on a specific date to the
+                            community of researchers. Values between 1901 and 2155 are allowed.</p>
                         <ul>
                             <li>If that date cannot be determined, use the date of registration.</li>
-                            <li>If an embargo period has been in effect, use the date when the embargo period ends.</li>
+                            <li>If an embargo period is in effect, use the date when the embargo period ends.</li>
                             <li>If there is no standard publication year value, use the date that would be preferred
-                                from a
-                                citation perspective.</li>
+                                from a citation perspective.</li>
                         </ul>
                     </div>
                     <div id="help-resourceinformation-resourcetype">
                         <h5>Resource Type</h5>
-                        <p>The data record is classified in the Resource Type form field. The following different
-                            resource
-                            types are available for selection.</p>
-                        <ul>
-                            <li><strong>Audiovisual:</strong> A series of visual representations that, when shown in
-                                sequence, give
-                                the impression of movement. May or may not include sound.</li>
-                            <li><strong>Book:</strong> A non-serial publication that is complete in one volume or a
-                                designated
-                                finite number of volumes.</li>
-                            <li><strong>BookChapter:</strong> A defined chapter or section of a book.</li>
-                            <li><strong>Collection:</strong> An aggregation of resources, which can be any aggregation
-                                of
-                                resources
-                                such as datasets, documents, etc.</li>
-                            <li><strong>ComputationalNotebook:</strong> An interactive document containing code, data,
-                                and
-                                text that
-                                is used for conducting and documenting computational research.</li>
-                            <li><strong>ConferencePaper:</strong> A paper that was presented at a conference.</li>
-                            <li><strong>ConferenceProceeding:</strong> A collection of papers presented at a conference.
-                            </li>
-                            <li><strong>DataPaper:</strong> A scholarly publication describing a dataset, published in a
-                                data
-                                journal.</li>
-                            <li><strong>Dataset:</strong> A structured collection of data generally associated with a
-                                unique
-                                body of
-                                work.</li>
-                            <li><strong>Dissertation:</strong> A formal and lengthy discourse or treatise on a
-                                particular
-                                subject,
-                                based on original research, and submitted for an academic degree.</li>
-                            <li><strong>Event:</strong> A non-persistent, time-based occurrence.</li>
-                            <li><strong>Image:</strong> A visual representation other than text.</li>
-                            <li><strong>Instrument:</strong> A device or tool used for scientific purposes.</li>
-                            <li><strong>InteractiveResource:</strong> A resource that requires interaction from the user
-                                to
-                                be
-                                understood, executed, or experienced.</li>
-                            <li><strong>Journal:</strong> A periodic publication that contains articles on current
-                                research,
-                                usually
-                                published in issues and volumes.</li>
-                            <li><strong>JournalArticle:</strong> A publication in a journal.</li>
-                            <li><strong>Model:</strong> An abstract, conceptual, graphical, or mathematical
-                                representation
-                                of
-                                processes or entities.</li>
-                            <li><strong>OutputManagementPlan:</strong> A document describing data outputs, management
-                                and
-                                sharing
-                                practices, and policies.</li>
-                            <li><strong>PeerReview:</strong> A review of a resource that has been conducted by experts
-                                in
-                                the field.
-                            </li>
-                            <li><strong>PhysicalObject:</strong> An inanimate, three-dimensional object or substance.
-                            </li>
-                            <li><strong>Preprint:</strong> A version of a scholarly or scientific paper that precedes
-                                formal
-                                peer
-                                review and publication in a peer-reviewed scholarly or scientific journal.</li>
-                            <li><strong>Report:</strong> A formal account of an investigation, research, or event.</li>
-                            <li><strong>Service:</strong> A system that provides one or more functions to users, such as
-                                a
-                                web
-                                service.</li>
-                            <li><strong>Software:</strong> A computer program in source or compiled form.</li>
-                            <li><strong>Sound:</strong> A resource primarily intended to be heard.</li>
-                        </ul>
+                        <p>Please specify the type of Dataset here. See <a
+                                href="https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/"
+                                target="_blank">DataCite Documentation</a> for definition of the controlled list and
+                            examples.</p>
+
                     </div>
                     <div id="help-resourceinformation-version">
                         <h5>Version</h5>
                         <p>The version number or other identifier of the dataset. If your dataset is published for the
-                            first
-                            time, this field can be left empty. If it has been updated, specify the version number here.
-                            The
-                            suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
-                            changes
-                            in the dataset. Major changes typically require registration of a new DOI. <em>If unsure
-                                leave
-                                blank.</em></p>
+                            first time, this field can be left empty. If it has been updated, specify the version number
+                            here.
+                            The suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
+                            changes in the dataset. Major changes typically require registration of a new DOI.
+                            <strong>If unsure, leave blank.</strong>
+                        </p>
                     </div>
                     <div id="help-resourceinformation-language">
                         <h5>Language of dataset</h5>
@@ -188,29 +123,21 @@
                     </div>
                     <div id="help-resourceinformation-title">
                         <h5>Title</h5>
-                        <p>The main title of the dataset. The first row is reserved for the main title. You can specify
+                        <p>The title of the dataset. The first row is reserved for the main title. You can specify
                             up to
-                            <?php echo $maxTitles; ?> additional title types if your dataset is known by multiple names
+                            <?php echo $maxTitles-1; ?> additional titles if your dataset is known by multiple names
                             or translations.
                         </p>
                     </div>
                     <div id="help-resourceinformation-titletype">
                         <h5>Title Type</h5>
                         <p>Indicates the type of title being provided, such as an alternative title or translated title.
-                            Default is "MainTitle". Every title should have a title type.</p>
+                            Mandatory for every title except the main title in the first row.</p>
                         <ul>
-                            <li><strong>Main Title:</strong> The primary title by which the dataset is known. This title
-                                type is required and can only be entered once.
-                            </li>
                             <li><strong>Alternative Title:</strong> You can also add an alternative title if required.
                             </li>
-                            <li><strong>Subtitle:</strong> If the data record has a subtitle, you can enter it with this
-                                title type.
-                            </li>
                             <li><strong>Translated Title:</strong> If the dataset is also to be published with a
-                                translated
-                                title,
-                                this title should have this title type.</li>
+                                translated title, this title should have this title type.</li>
                         </ul>
                     </div>
                 </div>
@@ -224,10 +151,12 @@
                 <div class="section-divider"></div>
                 <!-- formgroup authors -->
                 <div id="help-authors" class="section-content">
-                    <h4>Authors</h4>
-                    If possible, you should enter all authors of the dataset here, ideally with an ORCID. Entering an
-                    ORCID loads data from the corresponding ORCID profile. The order of the authors can also be changed
-                    later using drag & drop.
+                    <div id="help-authors-fg">
+                        <h4>Author(s)</h4>
+                        <p> Please enter authors of the dataset here, ideally with an ORCID. Entering an ORCID loads
+                            data from the corresponding ORCID profile. To add more authors, use the "add" button on the
+                            right. The order of the authors can be changed using drag & drop. </p>
+                    </div>
                     <div id="help-author-orcid">
                         <h5>ORCID</h5>
                         <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
@@ -286,7 +215,14 @@
                 <div class="section-divider"></div>
                 <!-- formgroup contributors -->
                 <div id="help-contributors" class="section-content">
-                    <h4>Contributors</h4>
+                    <div id="help-contributors-fg">
+                        <h4>Contributors</h4>
+                        <p>
+                            Institution or person responsible for collecting, managing, distributing, or otherwise
+                            contributing to the development of the resource. To add more than one contributor, use the "add" button on the right.
+                        </p>
+                    </div>
+
                     <div id="help-contributor-role">
                         <h5>Roles (Person)</h5>
                         <p>The role of the contributor person/s in the creation of the resource. Please choose one or
@@ -387,7 +323,7 @@
                     <div id="help-contributor-affiliation">
                         <h5>Affiliation</h5>
                         <p>The organisational or institutional affiliation of the Person/s.</p>
-                        <p>It is recommended to select the affiliation from the list, if the required affiliation is not
+                        <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                             among the available options, it can be entered manually.</p>
                     </div>
                     <div id="help-contributor-organisationname">
@@ -465,7 +401,7 @@
                     <div id="help-contributor-organisationaffiliation">
                         <h5>Affiliation</h5>
                         <p>The organisational or institutional affiliation of the Institution.</p>
-                        <p>It is recommended to select the affiliation from the list, if the required affiliation is not
+                        <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                             among the available options, it can be entered manually.</p>
                     </div>
                 </div>
@@ -675,6 +611,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <!-- formgroup related work-->
                 <div id="help-relatedwork" class="section-content">
                     <div id="help-relatedwork-fg">
                         <h4>Related Work</h4>

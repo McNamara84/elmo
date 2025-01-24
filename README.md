@@ -1,6 +1,6 @@
-# ELMO - EPOS Laboratory Metadata Optimizer
+# ELMO - Enhanced Laboratory Metadata Organizer
 
-This EPOS Laoratory Metadata Optimizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GeoForschungsZentrum Potsdam](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
+The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GeoForschungsZentrum Potsdam](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
 
 ## Main Features
 - Simple mapping of entered data using XSLT.
@@ -13,10 +13,21 @@ This EPOS Laoratory Metadata Optimizer (ELMO) is based on a student cooperation 
 
 ## Installation
 
+### Requirements
+
+The installation of ELMO is possible on operating systems such as recent Windows versions (e.g. Windows 10/11) and the most common Linux distributions (e.g. Ubuntu, Debian).
+Following conditions are required for installation:
+- PHP ≥ 8.2 and ≤ 8.4
+	- incl. a webserver able to perform PHP operations (such as Apache or Nginx)
+	- extensions needed: XSL, ZIP
+- MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/8.0/en/installing-and-configuration.html)) or MariaDB
+
+### Quick installation guide
+
 1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
 2. The XSL and ZIP extensions for PHP must be installed and enabled.
 3. Don't forget to start Apache and MySQL.
-4. Create a new empty sql database in (e.g. using phpMyAdmin) an copy the name of the database.
+4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
 5. Copy the content of the file `sample_settings.php` into a new file `settings.php` and adjust the settings for the database connection.
 6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `settings.php`.
 7. Create a Google Maps JS API key and paste it into the `settings.php` file as well.
@@ -26,6 +37,48 @@ This EPOS Laoratory Metadata Optimizer (ELMO) is based on a student cooperation 
 11. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
+
+<details> 
+  <summary> 
+
+  ### Detailed example installation on Windows 10/11
+  </summary>
+
+  This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10/11 using PHP and MySQL. For a local development environment, localhost-based access to the server is usually sufficient.
+  #### 1. Setting up the development environment
+  - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP > 8.2).
+  - Install [MySQL](https://dev.mysql.com/downloads/installer/) or MariaDB.
+  - Install and enable the XSL and ZIP extensions for PHP. In order to do that, open the `php.ini` file and uncomment the line for the required extensions.
+  #### 2. Starting Apache and MySQL
+  - If you're using an all-in-one solutions such as XAMPP or WampServer, you can start Apache directly from the XAMPP or WampServer control panel.
+  - Alternatively, you can manually start Apache by navigating to the `bin` directory of Apache (e.g., `C:\xampp\apache\bin`) and running `httpd.exe`.
+  #### 3. Creating an empty SQL database
+  - Using phpMyAdmin: If you're using XAMPP or WampServer, phpMyAdmin is already installed. You can access it by going to `http://localhost/phpmyadmin` in your browser.
+  - Create a new database and remember the name of it, as you'll need it later in the next step.
+  - Alternatively, using the Windows PowerShell: 
+    - Start MySQL in the Shell while being in your SQL directory: `mysql -u root -p`
+    - Create a database: `CREATE DATABASE your_database;`
+    - Create a new MySQL-user for the installation: `CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';`
+    - Granting rights to this user: `GRANT CREATE ON your_database.* TO 'username'@'localhost';` and save with `FLUSH PRIVILEGES;`
+    - Optional: confirm the creation of the database while being logged in as the new user: `SHOW DATABASES;`
+  #### 4. Setting up the `settings.php` file
+  - Download all files from this repository into the `htdocs`or`www`folder of your webserver.
+  - Create `settings.php`:
+    - Copy the entire contents of `sample_settings.php` which is located in the first level of the ELMO repository and save it as `settings.php` in the same directory.
+  - Adjust the database connection:
+    - Open the `settings.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
+  #### 5. Setting up the application
+  - Access the installation script in your browser as follows: `http://localhost/your_directory/install.php`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.php`.
+  #### 6. (Optional) Creating an API key for the automatically generated time zone selection
+  - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
+  - Insert your API key in `settings.php`in the according line.
+  #### 7. Creating a Google Maps JS API key
+  - Get a Google Maps JS API key via the [Google Cloud Console](https://console.cloud.google.com). To do this, create a project, enable the Google Maps JavaScript API and get your API key.
+  - Insert your Google Maps API key in the corresponding line in the `settings.php`file. 
+  #### 8. Accessing the metadata editor
+  - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
+  - Settings may be modified in `settings.php`.
+</details>
 
 ## Dependencies
 
@@ -65,60 +118,73 @@ In addition to the access data for the database, other settings can also be adju
 - `$feedbackAddress`: Email Address to which the feedback is sent
 - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent
 
-# API-Dokumentation
+## API-Dokumentation
 
 Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data Services Webanwendung. Sie richtet sich an Administratoren und Techniker, die diese Anwendung auf einem eigenen Webserver installieren und verwalten möchten.
 
-## Allgemeine Informationen
+### Allgemeine Informationen
 
 - Basis-URL: `https://mde2.cats4future.de/api.php`
 - Alle Anfragen sollten via HTTPS erfolgen
 - Antworten werden im JSON-Format zurückgegeben, sofern nicht anders angegeben
 
-## API-Endpunkte
+### API-Endpunkte
 
 [Interaktive Dokumentation](https://mde2.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
+<details>
+  <summary> 
+  
+ ### 1. GCMD Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  </summary>
 
-### 1. GCMD Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  GET ?action=getGcmdScienceKeywords
 
-GET ?action=getGcmdScienceKeywords
+  Liefert das kontrollierte Vokabular der GCMD Science Keywords.
 
-Liefert das kontrollierte Vokabular der GCMD Science Keywords.
+  **Antwort:**
+  JSON-Array mit Objekten, die folgende Schlüssel enthalten:
 
-**Antwort:**
-JSON-Array mit Objekten, die folgende Schlüssel enthalten:
+  - `id`: Eindeutige Kennung
+  - `text`: Bezeichnung des Keywords
+  - `language`: Sprachcode
+  - `scheme`: Name des Schemas
+  - `schemeURI`: URI des Schemas
+  - `description`: Beschreibung
+  - `children`: Array von Unterkategorien mit der gleichen Struktur
+</details>
 
-- `id`: Eindeutige Kennung
-- `text`: Bezeichnung des Keywords
-- `language`: Sprachcode
-- `scheme`: Name des Schemas
-- `schemeURI`: URI des Schemas
-- `description`: Beschreibung
-- `children`: Array von Unterkategorien mit der gleichen Struktur
+<details>
+  <summary>
 
-### 2. Zeitzonen aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 2. Zeitzonen aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  </summary>
 
-GET ?action=getTimezones
+  GET ?action=getTimezones
 
-Aktualisiert die Liste der Zeitzonen für das Feld `Timezones` in der Gruppe `Spatial and temporal coverage`.
+  Aktualisiert die Liste der Zeitzonen für das Feld `Timezones` in der Gruppe `Spatial and temporal coverage`.
 
-**Empfohlener Ausführungsintervall:** Monatlich
+  **Empfohlener Ausführungsintervall:** Monatlich
 
-**Antwort:**
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
+
+<details>
+  <summary>
+  
+  ### 3. NASA Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+
+  GET ?action=getNasaScienceKeywords
+
+  Aktualisiert den Thesaurus für die NASA Science Keywords.
+
+  **Empfohlener Ausführungsintervall:** Wöchentlich
+
+  **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
 
-### 3. NASA Science Keywords (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
-GET ?action=getNasaScienceKeywords
-
-Aktualisiert den Thesaurus für die NASA Science Keywords.
-
-**Empfohlener Ausführungsintervall:** Wöchentlich
-
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-### 4. ROR Affiliations
+### 4. ROR Affiliations (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
 GET ?action=getRorAffiliations
 
@@ -129,7 +195,10 @@ Aktualisiert die Daten für die Auswahlfelder der Affiliations von Personen.
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
 
-### 5. CrossRef Funders
+<details>
+  <summary>
+
+### 5. CrossRef Funders (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
 GET ?action=getCrossRefFunders
 
@@ -139,22 +208,32 @@ Aktualisiert die Auswahloptionen im Funders-Dropdown-Feld.
 
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
 
-### 6. Resource als DataCite XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>  
+  
+ ### 6. Resource as DataCite XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+  
+  GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
 
-GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
+  Exportiert einen Datensatz als XML-Datei gemäß dem DataCite-Schema (Version 4.5).
 
-Exportiert einen Datensatz als XML-Datei gemäß dem DataCite-Schema (Version 4.5).
+  **Parameter:**
 
-**Parameter:**
+  - `id`: ID des Datensatzes (erforderlich)
+  - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
 
-- `id`: ID des Datensatzes (erforderlich)
-- `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
+  **Antwort:**
+  XML-Datei oder XML-Inhalt
+</details>
 
-**Antwort:**
-XML-Datei oder XML-Inhalt
+<details>
+<summary>
 
-### 7. Resource als ISO XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+### 7. Resource as ISO XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+</summary>
 
 GET ?action=getResourceAsIsoXml&id={resource_id}&download={true|false}
 
@@ -167,56 +246,82 @@ Exportiert einen Datensatz als XML-Datei gemäß dem ISO-Standard.
 
 **Antwort:**
 XML-Datei oder XML-Inhalt
+</details>
 
-### 8. Resource als DIF XML (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>
 
-GET ?action=getResourceAsDifXml&id={resource_id}&download={true|false}
+  ### 8. Resource as DIF XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-Exportiert einen Datensatz als XML-Datei gemäß dem DIF-Format.
+  </summary>
 
-**Parameter:**
+  GET ?action=getResourceAsDifXml&id={resource_id}&download={true|false}
 
-- `id`: ID des Datensatzes (erforderlich)
-- `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
+  Exportiert einen Datensatz als XML-Datei gemäß dem DIF-Format.
 
-**Antwort:**
-XML-Datei oder XML-Inhalt
+  **Parameter:**
 
-### 9. Alle Ressourcen als eine XML-Datei (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  - `id`: ID des Datensatzes (erforderlich)
+  - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
 
-GET ?action=getResourcesAsOneFile&id={resource_id}
+  **Antwort:**
+  XML-Datei oder XML-Inhalt
+</details>
 
-Exportiert einen Datensatz in allen drei XML-Formaten (DataCite, ISO, DIF) in einer einzigen XML-Datei.
+<details>
+  <summary>
 
-**Parameter:**
+  ### 9. All resources as one XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-- `id`: ID des Datensatzes (erforderlich)
+  </summary>
 
-**Antwort:**
-XML-Datei zum Download
+  GET ?action=getResourcesAsOneFile&id={resource_id}
 
-### 10. MSL Vokabulare aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  Exportiert einen Datensatz in allen drei XML-Formaten (DataCite, ISO, DIF) in einer einzigen XML-Datei.
 
-GET ?action=getMslVocab&type={vocab_type}
+  **Parameter:**
 
-Aktualisiert die kontrollierten Vokabulare des Materials Science Laboratory (MSL).
+  - `id`: ID des Datensatzes (erforderlich)
 
-**Parameter:**
+  **Antwort:**
+  XML-Datei zum Download
+</details>
 
-- `type`: Typ des Vokabulars (erforderlich)
-  - Mögliche Werte: `all`, `analogue`, `geochemistry`, `geologicalage`, `geologicalsetting`, `materials`, `microscopy`, `paleomagnetism`, `porefluids`, `rockphysics`
+<details>
+  <summary>
 
-**Antwort:**
-JSON-Objekt mit Aktualisierungsstatus für jedes Vokabular
+ ### 10. MSL Vokabulare aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-### 11. MSL Labs aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  </summary>
 
-GET ?action=getMslLabs
+  GET ?action=getMslVocab&type={vocab_type}
 
-Aktualisiert die Liste der MSL Labs.
+  Aktualisiert die kontrollierten Vokabulare des Materials Science Laboratory (MSL).
 
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
+  **Parameter:**
+
+  - `type`: Typ des Vokabulars (erforderlich)
+    - Mögliche Werte: `all`, `analogue`, `geochemistry`, `geologicalage`, `geologicalsetting`, `materials`, `microscopy`, `paleomagnetism`, `porefluids`, `rockphysics`
+
+  **Antwort:**
+  JSON-Objekt mit Aktualisierungsstatus für jedes Vokabular
+</details>
+
+<details>
+  <summary>
+
+ ### 11. MSL Labs aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  </summary>
+
+  GET ?action=getMslLabs
+
+  Aktualisiert die Liste der MSL Labs.
+
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+
+</details>
 
 ### 12. CGI Keywords aktualisieren
 
@@ -245,109 +350,153 @@ Aktualisiert die Konzepte des GEMET Thesaurus.
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
 
-### 15. Rollen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+<details>
+  <summary>
 
-GET ?action=getRoles&type={role_type}
+  ### 15.  Rollen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-Ruft Rollen aus der Datenbank ab.
+  </summary>
 
-**Parameter:**
+  GET ?action=getRoles&type={role_type}
 
-- `type`: Typ der Rollen (erforderlich)
-  - Mögliche Werte: `all`, `person`, `institution`, `both`
+  Ruft Rollen aus der Datenbank ab.
 
-**Antwort:**
-JSON-Array mit Rollen-Objekten
+  **Parameter:**
 
-### 16. NASA Instruments Keywords aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  - `type`: Typ der Rollen (erforderlich)
+    - Mögliche Werte: `all`, `person`, `institution`, `both`
 
-GET ?action=getNasaInstrumentsKeywords
+  **Antwort:**
+  JSON-Array mit Rollen-Objekten
+</details>
 
-Aktualisiert die NASA/GCMD Instruments Keywords.
+<details>
+  <summary>
 
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
+  ### 16.  NASA Instruments Keywords aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-### 17. NASA Platforms Keywords aktualisieren (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  </summary
+  	
+  GET ?action=getNasaInstrumentsKeywords
 
-GET ?action=getNasaPlatformsKeywords
+  Aktualisiert die NASA/GCMD Instruments Keywords.
 
-Aktualisiert die NASA/GCMD Earth Platforms Keywords.
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
 
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
+<details>
+  <summary>
 
-### 18. Lizenzen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 17.  NASA Platforms Keywords aktualisieren (deprecated,  neue Version in  [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-GET ?action=getLicenses&resourcetype={license_type}
+  </summary
 
-Ruft Lizenzen aus der Datenbank ab.
+  GET ?action=getNasaPlatformsKeywords
 
-**Parameter:**
+  Aktualisiert die NASA/GCMD Earth Platforms Keywords.
 
-- `resourcetype`: Typ der Lizenzen (erforderlich)
-  - Mögliche Werte: `all`, `software`
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+  </details>
 
-**Antwort:**
-JSON-Array mit Lizenz-Objekten
+<details>
+  <summary>
 
-### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 18. Lizenzen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-GET ?action=getKeywords&curationType={curation_type}
+  </summary
 
-Ruft Keywords aus der Datenbank ab.
+  GET ?action=getLicenses&resourcetype={license_type}
 
-**Parameter:**
+  Ruft Lizenzen aus der Datenbank ab.
 
-- `curationType`: Typ der Kuration (optional)
-  - Mögliche Werte: `all`, `isCurated`
+  **Parameter:**
 
-**Antwort:**
-JSON-Array mit Keyword-Objekten
+  - `resourcetype`: Typ der Lizenzen (erforderlich)
+    - Mögliche Werte: `all`, `software`
 
-### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Antwort:**
+  JSON-Array mit Lizenz-Objekten
+</details>
 
-GET ?action=getRelations
+<details>
+  <summary>
+  
+  ### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-Ruft alle Relationen aus der Datenbank ab.
+  GET ?action=getKeywords&curationType={curation_type}
 
-**Antwort:**
-JSON-Array mit Relation-Objekten
+  Ruft Keywords aus der Datenbank ab.
 
-### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Parameter:**
 
-GET ?action=getIdentifierType&identifier={identifier_string}
+  - `curationType`: Typ der Kuration (optional)
+    - Mögliche Werte: `all`, `isCurated`
 
-Ermittelt den Typ eines gegebenen Identifiers.
+  **Antwort:**
+  JSON-Array mit Keyword-Objekten
+</details>
 
-**Parameter:**
+<details>
+  <summary>
+  
+  ### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-- `identifier`: Der zu prüfende Identifier-String (erforderlich)
+  GET ?action=getRelations
 
-**Antwort:**
-JSON-Objekt mit dem ermittelten Identifier-Typ oder einer Fehlermeldung
+  Ruft alle Relationen aus der Datenbank ab.
 
-### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Antwort:**
+  JSON-Array mit Relation-Objekten
+</details>
 
-GET ?action=getPattern&type={identifier_type}
+<details>
+  <summary>
+  
+  ### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-Ruft das Regex-Pattern für einen bestimmten Identifier-Typ ab.
+  GET ?action=getIdentifierType&identifier={identifier_string}
 
-**Parameter:**
+  Ermittelt den Typ eines gegebenen Identifiers.
 
-- `type`: Der Identifier-Typ (erforderlich)
+  **Parameter:**
 
-**Antwort:**
-JSON-Objekt mit dem Regex-Pattern oder einer Fehlermeldung
+  - `identifier`: Der zu prüfende Identifier-String (erforderlich)
 
-### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  **Antwort:**
+  JSON-Objekt mit dem ermittelten Identifier-Typ oder einer Fehlermeldung
+</details>
 
-GET ?action=getIdentifierTypes
+<details>
+  <summary>
+  
+  ### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
-Ruft alle verfügbaren Identifier-Typen aus der Datenbank ab.
+  GET ?action=getPattern&type={identifier_type}
 
-**Antwort:**
-JSON-Array mit Identifier-Typ-Objekten
+  Ruft das Regex-Pattern für einen bestimmten Identifier-Typ ab.
+
+  **Parameter:**
+
+  - `type`: Der Identifier-Typ (erforderlich)
+
+  **Antwort:**
+  JSON-Objekt mit dem Regex-Pattern oder einer Fehlermeldung
+</details>
+
+<details>
+  <summary>
+  
+  ### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+
+  GET ?action=getIdentifierTypes
+
+  Ruft alle verfügbaren Identifier-Typen aus der Datenbank ab.
+
+  **Antwort:**
+  JSON-Array mit Identifier-Typ-Objekten
+</details>
 
 ## Formularfelder
 
@@ -355,181 +504,218 @@ JSON-Array mit Identifier-Typ-Objekten
 
 - DOI
 
-  - In diesem Feld kommt die DOI (Digital Object Identifier), die die Ressource identifiziert.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: doi in der Tabelle Resource.
-  - Restriktionen: Muss im Format "prefix/suffix" sein.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/identifier/)
-  - Beispielwerte: `10.5880/GFZ.3.1.2024.002` `10.5880/pik.2024.001`
+  This field contains the DOI (Digital Object Identifier) that identifies the resource.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: `doi` in the table `Resource`
+  - Restrictions: Must be in “prefix/suffix” format
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/identifier/)
+  - Example values: `10.5880/GFZ.3.1.2024.002`, `10.5880/pik.2024.001`
+  - Mapping: is mapped to `<identifier>` in the DataCite scheme and to `<gmd:fileIdentifier>` as well as `<gmd:identifier> <gmd:MD_Identifier> <gmd:code>` and `<gmd:distributionInfo> <gmd:MD_Distribution> <gmd:transferOptions> <gmd:MD_DigitalTransferOptions> <gmd:onLine> <gmd:CI_OnlineResource>` in the ISO scheme
 
 - Publication Year
 
-  - In diesem Feld kommt das Veröffentlichungsjahr der Ressource.
-  - Datentyp: Year
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: year in der Tabelle Resource.
-  - Restriktionen: A year in four-digit format. Values allowed in four-digit format: 1901 to 2155 (due to data type YEAR)
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/publicationyear/)
-  - Beispielwerte: `1998` `2018` `1901`
+    This field contains the publication year of the resource.
+    - Data type: Year
+    - Occurrence: 1
+    - The corresponding field in the database where the value is saved is called: `year` in the table `year`
+    - Restrictions: A year in four-digit format. Values allowed in four-digit format: 1901 to 2155 (due to data type YEAR)
+    - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/publicationyear/#publicationyear)
+    - Example values: `1998`, `2018`
+    - Mapping: is mapped to `<publicationYear>` in the DataCite scheme
+
 
 - Resource Type
 
-  - In diesem Feld kommt der Typ der Ressource.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: resource_type_general in der Tabelle Resource_Type.
-  - Restriktionen: Muss ein „Recource Type“ ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/resourcetype/#a-resourcetypegeneral)
-  - Beispielwerte: `Dataset` `Audiovisual` `Book`
+  This field contains the type of resource.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is saved is called: `resource_type_general` in the table `Resource_Type`
+  - Restrictions: must be selected from [controlled list](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/#resourcetypegeneral) 
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/resourcetype/#a-resourcetypegeneral)
+  - Example values: `Dataset`, `Audiovisual`, `Book`
+  - Mapping: mapped to `<resourceType resourceTypeGeneral="XX">` in the DataCite scheme
 
 - Version
 
-  - In diesem Feld kommt die Versionsnummer der Ressource.
-  - Datentyp: FLOAT
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: version in der Tabelle Resource.
-  - Restriktionen: Zahl Punkt Zahl.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/version/)
-  - Beispielwerte: `1.0` `2.1` `3.5`
+  This field contains the version number of the resource.
+  - Data type: Float
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is saved is called: `version` in the table `Resource`
+  - Restrictions: None 
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/version/)
+  - Example values: `1.0` `2.1` `3.5`
+  - Mapping: mapped to `<version>` in DataCite scheme
 
 - Language of Dataset
 
-  - In diesem Feld kommt die Sprache des Datensatzes.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: name in der Tabelle Language.
-  - Restriktionen: Muss eine „Sprache“ ausgewählt werden.
+  This field contains the language of the dataset
+  - Data type: String
+  - Occurence: 1
+  - The corresponding field in the database where the value is saved is called: `name` in the table `Language`
+  - Restrictions: must be selected from controlled list
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/language/)
-  - Beispielwerte: `"en" Englisch` `"de" Deutsch` `"fr" Französisch`
+  - Beispielwerte: `Englisch`, `German`, `French`
+  - Mapping: mapped to `<language>` element in DataCite scheme and to `<gmd:language>` in ISO scheme 
 
 - Title
 
-  - In diesem Feld kommt der Titel der Ressource.
-  - Datentyp: Text
-  - Vorkommen: 1-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: text in der Tabelle title.
-  - Restriktionen: Muss angegeben werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)
-  - Beispielwerte: `Drone based photogrammetry data at the Geysir geothermal field, Iceland`
+  This field contains the title of the resource.
+  - Data type: String
+  - Occurrence: 1-n, with n=$maxTitles specified in the settings.php
+  - The corresponding field in the database where the value is stored is called: `text` in the table `title`
+  - Restrictions: None
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)
+  - Example values: `Drone based photogrammetry data at the Geysir`
+  - Mapping: mapped to `<titles> <title>` in DataCite scheme and `<identificationInfo> <MD_DataIdentification> <citation> <CI_Citation> <title>` or `...<alternateTitle` depending on the title type
 
 - Title Type
-  - In diesem Feld kommt die Art des Titels (außer dem Haupttitel).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: title in der Tabelle Title_Type.
-  - Restriktionen: Muss ein „Title Type“ ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/#a-titletype)
-  - Beispielwerte: `Main` `Subtitle` `Translated Title`
 
-### Rights
+  This field contains the type of title (other than the main title).
+  - Data type: String
+  - Occurrence: 1, if the corresponding title is not the main title
+  - The corresponding field in the database where the value is stored is called: `name` in the table `Title_Type`
+  - Restrictions: must be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/#a-titletype)
+  - Example values: `Translated Title`
+  - Mapping: mapped to `<title titleType="TranslatedTitle">` in the datacite scheme
+
+### Licenses & Rights
 
 - Rights Title
-  - In diesem Feld kommt der Titel der Lizenz mit ihrer Abkürzung.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: text und rightsIdentifier in der Tabelle Rights.
-  - Restriktionen: Muss eine „Linzenz“ ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/)
-  - Beispielwerte: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
+The content of this field is mapped to `<rights>` in the DataCite scheme and to `<resourceConstraints> <gmd:MD_Constraints> <gmd:useLimitation>` as well as `<gmd:resourceConstraints> <gmd:MD_LegalConstraints>` in the ISO scheme.
+
+  This field contains the title of the license with its abbreviation.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding fields in the database where the value is stored is called: `text`and `rightsIdentifier` in the table `Rights`
+  - Restrictions: Mandatory field. Must be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/)
+  - Example value: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
+
+- *Saved in backend (not visible to user):* rightsURI
+
+  This field contains the URI of the License.
+  - Data Type: String
+  - Occurence: 1
+  - The corresponding fields in the database where the value is stored is called: `rightsURI` in the table `Rights`
+  - Restrictions: Mandatory field. Must be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/#a-rightsuri)
+  - Example values: `https://creativecommons.org/licenses/by/4.0/legalcode`
+
+- *Saved in backend (not visible to user):* forSoftware
+
+  This field specifies if the license is used for software (forSoftware=1) or not (forSoftware=0). The controlled list changes for users based on this parameter when resource type Software is chosen.
 
 ### Authors
+Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsibleParty>` in the ISO scheme.
+Occurrence is: 1-n
 
-- Lastname
+- Last Name 
 
-  - In diesem Feld kommt der Nachname des Autors.
-  - Datentyp: Text
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: familyname in der Tabelle Author.
-  - Restriktionen: Muss angegeben werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#familyname)
-  - Beispielwerte: `Jemison` `Smith`
+  This field contains the author's surname.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: `familyname` in the table `author`
+  - Restrictions: mandatory field, only letters allowed
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#familyname)
+  - Example values: `Jemison`, `Smith`
 
-- Firstname
+- First Name
 
-  - In diesem Feld kommt der Vorname des Autors.
-  - Datentyp: Text
-  - Vorkommen: 1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: givenname in der Tabelle Author.
-  - Restriktionen: Muss angegeben werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
-  - Beispielwerte: `John` `Jane`
+  This field contains the author's first name.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database where the value is stored is called: `givenname` in the table `author`
+  - Restrictions: mandatory field, only letters allowed
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
+  - Example values: `Lisa`, `Elisa`
 
 - Author ORCID
 
-  - In diesem Feld kommt die ORCID des Autors (Open Researcher and Contributor ID).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: orcid in der Tabelle Author.
-  - Restriktionen: Muss im Format "xxxx-xxxx-xxxx-xxxx" sein.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
-  - Beispielwerte: `1452-9875-4521-7893` `0082-4781-1312-884x`
+  This field contains the author's ORCID (Open Researcher and Contributor ID).
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: `orcid` in the table `author`
+  - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
+  - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
 
 - Affiliation
-  - In diesem Feld kommt die Zugehörigkeit des Autors.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: name in der Tabelle Affiliation.
-  - Restriktionen: Es ist optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
-  - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+ 
+  This field contains the author's affiliation.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `name` in the table `affiliation`
+  - Restrictions: None, can be chosen from the dropdown menu or given as free text
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
+  - Example values: `Technische Universität Berlin`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
+
+- *Saved in backend (not visible to user):* rorId
+
+  If an affiliation is chosen from the dropdown menu, which contains the entry from the Research Organization Registry (ROR), the assiciated ROR-ID is saved.
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `rorId` in the table `affiliation`
+  - Restrictions: is automatically saved when an affiliation is chosen
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#a-affiliationidentifier)
+  - Example values: `03v4gjf40`, `04z8jg394`
 
 ### Contact Person(s)
 A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
 
 - Last name
 
-  - This field contains the surname of the person.
+  This field contains the surname of the person.
   - Data type: String
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: familyname in the Contact_Person table
   - Restrictions: Mandatory
-  - Example values: `Jemison` `Smith`
+  - Example values: `Jemison`, `Smith`
 
 - Firstname
 
-  - This field contains the first name of the person.
+  This field contains the first name of the person.
   - Data type: String
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: givenname in the table Contact_Person
   - Restrictions: Mandatory
-  - Example values: `John` `Jane`
+  - Example values: `John`, `Jane`
 
 - Position
 
-  - This field contains the position of the person in the organisation.
+  This field contains the position of the person in the organisation.
   - Data type: String
   - Occurrence: 0-1
   - The corresponding field in the database where the value is saved is called: position in the Contact_Person table
   - Restrictions: Optional
-  - Example values: `Working group leader` `Project leader`
+  - Example values: `Working group leader`, `Project leader`
 
 - Email address
 
-  - This field contains the email address of the person or organisation.
+  This field contains the email address of the person or organisation.
   - Data type: String
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: email in the Contact_Person table
   - Restrictions: Mandatory
-  - Example values: `ali.mohammed@gfz-potsdam.de` `holger.ehrmann@gfz-potsdam.de`
+  - Example values: `ali.mohammed@gfz-potsdam.de`, `holger.ehrmann@gfz-potsdam.de`
 
 - Website
 
-  - This field contains the organisation's website.
+  This field contains the organisation's website.
   - Data type: String
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: website in the Contact_Person table
-  - Restrictions: Optional.
-  - Example values: `gfz-potsdam.de` `fh-potsdam.de`
+  - Restrictions: Optional
+  - Example values: `gfz-potsdam.de`, `fh-potsdam.de`
 
 - Affiliation
-  - This field contains the affiliation of the person.
+  This field contains the affiliation of the person.
   - Data type: String
   - Occurrence: 0-n
   - The corresponding field in the database where the value is saved is called: name in the Affiliation table.
-  - Restrictions:Optimal.
-  - Example values: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
-  - Note**: Use autocomplete function for the Affiliation input field! similar to the ‘Author’ form group.
+  - Restrictions: Optional
+  - Example values: `Technische Universität Berlin`, `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+  - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
 ### Originating Laboratory
 <!-- TODO: Speicherung der Eingaben in der Datenbank dokumentieren! -->
@@ -544,89 +730,94 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
 
 ### Contributors
 
-- _Personal_
-- Lastname
-
-  - In diesem Feld kommt der Nachname der/des Mitwirkenden.
-  - Datentyp: Text
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: familyname in der Tabelle Contributor_Person
-  - Restriktionen: Optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#familyname)
-  - Beispielwerte: `Jemison` `Smith`
-
-- Firstname
-
-  - In diesem Feld kommt der Vorname der/des Mitwirkenden.
-  - Datentyp: Text
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: givenname in der Tabelle Contributor_Person
-  - Restriktionen: Optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#givenname)
-  - Beispielwerte: `John` `Jane`
-
-- Role
-
-  - In diesem Feld kommt die Rolle/ Rollen der/des Mitwirkenden.
-  - Datentyp: Text
-  - Vorkommen: 0-10
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Role_role_id in der Tabelle Contributor_Person_has_Role
-  - Restriktionen: muss mindestens eine Rolle ausgewählt werden./muss nur eine Rolle ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
-  - Beispielwerte: `Data Manager` `Project Manager`
+#### _Person_
+Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="ROLE">` with `<contributorName nameType="Personal">` in the DataCite scheme.
 
 - ORCID
 
-  - In diesem Feld kommt die ORCID der/des Mitwirkenden (Open Researcher and Contributor ID).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: orcid in der Tabelle Contributor_Person
-  - Restriktionen: Muss im Format "xxxx-xxxx-xxxx-xxxx" sein.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nameidentifierscheme)
-  - Beispielwerte: `1452-9875-4521-7893` `0082-4781-1312-884x`
+  This field contains the ORCID of the contributor (Open Researcher and Contributor ID).
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: `orcid` in the `Contributor_Person` table
+  - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nameidentifierscheme)
+  - Example values: `1452-9875-4521-7893`, `0082-4781-1312-884x`
+
+- Last Name 
+
+  This field contains the contributpr's surname.
+  - Data type: String
+  - Occurrence: 1, if a contributor person is specified
+  - The corresponding field in the database where the value is stored is called: `familyname` in the table `Contributor_Person`
+  - Restrictions: Only letters are allowed.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#familyname)
+  - Example values: `Jemison`, `Smith`
+
+- First Name
+
+  This field contains the contributpr's surname.
+  - Data type: String
+  - Occurrence: 1, if a contributor person is specified
+  - The corresponding field in the database where the value is stored is called: `givenname` in the table `Contributor_Person`
+  - Restrictions: Only letters are allowed
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#givenname)
+  - Example values: `John`, `Jane`
+
+- Role
+
+  This field contains the role(s) of the contributor(s).
+  - Data type: String
+  - Occurrence: 1-10, if a contributor person is specified
+  - The corresponding field in the database where the value is stored is called: `name` in the `Role` table
+  - Restrictions: must be selcted from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
+  - Example values: `Data Manager`, `Project Manager`
 
 - Affiliation
 
-  - In diesem Feld kommt die Zugehörigkeit der/des Mitwirkenden(Personal).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Affiliation_affiliation_id in der Tabelle Contributor_Person_has_Affiliation
+  This field contains the affiliation of the contributor(s).
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `name` in the table `Affiliation`
+  - Restrictions: None, can be selected from list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#affiliation)
+  - Example values: `Technische Universität Berlin`, `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+    - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
-  - Restriktionen: Es ist optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-affiliationidentifier)
-  - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+#### _Organisation_
+Contributor fields are optional. Only when one of the fields is filled the fields "Organisation Name" and "Role" become mandatory. The contents of the fields are mapped to `<contributor contributorType="ROLE">` in the DataCite scheme with `<contributorName nameType="Organizational">`
 
-- _Organisational_
 - Organisation Name
 
-  - In diesem Feld kommt der Name der Institution.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!**
-  - Restriktionen: Es ist optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nametype)
-  - Beispielwerte: `University of Applied Sciences Potsdam` `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
+  This field contains the name of the institution.
+  - Data type: String
+  - Occurrence: 1, if contributing organisation is specified
+  - The corresponding field in the database where the value is saved is called: `name` in the table `contributor_institution`
+  - Restrictions: None
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#contributorname)
+  - Example values: `University of Applied Sciences Potsdam`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
 - Role
-  - In diesem Feld kommt die Rolle/ Rollen der Institution.
-  - Datentyp: Text
-  - Vorkommen: 0-10
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!**
-  - Restriktionen: muss mindestens eine Rolle ausgewählt werden./muss nur eine Rolle ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
-  - Beispielwerte: `Data Collector` `Data Curator`
+
+  This field contains the role/roles of the institution.
+  - Data type: String
+  - Occurrence: 1-10
+  - The corresponding field in the database where the value is stored is called: `name` in the table `Role`
+  - Restrictions: must be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
+  - Example values: `Data Collector`, `Data Curator`.
   
 - Affiliation
 
-  - In diesem Feld kommt die Zugehörigkeit der/des Mitwirkenden(Organisation).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Affiliation_affiliation_id in der Tabelle Contributor_Institution_has_Affiliation
-  - Restriktionen: Es ist optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-affiliationidentifier)
-  - Beispielwerte: `Education and Science Workers' Union` `Institute of Science and Ethics`
-
-
+  This field contains the affiliation of the contributing institution.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `name` in the `Affiliation` table
+  - Restrictions: None, can be selected from list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#affiliation)
+  - Example values: `Education and Science Workers' Union`, `Institute of Science and Ethics`
+  - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
+ 
 ### Description
 
 - Abstract
@@ -703,7 +894,7 @@ Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and
 
 - GCMD Science Keyword
 
-  This field contains keywords to describe the content of the resource
+  This field contains keywords to describe the content of the resource.
   - Data type: String
   - Occurrence: 0-n
   - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
@@ -743,21 +934,21 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
 
 - Date created
   
-  - This field contains the date the resource itself was put together; this could refer to a timeframe in ancient history, a date range, or a single date for a final component, e.g., the finalized file with all the data.
+  This field contains the date the resource itself was put together; this could refer to a timeframe in ancient history, a date range, or a single date for a final component, e.g., the finalized file with all the data.
   - Data type: Date
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: `dateCreated` in the `resource` table
-  - Restrictions: This field must be a valid calendar date.
+  - Restrictions: This field must be a valid calendar date
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#created)
   - Example values: `2024-06-05` `1999-04-07`
 
 - Embargo until
 
-  -This field contains the date the resource is made publicly available, marking the end of an embargo period.
+  This field contains the date the resource is made publicly available, marking the end of an embargo period.
   - Data typ: Date
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `dateEmbargoUntil` in the `resource` table
-  - Restrictions: This field must be a valid calendar date.
+  - Restrictions: This field must be a valid calendar date
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#available)
   - Example values: `2024-06-15` `2000-12-31`
 
@@ -875,7 +1066,7 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   This field contains the type of relation.
   - Data type: String
   - Occurrence: 1, if relatedIdentifier is <0
-  - The corresponding field in the database where the value is saved is called: `relation_fk` in the `Related_Work` table.
+  - The corresponding field in the database where the value is saved is called: `relation_fk` in the `Related_Work` table
   - Restrictions: A relation type must be selected, if related work is specified
   - Relations can be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
   - Example values: `IsCitedBy` `IsSupplementTo` `IsContinuedBy`
@@ -885,7 +1076,7 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - This field contains the identifier
   - Data type: String
   - Occurrence: 1, if relatedIdentifier is <0
-  - The corresponding field in the database where the value is stored is called: `Identifier` in the `Related_Work` table.
+  - The corresponding field in the database where the value is stored is called: `Identifier` in the `Related_Work` table
   - Restrictions: Must be specified, if related work specified
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/)
   - Example values: `13030/tqb3kh97gh8w`, `0706.0001`, `10.26022/IEDA/112263`
@@ -895,7 +1086,7 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - This field contains the type of the relatedIdentifier.
   - Data type: String
   - Occurrence: 0-1
-  - The corresponding field in the database where the value is stored is called: `identifier_type_fk` in the `Related_Work` table.
+  - The corresponding field in the database where the value is stored is called: `identifier_type_fk` in the `Related_Work` table
   - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
   - Restrictions: Must be selected, if related work is specified
   - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
@@ -909,7 +1100,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   Name of the funding provider.
   - Data type: String
   - Occurence: 0-1, if Funding Reference is specified, then funderName is mandatory. 
-  - The corresponding field in the database where the value is stored is called: `funder` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `funder` in the `Funding_Reference` table
   - Restrictions: Selection from CrossRef funders list is possible, as well as free text
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/)
   - Example values: `Gordon and Betty Moore Foundation`, `Ford Foundation`
@@ -919,7 +1110,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   Uniquely identifies a funding entity, using Crossrefs' [Funder Registry](https://www.crossref.org/services/funder-registry/)
   - Data type: String
   - Occurence: 0-1
-  - The corresponding field in the database where the value is stored is called: `funderid` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `funderid` in the `Funding_Reference` table
   - Restrictions: is automatically saved, if a funder is selected from the dropdown list
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#funderidentifier)
   - Example values: `http://dx.doi.org/10.13039/100001214`
@@ -929,7 +1120,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   The type of the funderIdentifier. Is either NULL or "Crossref Funder ID"
   - Data type: String
   - Occurence: 0-1
-  - The corresponding field in the database where the value is stored is called: `funderidtyp` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `funderidtyp` in the `Funding_Reference` table
   - Restrictions: can only be "Crossref Funder ID" (if a funder is selected from the dropdown list) or null
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#a-funderidentifiertype)
   - Value: `Crossref Funder ID`
@@ -939,7 +1130,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   The code assigned by the funder to a sponsored award (grant).
   - Data type: String
   - Occurence: 0-1
-  - The corresponding field in the database where the value is stored is called: `grantnumber` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `grantnumber` in the `Funding_Reference` table
   - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardnumber)
   - Example values: `GBMF3859.01` `GBMF3859.22`
@@ -949,7 +1140,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   The human readable title or name of the award (grant).
   - Data type: String
   - Occurence: 0-1
-  - The corresponding field in the database where the value is stored is called: `grantname` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `grantname` in the `Funding_Reference` table
   - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
@@ -973,8 +1164,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 
 The following ER diagram shows the relationships and structures of the tables in the database.
 
-[![ER-Diagramm](doc/ER-Modell.jpg)](https://raw.githubusercontent.com/McNamara84/gfz-metadata-editor-msl-v2/feature/msl-frontend/doc/ER-Modell.jpg)
-
+![ER-Diagramm](doc/ER-Diagram.jpg)
 ## Contributing
 
 We appreciate every contribution to this project! You can use the feedback back form on the test server [link], create an issue on github or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template (only available in german right now!), so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.

@@ -27,7 +27,6 @@ function saveAuthors($connection, $postData, $resource_id)
     $affiliations = $postData['affiliation'] ?? [];
     $rorIds = $postData['authorRorIds'] ?? [];
 
-
     $len = count($familynames);
 
     for ($i = 0; $i < $len; $i++) {
@@ -49,29 +48,36 @@ function saveAuthors($connection, $postData, $resource_id)
             continue; // Skip this author
         }
 
-        // Check if the author already exists
-        $stmt = $connection->prepare("SELECT author_id FROM Author WHERE orcid = ?");
-        $stmt->bind_param("s", $orcid);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $author_id = null;
 
-        if ($result->num_rows > 0) {
-            // Author already exists, get the ID
-            $row = $result->fetch_assoc();
-            $author_id = $row['author_id'];
-
-            // Update the author's data
-            $stmt = $connection->prepare("UPDATE Author SET familyname = ?, givenname = ? WHERE author_id = ?");
-            $stmt->bind_param("ssi", $familyname, $givenname, $author_id);
+        // Check if the author already exists (only if ORCID is provided)
+        if (!empty($orcid)) {
+            $stmt = $connection->prepare("SELECT author_id FROM Author WHERE orcid = ?");
+            $stmt->bind_param("s", $orcid);
             $stmt->execute();
-        } else {
-            // Insert new author
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                // Author already exists, get the ID
+                $row = $result->fetch_assoc();
+                $author_id = $row['author_id'];
+
+                // Update the author's data
+                $stmt = $connection->prepare("UPDATE Author SET familyname = ?, givenname = ? WHERE author_id = ?");
+                $stmt->bind_param("ssi", $familyname, $givenname, $author_id);
+                $stmt->execute();
+            }
+            $stmt->close();
+        }
+
+        // Insert new author if not found (ORCID is empty or not matched)
+        if (!$author_id) {
             $stmt = $connection->prepare("INSERT INTO Author (familyname, givenname, orcid) VALUES (?, ?, ?)");
             $stmt->bind_param("sss", $familyname, $givenname, $orcid);
             $stmt->execute();
             $author_id = $stmt->insert_id;
+            $stmt->close();
         }
-        $stmt->close();
 
         // Insert into Resource_has_Author
         $stmt = $connection->prepare("INSERT IGNORE INTO Resource_has_Author (Resource_resource_id, Author_author_id) VALUES (?, ?)");
@@ -85,3 +91,4 @@ function saveAuthors($connection, $postData, $resource_id)
         }
     }
 }
+

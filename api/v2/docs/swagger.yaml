@@ -1,11 +1,11 @@
 openapi: 3.1.1
 info:
-  title: ELMO - EPOS Laboratory Metadata Optimizer
+  title: ELMO - Enhanced Laboratory Metadata Organizer
   description: |-
     This is the ELMO API V2 from GFZ Data Services. The API allows management and retrieval of metadata for scientific datasets.
 
     Some useful links:
-    - [The ELMO repository](https://github.com/McNamara84/gfz-metadata-editor-msl-v2)
+    - [The ELMO repository](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer)
     - [Test Server](https://mde2.cats4future.de)
     - [Legal notice](https://dataservices-cms.gfz-potsdam.de/about-us/imprint)
 
@@ -17,12 +17,12 @@ info:
   termsOfService: https://github.com/McNamara84/gfz-metadata-editor-msl-v2
   contact:
     name: Holger Ehrmann
-    email: ehrmann@gfz-potsdam.de
+    email: ehrmann@gfz.de
     url: https://mde2.cats4future.de
   license:
     name: GPL-2.0-only
     url: https://raw.githubusercontent.com/McNamara84/gfz-metadata-editor-msl-v2/refs/heads/main/LICENSE.md
-  version: 1.9.0
+  version: 2.0.0
 externalDocs:
   description: Documentation of the API V1 at GitHub
   url: https://github.com/McNamara84/gfz-metadata-editor-msl-v2#api-endpunkte
@@ -56,6 +56,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TimezonesUpdateResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /update/ror:
+    get:
+      tags:
+        - update
+      summary: Update ROR affiliations
+      description: |-
+        Updates the ROR (Research Organization Registry) affiliations saving them as JSON for autocomplete functionality
+      operationId: getRorAffiliations
+      responses:
+        "200":
+          description: ROR affiliations successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+                    example: "ROR affiliations successfully updated"
+                  count:
+                    type: integer
+                    description: Number of affiliations processed
+                    example: 111808
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Time of update
+                    example: "2025-01-15T14:30:00Z"
+                required:
+                  - message
+                  - count
+                  - timestamp
         "500":
           description: Internal server error
           content:
@@ -118,6 +157,57 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GcmdVocabularyUpdate"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /update/crossref:
+    get:
+      tags:
+        - update
+      summary: Update CrossRef funders
+      description: |-
+        Updates the CrossRef funders list by:
+        1. Fetching all funders from the CrossRef API using pagination
+        2. Processing and storing the data for dropdown selection
+        3. Saving them as JSON for dropdown functionality
+
+        Important: Uses polite rate limiting and includes proper user agent headers
+        as required by CrossRef's API etiquette.
+      operationId: getCrossref
+      responses:
+        "200":
+          description: CrossRef funders successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+                    example: "CrossRef funders successfully updated"
+                  count:
+                    type: integer
+                    description: Number of funders processed
+                    example: 27391
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Time of update
+                    example: "2025-01-19T08:45:22Z"
+                required:
+                  - message
+                  - count
+                  - timestamp
+        "429":
+          description: Too many requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "500":
           description: Internal server error
           content:

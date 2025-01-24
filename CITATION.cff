@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "Wenn Sie diese Software verwenden, zitieren Sie sie bitte wie folgt."
+message: "If you use this software, please cite it as below."
 authors:
   - family-names: "Ehrmann"
     given-names: "Holger"
@@ -10,8 +10,11 @@ authors:
   - family-names: "Mohammed"
     given-names: "Ali"
     orcid: "https://orcid.org/0009-0007-2910-0469"
-title: "ELMO - LONGTITLE"
-version: 1.9.0
-doi: 10.5880/GFZ.XXXXXX
+  - family-names: "Rethfeldt"
+    given-names: "Nina"
+    orcid: "https://orcid.org/0009-0006-5992-0559"
+title: "ELMO - Enhanced Laboratory Metadata Organizer"
+version: 2.0.0
+#doi: 10.5880/GFZ.XXXXXX
 date-released: 2025-03-13
-url: "https://github.com/McNamara84/gfz-metadata-editor-msl-v2"
+url: "https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer"

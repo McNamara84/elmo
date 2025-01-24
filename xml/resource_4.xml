@@ -1,11 +1,15 @@
 <?xml version="1.0"?>
 <Resource>
-  <currentDate>2024-11-13</currentDate>
-  <doi>10.5880/GFZ1234</doi>
-  <version/>
-  <year>2009</year>
-  <dateCreated>2024-11-13</dateCreated>
-  <dateEmbargoUntil>0000-00-00</dateEmbargoUntil>
+  <currentDate>2025-01-22</currentDate>
+  <year>2000</year>
+  <dateCreated>2025-01-08</dateCreated>
+  <Rights>
+    <rights_id>1</rights_id>
+    <text>Creative Commons Attribution 4.0 International</text>
+    <rightsIdentifier>CC-BY-4.0</rightsIdentifier>
+    <rightsURI>https://creativecommons.org/licenses/by/4.0/legalcode</rightsURI>
+    <forSoftware>0</forSoftware>
+  </Rights>
   <ResourceType>
     <resource_name_id>2</resource_name_id>
     <resource_type_general>Book</resource_type_general>
@@ -18,45 +22,129 @@
   </Language>
   <Titles>
     <Title>
-      <text>testtitrl</text>
+      <text>DOI test</text>
       <type>Main Title</type>
+    </Title>
+    <Title>
+      <text>Testen 2.0</text>
+      <type>Alternative Title</type>
     </Title>
   </Titles>
   <Authors>
     <Author>
-      <familyname>Ehrmann</familyname>
-      <givenname>Holger</givenname>
-      <orcid>1234-1234-1234-1234</orcid>
-      <Affiliations/>
+      <familyname>Ilyas khan</familyname>
+      <givenname>Muhammad</givenname>
+      <orcid>0000-0003-4816-5915</orcid>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>4</affiliation_id>
+          <name>International Islamic University, Islamabad</name>
+          <rorId>047w75g40</rorId>
+        </Affiliation>
+      </Affiliations>
     </Author>
   </Authors>
+  <ContactPersons>
+    <ContactPerson>
+      <familyname>Naja</familyname>
+      <givenname>Jana</givenname>
+      <position>CP</position>
+      <email>CP@cp.de</email>
+      <website>www.contact.de</website>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>5</affiliation_id>
+          <name>RMIT University</name>
+          <rorId>04ttjf776</rorId>
+        </Affiliation>
+      </Affiliations>
+    </ContactPerson>
+  </ContactPersons>
+  <OriginatingLaboratories>
+    <OriginatingLaboratory>
+      <laboratoryname>Gmmodel - Laboratoire de mod&#xC3;&#xA9;lisation analogique G&#xC3;&#xA9;osciences Montpellier (CNRS-Montpellier University, France)</laboratoryname>
+      <labId>f780441f60a30a86b752e00adb66f107</labId>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>6</affiliation_id>
+          <name>CNRS-Montpellier University, Montpellier, France</name>
+        </Affiliation>
+      </Affiliations>
+    </OriginatingLaboratory>
+  </OriginatingLaboratories>
+  <Contributors>
+    <Persons>
+      <Person>
+        <familyname>Malik</familyname>
+        <givenname>Ayesha</givenname>
+        <orcid>0000-0002-7471-0457</orcid>
+        <Affiliations>
+          <Affiliation>
+            <affiliation_id>7</affiliation_id>
+            <name>Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences</name>
+            <rorId>04z8jg394</rorId>
+          </Affiliation>
+        </Affiliations>
+        <Roles>
+          <Role>
+            <name>Data Curator</name>
+          </Role>
+          <Role>
+            <name>Data Manager</name>
+          </Role>
+        </Roles>
+      </Person>
+      <Person>
+        <familyname>Nana</familyname>
+        <givenname>Nina</givenname>
+        <Affiliations>
+          <Affiliation>
+            <affiliation_id>8</affiliation_id>
+            <name>No</name>
+          </Affiliation>
+          <Affiliation>
+            <affiliation_id>9</affiliation_id>
+            <name>ne</name>
+          </Affiliation>
+        </Affiliations>
+        <Roles>
+          <Role>
+            <name>Data Curator</name>
+          </Role>
+          <Role>
+            <name>Data Manager</name>
+          </Role>
+        </Roles>
+      </Person>
+      <Person>
+        <familyname>Lila</familyname>
+        <givenname>Lala</givenname>
+        <Affiliations/>
+        <Roles>
+          <Role>
+            <name>Project Member</name>
+          </Role>
+        </Roles>
+      </Person>
+    </Persons>
+  </Contributors>
   <Descriptions>
     <Description>
       <type>Abstract</type>
-      <description>gtrfgh</description>
+      <description>ABSTRACT</description>
     </Description>
   </Descriptions>
-  <Contributors>
-    <Persons/>
-    <Institutions/>
-  </Contributors>
-  <ContactPersons/>
-  <RelatedWorks/>
-  <SpatialTemporalCoverages/>
-  <ThesaurusKeywords/>
-  <FreeKeywords/>
-  <FundingReferences>
-    <FundingReference>
-      <Resource_has_Funding_Reference_id>4</Resource_has_Funding_Reference_id>
-      <Resource_resource_id>4</Resource_resource_id>
-      <Funding_Reference_funding_reference_id>4</Funding_Reference_funding_reference_id>
-      <funding_reference_id>4</funding_reference_id>
-      <funder>Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ</funder>
-      <funderid>1100010956</funderid>
-      <funderidtyp>Crossref Funder ID</funderidtyp>
-      <grantnumber>23443</grantnumber>
-      <grantname>hjkhjkfd</grantname>
-    </FundingReference>
-  </FundingReferences>
-  <OriginatingLaboratories/>
+  <SpatialTemporalCoverages>
+    <SpatialTemporalCoverage>
+      <spatial_temporal_coverage_id>4</spatial_temporal_coverage_id>
+      <latitudeMin>67.358</latitudeMin>
+      <latitudeMax>67.358</latitudeMax>
+      <longitudeMin>3.22221</longitudeMin>
+      <longitudeMax>3.22221</longitudeMax>
+      <description>Description</description>
+      <dateStart>2025-01-22</dateStart>
+      <dateEnd>2025-01-22</dateEnd>
+      <timezone>+03:00</timezone>
+    </SpatialTemporalCoverage>
+  </SpatialTemporalCoverages>
 </Resource>

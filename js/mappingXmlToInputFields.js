@@ -64,8 +64,7 @@ function mapTitleType(titleType) {
   const typeMap = {
     undefined: '1', // Main Title
     'AlternativeTitle': '2',
-    'Subtitle': '3',
-    'TranslatedTitle': '4'
+    'TranslatedTitle': '3'
   };
   return typeMap[titleType] || '1';
 }
@@ -164,7 +163,7 @@ function processCreators(xmlDoc, resolver) {
   for (let i = 0; i < creatorNodes.snapshotLength; i++) {
     const creatorNode = creatorNodes.snapshotItem(i);
 
-    // Extract Creators
+    // Extract Creator Data
     const givenName = getNodeText(creatorNode, 'ns:givenName', xmlDoc, resolver);
     const familyName = getNodeText(creatorNode, 'ns:familyName', xmlDoc, resolver);
     const orcid = getNodeText(
@@ -199,43 +198,27 @@ function processCreators(xmlDoc, resolver) {
       }
     }
 
-    if (i === 0) {
-      // First Author - use existing row
-      const firstRow = $('#group-author .row[data-creator-row]:first');
-      firstRow.find('input[name="orcids[]"]').val(orcid);
-      firstRow.find('input[name="familynames[]"]').val(familyName);
-      firstRow.find('input[name="givennames[]"]').val(givenName);
+    // Find the last row in the form
+    const $lastRow = $('input[name="familynames[]"]').last().closest('.row');
 
-      // Initialize Tagify for first row
-      const tagifyInput = firstRow.find('input[name="affiliation[]"]')[0];
-      if (tagifyInput) {
-        const tagify = new Tagify(tagifyInput);
-        tagify.addTags(affiliations.map(a => ({ value: a })));
-        firstRow.find('input[name="authorRorIds[]"]').val(rorIds.join(','));
-      }
-    } else {
-      // Additional authors - simulate button click
+    // Populate fields
+    $lastRow.find('input[name="orcids[]"]').val(orcid);
+    $lastRow.find('input[name="familynames[]"]').val(familyName);
+    $lastRow.find('input[name="givennames[]"]').val(givenName);
+
+    const tagifyInput = $lastRow.find('input[name="affiliation[]"]')[0];
+    if (tagifyInput && tagifyInput.tagify) {
+      tagifyInput.tagify.addTags(affiliations.map(a => ({ value: a })));
+      $lastRow.find('input[name="authorRorIds[]"]').val(rorIds.join(','));
+    }
+
+    // Clone a new row if more creators need to be added
+    if (i < creatorNodes.snapshotLength - 1) {
       $('#button-author-add').click();
-
-      // Find newly added row
-      const newRow = $('#group-author .row[data-creator-row]').last();
-
-      // Set values
-      newRow.find('input[name="orcids[]"]').val(orcid);
-      newRow.find('input[name="familynames[]"]').val(familyName);
-      newRow.find('input[name="givennames[]"]').val(givenName);
-
-      // Wait briefly for Tagify initialization
-      setTimeout(() => {
-        const tagifyInput = newRow.find('input[name="affiliation[]"]')[0];
-        if (tagifyInput && tagifyInput.tagify) {
-          tagifyInput.tagify.addTags(affiliations.map(a => ({ value: a })));
-          newRow.find('input[name="authorRorIds[]"]').val(rorIds.join(','));
-        }
-      }, 100);
     }
   }
 }
+
 
 /**
  * Process contact persons from XML and populate the form
@@ -277,7 +260,7 @@ function processContactPersons(xmlDoc) {
     const position = getNodeText(contactPersonNode, 'gmd:positionName/gco:CharacterString', xmlDoc, nsResolver);
     const email = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString', xmlDoc, nsResolver);
     const website = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL', xmlDoc, nsResolver);
-    
+
     // Extract affiliations
     const affiliationNodes = xmlDoc.evaluate(
       'gmd:organisationName/gco:CharacterString',
@@ -310,10 +293,10 @@ function processContactPersons(xmlDoc) {
     } else {
       // Additional contact persons - simulate button click
       $('#button-contactperson-add').click();
-      
+
       // Find newly added row
       const newRow = $('#group-contactperson .row[contact-person-row]').last();
-      
+
       // Set values
       newRow.find('input[name="cpFirstname[]"]').val(givenName);
       newRow.find('input[name="cpLastname[]"]').val(familyName);
@@ -474,6 +457,15 @@ function processOriginatingLaboratories(xmlDoc, resolver) {
   }
 }
 
+/**
+ * Normalize contributorType by adding whitespace between words.
+ * @param {string} contributorType - The contributorType from the XML.
+ * @returns {string} - Normalized role with spaces between words.
+ */
+function normalizeRole(contributorType) {
+  return contributorType.replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
 // Helper function to get or create a new organization row
 function getOrCreateOrgRow(index) {
   const container = $('#group-contributororganisation');
@@ -527,9 +519,9 @@ function processContributors(xmlDoc, resolver) {
 
   if (!contributorsNode) return;
 
-  // Get all contributors except ContactPerson and HostingInstitution
+  // Get all contributors except ContactPerson and Contributers with nameIdentifierScheme labid, because those are loaded into fg Contact Person and fg Originating Laboratory
   const contributorNodes = xmlDoc.evaluate(
-    'ns:contributor[not(@contributorType="ContactPerson") and not(@contributorType="HostingInstitution")]',
+    'ns:contributor[not(@contributorType="ContactPerson") and not(ns:nameIdentifier[@nameIdentifierScheme="labid"])]',
     contributorsNode,
     resolver,
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
@@ -564,7 +556,7 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
   const contributorName = getNodeText(contributor, 'ns:contributorName', xmlDoc, resolver);
   const givenName = getNodeText(contributor, 'ns:givenName', xmlDoc, resolver);
   const familyName = getNodeText(contributor, 'ns:familyName', xmlDoc, resolver);
-  const orcid = getNodeText(contributor, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver);
+  const orcid = getNodeText(contributor, 'ns:nameIdentifier[@schemeURI="https://orcid.org/"]', xmlDoc, resolver);
 
   // Get affiliations
   const affiliationNodes = xmlDoc.evaluate(
@@ -602,14 +594,14 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
       givenName,
       familyName,
       orcid,
-      roles: [contributorType],
+      roles: [normalizeRole(contributorType)], // Use normalized role
       affiliations,
       rorIds
     });
   } else {
     updateContributorMap(orgMap, contributorName, {
       name: contributorName,
-      roles: [contributorType],
+      roles: [normalizeRole(contributorType)], // Use normalized role
       affiliations,
       rorIds
     });
@@ -643,6 +635,7 @@ function updateContributorMap(map, key, newData) {
   }
 }
 
+
 /**
  * Populate the form with processed contributor data
  * @param {Map} personMap - Map containing person contributors
@@ -652,62 +645,78 @@ function populateFormWithContributors(personMap, orgMap) {
   let personIndex = 0;
   let orgIndex = 0;
 
+  // Helper function to get the Tagify instance (or initialize it if not already initialized)
+  function getTagifyInstance(inputElement) {
+    if (!inputElement) return null;
+    if (!inputElement._tagify) {
+      inputElement._tagify = new Tagify(inputElement);
+    }
+    return inputElement._tagify;
+  }
+
   // Process persons
   for (const person of personMap.values()) {
     const personRow = getOrCreatePersonRow(personIndex++);
+    
+    // Roles
+    const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
+    const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
+    if (tagifyRoles) {
+      tagifyRoles.removeAllTags();
+      tagifyRoles.addTags(person.roles.map(role => ({ value: role })));
+    }
 
-    // Set ORCID if available
+    // ORCID
     if (person.orcid) {
       personRow.find('input[name="cbORCID[]"]').val(person.orcid);
     }
 
-    // Set names
+    // Names
     personRow.find('input[name="cbPersonLastname[]"]').val(person.familyName);
     personRow.find('input[name="cbPersonFirstname[]"]').val(person.givenName);
 
-    // Set roles using Tagify
-    const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
-    if (roleInput && roleInput.tagify) {
-      roleInput.tagify.removeAllTags();
-      roleInput.tagify.addTags(person.roles.map(role => ({ value: role })));
-    }
-
-    // Set affiliations using Tagify
+    // Affiliations
     const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
-    if (affiliationInput && affiliationInput.tagify) {
-      affiliationInput.tagify.removeAllTags();
-      affiliationInput.tagify.addTags(person.affiliations.map(aff => ({ value: aff })));
+    const tagifyAffiliations = getTagifyInstance(affiliationInput);  // Get or initialize Tagify
+    if (tagifyAffiliations) {
+      tagifyAffiliations.removeAllTags();
+      tagifyAffiliations.addTags(person.affiliations.map(aff => ({ value: aff })));
     }
 
-    // Set ROR IDs
+    // ROR IDs
     personRow.find('input[name="cbRorIds[]"]').val(person.rorIds.join(','));
   }
 
   // Process organizations
   for (const org of orgMap.values()) {
     const orgRow = getOrCreateOrgRow(orgIndex++);
+    
+    // Roles
+    const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
+    const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
+    if (tagifyRoles) {
+      tagifyRoles.removeAllTags();
+      tagifyRoles.addTags(org.roles.map(role => ({ value: role })));
+    }
 
-    // Set organization name
+    // Organization name
     orgRow.find('input[name="cbOrganisationName[]"]').val(org.name);
 
-    // Set roles using Tagify
-    const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
-    if (roleInput && roleInput.tagify) {
-      roleInput.tagify.removeAllTags();
-      roleInput.tagify.addTags(org.roles.map(role => ({ value: role })));
-    }
-
-    // Set affiliations using Tagify
+    // Affiliations
     const affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
-    if (affiliationInput && affiliationInput.tagify) {
-      affiliationInput.tagify.removeAllTags();
-      affiliationInput.tagify.addTags(org.affiliations.map(aff => ({ value: aff })));
+    const tagifyAffiliations = getTagifyInstance(affiliationInput);  // Get or initialize Tagify
+    if (tagifyAffiliations) {
+      tagifyAffiliations.removeAllTags();
+      tagifyAffiliations.addTags(org.affiliations.map(aff => ({ value: aff })));
     }
 
-    // Set ROR IDs
+    // ROR IDs
     orgRow.find('input[name="OrganisationRorIds[]"]').val(org.rorIds.join(','));
   }
 }
+
+
+
 
 /**
  * Parse temporal data from a date node.
@@ -873,7 +882,7 @@ function processDates(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-  
+
   // Reset date fields
   $('input[name="dateCreated"]').val('');
   $('input[name="dateEmbargo"]').val('');
@@ -892,11 +901,11 @@ function processDates(xmlDoc, resolver) {
   }
 }
 
- /**
- * Process Subjects from XML and populate the Keyword fields
- * @param {Document} xmlDoc - The parsed XML document
- * @param {Function} resolver - The namespace resolver function
- */
+/**
+* Process Subjects from XML and populate the Keyword fields
+* @param {Document} xmlDoc - The parsed XML document
+* @param {Function} resolver - The namespace resolver function
+*/
 function processKeywords(xmlDoc, resolver) {
   const subjectNodes = xmlDoc.evaluate(
     './/ns:subjects/ns:subject',

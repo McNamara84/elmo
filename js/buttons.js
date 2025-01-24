@@ -105,11 +105,11 @@ $(document).ready(function () {
     if (titlesNumber < maxTitles) {
       // Clone the existing title row and reset its input fields.
       var newTitleRow = $addTitleBtn.closest(".row").clone();
-
-      // Remove help buttons from the cloned row.
-      deleteHelpButtonFromClonedRows(newTitleRow);
       $(newTitleRow).find("input").val("");
-
+      
+      // Ensure help buttons are retained
+      $(newTitleRow).find(".bi-question-circle-fill").closest(".input-group-append").show();
+      
       // Adjust the column layout classes for the cloned row.
       newTitleRow.find(".col-12.col-sm-12.col-md-11.col-lg-11")
         .removeClass("col-md-11 col-lg-11")
@@ -221,9 +221,6 @@ $(document).ready(function () {
       affiliationsData
     );
 
-    // Bind validation listeners to the new row
-    bindValidationListeners(newAuthorRow);
-
     // Event handler for the remove button
     newAuthorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
@@ -276,9 +273,6 @@ $(document).ready(function () {
       "input-contactperson-rorid" + uniqueSuffix,
       affiliationsData
     );
-
-    // Bind validation listeners to the new row
-    bindValidationListeners(newCPRow);
 
     // Event handler for the remove button
     newCPRow.on("click", ".removeButton", function () {
@@ -376,10 +370,6 @@ $(document).ready(function () {
     // Initialize Tagify for the new Roles field
     setupRolesDropdown(["person", "both"], "#input-contributor-personrole" + uniqueSuffix);
 
-    // Bind validation listeners to the new row
-    bindValidationListeners(newContributorRow);
-
-
     // Event handler for the remove button in the new row
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
@@ -465,9 +455,6 @@ $(document).ready(function () {
     // Initialize Tagify for the new Roles field
     setupRolesDropdown(["institution", "both"], "#input-contributor-organisationrole" + uniqueSuffix);
 
-    // Bind validation listeners to the new row
-    bindValidationListeners(newContributorRow);
-
     // Event handler for the remove button in the new row
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
@@ -494,9 +481,12 @@ $(document).ready(function () {
    * Event handler for the "Add TSC" button click.
    * Clones the last TSC row, resets input fields, updates IDs, and appends it to the TSC group.
    */
-  $("#button-stc-add").click(function () {
+  $("#button-stc-add").click(async function () {
     var tscGroup = $("#group-stc");
     var lastTscLine = tscGroup.children().last();
+
+    // Store the selected timezone value before cloning
+    var selectedTimezone = lastTscLine.find('select[name="tscTimezone[]"]').find(':selected').text();
 
     // Increment the unique row counter
     tscRowIdCounter++;
@@ -516,8 +506,8 @@ $(document).ready(function () {
       }
     });
 
-    // Reset values and validation feedback
-    newTscLine.find("input, select, textarea").val("").removeClass("is-invalid is-valid");
+    // Reset only non-timezone fields
+    newTscLine.find("input:not(#input-stc-timezone), textarea").val("").removeClass("is-invalid is-valid");
     newTscLine.find(".invalid-feedback, .valid-feedback").hide();
 
     // Remove help buttons
@@ -531,6 +521,16 @@ $(document).ready(function () {
 
     // Update the overlay labels
     updateOverlayLabels();
+
+    // Set the same timezone option in the new row
+    const timezoneSelect = newTscLine.find('select[name="tscTimezone[]"]');
+    timezoneSelect.find('option').each(function () {
+      if ($(this).text() === selectedTimezone) {
+        $(this).prop('selected', true);
+      } else {
+        $(this).prop('selected', false);
+      }
+    });
   });
 
   /**
@@ -630,9 +630,6 @@ $(document).ready(function () {
 
     // Reset required attributes
     newFundingReferenceRow.find("input").removeAttr("required");
-
-    // Bind validation listeners to the new row
-    bindValidationListeners(newFundingReferenceRow);
 
     // Event handler for the remove button
     newFundingReferenceRow.on("click", ".removeButton", function () {
@@ -794,12 +791,12 @@ $(document).ready(function () {
         tagifyAffiliation.addTags([lab.affiliation]);
         hiddenRorId.value = lab.ror_id || "";
         hiddenLabId.value = lab.id;
-        tagifyAffiliation.setReadOnly(true);
+        tagifyAffiliation.setReadonly(true);
       } else {
         tagifyAffiliation.removeAllTags();
         hiddenRorId.value = "";
         hiddenLabId.value = "";
-        tagifyAffiliation.setReadOnly(false);
+        tagifyAffiliation.setReadonly(false);
       }
     });
 
@@ -807,7 +804,7 @@ $(document).ready(function () {
       tagifyAffiliation.removeAllTags();
       hiddenRorId.value = "";
       hiddenLabId.value = "";
-      tagifyAffiliation.setReadOnly(false);
+      tagifyAffiliation.setReadonly(false);
     });
 
     tagifyName.on("input", function (e) {
@@ -817,7 +814,7 @@ $(document).ready(function () {
         if (!lab) {
           tagifyAffiliation.removeAllTags();
           hiddenRorId.value = "";
-          tagifyAffiliation.setReadOnly(false);
+          tagifyAffiliation.setReadonly(false);
         }
       }
     });
@@ -931,15 +928,6 @@ $(document).ready(function () {
     localStorage.setItem("inputGroupTextVisible", "false");
   });
 
-  /**
- * Binds validation listeners to input fields in a given row.
- * @param {jQuery} row - The row element to bind listeners to.
- */
-  function bindValidationListeners(row) {
-    row.find('input').on('input', function () {
-      validateField($(this));
-    });
-  }
 
   /**
    * Automatically sets the language based on the browser's language settings.

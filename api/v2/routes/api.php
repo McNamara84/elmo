@@ -20,6 +20,8 @@ return [
     ['GET', '/update/vocabs/msl', [new VocabController(), 'getMslVocab']],
     ['GET', '/update/timezones', [new VocabController(), 'updateTimezones']],
     ['GET', '/update/vocabs/gcmd', [new VocabController(), 'updateGcmdVocabs']],
+    ['GET', '/update/ror', [new VocabController(), 'getRorAffiliations']],
+    ['GET', '/update/crossref', [new VocabController(), 'getCrossref']],
 
     // Vocabulary retrieval endpoints
     ['GET', '/vocabs/sciencekeywords', [new VocabController(), 'getGcmdScienceKeywords']],
