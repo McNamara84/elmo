@@ -1,12 +1,13 @@
 <?php
 use EasyRdf\Graph;
 /**
- * VocabController.php
  *
  * This controller provides endpoints for fetching vocabularies via the API.
  *
  */
 
+// Set Max Execution Time to 300 seconds
+ini_set('max_execution_time', 300);
 // Include settings.php so that variables are available
 require_once __DIR__ . '/../../../settings.php';
 
@@ -1011,6 +1012,112 @@ class VocabController
             if (file_exists($file)) {
                 @unlink($file);
             }
+        }
+    }
+
+    /**
+     * Updates the funders list from CrossRef API
+     * 
+     * This function:
+     * 1. Fetches all funders from the CrossRef API using pagination
+     * 2. Handles rate limiting with retries
+     * 3. Saves the processed data to funders.json
+     * 
+     * @return void Outputs JSON response directly
+     * @throws Exception If API requests fail or file operations fail
+     */
+    public function getCrossref(): void
+    {
+        try {
+            $allFunders = [];
+            $offset = 0;
+            $limit = 1000; // Maximum results per request
+            $retryDelay = 5; // Seconds to wait before retry
+            $maxRetries = 3; // Maximum number of retry attempts
+            $totalResults = PHP_INT_MAX; // Initial value, will be updated with actual total
+
+            do {
+                $retry = 0;
+                $response = null;
+
+                // Retry loop for handling rate limits
+                do {
+                    $url = "https://api.crossref.org/funders?offset=$offset&rows=$limit";
+                    $context = stream_context_create([
+                        'http' => [
+                            'ignore_errors' => true,
+                            'user_agent' => 'ELMO (https://mde2.cats4future.de/; mailto:ehrmann@gfz.de)'
+                        ]
+                    ]);
+
+                    $response = @file_get_contents($url, false, $context);
+
+                    if ($response === false) {
+                        $httpStatus = $http_response_header[0] ?? 'Unknown error';
+
+                        if (strpos($httpStatus, '429') !== false) {
+                            // Rate limit hit - wait and retry
+                            sleep($retryDelay);
+                            $retry++;
+                        } else {
+                            throw new Exception("Failed to fetch CrossRef API: $httpStatus");
+                        }
+                    } else {
+                        break; // Successful response received
+                    }
+                } while ($retry < $maxRetries);
+
+                if ($retry >= $maxRetries) {
+                    throw new Exception("Maximum retry attempts reached");
+                }
+
+                $data = json_decode($response, true);
+                if (!isset($data['message']['items'])) {
+                    throw new Exception("Invalid response format from CrossRef API");
+                }
+
+                // Update total results count on first iteration
+                if ($offset === 0) {
+                    $totalResults = $data['message']['total-results'];
+                }
+
+                // Process funders
+                foreach ($data['message']['items'] as $funder) {
+                    $allFunders[] = [
+                        'crossRefId' => $funder['id'],
+                        'name' => $funder['name']
+                    ];
+                }
+
+                $offset += $limit;
+                sleep(1); // Delay between requests
+
+            } while (count($allFunders) < $totalResults);
+
+            // Save to file
+            if (
+                file_put_contents(
+                    '../json/funders.json',
+                    json_encode($allFunders, JSON_PRETTY_PRINT)
+                ) === false
+            ) {
+                throw new Exception('Failed to save funders.json');
+            }
+
+            // Send success response
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'message' => 'CrossRef funders successfully updated',
+                'count' => count($allFunders),
+                'timestamp' => date('c')
+            ]);
+
+        } catch (Exception $e) {
+            error_log("API Error in getCrossref: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
         }
     }
 }

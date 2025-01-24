@@ -163,6 +163,57 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /update/crossref:
+    get:
+      tags:
+        - update
+      summary: Update CrossRef funders
+      description: |-
+        Updates the CrossRef funders list by:
+        1. Fetching all funders from the CrossRef API using pagination
+        2. Processing and storing the data for dropdown selection
+        3. Saving them as JSON for dropdown functionality
+
+        Important: Uses polite rate limiting and includes proper user agent headers
+        as required by CrossRef's API etiquette.
+      operationId: getCrossref
+      responses:
+        "200":
+          description: CrossRef funders successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+                    example: "CrossRef funders successfully updated"
+                  count:
+                    type: integer
+                    description: Number of funders processed
+                    example: 27391
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Time of update
+                    example: "2025-01-19T08:45:22Z"
+                required:
+                  - message
+                  - count
+                  - timestamp
+        "429":
+          description: Too many requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /general/alive:
     get:
       tags:

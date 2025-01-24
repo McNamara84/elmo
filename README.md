@@ -195,7 +195,10 @@ Aktualisiert die Daten für die Auswahlfelder der Affiliations von Personen.
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
 
-### 5. CrossRef Funders
+<details>
+  <summary>
+
+### 5. CrossRef Funders (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
 
 GET ?action=getCrossRefFunders
 
@@ -205,6 +208,7 @@ Aktualisiert die Auswahloptionen im Funders-Dropdown-Feld.
 
 **Antwort:**
 Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
 
 <details>
   <summary>  
@@ -503,18 +507,18 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   This field contains the DOI (Digital Object Identifier) that identifies the resource.
   - Data type: String
   - Occurrence: 0-1
-  - The corresponding field in the database where the value is stored is called: `doi` in the table `Resource`.
-  - Restrictions: Must be in “prefix/suffix” format.
+  - The corresponding field in the database where the value is stored is called: `doi` in the table `Resource`
+  - Restrictions: Must be in “prefix/suffix” format
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/identifier/)
-  - Example values: `10.5880/GFZ.3.1.2024.002` `10.5880/pik.2024.001`
-  - Mapping: is mapped to `<identifier>` in the DataCite scheme and to `<gmd:fileIdentifier>` as well as `<gmd:identifier> <gmd:MD_Identifier> <gmd:code>` and `<gmd:distributionInfo> <gmd:MD_Distribution> <gmd:transferOptions> <gmd:MD_DigitalTransferOptions> <gmd:onLine> <gmd:CI_OnlineResource>` in the ISO scheme.
+  - Example values: `10.5880/GFZ.3.1.2024.002`, `10.5880/pik.2024.001`
+  - Mapping: is mapped to `<identifier>` in the DataCite scheme and to `<gmd:fileIdentifier>` as well as `<gmd:identifier> <gmd:MD_Identifier> <gmd:code>` and `<gmd:distributionInfo> <gmd:MD_Distribution> <gmd:transferOptions> <gmd:MD_DigitalTransferOptions> <gmd:onLine> <gmd:CI_OnlineResource>` in the ISO scheme
 
 - Publication Year
 
     This field contains the publication year of the resource.
     - Data type: Year
     - Occurrence: 1
-    - The corresponding field in the database where the value is saved is called: `year` in the table `year`.
+    - The corresponding field in the database where the value is saved is called: `year` in the table `year`
     - Restrictions: A year in four-digit format. Values allowed in four-digit format: 1901 to 2155 (due to data type YEAR)
     - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/publicationyear/#publicationyear)
     - Example values: `1998`, `2018`
@@ -526,10 +530,10 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   This field contains the type of resource.
   - Data type: String
   - Occurrence: 1
-  - The corresponding field in the database where the value is saved is called: `resource_type_general` in the table `Resource_Type`.
+  - The corresponding field in the database where the value is saved is called: `resource_type_general` in the table `Resource_Type`
   - Restrictions: must be selected from [controlled list](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/#resourcetypegeneral) 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/resourcetype/#a-resourcetypegeneral)
-  - Example values: `Dataset` `Audiovisual` `Book`
+  - Example values: `Dataset`, `Audiovisual`, `Book`
   - Mapping: mapped to `<resourceType resourceTypeGeneral="XX">` in the DataCite scheme
 
 - Version
@@ -537,8 +541,8 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   This field contains the version number of the resource.
   - Data type: Float
   - Occurrence: 0-1
-  - The corresponding field in the database where the value is saved is called: `version` in the table `Resource`.
-  - Restrictions: - 
+  - The corresponding field in the database where the value is saved is called: `version` in the table `Resource`
+  - Restrictions: None 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/version/)
   - Example values: `1.0` `2.1` `3.5`
   - Mapping: mapped to `<version>` in DataCite scheme
@@ -548,7 +552,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   This field contains the language of the dataset
   - Data type: String
   - Occurence: 1
-  - The corresponding field in the database where the value is saved is called: `name` in the table `Language`.
+  - The corresponding field in the database where the value is saved is called: `name` in the table `Language`
   - Restrictions: must be selected from controlled list
   - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/language/)
   - Beispielwerte: `Englisch`, `German`, `French`
@@ -559,8 +563,8 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   This field contains the title of the resource.
   - Data type: String
   - Occurrence: 1-n, with n=$maxTitles specified in the settings.php
-  - The corresponding field in the database where the value is stored is called: `text` in the table `title`.
-  - Restrictions: Must be specified.
+  - The corresponding field in the database where the value is stored is called: `text` in the table `title`
+  - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)
   - Example values: `Drone based photogrammetry data at the Geysir`
   - Mapping: mapped to `<titles> <title>` in DataCite scheme and `<identificationInfo> <MD_DataIdentification> <citation> <CI_Citation> <title>` or `...<alternateTitle` depending on the title type
@@ -570,8 +574,8 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   This field contains the type of title (other than the main title).
   - Data type: String
   - Occurrence: 1, if the corresponding title is not the main title
-  - The corresponding field in the database where the value is stored is called: `name` in the table `Title_Type`.
-  - Restrictions: must be sleected from controlled list
+  - The corresponding field in the database where the value is stored is called: `name` in the table `Title_Type`
+  - Restrictions: must be selected from controlled list
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/#a-titletype)
   - Example values: `Translated Title`
   - Mapping: mapped to `<title titleType="TranslatedTitle">` in the datacite scheme
@@ -584,18 +588,18 @@ The content of this field is mapped to `<rights>` in the DataCite scheme and to 
   This field contains the title of the license with its abbreviation.
   - Data type: String
   - Occurrence: 1
-  - The corresponding fields in the database where the value is stored is called: `text`and `rightsIdentifier` in the table `Rights`.
-  - Restrictions: Mandatory field. Must be selected from controlled list.
+  - The corresponding fields in the database where the value is stored is called: `text`and `rightsIdentifier` in the table `Rights`
+  - Restrictions: Mandatory field. Must be selected from controlled list
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/)
-  - Example values: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
+  - Example value: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
 
 - *Saved in backend (not visible to user):* rightsURI
 
   This field contains the URI of the License.
   - Data Type: String
   - Occurence: 1
-  - The corresponding fields in the database where the value is stored is called: `rightsURI` in the table `Rights`.
-  - Restrictions: Mandatory field. Must be selected from controlled list.
+  - The corresponding fields in the database where the value is stored is called: `rightsURI` in the table `Rights`
+  - Restrictions: Mandatory field. Must be selected from controlled list
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/#a-rightsuri)
   - Example values: `https://creativecommons.org/licenses/by/4.0/legalcode`
 
@@ -612,27 +616,27 @@ Occurrence is: 1-n
   This field contains the author's surname.
   - Data type: String
   - Occurrence: 1
-  - The corresponding field in the database where the value is stored is called: `familyname` in the table `author`.
+  - The corresponding field in the database where the value is stored is called: `familyname` in the table `author`
   - Restrictions: mandatory field, only letters allowed
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#familyname)
-  - Example values: `Jemison` `Smith`
+  - Example values: `Jemison`, `Smith`
 
 - First Name
 
   This field contains the author's first name.
   - Data type: String
   - Occurrence: 1
-  - The corresponding field in the database where the value is stored is called: `givenname` in the table `author`.
+  - The corresponding field in the database where the value is stored is called: `givenname` in the table `author`
   - Restrictions: mandatory field, only letters allowed
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
-  - Example values: `Jemison` `Smith`
+  - Example values: `Lisa`, `Elisa`
 
 - Author ORCID
 
   This field contains the author's ORCID (Open Researcher and Contributor ID).
   - Data type: String
   - Occurrence: 0-1
-  - The corresponding field in the database where the value is stored is called: `orcid` in the table `author`.
+  - The corresponding field in the database where the value is stored is called: `orcid` in the table `author`
   - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
   - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
@@ -642,16 +646,16 @@ Occurrence is: 1-n
   This field contains the author's affiliation.
   - Data type: String
   - Occurrence: 0-n
-  - The corresponding field in the database where the value is stored is called: `name` in the table `affiliation`.
+  - The corresponding field in the database where the value is stored is called: `name` in the table `affiliation`
   - Restrictions: None, can be chosen from the dropdown menu or given as free text
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
-  - Example values: `Technische Universität Berlin` `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
+  - Example values: `Technische Universität Berlin`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
 - *Saved in backend (not visible to user):* rorId
 
   If an affiliation is chosen from the dropdown menu, which contains the entry from the Research Organization Registry (ROR), the assiciated ROR-ID is saved.
   - Occurrence: 0-n
-  - The corresponding field in the database where the value is stored is called: `rorId` in the table `affiliation`.
+  - The corresponding field in the database where the value is stored is called: `rorId` in the table `affiliation`
   - Restrictions: is automatically saved when an affiliation is chosen
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#a-affiliationidentifier)
   - Example values: `03v4gjf40`, `04z8jg394`
@@ -661,57 +665,57 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
 
 - Last name
 
-  - This field contains the surname of the person.
+  This field contains the surname of the person.
   - Data type: String
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: familyname in the Contact_Person table
   - Restrictions: Mandatory
-  - Example values: `Jemison` `Smith`
+  - Example values: `Jemison`, `Smith`
 
 - Firstname
 
-  - This field contains the first name of the person.
+  This field contains the first name of the person.
   - Data type: String
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: givenname in the table Contact_Person
   - Restrictions: Mandatory
-  - Example values: `John` `Jane`
+  - Example values: `John`, `Jane`
 
 - Position
 
-  - This field contains the position of the person in the organisation.
+  This field contains the position of the person in the organisation.
   - Data type: String
   - Occurrence: 0-1
   - The corresponding field in the database where the value is saved is called: position in the Contact_Person table
   - Restrictions: Optional
-  - Example values: `Working group leader` `Project leader`
+  - Example values: `Working group leader`, `Project leader`
 
 - Email address
 
-  - This field contains the email address of the person or organisation.
+  This field contains the email address of the person or organisation.
   - Data type: String
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: email in the Contact_Person table
   - Restrictions: Mandatory
-  - Example values: `ali.mohammed@gfz-potsdam.de` `holger.ehrmann@gfz-potsdam.de`
+  - Example values: `ali.mohammed@gfz-potsdam.de`, `holger.ehrmann@gfz-potsdam.de`
 
 - Website
 
-  - This field contains the organisation's website.
+  This field contains the organisation's website.
   - Data type: String
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: website in the Contact_Person table
-  - Restrictions: Optional.
-  - Example values: `gfz-potsdam.de` `fh-potsdam.de`
+  - Restrictions: Optional
+  - Example values: `gfz-potsdam.de`, `fh-potsdam.de`
 
 - Affiliation
-  - This field contains the affiliation of the person.
+  This field contains the affiliation of the person.
   - Data type: String
   - Occurrence: 0-n
   - The corresponding field in the database where the value is saved is called: name in the Affiliation table.
-  - Restrictions:Optimal.
-  - Example values: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
-  - Note**: Use autocomplete function for the Affiliation input field! similar to the ‘Author’ form group.
+  - Restrictions: Optional
+  - Example values: `Technische Universität Berlin`, `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+  - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
 ### Originating Laboratory
 <!-- TODO: Speicherung der Eingaben in der Datenbank dokumentieren! -->
@@ -726,89 +730,94 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
 
 ### Contributors
 
-- _Personal_
-- Lastname
-
-  - In diesem Feld kommt der Nachname der/des Mitwirkenden.
-  - Datentyp: Text
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: familyname in der Tabelle Contributor_Person
-  - Restriktionen: Optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#familyname)
-  - Beispielwerte: `Jemison` `Smith`
-
-- Firstname
-
-  - In diesem Feld kommt der Vorname der/des Mitwirkenden.
-  - Datentyp: Text
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: givenname in der Tabelle Contributor_Person
-  - Restriktionen: Optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#givenname)
-  - Beispielwerte: `John` `Jane`
-
-- Role
-
-  - In diesem Feld kommt die Rolle/ Rollen der/des Mitwirkenden.
-  - Datentyp: Text
-  - Vorkommen: 0-10
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Role_role_id in der Tabelle Contributor_Person_has_Role
-  - Restriktionen: muss mindestens eine Rolle ausgewählt werden./muss nur eine Rolle ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
-  - Beispielwerte: `Data Manager` `Project Manager`
+#### _Person_
+Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="ROLE">` with `<contributorName nameType="Personal">` in the DataCite scheme.
 
 - ORCID
 
-  - In diesem Feld kommt die ORCID der/des Mitwirkenden (Open Researcher and Contributor ID).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: orcid in der Tabelle Contributor_Person
-  - Restriktionen: Muss im Format "xxxx-xxxx-xxxx-xxxx" sein.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nameidentifierscheme)
-  - Beispielwerte: `1452-9875-4521-7893` `0082-4781-1312-884x`
+  This field contains the ORCID of the contributor (Open Researcher and Contributor ID).
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database where the value is stored is called: `orcid` in the `Contributor_Person` table
+  - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nameidentifierscheme)
+  - Example values: `1452-9875-4521-7893`, `0082-4781-1312-884x`
+
+- Last Name 
+
+  This field contains the contributpr's surname.
+  - Data type: String
+  - Occurrence: 1, if a contributor person is specified
+  - The corresponding field in the database where the value is stored is called: `familyname` in the table `Contributor_Person`
+  - Restrictions: Only letters are allowed.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#familyname)
+  - Example values: `Jemison`, `Smith`
+
+- First Name
+
+  This field contains the contributpr's surname.
+  - Data type: String
+  - Occurrence: 1, if a contributor person is specified
+  - The corresponding field in the database where the value is stored is called: `givenname` in the table `Contributor_Person`
+  - Restrictions: Only letters are allowed
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#givenname)
+  - Example values: `John`, `Jane`
+
+- Role
+
+  This field contains the role(s) of the contributor(s).
+  - Data type: String
+  - Occurrence: 1-10, if a contributor person is specified
+  - The corresponding field in the database where the value is stored is called: `name` in the `Role` table
+  - Restrictions: must be selcted from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
+  - Example values: `Data Manager`, `Project Manager`
 
 - Affiliation
 
-  - In diesem Feld kommt die Zugehörigkeit der/des Mitwirkenden(Personal).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Affiliation_affiliation_id in der Tabelle Contributor_Person_has_Affiliation
+  This field contains the affiliation of the contributor(s).
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `name` in the table `Affiliation`
+  - Restrictions: None, can be selected from list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#affiliation)
+  - Example values: `Technische Universität Berlin`, `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+    - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
-  - Restriktionen: Es ist optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-affiliationidentifier)
-  - Beispielwerte: `Technische Universität Berlin` `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
+#### _Organisation_
+Contributor fields are optional. Only when one of the fields is filled the fields "Organisation Name" and "Role" become mandatory. The contents of the fields are mapped to `<contributor contributorType="ROLE">` in the DataCite scheme with `<contributorName nameType="Organizational">`
 
-- _Organisational_
 - Organisation Name
 
-  - In diesem Feld kommt der Name der Institution.
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-1
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!**
-  - Restriktionen: Es ist optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nametype)
-  - Beispielwerte: `University of Applied Sciences Potsdam` `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
+  This field contains the name of the institution.
+  - Data type: String
+  - Occurrence: 1, if contributing organisation is specified
+  - The corresponding field in the database where the value is saved is called: `name` in the table `contributor_institution`
+  - Restrictions: None
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#contributorname)
+  - Example values: `University of Applied Sciences Potsdam`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
 - Role
-  - In diesem Feld kommt die Rolle/ Rollen der Institution.
-  - Datentyp: Text
-  - Vorkommen: 0-10
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: **Noch nicht bekannt!**
-  - Restriktionen: muss mindestens eine Rolle ausgewählt werden./muss nur eine Rolle ausgewählt werden.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
-  - Beispielwerte: `Data Collector` `Data Curator`
+
+  This field contains the role/roles of the institution.
+  - Data type: String
+  - Occurrence: 1-10
+  - The corresponding field in the database where the value is stored is called: `name` in the table `Role`
+  - Restrictions: must be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
+  - Example values: `Data Collector`, `Data Curator`.
   
 - Affiliation
 
-  - In diesem Feld kommt die Zugehörigkeit der/des Mitwirkenden(Organisation).
-  - Datentyp: Zeichenkette
-  - Vorkommen: 0-n
-  - Das zugehörige Feld in der Datenbank, wo der Wert gespeichert wird, heißt: Affiliation_affiliation_id in der Tabelle Contributor_Institution_has_Affiliation
-  - Restriktionen: Es ist optional.
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-affiliationidentifier)
-  - Beispielwerte: `Education and Science Workers' Union` `Institute of Science and Ethics`
-
-
+  This field contains the affiliation of the contributing institution.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `name` in the `Affiliation` table
+  - Restrictions: None, can be selected from list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#affiliation)
+  - Example values: `Education and Science Workers' Union`, `Institute of Science and Ethics`
+  - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
+ 
 ### Description
 
 - Abstract
@@ -885,7 +894,7 @@ Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and
 
 - GCMD Science Keyword
 
-  This field contains keywords to describe the content of the resource
+  This field contains keywords to describe the content of the resource.
   - Data type: String
   - Occurrence: 0-n
   - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
@@ -925,21 +934,21 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
 
 - Date created
   
-  - This field contains the date the resource itself was put together; this could refer to a timeframe in ancient history, a date range, or a single date for a final component, e.g., the finalized file with all the data.
+  This field contains the date the resource itself was put together; this could refer to a timeframe in ancient history, a date range, or a single date for a final component, e.g., the finalized file with all the data.
   - Data type: Date
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: `dateCreated` in the `resource` table
-  - Restrictions: This field must be a valid calendar date.
+  - Restrictions: This field must be a valid calendar date
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#created)
   - Example values: `2024-06-05` `1999-04-07`
 
 - Embargo until
 
-  -This field contains the date the resource is made publicly available, marking the end of an embargo period.
+  This field contains the date the resource is made publicly available, marking the end of an embargo period.
   - Data typ: Date
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `dateEmbargoUntil` in the `resource` table
-  - Restrictions: This field must be a valid calendar date.
+  - Restrictions: This field must be a valid calendar date
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#available)
   - Example values: `2024-06-15` `2000-12-31`
 
@@ -1057,7 +1066,7 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   This field contains the type of relation.
   - Data type: String
   - Occurrence: 1, if relatedIdentifier is <0
-  - The corresponding field in the database where the value is saved is called: `relation_fk` in the `Related_Work` table.
+  - The corresponding field in the database where the value is saved is called: `relation_fk` in the `Related_Work` table
   - Restrictions: A relation type must be selected, if related work is specified
   - Relations can be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
   - Example values: `IsCitedBy` `IsSupplementTo` `IsContinuedBy`
@@ -1067,7 +1076,7 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - This field contains the identifier
   - Data type: String
   - Occurrence: 1, if relatedIdentifier is <0
-  - The corresponding field in the database where the value is stored is called: `Identifier` in the `Related_Work` table.
+  - The corresponding field in the database where the value is stored is called: `Identifier` in the `Related_Work` table
   - Restrictions: Must be specified, if related work specified
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/)
   - Example values: `13030/tqb3kh97gh8w`, `0706.0001`, `10.26022/IEDA/112263`
@@ -1077,7 +1086,7 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - This field contains the type of the relatedIdentifier.
   - Data type: String
   - Occurrence: 0-1
-  - The corresponding field in the database where the value is stored is called: `identifier_type_fk` in the `Related_Work` table.
+  - The corresponding field in the database where the value is stored is called: `identifier_type_fk` in the `Related_Work` table
   - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
   - Restrictions: Must be selected, if related work is specified
   - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
@@ -1091,7 +1100,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   Name of the funding provider.
   - Data type: String
   - Occurence: 0-1, if Funding Reference is specified, then funderName is mandatory. 
-  - The corresponding field in the database where the value is stored is called: `funder` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `funder` in the `Funding_Reference` table
   - Restrictions: Selection from CrossRef funders list is possible, as well as free text
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/)
   - Example values: `Gordon and Betty Moore Foundation`, `Ford Foundation`
@@ -1101,7 +1110,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   Uniquely identifies a funding entity, using Crossrefs' [Funder Registry](https://www.crossref.org/services/funder-registry/)
   - Data type: String
   - Occurence: 0-1
-  - The corresponding field in the database where the value is stored is called: `funderid` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `funderid` in the `Funding_Reference` table
   - Restrictions: is automatically saved, if a funder is selected from the dropdown list
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#funderidentifier)
   - Example values: `http://dx.doi.org/10.13039/100001214`
@@ -1111,7 +1120,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   The type of the funderIdentifier. Is either NULL or "Crossref Funder ID"
   - Data type: String
   - Occurence: 0-1
-  - The corresponding field in the database where the value is stored is called: `funderidtyp` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `funderidtyp` in the `Funding_Reference` table
   - Restrictions: can only be "Crossref Funder ID" (if a funder is selected from the dropdown list) or null
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#a-funderidentifiertype)
   - Value: `Crossref Funder ID`
@@ -1121,7 +1130,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   The code assigned by the funder to a sponsored award (grant).
   - Data type: String
   - Occurence: 0-1
-  - The corresponding field in the database where the value is stored is called: `grantnumber` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `grantnumber` in the `Funding_Reference` table
   - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardnumber)
   - Example values: `GBMF3859.01` `GBMF3859.22`
@@ -1131,7 +1140,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   The human readable title or name of the award (grant).
   - Data type: String
   - Occurence: 0-1
-  - The corresponding field in the database where the value is stored is called: `grantname` in the `Funding_Reference` table.
+  - The corresponding field in the database where the value is stored is called: `grantname` in the `Funding_Reference` table
   - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`

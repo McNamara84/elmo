@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'elmo/elmo',
-        'pretty_version' => '2.0.0-RC2',
-        'version' => '2.0.0.0-RC2',
-        'reference' => NULL,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '569e75a9da0c032c2ce4368228c8f30130c61b06',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -20,9 +20,9 @@
             'dev_requirement' => false,
         ),
         'elmo/elmo' => array(
-            'pretty_version' => '2.0.0-RC2',
-            'version' => '2.0.0.0-RC2',
-            'reference' => NULL,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '569e75a9da0c032c2ce4368228c8f30130c61b06',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
