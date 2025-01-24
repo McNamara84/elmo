@@ -179,6 +179,17 @@
             "saveAs": "Enregistrer en XML",
             "filename": "Nom du fichier",
             "save": "Enregistrer"
+        },
+        "submit": {
+            "title": "Soumettre les données",
+            "urgency": "Urgence",
+            "url": "URL des données",
+            "dataDescription": "Description des données (conformément au modèle de description des données)",
+            "privacypolice": "J'ai lu la politique de confidentialité et je consens au traitement de mes données.",
+            "urgencyNotice": "Veuillez sélectionner l'urgence",
+            "high": "élevée (2 semaines)",
+            "normal": "normale (4 semaines)",
+            "low": "basse (6 semaines)"
         }
     }
 }
