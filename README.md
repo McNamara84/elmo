@@ -538,7 +538,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   - Data type: Float
   - Occurrence: 0-1
   - The corresponding field in the database where the value is saved is called: `version` in the table `Resource`
-  - Restrictions: - 
+  - Restrictions: None 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/version/)
   - Example values: `1.0` `2.1` `3.5`
   - Mapping: mapped to `<version>` in DataCite scheme
@@ -560,7 +560,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   - Data type: String
   - Occurrence: 1-n, with n=$maxTitles specified in the settings.php
   - The corresponding field in the database where the value is stored is called: `text` in the table `title`
-  - Restrictions: -
+  - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)
   - Example values: `Drone based photogrammetry data at the Geysir`
   - Mapping: mapped to `<titles> <title>` in DataCite scheme and `<identificationInfo> <MD_DataIdentification> <citation> <CI_Citation> <title>` or `...<alternateTitle` depending on the title type
@@ -789,7 +789,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Data type: String
   - Occurrence: 1, if contributing organisation is specified
   - The corresponding field in the database where the value is saved is called: `name` in the table `contributor_institution`
-  - Restrictions: -
+  - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#contributorname)
   - Example values: `University of Applied Sciences Potsdam`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
