@@ -35,6 +35,7 @@ Following conditions are required for installation:
 9. Access `install.php` via the browser. The database tables will be created automatically in your database.
 10. The metadata editor is now accessible in the browser via `localhost/directoryname`.
 11. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
+12. Change the links to the legal notice and privacy policy.
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
 
