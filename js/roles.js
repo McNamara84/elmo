@@ -20,28 +20,41 @@ function setupRolesDropdown(roletypes, inputSelector) {
         a.localeCompare(b, undefined, { sensitivity: 'base' })
       );
 
-      const inputElement = $(inputSelector);
+      const inputElement = document.querySelector(inputSelector);
 
-      if (inputElement.length) {
-        if (inputElement[0].tagify) {
-          inputElement[0].tagify.settings.whitelist = uniqueSortedRoles;
-          inputElement[0].tagify.dropdown.show.call(inputElement[0].tagify);
-        } else {
-          new Tagify(inputElement[0], {
-            whitelist: uniqueSortedRoles,
-            enforceWhitelist: true,
-            maxTags: 10,
-            placeholder: translations.general.roleLabel,
-            dropdown: {
-              maxItems: 20,
-              classname: "tags-look",
-              enabled: 0,
-              closeOnSelect: false
-            }
-          });
-        }
+      if (!inputElement) {
+        console.error(`Input element not found for selector: ${inputSelector}`);
+        return;
+      }
+
+      // Check if Tagify is already initialized
+      if (inputElement._tagify) {
+        // Update the whitelist and refresh the dropdown
+        inputElement._tagify.settings.whitelist = uniqueSortedRoles;
+        inputElement._tagify.dropdown.hide(); // Ensure the dropdown is refreshed
+      } else {
+        // Initialize Tagify
+        const rolesTagify = new Tagify(inputElement, {
+          whitelist: uniqueSortedRoles,
+          enforceWhitelist: true,
+          maxTags: 10,
+          placeholder: translations.general.roleLabel,
+          dropdown: {
+            maxItems: 20,
+            classname: "tags-look",
+            enabled: 0,
+            closeOnSelect: false,
+          },
+          editTags: false,
+        });
+
+        // Assign the Tagify instance to the input
+        inputElement._tagify = rolesTagify;
       }
     })
+    .catch(error => {
+      console.error(`Error fetching roles for ${inputSelector}:`, error);
+    });
 }
 
 $(document).ready(function () {

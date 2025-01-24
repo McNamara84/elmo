@@ -221,9 +221,6 @@ $(document).ready(function () {
       affiliationsData
     );
 
-    // Bind validation listeners to the new row
-    bindValidationListeners(newAuthorRow);
-
     // Event handler for the remove button
     newAuthorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
@@ -276,9 +273,6 @@ $(document).ready(function () {
       "input-contactperson-rorid" + uniqueSuffix,
       affiliationsData
     );
-
-    // Bind validation listeners to the new row
-    bindValidationListeners(newCPRow);
 
     // Event handler for the remove button
     newCPRow.on("click", ".removeButton", function () {
@@ -376,10 +370,6 @@ $(document).ready(function () {
     // Initialize Tagify for the new Roles field
     setupRolesDropdown(["person", "both"], "#input-contributor-personrole" + uniqueSuffix);
 
-    // Bind validation listeners to the new row
-    bindValidationListeners(newContributorRow);
-
-
     // Event handler for the remove button in the new row
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
@@ -464,9 +454,6 @@ $(document).ready(function () {
 
     // Initialize Tagify for the new Roles field
     setupRolesDropdown(["institution", "both"], "#input-contributor-organisationrole" + uniqueSuffix);
-
-    // Bind validation listeners to the new row
-    bindValidationListeners(newContributorRow);
 
     // Event handler for the remove button in the new row
     newContributorRow.on("click", ".removeButton", function () {
@@ -644,9 +631,6 @@ $(document).ready(function () {
     // Reset required attributes
     newFundingReferenceRow.find("input").removeAttr("required");
 
-    // Bind validation listeners to the new row
-    bindValidationListeners(newFundingReferenceRow);
-
     // Event handler for the remove button
     newFundingReferenceRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
@@ -807,12 +791,12 @@ $(document).ready(function () {
         tagifyAffiliation.addTags([lab.affiliation]);
         hiddenRorId.value = lab.ror_id || "";
         hiddenLabId.value = lab.id;
-        tagifyAffiliation.setReadOnly(true);
+        tagifyAffiliation.setReadonly(true);
       } else {
         tagifyAffiliation.removeAllTags();
         hiddenRorId.value = "";
         hiddenLabId.value = "";
-        tagifyAffiliation.setReadOnly(false);
+        tagifyAffiliation.setReadonly(false);
       }
     });
 
@@ -820,7 +804,7 @@ $(document).ready(function () {
       tagifyAffiliation.removeAllTags();
       hiddenRorId.value = "";
       hiddenLabId.value = "";
-      tagifyAffiliation.setReadOnly(false);
+      tagifyAffiliation.setReadonly(false);
     });
 
     tagifyName.on("input", function (e) {
@@ -830,7 +814,7 @@ $(document).ready(function () {
         if (!lab) {
           tagifyAffiliation.removeAllTags();
           hiddenRorId.value = "";
-          tagifyAffiliation.setReadOnly(false);
+          tagifyAffiliation.setReadonly(false);
         }
       }
     });
@@ -944,15 +928,6 @@ $(document).ready(function () {
     localStorage.setItem("inputGroupTextVisible", "false");
   });
 
-  /**
- * Binds validation listeners to input fields in a given row.
- * @param {jQuery} row - The row element to bind listeners to.
- */
-  function bindValidationListeners(row) {
-    row.find('input').on('input', function () {
-      validateField($(this));
-    });
-  }
 
   /**
    * Automatically sets the language based on the browser's language settings.
