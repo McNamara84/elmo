@@ -185,7 +185,7 @@
             "urgency": "Urgency",
             "url": "URL to data",
             "dataDescription": "Data description (as mentioned in the data description template)",
-            "privacypolice": "I have read the privacy policy and agree to the processing of my data.",
+            "privacypolice": "I have read the <a href='docs/privacyPolicy.html' target='_blank' class='link-primary'>privacy policy</a> and agree to the processing of my data.",
             "urgencyNotice": "Please select an urgency",
             "high": "high (2 weeks)",
             "normal": "normal (4 weeks)",

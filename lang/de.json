@@ -185,7 +185,7 @@
             "urgency": "Dringlichkeit",
             "url": "URL zu den Daten",
             "dataDescription": "Datenbeschreibung (gem. Vorlage zur Datenbeschreibung)",
-            "privacypolice": "Ich habe die Datenschutzbestimmungen gelesen und bin mit der Verarbeitung meiner Daten einverstanden.",
+            "privacypolice": "Ich habe die <a href='docs/privacyPolicy.html' target='_blank' class='link-primary'>Datenschutzbestimmungen</a> gelesen und bin mit der Verarbeitung meiner Daten einverstanden.",
             "urgencyNotice": "Bitte wähle die Dringlichkeit aus",
             "high": "hoch (2 Wochen)",
             "normal": "normal (4 Wochen)",
