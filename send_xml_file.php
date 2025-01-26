@@ -3,10 +3,8 @@
  * Script to save dataset metadata and send it as XML via email
  * 
  * This script saves all form data to the database and sends the resulting
- * XML file as an email attachment to a preconfigured email address.
- * It uses the same save functions as save_data.php but sends an email
- * instead of triggering a download.
- * 
+ * XML file as an email attachment along with a PDF description and additional
+ * metadata via email.
  */
 
 // Enable error reporting for debugging
@@ -49,6 +47,15 @@ try {
     saveRelatedWork($connection, $_POST, $resource_id);
     saveFundingReferences($connection, $_POST, $resource_id);
 
+    // Get additional submission data from modal
+    $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;
+    $dataUrl = isset($_POST['dataUrl']) ? filter_var($_POST['dataUrl'], FILTER_SANITIZE_URL) : '';
+
+    // Validate URL if provided
+    if ($dataUrl && !filter_var($dataUrl, FILTER_VALIDATE_URL)) {
+        throw new Exception("Invalid data URL provided");
+    }
+
     // Get XML content from API
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
     $base_url = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
@@ -85,14 +92,70 @@ try {
     $mail->setFrom($smtpSender);
     $mail->addAddress($xmlSubmitAddress);
 
-    // Attachments
+    // Handle PDF upload if provided
+    $pdfAttachment = null;
+    if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
+        $pdfFile = $_FILES['dataDescription'];
+
+        // Validate file type
+        $fileType = mime_content_type($pdfFile['tmp_name']);
+        if ($fileType !== 'application/pdf') {
+            throw new Exception("Invalid file type. Only PDF files are allowed.");
+        }
+
+        // Validate file size
+        if ($pdfFile['size'] > 10 * 1024 * 1024) {
+            throw new Exception("PDF file size exceeds maximum limit of 10MB.");
+        }
+
+        // Add PDF as attachment
+        $mail->addAttachment(
+            $pdfFile['tmp_name'],
+            "data_description_" . $resource_id . ".pdf"
+        );
+    }
+
+    // Add XML attachment
     $mail->addStringAttachment($xml_content, "dataset_" . $resource_id . ".xml");
 
-    // Content
+    // Prepare email content
+    $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
+    $dataUrlText = $dataUrl ? $dataUrl : "not provided";
+
+    $htmlBody = "
+        <h2>New Dataset from ELMO</h2>
+        <p>Hi! I'm ELMO and a new dataset has been submitted with the following details:</p>
+        <ul>
+            <li><strong>Dataset ID in ELMO database:</strong> {$resource_id}</li>
+            <li><strong>Priority:</strong> {$urgencyText}</li>
+            <li><strong>URL to data:</strong> " . ($dataUrl ? "<a href='{$dataUrl}'>{$dataUrl}</a>" : "not provided") . "</li>
+        </ul>
+        <p>I have attached the metadata" .
+        (isset($_FILES['dataDescription']) ? " and data description" : "") .
+        " to this email.</p>
+        <p>And now get to work! You only have {$urgencyWeeks} weeks to do the job!</p>
+    ";
+
+    $plainBody = "
+        New Dataset from ELMO
+        
+        Hi! I'm ELMO and a new dataset has been submitted with the following details:
+        
+        Dataset ID in ELMO database: {$resource_id}
+        Priority: {$urgencyText}
+        URL to data: {$dataUrlText}
+        
+        I have attached the metadata" .
+        (isset($_FILES['dataDescription']) ? " and data description PDF" : "") .
+        " to this email.
+        And now get to work! You only have {$urgencyWeeks} weeks to do the job!
+    ";
+
+    // Set email content
     $mail->isHTML(true);
-    $mail->Subject = 'New Dataset Submission (ID: ' . $resource_id . ')';
-    $mail->Body = 'A new dataset has been submitted.<br>Dataset ID: ' . $resource_id;
-    $mail->AltBody = 'A new dataset has been submitted. Dataset ID: ' . $resource_id;
+    $mail->Subject = "New Dataset from ELMO (ELMO ID: {$resource_id})";
+    $mail->Body = $htmlBody;
+    $mail->AltBody = $plainBody;
 
     // Send email
     if (!$mail->send()) {
