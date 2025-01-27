@@ -51,9 +51,20 @@ try {
     $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;
     $dataUrl = isset($_POST['dataUrl']) ? filter_var($_POST['dataUrl'], FILTER_SANITIZE_URL) : '';
 
-    // Validate URL if provided
-    if ($dataUrl && !filter_var($dataUrl, FILTER_VALIDATE_URL)) {
-        throw new Exception("Invalid data URL provided");
+    // Validate and format URL if provided
+    if ($dataUrl) {
+        // Trim whitespace
+        $dataUrl = trim($dataUrl);
+
+        // Add https:// if no protocol is specified
+        if (!preg_match("~^(?:f|ht)tps?://~i", $dataUrl)) {
+            $dataUrl = "https://" . $dataUrl;
+        }
+
+        // Validate the complete URL
+        if (!filter_var($dataUrl, FILTER_VALIDATE_URL)) {
+            throw new Exception("Invalid data URL provided");
+        }
     }
 
     // Get XML content from API
