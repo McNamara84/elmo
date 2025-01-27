@@ -1147,16 +1147,18 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 
 ## Data validation
 
-- Mandatory fields: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email**, **Description Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
+The metadata editor has some mandatory fields which are neccessary for the submission of data. These include the following fields:
+- **Publication Year**, **Resource Type**, **Language of dataset**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email adress**, **Descriptions Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
 
-- Other fields **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields** are optional.✅
+The other fields are optional and are used to further enrich the data set with metadata. The following fields are optional:
+- **DOI**, **Version**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields**.✅
 
-- The following field become mandatory in certain cases:
+In certain cases, some subfields within a formgroup become mandatory. This affects the following fields:
 
-**Contributor Role**, **Contributor Lastname**, **Contributor Firstname** become mandatory, if one of the Contributor Person fields is filled
-**Contributor Organisation Name**, **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled (this includes **Contributor Organisation Affiliation**)
-**Related work all Fields** become mandatory fields, if one of the fields is filled
-**Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
+- **Contributor Role**, **Contributor Lastname** and **Contributor Firstname** become mandatory, if one of the Contributor Person fields is filled
+- **Contributor Organisation Name** and **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled (this includes **Contributor Organisation Affiliation**)
+- **Related work all Fields** becomes mandatory fields, if one of the fields is filled
+- **Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
 
 ## Database structure
 
