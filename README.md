@@ -718,15 +718,28 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
 ### Originating Laboratory
-<!-- TODO: Speicherung der Eingaben in der Datenbank dokumentieren! -->
-- Labor aus dem die Daten stammen
-- Vorkommen: 1-n
-- Wird gespeichert als `<contributor contributorType="HostingInstitution">` im [DataCite-Schema](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
-- Name of the originating laboratory
-  - Name des Labors, gewählt aus einer Liste, oder Freitext.
-  - Vorkommen 1-n
-  - Datentyp: Zeichenkette
-  - Wird gespeichert als `<contributorName>` im [DataCite-Schema 4.5](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/) (TODO)
+
+- Laboratory Name
+
+  This field contains the laboratory, where the research data came from. Its content is mapped to `<contributor contributorType="HostingInstitution"><contributorName>` in the DataCite scheme
+  - Data Type: String
+  - Occourence: 0-n
+  - The corresponding field in the database is called: `laboratoryname` in the table `originating_laboratory`
+  - Restrictions: Controlled vocabulary provided by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/labnames.json))
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
+  - Examples: `Fragmentation Lab (Ludwig-Maximilians-University Munich, Germany)`, `TecMOD - GRmodel (CNRS-Rennes 1 University, France)`
+
+  - *Saved in backend (not visible to user):* LabId, laboratoryAffiliation
+
+    The purpose of these fields is to clearly identify the originating laboratory. The contents are mapped to `<nameIdentifier nameIdentifierScheme="labid">` and `<affiliation>` in the DataCite scheme.
+    - Data type: String
+    - Occurence: 1
+    - The corresponding field in the database where the values are saved are called: `labId` in the table `originating_laboratory` and `name` in the table `affiliation`
+    - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
+    - Example values: 
+      LabID `9cd562c216daa82792972a074a222c52`, 
+      laboratoryAffiliation `Ludwig-Maximilians-University Munich, Munich, Germany`, 
+
 
 ### Contributors
 
