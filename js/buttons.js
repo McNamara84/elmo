@@ -762,7 +762,7 @@ $(document).ready(function () {
       placeholder: translations.laboratory.name,
       maxTags: 1,
       dropdown: {
-        maxItems: 20,
+        maxItems: 90,
         closeOnSelect: true,
         highlightFirst: true,
       },

@@ -830,7 +830,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Example values: `Education and Science Workers' Union`, `Institute of Science and Ethics`
   - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
  
-### Description
+### Descriptions
 - Abstract
   This field contains the abstract of the dataset. It is mapped to `<descriptions><description descriptionType="Abstract">` in the DataCite scheme and to `<identificationInfo><MD_DataIdentification><abstract>` in the ISO scheme
   - Data type: String
