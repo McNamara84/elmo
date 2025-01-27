@@ -718,19 +718,18 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
 ### Originating Laboratory
+The controlled list is provided and maintained by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/labnames.json)) and can be updated via API call (see [API documentation](https://mde2.cats4future.de/api/v2/docs/index.html)).
 
 - Laboratory Name
-
-  This field contains the laboratory, where the research data came from. Its content is mapped to `<contributor contributorType="HostingInstitution"><contributorName>` in the DataCite scheme
+  This field contains the laboratory, where the research data came from. Its content is mapped to `<contributor contributorType="HostingInstitution"><contributorName>` in the DataCite scheme. 
   - Data Type: String
   - Occourence: 0-n
   - The corresponding field in the database is called: `laboratoryname` in the table `originating_laboratory`
-  - Restrictions: Controlled vocabulary provided by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/labnames.json))
+  - Restrictions: Controlled list
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
   - Example values: `Fragmentation Lab (Ludwig-Maximilians-University Munich, Germany)`, `TecMOD - GRmodel (CNRS-Rennes 1 University, France)`
 
 - *Saved in backend (not visible to user):* LabId, laboratoryAffiliation
-
     The purpose of these fields is to clearly identify the originating laboratory. The contents are mapped to `<nameIdentifier nameIdentifierScheme="labid">` and `<affiliation>` in the DataCite scheme.
     - Data type: String
     - Occurence: 1
@@ -833,8 +832,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
  
 ### Description
 - Abstract
-
-This field contains the abstract of the dataset. It is mapped to `<descriptions><description descriptionType="Abstract">` in the DataCite scheme and to `<identificationInfo><MD_DataIdentification><abstract>` in the ISO scheme
+  This field contains the abstract of the dataset. It is mapped to `<descriptions><description descriptionType="Abstract">` in the DataCite scheme and to `<identificationInfo><MD_DataIdentification><abstract>` in the ISO scheme
   - Data type: String
   - Occurence: 1
   - The corresponding field in the database where the value is saved is called: `description` in the table `description` with `type=Abstract`
@@ -843,7 +841,6 @@ This field contains the abstract of the dataset. It is mapped to `<descriptions>
   - Example value: `The dataset contains a subset of an airborne hyperspectral HyMap image over the Cabo de Gata-Nίjar Natural Park in Spain from 15.06.2005, and soil wet chemistry data based on in-situ soil sampling. The Cabo de Gata-Nίjar Natural Park is a semi-arid mediterranean area in Southern Spain, sparsely populated and with a range of landscape patterns.`
 
 - Methods
-
   This field contains the The methodology employed for the study or research. It is mapped to `<descriptions><description descriptionType="Methods">` in the DataCite scheme.
   - Data type: String
   - Occurence: 0-1
@@ -853,9 +850,7 @@ This field contains the abstract of the dataset. It is mapped to `<descriptions>
   - Example value: `Graphical representation of the steps used to reconstruct sequence alignments of the Nudix superfamily, as described in the Materials and Methods section. (A) The pipeline to build the 78-PDB structure guided sequence alignment. (B) The pipeline to build the 324-core sequence alignment guided by the 78-PDB sequence alignment. (C) The pipeline to build the alignment of the complete Nudix clan (38,950 sequences). (D) Illustration of how to combine two alignment into one guided by a scaffold alignment.`
 
 - TechnicalInfo
-
-This field contains detailed information that may be associated with design, implementation, operation, use, and/or maintenance of a process, system, or instrument. It is mapped to `<descriptions><description descriptionType="TechnicalInfo">` in the DataCite scheme.
-
+  This field contains detailed information that may be associated with design, implementation, operation, use, and/or maintenance of a process, system, or instrument. It is mapped to `<descriptions><description descriptionType="TechnicalInfo">` in the DataCite scheme.
   - Data type: String
   - Occurence: 0-1
   - The corresponding field in the database where the value is saved is called: `description` in the table `description` with `type = Technical Information`
@@ -864,8 +859,7 @@ This field contains detailed information that may be associated with design, imp
   - Example value: `Scripts written and run using Wolfram Mathematica (confirmed with versions 10.2 to 11.1). Assumes raw data matches format produced by a LTQ Orbitrap Velos mass spectrometer and exported by the proprietary software (Xcalibur) to a comma-separated values (.csv) file. The .csv files are the expected input into the Mathematica scripts. `
 
 - Other
-
-  Other description information that does not fit into an existing category. Is mapped to `<descriptions><description descriptionType="Other">` in the DataCite scheme.
+  Other description information that does not fit into an existing category. Content of the field is mapped to `<descriptions><description descriptionType="Other">` in the DataCite scheme.
   - Data type: String
   - Occurence: 0-1
   - The corresponding field in the database where the value is saved is called: `description` in the table `description` with `type = Other`
