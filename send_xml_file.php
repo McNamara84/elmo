@@ -133,7 +133,7 @@ try {
         <p>I have attached the metadata" .
         (isset($_FILES['dataDescription']) ? " and data description" : "") .
         " to this email.</p>
-        <p>And now get to work! You only have {$urgencyWeeks} weeks to do the job!</p>
+        <p>And now let's get to work! The urgency of this data set is {$urgencyText}! But I've already done most of the work for you ;-)</p>
     ";
 
     $plainBody = "
@@ -148,7 +148,7 @@ try {
         I have attached the metadata" .
         (isset($_FILES['dataDescription']) ? " and data description PDF" : "") .
         " to this email.
-        And now get to work! You only have {$urgencyWeeks} weeks to do the job!
+        And now let's get to work! The urgency of this data set is {$urgencyText}! But I've already done most of the work for you ;-)
     ";
 
     // Set email content
