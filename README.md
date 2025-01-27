@@ -32,7 +32,7 @@ Following conditions are required for installation:
 6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `settings.php`.
 7. Create a Google Maps JS API key and paste it into the `settings.php` file as well.
 8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
-9. Access `install.php` via the browser. The database tables will be created automatically in your database.
+9. Access `install.html` via the browser and choose to install with or without test datasets. The database tables and optional the test datasets will be created automatically in your database.
 10. The metadata editor is now accessible in the browser via `localhost/directoryname`.
 11. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 
