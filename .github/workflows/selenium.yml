@@ -33,18 +33,20 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
-      - name: Install Docker Compose (v2 plugin)
+      - name: Install Docker and docker-compose
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
-          docker compose version
+          sudo apt-get install -y docker.io docker-compose
+          sudo systemctl start docker
+          sudo systemctl status docker --no-pager
+          docker-compose version
 
       - name: Start services via Docker Compose
-        run: docker compose up -d
+        run: docker-compose up -d
 
       - name: Wait for services to be ready
         run: |
-          # Warte auf Port 8000 (PHP) und 4444 (Selenium)
+          # Warte z.B. auf Port 8000 (PHP) und 4444 (Selenium)
           for i in {1..30}; do
             if curl -s http://localhost:8000/ >/dev/null && \
                curl -s http://localhost:4444/wd/hub/status >/dev/null; then
@@ -77,4 +79,4 @@ jobs:
 
       - name: Tear down
         if: always()
-        run: docker compose down
+        run: docker-compose down
