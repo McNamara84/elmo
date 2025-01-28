@@ -89,6 +89,67 @@ function checkContributorOrganisation(){
 }
 
 /**
+ * Dynamically applies or removes the 'required' attribute to the latitude and longitude fields 
+ * based on the following conditions:
+ * - When latMin is filled, longMin becomes required and vice versa.
+ * - When latMax is filled, longMax becomes required and vice versa.
+ * - When either latMax or longMax is filled, latMin and longMin become required.
+ * - If all fields are empty, none of the fields will be required.
+ * 
+ * This function operates on each row within the #group-stc container that has the attribute 'tsc-row'.
+ */
+function checkSpatialCoverage() {
+    $('#group-stc').find('[tsc-row]').each(function () {
+        var row = $(this);
+
+        // Locate the input fields for latitude and longitude
+        var latMin = row.find('[id^="input-stc-latmin"]');
+        var latMax = row.find('[id^="input-stc-latmax"]');
+        var longMin = row.find('[id^="input-stc-longmin"]');
+        var longMax = row.find('[id^="input-stc-longmax"]');
+
+        // Check if the fields are filled (not empty or whitespace only)
+        var isLatMinFilled = latMin.val() && latMin.val().trim() !== '';
+        var isLatMaxFilled = latMax.val() && latMax.val().trim() !== '';
+        var isLongMinFilled = longMin.val() && longMin.val().trim() !== '';
+        var isLongMaxFilled = longMax.val() && longMax.val().trim() !== '';
+
+        // If all fields are empty, none of them should be required
+        if (!isLatMinFilled && !isLatMaxFilled && !isLongMinFilled && !isLongMaxFilled) {
+            latMin.removeAttr('required');
+            latMax.removeAttr('required');
+            longMin.removeAttr('required');
+            longMax.removeAttr('required');
+        } else {
+            // When either latMax or longMax is filled, latMin and longMin and the other max become required
+            if (isLatMaxFilled || isLongMaxFilled) {
+                latMin.attr('required', 'required');
+                longMin.attr('required', 'required');
+                latMax.attr('required', 'required');
+                longMax.attr('required', 'required');
+            } else {
+                latMax.removeAttr('required');
+                longMax.removeAttr('required');
+            }
+
+            // When latMin is filled, longMin becomes required and vice versa
+            if (isLatMinFilled) {
+                longMin.attr('required', 'required');
+            }
+            
+
+            if (isLongMinFilled) {
+                latMin.attr('required', 'required');
+            }
+            
+        }
+    });
+}
+
+
+
+
+/**
  * Validates the Related Work section of the form.
  * Ensures all fields ("Relation", "Identifier", and "Identifier Type") are required if any of them are filled.
  */
@@ -162,6 +223,9 @@ function checkMandatoryFields() {
     // Formgroup Contributor Organization
     checkContributorOrganisation();
 
+    // Formgroup Spacial and Temporal Coverage
+    checkSpatialCoverage();
+
     //Formgroup Related Work
     checkRelatedWork();
 
@@ -187,6 +251,10 @@ $(document).on('blur',
     'input[name="cbPersonLastname[]"], ' +  // Contributor Person Lastname
     'input[name="cbPersonFirstname[]"], ' + // Contributor Person Firstname
     'input[name="cbOrganisationName[]"],' +   // Contributor Organisation Name
+    'input[name="tscLongitudeMax[]"],'+
+    'input[name="tscLongitudeMin[]"],'+
+    'input[name="tscLatitudeMin[]"],'+
+    'input[name="tscLatitudeMax[]"],'+
     'input[name="rIdentifier[]"]' ,            // Related Work Identifier
     function () {
         // Check mandatory fields when user leaves any of these input fields
