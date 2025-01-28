@@ -25,20 +25,16 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Install Selenium side-runner
+      - name: Install Selenium side-runner (4.x)
         run: |
-          npm install -g selenium-side-runner
-          npm install -g selenium-webdriver
+          npm install -g @seleniumhq/side-runner
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
-      # Docker via offizielles Install-Script
       - name: Install Docker (Engine + Compose v2 plugin)
         run: |
-          # Offizielles Docker-Installscript holen und ausführen
           curl -fsSL https://get.docker.com | sudo sh
-          # Test: Zeige Versionen an
           docker --version
           docker compose version
 
@@ -59,14 +55,14 @@ jobs:
 
       - name: Run Selenium tests
         run: |
-          selenium-side-runner \
-            --browser chrome \
+          side-runner \
+            tests/Selenium/Tests_MDE.side \
+            --capabilities "browserName=chrome" \
             --server http://localhost:4444/wd/hub \
             --base-url http://localhost:8000 \
             --timeout 100000 \
             --output-directory=./test-output \
-            --output-format=junit \
-            tests/Selenium/Tests_MDE.side
+            --output-format=junit
 
       - name: Upload artifacts
         if: always()
