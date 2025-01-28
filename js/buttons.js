@@ -508,7 +508,7 @@ $(document).ready(function () {
 
     // Reset only non-timezone fields
     newTscLine.find("input:not(#input-stc-timezone), textarea").val("").removeClass("is-invalid is-valid");
-    newTscLine.find(".invalid-feedback, .valid-feedback").hide();
+    newTscLine.find(".invalid-feedback, .valid-feedback").css("display", "");
 
     // Remove help buttons
     replaceHelpButtonInClonedRows(newTscLine);
