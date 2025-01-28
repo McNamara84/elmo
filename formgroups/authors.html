@@ -6,7 +6,7 @@
     <div id="group-author">
       <div class="row" data-creator-row>
         <!-- Input field ORCID Author -->
-        <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
+        <div class="col-2 col-sm-4 col-md-4 col-lg-2 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
@@ -25,7 +25,7 @@
           </div>
         </div>
         <!-- Input field Lastname Author -->
-        <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
+        <div class="col-2 col-sm-4 col-md-4 col-lg-2 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control" id="input-author-lastname" name="familynames[]"
@@ -39,7 +39,7 @@
           </div>
         </div>
         <!-- Input field Firstname Author -->
-        <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
+        <div class="col-2 col-sm-4 col-md-4 col-lg-2 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control" id="input-author-firstname" name="givennames[]"
@@ -53,7 +53,7 @@
           </div>
         </div>
         <!-- Input field Affiliation Author-->
-        <div class="col-10 col-sm-11 col-md-11 col-lg-5 p-1">
+        <div class="col-4 col-sm-9 col-md-10 col-lg-4 p-1">
           <div class="input-group has-validation">
             <input type="text" class="form-control input-with-help input-right-no-round-corners"
               id="input-author-affiliation" name="affiliation[]" data-translate-placeholder="general.affiliation" />
@@ -62,12 +62,15 @@
             <input type="hidden" id="input-author-rorid" name="authorRorIds[]" />
           </div>
         </div>
+        <!--Drag & drop Author-->
+        <div class="col-4 col-sm-1 col-md-1 col-lg-1 p-1">
+         <div class="drag-handle align-items-center" data-bs-toggle="tooltip" data-bs-placement="top"
+          title="Drag & drop to change order">
+         <i class="bi bi-grip-vertical pe-4"></i>
+         </div>
+        </div
         <!-- Button "add Author" -->
-        <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
-          <div class="drag-handle align-items-center" data-bs-toggle="tooltip" data-bs-placement="top"
-            title="Drag & drop to change order">
-            <i class="bi bi-grip-vertical pe-4"></i>
-          </div>
+        <div class="col-1 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
           <div class="align-items-center">
             <button type="button" class="btn btn-primary addAuthor" id="button-author-add" style="width: 36px"
               data-translate="general.add">
