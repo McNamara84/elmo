@@ -74,15 +74,9 @@
       "value": "DOI"
     }, {
       "id": "b9e80373-96d1-4683-8060-e0f6e11d81cc",
-      "comment": "",
+      "comment": "Dieser Schritt muss scheitern",
       "command": "click",
       "target": "css=#helpModal .btn-close",
-      "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
-        ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
-        ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
-        ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
-      ],
       "value": ""
     }, {
       "id": "67bc176d-b7f0-4837-91ec-a9317a1e80e6",
