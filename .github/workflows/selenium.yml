@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '16'
-      
+
       - name: Install Selenium side-runner
         run: |
           npm install -g selenium-side-runner@3.17.0
@@ -33,21 +33,22 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
-      - name: Set up Docker Compose
+      - name: Install Docker Compose (v2 plugin)
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker-compose
+          sudo apt-get install -y docker-compose-plugin
+          docker compose version
 
       - name: Start services via Docker Compose
         run: docker compose up -d
 
       - name: Wait for services to be ready
         run: |
-          # Warte z.B. auf Port 8000 und 4444
+          # Warte auf Port 8000 (PHP) und 4444 (Selenium)
           for i in {1..30}; do
-            if curl -s http://localhost:8000/ > /dev/null && \
-               curl -s http://localhost:4444/wd/hub/status > /dev/null; then
-              echo "PHP & Selenium sind erreichbar"
+            if curl -s http://localhost:8000/ >/dev/null && \
+               curl -s http://localhost:4444/wd/hub/status >/dev/null; then
+              echo "PHP und Selenium sind erreichbar."
               break
             fi
             echo "Warten auf Services..."
@@ -56,7 +57,6 @@ jobs:
 
       - name: Run Selenium tests
         run: |
-          # Base-URL ist jetzt http://localhost:8000
           selenium-side-runner \
             --browser chrome \
             --server http://localhost:4444/wd/hub \
@@ -74,7 +74,7 @@ jobs:
             *.log
             *.php
             install_output.log
-      
+
       - name: Tear down
         if: always()
         run: docker compose down

@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: mde2-msl-test
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    command: --default-authentication-plugin=mysql_native_password
+
+  php:
+    image: php:8.2-cli
+    container_name: php-app
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./:/var/www/html
+    working_dir: /var/www/html
+    command: php -S 0.0.0.0:8000 -t /var/www/html
+    ports:
+      - "8000:8000"
+
+  selenium:
+    image: selenium/standalone-chrome:latest
+    container_name: selenium
+    shm_size: "2g"
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+    depends_on:
+      - php
