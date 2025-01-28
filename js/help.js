@@ -45,8 +45,8 @@ $(document).ready(function () {
       var content = $(doc)
         .find("#" + sectionId)
         .html();
-      $("#helpModal .modal-body").html(content);
-      $("#helpModal").modal("show");
+      $("#modal-help .modal-body").html(content);
+      $("#modal-help").modal("show");
     }).fail(function () {
       console.error("Fehler beim Laden der help.html");
     });
