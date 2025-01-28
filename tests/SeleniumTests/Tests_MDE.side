@@ -2,7 +2,7 @@
   "id": "22f86976-3aab-4320-8921-ac16b024c9f6",
   "version": "2.0",
   "name": "Tests_MDE",
-  "url": "http://php-app:8000/",
+  "url": "http://localhost:8000",
   "tests": [{
     "id": "21e2027f-6eeb-4a2c-b733-1ec31431ed4a",
     "name": "Hilfebuttons",
@@ -7053,6 +7053,6 @@
     "timeout": 50000,
     "tests": ["7b7196a5-1270-47a4-87d2-3b3fd3952e88", "fafe99a0-a4e5-4c53-ae6b-eb156a37ad0f", "dff59546-76f4-4a28-9a31-8c19b776c9d8"]
   }],
-  "urls": ["http://php-app:8000/"],
+  "urls": ["http://localhost:8000"],
   "plugins": []
 }
