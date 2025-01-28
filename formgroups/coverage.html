@@ -52,9 +52,10 @@
                                 data-translate="coverage.description">Description</label>
                             <div class="input-group">
                                 <textarea rows="4"
-                                    placeholder="Please enter the description of the temporal and spatial coverage..."
-                                    data-translate="coverage.descriptionPlaceholder" name="tscDescription[]"
                                     class="form-control input-right-no-round-corners input-with-help input-right-with-round-corners"
+                                    placeholder="coverage.descriptionPlaceholder"
+                                    data-translate-placeholder="coverage.descriptionPlaceholder" 
+                                    name="tscDescription[]"
                                     id="input-stc-description"></textarea>
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-description"></i></span>
@@ -96,13 +97,14 @@
                                 </select>
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-timezone"></i></span>
-                                        <div class="invalid-feedback" data-translate="coverage.timezoneInvalid">Please choose the timezone.</div>
+                                <div class="invalid-feedback" data-translate="coverage.timezoneInvalid">Please choose
+                                    the timezone.</div>
                             </div>
                         </div>
                         <!-- Button for cloning new row -->
                         <div
                             class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
-                            <button type="button" class="btn btn-primary addtsc" id="button-stc-add" style="width: 36px"
+                            <button type="button" class="btn btn-primary addtsc" id="button-stc-add"
                                 data-translate="general.add">+</button>
                         </div>
                     </div>
