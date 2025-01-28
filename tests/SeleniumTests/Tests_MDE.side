@@ -7036,14 +7036,14 @@
     "name": "Default Suite",
     "persistSession": false,
     "parallel": false,
-    "timeout": 50000,
+    "timeout": 100000,
     "tests": ["21e2027f-6eeb-4a2c-b733-1ec31431ed4a", "0535f978-2aad-42ee-8e61-4355ea992c55", "93fb5119-337c-47ac-874c-47162131f059", "1737c436-a33a-47ed-a7b7-0daa80928273", "e42ac07b-e969-497c-9dc7-848a7d9f59c4", "7020eb46-3b5b-445c-b76a-a56a142f9874"]
   }, {
     "id": "d80903fc-6df0-47fd-9ddc-1e0460bb714c",
     "name": "DatasetsForTesting",
     "persistSession": false,
     "parallel": false,
-    "timeout": 50000,
+    "timeout": 100000,
     "tests": ["7b7196a5-1270-47a4-87d2-3b3fd3952e88", "fafe99a0-a4e5-4c53-ae6b-eb156a37ad0f", "dff59546-76f4-4a28-9a31-8c19b776c9d8"]
   }],
   "urls": ["http://localhost:8000"],

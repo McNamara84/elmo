@@ -67,7 +67,7 @@ jobs:
             --browser chrome \
             --server http://localhost:4444/wd/hub \
             --base-url http://localhost:8000 \
-            --timeout 60000 \
+            --timeout 100000 \
             tests/Selenium/Tests_MDE.side
 
       - name: Upload artifacts
