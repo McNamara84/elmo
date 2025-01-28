@@ -554,7 +554,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
   - Occurence: 1
   - The corresponding field in the database where the value is saved is called: `name` in the table `Language`
   - Restrictions: must be selected from controlled list
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/language/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/language/)
   - Beispielwerte: `Englisch`, `German`, `French`
   - Mapping: mapped to `<language>` element in DataCite scheme and to `<gmd:language>` in ISO scheme 
 
@@ -723,7 +723,7 @@ The controlled list is provided and maintained by Utrecht University ([MSL Labor
 - Laboratory Name
   This field contains the laboratory, where the research data came from. Its content is mapped to `<contributor contributorType="HostingInstitution"><contributorName>` in the DataCite scheme. 
   - Data Type: String
-  - Occourence: 0-n
+  - Occurence: 0-n
   - The corresponding field in the database is called: `laboratoryname` in the table `originating_laboratory`
   - Restrictions: Controlled list
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
@@ -846,7 +846,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurence: 0-1
   - The corresponding field in the database where the value is saved is called: `description` in the table `description` with `type = Methods`
   - Restrictions: None
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#methods)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#methods)
   - Example value: `Graphical representation of the steps used to reconstruct sequence alignments of the Nudix superfamily, as described in the Materials and Methods section. (A) The pipeline to build the 78-PDB structure guided sequence alignment. (B) The pipeline to build the 324-core sequence alignment guided by the 78-PDB sequence alignment. (C) The pipeline to build the alignment of the complete Nudix clan (38,950 sequences). (D) Illustration of how to combine two alignment into one guided by a scaffold alignment.`
 
 - TechnicalInfo
@@ -855,7 +855,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurence: 0-1
   - The corresponding field in the database where the value is saved is called: `description` in the table `description` with `type = Technical Information`
   - Restrictions: None
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#technicalinfo)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#technicalinfo)
   - Example value: `Scripts written and run using Wolfram Mathematica (confirmed with versions 10.2 to 11.1). Assumes raw data matches format produced by a LTQ Orbitrap Velos mass spectrometer and exported by the proprietary software (Xcalibur) to a comma-separated values (.csv) file. The .csv files are the expected input into the Mathematica scripts. `
 
 - Other
@@ -864,7 +864,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurence: 0-1
   - The corresponding field in the database where the value is saved is called: `description` in the table `description` with `type = Other`
   - Restrictions: None
-  - [DataCite-Dokumentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#other)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#other)
   - Example value:  `This is the description of a data set that does not fit into the categories of abstract, methods or technical information, but is nevertheless extremely necessary.`
 
 ### Keywords

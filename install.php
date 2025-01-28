@@ -103,7 +103,7 @@ function createDatabaseStructure($connection)
                 "Resource_Type" => "CREATE TABLE IF NOT EXISTS `Resource_Type` (
             `resource_name_id` INT NOT NULL AUTO_INCREMENT,
             `resource_type_general` VARCHAR(30) NULL,
-            `description` TEXT(5000) NULL,
+            `description` TEXT(1000) NULL,
             PRIMARY KEY (`resource_name_id`));",
 
                 "Rights" => "CREATE TABLE IF NOT EXISTS `Rights` (
@@ -206,7 +206,7 @@ function createDatabaseStructure($connection)
                 "Description" => "CREATE TABLE IF NOT EXISTS `Description` (
             `description_id` INT NOT NULL AUTO_INCREMENT,
             `type` VARCHAR(22) NOT NULL,
-            `description` TEXT(5000) NOT NULL,
+            `description` TEXT NOT NULL,
             `resource_id` INT NOT NULL,
             PRIMARY KEY (`description_id`),
             FOREIGN KEY (`resource_id`)
