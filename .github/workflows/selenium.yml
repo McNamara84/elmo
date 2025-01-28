@@ -25,12 +25,15 @@ jobs:
         with:
           node-version: '16'
 
+      # PHP-Dependencies per Composer
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
-      - name: Install side-runner (lokal)
+      # Node-Dependencies (hier: side-runner) lokal ins Projekt
+      - name: Install side-runner locally
         run: npm install --save-dev @seleniumhq/side-runner
 
+      # Docker (Engine + Compose) installieren
       - name: Install Docker (Engine + Compose v2 plugin)
         run: |
           curl -fsSL https://get.docker.com | sudo sh
@@ -54,8 +57,7 @@ jobs:
 
       - name: Run Selenium tests
         run: |
-          npx side-runner \
-            tests/Selenium/Tests_MDE.side \
+          npx side-runner tests/Selenium/Tests_MDE.side \
             --capabilities "browserName=chrome" \
             --server http://localhost:4444/wd/hub \
             --base-url http://localhost:8000 \
