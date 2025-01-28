@@ -140,8 +140,15 @@
             </div>
             <!-- PDF upload -->
             <div class="mb-3">
-              <label for="input-submit-datadescription" class="form-label" data-translate="modals.submit.dataDescription">Data Description (as mentioned in the Data Description Template)</label>
-              <input type="file" class="form-control" id="input-submit-datadescription" accept=".pdf">
+                <label for="input-submit-datadescription" class="form-label" data-translate="modals.submit.dataDescription">Data
+                    Description (as mentioned in the Data Description Template)</label>
+                <div class="input-group">
+                    <input type="file" class="form-control" id="input-submit-datadescription" accept=".pdf">
+                    <button class="btn btn-outline-danger" type="button" id="remove-file-btn" style="display: none;">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <small class="form-text text-muted" id="selected-file-name"></small>
             </div>
             <!-- Privacy policy checkbox -->
             <div class="mb-3 form-check">

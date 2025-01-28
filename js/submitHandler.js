@@ -17,7 +17,14 @@ class SubmitHandler {
             submit: new bootstrap.Modal($(`#${submitModalId}`)[0]),
             notification: new bootstrap.Modal($(`#${notificationModalId}`)[0])
         };
+
+        // File Input References
+        this.$fileInput = $('#input-submit-datadescription');
+        this.$removeFileBtn = $('#remove-file-btn');
+        this.$selectedFileName = $('#selected-file-name');
+
         this.initializeEventListeners();
+        this.initializeFileHandlers();
     }
 
     /**
@@ -26,6 +33,36 @@ class SubmitHandler {
     initializeEventListeners() {
         $('#input-submit-privacycheck').on('change', () => this.toggleSubmitButton());
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
+    }
+
+    /**
+     * Initialize file input handlers
+     */
+    initializeFileHandlers() {
+        // File Input Change Handler
+        this.$fileInput.on('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.$selectedFileName.text(file.name);
+                this.$removeFileBtn.show();
+            } else {
+                this.clearFileInput();
+            }
+        });
+
+        // Remove Button Click Handler
+        this.$removeFileBtn.on('click', () => {
+            this.clearFileInput();
+        });
+    }
+
+    /**
+     * Clear file input and reset related elements
+     */
+    clearFileInput() {
+        this.$fileInput.val('');
+        this.$selectedFileName.text('');
+        this.$removeFileBtn.hide();
     }
 
     /**
@@ -85,6 +122,7 @@ class SubmitHandler {
             success: (response) => {
                 if (response.success) {
                     this.showNotification('success', 'Success!', response.message);
+                    this.clearFileInput(); // Clear file input after successful submission
                 } else {
                     this.showNotification('danger', 'Error!', response.message);
                     console.error('Error details:', response.debug);
@@ -123,10 +161,10 @@ class SubmitHandler {
     showNotification(type, title, message) {
         $('#modal-notification-label').text(title);
         $('#modal-notification-body').html(`
-        <div class="alert alert-${type} mb-0">
-          ${message}
-        </div>
-      `);
+            <div class="alert alert-${type} mb-0">
+                ${message}
+            </div>
+        `);
 
         this.modals.notification.show();
 
