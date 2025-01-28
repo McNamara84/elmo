@@ -122,26 +122,35 @@ try {
     $mail->setFrom($smtpSender);
     $mail->addAddress($xmlSubmitAddress);
 
-    // Handle PDF upload if provided
+    // Handle file upload if provided
     $pdfAttachment = null;
     if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
-        $pdfFile = $_FILES['dataDescription'];
+        $uploadedFile = $_FILES['dataDescription'];
 
         // Validate file type
-        $fileType = mime_content_type($pdfFile['tmp_name']);
-        if ($fileType !== 'application/pdf') {
-            throw new Exception("Invalid file type. Only PDF files are allowed.");
+        $fileType = mime_content_type($uploadedFile['tmp_name']);
+        $allowedTypes = [
+            'application/pdf',                                                        // PDF
+            'application/msword',                                                     // DOC
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // DOCX
+        ];
+
+        if (!in_array($fileType, $allowedTypes)) {
+            throw new Exception("Invalid file type. Only PDF, DOC, and DOCX files are allowed.");
         }
 
         // Validate file size
-        if ($pdfFile['size'] > 10 * 1024 * 1024) {
-            throw new Exception("PDF file size exceeds maximum limit of 10MB.");
+        if ($uploadedFile['size'] > 10 * 1024 * 1024) {
+            throw new Exception("File size exceeds maximum limit of 10MB.");
         }
 
-        // Add PDF as attachment
+        // Get file extension from original filename
+        $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+
+        // Add file as attachment
         $mail->addAttachment(
-            $pdfFile['tmp_name'],
-            "data_description_" . $resource_id . ".pdf"
+            $uploadedFile['tmp_name'],
+            "data_description_" . $resource_id . "." . $fileExtension
         );
     }
 
