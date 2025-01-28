@@ -125,6 +125,7 @@
         "descriptionPlaceholder": "Veuillez saisir la description de la couverture temporelle et spatiale...",
         "start": "Début",
         "end": "Fin",
+        "dateTimeInvalid": "Veuillez saisir une date et une heure valides.",
         "timezone": "Fuseau horaire",
         "mapInfo": "(Veuillez choisir les coordonnées par rectangle ou marqueur)"
     },

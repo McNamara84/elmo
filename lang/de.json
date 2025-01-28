@@ -125,6 +125,7 @@
         "descriptionPlaceholder": "Bitte geben Sie die Beschreibung der zeitlichen und räumlichen Abdeckung ein...",
         "start": "Start",
         "end": "Ende",
+        "dateTimeInvalid": "Bitte machen Sie eine gültige Zeitangabe.",
         "timezone": "Zeitzone",
         "mapInfo": "(Bitte wählen Sie Koordinaten per Rechteck oder Markierung)"
     },

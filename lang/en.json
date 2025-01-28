@@ -125,6 +125,7 @@
         "descriptionPlaceholder": "Please enter the description of the temporal and spatial coverage...",
         "start": "Start",
         "end": "End",
+        "dateTimeInvalid": "Please enter a valid date and time.",
         "timezone": "Timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)"
     },
