@@ -34,6 +34,25 @@ require_once 'vendor/phpmailer/phpmailer/src/Exception.php';
 require_once 'vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require_once 'vendor/phpmailer/phpmailer/src/SMTP.php';
 
+/**
+ * Convert weeks to priority text
+ * @param int|null $weeks Number of weeks
+ * @return string Priority text
+ */
+function getPriorityText($weeks)
+{
+    switch ($weeks) {
+        case 2:
+            return "high";
+        case 4:
+            return "normal";
+        case 6:
+            return "low";
+        default:
+            return "undefined";
+    }
+}
+
 try {
     // Save all form components
     $resource_id = saveResourceInformationAndRights($connection, $_POST);
@@ -131,36 +150,37 @@ try {
 
     // Prepare email content
     $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
+    $priorityText = getPriorityText($urgencyWeeks);
     $dataUrlText = $dataUrl ? $dataUrl : "not provided";
 
     $htmlBody = "
-        <h2>New Dataset from ELMO</h2>
-        <p>Hi! I'm ELMO and a new dataset has been submitted with the following details:</p>
-        <ul>
-            <li><strong>Dataset ID in ELMO database:</strong> {$resource_id}</li>
-            <li><strong>Priority:</strong> {$urgencyText}</li>
-            <li><strong>URL to data:</strong> " . ($dataUrl ? "<a href='{$dataUrl}'>{$dataUrl}</a>" : "not provided") . "</li>
-        </ul>
-        <p>I have attached the metadata" .
+    <h2>New Dataset from ELMO</h2>
+    <p>Hi! I'm ELMO and a new dataset has been submitted with the following details:</p>
+    <ul>
+        <li><strong>Dataset ID in ELMO database:</strong> {$resource_id}</li>
+        <li><strong>Priority:</strong> {$urgencyText}</li>
+        <li><strong>URL to data:</strong> " . ($dataUrl ? "<a href='{$dataUrl}'>{$dataUrl}</a>" : "not provided") . "</li>
+    </ul>
+    <p>I have attached the metadata" .
         (isset($_FILES['dataDescription']) ? " and data description" : "") .
         " to this email.</p>
-        <p>And now let's get to work! The urgency of this data set is {$urgencyText}! But I've already done most of the work for you ;-)</p>
-    ";
+    <p>And now let's get to work! The urgency of this data set is {$priorityText}! But I've already done most of the work for you ;-)</p>
+";
 
     $plainBody = "
-        New Dataset from ELMO
-        
-        Hi! I'm ELMO and a new dataset has been submitted with the following details:
-        
-        Dataset ID in ELMO database: {$resource_id}
-        Priority: {$urgencyText}
-        URL to data: {$dataUrlText}
-        
-        I have attached the metadata" .
+    New Dataset from ELMO
+    
+    Hi! I'm ELMO and a new dataset has been submitted with the following details:
+    
+    Dataset ID in ELMO database: {$resource_id}
+    Priority: {$urgencyText}
+    URL to data: {$dataUrlText}
+    
+    I have attached the metadata" .
         (isset($_FILES['dataDescription']) ? " and data description PDF" : "") .
         " to this email.
-        And now let's get to work! The urgency of this data set is {$urgencyText}! But I've already done most of the work for you ;-)
-    ";
+    And now let's get to work! The urgency of this data set is {$priorityText}! But I've already done most of the work for you ;-)
+";
 
     // Set email content
     $mail->isHTML(true);
