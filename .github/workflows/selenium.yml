@@ -33,8 +33,13 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
+      - name: Install Docker Compose plugin
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin
+
       - name: Start services via Docker Compose
-        run: docker-compose up -d  # startet db, php und selenium
+        run: docker compose up -d
 
       - name: Wait for services to be ready
         run: |
@@ -72,4 +77,4 @@ jobs:
       
       - name: Tear down
         if: always()
-        run: docker-compose down
+        run: docker compose down
