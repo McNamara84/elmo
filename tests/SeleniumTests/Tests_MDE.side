@@ -53,9 +53,9 @@
       "id": "56b1368b-a224-4cfb-8776-ef98615de24c",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .modal-body",
+      "target": "css=#modal-help .modal-body",
       "targets": [
-        ["css=#helpModal .modal-body", "css:finder"],
+        ["css=#modal-help .modal-body", "css:finder"],
         ["xpath=//div[@id='helpModal']/div/div/div[2]", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div[2]", "xpath:position"]
       ],
@@ -76,7 +76,7 @@
       "id": "b9e80373-96d1-4683-8060-e0f6e11d81cc",
       "comment": "Dieser Schritt muss scheitern",
       "command": "click",
-      "target": "css=#helpModal .btn-close"
+      "target": "css=#modal-help .btn-close"
     }, {
       "id": "67bc176d-b7f0-4837-91ec-a9317a1e80e6",
       "comment": "",
@@ -104,9 +104,9 @@
       "id": "72e8b798-ceee-4ab5-b0d5-5b548f0007d1",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -139,9 +139,9 @@
       "id": "0d387874-1ee1-4882-8fc7-d0658cc557da",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -177,7 +177,7 @@
       "target": "id=helpModal",
       "targets": [
         ["id=helpModal", "id"],
-        ["css=#helpModal", "css:finder"],
+        ["css=#modal-help", "css:finder"],
         ["xpath=//div[@id='helpModal']", "xpath:attributes"],
         ["xpath=//body/div[2]", "xpath:position"]
       ],
@@ -209,9 +209,9 @@
       "id": "64df4723-6560-4478-9633-f0a06c0b69dc",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -244,9 +244,9 @@
       "id": "9365dac3-dc8b-48f1-8592-c29b6476e753",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -279,9 +279,9 @@
       "id": "531ec929-cfd8-4102-948a-1e02dc37e7c6",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -314,9 +314,9 @@
       "id": "2177f76c-e8f8-4aa9-91ff-0fc06161e8e9",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -349,9 +349,9 @@
       "id": "c7dd9093-79f8-450c-8866-472c049ee530",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -384,9 +384,9 @@
       "id": "b4403c21-06f3-468d-8653-ca54858cfb0f",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -419,9 +419,9 @@
       "id": "319f07bc-fb46-40f6-b77c-c0513f499927",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -454,9 +454,9 @@
       "id": "93f4f220-9e7b-4ad7-b1e1-6d8019d9321b",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -489,9 +489,9 @@
       "id": "4aeb81d9-96c3-4c28-ba63-73ba3d3352cb",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -524,9 +524,9 @@
       "id": "933edad2-7d84-4f64-9bd2-8885ae3b81a3",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -559,9 +559,9 @@
       "id": "999f54e2-2a67-4efd-8de3-332054349276",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -594,9 +594,9 @@
       "id": "8da4b20e-031d-4214-a078-c788dafda382",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -629,9 +629,9 @@
       "id": "dcdc2432-315a-4d71-aa4a-9de34e2a9903",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -664,9 +664,9 @@
       "id": "845704fc-5e64-48fb-9974-632f977a05d7",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -712,9 +712,9 @@
       "id": "3903479a-5e94-4497-acf2-b2328b65a2f1",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -760,9 +760,9 @@
       "id": "d97768f2-ea1c-4fcc-aabf-53aedddfef9c",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -808,9 +808,9 @@
       "id": "0544dee0-5046-427d-9cf5-c0ea97ce6623",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -843,9 +843,9 @@
       "id": "e4e591bd-6106-433d-8390-a6d28fc2c035",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -889,9 +889,9 @@
       "id": "8451d043-c1f1-4884-b46d-49e136d4f743",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -936,9 +936,9 @@
       "id": "7ec2c795-a991-4bd0-9742-d9fcccd58091",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1010,9 +1010,9 @@
       "id": "1e056554-85c3-47c4-87cb-45671c8c39b7",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1057,9 +1057,9 @@
       "id": "4cc1427c-9af1-45a5-af2d-fe06a1680aa6",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1092,9 +1092,9 @@
       "id": "bff6fafc-362c-46be-a72f-7abf6d25f96a",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1127,9 +1127,9 @@
       "id": "e120b776-e6a9-4ddc-b085-9c8d3ec402a8",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1162,9 +1162,9 @@
       "id": "f55482d1-f83c-44e3-a497-63381e50cc9b",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1197,9 +1197,9 @@
       "id": "af1281b6-4e5e-4638-acff-c3e08e4d1d9d",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1232,9 +1232,9 @@
       "id": "1efad48b-32a8-4d13-a06f-39a63fcd780c",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1267,9 +1267,9 @@
       "id": "23cedc7c-8ad3-427b-b448-fd14891ed670",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1313,9 +1313,9 @@
       "id": "550f7c44-8323-4d44-994d-bb29700e1a0d",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1348,9 +1348,9 @@
       "id": "02436d34-f0d1-43ac-b7e5-2c513a43fc21",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1383,9 +1383,9 @@
       "id": "159ef215-57a9-4c13-a968-d594f53e73b7",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1418,9 +1418,9 @@
       "id": "81758670-bcc9-4977-b332-e7bdeef29fd1",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1453,9 +1453,9 @@
       "id": "6d55f6ab-22fa-4bf4-a347-20e51718b8ef",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1488,9 +1488,9 @@
       "id": "99a6d7d0-1330-4eba-a3d2-43590df3ad93",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1523,9 +1523,9 @@
       "id": "ff5c3f3e-fe66-4f16-8ec0-417b7030df4b",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
@@ -1558,9 +1558,9 @@
       "id": "c2c0b584-d7ec-4920-a80b-908fe9131de6",
       "comment": "",
       "command": "click",
-      "target": "css=#helpModal .btn-close",
+      "target": "css=#modal-help .btn-close",
       "targets": [
-        ["css=#helpModal .btn-close", "css:finder"],
+        ["css=#modal-help .btn-close", "css:finder"],
         ["xpath=(//button[@type='button'])[28]", "xpath:attributes"],
         ["xpath=//div[@id='helpModal']/div/div/div/button", "xpath:idRelative"],
         ["xpath=//body/div[2]/div/div/div/button", "xpath:position"]
