@@ -27,8 +27,8 @@ jobs:
 
       - name: Install Selenium side-runner
         run: |
-          npm install -g selenium-side-runner@3.17.0
-          npm install -g selenium-webdriver@4.1.0
+          npm install -g selenium-side-runner
+          npm install -g selenium-webdriver
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
