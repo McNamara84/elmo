@@ -57,6 +57,10 @@ jobs:
             sleep 2
           done
 
+      - name: List tests
+        run: |
+          selenium-side-runner --list-tests tests/Selenium/Tests_MDE.side
+
       - name: Run Selenium tests
         run: |
           selenium-side-runner \
