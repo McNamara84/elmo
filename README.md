@@ -966,13 +966,13 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
 
 Spatial and temporal coverage specifies the geographic region and time frame that the dataset encompasses, providing essential context for its relevance and applicability.
 In the DataCite scheme: The data from Latitude, Longitude and Description are mapped to `<geoLocations>`, while Start Date/Time and End Date/Time are mapped to `<date dateType="Collected">`.
-In the ISO scheme: All field data are mapped to `<EX_Extent>`.
+In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spatial and temporal coverage is 0-n.
 
 - Latitude Min
   
   - This field contains the geographic latitude of a single coordinate or the smaller geographic latitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 1
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: latitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -90 to +90
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#southboundlatitude)
@@ -992,7 +992,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
   - This field contains the geographic longitude of a single coordinate or the smaller geographic longitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 1
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: longitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#westboundlongitude)
@@ -1012,7 +1012,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
 
   - This field contains a free-text explanation of the geographic and temporal context.
   - Data type: Free text
-  - Occurrence: 1
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
   - Restrictions: none
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#geolocationplace)
@@ -1022,7 +1022,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
   - This field contains the starting date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 1
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -1042,7 +1042,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
   - This field contains the ending date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 1 
+  - Occurrence: 0-1 
   - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -1062,7 +1062,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
   - This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
   - Data type: Zeichenkette (Auswahl aus Liste)
-  - Occurrence: 1
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
   - Restrictions: Only values from the list are permitted
   - ISO documentation
@@ -1157,9 +1157,9 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 
 ## Data validation
 
-- Mandatory fields: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email**, **Description Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
+- Mandatory fields: **Publication Year**, **Resource Type**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email**, **Description Abstract**, **Date created**.❗
 
-- Other fields **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields** are optional.✅
+- Other fields **DOI**, **Version**, **Language of Dataset**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **Spacial and temporal coverage - all fields, **Related work - all fields** and **Funding Reference - all fields** are optional.✅
 
 - The following field become mandatory in certain cases:
 
