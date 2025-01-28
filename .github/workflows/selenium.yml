@@ -7,247 +7,69 @@ on:
     branches: [ "main" ]
 
 jobs:
-  selenium:
+  selenium-tests:
     runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root_password
-          MYSQL_DATABASE: mde2-msl-test
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: test_password
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping --silent"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 3
-
     steps:
-    - uses: actions/checkout@v4
+      - name: Check out code
+        uses: actions/checkout@v4
 
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, zip
-        coverage: xdebug
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, zip
+          coverage: xdebug
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      
+      - name: Install Selenium side-runner
+        run: |
+          npm install -g selenium-side-runner@3.17.0
+          npm install -g selenium-webdriver@4.1.0
 
-    - name: Create test network
-      run: docker network create test-network
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
 
-    - name: Start Selenium container
-      run: |
-        docker run -d \
-          --network test-network \
-          --name selenium \
-          -e SE_NODE_MAX_SESSIONS=1 \
-          -e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
-          -e SE_VNC_NO_PASSWORD=1 \
-          -p 4444:4444 \
-          -p 7900:7900 \
-          --shm-size="2g" \
-          selenium/standalone-chrome:latest
+      - name: Start services via Docker Compose
+        run: docker-compose up -d  # startet db, php und selenium
 
-    - name: Install Selenium Dependencies
-      run: |
-        npm install -g selenium-side-runner@3.17.0
-        npm install -g selenium-webdriver@4.1.0
+      - name: Wait for services to be ready
+        run: |
+          # Warte z.B. auf Port 8000 und 4444
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/ > /dev/null && \
+               curl -s http://localhost:4444/wd/hub/status > /dev/null; then
+              echo "PHP & Selenium sind erreichbar"
+              break
+            fi
+            echo "Warten auf Services..."
+            sleep 2
+          done
 
-    - name: Update Composer dependencies
-      run: composer update --no-interaction --no-progress
+      - name: Run Selenium tests
+        run: |
+          # Base-URL ist jetzt http://localhost:8000
+          selenium-side-runner \
+            --browser chrome \
+            --server http://localhost:4444/wd/hub \
+            --base-url http://localhost:8000 \
+            --timeout 60000 \
+            tests/Selenium/Tests_MDE.side
 
-    - name: Install dependencies
-      run: |
-        composer install --prefer-dist --no-progress --no-suggest
-        composer dump-autoload -o
-
-    - name: Set up database
-      run: |
-        mysql -h127.0.0.1 -uroot -proot_password -e "
-          CREATE USER IF NOT EXISTS 'test_user'@'%' IDENTIFIED BY 'test_password';
-          GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
-          FLUSH PRIVILEGES;
-        "
-
-    - name: Create settings.php and install
-      run: |
-        cat << EOF > settings.php
-        <?php
-        error_reporting(E_ALL);
-        ini_set('display_errors', 1);
-
-        function connectDb() {
-            \$host = '127.0.0.1';
-            \$username = 'test_user';
-            \$password = 'test_password';
-            \$database = 'mde2-msl-test';
-            \$conn = new mysqli(\$host, \$username, \$password, \$database);
-            return \$conn;
-        }
-
-        function getApiKey() {
-            \$apiKeyGoogleMaps = 'test_api_key';
-            echo json_encode(['apiKey' => \$apiKeyGoogleMaps]);
-        }
-
-        if (basename(__FILE__) == basename(\$_SERVER['PHP_SELF'])) {
-            if (\$_SERVER['REQUEST_METHOD'] === 'GET') {
-                getApiKey();
-            }
-        }
-
-        \$connection = connectDb();
-
-        \$apiKeyTimezone = 'test_timezone_api_key';
-        \$maxTitles = 2;
-        \$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/labnames.json';
-
-        \$showFeedbackLink = true;
-        \$smtpHost = 'smtp.test.de';
-        \$smtpPort = 465;
-        \$smtpUser = 'test_user';
-        \$smtpPassword = 'test_password';
-        \$smtpSender = 'test_sender@test.com';
-        \$feedbackAddress = 'feedback@test.com';
-        EOF
-
-        # Führe install.php aus und erfasse die Ausgabe
-        php install.php > install_output.log 2>&1 || true
-
-        # Zeige die Ausgabe von install.php an
-        echo "Installationsausgabe:"
-        cat install_output.log
-
-    - name: Start PHP container
-      run: |
-        docker run -d \
-          --network test-network \
-          --name php-app \
-          -v ${{ github.workspace }}:/var/www/html \
-          -p 8000:8000 \
-          -e PHP_INI_SCAN_DIR=/var/www/html \
-          php:8.2-cli \
-          php -S 0.0.0.0:8000 -t /var/www/html -d display_errors=1 -d error_reporting=E_ALL
-
-    - name: Create PHP info page
-      run: |
-        echo "<?php phpinfo(); ?>" > info.php
-        echo "<?php error_log('Debug: Loading application...'); ?>" > debug.php
-
-    - name: Wait for PHP application to be ready
-      run: |
-        for i in {1..30}; do
-          if curl -s http://localhost:8000/ > /dev/null; then
-            echo "PHP application is ready."
-            break
-          fi
-          echo "Waiting for PHP application..."
-          sleep 2
-        done
-
-    - name: Wait for services and verify
-      run: |
-        # Erstelle Verzeichnis für Testergebnisse
-        mkdir -p test-output
-
-        # Teste PHP-Server
-        echo "Teste PHP-Server..."
-        curl -v http://localhost:8000/info.php > test-output/php-info.html
-        curl -v http://localhost:8000/debug.php
-        curl -v http://localhost:8000/ > test-output/index.html
-
-        # Teste Selenium
-        echo "Teste Selenium..."
-        curl -v http://localhost:4444/wd/hub/status > test-output/selenium-status.json
-
-        # Zeige Netzwerkinfo
-        echo "Docker Netzwerkinfo:"
-        docker network inspect test-network
-
-        # Zeige laufende Container
-        echo "Laufende Container:"
-        docker ps
-
-        # Zeige PHP-Logs
-        echo "PHP-Container-Logs:"
-        docker logs php-app
-
-    - name: Display application index.html
-      run: |
-        echo "Inhalt von test-output/index.html:"
-        cat test-output/index.html
-
-    - name: Fetch page content from Selenium container
-      run: |
-        echo "Rufe Seiteninhalt aus dem Selenium-Container ab..."
-        docker exec selenium sh -c 'curl -s http://php-app:8000/ > /tmp/page.html'
-        docker exec selenium sh -c 'cat /tmp/page.html'
-        docker cp selenium:/tmp/page.html test-output/page-from-selenium.html
-
-    - name: Display PHP application logs
-      run: |
-        echo "PHP-Anwendungs-Logs:"
-        docker logs php-app
-
-    - name: Verify database tables
-      run: |
-        mysql -h127.0.0.1 -utest_user -ptest_password -e "SHOW TABLES FROM \`mde2-msl-test\`;"
-
-    - name: Test connectivity from Selenium container
-      run: |
-        echo "Teste Konnektivität vom Selenium-Container zur PHP-Anwendung..."
-        docker exec selenium curl -v http://php-app:8000/ -o /dev/null
-
-    - name: Run Selenium tests
-      run: |
-        selenium-side-runner \
-          --debug \
-          --browser chrome \
-          --server http://localhost:4444/wd/hub \
-          --base-url http://php-app:8000 \
-          --timeout 60000 \
-          tests/Selenium/Tests_MDE.side
-
-    - name: Show debug info on failure
-      if: failure()
-      run: |
-        echo "PHP-Container-Logs:"
-        docker logs php-app
-        echo "Selenium-Container-Logs:"
-        docker logs selenium
-        echo "Netzwerkstatus:"
-        docker network inspect test-network
-        echo "Container-Status:"
-        docker ps -a
-        echo "Verzeichnisinhalte:"
-        ls -la
-        echo "Inhalt von test-output:"
-        ls -la test-output/
-        cat test-output/* || true
-
-    - name: Upload artifacts
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: logs-and-results
-        path: |
-          test-output/
-          *.log
-          *.php
-          install_output.log
-
-    - name: Cleanup
-      if: always()
-      run: |
-        docker stop php-app selenium || true
-        docker rm php-app selenium || true
-        docker network rm test-network || true
+      - name: Upload artifacts (logs etc.)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-and-results
+          path: |
+            test-output/
+            *.log
+            *.php
+            install_output.log
+      
+      - name: Tear down
+        if: always()
+        run: docker-compose down
