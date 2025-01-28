@@ -71,7 +71,7 @@
         ["xpath=//div[2]/h5", "xpath:position"],
         ["xpath=//h5[contains(.,'DOI')]", "xpath:innerText"]
       ],
-      "value": "DOIs"
+      "value": "DOI"
     }, {
       "id": "b9e80373-96d1-4683-8060-e0f6e11d81cc",
       "comment": "",
