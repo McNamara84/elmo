@@ -25,12 +25,11 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Install Selenium side-runner (4.x)
-        run: |
-          npm install -g @seleniumhq/side-runner
-
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Install side-runner (lokal)
+        run: npm install --save-dev @seleniumhq/side-runner
 
       - name: Install Docker (Engine + Compose v2 plugin)
         run: |
@@ -55,7 +54,7 @@ jobs:
 
       - name: Run Selenium tests
         run: |
-          side-runner \
+          npx side-runner \
             tests/Selenium/Tests_MDE.side \
             --capabilities "browserName=chrome" \
             --server http://localhost:4444/wd/hub \
