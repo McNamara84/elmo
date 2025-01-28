@@ -88,7 +88,7 @@
                         <div class="col-8 col-sm-8 col-md-3 col-lg-3 p-1">
                             <label for="input-stc-timezone" class="form-label"
                                 data-translate="coverage.timezone"></label>
-                            <div class="input-group">
+                            <div class="input-group has validation">
                                 <select
                                     class="form-select input-right-no-round-corners input-with-help input-right-with-round-corners"
                                     id="input-stc-timezone" name="tscTimezone[]">
@@ -96,6 +96,7 @@
                                 </select>
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-timezone"></i></span>
+                                        <div class="invalid-feedback" data-translate="coverage.timezoneInvalid">Please choose the timezone.</div>
                             </div>
                         </div>
                         <!-- Button for cloning new row -->

@@ -127,6 +127,7 @@
         "end": "Fin",
         "dateTimeInvalid": "Veuillez saisir une date et une heure valides.",
         "timezone": "Fuseau horaire",
+        "timezoneInvalid":"Veuillez sélectionner le fuseau horaire",
         "mapInfo": "(Veuillez choisir les coordonnées par rectangle ou marqueur)"
     },
     "relatedWork": {
