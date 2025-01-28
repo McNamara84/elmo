@@ -212,10 +212,6 @@ function checkTemporalCoverage() {
     });
 }
 
-
-
-
-
 /**
  * Validates the Related Work section of the form.
  * Ensures all fields ("Relation", "Identifier", and "Identifier Type") are required if any of them are filled.
