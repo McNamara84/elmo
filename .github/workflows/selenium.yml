@@ -64,6 +64,8 @@ jobs:
             --server http://localhost:4444/wd/hub \
             --base-url http://localhost:8000 \
             --timeout 100000 \
+            --output-directory=./test-output \
+            --output-format=junit \
             tests/Selenium/Tests_MDE.side
 
       - name: Upload artifacts
