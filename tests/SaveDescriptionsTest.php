@@ -27,9 +27,29 @@ class SaveDescriptionsTest extends TestCase
 
             // Installation direkt ausführen
             require_once __DIR__ . '/../install.php';
-            dropTables($connection);
-            createDatabaseStructure($connection);
-            insertLookupData($connection);
+
+            try {
+                // Datenbank neu aufsetzen
+                dropTables($connection);
+
+                // Alle Tabellen aus dem $tables Array erstellen
+                foreach ($tables as $tableName => $sqlCreate) {
+                    $stmt = $connection->prepare($sqlCreate);
+                    if (!$stmt->execute()) {
+                        throw new \Exception("Fehler beim Erstellen der Tabelle $tableName: " . $connection->error);
+                    }
+                }
+
+                // Lookup-Daten einfügen
+                insertLookupData($connection);
+
+                // Bestätigung ausgeben
+                echo "\nTest-Datenbank wurde erfolgreich erstellt.";
+
+            } catch (\Exception $e) {
+                echo "\nFehler bei der Datenbankinstallation: " . $e->getMessage();
+                throw $e;
+            }
         }
     }
 
