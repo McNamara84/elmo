@@ -152,7 +152,7 @@ class SaveAuthorsTest extends TestCase
         $affiliationResult = $stmt->get_result()->fetch_assoc();
 
         $this->assertEquals(
-            "Test University",
+            "Test University Potsdam",
             $affiliationResult["name"],
             "Der Name der Affiliation wurde nicht korrekt gespeichert."
         );
