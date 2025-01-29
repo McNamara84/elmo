@@ -39,7 +39,7 @@ class SaveAuthorsTest extends TestCase
             $connection->select_db($dbname);
 
             // Installation direkt ausführen
-            require_once 'install.php';
+            require_once __DIR__ . '/../install.php';
             dropTables($connection);
             createDatabaseStructure($connection);
             insertLookupData($connection);
