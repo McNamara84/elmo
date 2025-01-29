@@ -1155,9 +1155,11 @@ The other fields are optional and are used to further enrich the data set with m
 
 In certain cases, some subfields within a formgroup become mandatory. This affects the following fields:
 
-- **Contributor Role**, **Contributor Lastname** and **Contributor Firstname** become mandatory, if one of the Contributor Person fields is filled
-- **Contributor Organisation Name** and **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled (this includes **Contributor Organisation Affiliation**)
-- **Related work all Fields** becomes mandatory fields, if one of the fields is filled
+- **Contributor Role**, **Contributor Lastname** and **Contributor Firstname** become mandatory, if one of the Contributor Person fields is filled in
+- **Contributor Organisation Name** and **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled in (this includes **Contributor Organisation Affiliation**)
+- **Max Longitude** becomes mandatory, if the **Max Latitude** is filled in and vice versa. The same applies to **Min longitude** and **Min Latitude**
+- **EndDate** becomes mandatory, if the **StartDate** field is filled in
+- **Related work all Fields** becomes mandatory fields, if one of the fields is filled in
 - **Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
 
 ## Database structure
