@@ -1,4 +1,7 @@
 <?php
+if (!function_exists('connectDb')) {
+    require_once __DIR__ . '/../settings.php';
+}
 require_once __DIR__ . '/../install.php';
 
 function setupTestDatabase($connection) {
