@@ -17,14 +17,19 @@ class SaveOriginatingLaboratoryTest extends TestCase
             $connection = connectDb();
         }
         $this->connection = $connection;
-        // Check test database
+
+        // Überprüfen, ob die Testdatenbank verfügbar ist
         $dbname = 'mde2-msl-test';
         if ($this->connection->select_db($dbname) === false) {
-            // Create test database
+            // Testdatenbank erstellen
             $connection->query("CREATE DATABASE " . $dbname);
             $connection->select_db($dbname);
-            // install databse schema
-            require 'install.php';
+
+            // Installation direkt ausführen
+            require_once 'install.php';
+            dropTables($connection);
+            createDatabaseStructure($connection);
+            insertLookupData($connection);
         }
     }
 

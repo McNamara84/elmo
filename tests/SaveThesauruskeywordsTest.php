@@ -17,14 +17,19 @@ class SaveThesauruskeywordsTest extends TestCase
             $connection = connectDb();
         }
         $this->connection = $connection;
+
         // Überprüfen, ob die Testdatenbank verfügbar ist
         $dbname = 'mde2-msl-test';
         if ($this->connection->select_db($dbname) === false) {
             // Testdatenbank erstellen
             $connection->query("CREATE DATABASE " . $dbname);
             $connection->select_db($dbname);
-            // install.php ausführen
-            require 'install.php';
+
+            // Installation direkt ausführen
+            require_once 'install.php';
+            dropTables($connection);
+            createDatabaseStructure($connection);
+            insertLookupData($connection);
         }
     }
 
