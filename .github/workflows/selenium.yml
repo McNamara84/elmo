@@ -59,7 +59,7 @@ jobs:
 
       - name: Run Selenium tests
         run: |
-          npx side-runner \
+          npx @seleniumhq/side-runner \
             tests/Selenium/Tests_MDE.side \
             --capabilities "browserName=chrome" \
             --server http://localhost:4444/wd/hub \
