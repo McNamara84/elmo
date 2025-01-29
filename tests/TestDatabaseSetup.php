@@ -1,18 +1,18 @@
 <?php
-if (!function_exists('connectDb')) {
-    require_once __DIR__ . '/../settings.php';
-}
-require_once __DIR__ . '/../install.php';
+namespace Tests;
 
-function setupTestDatabase($connection) {
+function setupTestDatabase($connection)
+{
     try {
         // Bestehende Tabellen löschen
+        require_once __DIR__ . '/../install.php';
+
         dropTables($connection);
 
         // Datenbankstruktur erstellen
         $result = createDatabaseStructure($connection);
         if ($result['status'] === 'error') {
-            throw new Exception($result['message']);
+            throw new \Exception($result['message']);
         }
 
         // Minimale Lookup-Daten für Tests einfügen
@@ -20,7 +20,7 @@ function setupTestDatabase($connection) {
 
         return true;
 
-    } catch (Exception $e) {
-        throw new Exception("Fehler beim Aufsetzen der Testdatenbank: " . $e->getMessage());
+    } catch (\Exception $e) {
+        throw new \Exception("Fehler beim Aufsetzen der Testdatenbank: " . $e->getMessage());
     }
 }

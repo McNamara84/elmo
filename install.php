@@ -9,14 +9,16 @@
  */
 
 // Include database connection
-if (!file_exists("settings.php")) {
-    die(json_encode([
-        'status' => 'error',
-        'message' => 'Error: settings.php not found. Please ensure this file exists and is properly configured.'
-    ]));
+if (!defined('INCLUDED_FROM_TEST')) {
+    // Include database connection nur wenn nicht von Tests aufgerufen
+    if (!file_exists("settings.php")) {
+        die(json_encode([
+            'status' => 'error',
+            'message' => 'Error: settings.php not found.'
+        ]));
+    }
+    require_once("settings.php");
 }
-
-include("settings.php");
 
 // Check database connection
 if (!isset($connection) || !$connection) {
