@@ -4,6 +4,7 @@ use PHPUnit\Framework\TestCase;
 use mysqli_sql_exception;
 
 require_once __DIR__ . '/../settings.php';
+require_once __DIR__ . '/TestDatabaseSetup.php';
 require_once __DIR__ . '/../save/formgroups/save_descriptions.php';
 
 class SaveDescriptionsTest extends TestCase
@@ -24,33 +25,10 @@ class SaveDescriptionsTest extends TestCase
             // Testdatenbank erstellen
             $connection->query("CREATE DATABASE " . $dbname);
             $connection->select_db($dbname);
-
-            // Installation direkt ausführen
-            require_once __DIR__ . '/../install.php';
-
-            try {
-                // Datenbank neu aufsetzen
-                dropTables($connection);
-
-                // Alle Tabellen aus dem $tables Array erstellen
-                foreach ($tables as $tableName => $sqlCreate) {
-                    $stmt = $connection->prepare($sqlCreate);
-                    if (!$stmt->execute()) {
-                        throw new \Exception("Fehler beim Erstellen der Tabelle $tableName: " . $connection->error);
-                    }
-                }
-
-                // Lookup-Daten einfügen
-                insertLookupData($connection);
-
-                // Bestätigung ausgeben
-                echo "\nTest-Datenbank wurde erfolgreich erstellt.";
-
-            } catch (\Exception $e) {
-                echo "\nFehler bei der Datenbankinstallation: " . $e->getMessage();
-                throw $e;
-            }
         }
+
+        // Datenbank für Tests aufsetzen
+        setupTestDatabase($connection);
     }
 
     protected function tearDown(): void
