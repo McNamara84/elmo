@@ -150,6 +150,12 @@ function checkSpatialCoverage() {
                 description.attr('required', 'required')
             }
 
+            //When Description is filled, latMin and longMax become required
+            if (isDescriptionFilled){
+                longMin.attr('required','required')
+                latMin.attr('required','required')
+            }
+
         }
     });
 }
