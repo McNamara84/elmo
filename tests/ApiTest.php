@@ -5,6 +5,8 @@ use PHPUnit\Framework\TestCase;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
+require_once __DIR__ . '/TestDatabaseSetup.php';
+
 class ApiTest extends TestCase
 {
     private $client;
