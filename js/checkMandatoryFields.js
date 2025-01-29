@@ -107,19 +107,22 @@ function checkSpatialCoverage() {
         var latMax = row.find('[id^="input-stc-latmax"]');
         var longMin = row.find('[id^="input-stc-longmin"]');
         var longMax = row.find('[id^="input-stc-longmax"]');
+        var description = row.find('[id^="input-stc-description"]')
 
         // Check if the fields are filled (not empty or whitespace only)
         var isLatMinFilled = latMin.val() && latMin.val().trim() !== '';
         var isLatMaxFilled = latMax.val() && latMax.val().trim() !== '';
         var isLongMinFilled = longMin.val() && longMin.val().trim() !== '';
         var isLongMaxFilled = longMax.val() && longMax.val().trim() !== '';
+        var isDescriptionFilled = description.val() && description.val().trim() !== '';
 
         // If all fields are empty, none of them should be required
-        if (!isLatMinFilled && !isLatMaxFilled && !isLongMinFilled && !isLongMaxFilled) {
+        if (!isLatMinFilled && !isLatMaxFilled && !isLongMinFilled && !isLongMaxFilled && !isDescriptionFilled) {
             latMin.removeAttr('required');
             latMax.removeAttr('required');
             longMin.removeAttr('required');
             longMax.removeAttr('required');
+            description.removeAttr('required');
         } else {
             // When either latMax or longMax is filled, latMin and longMin and the other max become required
             if (isLatMaxFilled || isLongMaxFilled) {
@@ -127,19 +130,24 @@ function checkSpatialCoverage() {
                 longMin.attr('required', 'required');
                 latMax.attr('required', 'required');
                 longMax.attr('required', 'required');
+                description.attr('required','required');
             } else {
                 latMax.removeAttr('required');
                 longMax.removeAttr('required');
+                description.removeAttr('required');
+
             }
 
             // When latMin is filled, longMin becomes required and vice versa
             if (isLatMinFilled) {
                 longMin.attr('required', 'required');
+                description.attr('required', 'required')
             }
 
 
             if (isLongMinFilled) {
                 latMin.attr('required', 'required');
+                description.attr('required', 'required')
             }
 
         }
