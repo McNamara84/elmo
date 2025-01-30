@@ -59,14 +59,11 @@ jobs:
 
       - name: Run Selenium tests
         run: |
-          npx @seleniumhq/side-runner \
+          npx selenium-side-runner \
             tests/Selenium/Tests_MDE.side \
             --capabilities "browserName=chrome" \
             --server http://localhost:4444/wd/hub \
-            --base-url http://localhost:8000 \
-            --timeout 100000 \
-            --output-directory=./test-output \
-            --junit-report
+            --base-url http://localhost:8000
 
       - name: Upload artifacts
         if: always()
