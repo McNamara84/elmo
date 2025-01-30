@@ -972,7 +972,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
   This field contains the geographic latitude of a single coordinate or the smaller geographic latitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 0-1, becomes mandatory if one of the other Coordinate-Fields is filled
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: latitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -90 to +90
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#southboundlatitude)
@@ -992,7 +992,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
   This field contains the geographic longitude of a single coordinate or the smaller geographic longitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 0-1, becomes mandatory if one of the other Coordinate-Fields is filled
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: longitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#westboundlongitude)
@@ -1022,7 +1022,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
   - This field contains the starting date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 0-1, becomes mandatory, if End Date, Start Time, or End Time is specified 
+  - Occurrence: 0-1 
   - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -1042,7 +1042,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
   - This field contains the ending date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 0-1, becomes mandatory, if Start Date, Start Time, or End Time is specified 
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -1167,8 +1167,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 **Contributor Organisation Name**, **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled (this includes **Contributor Organisation Affiliation**)
 **Related work all Fields** become mandatory fields, if one of the fields is filled
 **Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
-**Spacial Coverage**: Latitude/Longitude become mandatory, if the other one is specified
-**Temporal Coverage**: When a Start Date or Time is specified, an End Date or Time is mandatory. When Times are filled, Dates become necessary. Timzone becomes mandatory if any of the temporal coverage fields is specified
+**Spacial and Temporal Coverage**: When any field is filled **Latitude Min**, **Longitude Min**, **descripton**, **dateStart**, **dateEnd** and **timezone** become mandatory. Latitude/Longitude Max become mandatory, if the other one is specified. When a Start Date or Time is specified, an End Date or Time is mandatory.
 
 ## Database structure
 
