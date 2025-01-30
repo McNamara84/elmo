@@ -88,119 +88,41 @@ function checkContributorOrganisation() {
     });
 }
 
-/**
- * Dynamically applies or removes the 'required' attribute to the latitude and longitude fields 
- * based on the following conditions:
- * - When latMin is filled, longMin becomes required and vice versa.
- * - When latMax is filled, longMax becomes required and vice versa.
- * - When either latMax or longMax is filled, latMin and longMin become required.
- * - If all fields are empty, none of the fields will be required.
- * 
- * This function operates on each row within the #group-stc container that has the attribute 'tsc-row'.
- */
 function checkCoverage() {
     $('#group-stc').find('[tsc-row]').each(function () {
         var row = $(this);
+        var fields = ['latmin', 'latmax', 'longmin', 'longmax', 'description', 'datestart', 'timestart', 'dateend', 'timeend', 'timezone'];
+        var inputs = {};
+        var filled = {};
 
-        // Locate the input fields for latitude and longitude
-        var latMin = row.find('[id^="input-stc-latmin"]');
-        var latMax = row.find('[id^="input-stc-latmax"]');
-        var longMin = row.find('[id^="input-stc-longmin"]');
-        var longMax = row.find('[id^="input-stc-longmax"]');
-        var description = row.find('[id^="input-stc-description"]')
-        var dateStart = row.find('[id^="input-stc-datestart"]');
-        var timeStart = row.find('[id^="input-stc-timestart"]');
-        var dateEnd = row.find('[id^="input-stc-dateend"]');
-        var timeEnd = row.find('[id^="input-stc-timeend"]');
-        var timezone = row.find('[id^="input-stc-timezone"]');
+        // Store jQuery elements and their filled status
+        fields.forEach(field => {
+            inputs[field] = row.find(`[id^="input-stc-${field}"]`);
+            filled[field] = inputs[field].val() && inputs[field].val().trim() !== '';
+            inputs[field].removeAttr('required'); // Ensure required is removed first
+        });
 
-        // Check if the fields are filled (not empty or whitespace only)
-        var isLatMinFilled = latMin.val() && latMin.val().trim() !== '';
-        var isLatMaxFilled = latMax.val() && latMax.val().trim() !== '';
-        var isLongMinFilled = longMin.val() && longMin.val().trim() !== '';
-        var isLongMaxFilled = longMax.val() && longMax.val().trim() !== '';
-        var isDescriptionFilled = description.val() && description.val().trim() !== '';
-        var isDateStartFilled = dateStart.val() && dateStart.val().trim() !== '';
-        var isTimeStartFilled = timeStart.val() && timeStart.val().trim() !== '';
-        var isDateEndFilled = dateEnd.val() && dateEnd.val().trim() !== '';
-        var isTimeEndFilled = timeEnd.val() && timeEnd.val().trim() !== '';
+        // If all fields are empty, stop processing
+        if (!Object.values(filled).includes(true)) {
+            return;
+        }
 
-        // If all fields are empty, none of them should be required
-        if (!isLatMinFilled && !isLatMaxFilled && !isLongMinFilled && !isLongMaxFilled && !isDescriptionFilled && !isDateStartFilled && !isTimeStartFilled && !isDateEndFilled && !isTimeEndFilled) {
-            latMin.removeAttr('required');
-            latMax.removeAttr('required');
-            longMin.removeAttr('required');
-            longMax.removeAttr('required');
-            description.removeAttr('required');
-            dateStart.removeAttr('required');
-            timeStart.removeAttr('required');
-            dateEnd.removeAttr('required');
-            timeEnd.removeAttr('required');
-            timezone.removeAttr('required');
-            
-        } else {
-            // When either latMax or longMax is filled, all fields except timeStart and timeEnd become required
-            if (isLatMaxFilled || isLongMaxFilled) {
-                latMin.attr('required', 'required');
-                longMin.attr('required', 'required');
-                latMax.attr('required', 'required');
-                longMax.attr('required', 'required');
-                description.attr('required','required');
-                dateStart.attr('required', 'required');
-                dateEnd.attr('required', 'required');
-                
-            } else {
-                latMax.removeAttr('required');
-                longMax.removeAttr('required');
-            }
-
-            // When latMin is filled, longMin and description, as well as dates become required and vice versa
-            if (isLatMinFilled || isLongMinFilled) {
-                longMin.attr('required', 'required');
-                latMin.attr('required', 'required');
-                description.attr('required', 'required')
-                dateStart.attr('required', 'required');
-                dateEnd.attr('required', 'required');
-                timezone.attr('required', 'required');
-            }
-            //When Description is filled, latMin, longMin and dates become required
-            if (isDescriptionFilled){
-                longMin.attr('required','required');
-                latMin.attr('required','required');
-                dateStart.attr('required', 'required');
-                dateEnd.attr('required', 'required');
-                timezone.attr('required', 'required');
-            }
-            if (isDateStartFilled || isDateEndFilled) {
-                dateStart.attr('required', 'required');
-                dateEnd.attr('required', 'required');
-                longMin.attr('required', 'required');
-                latMin.attr('required', 'required');
-                description.attr('required', 'required')
-            }
-            if (isTimeStartFilled || isTimeEndFilled) {
-                longMin.attr('required', 'required');
-                latMin.attr('required', 'required');
-                timeStart.attr('required', 'required');
-                timeEnd.attr('required', 'required');
-                dateStart.attr('required', 'required');
-                dateEnd.attr('required', 'required');
-                timezone.attr('required', 'required');
-                description.attr('required', 'required')
-            } else {
-                timeStart.removeAttr('required');
-                timeEnd.removeAttr('required');
-            }
-
-            // Make timezone required if any date or time field is filled
-            if (isDateStartFilled || isDateEndFilled || isTimeStartFilled || isTimeEndFilled) {
-                timezone.attr('required', 'required');
-            } else {
-                timezone.removeAttr('required');
-            }
+        // Apply 'required' based on dependencies
+        if (filled.latmax || filled.longmax) {
+            ['latmin', 'longmin', 'latmax', 'longmax', 'description', 'datestart', 'dateend'].forEach(field => inputs[field].attr('required', 'required'));
+        }
+        if (filled.latmin || filled.longmin || filled.description) {
+            ['latmin', 'longmin', 'description', 'datestart', 'dateend', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
+        }
+        if (filled.datestart || filled.dateend) {
+            ['datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
+        }
+        if (filled.timestart || filled.timeend) {
+            ['timestart', 'timeend', 'datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
         }
     });
 }
+
 
 
 /**
