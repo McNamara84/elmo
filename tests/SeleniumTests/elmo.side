@@ -1,0 +1,49 @@
+{
+  "id": "4c27886f-dc69-4026-a81a-0e5809ddfda7",
+  "version": "2.0",
+  "name": "ELMO",
+  "url": "http://localhost:8000",
+  "tests": [{
+    "id": "c84a6579-2dec-4a1a-9ba4-b2353c2d1fab",
+    "name": "AddTitle",
+    "commands": [{
+      "id": "93ba5870-211f-41a2-9c62-638682ead37b",
+      "comment": "Open Website",
+      "command": "open",
+      "target": "/",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "106b2b84-b6b3-41a6-8eac-e83a553eb3a8",
+      "comment": "Set window size",
+      "command": "setWindowSize",
+      "target": "1920x1080",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "2aba7aca-ddcb-49e4-adff-b1bd2e708f3e",
+      "comment": "Click button to add a title",
+      "command": "click",
+      "target": "id=button-resourceinformation-addtitle",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "1be47424-6558-4349-a009-e4befef7aae6",
+      "comment": "Remove previously added title",
+      "command": "click",
+      "target": "css=.removeTitle",
+      "targets": [],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "60bd9930-8245-4bfe-b91d-dc0b4f7a0e7b",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["c84a6579-2dec-4a1a-9ba4-b2353c2d1fab"]
+  }],
+  "urls": ["http://localhost:8000"],
+  "plugins": []
+}

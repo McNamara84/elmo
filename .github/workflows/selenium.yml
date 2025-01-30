@@ -67,7 +67,7 @@ jobs:
       - name: Run Selenium tests
         run: |
           npx selenium-side-runner \
-             tests/SeleniumTests/Tests_MDE.side \
+             tests/SeleniumTests/elmo.side \
             -c "goog:chromeOptions.args=[disable-infobars, headless]" \
             --server http://localhost:4444/wd/hub \
             --base-url http://localhost:8000
