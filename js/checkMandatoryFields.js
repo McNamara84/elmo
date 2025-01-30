@@ -88,6 +88,18 @@ function checkContributorOrganisation() {
     });
 }
 
+
+/**
+ * Dynamically applies or removes the 'required' attribute to input fields in each row within #group-stc.
+ *
+ * The function ensures:
+ * - If all fields are empty, none will be required.
+ * - If latMax or longMax is filled, latMin, longMin, latMax, longMax, description, dateStart, and dateEnd become required.
+ * - If latMin, longMin, or description is filled, those fields along with dateStart, dateEnd, and timezone become required.
+ * - If dateStart or dateEnd is filled, they, along with latMin, longMin, description, and timezone, become required.
+ * - If timeStart or timeEnd is filled, they, along with dateStart, dateEnd, latMin, longMin, description, and timezone, become required.
+ */
+
 function checkCoverage() {
     $('#group-stc').find('[tsc-row]').each(function () {
         var row = $(this);
