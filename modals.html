@@ -36,15 +36,15 @@
     </div>
 </div>
 <!-- Notification Modal -->
-<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel"
+<div class="modal fade" id="modal-notification" tabindex="-1" aria-labelledby="modal-notification-label"
     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="notificationModalLabel">Notification</h5>
+                <h5 class="modal-title" id="modal-notification-label">Notification</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="notificationModalBody">
+            <div class="modal-body" id="modal-notification-body">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
@@ -113,6 +113,59 @@
         </div>
     </div>
 </div>
+<!-- Submit Modal -->
+<div class="modal fade" id="modal-submit" tabindex="-1" aria-labelledby="modal-submit-label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modal-submit-label" data-translate="modals.submit.title">Submit Dataset</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="modal-submit-form">
+            <!-- Publication urgency dropdown -->
+            <div class="mb-3">
+              <label for="input-submit-urgency" class="form-label" data-translate="modals.submit.urgency">Urgency</label>
+              <select class="form-select" id="input-submit-urgency">
+                <option value="" data-translate="modals.submit.urgencyNotice" selected disabled>Please select an urgency</option>
+                <option value="2" data-translate="modals.submit.high">high (2 weeks)</option>
+                <option value="4" data-translate="modals.submit.normal">normal (4 weeks)</option>
+                <option value="6" data-translate="modals.submit.low">low (6 weeks)</option>
+              </select>
+            </div>
+            <!-- Data URL -->
+            <div class="mb-3">
+              <label for="input-submit-dataurl" class="form-label" data-translate="modals.submit.url">URL to data</label>
+              <input type="url" class="form-control" id="input-submit-dataurl" placeholder="https://...">
+            </div>
+            <!-- PDF upload -->
+            <div class="mb-3">
+                <label for="input-submit-datadescription" class="form-label" data-translate="modals.submit.dataDescription">Data
+                    Description (as mentioned in the Data Description Template)</label>
+                <div class="input-group">
+                    <input type="file" class="form-control" id="input-submit-datadescription" accept=".pdf,.doc,.docx">
+                    <button class="btn btn-outline-danger" type="button" id="remove-file-btn" style="display: none;">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <small class="form-text text-muted" id="selected-file-name"></small>
+            </div>
+            <!-- Privacy policy checkbox -->
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="input-submit-privacycheck" required>
+              <label class="form-check-label" for="input-submit-privacycheck" data-translate="modals.submit.privacypolice">
+                I have read the privacy policy and agree to the transmission of my data.
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="general.cancel">Cancel</button>
+          <button type="button" class="btn btn-success" id="button-submit-submit" data-translate="buttons.submit" disabled>Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
 <!-- Feedback Modal -->
 <div class="modal fade" id="modal-feedback" tabindex="-1" aria-labelledby="label-feedbackmodal" aria-hidden="true">
     <div class="modal-dialog">

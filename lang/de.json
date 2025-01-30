@@ -183,6 +183,17 @@
             "saveAs": "Als XML speichern",
             "filename": "Dateiname",
             "save": "Speichern"
+        },
+        "submit": {
+            "title": "Datensatz übermitteln",
+            "urgency": "Dringlichkeit",
+            "url": "URL zu den Daten",
+            "dataDescription": "Datenbeschreibung (bitte <a href='https://gfzpublic.gfz-potsdam.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_5007103' target='_blank' class='link-primary'>Vorlage zur Datenbeschreibung</a> benutzen)",
+            "privacypolice": "Ich habe die <a href='docs/privacyPolicy.html' target='_blank' class='link-primary'>Datenschutzbestimmungen</a> gelesen und bin mit der Verarbeitung meiner Daten einverstanden.",
+            "urgencyNotice": "Bitte wähle die Dringlichkeit aus",
+            "high": "hoch",
+            "normal": "normal",
+            "low": "niedrig"
         }
     }
 }

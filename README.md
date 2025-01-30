@@ -9,7 +9,8 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Always up-to-date controlled vocabularies through regular automatic updates.
 - Easy input of authors and contributors using ORCID preload.
 - Submitting of metadata directly to data curators.
-- Authors can be sorted by drag & drop
+- Authors can be sorted by drag & drop.
+- Submission of data descriptions files and link to data is possible.
 
 ## Installation
 
