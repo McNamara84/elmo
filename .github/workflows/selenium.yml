@@ -57,6 +57,13 @@ jobs:
             sleep 2
           done
 
+      - name: Check directory structure
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "\nDirectory content:"
+          ls -R tests/
+
       - name: Run Selenium tests
         run: |
           npx selenium-side-runner \
