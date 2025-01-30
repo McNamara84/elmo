@@ -66,7 +66,7 @@ jobs:
             --base-url http://localhost:8000 \
             --timeout 100000 \
             --output-directory=./test-output \
-            --output-format=junit
+            --junit-report
 
       - name: Upload artifacts
         if: always()
