@@ -32,6 +32,7 @@ class SaveHandler {
      * Handle save action
      */
     async handleSave() {
+        // Check form validity before proceeding
         if (!this.$form[0].checkValidity()) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
@@ -40,6 +41,7 @@ class SaveHandler {
             this.showNotification('danger', 'Validation Error', 'Please check your inputs');
             return;
         }
+
         this.showNotification('info', 'Processing...', 'Preparing file for download.');
         const suggestedFilename = await this.generateFilename();
         if (suggestedFilename) {
@@ -131,7 +133,13 @@ class SaveHandler {
       `);
 
         this.modals.notification.show();
-
+        $('#modal-notification .btn-close').on('click', () => {
+            this.modals.notification.hide();
+        });
+        
+        $('#modal-notification .btn-primary').on('click', () => {
+            this.modals.notification.hide();
+        });
         if (type === 'success') {
             setTimeout(() => this.modals.notification.hide(), 3000);
         }
