@@ -228,17 +228,17 @@ function checkMandatoryFields() {
 * Triggers checkMandatoryFields() when the user leaves these fields.
 */
 $(document).on('blur',
-    'input[name^="cpLastname"], ' +         // Contact Person last name
-    'input[name^="cpFirstname"], ' +        // Contact Person first name
-    'input[name^="cpPosition"], ' +         // Contact Person position
-    'input[name^="cpEmail"], ' +            // Contact Person email address
-    'input[name^="cpOnlineResource"], ' +   // Contact Person website
-    'input[name="grantNummer[]"], ' +       // Grant Number field
-    'input[name="grantName[]"], ' +         // Grant Name field
-    'input[name="cbORCID[]"], ' +           // Contributor Person ORCID
-    'input[name="cbPersonLastname[]"], ' +  // Contributor Person Lastname
-    'input[name="cbPersonFirstname[]"], ' + // Contributor Person Firstname
-    'input[name="cbOrganisationName[]"],' +   // Contributor Organisation Name
+    'input[name^="cpLastname"], ' +         
+    'input[name^="cpFirstname"], ' +        
+    'input[name^="cpPosition"], ' +         
+    'input[name^="cpEmail"], ' +            
+    'input[name^="cpOnlineResource"], ' +   
+    'input[name="grantNummer[]"], ' +       
+    'input[name="grantName[]"], ' +         
+    'input[name="cbORCID[]"], ' +           
+    'input[name="cbPersonLastname[]"], ' +  
+    'input[name="cbPersonFirstname[]"], ' + 
+    'input[name="cbOrganisationName[]"],' +  
     'input[name="tscLongitudeMax[]"],' +
     'input[name="tscLongitudeMin[]"],' +
     'input[name="tscLatitudeMin[]"],' +
@@ -248,7 +248,7 @@ $(document).on('blur',
     'input[name="tscDateEnd[]"],' +
     'input[name="tscTimeStart[]"],' +
     'input[name="tscTimeEnd[]"],' +
-    'input[name="rIdentifier[]"]',            // Related Work Identifier
+    'input[name="rIdentifier[]"]',           
     function () {
         // Check mandatory fields when user leaves any of these input fields
         checkMandatoryFields();
@@ -260,16 +260,15 @@ $(document).on('blur',
  * Triggers checkMandatoryFields() when the value of these fields changes.
  */
 $(document).on('change',
-    'input[name^="cpAffiliation"], ' +            // Contact Person Affiliation
-    'input[name="cbPersonRoles[]"], ' +           // Contributor Person Roles
-    'input[name="cbAffiliation[]"], ' +           // Contributor Person Affiliation
-    'input[name="cbOrganisationRoles[]"], ' +     // Contributor Organisation Roles
-    'input[name="OrganisationAffiliation[]"], ' + // Contributor Organisation Affiliation
-    'select[name="relation[]"], ' +            // Related Work Relation (dropdown)
-    'select[name="rIdentifierType[]"], ' +      // Related Identifier Type (dropdown)
-    'select[name="timezone[]"], ' +             // Timezone (dropdown)
-    'input[name="funder[]"]',                     // Funder field
-
+    'input[name^="cpAffiliation"], ' +            
+    'input[name="cbPersonRoles[]"], ' +           
+    'input[name="cbAffiliation[]"], ' +           
+    'input[name="cbOrganisationRoles[]"], ' +     
+    'input[name="OrganisationAffiliation[]"], ' + 
+    'select[name="relation[]"], ' +           
+    'select[name="rIdentifierType[]"], ' +      
+    'select[name="timezone[]"], ' +             
+    'input[name="funder[]"]',                     
     function () {
         // Check mandatory fields when any of these fields' values change
         checkMandatoryFields();
