@@ -1154,13 +1154,19 @@ The other fields are optional and are used to further enrich the data set with m
 - **DOI**, **Version**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields**.✅
 
 In certain cases, some subfields within a formgroup become mandatory. This affects the following fields:
+  Formgroup Contributors:
+  - **Contributor Role**, **Contributor Lastname** and **Contributor Firstname** become mandatory, if one of the Contributor Person fields is filled in
+  - **Contributor Organisation Name** and **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled in (this includes **Contributor Organisation Affiliation**)
+  Formgroup Spatial and Temporal Coverages: 
+  - Per default, no specification of any fields is required here when leaving all fields empty. Filling in any of the optional fields results in a change of mandatory fields.
+  - **Min Latitude**, **Min Longitude**, **Description**, **Date Start**, **Date End** and **Timezone** will become mandatory, if only one field of the formgroup gets filled in 
+  - **Max Latitude** becomes mandatory, if **Max Longitude** is filled in and vice versa
+  - **Time Start** becomes mandatory, if **Time End** is filled in and vice versa
 
-- **Contributor Role**, **Contributor Lastname** and **Contributor Firstname** become mandatory, if one of the Contributor Person fields is filled in
-- **Contributor Organisation Name** and **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled in (this includes **Contributor Organisation Affiliation**)
-- **Max Longitude** becomes mandatory, if the **Max Latitude** is filled in and vice versa. The same applies to **Min longitude** and **Min Latitude**
-- **EndDate** becomes mandatory, if the **StartDate** field is filled in
-- **Related work all Fields** becomes mandatory fields, if one of the fields is filled in
-- **Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
+  Formgroup Related works:
+  - **Related work all Fields** becomes mandatory fields, if one of the fields is filled in
+  Formgroup Funding Reference:
+  - **Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
 
 ## Database structure
 
