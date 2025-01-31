@@ -43,6 +43,9 @@ if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
 // Establish the database connection
 $connection = connectDb();
 
+// ELMO API Key
+$apiKeyElmo = '1234-1234-1234-1234';
+
 // API Key for https://timezonedb.com/
 $apiKeyTimezone = 'your_timezone_api_key';
 
