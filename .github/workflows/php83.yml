@@ -97,6 +97,8 @@ jobs:
 
         \$connection = connectDb();
 
+        \$apiKeyElmo = '1234-1234-1234-1234';
+
         \$apiKeyTimezone = 'test_timezone_api_key';
         \$maxTitles = 2;
         \$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/labnames.json';

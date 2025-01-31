@@ -11,6 +11,7 @@ class ApiTest extends TestCase
     private $baseUri;
     private $projectPath;
     private $connection;
+    private const API_KEY = '1234-1234-1234-1234';
 
     protected function setUp(): void
     {
@@ -41,7 +42,10 @@ class ApiTest extends TestCase
             'base_uri' => $this->baseUri,
             'timeout' => 5.0,
             'verify' => false,
-            'http_errors' => false
+            'http_errors' => false,
+            'headers' => [
+                'X-API-Key' => self::API_KEY
+            ]
         ]);
     }
 
