@@ -12,9 +12,9 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - [Settings](#settings)
 - [API-Dokumentation](#api-dokumentation)
   - [Allgemeine Informationen](#allgemeine-informationen)
-  <details> 
+  - <details> 
     <summary> 
-    [API-Endpunkte](#api-endpunkte)
+   [API-Endpunkte](#api-endpunkte)
     </summary>
     - [1. GCMD Science Keywords](#1-gcmd-science-keywords-deprecated-use-apiv2)
     - [2. Zeitzonen aktualisieren](#2-zeitzonen-aktualisieren-deprecated-use-apiv2)
