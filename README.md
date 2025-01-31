@@ -3,70 +3,19 @@
 The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GeoForschungsZentrum Potsdam](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
 
 ## Table of contents
-- [ELMO - Enhanced Laboratory Metadata Organizer](#elmo---enhanced-laboratory-metadata-organizer)
-  - [Table of contents](#table-of-contents)
   - [Main Features](#main-features)
   - [Installation](#installation)
     - [Requirements](#requirements)
     - [Quick installation guide](#quick-installation-guide)
     - [Detailed example installation on Windows 10/11](#detailed-example-installation-on-windows-1011)
-      - [1. Setting up the development environment](#1-setting-up-the-development-environment)
-      - [2. Starting Apache and MySQL](#2-starting-apache-and-mysql)
-      - [3. Creating an empty SQL database](#3-creating-an-empty-sql-database)
-      - [4. Setting up the `settings.php` file](#4-setting-up-the-settingsphp-file)
-      - [5. Setting up the application](#5-setting-up-the-application)
-      - [6. (Optional) Creating an API key for the automatically generated time zone selection](#6-optional-creating-an-api-key-for-the-automatically-generated-time-zone-selection)
-      - [7. Creating a Google Maps JS API key](#7-creating-a-google-maps-js-api-key)
-      - [8. Accessing the metadata editor](#8-accessing-the-metadata-editor)
   - [Dependencies](#dependencies)
   - [Settings](#settings)
   - [API-Dokumentation](#api-dokumentation)
     - [Allgemeine Informationen](#allgemeine-informationen)
     - [API-Endpunkte](#api-endpunkte)
-    - [1. GCMD Science Keywords (deprecated, use APIv2)](#1-gcmd-science-keywords-deprecated-use-apiv2)
-    - [2. Zeitzonen aktualisieren (deprecated, use APIv2)](#2-zeitzonen-aktualisieren-deprecated-use-apiv2)
-    - [3. NASA Science Keywords (deprecated, use APIv2)](#3-nasa-science-keywords-deprecated-use-apiv2)
-    - [4. ROR Affiliations (deprecated, neue Version in APIv2)](#4-ror-affiliations-deprecated-neue-version-in-apiv2)
-    - [5. CrossRef Funders (deprecated, neue Version in APIv2)](#5-crossref-funders-deprecated-neue-version-in-apiv2)
-    - [6. Resource as DataCite XML (deprecated, use APIv2)](#6-resource-as-datacite-xml-deprecated-use-apiv2)
-    - [7. Resource as ISO XML (deprecated, use APIv2)](#7-resource-as-iso-xml-deprecated-use-apiv2)
-    - [8. Resource as DIF XML (deprecated, use APIv2)](#8-resource-as-dif-xml-deprecated-use-apiv2)
-    - [9. All resources as one XML (deprecated, use APIv2)](#9-all-resources-as-one-xml-deprecated-use-apiv2)
-    - [10. MSL Vokabulare aktualisieren (deprecated, use APIv2)](#10-msl-vokabulare-aktualisieren-deprecated-use-apiv2)
-    - [11. MSL Labs aktualisieren (deprecated, use APIv2)](#11-msl-labs-aktualisieren-deprecated-use-apiv2)
-    - [12. CGI Keywords aktualisieren](#12-cgi-keywords-aktualisieren)
-    - [13. Chronostrat Keywords aktualisieren](#13-chronostrat-keywords-aktualisieren)
-    - [14. GEMET Concepts aktualisieren](#14-gemet-concepts-aktualisieren)
-    - [15.  Rollen abrufen (deprecated, use APIv2)](#15--rollen-abrufen-deprecated-use-apiv2)
-    - [16.  NASA Instruments Keywords aktualisieren (deprecated, use APIv2)](#16--nasa-instruments-keywords-aktualisieren-deprecated-use-apiv2)
-    - [17.  NASA Platforms Keywords aktualisieren (deprecated,  neue Version in  APIv2)](#17--nasa-platforms-keywords-aktualisieren-deprecated--neue-version-in--apiv2)
-    - [18. Lizenzen abrufen (deprecated, use APIv2)](#18-lizenzen-abrufen-deprecated-use-apiv2)
-    - [19. Keywords abrufen (deprecated, neue Version in APIv2)](#19-keywords-abrufen-deprecated-neue-version-in-apiv2)
-    - [20. Relationen abrufen (deprecated, neue Version in APIv2)](#20-relationen-abrufen-deprecated-neue-version-in-apiv2)
-    - [21. Identifier-Typ ermitteln (deprecated, neue Version in APIv2)](#21-identifier-typ-ermitteln-deprecated-neue-version-in-apiv2)
-    - [22. Identifier-Pattern abrufen (deprecated, neue Version in APIv2)](#22-identifier-pattern-abrufen-deprecated-neue-version-in-apiv2)
-    - [23. Alle Identifier-Typen abrufen (deprecated, neue Version in APIv2)](#23-alle-identifier-typen-abrufen-deprecated-neue-version-in-apiv2)
   - [Formularfelder](#formularfelder)
-    - [Resource Information](#resource-information)
-    - [Licenses \& Rights](#licenses--rights)
-    - [Authors](#authors)
-    - [Contact Person(s)](#contact-persons)
-    - [Originating Laboratory](#originating-laboratory)
-    - [Contributors](#contributors)
-      - [_Person_](#person)
-      - [_Organisation_](#organisation)
-    - [Description](#description)
-    - [Keywords](#keywords)
-      - [EPOS Multi-Scale Laboratories Keywords](#epos-multi-scale-laboratories-keywords)
-      - [GCMD Science Keywords](#gcmd-science-keywords)
-      - [Free Keywords](#free-keywords)
-    - [Dates](#dates)
-    - [Spatial and temporal coverage](#spatial-and-temporal-coverage)
-    - [Related Work](#related-work)
-    - [Funding Reference](#funding-reference)
   - [Data validation](#data-validation)
   - [Database structure](#database-structure)
-      - [ER diagram](#er-diagram)
   - [Contributing](#contributing)
   - [Testing](#testing)
 
@@ -109,8 +58,12 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   11. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 
   If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
+  
+  <details>
+  <summary>
 
   ### Detailed example installation on Windows 10/11
+  </summary>
 
   This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10/11 using PHP and MySQL. For a local development environment, localhost-based access to the server is usually sufficient.
   #### 1. Setting up the development environment
@@ -121,7 +74,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   - If you're using an all-in-one solutions such as XAMPP or WampServer, you can start Apache directly from the XAMPP or WampServer control panel.
   - Alternatively, you can manually start Apache by navigating to the `bin` directory of Apache (e.g., `C:\xampp\apache\bin`) and running `httpd.exe`.
   #### 3. Creating an empty SQL database
-  - Using phpMyAdmin: If you're using XAMPP or WampServer, phpMyAdmin is already installed.You can access it by going to `http://localhost/phpmyadmin` in your browser.
+  - Using phpMyAdmin: If you're using XAMPP or WampServer, phpMyAdmin is already installed. You can access it by going to `http://localhost/phpmyadmin` in your browser.
   - Create a new database and remember the name of it, as you'll need it later in the next step.
   - Alternatively, using the Windows PowerShell: 
     - Start MySQL in the Shell while being in your SQL directory: `mysql -u root -p`
@@ -146,6 +99,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   #### 8. Accessing the metadata editor
   - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
   - Settings may be modified in `settings.php`.
+  </details>
 </details> 
 
 <details>
@@ -176,7 +130,7 @@ The following third-party dependencies are included in header.html and footer.ht
   <summary>
 
   ## Settings
-  <summary>
+  </summary>
 
   In addition to the access data for the database, other settings can also be adjusted in the `settings.php` file:
 
@@ -1235,23 +1189,25 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   ## Data validation
   </summary>
 
-The metadata editor has some mandatory fields which are neccessary for the submission of data. These include the following fields:
-- **Publication Year**, **Resource Type**, **Language of dataset**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email adress**, **Descriptions Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
+The metadata editor has some mandatory fields which are necessary for the submission of data. These include the following fields:
+- **Publication Year**, **Resource Type**, **Language of dataset**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email address**, **Descriptions Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
 
 The other fields are optional and are used to further enrich the data set with metadata. The following fields are optional:
 - **DOI**, **Version**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields**.✅
 
 In certain cases, some subfields within a formgroup become mandatory. This affects the following fields:
-  Formgroup Contributors:
+
+Formgroup Contributors:
   - **Contributor Role**, **Contributor Lastname** and **Contributor Firstname** become mandatory, if one of the Contributor Person fields is filled in
   - **Contributor Organisation Name** and **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled in (this includes **Contributor Organisation Affiliation**)
-  Formgroup Spatial and Temporal Coverages: 
+
+Formgroup Spatial and Temporal Coverages: 
   - Per default, no specification of any fields is required here when leaving all fields empty. Filling in any of the optional fields results in a change of mandatory fields.
   - **Min Latitude**, **Min Longitude**, **Description**, **Date Start**, **Date End** and **Timezone** will become mandatory, if only one field of the formgroup gets filled in 
   - **Max Latitude** becomes mandatory, if **Max Longitude** is filled in and vice versa
   - **Time Start** becomes mandatory, if **Time End** is filled in and vice versa
 
-  Formgroup Related works:
+Formgroup Related works:
   - **Related work all Fields** becomes mandatory fields, if one of the fields is filled in
   Formgroup Funding Reference:
   - **Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
