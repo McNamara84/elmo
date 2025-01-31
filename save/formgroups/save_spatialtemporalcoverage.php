@@ -14,19 +14,56 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
     $allSuccessful = true;
 
     for ($i = 0; $i < $len; $i++) {
+        // Extract data for easier validation
+        $latitudeMin  = $postData['tscLatitudeMin'][$i];
+        $latitudeMax  = $postData['tscLatitudeMax'][$i];
+        $longitudeMin = $postData['tscLongitudeMin'][$i];
+        $longitudeMax = $postData['tscLongitudeMax'][$i];
+        $description  = $postData['tscDescription'][$i];
+        $dateStart    = $postData['tscDateStart'][$i];
+        $dateEnd      = $postData['tscDateEnd'][$i];
+        $timeStart    = $postData['tscTimeStart'][$i];
+        $timeEnd      = $postData['tscTimeEnd'][$i];
+        $timezone     = $postData['tscTimezone'][$i];
+
+        // Check if all fields are empty
+        if (empty($latitudeMin) && empty($latitudeMax) && empty($longitudeMin) && empty($longitudeMax) && empty($description) && empty($dateStart) && empty($dateEnd) && empty($timeStart) && empty($timeEnd) && empty($timezone)) {
+            continue; // Skip saving if all fields are empty
+        }
+
+        // Validate required fields when any field is filled
+        if (empty($latitudeMin) || empty($longitudeMin) || empty($description) || empty($dateStart) || empty($dateEnd) || empty($timezone)) {
+            $allSuccessful = false;
+            continue; // Skip this entry if any required fields are missing
+        }
+
+        // Validate time fields (if timeStart is given, timeEnd is mandatory)
+        if (!empty($timeStart) && empty($timeEnd)) {
+            $allSuccessful = false;
+            continue;
+        }
+
+        // Validate latitudeMax and longitudeMax
+        if (!empty($longitudeMax) && empty($latitudeMax)) {
+            $allSuccessful = false;
+            continue;
+        }
+
+        // Prepare data to be saved
         $stcData = [
-            'latitudeMin'  => empty($postData['tscLatitudeMin'][$i]) ? null : $postData['tscLatitudeMin'][$i],
-            'latitudeMax'  => empty($postData['tscLatitudeMax'][$i]) ? null : $postData['tscLatitudeMax'][$i],
-            'longitudeMin' => empty($postData['tscLongitudeMin'][$i]) ? null : $postData['tscLongitudeMin'][$i],
-            'longitudeMax' => empty($postData['tscLongitudeMax'][$i]) ? null : $postData['tscLongitudeMax'][$i],
-            'description'  => empty($postData['tscDescription'][$i]) ? null : $postData['tscDescription'][$i],
-            'dateStart'    => empty($postData['tscDateStart'][$i]) ? null : $postData['tscDateStart'][$i],
-            'dateEnd'      => empty($postData['tscDateEnd'][$i]) ? null : $postData['tscDateEnd'][$i],
-            'timeStart'    => empty($postData['tscTimeStart'][$i]) ? null : $postData['tscTimeStart'][$i],
-            'timeEnd'      => empty($postData['tscTimeEnd'][$i]) ? null : $postData['tscTimeEnd'][$i],
-            'timezone'     => empty($postData['tscTimezone'][$i]) ? null : $postData['tscTimezone'][$i]
+            'latitudeMin'  => $latitudeMin,
+            'latitudeMax'  => $latitudeMax,
+            'longitudeMin' => $longitudeMin,
+            'longitudeMax' => $longitudeMax,
+            'description'  => $description,
+            'dateStart'    => $dateStart,
+            'dateEnd'      => $dateEnd,
+            'timeStart'    => $timeStart,
+            'timeEnd'      => $timeEnd,
+            'timezone'     => $timezone
         ];
 
+        // Save STC entry
         $stc_id = insertSpatialTemporalCoverage($connection, $stcData);
         if ($stc_id) {
             linkResourceToSTC($connection, $resource_id, $stc_id);
@@ -37,6 +74,8 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
 
     return $allSuccessful;
 }
+
+
 
 /**
  * Inserts a single Spatial Temporal Coverage entry into the database.
