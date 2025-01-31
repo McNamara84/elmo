@@ -9,21 +9,43 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   - [Installation](#installation)
     - [Requirements](#requirements)
     - [Quick installation guide](#quick-installation-guide)
+    - [Detailed example installation on Windows 10/11](#detailed-example-installation-on-windows-1011)
+      - [1. Setting up the development environment](#1-setting-up-the-development-environment)
+      - [2. Starting Apache and MySQL](#2-starting-apache-and-mysql)
+      - [3. Creating an empty SQL database](#3-creating-an-empty-sql-database)
+      - [4. Setting up the `settings.php` file](#4-setting-up-the-settingsphp-file)
+      - [5. Setting up the application](#5-setting-up-the-application)
+      - [6. (Optional) Creating an API key for the automatically generated time zone selection](#6-optional-creating-an-api-key-for-the-automatically-generated-time-zone-selection)
+      - [7. Creating a Google Maps JS API key](#7-creating-a-google-maps-js-api-key)
+      - [8. Accessing the metadata editor](#8-accessing-the-metadata-editor)
   - [Dependencies](#dependencies)
   - [Settings](#settings)
   - [API-Dokumentation](#api-dokumentation)
     - [Allgemeine Informationen](#allgemeine-informationen)
     - [API-Endpunkte](#api-endpunkte)
     - [1. GCMD Science Keywords (deprecated, use APIv2)](#1-gcmd-science-keywords-deprecated-use-apiv2)
+    - [2. Zeitzonen aktualisieren (deprecated, use APIv2)](#2-zeitzonen-aktualisieren-deprecated-use-apiv2)
+    - [3. NASA Science Keywords (deprecated, use APIv2)](#3-nasa-science-keywords-deprecated-use-apiv2)
     - [4. ROR Affiliations (deprecated, neue Version in APIv2)](#4-ror-affiliations-deprecated-neue-version-in-apiv2)
     - [5. CrossRef Funders (deprecated, neue Version in APIv2)](#5-crossref-funders-deprecated-neue-version-in-apiv2)
     - [6. Resource as DataCite XML (deprecated, use APIv2)](#6-resource-as-datacite-xml-deprecated-use-apiv2)
     - [7. Resource as ISO XML (deprecated, use APIv2)](#7-resource-as-iso-xml-deprecated-use-apiv2)
+    - [8. Resource as DIF XML (deprecated, use APIv2)](#8-resource-as-dif-xml-deprecated-use-apiv2)
+    - [9. All resources as one XML (deprecated, use APIv2)](#9-all-resources-as-one-xml-deprecated-use-apiv2)
     - [10. MSL Vokabulare aktualisieren (deprecated, use APIv2)](#10-msl-vokabulare-aktualisieren-deprecated-use-apiv2)
     - [11. MSL Labs aktualisieren (deprecated, use APIv2)](#11-msl-labs-aktualisieren-deprecated-use-apiv2)
     - [12. CGI Keywords aktualisieren](#12-cgi-keywords-aktualisieren)
     - [13. Chronostrat Keywords aktualisieren](#13-chronostrat-keywords-aktualisieren)
     - [14. GEMET Concepts aktualisieren](#14-gemet-concepts-aktualisieren)
+    - [15.  Rollen abrufen (deprecated, use APIv2)](#15--rollen-abrufen-deprecated-use-apiv2)
+    - [16.  NASA Instruments Keywords aktualisieren (deprecated, use APIv2)](#16--nasa-instruments-keywords-aktualisieren-deprecated-use-apiv2)
+    - [17.  NASA Platforms Keywords aktualisieren (deprecated,  neue Version in  APIv2)](#17--nasa-platforms-keywords-aktualisieren-deprecated--neue-version-in--apiv2)
+    - [18. Lizenzen abrufen (deprecated, use APIv2)](#18-lizenzen-abrufen-deprecated-use-apiv2)
+    - [19. Keywords abrufen (deprecated, neue Version in APIv2)](#19-keywords-abrufen-deprecated-neue-version-in-apiv2)
+    - [20. Relationen abrufen (deprecated, neue Version in APIv2)](#20-relationen-abrufen-deprecated-neue-version-in-apiv2)
+    - [21. Identifier-Typ ermitteln (deprecated, neue Version in APIv2)](#21-identifier-typ-ermitteln-deprecated-neue-version-in-apiv2)
+    - [22. Identifier-Pattern abrufen (deprecated, neue Version in APIv2)](#22-identifier-pattern-abrufen-deprecated-neue-version-in-apiv2)
+    - [23. Alle Identifier-Typen abrufen (deprecated, neue Version in APIv2)](#23-alle-identifier-typen-abrufen-deprecated-neue-version-in-apiv2)
   - [Formularfelder](#formularfelder)
     - [Resource Information](#resource-information)
     - [Licenses \& Rights](#licenses--rights)
@@ -88,50 +110,49 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 
   If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
 
-  <details> 
-    <summary> 
+  ### Detailed example installation on Windows 10/11
 
-    ### Detailed example installation on Windows 10/11
-    </summary>
-
-    This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10/11 using PHP and MySQL. For a local development environment, localhost-based access to the server is usually sufficient.
-    #### 1. Setting up the development environment
-    - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP > 8.2).
-    - Install [MySQL](https://dev.mysql.com/downloads/installer/) or MariaDB.
-    - Install and enable the XSL and ZIP extensions for PHP. In order to do that, open the `php.ini` file and uncomment the line for the required extensions.
-    #### 2. Starting Apache and MySQL
-    - If you're using an all-in-one solutions such as XAMPP or WampServer, you can start Apache directly from the XAMPP or WampServer control panel.
-    - Alternatively, you can manually start Apache by navigating to the `bin` directory of Apache (e.g., `C:\xampp\apache\bin`) and running `httpd.exe`.
-    #### 3. Creating an empty SQL database
-    - Using phpMyAdmin: If you're using XAMPP or WampServer, phpMyAdmin is already installed. You can access it by going to `http://localhost/phpmyadmin` in your browser.
-    - Create a new database and remember the name of it, as you'll need it later in the next step.
-    - Alternatively, using the Windows PowerShell: 
-      - Start MySQL in the Shell while being in your SQL directory: `mysql -u root -p`
-      - Create a database: `CREATE DATABASE your_database;`
-      - Create a new MySQL-user for the installation: `CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';`
-      - Granting rights to this user: `GRANT CREATE ON your_database.* TO 'username'@'localhost';` and save with `FLUSH PRIVILEGES;`
-      - Optional: confirm the creation of the database while being logged in as the new user: `SHOW DATABASES;`
-    #### 4. Setting up the `settings.php` file
-    - Download all files from this repository into the `htdocs`or`www`folder of your webserver.
-    - Create `settings.php`:
-      - Copy the entire contents of `sample_settings.php` which is located in the first level of the ELMO repository and save it as `settings.php` in the same directory.
-    - Adjust the database connection:
-      - Open the `settings.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
-    #### 5. Setting up the application
-    - Access the installation script in your browser as follows: `http://localhost/your_directory/install.php`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.php`.
-    #### 6. (Optional) Creating an API key for the automatically generated time zone selection
-    - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
-    - Insert your API key in `settings.php`in the according line.
-    #### 7. Creating a Google Maps JS API key
-    - Get a Google Maps JS API key via the [Google Cloud Console](https://console.cloud.google.com). To do this, create a project, enable the Google Maps JavaScript API and get your API key.
-    - Insert your Google Maps API key in the corresponding line in the `settings.php`file. 
-    #### 8. Accessing the metadata editor
-    - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
-    - Settings may be modified in `settings.php`.
-  </details>
+  This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10/11 using PHP and MySQL. For a local development environment, localhost-based access to the server is usually sufficient.
+  #### 1. Setting up the development environment
+  - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP > 8.2).
+  - Install [MySQL](https://dev.mysql.com/downloads/installer/) or MariaDB.
+  - Install and enable the XSL and ZIP extensions for PHP. In order to do that, open the `php.ini` file and uncomment the line for the required extensions.
+  #### 2. Starting Apache and MySQL
+  - If you're using an all-in-one solutions such as XAMPP or WampServer, you can start Apache directly from the XAMPP or WampServer control panel.
+  - Alternatively, you can manually start Apache by navigating to the `bin` directory of Apache (e.g., `C:\xampp\apache\bin`) and running `httpd.exe`.
+  #### 3. Creating an empty SQL database
+  - Using phpMyAdmin: If you're using XAMPP or WampServer, phpMyAdmin is already installed.You can access it by going to `http://localhost/phpmyadmin` in your browser.
+  - Create a new database and remember the name of it, as you'll need it later in the next step.
+  - Alternatively, using the Windows PowerShell: 
+    - Start MySQL in the Shell while being in your SQL directory: `mysql -u root -p`
+    - Create a database: `CREATE DATABASE your_database;`
+    - Create a new MySQL-user for the installation: `CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';`
+    - Granting rights to this user: `GRANT CREATE ON your_database.* TO 'username'@'localhost';` and save with `FLUSH PRIVILEGES;`
+    - Optional: confirm the creation of the database while being logged in as the new user: `SHOW DATABASES;`
+  #### 4. Setting up the `settings.php` file
+  - Download all files from this repository into the `htdocs`or`www`folder of your webserver.
+  - Create `settings.php`:
+     - Copy the entire contents of `sample_settings.php` which is located in the first level of the ELMO repository and save it as `settings.php` in the same directory.
+  - Adjust the database connection:
+    - Open the `settings.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
+  #### 5. Setting up the application
+  - Access the installation script in your browser as follows: `http://localhost/your_directory/install.php`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.php`.
+  #### 6. (Optional) Creating an API key for the automatically generated time zone selection
+   - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
+  - Insert your API key in `settings.php`in the according line.
+  #### 7. Creating a Google Maps JS API key
+  - Get a Google Maps JS API key via the [Google Cloud Console](https://console.cloud.google.com). To do this, create a project, enable the Google Maps JavaScript API and get your API key.
+  - Insert your Google Maps API key in the corresponding line in the `settings.php`file. 
+  #### 8. Accessing the metadata editor
+  - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
+  - Settings may be modified in `settings.php`.
 </details> 
 
-## Dependencies
+<details>
+  <summary>
+
+  ## Dependencies
+  </summary>
 
 The following third-party dependencies are included in header.html and footer.html:
 
@@ -149,150 +170,132 @@ The following third-party dependencies are included in header.html and footer.ht
   Is used to display the thesauri as a hierarchical tree structure.
 - [Swagger UI 5.18.2](https://github.com/swagger-api/swagger-ui/releases)<br>
   For displaying the dynamic and interactive API documentation in accordance with OpenAPI standard 3.1.
-
-## Settings
-
-In addition to the access data for the database, other settings can also be adjusted in the `settings.php` file:
-
-- `$host`: Database host.
-- `$username`: Username of the user with access to the given database.
-- `$password`: Password of database user.
-- `$database`: Name of the database created.
-- `$maxTitles`: Defines the maximum number of titles that users can enter in the editor.
-- `$mslLabsUrl`: URL to the JSON file with the current list of laboratories.
-- `$showFeedbackLink`: true-> feedback function switched on, false-> feedback function switched off
-- `$smtpHost`: URL to the SMTP mail server
-- `$smtpPort`: Port of the mail server
-- `$smtpUser`: User name of the mailbox for sending the mails
-- `$smtpPassword`: Password of the mailbox
-- `$smtpSender`: Name of the sender in the feedback mails
-- `$feedbackAddress`: Email Address to which the feedback is sent
-- `$xmlSubmitAddress`: Email Address to which the finished XML file is sent
+</details>
 
 <details>
   <summary>
 
-  ## API-Dokumentation
-  </summary>
-
-  Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data Services Webanwendung. Sie richtet sich an Administratoren und Techniker, die diese Anwendung auf einem eigenen Webserver installieren und verwalten möchten.
-
-  ### Allgemeine Informationen
-
-  - Basis-URL: `https://mde2.cats4future.de/api.php`
-  - Alle Anfragen sollten via HTTPS erfolgen
-  - Antworten werden im JSON-Format zurückgegeben, sofern nicht anders angegeben
-
-  ### API-Endpunkte
-
-  [Interaktive Dokumentation](https://mde2.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
-  <details>
-    <summary> 
-    
-  ### 1. GCMD Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-    </summary>
-
-    GET ?action=getGcmdScienceKeywords
-
-    Liefert das kontrollierte Vokabular der GCMD Science Keywords.
-
-    **Antwort:**
-    JSON-Array mit Objekten, die folgende Schlüssel enthalten:
-
-    - `id`: Eindeutige Kennung
-    - `text`: Bezeichnung des Keywords
-    - `language`: Sprachcode
-    - `scheme`: Name des Schemas
-    - `schemeURI`: URI des Schemas
-    - `description`: Beschreibung
-    - `children`: Array von Unterkategorien mit der gleichen Struktur
-  </details>
-
-  <details>
-    <summary>
-
-    ### 2. Zeitzonen aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-    </summary>
-
-    GET ?action=getTimezones
-
-    Aktualisiert die Liste der Zeitzonen für das Feld `Timezones` in der Gruppe `Spatial and temporal coverage`.
-
-    **Empfohlener Ausführungsintervall:** Monatlich
-
-    **Antwort:**
-    Bestätigungsnachricht über erfolgreiche Aktualisierung
-  </details>
-
-  <details>
-    <summary>
-    
-    ### 3. NASA Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
-
-    GET ?action=getNasaScienceKeywords
-
-    Aktualisiert den Thesaurus für die NASA Science Keywords.
-
-    **Empfohlener Ausführungsintervall:** Wöchentlich
-
-    **Antwort:**
-  Bestätigungsnachricht über erfolgreiche Aktualisierung
-  </details>
-
-  ### 4. ROR Affiliations (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
-  GET ?action=getRorAffiliations
-
-  Aktualisiert die Daten für die Auswahlfelder der Affiliations von Personen.
-
-  **Empfohlener Ausführungsintervall:** Wöchentlich
-
-  **Antwort:**
-  Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-  <details>
-    <summary>
-
-  ### 5. CrossRef Funders (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
-
-  GET ?action=getCrossRefFunders
-
-  Aktualisiert die Auswahloptionen im Funders-Dropdown-Feld.
-
-  **Empfohlener Ausführungsintervall:** Wöchentlich
-
-  **Antwort:**
-  Bestätigungsnachricht über erfolgreiche Aktualisierung
-  </details>
-
-  <details>
-    <summary>  
-    
-  ### 6. Resource as DataCite XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
-    
-    GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
-
-    Exportiert einen Datensatz als XML-Datei gemäß dem DataCite-Schema (Version 4.5).
-
-    **Parameter:**
-
-    - `id`: ID des Datensatzes (erforderlich)
-    - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
-
-    **Antwort:**
-    XML-Datei oder XML-Inhalt
-  </details>
-
-  <details>
+  ## Settings
   <summary>
 
-  ### 7. Resource as ISO XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  In addition to the access data for the database, other settings can also be adjusted in the `settings.php` file:
 
+  - `$host`: Database host.
+  - `$username`: Username of the user with access to the given database.
+  - `$password`: Password of database user.
+  - `$database`: Name of the database created.
+  - `$maxTitles`: Defines the maximum number of titles that users can enter in the editor.
+  - `$mslLabsUrl`: URL to the JSON file with the current list of laboratories.
+  - `$showFeedbackLink`: true-> feedback function switched on, false-> feedback function switched off
+  - `$smtpHost`: URL to the SMTP mail server
+  - `$smtpPort`: Port of the mail server
+  - `$smtpUser`: User name of the mailbox for sending the mails
+  - `$smtpPassword`: Password of the mailbox
+  - `$smtpSender`: Name of the sender in the feedback mails
+  - `$feedbackAddress`: Email Address to which the feedback is sent
+  - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent
+</details>
+
+## API-Dokumentation
+
+Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data Services Webanwendung. Sie richtet sich an Administratoren und Techniker, die diese Anwendung auf einem eigenen Webserver installieren und verwalten möchten.
+
+### Allgemeine Informationen
+
+- Basis-URL: `https://mde2.cats4future.de/api.php`
+- Alle Anfragen sollten via HTTPS erfolgen
+- Antworten werden im JSON-Format zurückgegeben, sofern nicht anders angegeben
+
+### API-Endpunkte
+
+[Interaktive Dokumentation](https://mde2.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
+<details>
+  <summary> 
+  
+  ### 1. GCMD Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
   </summary>
 
-  GET ?action=getResourceAsIsoXml&id={resource_id}&download={true|false}
+  GET ?action=getGcmdScienceKeywords
 
-  Exportiert einen Datensatz als XML-Datei gemäß dem ISO-Standard.
+  Liefert das kontrollierte Vokabular der GCMD Science Keywords.
+
+  **Antwort:**
+  JSON-Array mit Objekten, die folgende Schlüssel enthalten:
+
+  - `id`: Eindeutige Kennung
+  - `text`: Bezeichnung des Keywords
+  - `language`: Sprachcode
+  - `scheme`: Name des Schemas
+  - `schemeURI`: URI des Schemas
+  - `description`: Beschreibung
+  - `children`: Array von Unterkategorien mit der gleichen Struktur
+</details>
+
+<details>
+  <summary>
+
+  ### 2. Zeitzonen aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  </summary>
+
+  GET ?action=getTimezones
+
+  Aktualisiert die Liste der Zeitzonen für das Feld `Timezones` in der Gruppe `Spatial and temporal coverage`.
+
+  **Empfohlener Ausführungsintervall:** Monatlich
+
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
+
+<details>
+  <summary>
+  
+  ### 3. NASA Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+
+  GET ?action=getNasaScienceKeywords
+
+  Aktualisiert den Thesaurus für die NASA Science Keywords.
+
+  **Empfohlener Ausführungsintervall:** Wöchentlich
+
+  **Antwort:**
+Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
+
+### 4. ROR Affiliations (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+GET ?action=getRorAffiliations
+
+Aktualisiert die Daten für die Auswahlfelder der Affiliations von Personen.
+
+**Empfohlener Ausführungsintervall:** Wöchentlich
+
+**Antwort:**
+Bestätigungsnachricht über erfolgreiche Aktualisierung
+
+<details>
+  <summary>
+
+### 5. CrossRef Funders (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+
+GET ?action=getCrossRefFunders
+
+Aktualisiert die Auswahloptionen im Funders-Dropdown-Feld.
+
+**Empfohlener Ausführungsintervall:** Wöchentlich
+
+**Antwort:**
+Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
+
+<details>
+  <summary>  
+  
+  ### 6. Resource as DataCite XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+  
+  GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
+
+  Exportiert einen Datensatz als XML-Datei gemäß dem DataCite-Schema (Version 4.5).
 
   **Parameter:**
 
@@ -301,261 +304,283 @@ In addition to the access data for the database, other settings can also be adju
 
   **Antwort:**
   XML-Datei oder XML-Inhalt
-  </details>
+</details>
 
-  <details>
-    <summary>
+<details>
+<summary>
 
-    ### 8. Resource as DIF XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+### 7. Resource as ISO XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-    </summary>
+</summary>
 
-    GET ?action=getResourceAsDifXml&id={resource_id}&download={true|false}
+GET ?action=getResourceAsIsoXml&id={resource_id}&download={true|false}
 
-    Exportiert einen Datensatz als XML-Datei gemäß dem DIF-Format.
+Exportiert einen Datensatz als XML-Datei gemäß dem ISO-Standard.
 
-    **Parameter:**
+**Parameter:**
 
-    - `id`: ID des Datensatzes (erforderlich)
-    - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
+- `id`: ID des Datensatzes (erforderlich)
+- `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
 
-    **Antwort:**
-    XML-Datei oder XML-Inhalt
-  </details>
+**Antwort:**
+XML-Datei oder XML-Inhalt
+</details>
 
-  <details>
-    <summary>
+<details>
+  <summary>
 
-    ### 9. All resources as one XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 8. Resource as DIF XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-    </summary>
+  </summary>
 
-    GET ?action=getResourcesAsOneFile&id={resource_id}
+  GET ?action=getResourceAsDifXml&id={resource_id}&download={true|false}
 
-    Exportiert einen Datensatz in allen drei XML-Formaten (DataCite, ISO, DIF) in einer einzigen XML-Datei.
+  Exportiert einen Datensatz als XML-Datei gemäß dem DIF-Format.
 
-    **Parameter:**
+  **Parameter:**
 
-    - `id`: ID des Datensatzes (erforderlich)
+  - `id`: ID des Datensatzes (erforderlich)
+  - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
 
-    **Antwort:**
-    XML-Datei zum Download
-  </details>
+  **Antwort:**
+  XML-Datei oder XML-Inhalt
+</details>
 
-  <details>
-    <summary>
+<details>
+  <summary>
+
+  ### 9. All resources as one XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  </summary>
+
+  GET ?action=getResourcesAsOneFile&id={resource_id}
+
+  Exportiert einen Datensatz in allen drei XML-Formaten (DataCite, ISO, DIF) in einer einzigen XML-Datei.
+
+  **Parameter:**
+
+  - `id`: ID des Datensatzes (erforderlich)
+
+  **Antwort:**
+  XML-Datei zum Download
+</details>
+
+<details>
+  <summary>
 
   ### 10. MSL Vokabulare aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
 
-    </summary>
+  </summary>
 
-    GET ?action=getMslVocab&type={vocab_type}
+  GET ?action=getMslVocab&type={vocab_type}
 
-    Aktualisiert die kontrollierten Vokabulare des Materials Science Laboratory (MSL).
+  Aktualisiert die kontrollierten Vokabulare des Materials Science Laboratory (MSL).
 
-    **Parameter:**
+  **Parameter:**
 
-    - `type`: Typ des Vokabulars (erforderlich)
-      - Mögliche Werte: `all`, `analogue`, `geochemistry`, `geologicalage`, `geologicalsetting`, `materials`, `microscopy`, `paleomagnetism`, `porefluids`, `rockphysics`
-
-    **Antwort:**
-    JSON-Objekt mit Aktualisierungsstatus für jedes Vokabular
-  </details>
-
-  <details>
-    <summary>
-
-  ### 11. MSL Labs aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
-    </summary>
-
-    GET ?action=getMslLabs
-
-    Aktualisiert die Liste der MSL Labs.
-
-    **Antwort:**
-    Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-  </details>
-
-  ### 12. CGI Keywords aktualisieren
-
-  GET ?action=getCGIKeywords
-
-  Aktualisiert die CGI Simple Lithology Keywords.
+  - `type`: Typ des Vokabulars (erforderlich)
+    - Mögliche Werte: `all`, `analogue`, `geochemistry`, `geologicalage`, `geologicalsetting`, `materials`, `microscopy`, `paleomagnetism`, `porefluids`, `rockphysics`
 
   **Antwort:**
-  Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-  ### 13. Chronostrat Keywords aktualisieren
-
-  GET ?action=getChronostratKeywords
-
-  Aktualisiert die Keywords aus der International Chronostratigraphic Chart.
-
-  **Antwort:**
-  Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-  ### 14. GEMET Concepts aktualisieren
-
-  GET ?action=getGemetConcepts
-
-  Aktualisiert die Konzepte des GEMET Thesaurus.
-
-  **Antwort:**
-  Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-  <details>
-    <summary>
-
-    ### 15.  Rollen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
-    </summary>
-
-    GET ?action=getRoles&type={role_type}
-
-    Ruft Rollen aus der Datenbank ab.
-
-    **Parameter:**
-
-    - `type`: Typ der Rollen (erforderlich)
-      - Mögliche Werte: `all`, `person`, `institution`, `both`
-
-    **Antwort:**
-    JSON-Array mit Rollen-Objekten
-  </details>
-
-  <details>
-    <summary>
-
-    ### 16.  NASA Instruments Keywords aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
-    </summary
-      
-    GET ?action=getNasaInstrumentsKeywords
-
-    Aktualisiert die NASA/GCMD Instruments Keywords.
-
-    **Antwort:**
-    Bestätigungsnachricht über erfolgreiche Aktualisierung
-  </details>
-
-  <details>
-    <summary>
-
-    ### 17.  NASA Platforms Keywords aktualisieren (deprecated,  neue Version in  [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
-    </summary
-
-    GET ?action=getNasaPlatformsKeywords
-
-    Aktualisiert die NASA/GCMD Earth Platforms Keywords.
-
-    **Antwort:**
-    Bestätigungsnachricht über erfolgreiche Aktualisierung
-    </details>
-
-  <details>
-    <summary>
-
-    ### 18. Lizenzen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
-
-    </summary
-
-    GET ?action=getLicenses&resourcetype={license_type}
-
-    Ruft Lizenzen aus der Datenbank ab.
-
-    **Parameter:**
-
-    - `resourcetype`: Typ der Lizenzen (erforderlich)
-      - Mögliche Werte: `all`, `software`
-
-    **Antwort:**
-    JSON-Array mit Lizenz-Objekten
-  </details>
-
-  <details>
-    <summary>
-    
-    ### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
-
-    GET ?action=getKeywords&curationType={curation_type}
-
-    Ruft Keywords aus der Datenbank ab.
-
-    **Parameter:**
-
-    - `curationType`: Typ der Kuration (optional)
-      - Mögliche Werte: `all`, `isCurated`
-
-    **Antwort:**
-    JSON-Array mit Keyword-Objekten
-  </details>
-
-  <details>
-    <summary>
-    
-    ### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
-
-    GET ?action=getRelations
-
-    Ruft alle Relationen aus der Datenbank ab.
-
-    **Antwort:**
-    JSON-Array mit Relation-Objekten
-  </details>
-
-  <details>
-    <summary>
-    
-    ### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
-
-    GET ?action=getIdentifierType&identifier={identifier_string}
-
-    Ermittelt den Typ eines gegebenen Identifiers.
-
-    **Parameter:**
-
-    - `identifier`: Der zu prüfende Identifier-String (erforderlich)
-
-    **Antwort:**
-    JSON-Objekt mit dem ermittelten Identifier-Typ oder einer Fehlermeldung
-  </details>
-
-  <details>
-    <summary>
-    
-    ### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
-
-    GET ?action=getPattern&type={identifier_type}
-
-    Ruft das Regex-Pattern für einen bestimmten Identifier-Typ ab.
-
-    **Parameter:**
-
-    - `type`: Der Identifier-Typ (erforderlich)
-
-    **Antwort:**
-    JSON-Objekt mit dem Regex-Pattern oder einer Fehlermeldung
-  </details>
-
-  <details>
-    <summary>
-    
-    ### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
-
-    GET ?action=getIdentifierTypes
-
-    Ruft alle verfügbaren Identifier-Typen aus der Datenbank ab.
-
-    **Antwort:**
-    JSON-Array mit Identifier-Typ-Objekten
-  </details>
-
+  JSON-Objekt mit Aktualisierungsstatus für jedes Vokabular
 </details>
 
-## Formularfelder
+<details>
+  <summary>
+
+### 11. MSL Labs aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  </summary>
+
+  GET ?action=getMslLabs
+
+  Aktualisiert die Liste der MSL Labs.
+
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+
+  </details>
+
+### 12. CGI Keywords aktualisieren
+
+GET ?action=getCGIKeywords
+
+Aktualisiert die CGI Simple Lithology Keywords.
+
+**Antwort:**
+Bestätigungsnachricht über erfolgreiche Aktualisierung
+
+### 13. Chronostrat Keywords aktualisieren
+
+GET ?action=getChronostratKeywords
+
+Aktualisiert die Keywords aus der International Chronostratigraphic Chart.
+
+**Antwort:**
+Bestätigungsnachricht über erfolgreiche Aktualisierung
+
+### 14. GEMET Concepts aktualisieren
+
+GET ?action=getGemetConcepts
+
+Aktualisiert die Konzepte des GEMET Thesaurus.
+
+**Antwort:**
+Bestätigungsnachricht über erfolgreiche Aktualisierung
+
+<details>
+  <summary>
+
+  ### 15.  Rollen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  </summary>
+
+  GET ?action=getRoles&type={role_type}
+
+  Ruft Rollen aus der Datenbank ab.
+
+  **Parameter:**
+
+  - `type`: Typ der Rollen (erforderlich)
+    - Mögliche Werte: `all`, `person`, `institution`, `both`
+
+  **Antwort:**
+  JSON-Array mit Rollen-Objekten
+</details>
+
+<details>
+  <summary>
+
+  ### 16.  NASA Instruments Keywords aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  </summary
+    
+  GET ?action=getNasaInstrumentsKeywords
+
+  Aktualisiert die NASA/GCMD Instruments Keywords.
+
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+</details>
+
+<details>
+  <summary>
+
+  ### 17.  NASA Platforms Keywords aktualisieren (deprecated,  neue Version in  [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  </summary
+
+  GET ?action=getNasaPlatformsKeywords
+
+  Aktualisiert die NASA/GCMD Earth Platforms Keywords.
+
+  **Antwort:**
+  Bestätigungsnachricht über erfolgreiche Aktualisierung
+  </details>
+
+<details>
+  <summary>
+
+  ### 18. Lizenzen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+
+  </summary
+
+  GET ?action=getLicenses&resourcetype={license_type}
+
+  Ruft Lizenzen aus der Datenbank ab.
+
+  **Parameter:**
+
+  - `resourcetype`: Typ der Lizenzen (erforderlich)
+    - Mögliche Werte: `all`, `software`
+
+  **Antwort:**
+  JSON-Array mit Lizenz-Objekten
+</details>
+
+<details>
+  <summary>
+  
+  ### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+
+  GET ?action=getKeywords&curationType={curation_type}
+
+  Ruft Keywords aus der Datenbank ab.
+
+  **Parameter:**
+
+  - `curationType`: Typ der Kuration (optional)
+    - Mögliche Werte: `all`, `isCurated`
+
+  **Antwort:**
+  JSON-Array mit Keyword-Objekten
+</details>
+
+<details>
+  <summary>
+  
+  ### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+
+  GET ?action=getRelations
+
+  Ruft alle Relationen aus der Datenbank ab.
+
+  **Antwort:**
+  JSON-Array mit Relation-Objekten
+</details>
+
+<details>
+  <summary>
+  
+  ### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+
+  GET ?action=getIdentifierType&identifier={identifier_string}
+
+  Ermittelt den Typ eines gegebenen Identifiers.
+
+  **Parameter:**
+
+  - `identifier`: Der zu prüfende Identifier-String (erforderlich)
+
+  **Antwort:**
+  JSON-Objekt mit dem ermittelten Identifier-Typ oder einer Fehlermeldung
+</details>
+
+<details>
+  <summary>
+  
+  ### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+
+  GET ?action=getPattern&type={identifier_type}
+
+  Ruft das Regex-Pattern für einen bestimmten Identifier-Typ ab.
+
+  **Parameter:**
+
+  - `type`: Der Identifier-Typ (erforderlich)
+
+  **Antwort:**
+  JSON-Objekt mit dem Regex-Pattern oder einer Fehlermeldung
+</details>
+
+<details>
+  <summary>
+  
+  ### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+
+  GET ?action=getIdentifierTypes
+
+  Ruft alle verfügbaren Identifier-Typen aus der Datenbank ab.
+
+  **Antwort:**
+  JSON-Array mit Identifier-Typ-Objekten
+</details>
+
+<details>
+  <summary>
+
+  ## Formularfelder
+  </summary>
 
 ### Resource Information
 
@@ -1202,7 +1227,13 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
 
-## Data validation
+</details>
+
+<details>
+  <summary>
+
+  ## Data validation
+  </summary>
 
 The metadata editor has some mandatory fields which are neccessary for the submission of data. These include the following fields:
 - **Publication Year**, **Resource Type**, **Language of dataset**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email adress**, **Descriptions Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
@@ -1225,13 +1256,21 @@ In certain cases, some subfields within a formgroup become mandatory. This affec
   Formgroup Funding Reference:
   - **Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
 
-## Database structure
+</details>
 
-#### ER diagram
+<details>
+  <summary>
 
-The following ER diagram shows the relationships and structures of the tables in the database.
+  ## Database structure
+  </summary>
 
-![ER-Diagramm](doc/ER-Diagram.jpg)
+  #### ER diagram
+
+  The following ER diagram shows the relationships and structures of the tables in the database.
+
+  ![ER-Diagramm](doc/ER-Diagram.jpg)
+</details>
+
 ## Contributing
 
 We appreciate every contribution to this project! You can use the feedback back form on the test server [link], create an issue on github or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template (only available in german right now!), so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.
