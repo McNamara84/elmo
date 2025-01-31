@@ -58,8 +58,8 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
             'description'  => $description,
             'dateStart'    => $dateStart,
             'dateEnd'      => $dateEnd,
-            'timeStart'    => $timeStart,
-            'timeEnd'      => $timeEnd,
+            'timeStart'    => empty($timeStart) ? NULL : $timeStart,
+            'timeEnd'      => empty($timeEnd) ? NULL : $timeEnd,
             'timezone'     => $timezone
         ];
 
