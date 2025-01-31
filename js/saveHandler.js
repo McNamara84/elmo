@@ -32,6 +32,14 @@ class SaveHandler {
      * Handle save action
      */
     async handleSave() {
+        if (!this.$form[0].checkValidity()) {
+            this.$form.addClass('was-validated');
+            const $firstInvalid = this.$form.find(':invalid').first();
+            $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            $firstInvalid.focus();
+            this.showNotification('danger', 'Validation Error', 'Please check your inputs');
+            return;
+        }
         this.showNotification('info', 'Processing...', 'Preparing file for download.');
         const suggestedFilename = await this.generateFilename();
         if (suggestedFilename) {
