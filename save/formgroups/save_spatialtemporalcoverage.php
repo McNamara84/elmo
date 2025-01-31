@@ -52,9 +52,9 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         // Prepare data to be saved
         $stcData = [
             'latitudeMin'  => $latitudeMin,
-            'latitudeMax'  => $latitudeMax,
+            'latitudeMax'  => empty($latitudeMax) ? NULL : $latitudeMax,
             'longitudeMin' => $longitudeMin,
-            'longitudeMax' => $longitudeMax,
+            'longitudeMax' => empty($longitudeMax) ? NULL : $longitudeMax,
             'description'  => $description,
             'dateStart'    => $dateStart,
             'dateEnd'      => $dateEnd,
