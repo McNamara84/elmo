@@ -2,6 +2,26 @@
 
 The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GeoForschungsZentrum Potsdam](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
 
+## Table of contents
+- [Main Features](#main-features)
+- [Installation](#installation)
+  - [Requirements](#requirements)
+  - [Quick installation guide](#quick-installation-guide)
+  - [Detailed example installation on Windows 10/11](#detailed-example-installation-on-windows-1011)
+- [Dependencies](#dependencies)
+- [Settings](#settings)
+- [API-Dokumentation](#api-dokumentation)
+  - [Allgemeine Informationen](#allgemeine-informationen)
+  <details> 
+    <summary> 
+    [API-Endpunkte](#api-endpunkte)
+    </summary>
+    - [1. GCMD Science Keywords](#1-gcmd-science-keywords-deprecated-use-apiv2)
+    - [2. Zeitzonen aktualisieren](#2-zeitzonen-aktualisieren-deprecated-use-apiv2)
+    - [3. NASA Science Keywords](#3-nasa-science-keywords-deprecated-use-apiv2)
+    - [4. ROR Affiliations](#4-ror-affiliations-deprecated-neue-version-in-apiv2)
+  </details>
+
 ## Main Features
 - Simple mapping of entered data using XSLT.
 - Modular, customizable front end.
