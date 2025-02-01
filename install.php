@@ -247,16 +247,16 @@ function createDatabaseStructure($connection)
 
                 "Spatial_Temporal_Coverage" => "CREATE TABLE IF NOT EXISTS `Spatial_Temporal_Coverage` (
             `spatial_temporal_coverage_id` INT NOT NULL AUTO_INCREMENT,
-            `latitudeMin` FLOAT NOT NULL,
+            `latitudeMin` FLOAT NULL,
             `latitudeMax` FLOAT NULL,
-            `longitudeMin` FLOAT NOT NULL,
+            `longitudeMin` FLOAT NULL,
             `longitudeMax` FLOAT NULL,
-            `description` TEXT(5000) NOT NULL,
-            `dateStart` DATE NOT NULL,
-            `dateEnd` DATE NOT NULL,
+            `description` TEXT(5000) NULL,
+            `dateStart` DATE NULL,
+            `dateEnd` DATE NULL,
             `timeStart` TIME NULL,
             `timeEnd` TIME NULL,
-            `timezone` VARCHAR(10) NOT NULL,
+            `timezone` VARCHAR(10) NULL,
             PRIMARY KEY (`spatial_temporal_coverage_id`));",
 
                 "Relation" => "CREATE TABLE IF NOT EXISTS `Relation` (
