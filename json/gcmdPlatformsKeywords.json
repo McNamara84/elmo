@@ -509,7 +509,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "Cessna is an American brand of general aviation aircraft.",
                                 "children": []
                             },
                             {
@@ -635,7 +635,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "A surface research vessel.",
                                 "children": []
                             },
                             {
@@ -653,7 +653,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The P-3C Orion is a four-engine turboprop aircraft originally designed by the U.S. Navy to locate and track enemy submarines. The mission has been modified in recent years to provide on-station surface surveillance for both land and sea missions. The P-3C has advanced submarine detection sensors such as directional frequency and ranging (DIFAR) sonobuoys and magnetic anomaly detection (MAD) equipment. The avionics system is integrated by a general-purpose digital computer that supports all the tactical displays, monitors and automatically launches ordnance and provides flight information to the pilots. In addition, the system coordinates navigation information and accepts sensor data inputs for tactical display and storage. The P-3C can carry a mixed payload of weapons internally and on wing pylons.",
                                 "children": []
                             },
                             {
@@ -1999,7 +1999,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "Forcing data, or gridded near-surface meteorological datasets, are used as input for land surface models (LSMs). High-resolution forcing data can lead to better model outcomes.",
                                 "children": []
                             },
                             {
@@ -2170,7 +2170,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "The NOAA EPP Cooperative Science Center for Earth System Science and Remote Sensing Technologies Center aims to conduct research consistent with NOAA\u2019s interests of Environmental Assessment, Prediction, and Environmental Stewardship. NOAA-CESSRST research creates a framework to recruit, educate, train, and graduate undergraduate and graduate students especially from underrepresented minority communities for professional opportunities and thus create a diverse STEM workforce for NOAA, other federal agencies, private sectors, and academia.",
                                         "children": []
                                     },
                                     {
@@ -2262,7 +2262,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The Mosaic Land Surface Model is a data set that contains a series of land surface parameters. It is available in both hourly and monthly formats.",
                                 "children": []
                             },
                             {
@@ -2352,7 +2352,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The Nested Grid Model (NGM) and Medium Range Forecast (MRF) Archive is historical digital data set DSI-6140, archived at the NOAA National Centers for Environmental Information (NCEI). The National Centers for Environmental Prediction (NCEP) of the National Weather Service (NWS) runs a series of computer analyses and forecasts operationally, which use or produce model data. This data set is one of several NCEP sets of model data archived at NCEI. Historical data set DSI-6140 consists of two subgroups of NCEP model data: NGM and MRF for the time period January 1, 1991 through April 15, 1997. Geographic coverage is the 48 contiguous states of the United States of America, plus adjacent waters and southern Canada. Major parameters provided by NGM are ice covered water areas (yes/no), snow covered areas (yes/no), terrain height, mean sea level pressure, convective precipitation, total precipitation, exchange coefficient at surface, upward turbulent flux of sensible heat, upward turbulent flux of water, surface pressure, number of mixed layers next to surface, u component of wind, v component of wind, vertical velocity, specific humidity, and temperature. Parameters provided by MRF are surface temperature, geopotential height, and relative humidity. DSI-6140 is the historical precursor data set to digital data set DSI-6141, NCEP EDAS and GDAS (FNL) Model Data, also archived at NCEI.",
                                 "children": []
                             },
                             {
@@ -3395,7 +3395,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "One of a series of meteorological satellites developed and operated by the Air Force under the Defense Meteorological Satellite Program (DMSP). This program, previously known as DAPP (Data Acquisition and Processing Program), was classified until March 1973. The objective of this program is to provide global visual and infrared cloudcover data and specialized environmental data to support Department of Defense operational weather analysis and forecasting requirements. Operationally, the program consists of two satellites in planned 830-km, sun-synchronous polar orbits, with the ascending node of one satellite in early morning and the other at local noon. The 6.4-m-long spacecraft is separated into four sections: (1) a precision mounting platform for sensors and equipment requiring precise alignment; (2) an equipment support module containing the electronics, reaction wheels, and some meteorological sensors; (3) a reaction control equipment support structure containing the third-stage rocket motor and supporting the ascent phase reaction control equipment; and (4) a 9.29-sq-m solar cell panel. The spacecraft stabilization is controlled by a combination flywheel and magnetic control coil system so sensors are maintained in the desired \"earth-looking\" mode. One feature is the precision-pointing accuracy of the primary imager to 0.01 deg provided by a star sensor and an updated ephemeris navigation system. This allows automatic geographical mapping of the digital imagery to the nearest picture element. The operational linescan system is the primary data acquisition system that provides real-time or stored, multi-orbit, day-and-night visual and infrared imagery of clouds. A supplementary sensor package contains four special sensors: (1) an advanced X-ray spectrometer, (2) an ionospheric/scintillation monitor, (3) a precipitating electron/ion spectrometer, and (4) an infrared temperature and moisture sounder. Either recorded or real-time data are transmitted to ground-receiving sites by two redundant S-band transmitters. Recorded data are read out to tracking sites located at Fairchild AFB, Washington, and at Loring AFB, Maine, and relayed by SATCOM to Air Force Global Weather Center, Offutt AFB, Nebraska. Real-time data are read out at mobile tactical sites located around the world.",
                                         "children": []
                                     },
                                     {
@@ -3449,7 +3449,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "One of a series of meteorological satellites developed and operated by the Air Force under the Defense Meteorological Satellite Program (DMSP). The primary mission was cloud imagery and MW imaging and temperature/humidity sounding.",
                                         "children": []
                                     },
                                     {
@@ -3560,7 +3560,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The Diadem satellites were a pair of French geodetic satellites launched in 1967. The satellites were magnetically stabilized, which made them difficult to track in the southern hemisphere.",
                                 "children": [
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/5edd7e9b-8b22-438a-b2e2-2c708bd0ac9c",
@@ -3800,7 +3800,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The first passive communications satellite experiment. Each of the two American spacecraft, launched in 1960 and 1964, were metalized balloon satellites acting as passive reflectors of microwave signals. Communication signals were transmitted from one location on Earth and bounced off the surface of the satellite to another Earth location.",
                                 "children": [
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/9b532124-c5a7-40c7-9788-a61ff1295363",
@@ -3965,7 +3965,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "Etalon is a Russian family (Etalon-1, Etalon-2) of passive geodetic satellites dedicated to satellite laser ranging. Etalon-1 was the first geodynamic satellite launched by the former Soviet Union. The Etalon spacecraft were launched in 1989 in conjunction with a pair of GLObal'naya NAvigatisionnay Sputnikovaya Sistema (GLONASS) satellites. The mission objectives were to determine a high accuracy terrestrial reference frame and earth rotation parameters, to improve the gravity field, and to improve the gravitational constant.",
                                 "children": [
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/0bd45536-e8d5-42bf-998f-05ce4d0f0a49",
@@ -4030,7 +4030,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The Explorers program is a NASA exploration program that provides flight opportunities for physics, geophysics, heliophysics, and astrophysics investigations from space. Launched in 1958, Explorer 1 was the first spacecraft of the United States to achieve orbit. Over 90 space missions have been launched since. Starting with Explorer 6, it has been operated by NASA, with regular collaboration with a variety of other institutions, including many international partners.",
                                 "children": [
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/84d39d18-7ae4-4f86-9626-694de58da933",
@@ -4058,7 +4058,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The first generation of Chinese polar orbiting meteorological satellites, consisting of four satellites. The primary measurements supported include atmosphere, ocean, land, snow, and ice.",
                                 "children": [
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/3ad82f6f-152d-4565-ada3-0f1a4ceacb6f",
@@ -4085,7 +4085,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "A Chinese weather satellite that was launched in 2006. It was the fourth satellite to be launched of the Fengyun 2 series, and the second operational spacecraft. It is part of the Fengyun program.",
                                         "children": []
                                     },
                                     {
@@ -4094,7 +4094,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "A Chinese geostationary satellite series focusing on atmosphere, ocean, and land scientific measurements.",
                                         "children": []
                                     }
                                 ]
@@ -4642,7 +4642,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "HEXAGON KH-9 reconnaissance satellites were the largest and last U.S. intelligence satellites to return photographic film to earth. During the Cold War, 19 HEXAGON missions imaged 877 million square miles of the Earth\u2019s surface between 1971-1986.",
                                 "children": []
                             },
                             {
@@ -4709,6 +4709,15 @@
                                         "children": []
                                     }
                                 ]
+                            },
+                            {
+                                "id": "https://gcmd.earthdata.nasa.gov/kms/concept/c5011ce7-f1a0-4a6c-924d-ca1c51d0c393",
+                                "text": "HotSat-1",
+                                "language": "en",
+                                "scheme": "NASA/GCMD Earth Platforms Keywords",
+                                "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
+                                "description": "HotSat-1, launched in June 2023, (and operational until December 2023) is a cutting-edge satellite developed by British company Satellite Vu (SatVu).\n\nThe satellite is the first of its kind to offer commercially available high-resolution thermal infrared imaging of Earth. It is designed to track heat variations from industries, infrastructure and other assets, providing valuable insights into energy efficiency, environmental monitoring, and the impacts of climate change\n\nThe satellite's primary mission is to collect the highest resolution thermal data from space for a safer and more sustainable Earth. The images captured by SatVu\u2019s first satellite, HotSat-1, show heat variations across the surface of the earth at a resolution of up to 3.5 m, both during the day and at night. Thermal data at this unparalleled resolution has wide applications, from economic monitoring and national security to climate resilience including urban heat monitoring.\n\nHotSat-1 is the first in a planned constellation of nine satellites which SatVu has envisaged for consistent monitoring of thermal emissions on Earth.\n\nAfter suffering a technical anomaly in December 2023, the satellite ceased operating. However, the second and third satellites of the constellation are planned for launch in the upcoming year.\n\nUntil ceasing operation, HotSat-1 was able to image the same location every 1-2 days while orbiting the Earth at an altitude of 500 km. The satellite communicated with a global network of ground stations to receive tasking requests and deliver data, with a downlink speed of 450 Mbps.\n\nApplicants will be given access to SatVu\u2019s self-service platform which allows users to browse their existing data catalogue. The data can be downloaded on a scene-by-scene basis, with each scene covering an area of 16 km2 (3.5km x 4.5km). The files are delivered as cloud-optimised GeoTIFFs of, on average, 10 MB and are accompanied by metadata following the STAC specification.\n\nHotSat-1 Mission Parameters:\nOrbit Type:\tSun synchronous\nOrbit Altitude:\t        500 km\nAscending Node:\t00:39\nSpacecraft Weight:\t130 kg\nSwath (Standard Scene Size):\t4.5 km (across-track) x 3.5 km (along-track)\nOrbit Off-Nadir Angle (ONA):\t0-45\u00b0\nGround Sampling Distance (GSD):\t3.5 m (nadir) to 6.8 m (45\u00b0 ONA)\nSpectral Band:\tNight: 3.7-5 \u03bcm Day: 4.5-5 \u03bcm\nRevisit Frequency (40\u00b0 latitude):\t1 day (45\u00b0 max. ONA) to 2 days (30\u00b0 max ONA)\nSensor Sensitivity:\t< 2 K\nCapacity:\t200 scenes per day\nDynamic Range:\t16 bit\nGeoreferencing Accuracy:\t30 m CE90 without ground control\n\nObjectives:\nThe primary objectives of HotSat-1 are to provide high-resolution thermal infrared imaging of the Earth. The satellite aims to monitor heat variations from industry and infrastructure to support activity monitoring, security intelligence, and climate impact analysis.\n\nThe satellite's frequent revisits to the same location allowed for near daily data collection, aiding in applications such as industrial activity monitoring and energy management. The data is intended to help identify areas of energy loss, monitor industrial activity, and support various sectors in managing environmental and energy-related challenges.\n\nInstruments:\nHotSat-1 uses a MWIR (Mid Wave InfraRed) imaging sensor that captures heat emissions from the Earth's surface. The instrument was designed and supplied by the Italian company Leonardo and has an array of pixels on an 8 \u03bcm pitch \u2013 the smallest thermal MWIR pixels commercially available at the time of development.\n\nEach scene is captured with a ground sampling distance (GSD) of between 3.5 metres and 6.8 metres depending on the imaging angle. Specifically, the sensor measures the intensity of this radiation to determine temperature differences as small as 2\u00b0C or better.\n\nTwo modes are possible which allow for both daytime and nighttime image capture. At night, the sensor is sensitive to radiation in the range 3.7-5 \u03bcm; during daylight hours, a filter is applied to reduce noise from reflected solar radiation, giving a range of 4.5-5 \u03bcm for daytime imaging.",
+                                "children": []
                             },
                             {
                                 "id": "https://gcmd.earthdata.nasa.gov/kms/concept/fe07a2e4-a6cd-401c-af3e-433bbc8c2c98",
@@ -5043,7 +5052,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "IRS-R2 (ResourceSat-2) is an environmental satellite from the Indian Space Research Organization (ISRO) which launched on 20 April 2011 and remains operational. It is the eighteenth remote sensing satellite built by ISRO.",
                                         "children": []
                                     },
                                     {
@@ -5052,7 +5061,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "METSAT (renamed as Kalpana \u2013 1) is the first in the series of exclusive meteorological satellites built by ISRO. It provides the first set to transponders for Swaran Jayanti Vidya Vikas Antariksh Upagraha Yojana (Vidya Vahini) for interactive training and developmental communication giving fillip to the training and developmental Communication channel of INSAT.",
                                         "children": []
                                     }
                                 ]
@@ -5211,7 +5220,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "JASON was a satellite altimeter oceanography mission. It sought to monitor global ocean circulation, study the ties between the ocean and the atmosphere, improve global climate forecasts and predictions, and monitor events such as El Ni\u00f1o and ocean eddies.",
                                 "children": [
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/4ea59dad-ed94-453e-a991-62c790a1d101",
@@ -5660,7 +5669,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "Meteosat satellites are in geostationary orbit, so they orbit the Earth at the same rate that the Earth rotates about its axis. This enables continuous observations of around one-third of the Earth\u2019s surface from their orbit 36,000km above the equator. Observations from geostationary orbit can save lives on Earth, as changes in weather and climate significantly impact not only our economy and infrastructure but also our lives. According to the World Meteorological Organization, there were more than 11 000 disasters attributed to weather, climate, and water-related hazards, which accounted for just over two million deaths and 3 trillion euros in losses between 1970 and 2019. Severe weather phenomena such as storms or even heavy fog can pose a significant threat to safety or business efficiency that require timely warnings to minimize their impact. To issue warnings and support decision makers, weather forecasters perform \u201cnowcasting\u201d to detect, in real time, rapidly developing situations of high impact weather, and predict their evolution a few hours ahead.  Nowcasting requires very frequent, high-quality observational data about the state of the atmosphere in real time - data that advanced geostationary weather satellites such as Meteosat can deliver continuously from their fixed position above the Earth\u2019s surface. The Meteosat satellites are also able to deliver information on winds by observing the displacement of clouds and water vapor patterns, an essential input for numerical weather prediction models. These complement other observations made by polar-orbiting satellites such as Metop, which remain the primary source for global numerical weather prediction models.",
                                 "children": [
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/dbfa9c1a-1853-4c48-8adf-f51ca6715c43",
@@ -5758,7 +5767,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "A weather satellite, also known as MSG 1. The Meteosat series are operated by EUMETSAT under the Meteosat Transition Programme (MTP) and the Meteosat Second Generation (MSG) program. Notable for imaging the first meteor to be predicted to strike the Earth, 2008 TC3. Launched 28 Aug 2002 by an Ariane V155, this European Meteorology satellite is in a Geostationary orbit.",
                                         "children": []
                                     },
                                     {
@@ -5767,7 +5776,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "Meteosat satellites are in geostationary orbit, so they orbit the Earth at the same rate that the Earth rotates about its axis. This enables continuous observations of around one-third of the Earth\u2019s surface from their orbit 36,000km above the equator. The primary mission of METEOSAT-9 was for operational meteorology.",
                                         "children": []
                                     },
                                     {
@@ -5841,7 +5850,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "Megha-Tropiques is an Indo-French Joint Satellite Mission for studying the water cycle and energy exchanges in the tropics. The main objective of this mission is to understand the life cycle of convective systems that influence the tropical weather and climate and their role in associated energy and moisture budget of the atmosphere in tropical regions. Megha-Tropiques provides scientific data on the contribution of the water cycle to the tropical atmosphere, with information on condensed water in clouds, water vapour in the atmosphere, precipitation, and evaporation. With its circular orbit inclined 20 deg to the equator, the Megha-Tropiques is a unique satellite for climate research that should also aid scientists seeking to refine prediction models.",
                                 "children": []
                             },
                             {
@@ -5859,7 +5868,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "Multi-functional Transport Satellites (MTSAT) is a series of geostationary weather satellites operated by the Japan Meteorological Agency (JMA). MTSAT carries an aeronautical mission to assist air navigation, plus a meteorological mission to provide imagery over the Asia-Pacific region. The meteorological mission includes an imager giving nominal hourly full Earth disk images in five spectral bands (one visible, four infrared). The satellites also have the capability to relay weather data from remote Automatic Weather Stations.",
                                 "children": []
                             },
                             {
@@ -5878,6 +5887,15 @@
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
                                 "description": "",
+                                "children": []
+                            },
+                            {
+                                "id": "https://gcmd.earthdata.nasa.gov/kms/concept/1819c1fe-da53-4727-af55-82083cae1d71",
+                                "text": "MuSat2",
+                                "language": "en",
+                                "scheme": "NASA/GCMD Earth Platforms Keywords",
+                                "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
+                                "description": "A science antenna developed with support from NASA\u2019s Earth Science Technology Office (ESTO) is now in low-Earth orbit aboard MuSat2, a commercial remote-sensing satellite flown by the aerospace company Muon Space. The dual-frequency science antenna was originally developed as part of the Next Generation GNSS Bistatic Radar Instrument (NGRx). Aboard MuSat2, it will help measure ocean surface wind speed\u2014an essential data point for scientists trying to forecast how severe a burgeoning hurricane will become.",
                                 "children": []
                             },
                             {
@@ -6097,7 +6115,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The National Polar-orbiting Operational Environmental Satellite System (NPOESS) was a joint program of the Air Force, NOAA, and NASA. Its polar-orbiting satellites were to provide long-term systematic measurements of key environmental variables for weather forecasting as well as climate studies. In February 2010, NPOESS was split into two programs. The Air Force-managed component will build satellites for the morning orbit, serving military needs. The NASA-managed civilian component, called the Joint Polar Satellite System (JPSS), will build satellites to fly in afternoon orbits, and will be operated by NOAA.",
                                 "children": []
                             },
                             {
@@ -6580,7 +6598,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "PROBA-2 is a follow-on ESA microsatellite technology demonstration mission to the PROBA mission (launch Oct. 21, 2001). The PROBA-2 goals embark on a scientific payload dedicated to sun observations and monitoring (space weather), and innovative platform subsystems with new advanced technologies such as propulsion systems with cold gas generator, Li-ion batteries, stellar compass and reaction wheels, solar array with concentrator, new central processor. The overall PROBA-2 mission includes a major Belgian contribution, on both platform and payload sides, and on the ground segment part.",
                                 "children": []
                             },
                             {
@@ -6607,7 +6625,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The Project for On-Board Autonomy (Proba) is a technology demonstration mission of the European Space Agency, funded within the frame of ESA\u2019s General Support Technology Programme (GSTP). It is managed by ESA\u2019s Control and Data Systems Division within the Department of Electrical Engineering, part of the Directorate for Technical and Operational Support at ESA/ESTEC. Work on the project began in mid-1998 and Proba-1 was successfully launched on 22 October 2001. Originally designed for a two-year mission, Proba-1 is still operating now as an Earth Observation Third Party Mission.",
                                 "children": []
                             },
                             {
@@ -6819,7 +6837,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "SARAL is an altimetric minisatellite operated by ISRO and CNES. Launched in 2013, data gathered by SARAL has applications in oceanography and atmospheric studies.",
                                 "children": []
                             },
                             {
@@ -7274,6 +7292,15 @@
                                 ]
                             },
                             {
+                                "id": "https://gcmd.earthdata.nasa.gov/kms/concept/73601b86-ec29-4337-95ed-fbca9cafc2c0",
+                                "text": "Tanager-1",
+                                "language": "en",
+                                "scheme": "NASA/GCMD Earth Platforms Keywords",
+                                "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
+                                "description": "Tanager-1, which launched on Aug. 16, 2024, was developed as part of a philanthropically funded public-private coalition led by the nonprofit Carbon Mapper. Planet Labs and JPL are both members of the Carbon Mapper Coalition.",
+                                "children": []
+                            },
+                            {
                                 "id": "https://gcmd.earthdata.nasa.gov/kms/concept/3b26dec5-2cb1-48ce-9873-048c321fdebe",
                                 "text": "TanSat",
                                 "language": "en",
@@ -7595,7 +7622,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "WorldView-3 is an imaging and environment-monitoring satellite from Maxar of the United States which launched on 13 August 2014 and remains operational. It is very similar to WorldView-2 but positioned in a lower orbit.",
                                         "children": []
                                     },
                                     {
@@ -7604,7 +7631,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "WorldView-4 was an imaging and environment-monitoring satellite from Maxar of the United States, which launched on 11 November 2016 to enhance European Space Imaging's customer offering with very high-resolution imagery options. Operating in coordination with WorldView-3 and the other satellites of the WorldView constellation, it offered high-resolution imagery at 31 cm resolution in panchromatic mode and 1.23 m in multispectral mode; it provided large area single pass (synoptic) collection, which eliminates temporal variations and offers geolocation accuracy and bi-directional scanning with daily revisits. On 7 January 2019, WorldView-4 was retired when the satellite experienced a failure in its CMGs (Control Moment Gyros), preventing the satellite from collecting imagery due to the loss of an axis of stability.",
                                         "children": []
                                     }
                                 ]
@@ -7643,7 +7670,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "A spaceflight operation in which a spacecraft passes in proximity to another body, usually a target of its space exploration mission and/or a source of a gravity assist (also called swing-by) to impel it towards another target.",
                                 "children": [
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/2351e160-5a9c-4d1c-81f0-775bbae1848e",
@@ -8723,7 +8750,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The NavIC system (formerly known as IRNSS) provides coverage for India and the surrounding region. The system provides positioning accuracy of better than 10 meters (10.9 yards) throughout India and better than 20 m (21.9 yards) for the area surrounding India by 1,500 km (932 miles). NavIC provides two services. A Standard Positioning Service (SPS) is available to all users, and a Restricted Service (RS) is available to authorized users only.",
                                 "children": [
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/f022cdbf-a868-46e1-aa93-17e4d2b19f67",
@@ -9300,7 +9327,7 @@
                                 "language": "en",
                                 "scheme": "NASA/GCMD Earth Platforms Keywords",
                                 "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                "description": "",
+                                "description": "The Medium-Class Explorers are the most capable scientific investigations that can be built within the streamlined, frequent flight model of the Explorer Program. MIDEX missions are, on average, approximately 500 to 1500 kg in mass. MIDEX missions typically utilize mid-range expendable launch vehicles (historically, these have been of the Delta II class).",
                                 "children": [
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/6524ba60-7265-49ae-b368-c18d981e7381",
@@ -10414,7 +10441,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "A network of undersea cables to connect continents.",
                                         "children": []
                                     },
                                     {
@@ -10423,7 +10450,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "Submarine networking is the process by which data is carried on undersea cables to connect continents. Submarine networks carry 99 percent of the world\u2019s intercontinental electronic communications traffic.",
                                         "children": []
                                     }
                                 ]
@@ -10988,7 +11015,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "A surface research vessel.",
                                         "children": []
                                     },
                                     {
@@ -10997,7 +11024,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "A surface research vessel.",
                                         "children": []
                                     },
                                     {
@@ -11123,7 +11150,7 @@
                                         "language": "en",
                                         "scheme": "NASA/GCMD Earth Platforms Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms",
-                                        "description": "",
+                                        "description": "The R/V Oshoro-maru is a training ship that is part of Hokkaido University's School of Fisheries Sciences. The ship is used for research and training in fisheries sciences, and to educate and develop human resources for the field. The Oshoro-maru is also used for international collaboration with other universities and research organizations.",
                                         "children": []
                                     },
                                     {

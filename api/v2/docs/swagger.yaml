@@ -9,11 +9,14 @@ info:
     - [Test Server](https://mde2.cats4future.de)
     - [Legal notice](https://dataservices-cms.gfz-potsdam.de/about-us/imprint)
 
+    ### Authentication
+    All `/update/` endpoints require authentication using an API key. Contact the administrator to obtain an API key.
+
     ### Binary Data
     Some endpoints return binary data (XML files) for download. These responses use the `application/octet-stream` content type.
 
-    ### Security Note
-    This API is publicly accessible and does not require authentication. However, rate limiting may apply.
+    ### Rate Limiting
+    Rate limiting may apply to prevent abuse.
   termsOfService: https://github.com/McNamara84/gfz-metadata-editor-msl-v2
   contact:
     name: Holger Ehrmann
@@ -29,7 +32,9 @@ externalDocs:
 servers:
   - url: https://mde2.cats4future.de/api/v2
     description: Test server
-security: []
+security:
+  - []
+  - ApiKeyAuth: []
 tags:
   - name: general
     description: General operations for health checks and version
@@ -58,6 +63,12 @@ paths:
                 $ref: "#/components/schemas/TimezonesUpdateResponse"
         "500":
           description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
           content:
             application/json:
               schema:
@@ -101,6 +112,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /update/vocabs/msl:
     get:
       tags:
@@ -119,6 +136,12 @@ paths:
                 $ref: "#/components/schemas/VocabularyUpdate"
         "500":
           description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
           content:
             application/json:
               schema:
@@ -143,6 +166,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /update/vocabs/gcmd:
     get:
       tags:
@@ -159,6 +188,12 @@ paths:
                 $ref: "#/components/schemas/GcmdVocabularyUpdate"
         "500":
           description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
           content:
             application/json:
               schema:
@@ -214,10 +249,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /general/alive:
     get:
       tags:
         - general
+      security: []
       summary: Health check
       description: Check if the API is responsive
       operationId: getAlive
@@ -238,6 +280,7 @@ paths:
     get:
       tags:
         - vocabularies
+      security: []
       summary: Get GCMD Science Keywords (for third party use)
       description: Retrieve the controlled vocabulary of GCMD Science Keywords from NASA (already prepared for use with jsTree)
       operationId: getGcmdScienceKeywords
@@ -258,6 +301,7 @@ paths:
     get:
       tags:
         - vocabularies
+      security: []
       summary: Get all free keywords
       description: Returns all free keywords from the database, regardless of curation status
       operationId: getAllFreeKeywords
@@ -285,6 +329,7 @@ paths:
     get:
       tags:
         - vocabularies
+      security: []
       summary: Get curated free keywords
       description: Returns only curated free keywords from the database
       operationId: getCuratedFreeKeywords
@@ -312,6 +357,7 @@ paths:
     get:
       tags:
         - vocabularies
+      security: []
       summary: Get uncurated free keywords
       description: Returns only uncurated free keywords from the database
       operationId: getUncuratedFreeKeywords
@@ -338,6 +384,7 @@ paths:
     get:
       tags:
         - vocabularies
+      security: []
       summary: Retrieve roles based on type
       description: Get a list of roles filtered by type
       operationId: getRoles
@@ -374,6 +421,7 @@ paths:
     get:
       tags:
         - vocabularies
+      security: []
       summary: Get all relations
       description: Retrieve all available relations for dataset relationships
       operationId: getRelations
@@ -400,6 +448,7 @@ paths:
     get:
       tags:
         - vocabularies
+      security: []
       summary: Get all licenses
       description: Returns all available licenses
       operationId: getAllLicenses
@@ -428,6 +477,7 @@ paths:
     get:
       tags:
         - vocabularies
+      security: []
       summary: Get software licenses
       description: Returns licenses specifically for software
       operationId: getSoftwareLicenses
@@ -456,6 +506,7 @@ paths:
     get:
       tags:
         - validation
+      security: []
       summary: Retrieve regex pattern for validation
       description: Returns the regex pattern for validating the specified type
       operationId: getPattern
@@ -489,6 +540,7 @@ paths:
     get:
       tags:
         - validation
+      security: []
       summary: Retrieve all identifier types
       description: Returns all available identifier types with their validation patterns
       operationId: getIdentifierTypes
@@ -515,6 +567,7 @@ paths:
     get:
       tags:
         - dataset
+      security: []
       summary: View dataset as XML
       description: View a dataset as XML in the specified metadata scheme
       operationId: exportDataset
@@ -558,6 +611,7 @@ paths:
     get:
       tags:
         - dataset
+      security: []
       summary: Download dataset as XML
       description: Download a dataset as XML file in the specified metadata scheme
       operationId: exportDatasetDownload
@@ -601,6 +655,7 @@ paths:
     get:
       tags:
         - dataset
+      security: []
       summary: View all metadata formats
       description: View dataset in all available metadata schemes combined in one XML document
       operationId: exportAllFormats
@@ -637,6 +692,7 @@ paths:
     get:
       tags:
         - dataset
+      security: []
       summary: Download all metadata formats
       description: Download dataset in all available metadata schemes as a single XML file
       operationId: exportAllFormatsDownload
@@ -670,6 +726,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key to access protected endpoints. Required for all /update/ endpoints.
   schemas:
     License:
       type: object
