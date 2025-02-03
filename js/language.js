@@ -56,12 +56,14 @@ function applyTranslations() {
         }
     });
 
+    // Translate placeholders in the first row
+    translatePlaceholders($("#group-stc").children().first());
+
     // Call resizeTitle and adjustButtons after translations are applied
     resizeTitle();
     adjustButtons();
     document.dispatchEvent(new Event('translationsLoaded'));
 }
-
 /**
  * Changes the application language and stores the selection
  * @param {string} lang - The language code to change to
@@ -70,6 +72,21 @@ function applyTranslations() {
 function changeLanguage(lang) {
     loadTranslations(lang);
     localStorage.setItem('userLanguage', lang);
+}
+
+/**
+ * Translates placeholders within a given row (or element)
+ * @param {jQuery} row - The row to translate (e.g., new or first row)
+ */
+function translatePlaceholders(row) {
+    row.find('[placeholder]').each(function () {
+        const placeholderKey = $(this).attr('placeholder');
+        const translatedPlaceholder = getNestedValue(translations, placeholderKey);
+
+        if (translatedPlaceholder) {
+            $(this).attr('placeholder', translatedPlaceholder);
+        }
+    });
 }
 
 /**
@@ -93,3 +110,7 @@ $(document).ready(function () {
         }
     });
 });
+
+
+
+

@@ -118,12 +118,16 @@
         "title": "Spatial and Temporal Coverages",
         "map": "Map",
         "latitude": "Latitude",
+        "latitudeInvalid": "Please enter a latitude between -90.00 and +90.00.",
         "longitude": "Longitude",
+        "longitudeInvalid": "Please enter a longitude between -180.00 and +180.00",
         "description": "Description",
         "descriptionPlaceholder": "Please enter the description of the temporal and spatial coverage...",
         "start": "Start",
         "end": "End",
+        "dateTimeInvalid": "Please enter a valid date and time.",
         "timezone": "Timezone",
+        "timezoneInvalid":"Please choose a timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)"
     },
     "relatedWork": {
