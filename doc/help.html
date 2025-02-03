@@ -59,7 +59,7 @@
             <div class="col-xs-12 col-md-9">
                 <!-- Introduction -->
                 <div id="help-introduction" class="section-content">
-                    <h4>Introduction</h4>
+                    <h3>Introduction</h3>
                     <p class="lead">Translations exist for the metadata editor in various languages. You can see whether
                         your
                         language already exists in the language selection drop-down menu at the top right. However, the
@@ -67,10 +67,11 @@
                         a switch for changing from light mode to dark mode for better contrast ratios.</p>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup resource information -->
                 <div id="help-resourceinformation" class="section-content">
                     <div id="help-resourceinformation-fg">
-                        <h4>Resource Information</h4>
+                        <h3>Resource Information</h3>
                         <p>Please specify general metadata for the data set here. Mandatory
                             fields are: Publication Year, Resource Type, Language of dataset, Title.
                         </p>
@@ -81,13 +82,13 @@
                         </p>
                     </div>
                     <div id="help-resourceinformation-doi">
-                        <h5>DOI</h5>
+                        <h4>DOI</h4>
                         <p>The DOI is a unique string that identifies a resource. Format should be 10.ORGANISATION/ID.
                             If you have no DOI for your dataset yet, please leave this field empty and a DOI will be
                             registered by GFZ Data Services.</p>
                     </div>
                     <div id="help-resourceinformation-publicationyear">
-                        <h5>Publication Year</h5>
+                        <h4>Publication Year</h4>
                         <p>The year when the data was or will be made publicly available. In the case of datasets,
                             “publish” is understood to mean making the data available on a specific date to the
                             community of researchers. Values between 1901 and 2155 are allowed.</p>
@@ -99,7 +100,7 @@
                         </ul>
                     </div>
                     <div id="help-resourceinformation-resourcetype">
-                        <h5>Resource Type</h5>
+                        <h4>Resource Type</h4>
                         <p>Please specify the type of Dataset here. See <a
                                 href="https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/"
                                 target="_blank">DataCite Documentation</a> for definition of the controlled list and
@@ -107,7 +108,7 @@
 
                     </div>
                     <div id="help-resourceinformation-version">
-                        <h5>Version</h5>
+                        <h4>Version</h4>
                         <p>The version number or other identifier of the dataset. If your dataset is published for the
                             first time, this field can be left empty. If it has been updated, specify the version number
                             here.
@@ -117,12 +118,12 @@
                         </p>
                     </div>
                     <div id="help-resourceinformation-language">
-                        <h5>Language of dataset</h5>
+                        <h4>Language of dataset</h4>
                         <p>The primary language of the dataset. Choose from a list of supported languages. Default is
                             English.</p>
                     </div>
                     <div id="help-resourceinformation-title">
-                        <h5>Title</h5>
+                        <h4>Title</h4>
                         <p>The title of the dataset. The first row is reserved for the main title. You can specify
                             up to
                             <?php echo $maxTitles-1; ?> additional titles if your dataset is known by multiple names
@@ -142,9 +143,10 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup rights & licenses -->
                 <div id="help-rights" class="section-content">
-                    <h4>Licenses and rights</h4>
+                    <h3>Licenses and rights</h3>
                     <p>Rights information for the data set. Following the Guidelines for the Handling of Research Data
                         of the GFZ German Research Centre for Geosciences for open science, we recommend a Creative
                         Commons Attribution 4.0 (CC-BY) license whenever possible.</p>
@@ -166,16 +168,17 @@
                     </p>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup authors -->
                 <div id="help-authors" class="section-content">
                     <div id="help-authors-fg">
-                        <h4>Author(s)</h4>
+                        <h3>Author(s)</h3>
                         <p> Please enter authors of the dataset here, ideally with an ORCID. Entering an ORCID loads
                             data from the corresponding ORCID profile. To add more authors, use the "add" button on the
                             right. The order of the authors can be changed using drag & drop. </p>
                     </div>
                     <div id="help-author-orcid">
-                        <h5>ORCID</h5>
+                        <h4>ORCID</h4>
                         <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
                             a valid ORCID in the format XXXX-XXXX-XXXX-XXXX (i.e. 0000-0001-5727-2427). If you do not
                             have an ORCID iD yet, you can learn about it and register
@@ -185,31 +188,32 @@
                         </p>
                     </div>
                     <div id="help-author-affiliation">
-                        <h5>Affiliation</h5>
+                        <h4>Affiliation</h4>
                         <p>The organisational or institutional affiliation of the creator.</p>
                         <p>It is recommended to select the affiliation from the list, if the required affiliation is not
                             among the available options, it can be entered manually.</p>
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup contactperson -->
                 <div id="help-contactperson" class="section-content">
                     <div id="help-contactperson-fg">
-                        <h4>Contact Person(s)</h4>
+                        <h3>Contact Person(s)</h3>
                         <p>Person with knowledge of how to access, troubleshoot, or otherwise field issues related to
                             the resource; May also be "Point of Contact" in organisation that controls access to the
                             resource. Please enter at least one contact person.</p>
                     </div>
                     <div id="help-contactperson-position">
-                        <h5>Position</h5>
+                        <h4>Position</h4>
                         <p>The position of the person in the organisation.</p>
                     </div>
                     <div id="help-contactperson-website">
-                        <h5>Website</h5>
+                        <h4>Website</h4>
                         <p>Professional or specialized website, excluding any private websites.</p>
                     </div>
                     <div id="help-contactperson-affiliation">
-                        <h5>Affiliation</h5>
+                        <h4>Affiliation</h4>
                         <p>The organisational or institutional affiliation of the Person.
                             It is recommended to select the affiliation from the list, if the required affiliation is
                             not
@@ -218,10 +222,11 @@
                     <div class="section-divider"></div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup originating laboratory -->
                 <div id="help-originatinglaboratory" class="section-content">
                     <div id="help-originatinglaboratory-fg">
-                        <h4>Originating Laboratory</h4>
+                        <h3>Originating Laboratory</h3>
                         <p>
                             Please specify the laboratory from which the data originates. This is essential for
                             retrieval of data publications from a laboratory and improving the findability of your
@@ -233,16 +238,17 @@
                     </div>
 
                     <div id="help-originatinglaboratory-name">
-                        <h5>Name of the originating laboratory</h5>
+                        <h4>Name of the originating laboratory</h4>
                         <p>Click the input field to open the list of multi-scale laboratories and start typing to
                             filter.</p>
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup contributors -->
                 <div id="help-contributors" class="section-content">
                     <div id="help-contributors-fg">
-                        <h4>Contributors</h4>
+                        <h3>Contributors</h3>
                         <p>
                             Institution or person responsible for collecting, managing, distributing, or otherwise
                             contributing to the development of the resource. To add more than one contributor, use the
@@ -251,7 +257,7 @@
                     </div>
 
                     <div id="help-contributor-role">
-                        <h5>Roles (Person)</h5>
+                        <h4>Roles (Person)</h4>
                         <p>The role of the contributor person/s in the creation of the resource. Please choose one or
                             more roles from the controlled list values provided by DataCite.</p>
                         <ul>
@@ -339,7 +345,7 @@
                         </ul>
                     </div>
                     <div id="help-contributor-orcid">
-                        <h5>ORCID</h5>
+                        <h4>ORCID</h4>
                         <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
                             a valid ORCID in form of XXXX-XXXX-XXXX-XXX(X) (i.e. 0000-0001-5727-2427). You can find your
                             colleagues' ORCID on the <a href="https://orcid.org/orcid-search/search"
@@ -348,17 +354,17 @@
                             information provided in the ORCID profile.</p>
                     </div>
                     <div id="help-contributor-affiliation">
-                        <h5>Affiliation</h5>
+                        <h4>Affiliation</h4>
                         <p>The organisational or institutional affiliation of the Person/s.</p>
                         <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                             among the available options, it can be entered manually.</p>
                     </div>
                     <div id="help-contributor-organisationname">
-                        <h5>Organisation Name</h5>
+                        <h4>Organisation Name</h4>
                         <p>The name of the institution.</p>
                     </div>
                     <div id="help-contributor-organisationrole">
-                        <h5>Roles (Organisation)</h5>
+                        <h4>Roles (Organisation)</h4>
                         <p>The role of the contributor organisation/s in the creation of the resource. Please choose one
                             or more roles from the controlled list values provided by DataCite:</p>
                         <ul>
@@ -426,17 +432,18 @@
                         </ul>
                     </div>
                     <div id="help-contributor-organisationaffiliation">
-                        <h5>Affiliation</h5>
+                        <h4>Affiliation</h4>
                         <p>The organisational or institutional affiliation of the Institution.</p>
                         <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                             among the available options, it can be entered manually.</p>
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup descriptions -->
                 <div id="help-descriptions" class="section-content">
                     <div id="help-descriptions-fg">
-                        <h4>Descriptions</h4>
+                        <h3>Descriptions</h3>
                         <p>
                             Filling in the description fields greatly improves the discoverability of your data
                             publication.<br>
@@ -447,7 +454,7 @@
                         </p>
                     </div>
                     <div id="help-description-abstract">
-                        <h5>Abstract</h5>
+                        <h4>Abstract</h4>
                         <p>A brief description of the resource and the context in which the resource was created.<br>
                             When writing the abstract, please keep in mind:
                         <ul>
@@ -475,24 +482,25 @@
                         </p>
                     </div>
                     <div id="help-description-methods">
-                        <h5>Methods</h5>
+                        <h4>Methods</h4>
                         <p>The methodology employed for the study or research.</p>
                     </div>
                     <div id="help-description-technicalinfo">
-                        <h5>Technical Information</h5>
+                        <h4>Technical Information</h4>
                         <p>Detailed information that may be associated with design, implementation, operation, use,
                             and/or maintenance of a process, system, or instrument.</p>
                     </div>
                     <div id="help-description-other">
-                        <h5>Other</h5>
+                        <h4>Other</h4>
                         <p>Other description information that does not fit into an existing category.</p>
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup MSL Keywords -->
                 <div id="help-mslkeywords" class="section-content">
                     <div id="help-mslKeywords-keyword">
-                        <h4>EPOS Multi-Scale Laboratories Keywords</h4>
+                        <h3>EPOS Multi-Scale Laboratories Keywords</h3>
                         <p>Please click on the Thesaurus button to the right to select keywords from the thesaurus or
                             start typing to use the autocomplete function. By adding terms like these, you make it much
                             easier for us to find your data and to make it discoverable in this catalogue and the EPOS
@@ -507,7 +515,7 @@
                         </p>
                     </div>
                     <div id="help-mslKeywords-keywordviewer">
-                        <h5>Keyword Viewer</h5>
+                        <h4>Keyword Viewer</h4>
                         <p>Please try to choose your keywords as specific as possible. Always check if there is a
                             more fitting keyword further down the hierarchy. Definitions of keywords can be read via
                             mouse
@@ -520,10 +528,11 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup GCMD Science Keywords -->
                 <div id="help-scienceKeywords" class="section-content">
                     <div id="help-scienceKeywords-keyword">
-                        <h4>GCMD Science Keywords</h4>
+                        <h3>GCMD Science Keywords</h3>
                         <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
                         <p>Please click on the Thesaurus button to the right to select keywords from the thesaurus
                             or start typing to use the autocomplete function. </p>
@@ -534,7 +543,7 @@
                     </div>
                     <!-- Explains use of thesaurus modal and the Keyword "tree"-->
                     <div id="help-scienceKeywords-keywordviewer">
-                        <h5>Keyword Viewer</h5>
+                        <h4>Keyword Viewer</h4>
                         <p>Please try to choose your keywords as specific as possible. Always check if there is a
                             more fitting keyword further down the hierarchy. Definitions of keywords can be read via
                             mouse
@@ -547,9 +556,10 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup descriptions -->
                 <div id="help-freeKeywords" class="section-content">
-                    <h4>Free Keywords</h4>
+                    <h3>Free Keywords</h3>
                     <p>Free keywords are user-defined tags that complement predefined thesaurus terms.
                         They allow for individual description and categorization of your content and improve its
                         discoverability.
@@ -557,10 +567,11 @@
                         thesauri above.</p>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup descriptions -->
                 <div id="help-dates" class="section-content">
                     <div id="help-dates-fg">
-                        <h4>Dates</h4>
+                        <h3>Dates</h3>
                         <p>
                             This group of fields refers to important data in the life cycle of the data set. Please
                             enter the information as precisely as possible to ensure the chronological classification
@@ -568,7 +579,7 @@
                         </p>
                     </div>
                     <div id="help-date-created">
-                        <h5>Date created</h5>
+                        <h4>Date created</h4>
                         <p>The date on which the dataset was created. If the dataset is a collection of data from
                             different sources, use the date when the dataset was compiled. If the dataset is a
                             simulation, use the date when the simulation was completed. If the dataset is a
@@ -578,17 +589,18 @@
                             different sources, use the date when the dataset was compiled.</p>
                     </div>
                     <div id="help-date-embargo">
-                        <h5>Embargo until</h5>
+                        <h4>Embargo until</h4>
                         <p>The date until which the dataset is under embargo. If the dataset is not under embargo,
                             leave
                             this field empty.</p>
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup temporal and spacial coverage -->
                 <div id="help-tsc" class="section-content">
                     <div id="help-stc-fg">
-                        <h4>Spatial and temporal coverage</h4>
+                        <h3>Spatial and temporal coverage</h3>
                         <p>
                             Geographic location and time period covered by the dataset. Includes coordinates
                             (latitude/longitude), dates, times, and time zones. Essential for data discovery and
@@ -598,7 +610,7 @@
                         </p>
                     </div>
                     <div id="help-tsc-geographicalcoverage">
-                        <h5>Geographic Coverage</h5>
+                        <h4>Geographic Coverage</h4>
                         <p>If you draw a rectangle on the map, the coordinates of this rectangle will be transferred
                             to
                             the
@@ -629,12 +641,12 @@
                         </ul>
                     </div>
                     <div id="help-tsc-description">
-                        <h5>Description</h5>
+                        <h4>Description</h4>
                         Free text field for explaining the geographic and temporal
                         context. Required field without any restrictions.
                     </div>
                     <div id="help-tsc-temporalcoverage">
-                        <h5>Temporal Coverage</h5>
+                        <h4>Temporal Coverage</h4>
                         <ul>
                             <li><strong>Start Date:</strong> Date of the beginning of the temporal coverage of the
                                 dataset.
@@ -654,17 +666,18 @@
                         </ul>
                     </div>
                     <div id="help-tsc-timezone">
-                        <h5>Timezone</h5>
+                        <h4>Timezone</h4>
                         Specifies the UTC-based time zone for start and end times.<br>
                         This field allows selection from all worldwide time zones to accurately represent the
                         temporal details of your data.
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup related work-->
                 <div id="help-relatedwork" class="section-content">
                     <div id="help-relatedwork-fg">
-                        <h4>Related Work</h4>
+                        <h3>Related Work</h3>
                         <p>
                             Please enter resources related to your data. This helps connecting your data to other work
                             like articles, samples, etc. Identifiers must be globally unique.
@@ -676,7 +689,7 @@
                         </p>
                     </div>
                     <div id="help-relatedwork-relation">
-                        <h5>Relation Type</h5>
+                        <h4>Relation Type</h4>
                         <p>The following different relation types are available for selection:</p>
                         <ul>
                             <li><strong>IsCitedBy:</strong> indicates that B includes A in a citation</li>
@@ -728,11 +741,11 @@
                         </ul>
                     </div>
                     <div id="help-relatedwork-identifier">
-                        <h5>Identifier</h5>
+                        <h4>Identifier</h4>
                         <p>Identifiers of related resources. These must be globally unique identifiers.</p>
                     </div>
                     <div id="help-relatedwork-identifiertype">
-                        <h5>Identifier Type</h5>
+                        <h4>Identifier Type</h4>
                         <p>The type of the Related Identifier.</p>
                         <ul>
                             <li><strong>ARK:</strong> A URI designed to support long-term access to information
@@ -781,28 +794,30 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <hr>
                 <!-- formgroup funding reference -->
                 <div id="help-fundingreference" class="section-content">
                     <div id="help-fundingreference-fg">
-                        <h4>Funding Reference</h4>
+                        <h3>Funding Reference</h3>
                         <p>Information about financial support (funding) for the resource being registered. It is a best
                             practice to supply funding information when financial support has been received.</p>
                     </div>
                     <div id="help-fundingreference-funder">
-                        <h5>Funder</h5>
+                        <h4>Funder</h4>
                         <p>The name of the funding provider. To receive suggestions, please enter at
                             least the first two letters. If possible, please choose from the controlled list. You can
                             also manually enter the funding provider.</p>
                     </div>
                     <div id="help-fundingreference-grantnumber">
-                        <h5>Grant Number</h5>
+                        <h4>Grant Number</h4>
                         <p>Free text field for entering the grant number assigned by the funding provider.</p>
                     </div>
                     <div id="help-fundingreference-grantname">
-                        <h5>Grant Name</h5>
+                        <h4>Grant Name</h4>
                         <p>Free text field for entering the title or name of the grant.</p>
                     </div>
                 </div>
+                <hr>
                 <!-- for better scrolling -->
                 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
             </div>
