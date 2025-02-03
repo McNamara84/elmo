@@ -118,12 +118,16 @@
         "title": "Couverture spatiale et temporelle",
         "map": "Carte",
         "latitude": "Latitude",
+        "latitudeInvalid": "Veuillez saisir une latitude comprise entre -90.00 et +90.00 .",
         "longitude": "Longitude",
+        "longitudeInvalid": "Veuillez saisir une longitude comprise entre -180.00 et +180.00.",
         "description": "Description",
         "descriptionPlaceholder": "Veuillez saisir la description de la couverture temporelle et spatiale...",
         "start": "Début",
         "end": "Fin",
+        "dateTimeInvalid": "Veuillez saisir une date et une heure valides.",
         "timezone": "Fuseau horaire",
+        "timezoneInvalid":"Veuillez sélectionner le fuseau horaire",
         "mapInfo": "(Veuillez choisir les coordonnées par rectangle ou marqueur)"
     },
     "relatedWork": {

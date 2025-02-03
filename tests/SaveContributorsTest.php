@@ -5,11 +5,28 @@ use mysqli_sql_exception;
 
 require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../save/formgroups/save_contributors.php';
+require_once __DIR__ . '/TestDatabaseSetup.php';
 
+/**
+ * Test class for saving contributors functionality
+ * 
+ * Tests the saving of contributor persons and institutions with various scenarios 
+ * including required fields, optional fields, and multiple contributors
+ */
 class SaveContributorsTest extends TestCase
 {
+    /**
+     * @var \mysqli Database connection
+     */
     private $connection;
 
+    /**
+     * Set up test environment
+     * Creates test database if it doesn't exist and initializes database structure
+     *
+     * @return void
+     * @throws \Exception If database setup fails
+     */
     protected function setUp(): void
     {
         global $connection;
@@ -17,22 +34,36 @@ class SaveContributorsTest extends TestCase
             $connection = connectDb();
         }
         $this->connection = $connection;
-        // Überprüfen, ob die Testdatenbank verfügbar ist
+
         $dbname = 'mde2-msl-test';
-        if ($this->connection->select_db($dbname) === false) {
-            // Testdatenbank erstellen
-            $connection->query("CREATE DATABASE " . $dbname);
-            $connection->select_db($dbname);
-            // install.php ausführen
-            require 'install.php';
+        try {
+            if ($this->connection->select_db($dbname) === false) {
+                $connection->query("CREATE DATABASE " . $dbname);
+                $connection->select_db($dbname);
+            }
+
+            setupTestDatabase($connection);
+
+        } catch (\Exception $e) {
+            $this->fail("Fehler beim Setup der Testdatenbank: " . $e->getMessage());
         }
     }
 
+    /**
+     * Clean up test environment after each test
+     *
+     * @return void
+     */
     protected function tearDown(): void
     {
         $this->cleanupTestData();
     }
 
+    /**
+     * Remove all test data from database tables
+     *
+     * @return void
+     */
     private function cleanupTestData()
     {
         $this->connection->query("SET FOREIGN_KEY_CHECKS=0");
@@ -69,7 +100,9 @@ class SaveContributorsTest extends TestCase
     }
 
     /**
-     * Vollständig ausgefüllte Contributor Person
+     * Test saving a contributor person with all fields populated
+     *
+     * @return void
      */
     public function testSaveFullContributorPerson()
     {
@@ -96,7 +129,6 @@ class SaveContributorsTest extends TestCase
 
         saveContributors($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob die Contributor Person korrekt gespeichert wurde
         $stmt = $this->connection->prepare("SELECT * FROM Contributor_Person WHERE orcid = ?");
         $stmt->bind_param("s", $postData["cbORCID"][0]);
         $stmt->execute();
@@ -106,7 +138,6 @@ class SaveContributorsTest extends TestCase
         $this->assertEquals($postData["cbPersonLastname"][0], $result["familyname"], "Der Nachname wurde nicht korrekt gespeichert.");
         $this->assertEquals($postData["cbPersonFirstname"][0], $result["givenname"], "Der Vorname wurde nicht korrekt gespeichert.");
 
-        // Überprüfen der Affiliation
         $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
                                             JOIN Contributor_Person_has_Affiliation cpha ON a.affiliation_id = cpha.Affiliation_affiliation_id
                                             WHERE cpha.Contributor_Person_contributor_person_id = ?");
@@ -116,11 +147,11 @@ class SaveContributorsTest extends TestCase
 
         $this->assertEquals(json_decode($postData["cbAffiliation"][0], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation wurde nicht korrekt gespeichert.");
         $this->assertEquals(
-            str_replace("https://ror.org/", "", $postData["cbpRorIds"][0]), 
-            $affiliationResult["rorId"], 
-            "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert.");
+            str_replace("https://ror.org/", "", $postData["cbpRorIds"][0]),
+            $affiliationResult["rorId"],
+            "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert."
+        );
 
-        // Überprüfen der Rollen
         $stmt = $this->connection->prepare("SELECT r.name FROM Role r 
                                             JOIN Contributor_Person_has_Role cphr ON r.role_id = cphr.Role_role_id
                                             WHERE cphr.Contributor_Person_contributor_person_id = ?");
@@ -133,7 +164,9 @@ class SaveContributorsTest extends TestCase
     }
 
     /**
-     * Vollständig ausgefüllte Contributor Institution
+     * Test saving a contributor institution with all fields populated
+     *
+     * @return void
      */
     public function testSaveFullContributorInstitution()
     {
@@ -158,7 +191,6 @@ class SaveContributorsTest extends TestCase
 
         saveContributors($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob die Contributor Institution korrekt gespeichert wurde
         $stmt = $this->connection->prepare("SELECT * FROM Contributor_Institution WHERE name = ?");
         $stmt->bind_param("s", $postData["cbOrganisationName"][0]);
         $stmt->execute();
@@ -167,7 +199,6 @@ class SaveContributorsTest extends TestCase
         $this->assertNotNull($result, "Die Contributor Institution wurde nicht gespeichert.");
         $this->assertEquals($postData["cbOrganisationName"][0], $result["name"], "Der Name der Institution wurde nicht korrekt gespeichert.");
 
-        // Überprüfen der Affiliation
         $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
                                             JOIN Contributor_Institution_has_Affiliation ciha ON a.affiliation_id = ciha.Affiliation_affiliation_id
                                             WHERE ciha.Contributor_Institution_contributor_institution_id = ?");
@@ -177,11 +208,11 @@ class SaveContributorsTest extends TestCase
 
         $this->assertEquals(json_decode($postData["OrganisationAffiliation"][0], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation wurde nicht korrekt gespeichert.");
         $this->assertEquals(
-            str_replace("https://ror.org/", "", $postData["hiddenOrganisationRorId"][0]), 
-            $affiliationResult["rorId"], 
-            "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert.");
+            str_replace("https://ror.org/", "", $postData["hiddenOrganisationRorId"][0]),
+            $affiliationResult["rorId"],
+            "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert."
+        );
 
-        // Überprüfen der Rollen
         $stmt = $this->connection->prepare("SELECT r.name FROM Role r 
                                             JOIN Contributor_Institution_has_Role cihr ON r.role_id = cihr.Role_role_id
                                             WHERE cihr.Contributor_Institution_contributor_institution_id = ?");
@@ -194,7 +225,9 @@ class SaveContributorsTest extends TestCase
     }
 
     /**
-     * Contributor Person mit nur Pflichtfeldern
+     * Test saving a contributor person with only required fields
+     *
+     * @return void
      */
     public function testSaveContributorPersonRequiredFieldsOnly()
     {
@@ -221,7 +254,6 @@ class SaveContributorsTest extends TestCase
 
         saveContributors($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob die Contributor Person korrekt gespeichert wurde
         $stmt = $this->connection->prepare("SELECT * FROM Contributor_Person WHERE orcid = ?");
         $stmt->bind_param("s", $postData["cbORCID"][0]);
         $stmt->execute();
@@ -231,14 +263,12 @@ class SaveContributorsTest extends TestCase
         $this->assertEquals($postData["cbPersonLastname"][0], $result["familyname"], "Der Nachname wurde nicht korrekt gespeichert.");
         $this->assertEquals($postData["cbPersonFirstname"][0], $result["givenname"], "Der Vorname wurde nicht korrekt gespeichert.");
 
-        // Überprüfen, dass keine Affiliation gespeichert wurde
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Contributor_Person_has_Affiliation WHERE Contributor_Person_contributor_person_id = ?");
         $stmt->bind_param("i", $result["contributor_person_id"]);
         $stmt->execute();
         $affiliationCount = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(0, $affiliationCount, "Es sollte keine Affiliation gespeichert worden sein.");
 
-        // Überprüfen der Rollen
         $stmt = $this->connection->prepare("SELECT r.name FROM Role r 
                                             JOIN Contributor_Person_has_Role cphr ON r.role_id = cphr.Role_role_id
                                             WHERE cphr.Contributor_Person_contributor_person_id = ?");
@@ -251,7 +281,10 @@ class SaveContributorsTest extends TestCase
     }
 
     /**
-     * Unvollständige Contributor Person und Institution
+     * Test saving incomplete contributor person and institution
+     * Verifies that incomplete records are not saved
+     *
+     * @return void
      */
     public function testSaveIncompleteContributors()
     {
@@ -282,13 +315,11 @@ class SaveContributorsTest extends TestCase
 
         saveContributors($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob keine Contributor Person gespeichert wurde
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Contributor_Person");
         $stmt->execute();
         $personCount = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(1, $personCount, "Es sollte keine Contributor Person gespeichert worden sein.");
 
-        // Überprüfen, ob keine Contributor Institution gespeichert wurde
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Contributor_Institution");
         $stmt->execute();
         $institutionCount = $stmt->get_result()->fetch_assoc()['count'];
@@ -296,7 +327,10 @@ class SaveContributorsTest extends TestCase
     }
 
     /**
-     * Mehrere vollständige Contributor Persons
+     * Test saving multiple contributor persons
+     * Verifies correct handling of multiple person entries including affiliations and roles
+     *
+     * @return void
      */
     public function testSaveMultipleContributorPersons()
     {
@@ -323,7 +357,6 @@ class SaveContributorsTest extends TestCase
 
         saveContributors($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob alle drei Contributor Persons korrekt gespeichert wurden
         for ($i = 0; $i < 3; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Contributor_Person WHERE orcid = ?");
             $stmt->bind_param("s", $postData["cbORCID"][$i]);
@@ -334,7 +367,6 @@ class SaveContributorsTest extends TestCase
             $this->assertEquals($postData["cbPersonLastname"][$i], $result["familyname"], "Der Nachname der Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals($postData["cbPersonFirstname"][$i], $result["givenname"], "Der Vorname der Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
 
-            // Überprüfen der Affiliation
             $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
                                                 JOIN Contributor_Person_has_Affiliation cpha ON a.affiliation_id = cpha.Affiliation_affiliation_id
                                                 WHERE cpha.Contributor_Person_contributor_person_id = ?");
@@ -344,11 +376,11 @@ class SaveContributorsTest extends TestCase
 
             $this->assertEquals(json_decode($postData["cbAffiliation"][$i], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals(
-                str_replace("https://ror.org/", "", $postData["cbpRorIds"][$i]), 
-                $affiliationResult["rorId"], 
-                "Die ROR-ID der Affiliation für Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+                str_replace("https://ror.org/", "", $postData["cbpRorIds"][$i]),
+                $affiliationResult["rorId"],
+                "Die ROR-ID der Affiliation für Person " . ($i + 1) . " wurde nicht korrekt gespeichert."
+            );
 
-            // Überprüfen der Rollen
             $stmt = $this->connection->prepare("SELECT r.name FROM Role r 
                                                 JOIN Contributor_Person_has_Role cphr ON r.role_id = cphr.Role_role_id
                                                 WHERE cphr.Contributor_Person_contributor_person_id = ?");
@@ -362,7 +394,10 @@ class SaveContributorsTest extends TestCase
     }
 
     /**
-     * Mehrere vollständige Contributor Institutions
+     * Test saving multiple contributor institutions
+     * Verifies correct handling of multiple institution entries including affiliations and roles
+     *
+     * @return void
      */
     public function testSaveMultipleContributorInstitutions()
     {
@@ -387,7 +422,6 @@ class SaveContributorsTest extends TestCase
 
         saveContributors($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob alle drei Contributor Institutions korrekt gespeichert wurden
         for ($i = 0; $i < 3; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Contributor_Institution WHERE name = ?");
             $stmt->bind_param("s", $postData["cbOrganisationName"][$i]);
@@ -397,7 +431,6 @@ class SaveContributorsTest extends TestCase
             $this->assertNotNull($result, "Die Contributor Institution " . ($i + 1) . " wurde nicht gespeichert.");
             $this->assertEquals($postData["cbOrganisationName"][$i], $result["name"], "Der Name der Institution " . ($i + 1) . " wurde nicht korrekt gespeichert.");
 
-            // Überprüfen der Affiliation
             $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
                                                 JOIN Contributor_Institution_has_Affiliation ciha ON a.affiliation_id = ciha.Affiliation_affiliation_id
                                                 WHERE ciha.Contributor_Institution_contributor_institution_id = ?");
@@ -407,11 +440,11 @@ class SaveContributorsTest extends TestCase
 
             $this->assertEquals(json_decode($postData["OrganisationAffiliation"][$i], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für Institution " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals(
-                str_replace("https://ror.org/", "", $postData["hiddenOrganisationRorId"][$i]), 
-                $affiliationResult["rorId"], 
-                "Die ROR-ID der Affiliation für Institution " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+                str_replace("https://ror.org/", "", $postData["hiddenOrganisationRorId"][$i]),
+                $affiliationResult["rorId"],
+                "Die ROR-ID der Affiliation für Institution " . ($i + 1) . " wurde nicht korrekt gespeichert."
+            );
 
-            // Überprüfen der Rollen
             $stmt = $this->connection->prepare("SELECT r.name FROM Role r 
                                                 JOIN Contributor_Institution_has_Role cihr ON r.role_id = cihr.Role_role_id
                                                 WHERE cihr.Contributor_Institution_contributor_institution_id = ?");
@@ -425,7 +458,10 @@ class SaveContributorsTest extends TestCase
     }
 
     /**
-     * Mehrere vollständige Contributor Persons und Institutions gleichzeitig
+     * Test saving multiple contributor persons and institutions simultaneously
+     * Verifies correct handling of mixed contributor types in a single save operation
+     *
+     * @return void
      */
     public function testSaveMultipleContributorPersonsAndInstitutions()
     {
@@ -456,7 +492,6 @@ class SaveContributorsTest extends TestCase
 
         saveContributors($this->connection, $postData, $resource_id);
 
-        // Überprüfen der Contributor Persons
         for ($i = 0; $i < 2; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Contributor_Person WHERE orcid = ?");
             $stmt->bind_param("s", $postData["cbORCID"][$i]);
@@ -468,7 +503,6 @@ class SaveContributorsTest extends TestCase
             $this->assertEquals($postData["cbPersonFirstname"][$i], $result["givenname"], "Der Vorname der Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
         }
 
-        // Überprüfen der Contributor Institutions
         for ($i = 0; $i < 2; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Contributor_Institution WHERE name = ?");
             $stmt->bind_param("s", $postData["cbOrganisationName"][$i]);
