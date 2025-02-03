@@ -122,3 +122,13 @@ label.mandatory-field::after {
     color: #dc3545;
     margin-left: 0.1rem;
 }
+
+/* Installation */
+.installation-option {
+    transition: transform 0.2s;
+}
+
+.status-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}

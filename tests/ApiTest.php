@@ -4,36 +4,60 @@ namespace Tests;
 use PHPUnit\Framework\TestCase;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use Exception;
 
+/**
+ * Test class for the API endpoints
+ */
 class ApiTest extends TestCase
 {
+    /**
+     * @var Client HTTP client instance
+     */
     private $client;
+
+    /**
+     * @var string Base URI for API requests
+     */
     private $baseUri;
+
+    /**
+     * @var string Project directory name
+     */
     private $projectPath;
+
+    /**
+     * @var \mysqli Database connection
+     */
     private $connection;
     private const API_KEY = '1234-1234-1234-1234';
 
+    /**
+     * Set up test environment
+     * - Ensures test database exists and is properly initialized
+     * - Configures HTTP client
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
-        // Datenbankverbindung herstellen
-        require_once __DIR__ . '/../settings.php';
         global $connection;
         if (!$connection) {
             $connection = connectDb();
         }
         $this->connection = $connection;
 
-        // Überprüfen, ob die Testdatenbank verfügbar ist
         $dbname = 'mde2-msl-test';
         if ($this->connection->select_db($dbname) === false) {
-            // Testdatenbank erstellen
             $connection->query("CREATE DATABASE " . $dbname);
             $connection->select_db($dbname);
-            // install.php ausführen
-            require __DIR__ . '/../install.php';
+
+            require_once __DIR__ . '/../install.php';
+            dropTables($connection);
+            createDatabaseStructure($connection);
+            insertLookupData($connection);
         }
 
-        // HTTP Client Setup
         $this->projectPath = basename(dirname(__DIR__));
         $this->baseUri = getenv('API_BASE_URL') ?: 'http://localhost:8000';
         echo "\nUsing base URI: " . $this->baseUri;
@@ -49,12 +73,20 @@ class ApiTest extends TestCase
         ]);
     }
 
+    /**
+     * Clean up after test execution
+     */
     protected function tearDown(): void
     {
-        // Datenbank-Cleanup ist hier nicht nötig, da die Lizenzen zu den Stammdaten gehören
-        // und nicht zwischen den Tests geändert werden
+        // No cleanup needed as licenses are part of master data
     }
 
+    /**
+     * Constructs the full API URL for a given endpoint
+     *
+     * @param string $endpoint The API endpoint path
+     * @return string The complete API URL
+     */
     private function getApiUrl($endpoint): string
     {
         if (getenv('API_BASE_URL')) {
@@ -64,6 +96,12 @@ class ApiTest extends TestCase
         return "/{$path}";
     }
 
+    /**
+     * Tests the health check endpoint
+     *
+     * @return void
+     * @throws Exception
+     */
     public function testHealthCheckShouldReturnAliveMessage(): void
     {
         $endpointUrl = $this->getApiUrl('general/alive');
@@ -100,6 +138,12 @@ class ApiTest extends TestCase
         }
     }
 
+    /**
+     * Tests the endpoint for retrieving all licenses
+     *
+     * @return void
+     * @throws Exception
+     */
     public function testGetAllLicensesShouldReturnLicenseList(): void
     {
         $endpointUrl = $this->getApiUrl('vocabs/licenses/all');
@@ -125,7 +169,6 @@ class ApiTest extends TestCase
             $this->assertIsArray($data, 'Response should be an array');
             $this->assertNotEmpty($data, 'Response should not be empty');
 
-            // Prüfen der Struktur des ersten Elements
             $firstLicense = $data[0];
             $this->assertArrayHasKey('rightsIdentifier', $firstLicense);
             $this->assertArrayHasKey('text', $firstLicense);
@@ -135,6 +178,12 @@ class ApiTest extends TestCase
         }
     }
 
+    /**
+     * Tests the endpoint for retrieving software licenses
+     *
+     * @return void
+     * @throws Exception
+     */
     public function testGetSoftwareLicensesShouldReturnSoftwareLicenseList(): void
     {
         $endpointUrl = $this->getApiUrl('vocabs/licenses/software');
@@ -156,7 +205,6 @@ class ApiTest extends TestCase
             $this->assertIsArray($data, 'Response should be an array');
             $this->assertNotEmpty($data, 'Response should not be empty');
 
-            // Prüfen ob alle zurückgegebenen Lizenzen forSoftware=1 haben
             foreach ($data as $license) {
                 $this->assertArrayHasKey('forSoftware', $license);
                 $this->assertEquals(
@@ -170,6 +218,12 @@ class ApiTest extends TestCase
         }
     }
 
+    /**
+     * Tests the MSL vocabulary update endpoint error handling
+     *
+     * @return void
+     * @throws Exception
+     */
     public function testUpdateMslVocabShouldHandleErrors(): void
     {
         $endpointUrl = $this->getApiUrl('update/vocabs/msl');
@@ -185,9 +239,7 @@ class ApiTest extends TestCase
                 $this->fail('Failed to parse JSON response: ' . json_last_error_msg());
             }
 
-            // Überprüfen ob die Antwort entweder ein erfolgreicher Update ist ODER eine valide Fehlermeldung
             if ($response->getStatusCode() === 200) {
-                // Success case
                 $this->assertArrayHasKey('message', $data, 'Response should contain a message');
                 $this->assertArrayHasKey('version', $data, 'Response should contain a version');
                 $this->assertArrayHasKey('timestamp', $data, 'Response should contain a timestamp');
@@ -211,11 +263,9 @@ class ApiTest extends TestCase
                 );
 
             } else if ($response->getStatusCode() === 500) {
-                // Error case
                 $this->assertArrayHasKey('error', $data, 'Error response should contain an error message');
                 $this->assertNotEmpty($data['error'], 'Error message should not be empty');
 
-                // Spezifische Fehlermeldung prüfen
                 $expectedErrors = [
                     "No vocabulary version found",
                     "Failed to download vocabulary data"

@@ -763,6 +763,9 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
+   //reset Related Works
+   $('#group-stc .row[tsc-row]').not(':first').remove();
+   $('#group-stc .row[tsc-row]:first input').val('');
 
   for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
     const geoLocationNode = geoLocationNodes.snapshotItem(i);

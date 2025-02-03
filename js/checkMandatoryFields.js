@@ -2,7 +2,7 @@
  * Validates the Contact Person section of the form.
  * Ensures the "Last Name", "First Name", and "Email" fields are required if any field in the row is filled.
  */
-function checkContactPerson(){
+function checkContactPerson() {
     $('#group-contactperson').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contact Person section
@@ -31,7 +31,7 @@ function checkContactPerson(){
  * Validates the Contributor Person section of the form.
  * Ensures the "Last Name", "First Name", and "Role" fields are required if any field in the row is filled.
  */
-function checkContributorPerson(){
+function checkContributorPerson() {
     $('#group-contributorperson').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contributor Person section
@@ -63,7 +63,7 @@ function checkContributorPerson(){
  * Validates the Contributor Organisation section of the form.
  * Ensures the "Name" and "Role" fields are required if any field in the row is filled.
  */
-function checkContributorOrganisation(){
+function checkContributorOrganisation() {
     $('#group-contributororganisation').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contributor Organization section
@@ -72,10 +72,10 @@ function checkContributorOrganisation(){
             role: row.find('[id^="input-contributor-organisationrole"]'),
             affiliation: row.find('[id^="input-contributor-organisationaffiliation"]')
         };
-    
+
         // Checks if any field in the row is filled
         var isAnyFieldFilled = Object.values(fields).some(field => field.val() && field.val().trim() !== '');
-    
+
         // Sets or removes the 'required' attribute based on the fill status
         if (isAnyFieldFilled) {
             fields.name.attr('required', 'required');
@@ -84,9 +84,58 @@ function checkContributorOrganisation(){
             fields.name.removeAttr('required');
             fields.role.removeAttr('required');
         }
-    
+
     });
 }
+
+
+/**
+ * Dynamically applies or removes the 'required' attribute to input fields in each row within #group-stc.
+ *
+ * The function ensures:
+ * - If all fields are empty, none will be required.
+ * - If latMax or longMax is filled, latMin, longMin, latMax, longMax, description, dateStart, and dateEnd become required.
+ * - If latMin, longMin, or description is filled, those fields along with dateStart, dateEnd, and timezone become required.
+ * - If dateStart or dateEnd is filled, they, along with latMin, longMin, description, and timezone, become required.
+ * - If timeStart or timeEnd is filled, they, along with dateStart, dateEnd, latMin, longMin, description, and timezone, become required.
+ */
+
+function checkCoverage() {
+    $('#group-stc').find('[tsc-row]').each(function () {
+        var row = $(this);
+        var fields = ['latmin', 'latmax', 'longmin', 'longmax', 'description', 'datestart', 'timestart', 'dateend', 'timeend', 'timezone'];
+        var inputs = {};
+        var filled = {};
+
+        // Store jQuery elements and their filled status
+        fields.forEach(field => {
+            inputs[field] = row.find(`[id^="input-stc-${field}"]`);
+            filled[field] = inputs[field].val() && inputs[field].val().trim() !== '';
+            inputs[field].removeAttr('required'); // Ensure required is removed first
+        });
+
+        // If all fields are empty, stop processing
+        if (!Object.values(filled).includes(true)) {
+            return;
+        }
+
+        // Apply 'required' based on dependencies
+        if (filled.latmax || filled.longmax) {
+            ['latmin', 'longmin', 'latmax', 'longmax', 'description', 'datestart', 'dateend'].forEach(field => inputs[field].attr('required', 'required'));
+        }
+        if (filled.latmin || filled.longmin || filled.description) {
+            ['latmin', 'longmin', 'description', 'datestart', 'dateend', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
+        }
+        if (filled.datestart || filled.dateend) {
+            ['datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
+        }
+        if (filled.timestart || filled.timeend) {
+            ['timestart', 'timeend', 'datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
+        }
+    });
+}
+
+
 
 /**
  * Validates the Related Work section of the form.
@@ -123,7 +172,7 @@ function checkRelatedWork() {
  * Validates the Funding Reference section of the form.
  * Ensures the "Funder" field is required if either "Grant Number" or "Grant Name" fields are filled.
  */
-function checkFunder(){
+function checkFunder() {
     $('#group-fundingreference').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Funding Reference section
@@ -162,6 +211,9 @@ function checkMandatoryFields() {
     // Formgroup Contributor Organization
     checkContributorOrganisation();
 
+    // Formgroup Spacial and Temporal Coverage
+    checkCoverage();
+
     //Formgroup Related Work
     checkRelatedWork();
 
@@ -176,18 +228,27 @@ function checkMandatoryFields() {
 * Triggers checkMandatoryFields() when the user leaves these fields.
 */
 $(document).on('blur',
-    'input[name^="cpLastname"], ' +         // Contact Person last name
-    'input[name^="cpFirstname"], ' +        // Contact Person first name
-    'input[name^="cpPosition"], ' +         // Contact Person position
-    'input[name^="cpEmail"], ' +            // Contact Person email address
-    'input[name^="cpOnlineResource"], ' +   // Contact Person website
-    'input[name="grantNummer[]"], ' +       // Grant Number field
-    'input[name="grantName[]"], ' +         // Grant Name field
-    'input[name="cbORCID[]"], ' +           // Contributor Person ORCID
-    'input[name="cbPersonLastname[]"], ' +  // Contributor Person Lastname
-    'input[name="cbPersonFirstname[]"], ' + // Contributor Person Firstname
-    'input[name="cbOrganisationName[]"],' +   // Contributor Organisation Name
-    'input[name="rIdentifier[]"]' ,            // Related Work Identifier
+    'input[name^="cpLastname"], ' +         
+    'input[name^="cpFirstname"], ' +        
+    'input[name^="cpPosition"], ' +         
+    'input[name^="cpEmail"], ' +            
+    'input[name^="cpOnlineResource"], ' +   
+    'input[name="grantNummer[]"], ' +       
+    'input[name="grantName[]"], ' +         
+    'input[name="cbORCID[]"], ' +           
+    'input[name="cbPersonLastname[]"], ' +  
+    'input[name="cbPersonFirstname[]"], ' + 
+    'input[name="cbOrganisationName[]"],' +  
+    'input[name="tscLongitudeMax[]"],' +
+    'input[name="tscLongitudeMin[]"],' +
+    'input[name="tscLatitudeMin[]"],' +
+    'input[name="tscLatitudeMax[]"],' +
+    'input[name="tscDescription[]"],' +
+    'input[name="tscDateStart[]"],' +
+    'input[name="tscDateEnd[]"],' +
+    'input[name="tscTimeStart[]"],' +
+    'input[name="tscTimeEnd[]"],' +
+    'input[name="rIdentifier[]"]',           
     function () {
         // Check mandatory fields when user leaves any of these input fields
         checkMandatoryFields();
@@ -199,15 +260,15 @@ $(document).on('blur',
  * Triggers checkMandatoryFields() when the value of these fields changes.
  */
 $(document).on('change',
-    'input[name^="cpAffiliation"], ' +            // Contact Person Affiliation
-    'input[name="cbPersonRoles[]"], ' +           // Contributor Person Roles
-    'input[name="cbAffiliation[]"], ' +           // Contributor Person Affiliation
-    'input[name="cbOrganisationRoles[]"], ' +     // Contributor Organisation Roles
-    'input[name="OrganisationAffiliation[]"], ' + // Contributor Organisation Affiliation
-    'select[name="relation[]"], ' +            // Related Work Relation (dropdown)
-    'select[name="rIdentifierType[]"], ' +
-    'input[name="funder[]"]' ,                     // Funder field
-    
+    'input[name^="cpAffiliation"], ' +            
+    'input[name="cbPersonRoles[]"], ' +           
+    'input[name="cbAffiliation[]"], ' +           
+    'input[name="cbOrganisationRoles[]"], ' +     
+    'input[name="OrganisationAffiliation[]"], ' + 
+    'select[name="relation[]"], ' +           
+    'select[name="rIdentifierType[]"], ' +      
+    'select[name="timezone[]"], ' +             
+    'input[name="funder[]"]',                     
     function () {
         // Check mandatory fields when any of these fields' values change
         checkMandatoryFields();
