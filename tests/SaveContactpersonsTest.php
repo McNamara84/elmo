@@ -9,10 +9,25 @@ require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../save/formgroups/save_contactperson.php';
 require_once __DIR__ . '/TestDatabaseSetup.php';
 
+/**
+ * Test class for contact person saving functionality
+ *
+ * This class contains test cases to verify the correct saving and validation
+ * of contact person information in different scenarios.
+ */
 class SaveContactpersonsTest extends TestCase
 {
+    /**
+     * @var \mysqli Database connection
+     */
     private $connection;
 
+    /**
+     * Set up test environment
+     * Creates test database if it doesn't exist and initializes database structure
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
         global $connection;
@@ -21,16 +36,13 @@ class SaveContactpersonsTest extends TestCase
         }
         $this->connection = $connection;
 
-        // Überprüfen, ob die Testdatenbank verfügbar ist
         $dbname = 'mde2-msl-test';
         try {
             if ($this->connection->select_db($dbname) === false) {
-                // Testdatenbank erstellen
                 $connection->query("CREATE DATABASE " . $dbname);
                 $connection->select_db($dbname);
             }
 
-            // Datenbank für Tests aufsetzen
             setupTestDatabase($connection);
 
         } catch (\Exception $e) {
@@ -38,11 +50,21 @@ class SaveContactpersonsTest extends TestCase
         }
     }
 
+    /**
+     * Clean up test environment after each test
+     *
+     * @return void
+     */
     protected function tearDown(): void
     {
         $this->cleanupTestData();
     }
 
+    /**
+     * Remove all test data from database
+     *
+     * @return void
+     */
     private function cleanupTestData()
     {
         $this->connection->query("SET FOREIGN_KEY_CHECKS=0");
@@ -79,7 +101,9 @@ class SaveContactpersonsTest extends TestCase
     }
 
     /**
-     * Testet die Speicherung einer einzelnen Contact Person mit allen ausgefüllten Feldern.
+     * Test saving a single contact person with all fields populated
+     *
+     * @return void
      */
     public function testSaveSingleContactPersonWithAllFields()
     {
@@ -107,7 +131,6 @@ class SaveContactpersonsTest extends TestCase
 
         saveContactPerson($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob die Contact Person korrekt gespeichert wurde
         $stmt = $this->connection->prepare("SELECT * FROM Contact_Person WHERE email = ?");
         $stmt->bind_param("s", $postData["cpEmail"][0]);
         $stmt->execute();
@@ -119,13 +142,11 @@ class SaveContactpersonsTest extends TestCase
         $this->assertEquals($postData["cpPosition"][0], $result["position"], "Die Position wurde nicht korrekt gespeichert.");
         $this->assertEquals("example.com", $result["website"], "Die Website wurde nicht korrekt gespeichert.");
 
-        // Überprüfen der Verknüpfung zur Resource
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Contact_Person WHERE Resource_resource_id = ? AND Contact_Person_contact_person_id = ?");
         $stmt->bind_param("ii", $resource_id, $result["contact_person_id"]);
         $stmt->execute();
         $this->assertEquals(1, $stmt->get_result()->num_rows, "Die Verknüpfung zur Resource wurde nicht korrekt erstellt.");
 
-        // Überprüfen der Affiliation
         $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
                                             JOIN Contact_Person_has_Affiliation cpha ON a.affiliation_id = cpha.Affiliation_affiliation_id
                                             WHERE cpha.contact_Person_contact_person_id = ?");
@@ -138,7 +159,9 @@ class SaveContactpersonsTest extends TestCase
     }
 
     /**
-     * Testet die Speicherung von 3 vollständig ausgefüllten Contact Persons.
+     * Test saving three fully populated contact persons
+     *
+     * @return void
      */
     public function testSaveThreeCompleteContactPersons()
     {
@@ -166,7 +189,6 @@ class SaveContactpersonsTest extends TestCase
 
         saveContactPerson($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob alle drei Contact Persons korrekt gespeichert wurden
         for ($i = 0; $i < 3; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Contact_Person WHERE email = ?");
             $stmt->bind_param("s", $postData["cpEmail"][$i]);
@@ -179,13 +201,11 @@ class SaveContactpersonsTest extends TestCase
             $this->assertEquals($postData["cpPosition"][$i], $result["position"], "Die Position der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals(str_replace(["http://", "https://"], "", $postData["cpOnlineResource"][$i]), $result["website"], "Die Website der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
 
-            // Überprüfen der Verknüpfung zur Resource
             $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Contact_Person WHERE Resource_resource_id = ? AND Contact_Person_contact_person_id = ?");
             $stmt->bind_param("ii", $resource_id, $result["contact_person_id"]);
             $stmt->execute();
             $this->assertEquals(1, $stmt->get_result()->num_rows, "Die Verknüpfung zur Resource für Contact Person " . ($i + 1) . " wurde nicht korrekt erstellt.");
 
-            // Überprüfen der Affiliation
             $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
                                                 JOIN Contact_Person_has_Affiliation cpha ON a.affiliation_id = cpha.Affiliation_affiliation_id
                                                 WHERE cpha.contact_Person_contact_person_id = ?");
@@ -202,7 +222,10 @@ class SaveContactpersonsTest extends TestCase
         }
     }
     /**
-     * Testet die Speicherung von 3 Contact Persons mit unvollständigen, aber dennoch validen Datensätzen.
+     * Test saving contact persons with missing non-required fields
+     * Verifies that contact persons are saved correctly when optional fields are empty
+     *
+     * @return void
      */
     public function testSaveContactPersonsWithMissingNonRequiredFields()
     {
@@ -230,7 +253,6 @@ class SaveContactpersonsTest extends TestCase
 
         saveContactPerson($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob alle drei Contact Persons korrekt gespeichert wurden
         for ($i = 0; $i < 3; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Contact_Person WHERE email = ?");
             $stmt->bind_param("s", $postData["cpEmail"][$i]);
@@ -243,13 +265,11 @@ class SaveContactpersonsTest extends TestCase
             $this->assertEquals($postData["cpPosition"][$i], $result["position"], "Die Position der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals(str_replace(["http://", "https://"], "", $postData["cpOnlineResource"][$i]), $result["website"], "Die Website der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
 
-            // Überprüfen der Verknüpfung zur Resource
             $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Contact_Person WHERE Resource_resource_id = ? AND Contact_Person_contact_person_id = ?");
             $stmt->bind_param("ii", $resource_id, $result["contact_person_id"]);
             $stmt->execute();
             $this->assertEquals(1, $stmt->get_result()->num_rows, "Die Verknüpfung zur Resource für Contact Person " . ($i + 1) . " wurde nicht korrekt erstellt.");
 
-            // Überprüfen der Affiliation (falls vorhanden)
             $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Contact_Person_has_Affiliation WHERE contact_Person_contact_person_id = ?");
             $stmt->bind_param("i", $result["contact_person_id"]);
             $stmt->execute();
@@ -279,7 +299,10 @@ class SaveContactpersonsTest extends TestCase
     }
 
     /**
-     * Versuch, 3 Contact Persons mit fehlenden Pflichtdaten zu speichern, der fehlschlagen sollte.
+     * Test saving contact persons with missing required fields
+     * Verifies that contact persons are not saved when mandatory fields are missing
+     *
+     * @return void
      */
     public function testSaveContactPersonsWithMissingRequiredFields()
     {
@@ -307,28 +330,31 @@ class SaveContactpersonsTest extends TestCase
 
         saveContactPerson($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob keine Contact Persons gespeichert wurden
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Contact_Person");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
-            3, 
-            $count, 
-            "Es sollten keine Contact Persons gespeichert worden sein.");
+            3,
+            $count,
+            "Es sollten keine Contact Persons gespeichert worden sein."
+        );
 
-        // Überprüfen, ob keine Verknüpfungen zur Resource erstellt wurden
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource_has_Contact_Person WHERE Resource_resource_id = ?");
         $stmt->bind_param("i", $resource_id);
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
-            3, 
-            $count, 
-            "Es sollten keine Verknüpfungen zur Resource erstellt worden sein.");
+            3,
+            $count,
+            "Es sollten keine Verknüpfungen zur Resource erstellt worden sein."
+        );
     }
 
     /**
-     * Testet die Speicherung von 2 Contact Persons. Eine nur mit Affiliation, die andere nur mit ROR-ID.
+     * Test saving contact persons with mixed affiliation and ROR ID data
+     * Tests scenario where one person has only affiliation and another has only ROR ID
+     *
+     * @return void
      */
     public function testSaveContactPersonsWithMixedAffiliationRorId()
     {
@@ -356,13 +382,11 @@ class SaveContactpersonsTest extends TestCase
 
         saveContactPerson($this->connection, $postData, $resource_id);
 
-        // Überprüfen, ob nur die erste Contact Person gespeichert wurde
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Contact_Person");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(2, $count, "Es sollte nur eine Contact Person gespeichert worden sein.");
 
-        // Überprüfen der gespeicherten Contact Person
         $stmt = $this->connection->prepare("SELECT * FROM Contact_Person WHERE email = ?");
         $stmt->bind_param("s", $postData["cpEmail"][0]);
         $stmt->execute();
@@ -374,7 +398,6 @@ class SaveContactpersonsTest extends TestCase
         $this->assertEquals($postData["cpPosition"][0], $result["position"], "Die Position der ersten Contact Person wurde nicht korrekt gespeichert.");
         $this->assertEquals(str_replace(["http://", "https://"], "", $postData["cpOnlineResource"][0]), $result["website"], "Die Website der ersten Contact Person wurde nicht korrekt gespeichert.");
 
-        // Überprüfen der Affiliation der ersten Contact Person
         $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
                                             JOIN Contact_Person_has_Affiliation cpha ON a.affiliation_id = cpha.Affiliation_affiliation_id
                                             WHERE cpha.contact_Person_contact_person_id = ?");
@@ -385,10 +408,10 @@ class SaveContactpersonsTest extends TestCase
         $this->assertNotNull($affiliationResult, "Die Affiliation für die erste Contact Person wurde nicht gespeichert.");
         $this->assertEquals(json_decode($postData["cpAffiliation"][0], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für die erste Contact Person wurde nicht korrekt gespeichert.");
         $this->assertNull(
-            $affiliationResult["rorId"], 
-        "Die ROR-ID der Affiliation für die erste Contact Person sollte null sein.");
+            $affiliationResult["rorId"],
+            "Die ROR-ID der Affiliation für die erste Contact Person sollte null sein."
+        );
 
-        // Überprüfen, dass die zweite Contact Person nicht gespeichert wurde
         $stmt = $this->connection->prepare("SELECT * FROM Contact_Person WHERE email = ?");
         $stmt->bind_param("s", $postData["cpEmail"][1]);
         $stmt->execute();
