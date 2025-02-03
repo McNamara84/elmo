@@ -5,6 +5,7 @@ use mysqli_sql_exception;
 
 require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../save/formgroups/save_originatinglaboratory.php';
+require_once __DIR__ . '/TestDatabaseSetup.php';
 
 class SaveOriginatingLaboratoryTest extends TestCase
 {
@@ -17,14 +18,21 @@ class SaveOriginatingLaboratoryTest extends TestCase
             $connection = connectDb();
         }
         $this->connection = $connection;
-        // Check test database
+
+        // Überprüfen, ob die Testdatenbank verfügbar ist
         $dbname = 'mde2-msl-test';
-        if ($this->connection->select_db($dbname) === false) {
-            // Create test database
-            $connection->query("CREATE DATABASE " . $dbname);
-            $connection->select_db($dbname);
-            // install databse schema
-            require 'install.php';
+        try {
+            if ($this->connection->select_db($dbname) === false) {
+                // Testdatenbank erstellen
+                $connection->query("CREATE DATABASE " . $dbname);
+                $connection->select_db($dbname);
+            }
+
+            // Datenbank für Tests aufsetzen
+            setupTestDatabase($connection);
+
+        } catch (\Exception $e) {
+            $this->fail("Fehler beim Setup der Testdatenbank: " . $e->getMessage());
         }
     }
 

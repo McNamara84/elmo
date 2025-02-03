@@ -29,6 +29,34 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Authors can be sorted by drag & drop.
 - Submission of data descriptions files and link to data is possible.
 
+## Installation
+
+### Requirements
+
+The installation of ELMO is possible on operating systems such as recent Windows versions (e.g. Windows 10/11) and the most common Linux distributions (e.g. Ubuntu, Debian).
+Following conditions are required for installation:
+- PHP ≥ 8.2 and ≤ 8.4
+	- incl. a webserver able to perform PHP operations (such as Apache or Nginx)
+	- extensions needed: XSL, ZIP
+- MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/8.0/en/installing-and-configuration.html)) or MariaDB
+
+### Quick installation guide
+
+1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
+2. The XSL and ZIP extensions for PHP must be installed and enabled.
+3. Don't forget to start Apache and MySQL.
+4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
+5. Copy the content of the file `sample_settings.php` into a new file `settings.php` and adjust the settings for the database connection.
+6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `settings.php`.
+7. Create a Google Maps JS API key and paste it into the `settings.php` file as well.
+8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
+9. Access `install.html` via the browser and choose to install with or without test datasets. The database tables will be created in your database, as well as 3 test datasets, if you chose that first option.
+10. Delete `install.php` and `install.html` after successfully creating the database.
+11. The metadata editor is now accessible in the browser via `localhost/directoryname`.
+12. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
+
+If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
+
 <details> 
   <summary> 
 
@@ -90,14 +118,16 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   - Adjust the database connection:
     - Open the `settings.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
   #### 5. Setting up the application
-  - Access the installation script in your browser as follows: `http://localhost/your_directory/install.php`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.php`.
-  #### 6. (Optional) Creating an API key for the automatically generated time zone selection
-   - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
+  - Access the installation script in your browser as follows: `http://localhost/your_directory/install.html`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.html` if you chose this option.
+  #### 6. Delete installation files
+  - Please delete `install.php` and `install.html` after successfully creating the database.
+  #### 7. (Optional) Creating an API key for the automatically generated time zone selection
+  - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
   - Insert your API key in `settings.php`in the according line.
-  #### 7. Creating a Google Maps JS API key
+  #### 8. Creating a Google Maps JS API key
   - Get a Google Maps JS API key via the [Google Cloud Console](https://console.cloud.google.com). To do this, create a project, enable the Google Maps JavaScript API and get your API key.
   - Insert your Google Maps API key in the corresponding line in the `settings.php`file. 
-  #### 8. Accessing the metadata editor
+  #### 9. Accessing the metadata editor
   - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
   - Settings may be modified in `settings.php`.
   </details>

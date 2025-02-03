@@ -5,6 +5,7 @@ use mysqli_sql_exception;
 
 require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../save/formgroups/save_spatialtemporalcoverage.php';
+require_once __DIR__ . '/TestDatabaseSetup.php';
 
 /**
  * Test class for Spatial Temporal Coverage saving functionality.
@@ -20,13 +21,6 @@ class SaveSpatialTemporalCoverageTest extends TestCase
      */
     private $connection;
 
-    /**
-     * Set up the test environment.
-     * 
-     * Establishes database connection and ensures test database exists.
-     *
-     * @return void
-     */
     protected function setUp(): void
     {
         global $connection;
@@ -35,11 +29,20 @@ class SaveSpatialTemporalCoverageTest extends TestCase
         }
         $this->connection = $connection;
 
+        // Überprüfen, ob die Testdatenbank verfügbar ist
         $dbname = 'mde2-msl-test';
-        if ($this->connection->select_db($dbname) === false) {
-            $connection->query("CREATE DATABASE " . $dbname);
-            $connection->select_db($dbname);
-            require 'install.php';
+        try {
+            if ($this->connection->select_db($dbname) === false) {
+                // Testdatenbank erstellen
+                $connection->query("CREATE DATABASE " . $dbname);
+                $connection->select_db($dbname);
+            }
+
+            // Datenbank für Tests aufsetzen
+            setupTestDatabase($connection);
+
+        } catch (\Exception $e) {
+            $this->fail("Fehler beim Setup der Testdatenbank: " . $e->getMessage());
         }
     }
 
