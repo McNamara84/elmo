@@ -1699,6 +1699,8 @@ return array(
     'PHPUnit\\TestFixture\\Issue6100\\Issue6100Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/6100/Issue6100Test.php',
     'PHPUnit\\TestFixture\\Issue6103\\Issue6103Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/6103/Issue6103Test.php',
     'PHPUnit\\TestFixture\\Issue6109\\Issue6109Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/6109/Issue6109Test.php',
+    'PHPUnit\\TestFixture\\Issue6115\\Enumeration' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/6115/Issue6115Test.php',
+    'PHPUnit\\TestFixture\\Issue6115\\Issue6115Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/6115/Issue6115Test.php',
     'PHPUnit\\TestFixture\\Issue74Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/74/Issue74Test.php',
     'PHPUnit\\TestFixture\\Issue765Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/765/Issue765Test.php',
     'PHPUnit\\TestFixture\\Issue797Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/797/Issue797Test.php',
