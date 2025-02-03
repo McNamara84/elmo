@@ -29,6 +29,34 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Authors can be sorted by drag & drop.
 - Submission of data descriptions files and link to data is possible.
 
+## Installation
+
+### Requirements
+
+The installation of ELMO is possible on operating systems such as recent Windows versions (e.g. Windows 10/11) and the most common Linux distributions (e.g. Ubuntu, Debian).
+Following conditions are required for installation:
+- PHP ≥ 8.2 and ≤ 8.4
+	- incl. a webserver able to perform PHP operations (such as Apache or Nginx)
+	- extensions needed: XSL, ZIP
+- MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/8.0/en/installing-and-configuration.html)) or MariaDB
+
+### Quick installation guide
+
+1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
+2. The XSL and ZIP extensions for PHP must be installed and enabled.
+3. Don't forget to start Apache and MySQL.
+4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
+5. Copy the content of the file `sample_settings.php` into a new file `settings.php` and adjust the settings for the database connection.
+6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `settings.php`.
+7. Create a Google Maps JS API key and paste it into the `settings.php` file as well.
+8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
+9. Access `install.html` via the browser and choose to install with or without test datasets. The database tables will be created in your database, as well as 3 test datasets, if you chose that first option.
+10. Delete `install.php` and `install.html` after successfully creating the database.
+11. The metadata editor is now accessible in the browser via `localhost/directoryname`.
+12. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
+
+If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
+
 <details> 
   <summary> 
 
@@ -90,14 +118,16 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   - Adjust the database connection:
     - Open the `settings.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
   #### 5. Setting up the application
-  - Access the installation script in your browser as follows: `http://localhost/your_directory/install.php`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.php`.
-  #### 6. (Optional) Creating an API key for the automatically generated time zone selection
-   - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
+  - Access the installation script in your browser as follows: `http://localhost/your_directory/install.html`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.html` if you chose this option.
+  #### 6. Delete installation files
+  - Please delete `install.php` and `install.html` after successfully creating the database.
+  #### 7. (Optional) Creating an API key for the automatically generated time zone selection
+  - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
   - Insert your API key in `settings.php`in the according line.
-  #### 7. Creating a Google Maps JS API key
+  #### 8. Creating a Google Maps JS API key
   - Get a Google Maps JS API key via the [Google Cloud Console](https://console.cloud.google.com). To do this, create a project, enable the Google Maps JavaScript API and get your API key.
   - Insert your Google Maps API key in the corresponding line in the `settings.php`file. 
-  #### 8. Accessing the metadata editor
+  #### 9. Accessing the metadata editor
   - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
   - Settings may be modified in `settings.php`.
   </details>
@@ -1003,13 +1033,13 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
 
 Spatial and temporal coverage specifies the geographic region and time frame that the dataset encompasses, providing essential context for its relevance and applicability.
 In the DataCite scheme: The data from Latitude, Longitude and Description are mapped to `<geoLocations>`, while Start Date/Time and End Date/Time are mapped to `<date dateType="Collected">`.
-In the ISO scheme: All field data are mapped to `<EX_Extent>`.
+In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spatial and temporal coverage is 0-n.
 
 - Latitude Min
   
-  - This field contains the geographic latitude of a single coordinate or the smaller geographic latitude of a rectangle.
+  This field contains the geographic latitude of a single coordinate or the smaller geographic latitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 1
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: latitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -90 to +90
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#southboundlatitude)
@@ -1017,9 +1047,9 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
 
 - Latitude Max
   
-  - This field contains the larger geographic latitude of a rectangle.
+  This field contains the larger geographic latitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 0-1
+  - Occurrence: 0-1, becomes mandatory if Longitude Max is filled
   - The corresponding field in the database where the value is stored is called: latitudeMax in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -90 to +90
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#northboundlatitude)
@@ -1027,9 +1057,9 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
 - Longitude Min
   
-  - This field contains the geographic longitude of a single coordinate or the smaller geographic longitude of a rectangle.
+  This field contains the geographic longitude of a single coordinate or the smaller geographic longitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 1
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: longitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#westboundlongitude)
@@ -1037,9 +1067,9 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
 - Longitude Max
   
-  - This field contains the larger geographic longitude of a rectangle.
+  This field contains the larger geographic longitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 0-1
+  - Occurrence: 0-1, becomes mandatory if Latitude Max is filled
   - The corresponding field in the database where the value is stored is called: longitudeMax in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#eastboundlongitude)
@@ -1049,7 +1079,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
 
   - This field contains a free-text explanation of the geographic and temporal context.
   - Data type: Free text
-  - Occurrence: 1
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
   - Restrictions: none
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#geolocationplace)
@@ -1059,7 +1089,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
   - This field contains the starting date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 1
+  - Occurrence: 0-1 
   - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -1069,7 +1099,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
   - This field contains the starting time.
   - Data type: TIME  
-  - Occurrence: 0-1
+  - Occurrence: 0-1, becomes mandatory, if End Time is specified
   - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -1079,7 +1109,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
   - This field contains the ending date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 1 
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -1089,7 +1119,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
   - This field contains the ending time.
   - Data type: TIME 
-  - Occurrence: 0-1
+  - Occurrence: 0-1, becomes mandatory, if Start Time is specified
   - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -1099,7 +1129,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`.
   
   - This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
   - Data type: Zeichenkette (Auswahl aus Liste)
-  - Occurrence: 1
+  - Occurrence: 0-1, mandatory, when Start Date, Start Time, End Date or End Time is filled
   - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
   - Restrictions: Only values from the list are permitted
   - ISO documentation
@@ -1196,15 +1226,16 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 
 <details>
   <summary>
-
   ## Data validation
   </summary>
 
 The metadata editor has some mandatory fields which are necessary for the submission of data. These include the following fields:
 - **Publication Year**, **Resource Type**, **Language of dataset**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email address**, **Descriptions Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
 
+
 The other fields are optional and are used to further enrich the data set with metadata. The following fields are optional:
 - **DOI**, **Version**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields**.✅
+
 
 In certain cases, some subfields within a formgroup become mandatory. This affects the following fields:
 
