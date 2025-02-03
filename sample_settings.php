@@ -54,6 +54,8 @@ $maxTitles = 2;
 
 // URL to the source with all laboratories for MSL
 $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/labnames.json';
+// URL to the source with all vocabularies for MSL
+$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
