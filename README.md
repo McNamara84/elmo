@@ -734,7 +734,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: email in the Contact_Person table
   - Restrictions: Mandatory
-  - Example values: `ali.mohammed@gfz-potsdam.de`, `holger.ehrmann@gfz-potsdam.de`
+  - Example values: `ali.mohammed@gfz.de`, `holger.ehrmann@gfz.de`
 
 - Website
 

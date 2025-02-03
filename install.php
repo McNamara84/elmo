@@ -541,7 +541,7 @@ function insertTestDataIntoMainTables($connection)
                         ["text" => "Long-term CO2 and CH4 flux measurements and associated environmental variables from a rewetted peatland", "Title_Type_fk" => 1, "Resource_resource_id" => 3]
                 ],
                 "Contact_Person" => [
-                        ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "position" => "Arbeitsgruppenleiter", "email" => "Kwiatek.Grzegorz@gfz-potsdam.de", "website" => "gfz-potsdam.de"],
+                        ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "position" => "Arbeitsgruppenleiter", "email" => "Kwiatek.Grzegorz@gfz.de", "website" => "gfz.de"],
                         ["familyName" => "Goebel", "givenname" => "Thomas", "position" => "Projektleiter", "email" => "Thomas.Goebel@tu-berlin.de", "website" => "www.tu.berlin"],
                         ["familyName" => "Wille", "givenname" => "Christian", "position" => "Abteilungsleiter", "email" => "Christian.Wille@fh-potsdam.de", "website" => "fh-potsdam.de"]
                 ],
