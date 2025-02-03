@@ -6,7 +6,7 @@ info:
 
     Some useful links:
     - [The ELMO repository](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer)
-    - [Test Server](https://mde2.cats4future.de)
+    - [Test Server](https://elmo.cats4future.de)
     - [Legal notice](https://dataservices-cms.gfz.de/about-us/legal-notice)
 
     ### Binary Data
@@ -18,7 +18,7 @@ info:
   contact:
     name: Holger Ehrmann
     email: ehrmann@gfz.de
-    url: https://mde2.cats4future.de
+    url: https://elmo.cats4future.de
   license:
     name: GPL-2.0-only
     url: https://raw.githubusercontent.com/McNamara84/gfz-metadata-editor-msl-v2/refs/heads/main/LICENSE.md
@@ -27,7 +27,7 @@ externalDocs:
   description: Documentation of the API V1 at GitHub
   url: https://github.com/McNamara84/gfz-metadata-editor-msl-v2#api-endpunkte
 servers:
-  - url: https://mde2.cats4future.de/api/v2
+  - url: https://elmo.cats4future.de/api/v2
     description: Test server
 security: []
 tags:

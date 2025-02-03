@@ -187,17 +187,17 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 
 ### Allgemeine Informationen
 
-- Basis-URL: `https://mde2.cats4future.de/api.php`
+- Basis-URL: `https://elmo.cats4future.de/api.php`
 - Alle Anfragen sollten via HTTPS erfolgen
 - Antworten werden im JSON-Format zurückgegeben, sofern nicht anders angegeben
 
 ### API-Endpunkte
 
-[Interaktive Dokumentation](https://mde2.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
+[Interaktive Dokumentation](https://elmo.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
 <details>
   <summary> 
   
-  ### 1. GCMD Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 1. GCMD Science Keywords (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
   </summary>
 
   GET ?action=getGcmdScienceKeywords
@@ -219,7 +219,7 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary>
 
-  ### 2. Zeitzonen aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 2. Zeitzonen aktualisieren (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
   </summary>
 
   GET ?action=getTimezones
@@ -235,7 +235,7 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 <details>
   <summary>
   
-  ### 3. NASA Science Keywords (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+  ### 3. NASA Science Keywords (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
 
   GET ?action=getNasaScienceKeywords
 
@@ -247,7 +247,7 @@ Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data 
 Bestätigungsnachricht über erfolgreiche Aktualisierung
 </details>
 
-### 4. ROR Affiliations (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+### 4. ROR Affiliations (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
 
 GET ?action=getRorAffiliations
 
@@ -261,7 +261,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-### 5. CrossRef Funders (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+### 5. CrossRef Funders (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
 
 GET ?action=getCrossRefFunders
 
@@ -276,7 +276,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>  
   
-  ### 6. Resource as DataCite XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+  ### 6. Resource as DataCite XML (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
   
   GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
 
@@ -294,7 +294,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
 <summary>
 
-### 7. Resource as ISO XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+### 7. Resource as ISO XML (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
 
 </summary>
 
@@ -314,7 +314,7 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-  ### 8. Resource as DIF XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 8. Resource as DIF XML (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
 
   </summary>
 
@@ -334,7 +334,7 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-  ### 9. All resources as one XML (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 9. All resources as one XML (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
 
   </summary>
 
@@ -353,7 +353,7 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-  ### 10. MSL Vokabulare aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 10. MSL Vokabulare aktualisieren (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
 
   </summary>
 
@@ -373,7 +373,7 @@ XML-Datei oder XML-Inhalt
 <details>
   <summary>
 
-### 11. MSL Labs aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+### 11. MSL Labs aktualisieren (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
 
   </summary>
 
@@ -416,7 +416,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  ### 15.  Rollen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 15.  Rollen abrufen (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
 
   </summary>
 
@@ -436,7 +436,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  ### 16.  NASA Instruments Keywords aktualisieren (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 16.  NASA Instruments Keywords aktualisieren (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
 
   </summary
     
@@ -451,7 +451,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  ### 17.  NASA Platforms Keywords aktualisieren (deprecated,  neue Version in  [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 17.  NASA Platforms Keywords aktualisieren (deprecated,  neue Version in  [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
 
   </summary
 
@@ -466,7 +466,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
 
-  ### 18. Lizenzen abrufen (deprecated, use [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))
+  ### 18. Lizenzen abrufen (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
 
   </summary
 
@@ -486,7 +486,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
   
-  ### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+  ### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
 
   GET ?action=getKeywords&curationType={curation_type}
 
@@ -504,7 +504,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
   
-  ### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+  ### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
 
   GET ?action=getRelations
 
@@ -517,7 +517,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
   
-  ### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+  ### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
 
   GET ?action=getIdentifierType&identifier={identifier_string}
 
@@ -534,7 +534,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
   
-  ### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+  ### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
 
   GET ?action=getPattern&type={identifier_type}
 
@@ -551,7 +551,7 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 <details>
   <summary>
   
-  ### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://mde2.cats4future.de/api/v2/docs/index.html))</summary>
+  ### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
 
   GET ?action=getIdentifierTypes
 
@@ -785,7 +785,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
 ### Originating Laboratory
-The controlled list is provided and maintained by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/labnames.json)) and can be updated via API call (see [API documentation](https://mde2.cats4future.de/api/v2/docs/index.html)).
+The controlled list is provided and maintained by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/labnames.json)) and can be updated via API call (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html)).
 
 - Laboratory Name
   This field contains the laboratory, where the research data came from. Its content is mapped to `<contributor contributorType="HostingInstitution"><contributorName>` in the DataCite scheme. 
@@ -939,7 +939,7 @@ Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD
 
 #### EPOS Multi-Scale Laboratories Keywords
 
-Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://mde2.cats4future.de/api/v2/docs/index.html)).
+Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://elmo.cats4future.de/api/v2/docs/index.html)).
 
 - EPOS Multi-Scale Laboratories Keyword
 
@@ -967,7 +967,7 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
 
 #### GCMD Science Keywords
 
-Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and Earth Science Services) are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://mde2.cats4future.de/api/v2/docs/index.html))
+Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and Earth Science Services) are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html))
 
 - GCMD Science Keyword
 
