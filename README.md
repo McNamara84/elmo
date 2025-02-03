@@ -773,7 +773,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: website in the Contact_Person table
   - Restrictions: Optional
-  - Example values: `gfz-potsdam.de`, `fh-potsdam.de`
+  - Example values: `gfz.de`, `fh-potsdam.de`
 
 - Affiliation
   This field contains the affiliation of the person.
