@@ -9,15 +9,26 @@ require_once __DIR__ . '/../save/formgroups/save_authors.php';
 require_once __DIR__ . '/TestDatabaseSetup.php';
 
 /**
- * Testklasse für die Funktionalität zum Speichern von Autoren.
+ * Test class for the author saving functionality.
  * 
- * Diese Klasse enthält verschiedene Testfälle, die die korrekte Funktionsweise
- * der saveAuthors-Funktion unter verschiedenen Bedingungen überprüfen.
+ * This class contains various test cases to verify the correct functionality
+ * of the saveAuthors function under different conditions.
+ * 
+ * @package Tests
  */
 class SaveAuthorsTest extends TestCase
 {
+    /**
+     * @var \mysqli Database connection instance
+     */
     private $connection;
 
+    /**
+     * Set up the test environment.
+     * Creates test database if it doesn't exist and initializes database structure.
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
         global $connection;
@@ -25,17 +36,12 @@ class SaveAuthorsTest extends TestCase
             $connection = connectDb();
         }
         $this->connection = $connection;
-
-        // Überprüfen, ob die Testdatenbank verfügbar ist
         $dbname = 'mde2-msl-test';
         try {
             if ($this->connection->select_db($dbname) === false) {
-                // Testdatenbank erstellen
                 $connection->query("CREATE DATABASE " . $dbname);
                 $connection->select_db($dbname);
             }
-
-            // Datenbank für Tests aufsetzen
             setupTestDatabase($connection);
 
         } catch (\Exception $e) {
@@ -44,7 +50,9 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Bereinigt die Testdaten nach jedem Test.
+     * Clean up test data after each test.
+     *
+     * @return void
      */
     protected function tearDown(): void
     {
@@ -52,7 +60,9 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Löscht alle Testdaten aus der Datenbank.
+     * Removes all test data from the database.
+     *
+     * @return void
      */
     private function cleanupTestData()
     {
@@ -90,7 +100,10 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Testet das Speichern eines einzelnen Autors mit allen Feldern.
+     * Tests saving a single author with all fields populated.
+     *
+     * @return void
+     * @throws \Exception
      */
     public function testSaveSingleAuthorWithAllFields()
     {
@@ -116,7 +129,6 @@ class SaveAuthorsTest extends TestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        // Überprüfen, ob der Autor korrekt gespeichert wurde
         $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ?");
         $stmt->bind_param("s", $authorData["familynames"][0]);
         $stmt->execute();
@@ -133,7 +145,6 @@ class SaveAuthorsTest extends TestCase
             "Die ORCID des Autors wurde nicht korrekt gespeichert."
         );
 
-        // Überprüfen der Relation zur Resource
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
         $stmt->bind_param("ii", $resource_id, $authorResult["author_id"]);
         $stmt->execute();
@@ -143,7 +154,6 @@ class SaveAuthorsTest extends TestCase
             "Die Verknüpfung zwischen Autor und Resource wurde nicht korrekt gespeichert."
         );
 
-        // Überprüfen der Affiliation
         $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
                                             JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
                                             WHERE aha.Author_author_id = ?");
@@ -164,7 +174,10 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Testet das Speichern von drei Autoren mit allen Feldern.
+     * Tests saving three authors with all fields populated.
+     *
+     * @return void
+     * @throws \Exception
      */
     public function testSaveThreeAuthorsWithAllFields()
     {
@@ -190,7 +203,6 @@ class SaveAuthorsTest extends TestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        // Überprüfen, ob alle drei Autoren korrekt gespeichert wurden
         for ($i = 0; $i < 3; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
             $stmt->bind_param("ss", $authorData["familynames"][$i], $authorData["givennames"][$i]);
@@ -203,7 +215,6 @@ class SaveAuthorsTest extends TestCase
                 "Die ORCID des Autors " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
 
-            // Überprüfen der Relation zur Resource
             $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
             $stmt->bind_param("ii", $resource_id, $authorResult["author_id"]);
             $stmt->execute();
@@ -213,7 +224,6 @@ class SaveAuthorsTest extends TestCase
                 "Die Verknüpfung zwischen Autor " . ($i + 1) . " und Resource wurde nicht korrekt gespeichert."
             );
 
-            // Überprüfen der Affiliation
             $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
                                                 JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
                                                 WHERE aha.Author_author_id = ?");
@@ -235,7 +245,10 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Testet das Speichern eines einzelnen Autors mit nur den erforderlichen Feldern.
+     * Tests saving a single author with only required fields.
+     *
+     * @return void
+     * @throws \Exception
      */
     public function testSaveSingleAuthorWithOnlyRequiredFields()
     {
@@ -261,7 +274,6 @@ class SaveAuthorsTest extends TestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        // Überprüfen, ob der Autor korrekt gespeichert wurde
         $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ?");
         $stmt->bind_param("s", $authorData["familynames"][0]);
         $stmt->execute();
@@ -276,7 +288,6 @@ class SaveAuthorsTest extends TestCase
             "Die ORCID des Autors sollte leer sein."
         );
 
-        // Überprüfen der Relation zur Resource
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
         $stmt->bind_param("ii", $resource_id, $authorResult["author_id"]);
         $stmt->execute();
@@ -286,7 +297,6 @@ class SaveAuthorsTest extends TestCase
             "Die Verknüpfung zwischen Autor und Resource wurde nicht korrekt gespeichert."
         );
 
-        // Überprüfen, dass keine Affiliation gespeichert wurde
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_has_Affiliation WHERE Author_author_id = ?");
         $stmt->bind_param("i", $authorResult["author_id"]);
         $stmt->execute();
@@ -299,7 +309,10 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Testet das Verhalten beim Versuch, einen Autor mit leeren Feldern zu speichern.
+     * Tests behavior when attempting to save an author with empty fields.
+     *
+     * @return void
+     * @throws \Exception
      */
     public function testSaveAuthorWithEmptyFields()
     {
@@ -325,7 +338,6 @@ class SaveAuthorsTest extends TestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        // Überprüfen, ob kein Autor gespeichert wurde
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
@@ -337,7 +349,10 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Testet das Speichern von drei Autoren, wobei einer einen fehlenden Nachnamen hat.
+     * Tests saving three authors where one has a missing last name.
+     *
+     * @return void
+     * @throws \Exception
      */
     public function testSaveThreeAuthorsWithOneMissingLastName()
     {
@@ -363,7 +378,6 @@ class SaveAuthorsTest extends TestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        // Überprüfen, ob nur zwei Autoren gespeichert wurden
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
@@ -373,7 +387,6 @@ class SaveAuthorsTest extends TestCase
             "Es sollten nur zwei Autoren gespeichert worden sein, da einer einen fehlenden Nachnamen hatte."
         );
 
-        // Überprüfen, ob die richtigen zwei Autoren gespeichert wurden
         $stmt = $this->connection->prepare("SELECT familyname FROM Author ORDER BY familyname");
         $stmt->execute();
         $result = $stmt->get_result();
@@ -389,7 +402,11 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Testet das Speichern von Autoren mit mehreren Affiliationen.
+     * Tests saving authors with multiple affiliations.
+     * Verifies correct handling of multiple affiliations per author.
+     *
+     * @return void
+     * @throws \Exception
      */
     public function testSaveAuthorsWithMultipleAffiliations()
     {
@@ -423,7 +440,6 @@ class SaveAuthorsTest extends TestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        // Überprüfen, ob alle drei Autoren korrekt gespeichert wurden
         for ($i = 0; $i < 3; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
             $stmt->bind_param("ss", $authorData["familynames"][$i], $authorData["givennames"][$i]);
@@ -436,7 +452,6 @@ class SaveAuthorsTest extends TestCase
                 "Die ORCID des Autors " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
 
-            // Überprüfen der Affiliationen
             $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
                                             JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
                                             WHERE aha.Author_author_id = ?");
@@ -469,7 +484,12 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Testet das Speichern von Autoren mit gemischten Affiliationen und ROR-IDs.
+     * Tests saving authors with mixed affiliations and ROR IDs.
+     * Verifies correct handling of cases where some authors have affiliations
+     * and ROR IDs while others don't.
+     *
+     * @return void
+     * @throws \Exception
      */
     public function testSaveAuthorsWithMixedAffiliationsAndRorIds()
     {
@@ -503,7 +523,6 @@ class SaveAuthorsTest extends TestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        // Überprüfen, ob nur die ersten beiden Autoren gespeichert wurden
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
@@ -513,7 +532,6 @@ class SaveAuthorsTest extends TestCase
             "Es sollten nur zwei Autoren gespeichert worden sein, da der dritte Autor eine ROR-ID ohne Affiliation hatte."
         );
 
-        // Überprüfen der gespeicherten Autoren und ihrer Affiliationen
         for ($i = 0; $i < 2; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
             $stmt->bind_param("ss", $authorData["familynames"][$i], $authorData["givennames"][$i]);
@@ -525,7 +543,6 @@ class SaveAuthorsTest extends TestCase
                 "Autor {$authorData["familynames"][$i]} sollte gespeichert worden sein."
             );
 
-            // Überprüfen der Affiliationen
             $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_has_Affiliation WHERE Author_author_id = ?");
             $stmt->bind_param("i", $authorResult["author_id"]);
             $stmt->execute();
@@ -546,7 +563,6 @@ class SaveAuthorsTest extends TestCase
             }
         }
 
-        // Überprüfen, dass der dritte Autor nicht gespeichert wurde
         $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
         $stmt->bind_param("ss", $authorData["familynames"][2], $authorData["givennames"][2]);
         $stmt->execute();
@@ -559,11 +575,20 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Testet Spezialfälle und Randbedingungen beim Speichern von Autoren.
+     * Tests special cases and edge conditions when saving authors.
+     * Includes tests for:
+     * - Hyphenated names
+     * - Non-ASCII characters
+     * - Very long names and affiliations
+     * - Existing authors with new affiliations
+     * - Invalid ORCID IDs
+     * - Multiple resource associations
+     *
+     * @return void
+     * @throws \Exception
      */
     public function testSpecialCasesAndEdgeConditions()
     {
-        // Erstellen einer initialen Ressource und eines Autors
         $initialResourceData = [
             "doi" => "10.5880/GFZ.TEST.INITIAL",
             "year" => 2023,
@@ -585,7 +610,6 @@ class SaveAuthorsTest extends TestCase
         ];
         saveAuthors($this->connection, $initialAuthorData, $initial_resource_id);
 
-        // Neue Ressource für den Haupttest
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.SPECIAL.CASES",
             "year" => 2023,
@@ -638,27 +662,23 @@ class SaveAuthorsTest extends TestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        // Überprüfen der gespeicherten Autoren
         $stmt = $this->connection->prepare("SELECT COUNT(DISTINCT a.author_id) as count FROM Author a JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id WHERE rha.Resource_resource_id IN (?, ?)");
         $stmt->bind_param("ii", $initial_resource_id, $resource_id);
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
-        // Wir erwarten, dass 5 Autoren insgesamt gespeichert wurden
         $this->assertEquals(
             5,
             $count,
             "Es sollten insgesamt 5 Autoren gespeichert worden sein, einschließlich des bestehenden Autors."
         );
 
-        // Überprüfen des existierenden Autors
         $stmt = $this->connection->prepare("SELECT a.*, GROUP_CONCAT(DISTINCT rha.Resource_resource_id) as resource_ids, COUNT(DISTINCT aha.Affiliation_affiliation_id) as affiliation_count FROM Author a JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id LEFT JOIN Author_has_Affiliation aha ON a.author_id = aha.Author_author_id WHERE a.orcid = ? GROUP BY a.author_id");
         $existingOrcid = "0000-0001-2345-6789";
         $stmt->bind_param("s", $existingOrcid);
         $stmt->execute();
         $existingAuthor = $stmt->get_result()->fetch_assoc();
 
-        // Der existierende Autor sollte mit beiden Ressourcen verknüpft sein
         $this->assertStringContainsString(
             (string) $initial_resource_id,
             $existingAuthor['resource_ids'],
@@ -670,19 +690,16 @@ class SaveAuthorsTest extends TestCase
             "Der existierende Autor sollte mit der neuen Ressource verknüpft sein."
         );
 
-        // Der existierende Autor sollte jetzt zwei Affiliationen haben
         $this->assertEquals(
             2,
             $existingAuthor['affiliation_count'],
             "Der bestehende Autor sollte jetzt zwei Affiliationen haben: die ursprüngliche und die neue."
         );
 
-        // Überprüfen der Affiliationen
         $stmt = $this->connection->prepare("SELECT COUNT(DISTINCT affiliation_id) as count FROM Affiliation");
         $stmt->execute();
         $affiliationCount = $stmt->get_result()->fetch_assoc()['count'];
 
-        // Wir erwarten 7 einzigartige Affiliationen (5 neue + 2 bestehende)
         $this->assertEquals(
             7,
             $affiliationCount,
