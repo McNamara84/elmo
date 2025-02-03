@@ -33,7 +33,7 @@ Following conditions are required for installation:
 6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `settings.php`.
 7. Create a Google Maps JS API key and paste it into the `settings.php` file as well.
 8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
-9. Access `install.html` via the browser and choose to install with or without test datasets. The database tables and optional the test datasets will be created automatically in your database.
+9. Access `install.html` via the browser and choose to install with or without test datasets. The database tables will be created in your database, as well as 3 test datasets, if you chose that first option.
 10. The metadata editor is now accessible in the browser via `localhost/directoryname`.
 11. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 
@@ -69,7 +69,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - Adjust the database connection:
     - Open the `settings.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
   #### 5. Setting up the application
-  - Access the installation script in your browser as follows: `http://localhost/your_directory/install.php`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.php`.
+  - Access the installation script in your browser as follows: `http://localhost/your_directory/install.html`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.html` if you chose this option.
   #### 6. (Optional) Creating an API key for the automatically generated time zone selection
   - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
   - Insert your API key in `settings.php`in the according line.
