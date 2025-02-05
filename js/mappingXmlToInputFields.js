@@ -83,11 +83,6 @@ function processTitles(xmlDoc, resolver) {
     null
   );
 
-  // reset Titles
-  $('input[name="title[]"]').closest('.row').not(':first').remove();
-  $('input[name="title[]"]:first').val('');
-  $('#input-resourceinformation-titletype').val('1');
-
   for (let i = 0; i < titleNodes.snapshotLength; i++) {
     const titleNode = titleNodes.snapshotItem(i);
     const titleType = titleNode.getAttribute('titleType');
@@ -155,10 +150,6 @@ function processCreators(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-
-  // Reset existing authors
-  $('#group-author .row[data-creator-row]').not(':first').remove();
-  $('#group-author .row[data-creator-row]:first input').val('');
 
   for (let i = 0; i < creatorNodes.snapshotLength; i++) {
     const creatorNode = creatorNodes.snapshotItem(i);
@@ -242,9 +233,6 @@ function processContactPersons(xmlDoc) {
     null
   );
 
-  // Reset existing contact persons
-  $('#group-contactperson .row[contact-person-row]').not(':first').remove();
-  $('#group-contactperson .row[contact-person-row]:first input').val('');
 
   for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
     const contactPersonNode = contactPersonNodes.snapshotItem(i);
@@ -287,7 +275,6 @@ function processContactPersons(xmlDoc) {
       // Initialize Tagify for affiliations
       const affiliationInput = firstRow.find('input[name="cpAffiliation[]"]')[0];
       if (affiliationInput && affiliationInput.tagify) {
-        affiliationInput.tagify.removeAllTags();
         affiliationInput.tagify.addTags(affiliations.map(a => ({ value: a })));
       }
     } else {
@@ -308,7 +295,6 @@ function processContactPersons(xmlDoc) {
       setTimeout(() => {
         const affiliationInput = newRow.find('input[name="cpAffiliation[]"]')[0];
         if (affiliationInput && affiliationInput.tagify) {
-          affiliationInput.tagify.removeAllTags();
           affiliationInput.tagify.addTags(affiliations.map(a => ({ value: a })));
         }
       }, 100);
@@ -358,7 +344,6 @@ function setLabNameWithTagify(row, labId) {
   try {
     // Check if Tagify instance exists
     if (inputName.tagify) {
-      inputName.tagify.removeAllTags();
       inputName.tagify.addTags([lab.name]);
     } else {
       // Create new Tagify instance
@@ -377,7 +362,6 @@ function setLabNameWithTagify(row, labId) {
 
       // Set value after short delay
       setTimeout(() => {
-        tagify.removeAllTags();
         tagify.addTags([lab.name]);
       }, 100);
     }
@@ -385,7 +369,6 @@ function setLabNameWithTagify(row, labId) {
     // Find and set affiliation field
     const inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]')[0];
     if (inputAffiliation && inputAffiliation.tagify) {
-      inputAffiliation.tagify.removeAllTags();
       inputAffiliation.tagify.addTags([lab.affiliation]);
     }
 
@@ -416,9 +399,7 @@ function processOriginatingLaboratories(xmlDoc, resolver) {
     null
   );
 
-  // reset existing laboratories
-  $('#group-originatinglaboratory .row[data-laboratory-row]').not(':first').remove();
-  $('#group-originatinglaboratory .row[data-laboratory-row]:first input').val('');
+
 
   for (let i = 0; i < laboratoryNodes.snapshotLength; i++) {
     const labNode = laboratoryNodes.snapshotItem(i);
@@ -507,15 +488,6 @@ function processContributors(xmlDoc, resolver) {
     XPathResult.FIRST_ORDERED_NODE_TYPE,
     null
   ).singleNodeValue;
-
-  // reset Contributor Person 
-  $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
-  $('#group-contributorperson .row[contributor-person-row]:first input').val('');
-
-  // reset Contributor Institution
-  $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
-  $('#group-contributororganisation .row[contributors-row]:first input').val('');
-
 
   if (!contributorsNode) return;
 
@@ -657,12 +629,11 @@ function populateFormWithContributors(personMap, orgMap) {
   // Process persons
   for (const person of personMap.values()) {
     const personRow = getOrCreatePersonRow(personIndex++);
-    
+
     // Roles
     const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
     const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
     if (tagifyRoles) {
-      tagifyRoles.removeAllTags();
       tagifyRoles.addTags(person.roles.map(role => ({ value: role })));
     }
 
@@ -679,7 +650,6 @@ function populateFormWithContributors(personMap, orgMap) {
     const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
     const tagifyAffiliations = getTagifyInstance(affiliationInput);  // Get or initialize Tagify
     if (tagifyAffiliations) {
-      tagifyAffiliations.removeAllTags();
       tagifyAffiliations.addTags(person.affiliations.map(aff => ({ value: aff })));
     }
 
@@ -690,12 +660,11 @@ function populateFormWithContributors(personMap, orgMap) {
   // Process organizations
   for (const org of orgMap.values()) {
     const orgRow = getOrCreateOrgRow(orgIndex++);
-    
+
     // Roles
     const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
     const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
     if (tagifyRoles) {
-      tagifyRoles.removeAllTags();
       tagifyRoles.addTags(org.roles.map(role => ({ value: role })));
     }
 
@@ -763,9 +732,6 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-   //reset Related Works
-   $('#group-stc .row[tsc-row]').not(':first').remove();
-   $('#group-stc .row[tsc-row]:first input').val('');
 
   for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
     const geoLocationNode = geoLocationNodes.snapshotItem(i);
@@ -842,11 +808,6 @@ function processDescriptions(xmlDoc, resolver) {
     'Other': 'input-other'
   };
 
-  // reset all description fields
-  Object.values(descriptionMapping).forEach(inputId => {
-    $(`#${inputId}`).val('');
-  });
-
   // Process each description node
   for (let i = 0; i < descriptionNodes.snapshotLength; i++) {
     const descriptionNode = descriptionNodes.snapshotItem(i);
@@ -885,10 +846,6 @@ function processDates(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-
-  // Reset date fields
-  $('input[name="dateCreated"]').val('');
-  $('input[name="dateEmbargo"]').val('');
 
   for (let i = 0; i < dateNodes.snapshotLength; i++) {
     const dateNode = dateNodes.snapshotItem(i);
@@ -933,10 +890,6 @@ function processKeywords(xmlDoc, resolver) {
   const tagifyMsl = tagifyInputMsl._tagify;
   const tagifyFree = tagifyInputFree._tagify;
 
-  // Clear existing tags
-  tagifyGCMD.removeAllTags();
-  tagifyMsl.removeAllTags();
-  tagifyFree.removeAllTags();
 
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
@@ -980,9 +933,6 @@ function processRelatedWorks(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-  //reset Related Works
-  $('#group-relatedwork .row[related-work-row]').not(':first').remove();
-  $('#group-relatedwork .row[related-work-row]:first input').val('');
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -1023,9 +973,6 @@ function processFunders(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-  // reset Funding References
-  $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
-  $('#group-fundingreference .row[funding-reference-row]:first input').val('');
 
   for (let i = 0; i < funderNodes.snapshotLength; i++) {
     const funderNode = funderNodes.snapshotItem(i);
@@ -1054,11 +1001,14 @@ function processFunders(xmlDoc, resolver) {
   }
 }
 
+
+
 /**
  * Loads XML data into form fields according to mapping configuration
  * @param {Document} xmlDoc - The parsed XML document
  */
 async function loadXmlToForm(xmlDoc) {
+  clearInputFields();
   const resourceNode = xmlDoc.evaluate(
     '//ns:resource | /resource | //resource',
     xmlDoc,
