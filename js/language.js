@@ -56,6 +56,17 @@ function applyTranslations() {
         }
     });
 
+    // Update tooltips
+    $('[data-translate-tooltip]').each(function () {
+        const element = $(this);
+        const tooltipKey = element.data('translate-tooltip');
+        const translatedTooltip = getNestedValue(translations, tooltipKey);
+
+        if (translatedTooltip) {
+            element.attr('title', translatedTooltip).tooltip('dispose').tooltip();
+        }
+    });
+
     // Translate placeholders in the first row
     translatePlaceholders($("#group-stc").children().first());
 
