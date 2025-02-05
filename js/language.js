@@ -56,16 +56,21 @@ function applyTranslations() {
         }
     });
 
-    // Update tooltips
-    $('[data-translate-tooltip]').each(function () {
-        const element = $(this);
-        const tooltipKey = element.data('translate-tooltip');
-        const translatedTooltip = getNestedValue(translations, tooltipKey);
+  // Update tooltips
+  $('[data-translate-tooltip]').each(function () {
+    const element = $(this);
+    const tooltipKey = element.data('translate-tooltip');
+    const translatedTooltip = getNestedValue(translations, tooltipKey);
 
-        if (translatedTooltip) {
-            element.attr('title', translatedTooltip).tooltip('dispose').tooltip();
-        }
-    });
+    if (translatedTooltip) {
+      element.attr('data-bs-original-title', translatedTooltip);
+      const tooltip = bootstrap.Tooltip.getInstance(element[0]);
+      if (tooltip) {
+        tooltip.dispose();
+      }
+      new bootstrap.Tooltip(element[0]);
+    }
+  });
 
     // Translate placeholders in the first row
     translatePlaceholders($("#group-stc").children().first());
