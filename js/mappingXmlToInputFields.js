@@ -690,7 +690,7 @@ function populateFormWithContributors(personMap, orgMap) {
 /**
  * Parse temporal data from a date node.
  * This helper function simplifies the processing of temporal data in the main `processSpatialTemporalCoverages` function. 
- * It parses date strings and returns the extracted start and end dates and times as separate components.
+ * It parses date strings and returns the extracted start and end dates, times and the timezone as separate components.
  * @param {Node} dateNode - The XML node containing temporal data.
  * @returns {Object} An object containing startDate, startTime, endDate, and endTime.
  */
@@ -700,20 +700,57 @@ function parseTemporalData(dateNode) {
     startTime: '',
     endDate: '',
     endTime: '',
+    timezoneOffset: '',  
   };
 
   if (!dateNode || !dateNode.textContent) return result;
 
   const [start, end] = dateNode.textContent.split('/');
+
+  // Handle start date and time
   if (start) {
-    const [startDate, startTime] = start.includes('T') ? start.split('T') : [start, ''];
-    result.startDate = startDate;
-    result.startTime = startTime ? startTime.split(/[+-]/)[0] : '';
+    if (start.includes('T')) {
+      // Case 1: Date with time and timezone (e.g., 2025-02-28T01:11:00+01:00)
+      const [startDate, startTime] = start.split('T');
+      result.startDate = startDate;
+      result.startTime = startTime.split(/[+-]/)[0];  // Extract time part
+
+      // Extract timezone if present
+      if (start.includes('+') || start.includes('-')) {
+        result.timezoneOffset = start.slice(-6);  // Extract the timezone offset (+01:00, -02:00)
+      }
+    } else {
+      // Case 2: Date with only timezone (e.g., 2025-02-28+02:00)
+      result.startDate = start.replace(/([+-]\d{2}:\d{2})$/, '');  // Remove timezone part from the date
+      result.startTime = '';  // No time
+      const offsetMatch = start.match(/([+-]\d{2}:\d{2})$/);
+      if (offsetMatch) {
+        result.timezoneOffset = offsetMatch[1];  // Extract the timezone offset (+02:00)
+      }
+    }
   }
+
+  // Handle end date and time (similar to start)
   if (end) {
-    const [endDate, endTime] = end.includes('T') ? end.split('T') : [end, ''];
-    result.endDate = endDate;
-    result.endTime = endTime ? endTime.split(/[+-]/)[0] : '';
+    if (end.includes('T')) {
+      // Case 1: Date with time and timezone (e.g., 2025-02-28T22:22:00+01:00)
+      const [endDate, endTime] = end.split('T');
+      result.endDate = endDate;
+      result.endTime = endTime.split(/[+-]/)[0];  // Extract time part
+
+      // Extract timezone if present
+      if (end.includes('+') || end.includes('-')) {
+        result.timezoneOffset = end.slice(-6);  // Extract the timezone offset (+01:00, -02:00)
+      }
+    } else {
+      // Case 2: Date with only timezone (e.g., 2025-02-28+02:00)
+      result.endDate = end.replace(/([+-]\d{2}:\d{2})$/, '');  // Remove timezone part from the date
+      result.endTime = '';  // No time
+      const offsetMatch = end.match(/([+-]\d{2}:\d{2})$/);
+      if (offsetMatch) {
+        result.timezoneOffset = offsetMatch[1];  // Extract the timezone offset (+02:00)
+      }
+    }
   }
 
   return result;
@@ -764,18 +801,32 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
     $lastRow.find('input[name="tscLongitudeMin[]"]').val(longitudeMin);
     $lastRow.find('input[name="tscLongitudeMax[]"]').val(longitudeMax);
 
-    // Handle timezone
-    const timezoneField = $lastRow.find('select[name="tscTimezone[]"]');
-    timezoneField.val(i === 0 ? '' : 'UTC+00:00 (Africa/Abidjan)');
-
     // Set date and time if available
+
     const dateNode = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(i);
     const temporalData = parseTemporalData(dateNode);
-
+    
     $lastRow.find('input[name="tscDateStart[]"]').val(temporalData.startDate);
-    $lastRow.find('input[name="tscTimeStart[]"]').val(temporalData.startTime);
+    if(temporalData.startTime!=''){
+      $lastRow.find('input[name="tscTimeStart[]"]').val(temporalData.startTime);
+    }
+    if (temporalData.endTime!=''){
+      $lastRow.find('input[name="tscTimeEnd[]"]').val(temporalData.endTime);
+
+    }
+
     $lastRow.find('input[name="tscDateEnd[]"]').val(temporalData.endDate);
-    $lastRow.find('input[name="tscTimeEnd[]"]').val(temporalData.endTime);
+   
+    // Handle timezone
+const timezoneField = $lastRow.find('select[name="tscTimezone[]"]');
+
+// Find the option that matches the extracted timezoneOffset and set it as the selected value
+timezoneField.find('option').each(function () {
+  if ($(this).text().includes(temporalData.timezoneOffset)) {
+    timezoneField.val($(this).val());  // Select the matched option
+    return false;  // Exit the loop once a match is found
+  }
+});
 
     // Clone row for the next entry, if there is one
     if (i < geoLocationNodes.snapshotLength - 1) {
