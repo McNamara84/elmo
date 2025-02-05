@@ -651,7 +651,8 @@ Bestätigungsnachricht über erfolgreiche Aktualisierung
 ### Licenses & Rights
 
 - Rights Title
-The content of this field is mapped to `<rights>` in the DataCite scheme and to `<resourceConstraints> <gmd:MD_Constraints> <gmd:useLimitation>` as well as `<gmd:resourceConstraints> <gmd:MD_LegalConstraints>` in the ISO scheme.
+
+  The content of this field is mapped to `<rights>` in the DataCite scheme and to `<resourceConstraints> <gmd:MD_Constraints> <gmd:useLimitation>` as well as `<gmd:resourceConstraints> <gmd:MD_LegalConstraints>` in the ISO scheme.
 
   This field contains the title of the license with its abbreviation.
   - Data type: String
@@ -675,7 +676,7 @@ The content of this field is mapped to `<rights>` in the DataCite scheme and to 
 
   This field specifies if the license is used for software (forSoftware=1) or not (forSoftware=0). The controlled list changes for users based on this parameter when resource type Software is chosen.
 
-### Authors
+### Author(s)
 Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsibleParty>` in the ISO scheme.
 Occurrence is: 1-n
 
@@ -731,7 +732,7 @@ Occurrence is: 1-n
 ### Contact Person(s)
 A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
 
-- Last name
+- Last Name
 
   This field contains the surname of the person.
   - Data type: String
@@ -740,7 +741,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Restrictions: Mandatory
   - Example values: `Jemison`, `Smith`
 
-- Firstname
+- First Name
 
   This field contains the first name of the person.
   - Data type: String
@@ -777,6 +778,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Example values: `gfz.de`, `fh-potsdam.de`
 
 - Affiliation
+    
   This field contains the affiliation of the person.
   - Data type: String
   - Occurrence: 0-n
@@ -1227,6 +1229,24 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 
 <details>
   <summary>
+
+  ## Overview of occurences
+  </summary>
+The following table gives a fast overview on the occurences of the form fields.
+
+| Form group | Field | DataCite | ISO |
+| ---------- | ----- | -------- | --- |
+|            |       |          |     |
+|            |       |          |     |
+|            |       |          |     |
+
+
+
+</details>
+
+<details>
+  <summary>
+
   ## Data validation
   </summary>
 
