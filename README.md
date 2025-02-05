@@ -181,6 +181,8 @@ The following third-party dependencies are included in header.html and footer.ht
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
   - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent
+  - `$showMslLabs`: Should the form group Originating Laboratory be displayed? (true/false)
+  - `$showMslVocabs`: Should the form group MSL keywords be displayed? (true/false)
 </details>
 
 ## API-Dokumentation
