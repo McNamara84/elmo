@@ -67,13 +67,14 @@ include("formgroups/resourceInformation.html");
 include("formgroups/rights.html");
 include("formgroups/authors.html");
 include("formgroups/contactpersons.html");
-// If the $showMslLabs variable is set to true, include the MSL labs form group
 if ($showMslLabs) {
     include("formgroups/originatingLaboratory.html");
 }
 include("formgroups/contributors.html");
 include("formgroups/descriptions.html");
-include("formgroups/mslKeywords.html");
+if ($showMslVocabs) {
+    include("formgroups/mslKeywords.html");
+}
 include("formgroups/thesaurusKeywords.html");
 include("formgroups/freeKeywords.html");
 include("formgroups/dates.html");
