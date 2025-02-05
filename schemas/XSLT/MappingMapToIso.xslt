@@ -57,7 +57,7 @@ http://www.altova.com/mapforce
 									<CI_OnlineResource>
 										<linkage>
 											<URL>
-												<xsl:value-of select="'https://www.gfz-potsdam.de/'"/>
+												<xsl:value-of select="'https://www.gfz.de/'"/>
 											</URL>
 										</linkage>
 										<function>
