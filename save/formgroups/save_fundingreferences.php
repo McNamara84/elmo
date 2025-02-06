@@ -20,6 +20,8 @@ function saveFundingReferences($connection, $postData, $resource_id)
         return false;
     }
 
+    $saveSuccessful = false; // Explicitly initialize before checking funders
+
     if (
         isset($postData['funder'], $postData['funderId'], $postData['grantNummer'], $postData['grantName']) &&
         is_array($postData['funder']) && is_array($postData['funderId']) &&
@@ -30,8 +32,6 @@ function saveFundingReferences($connection, $postData, $resource_id)
         $grantNumber = $postData['grantNummer'];
         $grantName = $postData['grantName'];
         $len = count($funder);
-
-        $saveSuccessful = false;
 
         for ($i = 0; $i < $len; $i++) {
             if (empty($funder[$i])) {
@@ -73,8 +73,9 @@ function saveFundingReferences($connection, $postData, $resource_id)
         }
     }
 
-    return $saveSuccessful; // Ensure function returns false if no funders were saved
+    return $saveSuccessful; // Ensures false is returned when no funders are processed
 }
+
 
 
 /**
