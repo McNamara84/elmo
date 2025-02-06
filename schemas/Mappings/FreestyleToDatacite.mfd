@@ -91,16 +91,6 @@
 					</targets>
 					<view ltx="640" lty="1150" rbx="764" rby="1203"/>
 				</component>
-				<component name="substring-after" library="core" uid="68" kind="5">
-					<sources>
-						<datapoint pos="0" key="210"/>
-						<datapoint pos="1" key="208"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="211"/>
-					</targets>
-					<view ltx="641" lty="1255" rbx="765" rby="1308"/>
-				</component>
 				<component name="substring-before" library="core" uid="67" kind="5">
 					<sources>
 						<datapoint pos="0" key="209"/>
@@ -298,18 +288,6 @@
 						</comment>
 					</data>
 				</component>
-				<component name="constant" library="core" uid="167" kind="2">
-					<targets>
-						<datapoint pos="0" key="436"/>
-					</targets>
-					<view ltx="858" lty="-138" rbx="1012" rby="-122"/>
-					<data>
-						<constant value="Collected" datatype="string"/>
-						<comment>
-							<text>Default value for dateType when data was collected</text>
-						</comment>
-					</data>
-				</component>
 				<component name="concat" library="core" uid="61" kind="5" growable="1" growablebasename="value">
 					<sources>
 						<datapoint pos="0" key="159"/>
@@ -390,16 +368,6 @@
 						</comment>
 					</data>
 				</component>
-				<component name="logical-and" library="core" uid="151" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="389"/>
-						<datapoint pos="1" key="390"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="394"/>
-					</targets>
-					<view ltx="1028" lty="1446" rbx="1134" rby="1500"/>
-				</component>
 				<component name="doi" library="core" uid="216" kind="3">
 					<sources>
 						<datapoint pos="0" key="502"/>
@@ -468,38 +436,6 @@
 						<datapoint pos="0" key="404"/>
 					</targets>
 					<view ltx="1183" lty="1382" rbx="1277" rby="1453"/>
-				</component>
-				<component name="concat" library="core" uid="255" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="516"/>
-						<datapoint pos="1" key="517"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="518"/>
-					</targets>
-					<view ltx="469" lty="1476" rbx="554" rby="1530"/>
-				</component>
-				<component name="if-else" library="core" uid="267" kind="4">
-					<sources>
-						<datapoint pos="0" key="524"/>
-						<datapoint pos="1" key="525"/>
-						<datapoint pos="2" key="526"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="562"/>
-					</targets>
-					<view ltx="592" lty="1475" rbx="686" rby="1546"/>
-				</component>
-				<component name="if-else" library="core" uid="163" kind="4">
-					<sources>
-						<datapoint pos="0" key="419"/>
-						<datapoint/>
-						<datapoint pos="2" key="424"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="425"/>
-					</targets>
-					<view ltx="592" lty="1399" rbx="686" rby="1470"/>
 				</component>
 				<component name="constant" library="core" uid="244" kind="2">
 					<targets>
@@ -936,15 +872,6 @@
 					</targets>
 					<view ltx="592" lty="1546" rbx="686" rby="1617"/>
 				</component>
-				<component name="constant" library="core" uid="166" kind="2">
-					<targets>
-						<datapoint pos="0" key="511"/>
-					</targets>
-					<view ltx="420" lty="1435" rbx="535" rby="1451"/>
-					<data>
-						<constant value="/" datatype="string"/>
-					</data>
-				</component>
 				<component name="exists" library="core" uid="208" kind="5">
 					<sources>
 						<datapoint pos="0" key="481"/>
@@ -953,33 +880,6 @@
 						<datapoint pos="0" key="482"/>
 					</targets>
 					<view ltx="810" lty="1324" rbx="890" rby="1361"/>
-				</component>
-				<component name="timeStart" library="core" uid="263" kind="3">
-					<sources>
-						<datapoint pos="0" key="554"/>
-						<datapoint pos="1" key="555"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="556"/>
-						<datapoint/>
-					</targets>
-					<view ltx="346" lty="1476" rbx="447" rby="1529"/>
-				</component>
-				<component name="if-else" library="core" uid="345" kind="4">
-					<sources>
-						<datapoint pos="0" key="691"/>
-						<datapoint pos="1" key="692"/>
-						<datapoint pos="2" key="693"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="694"/>
-					</targets>
-					<view ltx="585" lty="1616" rbx="679" rby="1687"/>
-					<data>
-						<comment>
-							<text>timezone for timeStart</text>
-						</comment>
-					</data>
 				</component>
 				<component name="if-else" library="core" uid="287" kind="4">
 					<sources>
@@ -1048,21 +948,6 @@
 					</targets>
 					<view ltx="346" lty="1570" rbx="447" rby="1623"/>
 				</component>
-				<component name="logical-and" library="core" uid="349" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="707"/>
-						<datapoint pos="1" key="705"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="706"/>
-					</targets>
-					<view ltx="385" lty="1729" rbx="491" rby="1783"/>
-					<data>
-						<comment>
-							<text>timeEnd AND timezone</text>
-						</comment>
-					</data>
-				</component>
 				<component name="constant" library="core" uid="268" kind="2">
 					<targets>
 						<datapoint pos="0" key="527"/>
@@ -1071,37 +956,6 @@
 					<data>
 						<constant datatype="string"/>
 					</data>
-				</component>
-				<component name="if-else" library="core" uid="348" kind="4">
-					<sources>
-						<datapoint pos="0" key="701"/>
-						<datapoint pos="1" key="702"/>
-						<datapoint pos="2" key="700"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="699"/>
-					</targets>
-					<view ltx="593" lty="1704" rbx="687" rby="1775"/>
-					<data>
-						<comment>
-							<text>timezone for timeEnd</text>
-						</comment>
-					</data>
-				</component>
-				<component name="concat" library="core" uid="271" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="564"/>
-						<datapoint pos="1" key="565"/>
-						<datapoint pos="2" key="696"/>
-						<datapoint pos="3" key="566"/>
-						<datapoint pos="4" key="567"/>
-						<datapoint pos="5" key="568"/>
-						<datapoint pos="6" key="708"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="569"/>
-					</targets>
-					<view ltx="778" lty="1487" rbx="863" rby="1625"/>
 				</component>
 				<component name="exists" library="core" uid="315" kind="5">
 					<sources>
@@ -1236,48 +1090,6 @@
 						</comment>
 					</data>
 				</component>
-				<component name="exists" library="core" uid="241" kind="5">
-					<sources>
-						<datapoint pos="0" key="553"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="528"/>
-					</targets>
-					<view ltx="243" lty="1747" rbx="323" rby="1784"/>
-					<data>
-						<comment>
-							<text>if timeStart exists</text>
-						</comment>
-					</data>
-				</component>
-				<component name="exists" library="core" uid="247" kind="5">
-					<sources>
-						<datapoint pos="0" key="557"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="558"/>
-					</targets>
-					<view ltx="244" lty="1807" rbx="324" rby="1844"/>
-					<data>
-						<comment>
-							<text>timeEnd</text>
-						</comment>
-					</data>
-				</component>
-				<component name="exists" library="core" uid="343" kind="5">
-					<sources>
-						<datapoint pos="0" key="687"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="686"/>
-					</targets>
-					<view ltx="243" lty="1844" rbx="323" rby="1881"/>
-					<data>
-						<comment>
-							<text>if timezone exists</text>
-						</comment>
-					</data>
-				</component>
 				<component name="constant" library="core" uid="77" kind="2">
 					<targets>
 						<datapoint pos="0" key="244"/>
@@ -1395,20 +1207,6 @@
 					</targets>
 					<view ltx="838" lty="1381" rbx="932" rby="1452"/>
 				</component>
-				<component name="exists" library="core" uid="211" kind="5">
-					<sources>
-						<datapoint pos="0" key="487"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="488"/>
-					</targets>
-					<view ltx="252" lty="1656" rbx="332" rby="1693"/>
-					<data>
-						<comment>
-							<text>if latitudeMin exists</text>
-						</comment>
-					</data>
-				</component>
 				<component name="exists" library="core" uid="366" kind="5">
 					<sources>
 						<datapoint/>
@@ -1420,20 +1218,6 @@
 					<data>
 						<comment>
 							<text>if longitudeMax exists</text>
-						</comment>
-					</data>
-				</component>
-				<component name="exists" library="core" uid="213" kind="5">
-					<sources>
-						<datapoint pos="0" key="489"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="490"/>
-					</targets>
-					<view ltx="244" lty="1704" rbx="324" rby="1741"/>
-					<data>
-						<comment>
-							<text>if longitudeMin exists</text>
 						</comment>
 					</data>
 				</component>
@@ -1717,6 +1501,210 @@
 						</comment>
 					</data>
 				</component>
+				<component name="concat" library="core" uid="303" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="601"/>
+						<datapoint pos="1" key="602"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="603"/>
+					</targets>
+					<view ltx="396" lty="2026" rbx="481" rby="2080"/>
+				</component>
+				<component name="if-else" library="core" uid="291" kind="4">
+					<sources>
+						<datapoint pos="0" key="589"/>
+						<datapoint pos="1" key="590"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="591"/>
+					</targets>
+					<view ltx="911" lty="2016" rbx="1005" rby="2087"/>
+				</component>
+				<component name="exists" library="core" uid="213" kind="5">
+					<sources>
+						<datapoint pos="0" key="489"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="490"/>
+					</targets>
+					<view ltx="244" lty="1704" rbx="324" rby="1741"/>
+					<data>
+						<comment>
+							<text>if longitudeMin exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="substring-after" library="core" uid="68" kind="5">
+					<sources>
+						<datapoint pos="0" key="210"/>
+						<datapoint pos="1" key="208"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="211"/>
+					</targets>
+					<view ltx="641" lty="1255" rbx="765" rby="1308"/>
+				</component>
+				<component name="exists" library="core" uid="211" kind="5">
+					<sources>
+						<datapoint pos="0" key="487"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="488"/>
+					</targets>
+					<view ltx="252" lty="1656" rbx="332" rby="1693"/>
+					<data>
+						<comment>
+							<text>if latitudeMin exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="logical-and" library="core" uid="151" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="389"/>
+						<datapoint pos="1" key="390"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="394"/>
+					</targets>
+					<view ltx="375" lty="1336" rbx="481" rby="1390"/>
+					<data>
+						<comment>
+							<text>do latitudeMax AND longitudeMax exist?</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="163" kind="4">
+					<sources>
+						<datapoint pos="0" key="419"/>
+						<datapoint/>
+						<datapoint pos="2" key="424"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="425"/>
+					</targets>
+					<view ltx="592" lty="1399" rbx="686" rby="1470"/>
+				</component>
+				<component name="if-else" library="core" uid="267" kind="4">
+					<sources>
+						<datapoint pos="0" key="524"/>
+						<datapoint pos="1" key="525"/>
+						<datapoint pos="2" key="526"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="562"/>
+					</targets>
+					<view ltx="592" lty="1475" rbx="686" rby="1546"/>
+				</component>
+				<component name="concat" library="core" uid="376" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="753"/>
+						<datapoint pos="1" key="755"/>
+						<datapoint pos="2" key="760"/>
+						<datapoint pos="3" key="756"/>
+						<datapoint pos="4" key="754"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="758"/>
+					</targets>
+					<view ltx="1243" lty="1729" rbx="1328" rby="1833"/>
+					<data>
+						<comment>
+							<text>without Times</text>
+						</comment>
+					</data>
+				</component>
+				<component name="concat" library="core" uid="271" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="564"/>
+						<datapoint pos="1" key="565"/>
+						<datapoint pos="2" key="696"/>
+						<datapoint pos="3" key="566"/>
+						<datapoint pos="4" key="567"/>
+						<datapoint pos="5" key="568"/>
+						<datapoint pos="6" key="708"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="569"/>
+					</targets>
+					<view ltx="1310" lty="1563" rbx="1395" rby="1701"/>
+					<data>
+						<comment>
+							<text>with times</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="345" kind="4">
+					<sources>
+						<datapoint pos="0" key="691"/>
+						<datapoint pos="1" key="692"/>
+						<datapoint pos="2" key="693"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="694"/>
+					</targets>
+					<view ltx="585" lty="1616" rbx="679" rby="1687"/>
+					<data>
+						<comment>
+							<text>timezone for timeStart</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="343" kind="5">
+					<sources>
+						<datapoint pos="0" key="687"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="686"/>
+					</targets>
+					<view ltx="243" lty="1844" rbx="323" rby="1881"/>
+					<data>
+						<comment>
+							<text>if timezone exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="logical-and" library="core" uid="349" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="707"/>
+						<datapoint pos="1" key="705"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="706"/>
+					</targets>
+					<view ltx="385" lty="1729" rbx="491" rby="1783"/>
+					<data>
+						<comment>
+							<text>timeEnd AND timezone</text>
+						</comment>
+					</data>
+				</component>
+				<component name="if-else" library="core" uid="348" kind="4">
+					<sources>
+						<datapoint pos="0" key="701"/>
+						<datapoint pos="1" key="702"/>
+						<datapoint pos="2" key="700"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="699"/>
+					</targets>
+					<view ltx="593" lty="1704" rbx="687" rby="1775"/>
+					<data>
+						<comment>
+							<text>timezone for timeEnd</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="166" kind="2">
+					<targets>
+						<datapoint pos="0" key="511"/>
+					</targets>
+					<view ltx="420" lty="1435" rbx="535" rby="1451"/>
+					<data>
+						<constant value="/" datatype="string"/>
+					</data>
+				</component>
 				<component name="DataCiteSchema45" library="xml" uid="3" kind="14">
 					<properties XSLTTargetEncoding="UTF-8" XSLTDefaultOutput="1"/>
 					<view ltx="1470" lty="-99" rbx="2074" rby="2689"/>
@@ -1837,6 +1825,9 @@
 											<entry name="date" ns="1" inpkey="580" expanded="1" clone="1">
 												<entry name="dateType" type="attribute" inpkey="440"/>
 											</entry>
+											<entry name="date" ns="1" inpkey="767" expanded="1" clone="1">
+												<entry name="dateType" type="attribute" inpkey="768"/>
+											</entry>
 											<entry name="date" ns="1" inpkey="441" expanded="1" clone="1">
 												<entry name="dateType" type="attribute" inpkey="442"/>
 											</entry>
@@ -1901,26 +1892,98 @@
 						<document schema="..\DataCite\DataCiteSchema45.xsd" instanceroot="{http://datacite.org/schema/kernel-4}resource" inputinstance="..\DataCite\DataCiteExample45.xml" outputinstance="..\DataCite\DataCiteExample45.xml"/>
 					</data>
 				</component>
-				<component name="concat" library="core" uid="303" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="601"/>
-						<datapoint pos="1" key="602"/>
-					</sources>
+				<component name="constant" library="core" uid="167" kind="2">
 					<targets>
-						<datapoint pos="0" key="603"/>
+						<datapoint pos="0" key="436"/>
 					</targets>
-					<view ltx="396" lty="2026" rbx="481" rby="2080"/>
+					<view ltx="858" lty="-138" rbx="1012" rby="-122"/>
+					<data>
+						<constant value="Collected" datatype="string"/>
+						<comment>
+							<text>Default value for dateType when data was collected</text>
+						</comment>
+					</data>
 				</component>
-				<component name="if-else" library="core" uid="291" kind="4">
+				<component name="exists" library="core" uid="241" kind="5">
 					<sources>
-						<datapoint pos="0" key="589"/>
-						<datapoint pos="1" key="590"/>
-						<datapoint/>
+						<datapoint pos="0" key="553"/>
 					</sources>
 					<targets>
-						<datapoint pos="0" key="591"/>
+						<datapoint pos="0" key="528"/>
 					</targets>
-					<view ltx="911" lty="2016" rbx="1005" rby="2087"/>
+					<view ltx="243" lty="1747" rbx="323" rby="1784"/>
+					<data>
+						<comment>
+							<text>if timeStart exists</text>
+						</comment>
+					</data>
+				</component>
+				<component name="timeStart" library="core" uid="263" kind="3">
+					<sources>
+						<datapoint pos="0" key="554"/>
+						<datapoint pos="1" key="555"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="556"/>
+						<datapoint/>
+					</targets>
+					<view ltx="346" lty="1476" rbx="447" rby="1529"/>
+				</component>
+				<component name="concat" library="core" uid="255" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="516"/>
+						<datapoint pos="1" key="517"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="518"/>
+					</targets>
+					<view ltx="469" lty="1476" rbx="554" rby="1530"/>
+				</component>
+				<component name="dateStart" library="core" uid="379" kind="3">
+					<sources>
+						<datapoint pos="0" key="761"/>
+						<datapoint pos="1" key="762"/>
+					</sources>
+					<targets>
+						<datapoint/>
+						<datapoint pos="1" key="763"/>
+					</targets>
+					<view ltx="730" lty="1761" rbx="831" rby="1814"/>
+					<data>
+						<comment>
+							<text>when timeStart does not exist</text>
+						</comment>
+					</data>
+				</component>
+				<component name="exists" library="core" uid="247" kind="5">
+					<sources>
+						<datapoint pos="0" key="557"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="558"/>
+					</targets>
+					<view ltx="244" lty="1807" rbx="324" rby="1844"/>
+					<data>
+						<comment>
+							<text>timeEnd</text>
+						</comment>
+					</data>
+				</component>
+				<component name="dateEnd" library="core" uid="380" kind="3">
+					<sources>
+						<datapoint pos="0" key="765"/>
+						<datapoint pos="1" key="766"/>
+					</sources>
+					<targets>
+						<datapoint/>
+						<datapoint pos="1" key="764"/>
+					</targets>
+					<view ltx="741" lty="1861" rbx="842" rby="1914"/>
+					<data>
+						<comment>
+							<text>when timeEnd does not exist</text>
+						</comment>
+					</data>
 				</component>
 				<component name="FreestyleSchemaDB" library="xml" uid="2" kind="14">
 					<properties XSLTTargetEncoding="UTF-8"/>
@@ -2090,7 +2153,7 @@
 								</entry>
 							</entry>
 						</root>
-						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\resource_5.xml" outputinstance="..\..\xml\resource_5.xml"/>
+						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\resource_1.xml" outputinstance="..\..\xml\resource_1.xml"/>
 					</data>
 				</component>
 			</children>
@@ -2791,6 +2854,7 @@
 					<vertex vertexkey="436">
 						<edges>
 							<edge vertexkey="440"/>
+							<edge vertexkey="768"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="432">
@@ -2896,6 +2960,7 @@
 							<edge vertexkey="524"/>
 							<edge vertexkey="555"/>
 							<edge vertexkey="704"/>
+							<edge vertexkey="762"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="518">
@@ -2921,6 +2986,7 @@
 							<edge vertexkey="531"/>
 							<edge vertexkey="551"/>
 							<edge vertexkey="705"/>
+							<edge vertexkey="766"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="247">
@@ -2974,6 +3040,7 @@
 					<vertex vertexkey="576">
 						<edges>
 							<edge vertexkey="564"/>
+							<edge vertexkey="761"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="562">
@@ -2984,11 +3051,13 @@
 					<vertex vertexkey="511">
 						<edges>
 							<edge vertexkey="566"/>
+							<edge vertexkey="760"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="578">
 						<edges>
 							<edge vertexkey="567"/>
+							<edge vertexkey="765"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="563">
@@ -3166,6 +3235,8 @@
 							<edge vertexkey="687"/>
 							<edge vertexkey="692"/>
 							<edge vertexkey="702"/>
+							<edge vertexkey="754"/>
+							<edge vertexkey="755"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="697">
@@ -3268,6 +3339,21 @@
 					<vertex vertexkey="749">
 						<edges>
 							<edge vertexkey="751"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="763">
+						<edges>
+							<edge vertexkey="753"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="764">
+						<edges>
+							<edge vertexkey="756"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="758">
+						<edges>
+							<edge vertexkey="767"/>
 						</edges>
 					</vertex>
 				</vertices>

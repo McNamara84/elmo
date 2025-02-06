@@ -533,6 +533,22 @@ http://www.altova.com/mapforce
 							</xsl:choose>
 						</xsl:for-each>
 					</xsl:for-each>
+					<xsl:for-each select="*[local-name()='SpatialTemporalCoverages' and namespace-uri()='']/*[local-name()='SpatialTemporalCoverage' and namespace-uri()='']">
+						<xsl:variable name="var61_cur" select="."/>
+						<xsl:for-each select="(./*[local-name()='dateStart' and namespace-uri()=''])[not($var61_cur/*[local-name()='timeStart' and namespace-uri()=''])]">
+							<xsl:variable name="var62_filter" select="."/>
+							<xsl:for-each select="$var61_cur/*[local-name()='timezone' and namespace-uri()='']">
+								<xsl:variable name="var63_cur" select="."/>
+								<xsl:for-each select="($var61_cur/*[local-name()='dateEnd' and namespace-uri()=''])[not($var61_cur/*[local-name()='timeEnd' and namespace-uri()=''])]">
+									<xsl:variable name="var64_filter" select="."/>
+									<date>
+										<xsl:attribute name="dateType" namespace="">Collected</xsl:attribute>
+										<xsl:value-of select="concat($var62_filter, $var63_cur, '/', ., $var63_cur)"/>
+									</date>
+								</xsl:for-each>
+							</xsl:for-each>
+						</xsl:for-each>
+					</xsl:for-each>
 					<date>
 						<xsl:attribute name="dateType" namespace="">Created</xsl:attribute>
 						<xsl:value-of select="*[local-name()='dateCreated' and namespace-uri()='']"/>
@@ -542,10 +558,10 @@ http://www.altova.com/mapforce
 					<xsl:value-of select="*[local-name()='Language' and namespace-uri()='']/*[local-name()='code' and namespace-uri()='']"/>
 				</language>
 				<xsl:for-each select="*[local-name()='RelatedWorks' and namespace-uri()='']">
-					<xsl:variable name="var61_cur" select="."/>
+					<xsl:variable name="var65_cur" select="."/>
 					<relatedIdentifiers>
 						<xsl:for-each select="*[local-name()='RelatedWork' and namespace-uri()='']">
-							<xsl:variable name="var62_cur" select="."/>
+							<xsl:variable name="var66_cur" select="."/>
 							<relatedIdentifier>
 								<xsl:attribute name="relatedIdentifierType" namespace="">
 									<xsl:value-of select="*[local-name()='IdentifierType' and namespace-uri()='']/*[local-name()='name' and namespace-uri()='']"/>
@@ -560,7 +576,7 @@ http://www.altova.com/mapforce
 				</xsl:for-each>
 				<xsl:if test="*[local-name()='version' and namespace-uri()='']">
 					<xsl:for-each select="*[local-name()='version' and namespace-uri()='']">
-						<xsl:variable name="var63_cur" select="."/>
+						<xsl:variable name="var67_cur" select="."/>
 						<version>
 							<xsl:value-of select="."/>
 						</version>
@@ -582,7 +598,7 @@ http://www.altova.com/mapforce
 				</rightsList>
 				<descriptions>
 					<xsl:for-each select="*[local-name()='Descriptions' and namespace-uri()='']/*[local-name()='Description' and namespace-uri()='']">
-						<xsl:variable name="var64_cur" select="."/>
+						<xsl:variable name="var68_cur" select="."/>
 						<description>
 							<xsl:attribute name="descriptionType" namespace="">
 								<xsl:choose>
@@ -601,10 +617,10 @@ http://www.altova.com/mapforce
 				</descriptions>
 				<geoLocations>
 					<xsl:for-each select="*[local-name()='SpatialTemporalCoverages' and namespace-uri()='']/*[local-name()='SpatialTemporalCoverage' and namespace-uri()='']">
-						<xsl:variable name="var65_cur" select="."/>
+						<xsl:variable name="var69_cur" select="."/>
 						<geoLocation>
 							<xsl:for-each select="*[local-name()='description' and namespace-uri()='']">
-								<xsl:variable name="var66_cur" select="."/>
+								<xsl:variable name="var70_cur" select="."/>
 								<geoLocationPlace>
 									<xsl:value-of select="."/>
 								</geoLocationPlace>
@@ -613,13 +629,13 @@ http://www.altova.com/mapforce
 								<geoLocationPoint>
 									<xsl:if test="not((false() and boolean(*[local-name()='longitudeMax' and namespace-uri()=''])))">
 										<xsl:for-each select="*[local-name()='longitudeMin' and namespace-uri()='']">
-											<xsl:variable name="var67_cur" select="."/>
+											<xsl:variable name="var71_cur" select="."/>
 											<pointLongitude>
 												<xsl:value-of select="number(.)"/>
 											</pointLongitude>
 										</xsl:for-each>
 										<xsl:for-each select="*[local-name()='latitudeMin' and namespace-uri()='']">
-											<xsl:variable name="var68_cur" select="."/>
+											<xsl:variable name="var72_cur" select="."/>
 											<pointLatitude>
 												<xsl:value-of select="number(.)"/>
 											</pointLatitude>
@@ -631,7 +647,7 @@ http://www.altova.com/mapforce
 								<geoLocationBox>
 									<xsl:if test="(true() and boolean(*[local-name()='longitudeMax' and namespace-uri()='']))">
 										<xsl:for-each select="*[local-name()='longitudeMin' and namespace-uri()='']">
-											<xsl:variable name="var69_cur" select="."/>
+											<xsl:variable name="var73_cur" select="."/>
 											<westBoundLongitude>
 												<xsl:value-of select="number(.)"/>
 											</westBoundLongitude>
@@ -639,7 +655,7 @@ http://www.altova.com/mapforce
 									</xsl:if>
 									<xsl:if test="(true() and boolean(*[local-name()='longitudeMax' and namespace-uri()='']))">
 										<xsl:for-each select="*[local-name()='longitudeMax' and namespace-uri()='']">
-											<xsl:variable name="var70_cur" select="."/>
+											<xsl:variable name="var74_cur" select="."/>
 											<eastBoundLongitude>
 												<xsl:value-of select="number(.)"/>
 											</eastBoundLongitude>
@@ -647,7 +663,7 @@ http://www.altova.com/mapforce
 									</xsl:if>
 									<xsl:if test="(true() and boolean(*[local-name()='longitudeMax' and namespace-uri()='']))">
 										<xsl:for-each select="*[local-name()='latitudeMin' and namespace-uri()='']">
-											<xsl:variable name="var71_cur" select="."/>
+											<xsl:variable name="var75_cur" select="."/>
 											<southBoundLatitude>
 												<xsl:value-of select="number(.)"/>
 											</southBoundLatitude>
@@ -655,7 +671,7 @@ http://www.altova.com/mapforce
 									</xsl:if>
 									<xsl:if test="(true() and boolean(*[local-name()='longitudeMax' and namespace-uri()='']))">
 										<xsl:for-each select="*[local-name()='latitudeMax' and namespace-uri()='']">
-											<xsl:variable name="var72_cur" select="."/>
+											<xsl:variable name="var76_cur" select="."/>
 											<northBoundLatitude>
 												<xsl:value-of select="number(.)"/>
 											</northBoundLatitude>
@@ -667,10 +683,10 @@ http://www.altova.com/mapforce
 					</xsl:for-each>
 				</geoLocations>
 				<xsl:for-each select="*[local-name()='FundingReferences' and namespace-uri()='']">
-					<xsl:variable name="var73_cur" select="."/>
+					<xsl:variable name="var77_cur" select="."/>
 					<fundingReferences>
 						<xsl:for-each select="*[local-name()='FundingReference' and namespace-uri()='']">
-							<xsl:variable name="var74_cur" select="."/>
+							<xsl:variable name="var78_cur" select="."/>
 							<fundingReference>
 								<funderName>
 									<xsl:value-of select="*[local-name()='funder' and namespace-uri()='']"/>
