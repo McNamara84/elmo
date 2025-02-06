@@ -36,14 +36,14 @@ http://www.altova.com/mapforce
 					<xsl:variable name="var7_cur" select="."/>
 					<date xmlns="http://datacite.org/schema/kernel-4">
 						<xsl:attribute name="dateType" namespace="">Collected</xsl:attribute>
-						<xsl:value-of select="concat($par6, $par5, $par4, '/', $par7, $par1, .)"/>
+						<xsl:value-of select="concat($par6, $par4, $par7, '/', $par5, $par1, .)"/>
 					</date>
 				</xsl:for-each>
 			</xsl:when>
 			<xsl:otherwise>
 				<date xmlns="http://datacite.org/schema/kernel-4">
 					<xsl:attribute name="dateType" namespace="">Collected</xsl:attribute>
-					<xsl:value-of select="concat($par6, $par5, $par4, '/', $par7, $par1, '')"/>
+					<xsl:value-of select="concat($par6, $par4, $par7, '/', $par5, $par1, '')"/>
 				</date>
 			</xsl:otherwise>
 		</xsl:choose>
@@ -372,10 +372,10 @@ http://www.altova.com/mapforce
 																		<xsl:with-param name="par1" select="concat('T', .)"/>
 																		<xsl:with-param name="par2" select="$var8_cur"/>
 																		<xsl:with-param name="par3" select="$var30_cur"/>
-																		<xsl:with-param name="par4" select="string($var39_cur)"/>
-																		<xsl:with-param name="par5" select="concat('T', $var34_cur)"/>
+																		<xsl:with-param name="par4" select="concat('T', $var34_cur)"/>
+																		<xsl:with-param name="par5" select="$var40_cur"/>
 																		<xsl:with-param name="par6" select="$var31_cur"/>
-																		<xsl:with-param name="par7" select="$var40_cur"/>
+																		<xsl:with-param name="par7" select="string($var39_cur)"/>
 																	</xsl:call-template>
 																</xsl:for-each>
 															</xsl:when>
@@ -384,10 +384,10 @@ http://www.altova.com/mapforce
 																	<xsl:with-param name="par1" select="''"/>
 																	<xsl:with-param name="par2" select="$var8_cur"/>
 																	<xsl:with-param name="par3" select="$var30_cur"/>
-																	<xsl:with-param name="par4" select="string($var39_cur)"/>
-																	<xsl:with-param name="par5" select="concat('T', $var34_cur)"/>
+																	<xsl:with-param name="par4" select="concat('T', $var34_cur)"/>
+																	<xsl:with-param name="par5" select="."/>
 																	<xsl:with-param name="par6" select="$var31_cur"/>
-																	<xsl:with-param name="par7" select="."/>
+																	<xsl:with-param name="par7" select="string($var39_cur)"/>
 																</xsl:call-template>
 															</xsl:otherwise>
 														</xsl:choose>
@@ -411,10 +411,10 @@ http://www.altova.com/mapforce
 																	<xsl:with-param name="par1" select="concat('T', .)"/>
 																	<xsl:with-param name="par2" select="$var8_cur"/>
 																	<xsl:with-param name="par3" select="$var30_cur"/>
-																	<xsl:with-param name="par4" select="''"/>
-																	<xsl:with-param name="par5" select="concat('T', $var34_cur)"/>
+																	<xsl:with-param name="par4" select="concat('T', $var34_cur)"/>
+																	<xsl:with-param name="par5" select="$var44_cur"/>
 																	<xsl:with-param name="par6" select="$var31_cur"/>
-																	<xsl:with-param name="par7" select="$var44_cur"/>
+																	<xsl:with-param name="par7" select="''"/>
 																</xsl:call-template>
 															</xsl:for-each>
 														</xsl:when>
@@ -423,10 +423,10 @@ http://www.altova.com/mapforce
 																<xsl:with-param name="par1" select="''"/>
 																<xsl:with-param name="par2" select="$var8_cur"/>
 																<xsl:with-param name="par3" select="$var30_cur"/>
-																<xsl:with-param name="par4" select="''"/>
-																<xsl:with-param name="par5" select="concat('T', $var34_cur)"/>
+																<xsl:with-param name="par4" select="concat('T', $var34_cur)"/>
+																<xsl:with-param name="par5" select="."/>
 																<xsl:with-param name="par6" select="$var31_cur"/>
-																<xsl:with-param name="par7" select="."/>
+																<xsl:with-param name="par7" select="''"/>
 															</xsl:call-template>
 														</xsl:otherwise>
 													</xsl:choose>
@@ -468,10 +468,10 @@ http://www.altova.com/mapforce
 																	<xsl:with-param name="par1" select="concat('T', .)"/>
 																	<xsl:with-param name="par2" select="$var8_cur"/>
 																	<xsl:with-param name="par3" select="$var30_cur"/>
-																	<xsl:with-param name="par4" select="string($var52_cur)"/>
-																	<xsl:with-param name="par5" select="''"/>
+																	<xsl:with-param name="par4" select="''"/>
+																	<xsl:with-param name="par5" select="$var53_cur"/>
 																	<xsl:with-param name="par6" select="$var31_cur"/>
-																	<xsl:with-param name="par7" select="$var53_cur"/>
+																	<xsl:with-param name="par7" select="string($var52_cur)"/>
 																</xsl:call-template>
 															</xsl:for-each>
 														</xsl:when>
@@ -480,10 +480,10 @@ http://www.altova.com/mapforce
 																<xsl:with-param name="par1" select="''"/>
 																<xsl:with-param name="par2" select="$var8_cur"/>
 																<xsl:with-param name="par3" select="$var30_cur"/>
-																<xsl:with-param name="par4" select="string($var52_cur)"/>
-																<xsl:with-param name="par5" select="''"/>
+																<xsl:with-param name="par4" select="''"/>
+																<xsl:with-param name="par5" select="."/>
 																<xsl:with-param name="par6" select="$var31_cur"/>
-																<xsl:with-param name="par7" select="."/>
+																<xsl:with-param name="par7" select="string($var52_cur)"/>
 															</xsl:call-template>
 														</xsl:otherwise>
 													</xsl:choose>
@@ -508,9 +508,9 @@ http://www.altova.com/mapforce
 																<xsl:with-param name="par2" select="$var8_cur"/>
 																<xsl:with-param name="par3" select="$var30_cur"/>
 																<xsl:with-param name="par4" select="''"/>
-																<xsl:with-param name="par5" select="''"/>
+																<xsl:with-param name="par5" select="$var57_cur"/>
 																<xsl:with-param name="par6" select="$var31_cur"/>
-																<xsl:with-param name="par7" select="$var57_cur"/>
+																<xsl:with-param name="par7" select="''"/>
 															</xsl:call-template>
 														</xsl:for-each>
 													</xsl:when>
@@ -520,9 +520,9 @@ http://www.altova.com/mapforce
 															<xsl:with-param name="par2" select="$var8_cur"/>
 															<xsl:with-param name="par3" select="$var30_cur"/>
 															<xsl:with-param name="par4" select="''"/>
-															<xsl:with-param name="par5" select="''"/>
+															<xsl:with-param name="par5" select="."/>
 															<xsl:with-param name="par6" select="$var31_cur"/>
-															<xsl:with-param name="par7" select="."/>
+															<xsl:with-param name="par7" select="''"/>
 														</xsl:call-template>
 													</xsl:otherwise>
 												</xsl:choose>
@@ -697,7 +697,7 @@ http://www.altova.com/mapforce
 											<xsl:value-of select="*[local-name()='funderidtyp' and namespace-uri()='']"/>
 										</xsl:attribute>
 										<xsl:attribute name="schemeURI" namespace="">https://www.crossref.org/services/funder-registry/</xsl:attribute>
-										<xsl:value-of select="concat('http://dx.doi.org/10.13039/', *[local-name()='funderid' and namespace-uri()=''])"/>
+										<xsl:value-of select="concat('https://doi.org/10.13039/', *[local-name()='funderid' and namespace-uri()=''])"/>
 									</funderIdentifier>
 								</xsl:if>
 								<xsl:if test="((string-length(string(*[local-name()='grantnumber' and namespace-uri()=''])) &gt; 0) and true())">

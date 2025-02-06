@@ -35,14 +35,23 @@ function saveFundingReferences($connection, $postData, $resource_id)
 
         for ($i = 0; $i < $len; $i++) {
             if (empty($funder[$i])) {
-                continue;
+                continue; // Skip if no funder name is provided
             }
+        
+          // Only set funderId and funderIdType if a funderId exists
+    if (!empty($funderId[$i])) {
+        // Extract last 10 digits for the funderId if it's non-empty
+        $funderIdString = extractLastTenDigits($funderId[$i]);
+        // If funderId is present, assign a type (could be "Crossref Funder ID" or another default type)
+        $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
+    } else {
+        $funderIdString = null;
+        $funderIdType = null;
+    }
 
-            $funderIdString = !empty($funderId[$i]) ? extractLastTenDigits($funderId[$i]) : null;
-            $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : null;
-
+        
             error_log("Processing funding reference for funder: " . $funder[$i]);
-
+        
             $funding_reference_id = insertFundingReference(
                 $connection,
                 $funder[$i],
@@ -51,7 +60,7 @@ function saveFundingReferences($connection, $postData, $resource_id)
                 $grantNumber[$i],
                 $grantName[$i]
             );
-
+        
             if ($funding_reference_id) {
                 error_log("Successfully inserted funding reference with ID: " . $funding_reference_id);
                 $linkResult = linkResourceToFundingReference($connection, $resource_id, $funding_reference_id);
@@ -65,14 +74,9 @@ function saveFundingReferences($connection, $postData, $resource_id)
                 error_log("Failed to insert Funding Reference");
             }
         }
-
-        return $saveSuccessful;
-    } else {
-        error_log("Invalid postData structure");
-        return false;
-    }
 }
 
+}
 /**
  * Inserts a funding reference into the database if it doesn't already exist.
  *
@@ -103,15 +107,15 @@ function insertFundingReference($connection, $funder, $funderId, $funderIdType, 
     }
 
     $checkStmt->bind_param(
-        "sssss", 
-        $funder, 
+        "sssss",
+        $funder,
         $funderId,
         $funderIdType,
         $grantNumber,
         $grantName
     );
     $checkStmt->execute();
-    
+
     // Fetch the result and check if any funding reference exists
     $checkStmt->bind_result($existingId);
     $checkStmt->fetch();
