@@ -1,3 +1,41 @@
+/**
+ * Processes the resource type from an XML document and selects the corresponding option
+ * in the dropdown based on the visible text matching the `resourceTypeGeneral` attribute.
+ *
+ * @param {Document} xmlDoc - The XML document containing the resourceType element.
+ */
+function processResourceType(xmlDoc) {
+  // Extract the resourceType element
+  const resourceNode = xmlDoc.querySelector('resourceType');
+  if (!resourceNode) {
+    console.error('No resourceType element found in XML');
+    return;
+  }
+
+  // Get the resourceTypeGeneral attribute
+  const resourceTypeGeneral = resourceNode.getAttribute('resourceTypeGeneral');
+  if (!resourceTypeGeneral) {
+    console.error('No resourceTypeGeneral attribute found');
+    return;
+  }
+
+  // Select the corresponding option in the dropdown
+  const selectField = document.querySelector('#input-resourceinformation-resourcetype');
+  if (!selectField) {
+    console.error('Select field not found');
+    return;
+  }
+
+  // Find an option where the visible text matches resourceTypeGeneral
+  const optionToSelect = Array.from(selectField.options).find(option => option.text.trim() === resourceTypeGeneral);
+
+  if (optionToSelect) {
+    optionToSelect.selected = true;
+  } else {
+    console.warn(`No matching option found for text: ${resourceTypeGeneral}`);
+  }
+}
+
 
 /**
  * Extracts license identifier from various formats
@@ -700,7 +738,7 @@ function parseTemporalData(dateNode) {
     startTime: '',
     endDate: '',
     endTime: '',
-    timezoneOffset: '',  
+    timezoneOffset: '',
   };
 
   if (!dateNode || !dateNode.textContent) return result;
@@ -805,28 +843,28 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
 
     const dateNode = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(i);
     const temporalData = parseTemporalData(dateNode);
-    
+
     $lastRow.find('input[name="tscDateStart[]"]').val(temporalData.startDate);
-    if(temporalData.startTime!=''){
+    if (temporalData.startTime != '') {
       $lastRow.find('input[name="tscTimeStart[]"]').val(temporalData.startTime);
     }
-    if (temporalData.endTime!=''){
+    if (temporalData.endTime != '') {
       $lastRow.find('input[name="tscTimeEnd[]"]').val(temporalData.endTime);
 
     }
 
     $lastRow.find('input[name="tscDateEnd[]"]').val(temporalData.endDate);
-   
-    // Handle timezone
-const timezoneField = $lastRow.find('select[name="tscTimezone[]"]');
 
-// Find the option that matches the extracted timezoneOffset and set it as the selected value
-timezoneField.find('option').each(function () {
-  if ($(this).text().includes(temporalData.timezoneOffset)) {
-    timezoneField.val($(this).val());  // Select the matched option
-    return false;  // Exit the loop once a match is found
-  }
-});
+    // Handle timezone
+    const timezoneField = $lastRow.find('select[name="tscTimezone[]"]');
+
+    // Find the option that matches the extracted timezoneOffset and set it as the selected value
+    timezoneField.find('option').each(function () {
+      if ($(this).text().includes(temporalData.timezoneOffset)) {
+        timezoneField.val($(this).val());  // Select the matched option
+        return false;  // Exit the loop once a match is found
+      }
+    });
 
     // Clone row for the next entry, if there is one
     if (i < geoLocationNodes.snapshotLength - 1) {
@@ -1104,45 +1142,7 @@ async function loadXmlToForm(xmlDoc) {
       selector: '#input-resourceinformation-version',
       attribute: 'textContent'
     },
-    'resourceType': {
-      selector: '#input-resourceinformation-resourcetype',
-      attribute: 'resourceTypeGeneral',
-      transform: (value) => {
-        const typeMap = {
-          'Audiovisual': '1',
-          'Book': '2',
-          'BookChapter': '3',
-          'Collection': '4',
-          'ComputationalNotebook': '5',
-          'ConferencePaper': '6',
-          'ConferenceProceeding': '7',
-          'DataPaper': '8',
-          'Dataset': '9',
-          'Dissertation': '10',
-          'Event': '11',
-          'Image': '12',
-          'Instrument': '13',
-          'InteractiveResource': '14',
-          'Journal': '15',
-          'JournalArticle': '16',
-          'Model': '17',
-          'OutputManagementPlan': '18',
-          'PeerReview': '19',
-          'PhysicalObject': '20',
-          'Preprint': '21',
-          'Report': '22',
-          'Service': '23',
-          'Software': '24',
-          'Sound': '25',
-          'Standard': '26',
-          'StudyRegistration': '27',
-          'Text': '28',
-          'Workflow': '29',
-          'Other': '30'
-        };
-        return typeMap[value] || '30';
-      }
-    },
+
     // Language mapping
     'language': {
       selector: '#input-resourceinformation-language',
@@ -1204,6 +1204,7 @@ async function loadXmlToForm(xmlDoc) {
     }
   }
 
+  processResourceType(xmlDoc);
   // Process titles
   processTitles(xmlDoc, resolver);
   // Processing Creators
