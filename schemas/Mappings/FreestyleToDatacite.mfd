@@ -1299,16 +1299,6 @@
 					</targets>
 					<view ltx="310" lty="2129" rbx="392" rby="2166"/>
 				</component>
-				<component name="concat" library="core" uid="303" kind="5" growable="1" growablebasename="value">
-					<sources>
-						<datapoint pos="0" key="601"/>
-						<datapoint pos="1" key="602"/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="603"/>
-					</targets>
-					<view ltx="396" lty="2026" rbx="481" rby="2080"/>
-				</component>
 				<component name="greater" library="core" uid="310" kind="5">
 					<sources>
 						<datapoint pos="0" key="613"/>
@@ -1727,29 +1717,6 @@
 						</comment>
 					</data>
 				</component>
-				<component name="if-else" library="core" uid="291" kind="4">
-					<sources>
-						<datapoint pos="0" key="589"/>
-						<datapoint pos="1" key="590"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint pos="0" key="591"/>
-					</targets>
-					<view ltx="911" lty="2016" rbx="1005" rby="2087"/>
-				</component>
-				<component name="constant" library="core" uid="18" kind="2">
-					<targets>
-						<datapoint/>
-					</targets>
-					<view ltx="859" lty="-667" rbx="1005" rby="-651"/>
-					<data>
-						<constant value="Dataset" datatype="string"/>
-						<comment>
-							<text>Default value laut altem MDE</text>
-						</comment>
-					</data>
-				</component>
 				<component name="DataCiteSchema45" library="xml" uid="3" kind="14">
 					<properties XSLTTargetEncoding="UTF-8" XSLTDefaultOutput="1"/>
 					<view ltx="1470" lty="-99" rbx="2074" rby="2689"/>
@@ -1809,7 +1776,7 @@
 											</entry>
 											<entry name="subject" ns="1" inpkey="459" expanded="1" clone="1"/>
 										</entry>
-										<entry name="contributors" ns="1" inpkey="583" expanded="1">
+										<entry name="contributors" ns="1" expanded="1">
 											<entry name="contributor" ns="1" inpkey="111" expanded="1">
 												<entry name="contributorType" type="attribute" inpkey="112"/>
 												<entry name="contributorName" ns="1" inpkey="113" expanded="1"/>
@@ -1934,6 +1901,27 @@
 						<document schema="..\DataCite\DataCiteSchema45.xsd" instanceroot="{http://datacite.org/schema/kernel-4}resource" inputinstance="..\DataCite\DataCiteExample45.xml" outputinstance="..\DataCite\DataCiteExample45.xml"/>
 					</data>
 				</component>
+				<component name="concat" library="core" uid="303" kind="5" growable="1" growablebasename="value">
+					<sources>
+						<datapoint pos="0" key="601"/>
+						<datapoint pos="1" key="602"/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="603"/>
+					</targets>
+					<view ltx="396" lty="2026" rbx="481" rby="2080"/>
+				</component>
+				<component name="if-else" library="core" uid="291" kind="4">
+					<sources>
+						<datapoint pos="0" key="589"/>
+						<datapoint pos="1" key="590"/>
+						<datapoint/>
+					</sources>
+					<targets>
+						<datapoint pos="0" key="591"/>
+					</targets>
+					<view ltx="911" lty="2016" rbx="1005" rby="2087"/>
+				</component>
 				<component name="FreestyleSchemaDB" library="xml" uid="2" kind="14">
 					<properties XSLTTargetEncoding="UTF-8"/>
 					<view ltx="-2" lty="-8" rbx="198" rby="2305"/>
@@ -2007,7 +1995,7 @@
 												</entry>
 											</entry>
 										</entry>
-										<entry name="Contributors" outkey="582" expanded="1">
+										<entry name="Contributors" expanded="1">
 											<entry name="Persons" expanded="1">
 												<entry name="Person" expanded="1">
 													<entry name="familyname" outkey="174"/>
@@ -2102,7 +2090,7 @@
 								</entry>
 							</entry>
 						</root>
-						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\resource_4.xml" outputinstance="..\..\xml\resource_4.xml"/>
+						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\resource_5.xml" outputinstance="..\..\xml\resource_5.xml"/>
 					</data>
 				</component>
 			</children>
@@ -3016,11 +3004,6 @@
 					<vertex vertexkey="575">
 						<edges>
 							<edge vertexkey="581"/>
-						</edges>
-					</vertex>
-					<vertex vertexkey="582">
-						<edges>
-							<edge vertexkey="583"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="533">
