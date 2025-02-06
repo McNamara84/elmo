@@ -391,8 +391,8 @@
 											type="xs:integer" />
 										<xs:element name="funding_reference_id" type="xs:integer" />
 										<xs:element name="funder" type="xs:string" />
-										<xs:element name="funderid" type="xs:integer" />
-										<xs:element name="funderidtyp" type="xs:string" />
+										<xs:element name="funderid" type="xs:integer" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="funderidtyp" type="xs:string" minOccurs="0" maxOccurs="1"/>
 										<xs:element name="grantnumber" type="xs:string" />
 										<xs:element name="grantname" type="xs:string" />
 									</xs:sequence>
