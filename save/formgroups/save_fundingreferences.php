@@ -38,18 +38,15 @@ function saveFundingReferences($connection, $postData, $resource_id)
                 continue; // Skip if no funder name is provided
             }
         
-          // Only set funderId and funderIdType if a funderId exists
-    if (!empty($funderId[$i])) {
-        // Extract last 10 digits for the funderId if it's non-empty
-        $funderIdString = extractLastTenDigits($funderId[$i]);
-        // If funderId is present, assign a type (could be "Crossref Funder ID" or another default type)
-        $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
-    } else {
-        $funderIdString = null;
-        $funderIdType = null;
-    }
+            // Only set funderId and funderIdType if a funderId exists
+            if (!empty($funderId[$i])) {
+                $funderIdString = extractLastTenDigits($funderId[$i]);
+                $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
+            } else {
+                $funderIdString = null;
+                $funderIdType = null;
+            }
 
-        
             error_log("Processing funding reference for funder: " . $funder[$i]);
         
             $funding_reference_id = insertFundingReference(
@@ -74,9 +71,12 @@ function saveFundingReferences($connection, $postData, $resource_id)
                 error_log("Failed to insert Funding Reference");
             }
         }
+    }
+
+    return $saveSuccessful; // Ensure function returns false if no funders were saved
 }
 
-}
+
 /**
  * Inserts a funding reference into the database if it doesn't already exist.
  *
