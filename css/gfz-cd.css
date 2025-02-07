@@ -130,3 +130,13 @@ label.mandatory-field::after {
 .navbar-sidebar .nav-link:hover {
     color: black; /* Optional: Same color or another color on hover */
 }
+
+/* Installation */
+.installation-option {
+    transition: transform 0.2s;
+}
+
+.status-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}

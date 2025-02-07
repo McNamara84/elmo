@@ -115,9 +115,6 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
         // Convert Set to array of objects for Tagify
         const affiliationObjects = Array.from(affiliationSet).map(name => ({ value: name }));
 
-        console.log('Collected Affiliations:', affiliationObjects);
-        console.log('Collected ROR IDs:', Array.from(rorIds));
-
         // Set Tagify tags
         const affiliationInput = row.find('input[id^="input-author-affiliation"]')[0];
         if (affiliationInput.tagify) {

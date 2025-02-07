@@ -76,3 +76,35 @@ div[id^="help-"] {
     padding-top: 5px;
     padding-bottom: 5px;
 }
+
+/* h3 Formatierung*/
+h3 {
+    color:#005b9d;   
+    /* Farbe */
+    font-size:22pt;  
+    /* Größe */
+    font-weight: 500; 
+    /* Semi-Fett */
+}
+
+/* h4 Formatierung*/
+h4 {
+    color:#020202;   
+    /* Farbe */
+    font-size:16pt;  
+    /* Größe */
+    font-weight: 300; 
+    /* Light */
+}
+
+/* h5 Formatierung*/
+h5 {
+    color:#020202;   
+    /* Farbe */
+    font-size:11pt;  
+    /* Größe */
+    margin-left: 10px;
+    /* Rückt die Überschrift nach rechts ein */
+    font-weight: 600; 
+    /* Semi-Fett */
+}

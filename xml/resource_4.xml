@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <Resource>
-  <currentDate>2025-01-21</currentDate>
+  <currentDate>2025-01-22</currentDate>
   <year>2000</year>
-  <dateCreated>2025-01-14</dateCreated>
+  <dateCreated>2025-01-08</dateCreated>
   <Rights>
     <rights_id>1</rights_id>
     <text>Creative Commons Attribution 4.0 International</text>
@@ -11,14 +11,14 @@
     <forSoftware>0</forSoftware>
   </Rights>
   <ResourceType>
-    <resource_name_id>1</resource_name_id>
-    <resource_type_general>Audiovisual</resource_type_general>
-    <description>A series of visual representations imparting an impression of motion when shown in succession. May or may not include sound.</description>
+    <resource_name_id>2</resource_name_id>
+    <resource_type_general>Book</resource_type_general>
+    <description>A medium for recording information in the form of writing or images, typically composed of many pages bound together and protected by a cover.</description>
   </ResourceType>
   <Language>
-    <language_id>2</language_id>
-    <code>de</code>
-    <name>German</name>
+    <language_id>1</language_id>
+    <code>en</code>
+    <name>English</name>
   </Language>
   <Titles>
     <Title>
@@ -27,39 +27,123 @@
     </Title>
     <Title>
       <text>Testen 2.0</text>
-      <type>Translated Title</type>
+      <type>Alternative Title</type>
     </Title>
   </Titles>
   <Authors>
     <Author>
-      <familyname>Naja</familyname>
-      <givenname>nana</givenname>
-      <Affiliations/>
+      <familyname>Ilyas khan</familyname>
+      <givenname>Muhammad</givenname>
+      <orcid>0000-0003-4816-5915</orcid>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>4</affiliation_id>
+          <name>International Islamic University, Islamabad</name>
+          <rorId>047w75g40</rorId>
+        </Affiliation>
+      </Affiliations>
     </Author>
   </Authors>
   <ContactPersons>
     <ContactPerson>
-      <familyname>CPLASTNAME</familyname>
-      <givenname>CPFIRSTNAME</givenname>
+      <familyname>Naja</familyname>
+      <givenname>Jana</givenname>
+      <position>CP</position>
       <email>CP@cp.de</email>
+      <website>www.contact.de</website>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>5</affiliation_id>
+          <name>RMIT University</name>
+          <rorId>04ttjf776</rorId>
+        </Affiliation>
+      </Affiliations>
     </ContactPerson>
   </ContactPersons>
+  <OriginatingLaboratories>
+    <OriginatingLaboratory>
+      <laboratoryname>Gmmodel - Laboratoire de mod&#xC3;&#xA9;lisation analogique G&#xC3;&#xA9;osciences Montpellier (CNRS-Montpellier University, France)</laboratoryname>
+      <labId>f780441f60a30a86b752e00adb66f107</labId>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>6</affiliation_id>
+          <name>CNRS-Montpellier University, Montpellier, France</name>
+        </Affiliation>
+      </Affiliations>
+    </OriginatingLaboratory>
+  </OriginatingLaboratories>
+  <Contributors>
+    <Persons>
+      <Person>
+        <familyname>Malik</familyname>
+        <givenname>Ayesha</givenname>
+        <orcid>0000-0002-7471-0457</orcid>
+        <Affiliations>
+          <Affiliation>
+            <affiliation_id>7</affiliation_id>
+            <name>Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences</name>
+            <rorId>04z8jg394</rorId>
+          </Affiliation>
+        </Affiliations>
+        <Roles>
+          <Role>
+            <name>Data Curator</name>
+          </Role>
+          <Role>
+            <name>Data Manager</name>
+          </Role>
+        </Roles>
+      </Person>
+      <Person>
+        <familyname>Nana</familyname>
+        <givenname>Nina</givenname>
+        <Affiliations>
+          <Affiliation>
+            <affiliation_id>8</affiliation_id>
+            <name>No</name>
+          </Affiliation>
+          <Affiliation>
+            <affiliation_id>9</affiliation_id>
+            <name>ne</name>
+          </Affiliation>
+        </Affiliations>
+        <Roles>
+          <Role>
+            <name>Data Curator</name>
+          </Role>
+          <Role>
+            <name>Data Manager</name>
+          </Role>
+        </Roles>
+      </Person>
+      <Person>
+        <familyname>Lila</familyname>
+        <givenname>Lala</givenname>
+        <Affiliations/>
+        <Roles>
+          <Role>
+            <name>Project Member</name>
+          </Role>
+        </Roles>
+      </Person>
+    </Persons>
+  </Contributors>
   <Descriptions>
     <Description>
       <type>Abstract</type>
-      <description>Hallo</description>
+      <description>ABSTRACT</description>
     </Description>
   </Descriptions>
   <SpatialTemporalCoverages>
     <SpatialTemporalCoverage>
       <spatial_temporal_coverage_id>4</spatial_temporal_coverage_id>
-      <latitudeMin>30.7464</latitudeMin>
-      <latitudeMax>30.7464</latitudeMax>
-      <longitudeMin>34.8628</longitudeMin>
-      <longitudeMax>34.8628</longitudeMax>
-      <description>Juhu</description>
-      <dateStart>2000-01-01</dateStart>
-      <dateEnd>1000-01-01</dateEnd>
+      <latitudeMin>67.358</latitudeMin>
+      <latitudeMax>67.358</latitudeMax>
+      <longitudeMin>3.22221</longitudeMin>
+      <longitudeMax>3.22221</longitudeMax>
+      <description>Description</description>
+      <dateStart>2025-01-22</dateStart>
+      <dateEnd>2025-01-22</dateEnd>
       <timezone>+03:00</timezone>
     </SpatialTemporalCoverage>
   </SpatialTemporalCoverages>

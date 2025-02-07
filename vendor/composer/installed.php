@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'elmo/elmo',
-        'pretty_version' => '2.0.0-RC2',
-        'version' => '2.0.0.0-RC2',
-        'reference' => NULL,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '7859b721cb3788df117e3d9808a8f3b597ce6297',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -20,9 +20,9 @@
             'dev_requirement' => false,
         ),
         'elmo/elmo' => array(
-            'pretty_version' => '2.0.0-RC2',
-            'version' => '2.0.0.0-RC2',
-            'reference' => NULL,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '7859b721cb3788df117e3d9808a8f3b597ce6297',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -155,9 +155,9 @@
             'dev_requirement' => true,
         ),
         'phpunit/phpunit' => array(
-            'pretty_version' => '11.5.3',
-            'version' => '11.5.3.0',
-            'reference' => '30e319e578a7b5da3543073e30002bf82042f701',
+            'pretty_version' => '11.5.6',
+            'version' => '11.5.6.0',
+            'reference' => '3c3ae14c90f244cdda95028c3e469028e8d1c02c',
             'type' => 'library',
             'install_path' => __DIR__ . '/../phpunit/phpunit',
             'aliases' => array(),

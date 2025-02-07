@@ -69,61 +69,38 @@ function saveContributorPersons($connection, $postData, $resource_id, $valid_rol
 
         $len = count($cbPersonLastnames);
         for ($i = 0; $i < $len; $i++) {
-            if (empty(trim($cbORCIDs[$i])) &&empty(trim($cbPersonLastnames[$i])) && empty(trim($cbPersonFirstnames[$i])) && empty(trim($cbPersonRoles[$i])) ) {
+            if (empty(trim($cbORCIDs[$i])) && empty(trim($cbPersonLastnames[$i])) && empty(trim($cbPersonFirstnames[$i])) && empty(trim($cbPersonRoles[$i]))) {
                 continue; // Skip missing Contact Person (only if all fields are empty)
             }
 
-            $contributor_person_id = saveOrUpdateContributorPerson($connection, $cbPersonLastnames[$i], $cbPersonFirstnames[$i], $cbORCIDs[$i]);
+            // Insert new contributor person
+            $stmt = $connection->prepare("INSERT INTO Contributor_Person (familyname, givenname, orcid) VALUES (?, ?, ?)");
+            $stmt->bind_param("sss", $cbPersonLastnames[$i], $cbPersonFirstnames[$i], $cbORCIDs[$i]);
+            $stmt->execute();
+            $contributor_person_id = $stmt->insert_id;
+            $stmt->close();
+
+            // Link resource to contributor person
             linkResourceToContributorPerson($connection, $resource_id, $contributor_person_id);
 
+            // Save affiliations
             if (!empty($cbAffiliations[$i])) {
                 saveAffiliations(
-                    $connection, 
-                    $contributor_person_id, 
-                    $cbAffiliations[$i], 
-                    $cbRorIds[$i] ?? null, 
-                    'Contributor_Person_has_Affiliation', 
+                    $connection,
+                    $contributor_person_id,
+                    $cbAffiliations[$i],
+                    $cbRorIds[$i] ?? null,
+                    'Contributor_Person_has_Affiliation',
                     'Contributor_Person_contributor_person_id'
                 );
             }
 
+            // Save roles
             saveContributorPersonRoles($connection, $contributor_person_id, $cbPersonRoles[$i], $valid_roles);
         }
     }
 }
 
-/**
- * Saves or updates a contributor person in the database.
- *
- * @param mysqli $connection The database connection.
- * @param string $lastname   The last name of the person.
- * @param string $firstname  The first name of the person.
- * @param string $orcid      The ORCID of the person.
- *
- * @return int The ID of the saved or updated contributor person.
- */
-function saveOrUpdateContributorPerson($connection, $lastname, $firstname, $orcid)
-{
-    $stmt = $connection->prepare("SELECT contributor_person_id FROM Contributor_Person WHERE orcid = ?");
-    $stmt->bind_param("s", $orcid);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $contributor_person_id = $row['contributor_person_id'];
-        $stmt = $connection->prepare("UPDATE Contributor_Person SET familyname = ?, givenname = ? WHERE contributor_person_id = ?");
-        $stmt->bind_param("ssi", $lastname, $firstname, $contributor_person_id);
-    } else {
-        $stmt = $connection->prepare("INSERT INTO Contributor_Person (familyname, givenname, orcid) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $lastname, $firstname, $orcid);
-    }
-    $stmt->execute();
-    $contributor_person_id = $stmt->insert_id ?: $contributor_person_id;
-    $stmt->close();
-
-    return $contributor_person_id;
-}
 
 /**
  * Links a resource with a contributor person.

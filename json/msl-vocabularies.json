@@ -2302,15 +2302,24 @@
                 "description": "",
                 "children": [
                     {
-                        "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-",
-                        "text": "",
+                        "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-borates",
+                        "text": "borates",
+                        "language": "en",
+                        "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
+                        "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
+                        "description": "",
+                        "children": []
+                    },
+                    {
+                        "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals",
+                        "text": "carbonate minerals",
                         "language": "en",
                         "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
                         "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
                         "description": "",
                         "children": [
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--ankerite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-ankerite",
                                 "text": "ankerite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2319,7 +2328,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--apatite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-apatite",
                                 "text": "apatite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2328,7 +2337,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--aragonite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-aragonite",
                                 "text": "aragonite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2337,7 +2346,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--azurite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-azurite",
                                 "text": "azurite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2346,7 +2355,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--bastnaesite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-bastnaesite",
                                 "text": "bastnaesite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2355,7 +2364,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--breunnerite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-breunnerite",
                                 "text": "breunnerite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2364,7 +2373,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--calcite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-calcite",
                                 "text": "calcite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2373,7 +2382,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--dolomite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-dolomite",
                                 "text": "dolomite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2382,7 +2391,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--magnesite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-magnesite",
                                 "text": "magnesite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2391,7 +2400,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--malachite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-malachite",
                                 "text": "malachite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2400,7 +2409,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--manganocalcite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-manganocalcite",
                                 "text": "manganocalcite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2409,7 +2418,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--parisite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-parisite",
                                 "text": "parisite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2418,7 +2427,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--rhodochrosite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-rhodochrosite",
                                 "text": "rhodochrosite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2427,7 +2436,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--siderite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-siderite",
                                 "text": "siderite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2436,7 +2445,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--smithsonite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-smithsonite",
                                 "text": "smithsonite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2445,7 +2454,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--strontianite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-strontianite",
                                 "text": "strontianite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2454,7 +2463,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--trona",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-trona",
                                 "text": "trona",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2463,7 +2472,7 @@
                                 "children": []
                             },
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals--witherite",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-carbonate_minerals-witherite",
                                 "text": "witherite",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
@@ -2472,15 +2481,6 @@
                                 "children": []
                             }
                         ]
-                    },
-                    {
-                        "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-borates",
-                        "text": "borates",
-                        "language": "en",
-                        "scheme": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
-                        "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/",
-                        "description": "",
-                        "children": []
                     },
                     {
                         "id": "https:\/\/epos-msl.uu.nl\/voc\/materials\/1.3\/minerals-chemical_elements",
@@ -26726,17 +26726,8 @@
                         "children": []
                     },
                     {
-                        "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/facility_types-full-scale_testing_laboratory",
-                        "text": "full-scale testing laboratory",
-                        "language": "en",
-                        "scheme": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
-                        "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
-                        "description": "",
-                        "children": []
-                    },
-                    {
-                        "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/facility_types-geoenergy_testbed",
-                        "text": "geoenergy testbed",
+                        "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/facility_types-geo-energy_testbed",
+                        "text": "geo-energy testbed",
                         "language": "en",
                         "scheme": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
                         "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
@@ -26789,6 +26780,15 @@
                                 "children": []
                             },
                             {
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/equipment-borehole_drilling-drill_core",
+                                "text": "drill core",
+                                "language": "en",
+                                "scheme": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
+                                "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
+                                "description": "",
+                                "children": []
+                            },
+                            {
                                 "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/equipment-borehole_drilling-drilling_test_rig",
                                 "text": "drilling test rig",
                                 "language": "en",
@@ -26814,15 +26814,6 @@
                                 "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
                                 "description": "",
                                 "children": []
-                            },
-                            {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/equipment-borehole_drilling-rock_samples",
-                                "text": "rock samples",
-                                "language": "en",
-                                "scheme": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
-                                "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
-                                "description": "",
-                                "children": []
                             }
                         ]
                     },
@@ -26835,8 +26826,8 @@
                         "description": "",
                         "children": [
                             {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/equipment-borehole_logging-open-hole_logging",
-                                "text": "open-hole logging",
+                                "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/equipment-borehole_logging-open_hole_logging",
+                                "text": "open hole logging",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
                                 "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
@@ -27011,34 +27002,6 @@
                             {
                                 "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/equipment-distributed_fibre_optic_sensing-distributed_temperature_sensing",
                                 "text": "distributed temperature sensing",
-                                "language": "en",
-                                "scheme": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
-                                "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
-                                "description": "",
-                                "children": []
-                            }
-                        ]
-                    },
-                    {
-                        "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/equipment-geothermal_heating_and_cooling",
-                        "text": "geothermal heating and cooling",
-                        "language": "en",
-                        "scheme": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
-                        "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
-                        "description": "",
-                        "children": [
-                            {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/equipment-geothermal_heating_and_cooling-heat_pump_mobile_unit",
-                                "text": "heat pump mobile unit",
-                                "language": "en",
-                                "scheme": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
-                                "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
-                                "description": "",
-                                "children": []
-                            },
-                            {
-                                "id": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/equipment-geothermal_heating_and_cooling-heat_pump_test_rig",
-                                "text": "heat pump test rig",
                                 "language": "en",
                                 "scheme": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
                                 "schemeURI": "https:\/\/epos-msl.uu.nl\/voc\/testbeds\/1.3\/",
