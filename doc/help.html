@@ -124,7 +124,9 @@
                     </div>
                     <div id="help-resourceinformation-title">
                         <h4>Title</h4>
-                        <p>The title of the dataset. The first row is reserved for the main title. You can specify
+                        <p>The title of the dataset. Please note that the title shall describe the data and not repeat
+                            the title of the corresponding article! The first row is reserved for the main title. You
+                            can specify
                             up to
                             <?php echo $maxTitles-1; ?> additional titles if your dataset is known by multiple names
                             or translations.
@@ -393,8 +395,11 @@
                             <li>
                                 <strong>Hosting Institution: </strong>Typically, the organisation allowing the resource
                                 to be available on the internet through the provision of its hardware/software/operating
-                                support. May also be used for an organisation that stores the data offline. Often a data
-                                centre (if that data centre is not the
+                                support. May also be used for an organisation that stores the data offline. If your data
+                                was derived from a laboratory, please include the name of the laboratory (with
+                                affiliation) as contributor with the role “HostingInstitution”. There may be two hosting
+                                institutions if the data or work is stored in both.
+                                Often a data centre (if that data centre is not the
                             </li>
                             <li>
                                 <strong>Producer: </strong>Typically a organisation responsible for the artistry and
@@ -460,7 +465,9 @@
                     </div>
                     <div id="help-description-abstract">
                         <h4>Abstract</h4>
-                        <p>A brief description of the resource and the context in which the resource was created.<br>
+                        <p>A brief description of the resource and the context in which the resource was created. Please
+                            keep in mind that this abstract is describing the resource itself and should not simply be
+                            the abstract of a corresponding article.<br>
                             When writing the abstract, please keep in mind:
                         <ul>
                             <li>The audience is the broader scientific community, not only your own subdomain.</li>
@@ -506,7 +513,7 @@
                 <div id="help-mslkeywords" class="section-content">
                     <div id="help-mslKeywords-keyword">
                         <h3>EPOS Multi-Scale Laboratories Keywords</h3>
-                        <p>Please click on the Thesaurus button to the right to select keywords from the thesaurus or
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
                             start typing to use the autocomplete function. By adding terms like these, you make it much
                             easier for us to find your data and to make it discoverable in this catalogue and the EPOS
                             data
@@ -539,7 +546,7 @@
                     <div id="help-scienceKeywords-keyword">
                         <h3>GCMD Science Keywords</h3>
                         <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                        <p>Please click on the Thesaurus button to the right to select keywords from the thesaurus
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree
                             or start typing to use the autocomplete function. </p>
                         <p>GCMD Science Keywords are essential for filtering options within the GFZ Metadata Portal.
                             Therefore, we highly recommend selecting at least one GCMD Science Keyword to describe
@@ -616,6 +623,9 @@
                     </div>
                     <div id="help-tsc-geographicalcoverage">
                         <h4>Geographic Coverage</h4>
+                        <p>You can add singles coordinates with <code>Latitude Min</code> and <code>Longitude Min</code>
+                            or a bounding box with <code>Latitude Min</code>, <code>Latitude Max</code>,
+                            <code>Longitude Min</code> and <code>Longitude Max</code>.</p>
                         <p>If you draw a rectangle on the map, the coordinates of this rectangle will be transferred
                             to
                             the
