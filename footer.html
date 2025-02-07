@@ -5,7 +5,7 @@
       <div class="col d-flex align-items-center justify-content-center">
         <div class="col-auto d-flex align-items-center justify-content-end">
           <button type="button" class="btn btn-danger m-1" data-bs-toggle="tooltip" data-translate="buttons.clear"
-            data-bs-title="Delete all entries or content." id="button-form-reset" disabled
+            data-bs-title="Delete all entries or content." id="button-form-reset" 
             data-translate-tooltip="buttons.clearTooltip">
             Clear
           </button>
@@ -19,7 +19,7 @@
             Save
           </button>
           <button type="submit" class="btn btn-success m-1" form="form-mde" id="button-form-submit" data-action="submit"
-            disabled aria-label="Transmit the entered data or content." data-translate="buttons.submit"
+            aria-label="Transmit the entered data or content." data-translate="buttons.submit"
             data-translate-tooltip="buttons.submitTooltip">
             Submit
           </button>
@@ -51,7 +51,7 @@
 <!-- Thesauri laden -->
 <script src="js/thesauri.js"></script>
 <!-- Validierungen laden -->
-<script src="js/validation.js"></script>
+<script type="module" src="js/validation.js"></script>
 <!-- autocomplete laden -->
 <script src="js/autocomplete.js"></script>
 <!-- Roles laden -->
@@ -70,6 +70,8 @@
 <script src="js/headerResponsiveDesign.js"></script>
 <!-- Contributor Pflichtfelder überprüfungsfunktion einbinden -->
 <script src="js/checkMandatoryFields.js"></script>
+<!-- Clear form -->
+<script src="js/clear.js"></script> 
 <!-- Upload Handler -->
 <script src="js/upload.js"></script>
 <!-- Mapping from XML file to input fields -->

@@ -48,7 +48,7 @@ http://www.altova.com/mapforce
 										<xsl:attribute name="affiliationIdentifierScheme" namespace="">ROR</xsl:attribute>
 									</xsl:if>
 									<xsl:if test="*[local-name()='rorId' and namespace-uri()='']">
-										<xsl:attribute name="schemeURI" namespace="">https://orcid.org/</xsl:attribute>
+										<xsl:attribute name="schemeURI" namespace="">https://ror.org/</xsl:attribute>
 									</xsl:if>
 									<xsl:if test="*[local-name()='rorId' and namespace-uri()='']">
 										<xsl:for-each select="*[local-name()='rorId' and namespace-uri()='']">
@@ -184,7 +184,7 @@ http://www.altova.com/mapforce
 									</familyName>
 									<xsl:if test="(true() and (string-length(string($var13_cur/*[local-name()='orcid' and namespace-uri()=''])) &gt; 0))">
 										<nameIdentifier>
-											<xsl:attribute name="nameIdentifierScheme" namespace="">https://orcid.org/</xsl:attribute>
+											<xsl:attribute name="nameIdentifierScheme" namespace="">ORCID</xsl:attribute>
 											<xsl:attribute name="schemeURI" namespace="">https://orcid.org/</xsl:attribute>
 											<xsl:value-of select="$var13_cur/*[local-name()='orcid' and namespace-uri()='']"/>
 										</nameIdentifier>
@@ -601,35 +601,38 @@ http://www.altova.com/mapforce
 						</geoLocation>
 					</xsl:for-each>
 				</geoLocations>
-				<fundingReferences>
-					<xsl:for-each select="*[local-name()='FundingReferences' and namespace-uri()='']/*[local-name()='FundingReference' and namespace-uri()='']">
-						<xsl:variable name="var66_cur" select="."/>
-						<fundingReference>
-							<funderName>
-								<xsl:value-of select="*[local-name()='funder' and namespace-uri()='']"/>
-							</funderName>
-							<xsl:if test="(true() and (string-length(string(number(*[local-name()='funderid' and namespace-uri()='']))) &gt; 0))">
-								<funderIdentifier>
-									<xsl:attribute name="funderIdentifierType" namespace="">
-										<xsl:value-of select="*[local-name()='funderidtyp' and namespace-uri()='']"/>
-									</xsl:attribute>
-									<xsl:attribute name="schemeURI" namespace="">https://www.crossref.org/services/funder-registry/</xsl:attribute>
-									<xsl:value-of select="concat('http://dx.doi.org/10.13039/', *[local-name()='funderid' and namespace-uri()=''])"/>
-								</funderIdentifier>
-							</xsl:if>
-							<xsl:if test="((string-length(string(*[local-name()='grantnumber' and namespace-uri()=''])) &gt; 0) and true())">
-								<awardNumber>
-									<xsl:value-of select="*[local-name()='grantnumber' and namespace-uri()='']"/>
-								</awardNumber>
-							</xsl:if>
-							<xsl:if test="((string-length(string(*[local-name()='grantname' and namespace-uri()=''])) &gt; 0) and true())">
-								<awardTitle>
-									<xsl:value-of select="*[local-name()='grantname' and namespace-uri()='']"/>
-								</awardTitle>
-							</xsl:if>
-						</fundingReference>
-					</xsl:for-each>
-				</fundingReferences>
+				<xsl:for-each select="*[local-name()='FundingReferences' and namespace-uri()='']">
+					<xsl:variable name="var66_cur" select="."/>
+					<fundingReferences>
+						<xsl:for-each select="*[local-name()='FundingReference' and namespace-uri()='']">
+							<xsl:variable name="var67_cur" select="."/>
+							<fundingReference>
+								<funderName>
+									<xsl:value-of select="*[local-name()='funder' and namespace-uri()='']"/>
+								</funderName>
+								<xsl:if test="(true() and (string-length(string(number(*[local-name()='funderid' and namespace-uri()='']))) &gt; 0))">
+									<funderIdentifier>
+										<xsl:attribute name="funderIdentifierType" namespace="">
+											<xsl:value-of select="*[local-name()='funderidtyp' and namespace-uri()='']"/>
+										</xsl:attribute>
+										<xsl:attribute name="schemeURI" namespace="">https://www.crossref.org/services/funder-registry/</xsl:attribute>
+										<xsl:value-of select="concat('http://dx.doi.org/10.13039/', *[local-name()='funderid' and namespace-uri()=''])"/>
+									</funderIdentifier>
+								</xsl:if>
+								<xsl:if test="((string-length(string(*[local-name()='grantnumber' and namespace-uri()=''])) &gt; 0) and true())">
+									<awardNumber>
+										<xsl:value-of select="*[local-name()='grantnumber' and namespace-uri()='']"/>
+									</awardNumber>
+								</xsl:if>
+								<xsl:if test="((string-length(string(*[local-name()='grantname' and namespace-uri()=''])) &gt; 0) and true())">
+									<awardTitle>
+										<xsl:value-of select="*[local-name()='grantname' and namespace-uri()='']"/>
+									</awardTitle>
+								</xsl:if>
+							</fundingReference>
+						</xsl:for-each>
+					</fundingReferences>
+				</xsl:for-each>
 			</xsl:for-each>
 		</resource>
 	</xsl:template>

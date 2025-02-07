@@ -11035,6 +11035,15 @@
                                         "children": []
                                     },
                                     {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/5ae1e11b-09c3-463d-9644-555a095a9333",
+                                        "text": "VEGETATION FRACTION",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "The areal extent of vegetation-covered ground, expressed as the mathematical fraction of a region covered with vegetation.",
+                                        "children": []
+                                    },
+                                    {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/b7812c71-4b9e-4016-b4ba-dfcdb7e62365",
                                         "text": "VEGETATION INDEX",
                                         "language": "en",
@@ -14660,6 +14669,15 @@
                                         "children": []
                                     },
                                     {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/9cb22e18-bad2-4644-88d4-106600acf0fa",
+                                        "text": "LAND ICE FRACTION",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "The areal extent of ice, typically glacier ice, expressed as the mathematical fraction of a region covered with ice.",
+                                        "children": []
+                                    },
+                                    {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/1f4cdbc4-0f65-4384-83c9-9422c280717d",
                                         "text": "PERMAFROST",
                                         "language": "en",
@@ -14769,6 +14787,24 @@
                                         "children": []
                                     },
                                     {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/89453747-14cb-4824-8c93-b142dff28cdb",
+                                        "text": "SNOW FRACTION",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "The areal extent of snow-covered ground, expressed as the mathematical fraction of a region covered with snow.",
+                                        "children": []
+                                    },
+                                    {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/b5c86a31-0c3b-4217-8530-0aa5234a5f89",
+                                        "text": "SNOW GRAIN SIZE",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "The size of individual snow grains in micrometers.",
+                                        "children": []
+                                    },
+                                    {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/58f98d2a-d7d6-47d4-b826-68fdc57e79bb",
                                         "text": "SNOW MELT",
                                         "language": "en",
@@ -14795,6 +14831,15 @@
                                                 "children": []
                                             }
                                         ]
+                                    },
+                                    {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/76d95fbe-8fa9-485d-9d65-55340512c12d",
+                                        "text": "SNOW RADIATIVE FORCING",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "Snow radiative forcing is a measure of the additional absorption of solar radiation from light-absorbing particles (LAP) such as dust or soot. Units of measure are watts per square meter (W/m2). Radiative forcing is calculated by the difference between the net (downward minus upward) radiative fluxes (irradiance) with and without LAP across a portion of the visible spectrum, for example from 0.350 to 0.876 um. This value depends on the amount of dust or soot, particle size distribution, and the amount of incoming solar radiation.",
+                                        "children": []
                                     },
                                     {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/9e15c793-ede5-4089-8fb7-5bbb31ff7913",
@@ -14897,6 +14942,15 @@
                                         "children": []
                                     },
                                     {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/27a8f83d-6fdb-43a8-bbdd-25a0ac9b3b5a",
+                                        "text": "VISIBLE SNOW DARKENING",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "Snow darkening is a measure of the potential additional absorption of solar radiation from light-absorbing particles (LAP) such as dust or soot. Units of measure are a fraction or a percent of the visible broadband spectrum, for example from 0.350 to 0.876 um. This value depends on the amount of dust or soot and particle size distribution.",
+                                        "children": []
+                                    },
+                                    {
                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/067004b9-1628-4c00-8bfb-28f910b68d59",
                                         "text": "WHITEOUT",
                                         "language": "en",
@@ -14970,6 +15024,52 @@
                                                 "children": []
                                             }
                                         ]
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "https://gcmd.earthdata.nasa.gov/kms/concept/f69374fe-eda2-4223-b130-096220251235",
+                                "text": "CLIMATE CHANGE RESPONSES",
+                                "language": "en",
+                                "scheme": "NASA/GCMD Earth Science Keywords",
+                                "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                "description": "Climate change is defined as changes in the global environment that may alter the capacity of the Earth to sustain life. Global change encompasses climate change, but it also includes other critical drivers of environmental change that may or may not interact with climate change, such as land use change, the alteration of the water cycle,changes in biogeochemical cycles, and biodiversity loss. Responses to global change may include actions such as adaptation, mitigation, and various forms of scenario and contingency planning to reduce risk.",
+                                "children": [
+                                    {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/223e1204-e305-43d2-80d0-8baed8c828c0",
+                                        "text": "CLIMATE ADAPTATION",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "Adjustment in natural or human systems to a new or changing environment that exploits beneficial opportunities or moderates negative effects of a changing climate.",
+                                        "children": []
+                                    },
+                                    {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/c4a6c571-406e-4023-b479-6a1fc30f184c",
+                                        "text": "CLIMATE MITIGATION",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "Measures to reduce the amount and speed of future climate change by reducing emissions of heat-trapping gases or removing carbon dioxide from the atmosphere.",
+                                        "children": []
+                                    },
+                                    {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/b8dfcdca-5777-4374-8950-8225b90df0e4",
+                                        "text": "CLIMATE RESILIENCE",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "The ability of a natural or human system to absorb and recover from climate-induced impacts.",
+                                        "children": []
+                                    },
+                                    {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/6062293a-f372-4e65-9bab-27355f0ebc59",
+                                        "text": "SCENARIO PLANNING",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "Preparation based on a plausible description of how the future may develop based on a coherent and internally consistent set of assumptions about key driving forces (e.g., rate of technological change, prices) and relationships. Scenarios are neither predictions nor forecasts, but are used to provide a view of the implications of developments and actions. Preparation may differ for each plausible scenario considered.",
+                                        "children": []
                                     }
                                 ]
                             },
@@ -15564,43 +15664,6 @@
                                         "scheme": "NASA/GCMD Earth Science Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
                                         "description": "",
-                                        "children": []
-                                    }
-                                ]
-                            },
-                            {
-                                "id": "https://gcmd.earthdata.nasa.gov/kms/concept/f69374fe-eda2-4223-b130-096220251235",
-                                "text": "GLOBAL CHANGE RESPONSES",
-                                "language": "en",
-                                "scheme": "NASA/GCMD Earth Science Keywords",
-                                "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
-                                "description": "Global change is defined as changes in the global environment that may alter the capacity of the Earth to sustain life. Global change encompasses climate change, but it also includes other critical drivers of environmental change that may or may not interact with climate change, such as land use change, the alteration of the water cycle,changes in biogeochemical cycles, and biodiversity loss. Responses to global change may include actions such as adaptation, mitigation, and various forms of scenario and contingency planning to reduce risk.",
-                                "children": [
-                                    {
-                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/223e1204-e305-43d2-80d0-8baed8c828c0",
-                                        "text": "CLIMATE ADAPTATION",
-                                        "language": "en",
-                                        "scheme": "NASA/GCMD Earth Science Keywords",
-                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
-                                        "description": "Adjustment in natural or human systems to a new or changing environment that exploits beneficial opportunities or moderates negative effects of a changing climate.",
-                                        "children": []
-                                    },
-                                    {
-                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/c4a6c571-406e-4023-b479-6a1fc30f184c",
-                                        "text": "CLIMATE MITIGATION",
-                                        "language": "en",
-                                        "scheme": "NASA/GCMD Earth Science Keywords",
-                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
-                                        "description": "Measures to reduce the amount and speed of future climate change by reducing emissions of heat-trapping gases or removing carbon dioxide from the atmosphere.",
-                                        "children": []
-                                    },
-                                    {
-                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/6062293a-f372-4e65-9bab-27355f0ebc59",
-                                        "text": "SCENARIO PLANNING",
-                                        "language": "en",
-                                        "scheme": "NASA/GCMD Earth Science Keywords",
-                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
-                                        "description": "Preparation based on a plausible description of how the future may develop based on a coherent and internally consistent set of assumptions about key driving forces (e.g., rate of technological change, prices) and relationships. Scenarios are neither predictions nor forecasts, but are used to provide a view of the implications of developments and actions. Preparation may differ for each plausible scenario considered.",
                                         "children": []
                                     }
                                 ]
@@ -16419,15 +16482,6 @@
                                         "scheme": "NASA/GCMD Earth Science Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
                                         "description": "A phase of the disaster management cycle that involves the mobilization of the necessary emergency services and first responders in the disaster area. This is likely to include a first wave of core emergency services, such as firefighters, police and ambulance crews.",
-                                        "children": []
-                                    },
-                                    {
-                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/9af548c9-7050-4d59-b66d-adf52f2fb242",
-                                        "text": "ENVIRONMENTAL JUSTICE",
-                                        "language": "en",
-                                        "scheme": "NASA/GCMD Earth Science Keywords",
-                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
-                                        "description": "Environmental justice is the fair treatment and meaningful involvement of all people regardless of race, color, national origin, or income, with respect to the development, implementation, and enforcement of environmental laws, regulations, and policies.  \n\nEnvironmental Justice is becoming more important to the federal government and to individual agencies such as NASA and EPA.  Environmental Justice is also the driving force behind all of the UN\u2019s Sustainable Development Goals.  NASA data are being used to support environmental and climate justice efforts. Scientists and decision-makers are applying a wide combination of datasets to assess the vulnerability and exposure of communities to environmental challenges. By providing full and open access to data, software, and tools, the agency ensures that anyone can use these resources.",
                                         "children": []
                                     },
                                     {
@@ -18865,6 +18919,24 @@
                                         "scheme": "NASA/GCMD Earth Science Keywords",
                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
                                         "description": "Identifies the type of grid location.",
+                                        "children": []
+                                    },
+                                    {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/911f2d35-8678-42e6-a581-324d385f7d6b",
+                                        "text": "ROCK FRACTION",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "The areal extent of rock or soil-covered ground, expressed as the mathematical fraction of a region covered with rock or soil.",
+                                        "children": []
+                                    },
+                                    {
+                                        "id": "https://gcmd.earthdata.nasa.gov/kms/concept/87be8c1f-9f92-45f9-ba9b-f50efa5bcca0",
+                                        "text": "SHADE FRACTION",
+                                        "language": "en",
+                                        "scheme": "NASA/GCMD Earth Science Keywords",
+                                        "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                        "description": "Spectral fraction of photometric shade.",
                                         "children": []
                                     }
                                 ]
@@ -24796,7 +24868,7 @@
                                                     },
                                                     {
                                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/1203f04d-cd90-4f46-b2c1-998a3c182250",
-                                                        "text": "STRAITRAPHIC SEQUENCE",
+                                                        "text": "STRATIGRAPHIC SEQUENCE",
                                                         "language": "en",
                                                         "scheme": "NASA/GCMD Earth Science Keywords",
                                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
@@ -25269,7 +25341,7 @@
                                                     },
                                                     {
                                                         "id": "https://gcmd.earthdata.nasa.gov/kms/concept/103f1165-1008-4caa-bf77-5259ae1a7a36",
-                                                        "text": "STRAITIGRAPHIC SEQUENCE",
+                                                        "text": "STRATIGRAPHIC SEQUENCE",
                                                         "language": "en",
                                                         "scheme": "NASA/GCMD Earth Science Keywords",
                                                         "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
@@ -30178,6 +30250,15 @@
                                                         "children": []
                                                     }
                                                 ]
+                                            },
+                                            {
+                                                "id": "https://gcmd.earthdata.nasa.gov/kms/concept/fa963ea3-d500-41c6-8128-69add1795d43",
+                                                "text": "HIGH WATER MARK",
+                                                "language": "en",
+                                                "scheme": "NASA/GCMD Earth Science Keywords",
+                                                "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                                "description": "A high water mark indicates the maximum height reached by water during a flood event, often identified after the flood by physical evidence left on the riverbank, and used to supplement data from a stream gauge when real-time monitoring wasn't available.",
+                                                "children": []
                                             },
                                             {
                                                 "id": "https://gcmd.earthdata.nasa.gov/kms/concept/960037c5-57b1-4cdf-84be-4542beee7d5a",

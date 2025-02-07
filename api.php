@@ -392,8 +392,7 @@ if ($_GET['action'] == 'getGemetConcepts') {
     exit();
 }
 
-
-
+/* Deprecated. Use APIv2 instead. */
 // API-Hook für den Abruf aller Funders von der CrossRef-API
 // Beispielaufruf: api.php?action=getCrossRefFunders
 // JSON-Antwort: crossRefId, name

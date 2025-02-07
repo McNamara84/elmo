@@ -118,12 +118,16 @@
         "title": "Räumliche und zeitliche Abdeckung",
         "map": "Karte",
         "latitude": "Breitengrad",
+        "latitudeInvalid": "Bitte geben Sie einen Breitengrad zwischen -90.00 und +90.00 ein.",
         "longitude": "Längengrad",
+        "longitudeInvalid": "Bitte geben Sie einen Längengrad zwischen -180.00 und +180.00 ein.",
         "description": "Beschreibung",
         "descriptionPlaceholder": "Bitte geben Sie die Beschreibung der zeitlichen und räumlichen Abdeckung ein...",
         "start": "Start",
         "end": "Ende",
+        "dateTimeInvalid": "Bitte machen Sie eine gültige Zeitangabe.",
         "timezone": "Zeitzone",
+        "timezoneInvalid":"Bitte wählen Sie die Zeitzone",
         "mapInfo": "(Bitte wählen Sie Koordinaten per Rechteck oder Markierung)"
     },
     "relatedWork": {
@@ -179,6 +183,17 @@
             "saveAs": "Als XML speichern",
             "filename": "Dateiname",
             "save": "Speichern"
+        },
+        "submit": {
+            "title": "Datensatz übermitteln",
+            "urgency": "Dringlichkeit",
+            "url": "URL zu den Daten",
+            "dataDescription": "Datenbeschreibung (bitte <a href='https://gfzpublic.gfz.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_5007103' target='_blank' class='link-primary'>Vorlage zur Datenbeschreibung</a> benutzen)",
+            "privacypolice": "Ich habe die <a href='docs/privacyPolicy.html' target='_blank' class='link-primary'>Datenschutzbestimmungen</a> gelesen und bin mit der Verarbeitung meiner Daten einverstanden.",
+            "urgencyNotice": "Bitte wähle die Dringlichkeit aus",
+            "high": "hoch",
+            "normal": "normal",
+            "low": "niedrig"
         }
     }
 }

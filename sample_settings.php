@@ -43,6 +43,9 @@ if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
 // Establish the database connection
 $connection = connectDb();
 
+// ELMO API Key
+$apiKeyElmo = '1234-1234-1234-1234';
+
 // API Key for https://timezonedb.com/
 $apiKeyTimezone = 'your_timezone_api_key';
 
@@ -51,6 +54,8 @@ $maxTitles = 2;
 
 // URL to the source with all laboratories for MSL
 $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/labnames.json';
+// URL to the source with all vocabularies for MSL
+$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;

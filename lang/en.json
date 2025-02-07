@@ -118,12 +118,16 @@
         "title": "Spatial and Temporal Coverages",
         "map": "Map",
         "latitude": "Latitude",
+        "latitudeInvalid": "Please enter a latitude between -90.00 and +90.00.",
         "longitude": "Longitude",
+        "longitudeInvalid": "Please enter a longitude between -180.00 and +180.00",
         "description": "Description",
         "descriptionPlaceholder": "Please enter the description of the temporal and spatial coverage...",
         "start": "Start",
         "end": "End",
+        "dateTimeInvalid": "Please enter a valid date and time.",
         "timezone": "Timezone",
+        "timezoneInvalid":"Please choose a timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)"
     },
     "relatedWork": {
@@ -179,6 +183,17 @@
             "saveAs": "Save as XML",
             "filename": "Filename",
             "save": "Save"
+        },
+        "submit": {
+            "title": "Submit Dataset",
+            "urgency": "Urgency",
+            "url": "URL to data",
+            "dataDescription": "Data description (please use <a href='https://gfzpublic.gfz.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_5007103' target='_blank' class='link-primary'>description template</a>)",
+            "privacypolice": "I have read the <a href='docs/privacyPolicy.html' target='_blank' class='link-primary'>privacy policy</a> and agree to the processing of my data.",
+            "urgencyNotice": "Please select an urgency",
+            "high": "high",
+            "normal": "normal",
+            "low": "low"
         }
     }
 }
