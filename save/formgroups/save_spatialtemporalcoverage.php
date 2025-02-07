@@ -15,16 +15,16 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
 
     for ($i = 0; $i < $len; $i++) {
         // Extract data for easier validation
-        $latitudeMin  = $postData['tscLatitudeMin'][$i];
-        $latitudeMax  = $postData['tscLatitudeMax'][$i];
-        $longitudeMin = $postData['tscLongitudeMin'][$i];
-        $longitudeMax = $postData['tscLongitudeMax'][$i];
-        $description  = $postData['tscDescription'][$i];
-        $dateStart    = $postData['tscDateStart'][$i];
-        $dateEnd      = $postData['tscDateEnd'][$i];
-        $timeStart    = $postData['tscTimeStart'][$i];
-        $timeEnd      = $postData['tscTimeEnd'][$i];
-        $timezone     = $postData['tscTimezone'][$i];
+        $latitudeMin  = $postData['tscLatitudeMin'][$i]  ?? null;
+        $latitudeMax  = $postData['tscLatitudeMax'][$i]  ?? null;
+        $longitudeMin = $postData['tscLongitudeMin'][$i] ?? null;
+        $longitudeMax = $postData['tscLongitudeMax'][$i] ?? null;
+        $description  = $postData['tscDescription'][$i]  ?? null;
+        $dateStart    = $postData['tscDateStart'][$i]    ?? null;
+        $dateEnd      = $postData['tscDateEnd'][$i]      ?? null;
+        $timeStart    = $postData['tscTimeStart'][$i]    ?? null;
+        $timeEnd      = $postData['tscTimeEnd'][$i]      ?? null;
+        $timezone     = $postData['tscTimezone'][$i]     ?? null;
 
         // Check if all fields are empty
         if (empty($latitudeMin) && empty($latitudeMax) && empty($longitudeMin) && empty($longitudeMax) && empty($description) && empty($dateStart) && empty($dateEnd) && empty($timeStart) && empty($timeEnd) && empty($timezone)) {
