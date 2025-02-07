@@ -61,19 +61,6 @@ $showMslVocabs = true;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
-function getSettings($setting)
-{
-    global $showMslLabs;
-    switch ($setting) {
-        case 'showMslLabs':
-            echo json_encode(['showMslLabs' => $showMslLabs]);
-            break;
-        
-        default:
-            break;
-    }
-}
-
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
 
@@ -89,3 +76,35 @@ $feedbackAddress = 'feedback@example.com';
 
 // Target address for XML submit
 $xmlSubmitAddress = 'xmlsubmit@example.com';
+
+function getSettings($setting)
+{
+    global $apiKeyGoogleMaps, $showMslLabs;
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    switch ($setting) {
+        case 'apiKey':
+            echo json_encode([
+                'apiKey' => $apiKeyGoogleMaps
+            ]);
+            break;
+
+        case 'all':
+            echo json_encode([
+                'apiKey' => $apiKeyGoogleMaps,
+                'showMslLabs' => $showMslLabs
+            ]);
+            break;
+
+        default:
+            echo json_encode(['error' => 'Unknown setting']);
+            break;
+    }
+    exit;
+}
+
+if (isset($_GET['setting'])) {
+    getSettings($_GET['setting']);
+    exit;
+}
