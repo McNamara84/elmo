@@ -122,3 +122,11 @@ label.mandatory-field::after {
     color: #dc3545;
     margin-left: 0.1rem;
 }
+
+.navbar-sidebar .nav-link {
+    color:#00589C; 
+}
+
+.navbar-sidebar .nav-link:hover {
+    color: black; /* Optional: Same color or another color on hover */
+}
