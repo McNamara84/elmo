@@ -20,26 +20,6 @@ function connectDb()
     return $conn;
 }
 
-/**
- * Outputs the Google Maps API key in JSON format.
- *
- * @return void
- */
-function getApiKey()
-{
-    // Google Maps API Key
-    $apiKeyGoogleMaps = 'your_google_maps_api_key';
-    // Return API key as JSON
-    echo json_encode(['apiKey' => $apiKeyGoogleMaps]);
-}
-
-// Check if the file is accessed directly via an HTTP request
-if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        getApiKey();
-    }
-}
-
 // Establish the database connection
 $connection = connectDb();
 
