@@ -1,3 +1,6 @@
+<?php
+include_once "../settings.php";
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -46,7 +49,9 @@
                             Laboratory</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-contributors">Contributor(s)</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-descriptions">Description(s)</a></li>
+                    <?php if ($showMslVocabs): ?>
                     <li class="nav-item"><a class="nav-link" href="#help-mslkeywords">EPOS MSL Keywords</a></li>
+                    <?php endif; ?>
                     <li class="nav-item"><a class="nav-link" href="#help-scienceKeywords">GCMD Science Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-freeKeywords">Free Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-dates">Dates</a></li>
@@ -489,6 +494,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <?php if ($showMslVocabs): ?>
                 <!-- formgroup MSL Keywords -->
                 <div id="help-mslkeywords" class="section-content">
                     <div id="help-mslKeywords-keyword">
@@ -520,6 +526,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <?php endif; ?>
                 <!-- formgroup GCMD Science Keywords -->
                 <div id="help-scienceKeywords" class="section-content">
                     <div id="help-scienceKeywords-keyword">
