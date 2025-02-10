@@ -72,7 +72,7 @@
 					</targets>
 					<view ltx="1585" lty="9" rbx="1739" rby="25"/>
 					<data>
-						<constant value="https://www.gfz-potsdam.de/" datatype="string"/>
+						<constant value="https://www.gfz.de/" datatype="string"/>
 						<comment>
 							<text>Default URL for linkage</text>
 						</comment>

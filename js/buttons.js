@@ -57,6 +57,18 @@ $(document).ready(function () {
   });
 
 
+    /**
+  * Event listener for the clear button that resets all input fields
+  * @requires jQuery
+  * @requires Bootstrap
+  * 
+  */
+    $(document).ready(function () {
+      $('#button-form-reset').on('click', function () {
+        clearInputFields();
+      });
+    });
+
   // Optional: Formular zurücksetzen, wenn das Modal geöffnet wird
   $('#modal-feedback').on('show.bs.modal', function () {
     $("#form-feedback")[0].reset();

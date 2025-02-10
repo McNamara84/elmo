@@ -1092,7 +1092,7 @@ class VocabController
                     $context = stream_context_create([
                         'http' => [
                             'ignore_errors' => true,
-                            'user_agent' => 'ELMO (https://mde2.cats4future.de/; mailto:ehrmann@gfz.de)'
+                            'user_agent' => 'ELMO (https://elmo.cats4future.de/; mailto:ehrmann@gfz.de)'
                         ]
                     ]);
 
