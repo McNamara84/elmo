@@ -42,6 +42,29 @@ class VocabController
     }
 
     /**
+     * Validates the API key from the request header
+     * 
+     * @return bool True if API key is valid, false otherwise
+     */
+    private function validateApiKey(): bool
+    {
+        global $apiKeyElmo;
+
+        // Get API key from header
+        $providedKey = $_SERVER['HTTP_X_API_KEY'] ?? null;
+
+        // Check if key exists and matches
+        if (!$providedKey || $providedKey !== $apiKeyElmo) {
+            http_response_code(401);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Invalid or missing API key']);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Retrieves relation data from the database and returns it as JSON.
      *
      * @return void
@@ -202,6 +225,10 @@ class VocabController
      */
     public function getMslVocab($vars = [])
     {
+        // Validate API key before processing request
+        if (!$this->validateApiKey()) {
+            return;
+        }
         try {
             $jsonDir = __DIR__ . '/../../../json/';
             $outputFile = $jsonDir . 'msl-vocabularies.json';
@@ -311,6 +338,10 @@ class VocabController
      */
     public function updateMslLabs()
     {
+        // Validate API key before processing request
+        if (!$this->validateApiKey()) {
+            return;
+        }
         try {
             $mslLabs = $this->fetchAndProcessMslLabs();
             $jsonString = json_encode($mslLabs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -387,7 +418,10 @@ class VocabController
     public function updateTimezones()
     {
         global $apiKeyTimezone;
-
+        // Validate API key before processing request
+        if (!$this->validateApiKey()) {
+            return;
+        }
         try {
             // The TimeZoneDB API URL to fetch timezone data
             $apiUrl = 'http://api.timezonedb.com/v2.1/list-time-zone?key=' . urlencode($apiKeyTimezone) . '&format=json';
@@ -705,6 +739,10 @@ class VocabController
      */
     public function updateGcmdVocabs()
     {
+        // Validate API key before processing request
+        if (!$this->validateApiKey()) {
+            return;
+        }
         // Temporarily adjust error reporting
         $originalErrorReporting = error_reporting();
         error_reporting(E_ALL & ~E_DEPRECATED);
@@ -900,6 +938,10 @@ class VocabController
      */
     public function getRorAffiliations(): void
     {
+        // Validate API key before processing request
+        if (!$this->validateApiKey()) {
+            return;
+        }
         try {
             // Fetch latest ROR data dump metadata from Zenodo
             $rorDataDumpUrl = 'https://zenodo.org/api/communities/ror-data/records?q=&sort=newest';
@@ -1028,6 +1070,10 @@ class VocabController
      */
     public function getCrossref(): void
     {
+        // Validate API key before processing request
+        if (!$this->validateApiKey()) {
+            return;
+        }
         try {
             $allFunders = [];
             $offset = 0;
@@ -1046,7 +1092,7 @@ class VocabController
                     $context = stream_context_create([
                         'http' => [
                             'ignore_errors' => true,
-                            'user_agent' => 'ELMO (https://mde2.cats4future.de/; mailto:ehrmann@gfz.de)'
+                            'user_agent' => 'ELMO (https://elmo.cats4future.de/; mailto:ehrmann@gfz.de)'
                         ]
                     ]);
 

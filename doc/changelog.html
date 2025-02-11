@@ -1,16 +1,46 @@
-<!-- Changelog Inhalt -->
+<!-- Changelog Content -->
 <div class="accordion" id="accordion-changelog">
+    <!-- Version 2.0.0RC3 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-changelog-version5">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse-changelog-version5" aria-expanded="true"
+                aria-controls="collapse-changelog-version5">
+                Version 2.0.0RC3 - 2025/03/04
+            </button>
+        </h2>
+        <div id="collapse-changelog-version5" class="accordion-collapse collapse show"
+            aria-labelledby="heading-changelog-version5" data-bs-parent="#accordion-changelog">
+            <div class="accordion-body">
+                <ul>
+                    <li><strong>New Features:</strong>
+                        <ul>
+                            <li>Install Script: New option to install database without test datasets</li>
+                            <li>APIv2: Endpoints for updating vocabularies secured with ELMO API key</li>
+                            <li>Clear Button clears form</li>
+                        </ul>
+                    </li>
+                    <li><strong>Fixed Bugs:</strong>
+                        <li>Timezones are loaded from xml files</li>
+                        <ul>
+                            
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
     <!-- Version 2.0.0RC2 -->
     <div class="accordion-item">
         <h2 class="accordion-header" id="heading-changelog-version0">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse-changelog-version0" aria-expanded="true"
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse-changelog-version0" aria-expanded="false"
                 aria-controls="collapse-changelog-version0">
                 Version 2.0.0RC2 - 2025/02/03
             </button>
         </h2>
-        <div id="collapse-changelog-version0" class="accordion-collapse collapse show"
-         aria-labelledby="heading-changelog-version0" data-bs-parent="#accordion-changelog">
+        <div id="collapse-changelog-version0" class="accordion-collapse collapse"
+            aria-labelledby="heading-changelog-version0" data-bs-parent="#accordion-changelog">
             <div class="accordion-body">
                 <ul>
                     <li><strong>New Features:</strong>
@@ -18,14 +48,18 @@
                             <li>APIv2: New API endpoint /update/ror for automatic refresh of ROR affiliation data</li>
                             <li>APIv2: New API endpoint /update/crossref for automatic refresh of CrossRef funders</li>
                             <li>Spatial and temporal coverage: Automatic default value for timezone select field</li>
+                            <li>Invalid feedback and dependent mandatory fields for Spacial and Temporal Coverage</li>
+                            <li>Submit: Submission of data descriptions files and link to data is possible</li>
                         </ul>
                     </li>
                     <li><strong>Fixed Bugs:</strong>
                         <ul>
-                            <li>Updated Readme + Help Guide for Formgroups: Resource Information, Rights, Authors, Contributors</li>
+                            <li>Updated Readme (technical documentation) + Help Guide (user guide)</li>
                             <li>Removed "Subtitle" from dropdown menu "Title Type"</li>
                             <li>Loading Contibutor Roles + ORCID from xml file</li>
                             <li>Saving multiple Contributors without ORCIDs</li>
+                            <li>Adjusted column properties of the "plus" button</li>
+                            <li>Fields in Spacial and Temporal Coverage are not mandatory anymore</li>
                         </ul>
                     </li>
                 </ul>

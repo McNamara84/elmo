@@ -57,6 +57,18 @@ $(document).ready(function () {
   });
 
 
+    /**
+  * Event listener for the clear button that resets all input fields
+  * @requires jQuery
+  * @requires Bootstrap
+  * 
+  */
+    $(document).ready(function () {
+      $('#button-form-reset').on('click', function () {
+        clearInputFields();
+      });
+    });
+
   // Optional: Formular zurücksetzen, wenn das Modal geöffnet wird
   $('#modal-feedback').on('show.bs.modal', function () {
     $("#form-feedback")[0].reset();
@@ -506,9 +518,11 @@ $(document).ready(function () {
       }
     });
 
-    // Reset only non-timezone fields
-    newTscLine.find("input:not(#input-stc-timezone), textarea").val("").removeClass("is-invalid is-valid");
-    newTscLine.find(".invalid-feedback, .valid-feedback").hide();
+    // Reset only non-timezone fields and remove the required attribute
+    newTscLine.find("input:not(#input-stc-timezone), textarea")
+      .val("")  // Clear values
+      .removeClass("is-invalid is-valid")  // Remove validation classes
+      .removeAttr("required");  // Remove required attribute
 
     // Remove help buttons
     replaceHelpButtonInClonedRows(newTscLine);
@@ -762,7 +776,7 @@ $(document).ready(function () {
       placeholder: translations.laboratory.name,
       maxTags: 1,
       dropdown: {
-        maxItems: 20,
+        maxItems: 90,
         closeOnSelect: true,
         highlightFirst: true,
       },
