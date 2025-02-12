@@ -30,18 +30,30 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="label-sciencekeyword-modal" data-translate="keywords.thesaurus.title">GCMD Science
-          Keywords</h5>
+        <h5 class="modal-title" id="label-sciencekeyword-modal" data-translate="keywords.sciencekeywords">
+          GCMD Science Keywords
+        </h5>
         <span class="input-group-text"><i class="bi bi-question-circle-fill"
             data-help-section-id="help-scienceKeywords-keywordviewer"></i></span>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <div id="panel-sciencekeyword-thesaurus">
-          <input type="text" class="form-control mb-3" id="input-sciencekeyword-search"
+      <div class="modal-body d-flex">
+        <!-- Left Side: Keyword Selection Tree -->
+        <div id="panel-sciencekeyword-thesaurus" class="w-50 pe-3 border-end">
+          <input type="text" class="form-control mb-3" id="input-sciencekeyword-thesaurussearch"
             placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
           <div id="jstree-sciencekeyword"></div>
         </div>
+
+        <!-- Right Side: Selected Keywords -->
+        <div class="w-50 ps-3">
+          <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+          <ul id="selected-keywords" class="list-group">
+            <!-- Selected keywords will appear here dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
       </div>
     </div>
   </div>
