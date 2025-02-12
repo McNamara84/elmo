@@ -246,33 +246,3 @@ if ($_GET['action'] === 'getKeywords') {
     }
     exit;
 }
-
-// API-Hook getRelations, der alle Relationen aus der Datenbank abruft
-// Beispielaufruf api.php?action=getRelations
-if ($_GET['action'] == 'getRelations') {
-    $sql = 'SELECT * FROM Relation';
-    $result = $connection->query($sql);
-    if ($result->num_rows > 0) {
-        $getRelations = [];
-        while ($row = $result->fetch_assoc()) {
-            $Relation[] = $row;
-        }
-        echo json_encode($Relation);
-    } else {
-        echo 'Keine Relation gefunden';
-    }
-    // Skriptausführung beenden
-    exit();
-}
-
-// Hilfsfunktion zur Bestimmung eines eindeutigen Delimiters
-function getUniqueDelimiter($pattern)
-{
-    $characters = str_split('!@#$%^&*(){}[]<>:;,?/');
-    foreach ($characters as $char) {
-        if (strpos($pattern, $char) === false) {
-            return $char;
-        }
-    }
-    throw new Exception("Kein eindeutiger Delimiter gefunden");
-}
