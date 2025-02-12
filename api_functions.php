@@ -4,36 +4,6 @@ require 'vendor/autoload.php';
 use EasyRdf\Graph;
 use EasyRdf\RdfNamespace;
 
-function getLatestVersion($baseUrl, $type)
-{
-    $versions = [];
-    for ($i = 1; $i <= 10; $i++) {
-        $url = "{$baseUrl}{$type}/1.{$i}/{$type}_1-{$i}.json";
-        $headers = @get_headers($url);
-        if ($headers && strpos($headers[0], '200') !== false) {
-            $versions[] = "1.{$i}";
-        } else {
-            break;
-        }
-    }
-    return end($versions);
-}
-
-function downloadAndSave($url, $savePath)
-{
-    $json = @file_get_contents($url);
-    if ($json === false) {
-        return false;
-    }
-    // Schlüssel "uri" in JSON-Datei umbenennen in "id"
-    $json = str_replace('"uri":', '"id":', $json);
-    // Schlüssel "vocab_uri" in JSON-Datei umbenennen in "schemeURI"
-    $json = str_replace('"vocab_uri":', '"schemeURI":', $json);
-    // Schlüssel "label" in JSON-Datei umbenennen in "text"
-    $json = str_replace('"label":', '"text":', $json);
-    return file_put_contents($savePath, $json) !== false;
-}
-
 function fetchAndProcessCGIKeywords()
 {
     $url = 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology.rdf';
@@ -152,70 +122,4 @@ function buildHierarchy($graph, $conceptScheme, $schemeName)
 function saveJsonToFile($data, $filePath)
 {
     file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-}
-
-function processKeywords($conceptScheme, $schemeName, $outputFile)
-{
-    $pageNum = 1;
-    $pageSize = 2000;
-    $graph = new Graph();
-    while (true) {
-        try {
-            $data = fetchRdfData($conceptScheme, $pageNum, $pageSize);
-            $tempGraph = new Graph();
-            $tempGraph->parse($data, 'rdf');
-
-            foreach ($tempGraph->resources() as $resource) {
-                foreach ($tempGraph->properties($resource) as $property) {
-                    foreach ($tempGraph->all($resource, $property) as $value) {
-                        $graph->add($resource, $property, $value);
-                    }
-                }
-            }
-
-            if (strpos($data, '<skos:Concept') === false) {
-                break;
-            }
-            $pageNum++;
-        } catch (Exception $e) {
-            if ($pageNum == 1) {
-                throw $e;
-            } else {
-                break;
-            }
-        }
-    }
-    $hierarchicalData = buildHierarchy($graph, $conceptScheme, $schemeName);
-    saveJsonToFile($hierarchicalData, $outputFile);
-
-    echo "{$schemeName} erfolgreich aktualisiert";
-}
-
-function saveKeywordsToJson($connection, $filename, $curationType)
-{
-    if ($connection === null) {
-        die('Datenbankverbindung ist nicht initialisiert.');
-    }
-
-    $sql = 'SELECT free_keywords_id, free_keyword, isCurated FROM Free_Keywords';
-    if ($curationType === 'isCurated') {
-        $sql .= ' WHERE isCurated = 1';
-    } elseif ($curationType !== 'all') {
-        die('Ungültiger curationType');
-    }
-
-    $result = $connection->query($sql);
-
-    if ($result && $result->num_rows > 0) {
-        $keywords = $result->fetch_all(MYSQLI_ASSOC);
-        $jsonString = json_encode($keywords);
-
-        if (file_put_contents($filename, $jsonString) !== false) {
-            echo 'Keywords erfolgreich in ' . $filename . ' gespeichert.';
-        } else {
-            echo 'Fehler beim Speichern der Datei ' . $filename;
-        }
-    } else {
-        echo 'Keine Keywords gefunden.';
-    }
 }
