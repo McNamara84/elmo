@@ -86,7 +86,7 @@
 
 .modal-dialog {
     max-width: 90vw;
-    /* Breite auf 90% des Viewports setzen */
+    /* Set width to 90% of the viewport */
     width: 90vw;
 }
 
@@ -94,9 +94,9 @@
 #jstree-mslkeyword {
     width: 100%;
     max-width: 600px;
-    /* Größerer Bereich für die Baumstruktur */
+    /* Larger area for the tree structure */
     overflow-x: auto;
-    /* Falls nötig, horizontales Scrollen */
+    /* If necessary, horizontal scrolling */
 }
 
 
