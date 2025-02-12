@@ -159,7 +159,7 @@ $(document).ready(function () {
                 },
                 checkbox: {
                     keep_selected_style: true,
-                    three_state: false // WICHTIG: Deaktiviert die kaskadierende Auswahl
+                    three_state: false // Disables cascading selection
                 },
                 plugins: ['search', 'checkbox'],  // activates search and checkbox plugins
                 search: {
@@ -204,7 +204,7 @@ $(document).ready(function () {
             $(config.jsTreeId).on("changed.jstree", function (e, data) {
                 updateSelectedKeywordsList();
 
-                // Aktualisieren der Tagify-Tags basierend auf der jsTree-Auswahl
+                // Updates the Tagify tags based on the jsTree selection
                 var selectedNodes = $(config.jsTreeId).jstree("get_selected", true);
                 var selectedValues = selectedNodes.map(function (node) {
                     return data.instance.get_path(node, " > ");
