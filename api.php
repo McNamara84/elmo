@@ -215,35 +215,6 @@ if ($_GET['action'] == 'getGemetConcepts') {
     exit();
 }
 
-// API-Hook getLicenses, der mit resourcetype=all alle Lizenzen oder mit resourcetype=software nur die Softwarelizenzen (DB-Attribut forSoftware=1) zurückgibt
-// Beispielaufruf api.php?action=getLicenses&resourcetype=all für alle Lizenzen oder api.php?action=getLicenses&resourcetype=software für Softwarelizenzen
-if ($_GET['action'] == 'getLicenses') {
-    $resourcetype = $_GET['resourcetype'];
-
-    // Alle Lizenzen abrufen
-    if ($resourcetype == 'all') {
-        $sql = 'SELECT * FROM Rights';
-    }
-    // Nur Softwarelizenzen abrufen
-    else if ($resourcetype == 'software') {
-        $sql = 'SELECT * FROM Rights WHERE forSoftware = 1';
-    } else {
-        die('Ungültiger resourcetype');
-    }
-
-    $result = $connection->query($sql);
-    if ($result->num_rows > 0) {
-        $licenses = [];
-        while ($row = $result->fetch_assoc()) {
-            $licenses[] = $row;
-        }
-        echo json_encode($licenses);
-    } else {
-        echo 'Keine Lizenzen gefunden';
-        exit();
-    }
-}
-
 // API-Hook getKeywords, der alle oder nur die kuratierten Keywords aus der Datenbank abruft
 if ($_GET['action'] === 'getKeywords') {
     header('Content-Type: application/json');
