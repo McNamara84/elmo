@@ -19,7 +19,8 @@ $(document).ready(function () {
             inputId: '#input-sciencekeyword',
             jsonFile: 'json/gcmdScienceKeywords.json',
             jsTreeId: '#jstree-sciencekeyword',
-            searchInputId: '#input-sciencekeyword-search'
+            searchInputId: '#input-sciencekeyword-search',
+            selectedKeywordsListId: 'selected-keywords-gcmd'
         },
         // MSL-Keywords
         {
@@ -27,6 +28,7 @@ $(document).ready(function () {
             jsonFile: 'json/msl-vocabularies.json',
             jsTreeId: '#jstree-mslkeyword',
             searchInputId: '#input-mslkeyword-thesaurussearch',
+            selectedKeywordsListId: 'selected-keywords-msl'
         },
     ];
 
@@ -111,12 +113,6 @@ $(document).ready(function () {
 
             var processedData = processNodes(filteredData);
 
-            /**
-             * Builds a whitelist of keywords from hierarchical data for Tagify dropdown.
-             *
-             * @param {Array<Object>} data - Array of hierarchical data.
-             * @param {Array<string>} [parentPath=[]] - The parent path for building keyword hierarchy.
-             */
             function buildWhitelist(data, parentPath = []) {
                 data.forEach(function (item) {
                     var textToAdd = parentPath.concat(item.text).join(' > ');
@@ -143,18 +139,17 @@ $(document).ready(function () {
                 enforceWhitelist: true,
                 placeholder: translations.keywords.thesaurus.label,
                 dropdown: {
-                    maxItems: 50,  // max. number of whitelist items shown
-                    enabled: 3,    // show whitelist when 3 characters are typed
-                    closeOnSelect: true,  //close dropdown after keyword-selection
-                    classname: "thesaurus-tagify", // custom class for dropdown
+                    maxItems: 50,
+                    enabled: 3,
+                    closeOnSelect: true,
+                    classname: "thesaurus-tagify",
                 },
                 editTags: false,  // tags can not be edited
             });
             // Explicitly assign the instance to input._tagify
             input._tagify = thesaurusKeywordstagify;
 
-
-            // Initialise jsTree
+            // Initialize jsTree
             $(config.jsTreeId).jstree({
                 core: {
                     data: processedData,
@@ -163,72 +158,60 @@ $(document).ready(function () {
                     }
                 },
                 checkbox: {
-                    keep_selected_style: true  // keep checkbox-style
+                    keep_selected_style: true,
+                    three_state: false // WICHTIG: Deaktiviert die kaskadierende Auswahl
                 },
                 plugins: ['search', 'checkbox'],  // activates search and checkbox plugins
                 search: {
-                    show_only_matches: true,  // show only nodes matching the search
-
-                    /**
-                    * Callback function used to perform a search operation on jsTree nodes.
-                    * This function checks whether the search string matches the node's text or tooltip description.
-                    *
-                    * @param {string} str - The search string entered by the user.
-                    * @param {Object} node - The node being searched.
-                    * @param {string} node.text - The text content of the node.
-                    * @param {Object} [node.a_attr] - The attributes of the node.
-                    * @param {string} [node.a_attr.title] - The tooltip text for the node.
-                    * @returns {boolean} Returns `true` if the node text or tooltip matches the search string, otherwise `false`.
-                    */
+                    show_only_matches: true,
                     search_callback: function (str, node) {
-                        // Suchkriterium für Text oder Tooltip
                         return node.text.toLowerCase().indexOf(str.toLowerCase()) !== -1 ||
                             (node.a_attr && node.a_attr.title && node.a_attr.title.toLowerCase().indexOf(str.toLowerCase()) !== -1);
                     }
                 }
             });
 
-            /**
-            * Real-time search function for filtering nodes in jsTree as the user types in the search input.
-            * 
-            * @param {Event} event - The input event triggered by the user typing in the search field.
-            */
             $(config.searchInputId).on("input", function () {
                 $(config.jsTreeId).jstree(true).search($(this).val());
             });
 
-            /**
-            * Event handler for when a node is selected in jsTree.
-            * The function adds a tag to Tagify if the node's full path is not already present.
-            * 
-            * @param {Event} e - The event triggered by selecting a node in jsTree.
-            * @param {Object} data - The data related to the selected node.
-            * @param {Object} data.instance - The jsTree instance.
-            * @param {Object} data.node - The selected node in jsTree.
-            * @param {string} data.node.text - The text of the selected node.
-            */
-            $(config.jsTreeId).on("select_node.jstree", function (e, data) {
-                var fullPath = data.instance.get_path(data.node, " > ");
-                var existingTags = thesaurusKeywordstagify.value.map((tag) => tag.value);
+            function updateSelectedKeywordsList() {
+                let selectedKeywordsList = document.getElementById(config.selectedKeywordsListId);
+                if (!selectedKeywordsList) return;
 
-                if (!existingTags.includes(fullPath)) {
-                    thesaurusKeywordstagify.addTags([fullPath]);
-                }
-            });
+                selectedKeywordsList.innerHTML = "";
+                var selectedNodes = $(config.jsTreeId).jstree("get_selected", true);
 
+                selectedNodes.forEach(function (node) {
+                    let fullPath = $(config.jsTreeId).jstree().get_path(node, " > ");
+                    let listItem = document.createElement("li");
+                    listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+                    listItem.textContent = fullPath;
 
-            /**
-            * Event handler for when a node is deselected in jsTree.
-            * The function removes the corresponding tag from Tagify.
-            * 
-            * @param {Event} e - The event triggered by deselecting a node in jsTree.
-            * @param {Object} data - The data related to the deselected node.
-            * @param {Object} data.instance - The jsTree instance.
-            * @param {Object} data.node - The deselected node in jsTree.
-            */
-            $(config.jsTreeId).on("deselect_node.jstree", function (e, data) {
-                var fullPath = data.instance.get_path(data.node, " > ");
-                thesaurusKeywordstagify.removeTag(fullPath);
+                    let removeButton = document.createElement("button");
+                    removeButton.classList.add("btn", "btn-sm", "btn-danger");
+                    removeButton.innerHTML = "&times;";
+                    removeButton.onclick = function () {
+                        $(config.jsTreeId).jstree("deselect_node", node.id);
+                    };
+
+                    listItem.appendChild(removeButton);
+                    selectedKeywordsList.appendChild(listItem);
+                });
+            }
+
+            // Event handler for 'changed.jstree'
+            $(config.jsTreeId).on("changed.jstree", function (e, data) {
+                updateSelectedKeywordsList();
+
+                // Aktualisieren der Tagify-Tags basierend auf der jsTree-Auswahl
+                var selectedNodes = $(config.jsTreeId).jstree("get_selected", true);
+                var selectedValues = selectedNodes.map(function (node) {
+                    return data.instance.get_path(node, " > ");
+                });
+
+                thesaurusKeywordstagify.removeAllTags();
+                thesaurusKeywordstagify.addTags(selectedValues);
             });
 
             /**
@@ -280,35 +263,6 @@ $(document).ready(function () {
                     return jsTree.get_path(n, " > ") === path;
                 });
             }
-
-            /**
-            * Event handler for selecting a node in jsTree. 
-            * Adds the corresponding node as a tag in the Tagify input field if it is not already present.
-            * 
-            * @param {Event} e - The event triggered by selecting a node in jsTree.
-            * @param {Object} data - The data related to the selected node.
-            * @param {Object} data.instance - The jsTree instance.
-            * @param {Object} data.node - The selected node in jsTree.
-            * @param {string} data.node.id - The ID of the selected node.
-            * @param {string} data.node.original.scheme - The scheme associated with the node.
-            * @param {string} data.node.original.schemeURI - The URI of the scheme associated with the node.
-            * @param {string} data.node.original.language - The language associated with the node.
-            */
-            $(config.jsTreeId).on("select_node.jstree", function (e, data) {
-                var fullPath = data.instance.get_path(data.node, " > ");
-                var existingTags = thesaurusKeywordstagify.value.map((tag) => tag.id);
-
-                // Only add the tag if it's not already present
-                if (!existingTags.includes(data.node.id)) {
-                    thesaurusKeywordstagify.addTags([{
-                        value: fullPath,
-                        id: data.node.id,
-                        scheme: data.node.original.scheme,
-                        schemeURI: data.node.original.schemeURI,
-                        language: data.node.original.language
-                    }]);
-                }
-            });
         }
 
         // loads JSON file
