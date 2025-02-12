@@ -26,6 +26,9 @@ $connection = connectDb();
 // ELMO API Key
 $apiKeyElmo = '1234-1234-1234-1234';
 
+// Google Maps API Key
+$apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
+
 // API Key for https://timezonedb.com/
 $apiKeyTimezone = 'your_timezone_api_key';
 
