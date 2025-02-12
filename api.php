@@ -214,35 +214,3 @@ if ($_GET['action'] == 'getGemetConcepts') {
     }
     exit();
 }
-
-// API-Hook getKeywords, der alle oder nur die kuratierten Keywords aus der Datenbank abruft
-if ($_GET['action'] === 'getKeywords') {
-    header('Content-Type: application/json');
-
-    $curationType = $_GET['curationType'] ?? 'all';
-    $sql = 'SELECT free_keyword FROM Free_Keywords';
-
-    if ($curationType === 'isCurated') {
-        $sql .= ' WHERE isCurated = 1';
-    } elseif ($curationType !== 'all') {
-        echo json_encode(['error' => 'Ungültiger curationType']);
-        exit;
-    }
-    try {
-        $result = $connection->query($sql);
-
-        if ($result === false) {
-            throw new Exception("Datenbankabfrage fehlgeschlagen: " . $connection->error);
-        }
-
-        $keywords = [];
-        while ($row = $result->fetch_assoc()) {
-            $keywords[] = ['free_keyword' => $row['free_keyword']];
-        }
-
-        echo json_encode($keywords);
-    } catch (Exception $e) {
-        echo json_encode(['error' => 'Ein Fehler ist aufgetreten beim Abrufen der Keywords']);
-    }
-    exit;
-}
