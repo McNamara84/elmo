@@ -2507,6 +2507,6 @@
     "platform": {
         "php": "^8.2 || ^8.3 || ^8.4"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }

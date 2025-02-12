@@ -3,7 +3,7 @@
         'name' => 'elmo/elmo',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '11f55a6349f1305c27435eea179c64a0836f017b',
+        'reference' => 'e1cef6f0d1221985b6678385da4f6c5d843928fa',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'elmo/elmo' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '11f55a6349f1305c27435eea179c64a0836f017b',
+            'reference' => 'e1cef6f0d1221985b6678385da4f6c5d843928fa',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

@@ -28,6 +28,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Submitting of metadata directly to data curators.
 - Authors can be sorted by drag & drop.
 - Submission of data descriptions files and link to data is possible.
+- Optional input fields with form groups that can be hidden.
 
 ## Installation
 
@@ -180,6 +181,8 @@ The following third-party dependencies are included in header.html and footer.ht
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
   - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent
+  - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
+  - `$showMslVocabs`: Specifies whether the form group MSL keywords should be displayed (true/false).
 </details>
 
 ## API-Dokumentation
