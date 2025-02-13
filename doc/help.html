@@ -91,20 +91,27 @@ include_once "../settings.php";
                     <div id="help-resourceinformation-doi">
                         <h4>DOI</h4>
                         <p>The DOI is a unique string that identifies a resource. Format should be 10.ORGANISATION/ID.
-                            If you have no DOI for your dataset yet, please leave this field empty and a DOI will be
-                            registered by GFZ Data Services.</p>
+                            GFZ DataServices will register a DOI for your Dataset after submission and curation.
+                            <strong>Please leave this field empty if your dataset is not published yet.</strong>
+                        </p>
                     </div>
                     <div id="help-resourceinformation-publicationyear">
                         <h4>Publication Year</h4>
                         <p>The year when the data was or will be made publicly available. In the case of datasets,
                             “publish” is understood to mean making the data available on a specific date to the
                             community of researchers. Values between 1901 and 2155 are allowed.</p>
-                        <ul>
-                            <li>If that date cannot be determined, use the date of registration.</li>
-                            <li>If an embargo period is in effect, use the date when the embargo period ends.</li>
-                            <li>If there is no standard publication year value, use the date that would be preferred
-                                from a citation perspective.</li>
-                        </ul>
+                    </div>
+                    <div>
+                        <ul class="list-unstyled">
+                            <ul>
+                                <li>If that date cannot be determined, use the date of registration.
+                                </li>
+                                <li>If an embargo period is in effect, use the date when the embargo
+                                    period ends.</li>
+                                <li>If there is no standard publication year value, use the date
+                                    that would be preferred
+                                    from a citation perspective.</li>
+                            </ul>
                     </div>
                     <div id="help-resourceinformation-resourcetype">
                         <h4>Resource Type</h4>
@@ -131,7 +138,9 @@ include_once "../settings.php";
                     </div>
                     <div id="help-resourceinformation-title">
                         <h4>Title</h4>
-                        <p>The title of the dataset. The first row is reserved for the main title. You can specify
+                        <p>The title of the dataset. Please note that the title shall describe the data and not repeat
+                            the title of the corresponding article! The first row is reserved for the main title. You
+                            can specify
                             up to
                             <?php echo $maxTitles-1; ?> additional titles if your dataset is known by multiple names
                             or translations.
@@ -180,7 +189,8 @@ include_once "../settings.php";
                 <div id="help-authors" class="section-content">
                     <div id="help-authors-fg">
                         <h3>Author(s)</h3>
-                        <p> Please enter authors of the dataset here, ideally with an ORCID. Entering an ORCID loads
+                        <p> Please enter authors of the dataset here by entering their last and first name without any
+                            titles. Ideally you provide an ORCID. Entering an ORCID loads
                             data from the corresponding ORCID profile. To add more authors, use the "add" button on the
                             right. The order of the authors can be changed using drag & drop. </p>
                     </div>
@@ -217,7 +227,9 @@ include_once "../settings.php";
                     </div>
                     <div id="help-contactperson-website">
                         <h4>Website</h4>
-                        <p>Professional or specialized website, excluding any private websites.</p>
+                        <p>Professional or specialized website, excluding any private websites. The specification of a
+                            website, such as that of your institution, offers further contact options in case of
+                            questions.</p>
                     </div>
                     <div id="help-contactperson-affiliation">
                         <h4>Affiliation</h4>
@@ -259,9 +271,16 @@ include_once "../settings.php";
                     <div id="help-contributors-fg">
                         <h3>Contributors</h3>
                         <p>
-                            Institution or person responsible for collecting, managing, distributing, or otherwise
-                            contributing to the development of the resource. To add more than one contributor, use the
-                            "add" button on the right.
+                            A contributor is an institution or a person responsible for collecting, managing,
+                            distributing, or otherwise contributing to the development of the resource. To add more than
+                            one contributor, use the "add" button on the right.
+                        </p>
+                        <p>
+                            With <code>Contributing Person(s)</code> or <code>Contributing Institution(s)</code> you
+                            have the possibility
+                            to acknowledge additional persons or institutions related to the dataset which you would
+                            normally not mention as authors. These are not named in the citation but are always related
+                            to the dataset and findable just as all the other metadata fields.
                         </p>
                     </div>
                     <div>
@@ -402,8 +421,11 @@ include_once "../settings.php";
                             <li>
                                 <strong>Hosting Institution: </strong>Typically, the organisation allowing the resource
                                 to be available on the internet through the provision of its hardware/software/operating
-                                support. May also be used for an organisation that stores the data offline. Often a data
-                                centre (if that data centre is not the
+                                support. May also be used for an organisation that stores the data offline. If your data
+                                was derived from a laboratory, please include the name of the laboratory (with
+                                affiliation) as contributor with the role “HostingInstitution”. There may be two hosting
+                                institutions if the data or work is stored in both.
+                                Often a data centre (if that data centre is not the
                             </li>
                             <li>
                                 <strong>Producer: </strong>Typically a organisation responsible for the artistry and
@@ -464,12 +486,18 @@ include_once "../settings.php";
                             The abstract is a mandatory field, because it is (just like the abstract of a paper) highly
                             valuable
                             to other scholars in finding your data and then determining whether or not the resource is
-                            worth investigating further, re-using, or validating.
+                            worth investigating further, re-using, or validating.<br>
+                            <strong>Please keep in mind that the descriptions should describe the resource itself and
+                                not the corresponding article.</strong>
                         </p>
                     </div>
                     <div id="help-description-abstract">
                         <h4>Abstract</h4>
-                        <p>A brief description of the resource and the context in which the resource was created.<br>
+                        <p>A brief description of the resource and the context in which the resource was created.
+                            <strong>Please
+                                keep in mind that this abstract is describing the resource itself and should not simply
+                                be
+                                the abstract of a corresponding article.</strong><br>
                             When writing the abstract, please keep in mind:
                         <ul>
                             <li>The audience is the broader scientific community, not only your own subdomain.</li>
@@ -516,7 +544,7 @@ include_once "../settings.php";
                 <div id="help-mslkeywords" class="section-content">
                     <div id="help-mslKeywords-keyword">
                         <h3>EPOS Multi-Scale Laboratories Keywords</h3>
-                        <p>Please click on the Thesaurus button to the right to select keywords from the thesaurus or
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
                             start typing to use the autocomplete function. By adding terms like these, you make it much
                             easier for us to find your data and to make it discoverable in this catalogue and the EPOS
                             data
@@ -550,7 +578,7 @@ include_once "../settings.php";
                     <div id="help-scienceKeywords-keyword">
                         <h3>GCMD Science Keywords</h3>
                         <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                        <p>Please click on the Thesaurus button to the right to select keywords from the thesaurus
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree
                             or start typing to use the autocomplete function. </p>
                         <p>GCMD Science Keywords are essential for filtering options within the GFZ Metadata Portal.
                             Therefore, we highly recommend selecting at least one GCMD Science Keyword to describe
@@ -627,16 +655,11 @@ include_once "../settings.php";
                     </div>
                     <div id="help-tsc-geographicalcoverage">
                         <h4>Geographic Coverage</h4>
-                        <p>If you draw a rectangle on the map, the coordinates of this rectangle will be transferred
-                            to
-                            the
-                            input fields <code>Latitude Min</code> and <code>Latitude Max</code> as well as
-                            <code>Longitude Min</code> and <code>Longitude Max</code>. These coordinates will only
-                            be
-                            saved
-                            together with the entire form. If you only set a marker on the map, the fields
-                            <code>Latitude Min</code> and <code>Longitude Min</code> will be filled, while
-                            <code>Latitude Max</code> and <code>Longitude Max</code> remain empty.
+                        <p>You can add singles coordinates with <code>Latitude Min</code> and <code>Longitude Min</code>
+                            or a bounding box with <code>Latitude Min</code>, <code>Latitude Max</code>,
+                            <code>Longitude Min</code> and <code>Longitude Max</code>.
+                        </p>
+                        <p>You can also use the map to set the coordinates either for rectangles or points.
                         </p>
                         <ul>
                             <li><strong>Latitude Min:</strong> Geographic latitude of a single coordinate or the
@@ -735,9 +758,12 @@ include_once "../settings.php";
                             </li>
                             <li><strong>References:</strong> indicates B is used as a source of information for A
                             </li>
-                            <li><strong>IsDocumentedBy:</strong> indicates B is documentation about/explaining A
+                            <li><strong>IsDocumentedBy:</strong> indicates B is documentation about/explaining A (e.g.
+                                points to software documentation or a data report)
                             </li>
-                            <li><strong>Documents:</strong> indicates A is documentation about/explaining B</li>
+                            <li><strong>Documents:</strong> indicates A is documentation about/explaining B (e.g. points
+                                to
+                                software documentation or a data report)</li>
                             <li><strong>IsCompiledBy:</strong> indicates B is used to compile or create A</li>
                             <li><strong>Compiles:</strong> indicates B is the result of a compile or creation event
                                 using A</li>
@@ -824,7 +850,11 @@ include_once "../settings.php";
                         <h4>Funder</h4>
                         <p>The name of the funding provider. To receive suggestions, please enter at
                             least the first two letters. If possible, please choose from the controlled list. You can
-                            also manually enter the funding provider.</p>
+                            also manually enter the funding provider. Please use the funder name in
+                            the corresponding national language (e.g. "Deutsche Forschungsgemein-
+                            schaft" for DFG, "Vetenskapsrådet" for the Swedish Research
+                            Council). Several grant numbers by the same funder should
+                            be entered as individual entries (several lines).</p>
                     </div>
                     <div id="help-fundingreference-grantnumber">
                         <h4>Grant Number</h4>

@@ -943,7 +943,7 @@ Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD
 
 #### EPOS Multi-Scale Laboratories Keywords
 
-Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://elmo.cats4future.de/api/v2/docs/index.html)).
+Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies) are provided by Utrecht University on [GitHub](https://github.com/UtrechtUniversity/msl_vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://elmo.cats4future.de/api/v2/docs/index.html)).
 
 - EPOS Multi-Scale Laboratories Keyword
 
