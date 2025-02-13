@@ -28,6 +28,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Submitting of metadata directly to data curators.
 - Authors can be sorted by drag & drop.
 - Submission of data descriptions files and link to data is possible.
+- Optional input fields with form groups that can be hidden.
 
 ## Installation
 
@@ -149,7 +150,7 @@ The following third-party dependencies are included in header.html and footer.ht
   For the event handlers in JavaScript and to simplify the JavaScript code.
 - [jQuery UI 1.14.1](https://github.com/jquery/jquery-ui/releases)<br>
   Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
-- [Tagify 4.33.0](https://github.com/yairEO/tagify/releases)<br>
+- [Tagify 4.33.2](https://github.com/yairEO/tagify/releases)<br>
   Is used for the Thesaurus Keywords field, the entry of multiple affiliations and free keywords.
 - [jsTree 3.3.17](https://github.com/vakata/jstree/releases)<br>
   Is used to display the thesauri as a hierarchical tree structure.
@@ -180,6 +181,8 @@ The following third-party dependencies are included in header.html and footer.ht
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
   - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent
+  - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
+  - `$showMslVocabs`: Specifies whether the form group MSL keywords should be displayed (true/false).
 </details>
 
 ## API-Dokumentation

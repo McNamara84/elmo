@@ -118,10 +118,10 @@ $(document).ready(function () {
       // Clone the existing title row and reset its input fields.
       var newTitleRow = $addTitleBtn.closest(".row").clone();
       $(newTitleRow).find("input").val("");
-      
+
       // Ensure help buttons are retained
       $(newTitleRow).find(".bi-question-circle-fill").closest(".input-group-append").show();
-      
+
       // Adjust the column layout classes for the cloned row.
       newTitleRow.find(".col-12.col-sm-12.col-md-11.col-lg-11")
         .removeClass("col-md-11 col-lg-11")
@@ -663,12 +663,14 @@ $(document).ready(function () {
 
   var labData;
 
-  // Load lab data from JSON and initialize Tagify on the first laboratory row
-  $.getJSON("json/msl-labs.json", function (data) {
-    labData = data;
-    var firstRow = $("#group-originatinglaboratory .row").first();
-    initializeTagify(firstRow, data);
-  });
+  if ($("#group-originatinglaboratory").length) {
+    // Load lab data from JSON and initialize Tagify on the first laboratory row
+    $.getJSON("json/msl-labs.json", function (data) {
+      labData = data;
+      var firstRow = $("#group-originatinglaboratory .row").first();
+      initializeTagify(firstRow, data);
+    });
+  }
 
   var rowCounter = 1;
 

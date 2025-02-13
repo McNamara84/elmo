@@ -1,3 +1,6 @@
+<?php
+include_once "../settings.php";
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,7 +21,7 @@
             <a class="navbar-brand text-white m-3" href="#">
                 Enhanced Laboratory Metadata Optimizer - Guide
             </a>
-            <!-- Link to imprint -->
+            <!-- Link to legal notice -->
             <div class="navbar-collapse justify-content-end" id="navbar-help-menu">
                 <ul class="navbar-nav">
                     <li class="nav-item">
@@ -42,11 +45,15 @@
                     <li class="nav-item"><a class="nav-link" href="#help-rights">Licenses and rights</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-authors">Author(s)</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-contactperson">Contact Person(s)</a></li>
+                    <?php if ($showMslLabs): ?>
                     <li class="nav-item"><a class="nav-link" href="#help-originatinglaboratory">Originating
                             Laboratory</a></li>
+                    <?php endif; ?>
                     <li class="nav-item"><a class="nav-link" href="#help-contributors">Contributor(s)</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-descriptions">Description(s)</a></li>
+                    <?php if ($showMslVocabs): ?>
                     <li class="nav-item"><a class="nav-link" href="#help-mslkeywords">EPOS MSL Keywords</a></li>
+                    <?php endif; ?>
                     <li class="nav-item"><a class="nav-link" href="#help-scienceKeywords">GCMD Science Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-freeKeywords">Free Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-dates">Dates</a></li>
@@ -234,6 +241,7 @@
                     <div class="section-divider"></div>
                 </div>
                 <div class="section-divider"></div>
+                <?php if ($showMslLabs): ?>
                 <hr>
                 <!-- formgroup originating laboratory -->
                 <div id="help-originatinglaboratory" class="section-content">
@@ -256,6 +264,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <?php endif; ?>
                 <hr>
                 <!-- formgroup contributors -->
                 <div id="help-contributors" class="section-content">
@@ -529,6 +538,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <?php if ($showMslVocabs): ?>
                 <hr>
                 <!-- formgroup MSL Keywords -->
                 <div id="help-mslkeywords" class="section-content">
@@ -561,6 +571,7 @@
                     </div>
                 </div>
                 <div class="section-divider"></div>
+                <?php endif; ?>
                 <hr>
                 <!-- formgroup GCMD Science Keywords -->
                 <div id="help-scienceKeywords" class="section-content">
