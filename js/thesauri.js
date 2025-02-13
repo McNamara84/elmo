@@ -22,6 +22,22 @@ $(document).ready(function () {
             searchInputId: '#input-sciencekeyword-search',
             selectedKeywordsListId: 'selected-keywords-gcmd'
         },
+        // GCMD PLATFORMS
+        {
+            inputId: '#input-Platforms',
+            jsonFile: 'json/gcmdPlatformsKeywords.json',
+            jsTreeId: '#jstree-Platforms',
+            searchInputId: '#input-Platforms-thesaurussearch',
+            selectedKeywordsListId: 'selected-keywords-Platforms-gcmd'
+        },
+        // GCMD INSTRUMENTS
+        {
+            inputId: '#input-Instruments',
+            jsonFile: 'json/gcmdInstrumentsKeywords.json',
+            jsTreeId: '#jstree-instruments',
+            searchInputId: '#input-instruments-thesaurussearch',
+            selectedKeywordsListId: 'selected-keywords-instruments-gcmd'
+        },
         // MSL-Keywords
         {
             inputId: '#input-mslkeyword',
