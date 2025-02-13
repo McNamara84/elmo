@@ -1,26 +1,81 @@
 <div class="card mb-2">
-  <div class="card-header"><b data-translate="keywords.thesaurus.title">GCMD Science Keywords</b></div>
-  <div class="card-body reduce-padding">
-    <!------------------------------- NASA GCMD SCIENCE KEYWORDS ------------------------------------------------------------>
-    <!-- Input field -->
-    <div class="input-group has-validation input-margin-top-bottom">
-      <div class="form-floating">
-        <div class="input-group has-validation">
-          <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-sciencekeyword"
-            name="thesaurusKeywords" />
-          <span class="input-group-text"><i class="bi bi-question-circle-fill"
-              data-help-section-id="help-scienceKeywords-keyword"></i></span>
+  <div class="card-header">
+    <b data-translate="keywords.thesaurus.name"></b>
+  </div>
+
+  <div id="thesaurusKeywordsGroup">
+    <div class="accordion p-2" id="accordionThesauri">
+
+      <!------------------------------- NASA GCMD SCIENCE KEYWORDS ------------------------------------------------------------>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingScienceKeywords">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapseScienceKeywords" aria-expanded="false" aria-controls="collapseScienceKeywords">
+            GCMD Science Keywords
+          </button>
+        </h2>
+        <div id="collapseScienceKeywords" class="accordion-collapse collapse" aria-labelledby="headingScienceKeywords"
+          data-bs-parent="#accordionThesauri">
+          <div class="accordion-body">
+            <!-- Input field -->
+            <div class="input-group has-validation input-margin-top-bottom">
+              <div class="form-floating">
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="input-sciencekeyword" name="thesaurusKeywords" />
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-scienceKeywords-keyword"></i></span>
+                </div>
+              </div>
+              <!-- Thesaurus button -->
+              <div class="col-auto p-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                  data-bs-target="#modal-sciencekeyword" id="button-sciencekeyword-open">
+                  <i class="bi bi-diagram-3"></i>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <!-- Thesaurus button -->
-      <div class="col-auto p-2">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-sciencekeyword"
-          id="button-sciencekeyword-open">
-          <i class="bi bi-diagram-3"></i>
-        </button>
+
+      <!------------------------------- NASA GCMD PLATFORMS ------------------------------------------------------------>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingPlatforms">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapsePlatforms" aria-expanded="false" aria-controls="collapsePlatforms">
+            GCMD Platforms
+          </button>
+        </h2>
+        <div id="collapsePlatforms" class="accordion-collapse collapse" data-bs-parent="#accordionThesauri">
+          <div class="accordion-body">
+            <!-- Input field -->
+            <div class="input-group has-validation input-margin-top-bottom">
+              <div class="form-floating">
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="inputPlatforms" name="platforms" />
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-scienceKeywords-keyword"></i></span>
+                </div>
+              </div>
+              <!-- Thesaurus button -->
+              <div class="col-auto p-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#platformsModal"
+                  id="platformKeywordsThesaurus">
+                  <i class="bi bi-diagram-3"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+
+
     </div>
   </div>
+</div>
 </div>
 <!-- Modal for Science Keywords -->
 <div class="modal fade <?php if 

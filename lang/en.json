@@ -97,10 +97,13 @@
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
+            "ThesaurusKeywords": "Thesaurus Keywords",
             "title": "GCMD Science Keywords",
-            "name": "Thesaurus",
+            "name": "Thesaurus Keywords",
             "scienceKeywords": "NASA GCMD Science Keywords",
-            "label": "Open thesaurus to choose keywords or start typing..."
+            "label": "Open thesaurus to choose keywords or start typing...",
+            "platforms": "GCMD Plattformen",
+            "instruments": "GCMD Instrumente"
         },
         "free": {
             "title": "Free Keywords",
@@ -127,7 +130,7 @@
         "end": "End",
         "dateTimeInvalid": "Please enter a valid date and time.",
         "timezone": "Timezone",
-        "timezoneInvalid":"Please choose a timezone",
+        "timezoneInvalid": "Please choose a timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)"
     },
     "relatedWork": {
