@@ -119,8 +119,11 @@ $(document).ready(function () {
       var newTitleRow = $addTitleBtn.closest(".row").clone();
       $(newTitleRow).find("input").val("");
 
-      // Ensure help buttons are retained
-      $(newTitleRow).find(".bi-question-circle-fill").closest(".input-group-append").show();
+
+      // Rebind help button functionality for cloned rows
+      $(newTitleRow).find(".bi-question-circle-fill").each(function () {
+        $(this).data("help-section-id");
+      });
 
 
       // Adjust Title Input field width
@@ -961,6 +964,7 @@ $(document).ready(function () {
       localStorage.setItem("userLanguage", language);
     }
   });
+
 
   // Initialize tooltips
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
