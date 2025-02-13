@@ -879,27 +879,6 @@ $(document).ready(function () {
     }
   }
 
-
-  /**
-  * Removes help buttons from cloned rows and adjusts CSS classes for input elements.
-  *
-  * @param {jQuery} row - The cloned row from which to remove help buttons.
-  * @param {string} [roundCornersClass="input-right-with-round-corners"] - The CSS class to add to input elements.
-  */
-  function deleteHelpButtonFromClonedRows(
-    row,
-    roundCornersClass = "input-right-with-round-corners"
-  ) {
-    row.find("span.input-group-text:has(i.bi-question-circle-fill)").each(function () {
-      $(this).remove();
-    });
-
-    row
-      .find(".input-with-help")
-      .removeClass("input-right-no-round-corners")
-      .addClass(roundCornersClass);
-  }
-
   let hoverCount = 0;
   let timer = null;
 
