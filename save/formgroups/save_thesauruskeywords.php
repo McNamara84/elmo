@@ -13,7 +13,9 @@ function saveThesaurusKeywords($connection, $postData, $resource_id)
     // Defines the fields to process
     $fieldsToProcess = [
         'thesaurusKeywords', // Thesaurus Keywords
-        'MSLKeywords'        // MSL Keywords
+        'MSLKeywords',        // MSL Keywords
+        'platforms',          // GCMD Platforms
+        'instruments'         // GCMD Instruments
     ];
 
     // Iterates over the fields and checks if they exist in the POST data and are not empty
