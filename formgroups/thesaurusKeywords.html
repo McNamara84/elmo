@@ -6,7 +6,7 @@
   <div id="thesaurusKeywordsGroup">
     <div class="accordion p-2" id="accordionThesauri">
 
-      <!------------------------------- NASA GCMD SCIENCE KEYWORDS ------------------------------------------------------------>
+      <!------------------------------- GCMD SCIENCE KEYWORDS ------------------------------------------------------------>
       <div class="accordion-item">
         <h2 class="accordion-header" id="headingScienceKeywords">
           <button class="accordion-button" type="button" data-bs-toggle="collapse"
@@ -39,7 +39,7 @@
         </div>
       </div>
 
-      <!------------------------------- NASA GCMD PLATFORMS ------------------------------------------------------------>
+      <!------------------------------- GCMD PLATFORMS ------------------------------------------------------------>
       <div class="accordion-item">
         <h2 class="accordion-header" id="headingPlatforms">
           <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
@@ -61,7 +61,7 @@
               </div>
               <!-- Thesaurus button -->
               <div class="col-auto p-2">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#platformsModal"
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-Platforms"
                   id="platformKeywordsThesaurus">
                   <i class="bi bi-diagram-3"></i>
                 </button>
@@ -71,7 +71,7 @@
         </div>
       </div>
 
-      <!------------------------------- NASA GCMD INSTRUMENTS ------------------------------------------------------------>
+      <!------------------------------- GCMD INSTRUMENTS ------------------------------------------------------------>
 
       <div class="accordion-item">
         <h2 class="accordion-header" id="headingInstruments">
@@ -94,7 +94,7 @@
               </div>
               <!-- Thesaurus button -->
               <div class="col-auto p-2">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#instrumentsModal"
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-instruments"
                   id="openInstrumentsThesaurus">
                   <i class="bi bi-diagram-3"></i>
                 </button>
@@ -108,6 +108,8 @@
 </div>
 </div>
 
+
+<!------------------------------- Modals ------------------------------------------------------------>
 
 <!-- Modal for Science Keywords -->
 <div class="modal fade <?php if 
@@ -135,6 +137,82 @@
         <div class="w-50 ps-3">
           <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
           <ul id="selected-keywords-gcmd" class="list-group">
+            <!-- Selected keywords will appear here dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal for GCMD PLATFORMS -->
+<div class="modal fade <?php if 
+      (isset($_SESSION['PlatformsModal']) && $_SESSION['PlatformsModal'] == 'true') 
+      {echo 'show'; } ?>
+      " id="modal-Platforms" tabindex="-1" aria-labelledby="label-Platforms-modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="label-Platforms-modal" data-translate="keywords.Platforms">
+          GCMD Platforms
+        </h5>
+        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+            data-help-section-id="help-Platforms-keywordviewer"></i></span>
+      </div>
+      <div class="modal-body d-flex">
+        <!-- Left Side: Keyword Selection Tree -->
+        <div id="panel-Platforms-thesaurus" class="w-50 pe-3 border-end">
+          <input type="text" class="form-control mb-3" id="input-Platforms-thesaurussearch"
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
+          <div id="jstree-Platforms"></div>
+        </div>
+
+        <!-- Right Side: Selected Keywords -->
+        <div class="w-50 ps-3">
+          <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+          <ul id="selected-keywords-Platforms-gcmd" class="list-group">
+            <!-- Selected keywords will appear here dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal for GCMD INSTRUMENTS -->
+<div class="modal fade <?php if 
+      (isset($_SESSION['instrumentsModal']) && $_SESSION['instrumentsModal'] == 'true') 
+      {echo 'show'; } ?>
+      " id="modal-instruments" tabindex="-1" aria-labelledby="label-instruments-modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="label-instruments-modal" data-translate="keywords.instruments">
+          GCMD instruments
+        </h5>
+        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+            data-help-section-id="help-instruments-keywordviewer"></i></span>
+      </div>
+      <div class="modal-body d-flex">
+        <!-- Left Side: Keyword Selection Tree -->
+        <div id="panel-instruments-thesaurus" class="w-50 pe-3 border-end">
+          <input type="text" class="form-control mb-3" id="input-instruments-thesaurussearch"
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
+          <div id="jstree-instruments"></div>
+        </div>
+
+        <!-- Right Side: Selected Keywords -->
+        <div class="w-50 ps-3">
+          <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+          <ul id="selected-keywords-instruments-gcmd" class="list-group">
             <!-- Selected keywords will appear here dynamically -->
           </ul>
         </div>
