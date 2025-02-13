@@ -4,31 +4,50 @@
  */
 $(document).ready(function () {
     /**
-     * Configuration array for keyword input fields.
-     * Each object in the array defines the settings for a specific keyword input and associated components.
-     *
-     * @type {Array<Object>}
-     * @property {string} inputId - The ID of the input element where keywords will be entered.
-     * @property {string} jsonFile - The path to the JSON file containing the thesaurus.
-     * @property {string} jsTreeId - The ID of the jsTree element associated with this input field.
-     * @property {string} searchInputId - The ID of the search input field for the corresponding jsTree-modal.
-     */
+ * Configuration array for keyword input fields.
+ * Each object in the array defines the settings for a specific keyword input and associated components.
+ *
+ * @type {Array<Object>}
+ * @property {string} inputId - The ID of the input element where keywords will be entered.
+ * @property {string} jsonFile - The path to the JSON file containing the thesaurus.
+ * @property {string} jsTreeId - The ID of the jsTree element associated with this input field.
+ * @property {string} searchInputId - The ID of the search input field for the corresponding jsTree-modal.
+ */
     var keywordConfigurations = [
-        // GCMD Science Keywords
         {
             inputId: '#input-sciencekeyword',
             jsonFile: 'json/gcmdScienceKeywords.json',
             jsTreeId: '#jstree-sciencekeyword',
-            searchInputId: '#input-sciencekeyword-search'
+            searchInputId: '#input-sciencekeyword-search',
+            shouldInitialize: true // Immer initialisieren
         },
-        // MSL-Keywords
         {
             inputId: '#input-mslkeyword',
             jsonFile: 'json/msl-vocabularies.json',
             jsTreeId: '#jstree-mslkeyword',
             searchInputId: '#input-mslkeyword-thesaurussearch',
-        },
+            shouldInitialize: false // Standardmäßig nicht initialisieren
+        }
     ];
+
+    fetch('settings.php?setting=all')
+        .then(response => response.json())
+        .then(data => {
+            // MSL Keyword Konfiguration aktualisieren
+            keywordConfigurations.find(config => config.inputId === '#input-mslkeyword').shouldInitialize = data.showMslLabs;
+
+            // Initialisierung aller Keyword-Felder
+            keywordConfigurations.forEach(function (config) {
+                if (config.shouldInitialize) {
+                    initializeKeywordInput(config);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Fehler beim Abruf der Settings:', error);
+        });
+
+
 
     /**
      * Initializes a keyword input field with tag management and hierarchical tree data and search capabilities used in modal.
@@ -316,18 +335,4 @@ $(document).ready(function () {
             loadKeywords(data);
         });
     }
-
-    /**
-    * Initializes all keyword input fields based on the configuration settings.
-    * This function iterates through the `keywordConfigurations` array and calls the `initializeKeywordInput` function 
-    * for each configuration object, setting up the corresponding input field, jsTree, and search functionality.
-    * 
-    * @param {Object} config - A configuration object for each keyword input field, containing the settings for 
-    *                          the input, JSON file, jsTree, and search input.
-    * 
-    * @returns {void}
-    */
-    keywordConfigurations.forEach(function (config) {
-        initializeKeywordInput(config);
-    });
 });

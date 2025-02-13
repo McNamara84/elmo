@@ -20,31 +20,14 @@ function connectDb()
     return $conn;
 }
 
-/**
- * Outputs the Google Maps API key in JSON format.
- *
- * @return void
- */
-function getApiKey()
-{
-    // Google Maps API Key
-    $apiKeyGoogleMaps = 'your_google_maps_api_key';
-    // Return API key as JSON
-    echo json_encode(['apiKey' => $apiKeyGoogleMaps]);
-}
-
-// Check if the file is accessed directly via an HTTP request
-if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        getApiKey();
-    }
-}
-
 // Establish the database connection
 $connection = connectDb();
 
 // ELMO API Key
 $apiKeyElmo = '1234-1234-1234-1234';
+
+// Google Maps API Key
+$apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 
 // API Key for https://timezonedb.com/
 $apiKeyTimezone = 'your_timezone_api_key';
@@ -52,8 +35,12 @@ $apiKeyTimezone = 'your_timezone_api_key';
 // Maximum number of titles that can be entered
 $maxTitles = 2;
 
+// Show MSL labs form group
+$showMslLabs = true;
 // URL to the source with all laboratories for MSL
 $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/labnames.json';
+// Show MSL vocabularies
+$showMslVocabs = true;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
@@ -72,3 +59,35 @@ $feedbackAddress = 'feedback@example.com';
 
 // Target address for XML submit
 $xmlSubmitAddress = 'xmlsubmit@example.com';
+
+function getSettings($setting)
+{
+    global $apiKeyGoogleMaps, $showMslLabs;
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    switch ($setting) {
+        case 'apiKey':
+            echo json_encode([
+                'apiKey' => $apiKeyGoogleMaps
+            ]);
+            break;
+
+        case 'all':
+            echo json_encode([
+                'apiKey' => $apiKeyGoogleMaps,
+                'showMslLabs' => $showMslLabs
+            ]);
+            break;
+
+        default:
+            echo json_encode(['error' => 'Unknown setting']);
+            break;
+    }
+    exit;
+}
+
+if (isset($_GET['setting'])) {
+    getSettings($_GET['setting']);
+    exit;
+}
