@@ -26,7 +26,8 @@ $(document).ready(function () {
   // Event handler for the "Help On" button click
   $("#buttonHelpOn").click(function (event) {
       event.preventDefault();
-      setHelpStatus("help-on"); 
+      setHelpStatus("help-on");
+  });
 
   // Event handler for the "Help Off" button click
   $("#buttonHelpOff").click(function (event) {
