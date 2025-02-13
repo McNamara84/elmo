@@ -359,8 +359,8 @@ $(document).ready(function () {
     });
   }
 
-  // Fetch the API key via AJAX request and initialize the map
-  fetch("settings.php")
+  // Fetch the Google Maps API key from settings.php and initialize the map
+  fetch("settings.php?setting=apiKey")
     .then((response) => {
       if (!response.ok) {
         throw new Error("Network response was not ok");
@@ -370,7 +370,7 @@ $(document).ready(function () {
     .then((data) => {
       if (data.apiKey) {
         loadGoogleMapsApi(data.apiKey);
-        // Load the map
+
         google.maps.importLibrary("maps").then(initMap);
       } else {
         console.error("API key not found in the response");
@@ -379,6 +379,7 @@ $(document).ready(function () {
     .catch((error) => {
       console.error("Error fetching the API key:", error);
     });
+
 
   // Make functions globally accessible
   window.deleteDrawnOverlaysForRow = deleteDrawnOverlaysForRow;

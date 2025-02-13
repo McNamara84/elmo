@@ -17,9 +17,7 @@
     integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- CDN for Tagify CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.33.0/tagify.css"
-    integrity="sha512-aGUjmkw9c7PfAFTwp5TUNdYaPeENG2dmSQcttEohCiV35w6jnLw8F4b71+OELp81/HE+FdDkoYfNG2FVoY/y2g=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify@4.33.2/dist/tagify.min.css">
   <!-- CDN for jsTree CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.17/themes/default/style.min.css"
     integrity="sha512-A5OJVuNqxRragmJeYTW19bnw9M2WyxoshScX/rGTgZYj5hRXuqwZ+1AVn2d6wYTZPzPXxDeAGlae0XwTQdXjQA=="
@@ -41,7 +39,8 @@
       ELMO
     </a>
     <div class="ms-auto d-flex align-items-center me-3 p-1">
-      <!-- Link to imprint -->
+
+      <!-- Link to legal notice -->
       <a href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank" class="text-white me-3"
         style="text-decoration: none;" data-translate="header.legalNotice">Legal Notice</a>
       <!-- Dropdown menu for help -->
@@ -52,6 +51,8 @@
           Help
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-help">
+          <li><a href="doc/privacyPolicy.html" class="dropdown-item" target="_blank" id="buttonPrivacy"><i
+                class="bi bi-shield-check"></i> Privacy Policy</a></li>
           <li><a href="doc/help.html" class="dropdown-item" target="_blank" id="buttonHelp"
               data-translate="buttons.guide">
               <i class="bi bi-book"></i> Guide</a></li>
