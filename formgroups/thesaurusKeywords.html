@@ -71,12 +71,44 @@
         </div>
       </div>
 
+      <!------------------------------- NASA GCMD INSTRUMENTS ------------------------------------------------------------>
 
-
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingInstruments">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapseInstruments" aria-expanded="false" aria-controls="collapseInstruments">
+            GCMD instruments
+          </button>
+        </h2>
+        <div id="collapseInstruments" class="accordion-collapse collapse" data-bs-parent="#accordionThesauri">
+          <div class="accordion-body">
+            <!-- Input field -->
+            <div class="input-group has-validation input-margin-top-bottom">
+              <div class="form-floating">
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="inputInstruments" name="instruments" />
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-scienceKeywords-keyword"></i></span>
+                </div>
+              </div>
+              <!-- Thesaurus button -->
+              <div class="col-auto p-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#instrumentsModal"
+                  id="openInstrumentsThesaurus">
+                  <i class="bi bi-diagram-3"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 </div>
+
+
 <!-- Modal for Science Keywords -->
 <div class="modal fade <?php if 
       (isset($_SESSION['scienceModal']) && $_SESSION['scienceModal'] == 'true') 
@@ -104,7 +136,7 @@
           <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
           <ul id="selected-keywords-gcmd" class="list-group">
             <!-- Selected keywords will appear here dynamically -->
-        </ul>        
+          </ul>
         </div>
       </div>
       <div class="modal-footer">
