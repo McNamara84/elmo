@@ -154,7 +154,7 @@ The following third-party dependencies are included in header.html and footer.ht
   Is used for the Thesaurus Keywords field, the entry of multiple affiliations and free keywords.
 - [jsTree 3.3.17](https://github.com/vakata/jstree/releases)<br>
   Is used to display the thesauri as a hierarchical tree structure.
-- [Swagger UI 5.18.2](https://github.com/swagger-api/swagger-ui/releases)<br>
+- [Swagger UI 5.18.3](https://github.com/swagger-api/swagger-ui/releases)<br>
   For displaying the dynamic and interactive API documentation in accordance with OpenAPI standard 3.1.
 </details>
 
