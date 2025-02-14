@@ -5,23 +5,27 @@
   <div class="card-body">
     <div id="group-author">
       <div class="row" data-creator-row>
-        <!-- Input field ORCID Author -->
-        <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
+        <!-- Input field ORCID Author mit Contact Person Toggle -->
+        <div class="col-12 col-sm-12 col-md-5 col-lg-3 p-1">
           <div class="input-group has-validation">
-            <div class="form-floating">
+            <!-- Toggle-Checkbox als Button (Bootstrap Toggle Button) -->
+            <input type="checkbox" class="btn-check" id="checkbox-author-contactperson" autocomplete="off">
+            <label class="btn btn-outline-primary lh-sm round-corners-left" for="btn-check-contact">
+              Contact<br>Person?
+            </label>
+            <!-- ORCID Input Field -->
+            <div class="form-floating flex-grow-1">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
                 id="input-author-orcid" name="orcids[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
-              <label for="input-author-orcid" data-translate="general.ORCID">
-                ORCID
-              </label>
+              <label for="input-author-orcid" data-translate="general.ORCID">ORCID</label>
               <div class="invalid-feedback" data-translate="general.orcidInvalid">
                 Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))
               </div>
             </div>
-            <div class="input-group-append">
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-author-orcid"></i></span>
-            </div>
+            <!-- Help Icon -->
+            <span class="input-group-text">
+              <i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i>
+            </span>
           </div>
         </div>
         <!-- Input field Lastname Author -->
@@ -53,7 +57,7 @@
           </div>
         </div>
         <!-- Input field Affiliation Author-->
-        <div class="col-10 col-sm-11 col-md-11 col-lg-5 p-1">
+        <div class="col-10 col-sm-11 col-md-10 col-lg-4 p-1">
           <div class="input-group has-validation">
             <input type="text" class="form-control input-with-help input-right-no-round-corners"
               id="input-author-affiliation" name="affiliation[]" data-translate-placeholder="general.affiliation" />
