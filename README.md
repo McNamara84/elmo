@@ -854,6 +854,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 
 <details>
   <summary>
+
   ## Data validation
   </summary>
 
