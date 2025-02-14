@@ -191,7 +191,8 @@ The following third-party dependencies are included in header.html and footer.ht
 
 <details>
   <summary>
-## Formularfelder
+
+  ## Formularfelder
   </summary>
 
 ### Resource Information
