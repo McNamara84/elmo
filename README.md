@@ -705,7 +705,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - Description
 
-  - This field contains a free-text explanation of the geographic and temporal context.
+  This field contains a free-text explanation of the geographic and temporal context.
   - Data type: Free text
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
@@ -715,7 +715,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - Start Date
   
-  - This field contains the starting date of the temporal classification of the dataset.
+  This field contains the starting date of the temporal classification of the dataset.
   - Data type: DATE
   - Occurrence: 0-1 
   - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
@@ -725,9 +725,9 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - Start Time
   
-  - This field contains the starting time.
+  This field contains the starting time.
   - Data type: TIME  
-  - Occurrence: 0-1, becomes mandatory, if End Time is specified
+  - Occurrence: 0-1, becomes mandatory, if any time in Spatial and Temporal Coverage is specified, to achieve data consistency
   - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -735,7 +735,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - End Date
   
-  - This field contains the ending date of the temporal classification of the dataset.
+  This field contains the ending date of the temporal classification of the dataset.
   - Data type: DATE
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
@@ -745,9 +745,9 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - End Time
   
-  - This field contains the ending time.
+  This field contains the ending time.
   - Data type: TIME 
-  - Occurrence: 0-1, becomes mandatory, if Start Time is specified
+  - Occurrence: 0-1, becomes mandatory, if any time in Spatial and Temporal Coverage is specified, to achieve data consistency
   - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -755,8 +755,8 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - Timezone
   
-  - This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
-  - Data type: Zeichenkette (Auswahl aus Liste)
+  This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
+  - Data type: String
   - Occurrence: 0-1, mandatory, when Start Date, Start Time, End Date or End Time is filled
   - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
   - Restrictions: Only values from the list are permitted

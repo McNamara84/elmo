@@ -98,12 +98,29 @@ function checkContributorOrganisation() {
  * - If latMin, longMin, or description is filled, those fields along with dateStart, dateEnd, and timezone become required.
  * - If dateStart or dateEnd is filled, they, along with latMin, longMin, description, and timezone, become required.
  * - If timeStart or timeEnd is filled, they, along with dateStart, dateEnd, latMin, longMin, description, and timezone, become required.
+ * - If a time is given in any row, all rows require timeStart and timeEnd
  */
 
 function checkCoverage() {
-    $('#group-stc').find('[tsc-row]').each(function () {
+    var group = $('#group-stc');
+    var fields = ['latmin', 'latmax', 'longmin', 'longmax', 'description', 'datestart', 'timestart', 'dateend', 'timeend', 'timezone'];
+    var allRows = group.find('[tsc-row]');
+    var anyTimeFilled = false;
+
+    // First pass: check if any row has timeStart or timeEnd filled
+    allRows.each(function () {
         var row = $(this);
-        var fields = ['latmin', 'latmax', 'longmin', 'longmax', 'description', 'datestart', 'timestart', 'dateend', 'timeend', 'timezone'];
+        var timeStart = row.find(`[id^="input-stc-timestart"]`).val();
+        var timeEnd = row.find(`[id^="input-stc-timeend"]`).val();
+        if ((timeStart && timeStart.trim() !== '') || (timeEnd && timeEnd.trim() !== '')) {
+            anyTimeFilled = true;
+            return false; // Exit loop early if a time field is found
+        }
+    });
+
+    // Second pass: process each row
+    allRows.each(function () {
+        var row = $(this);
         var inputs = {};
         var filled = {};
 
@@ -114,7 +131,7 @@ function checkCoverage() {
             inputs[field].removeAttr('required'); // Ensure required is removed first
         });
 
-        // If all fields are empty, stop processing
+        // If all fields are empty, stop processing for this row
         if (!Object.values(filled).includes(true)) {
             return;
         }
@@ -132,8 +149,14 @@ function checkCoverage() {
         if (filled.timestart || filled.timeend) {
             ['timestart', 'timeend', 'datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
         }
+
+        // Enforce time requirement across all rows if any row has time
+        if (anyTimeFilled) {
+            ['timestart', 'timeend'].forEach(field => inputs[field].attr('required', 'required'));
+        }
     });
 }
+
 
 
 
