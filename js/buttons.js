@@ -57,17 +57,17 @@ $(document).ready(function () {
   });
 
 
-    /**
-  * Event listener for the clear button that resets all input fields
-  * @requires jQuery
-  * @requires Bootstrap
-  * 
-  */
-    $(document).ready(function () {
-      $('#button-form-reset').on('click', function () {
-        clearInputFields();
-      });
+  /**
+* Event listener for the clear button that resets all input fields
+* @requires jQuery
+* @requires Bootstrap
+* 
+*/
+  $(document).ready(function () {
+    $('#button-form-reset').on('click', function () {
+      clearInputFields();
     });
+  });
 
   // Optional: Formular zurücksetzen, wenn das Modal geöffnet wird
   $('#modal-feedback').on('show.bs.modal', function () {
@@ -119,13 +119,23 @@ $(document).ready(function () {
       var newTitleRow = $addTitleBtn.closest(".row").clone();
       $(newTitleRow).find("input").val("");
 
-      // Ensure help buttons are retained
-      $(newTitleRow).find(".bi-question-circle-fill").closest(".input-group-append").show();
 
-      // Adjust the column layout classes for the cloned row.
-      newTitleRow.find(".col-12.col-sm-12.col-md-11.col-lg-11")
-        .removeClass("col-md-11 col-lg-11")
-        .addClass("col-md-8 col-lg-8");
+      // Rebind help button functionality for cloned rows
+      $(newTitleRow).find(".bi-question-circle-fill").each(function () {
+        $(this).data("help-section-id");
+      });
+
+
+      // Adjust Title Input field width
+      newTitleRow.find(".col-10.col-sm-11.col-md-11.col-lg-11")
+        .removeClass("col-sm-11 col-md-11 col-lg-11")
+        .addClass("col-11 col-md-8 col-lg-8");
+
+      // Adjust Title Type Dropdown width and make it visible
+      newTitleRow.find("#container-resourceinformation-titletype")
+        .removeClass("col-10 col-md-3")
+        .addClass("col-10 col-md-3 col-lg-3")
+        .show();
 
       // Control the visibility of the title type dropdown.
       if (titlesNumber === 0) {
@@ -872,27 +882,6 @@ $(document).ready(function () {
     }
   }
 
-
-  /**
-  * Removes help buttons from cloned rows and adjusts CSS classes for input elements.
-  *
-  * @param {jQuery} row - The cloned row from which to remove help buttons.
-  * @param {string} [roundCornersClass="input-right-with-round-corners"] - The CSS class to add to input elements.
-  */
-  function deleteHelpButtonFromClonedRows(
-    row,
-    roundCornersClass = "input-right-with-round-corners"
-  ) {
-    row.find("span.input-group-text:has(i.bi-question-circle-fill)").each(function () {
-      $(this).remove();
-    });
-
-    row
-      .find(".input-with-help")
-      .removeClass("input-right-no-round-corners")
-      .addClass(roundCornersClass);
-  }
-
   let hoverCount = 0;
   let timer = null;
 
@@ -975,6 +964,7 @@ $(document).ready(function () {
       localStorage.setItem("userLanguage", language);
     }
   });
+
 
   // Initialize tooltips
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
