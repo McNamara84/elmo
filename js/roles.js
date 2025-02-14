@@ -1,19 +1,25 @@
 /**
  * Configures a dropdown field for selecting roles.
- * Fetches roles based on specified types from an API and updates the dropdown options.
+ * Fetches roles based on specified types from the APIv2 endpoint and updates the dropdown options.
  *
  * @param {Array} roletypes - Array of role types (e.g., "person", "institution", "both")
  * @param {string} inputSelector - CSS selector of the input field to be configured
  */
 function setupRolesDropdown(roletypes, inputSelector) {
   const rolePromises = roletypes.map(type =>
-    $.getJSON(`./api.php?action=getRoles&type=${type}`)
+    fetch(`./api/v2/vocabs/roles?type=${type}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
   );
 
   Promise.all(rolePromises)
     .then(results => {
-      const roleNames = results.flatMap(data =>
-        data.map(role => role.name)
+      const roleNames = results.flatMap(roles =>
+        roles.map(role => role.name)
       );
 
       const uniqueSortedRoles = [...new Set(roleNames)].sort((a, b) =>
@@ -57,7 +63,7 @@ function setupRolesDropdown(roletypes, inputSelector) {
     });
 }
 
-$(document).ready(function () {
+document.addEventListener('DOMContentLoaded', function () {
   setupRolesDropdown(["person", "both"], "#input-contributor-personrole");
   setupRolesDropdown(["institution", "both"], "#input-contributor-organisationrole");
 });
