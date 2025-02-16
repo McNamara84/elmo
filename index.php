@@ -66,7 +66,6 @@ include("header.html");
 include("formgroups/resourceInformation.html");
 include("formgroups/rights.html");
 include("formgroups/authors.html");
-include("formgroups/contactpersons.html");
 if ($showMslLabs) {
     include("formgroups/originatingLaboratory.html");
 }
