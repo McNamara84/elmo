@@ -42,6 +42,7 @@ http://www.altova.com/mapforce
 					<MD_ScopeCode>
 						<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode</xsl:attribute>
 						<xsl:attribute name="codeListValue" namespace="">dataset</xsl:attribute>
+						<xsl:value-of select="'dataset'"/>
 					</MD_ScopeCode>
 				</hierarchyLevel>
 				<contact>
@@ -53,6 +54,15 @@ http://www.altova.com/mapforce
 						</organisationName>
 						<contactInfo>
 							<CI_Contact>
+								<address>
+									<CI_Address>
+										<electronicMailAddress>
+											<gco:CharacterString>
+												<xsl:value-of select="'datapub@gfz.de'"/>
+											</gco:CharacterString>
+										</electronicMailAddress>
+									</CI_Address>
+								</address>
 								<onlineResource>
 									<CI_OnlineResource>
 										<linkage>
@@ -60,6 +70,16 @@ http://www.altova.com/mapforce
 												<xsl:value-of select="'https://www.gfz.de/'"/>
 											</URL>
 										</linkage>
+										<name>
+											<gco:CharacterString>
+												<xsl:value-of select="'GFZ German Research Center for Geosciences'"/>
+											</gco:CharacterString>
+										</name>
+										<description>
+											<gco:CharacterString>
+												<xsl:value-of select="'GFZ German Research Center for Geosciences'"/>
+											</gco:CharacterString>
+										</description>
 										<function>
 											<CI_OnLineFunctionCode>
 												<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode</xsl:attribute>
@@ -148,6 +168,22 @@ http://www.altova.com/mapforce
 												<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode</xsl:attribute>
 												<xsl:attribute name="codeListValue" namespace="">creation</xsl:attribute>
 												<xsl:value-of select="'creation'"/>
+											</CI_DateTypeCode>
+										</dateType>
+									</CI_Date>
+								</date>
+								<date>
+									<CI_Date>
+										<date>
+											<gco:Date>
+												<xsl:value-of select="*[local-name()='currentDate' and namespace-uri()='']"/>
+											</gco:Date>
+										</date>
+										<dateType>
+											<CI_DateTypeCode>
+												<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ProgressCode</xsl:attribute>
+												<xsl:attribute name="codeListValue" namespace="">revision</xsl:attribute>
+												<xsl:value-of select="'revision'"/>
 											</CI_DateTypeCode>
 										</dateType>
 									</CI_Date>
