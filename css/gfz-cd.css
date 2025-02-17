@@ -137,6 +137,14 @@ label.mandatory-field::after {
     margin-left: 0.1rem;
 }
 
+.navbar-sidebar .nav-link {
+    color:#00589C; 
+}
+
+.navbar-sidebar .nav-link:hover {
+    color: black; /* Optional: Same color or another color on hover */
+}
+
 /* Installation */
 .installation-option {
     transition: transform 0.2s;
