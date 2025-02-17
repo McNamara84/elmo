@@ -57,17 +57,17 @@ $(document).ready(function () {
   });
 
 
-    /**
-  * Event listener for the clear button that resets all input fields
-  * @requires jQuery
-  * @requires Bootstrap
-  * 
-  */
-    $(document).ready(function () {
-      $('#button-form-reset').on('click', function () {
-        clearInputFields();
-      });
+  /**
+* Event listener for the clear button that resets all input fields
+* @requires jQuery
+* @requires Bootstrap
+* 
+*/
+  $(document).ready(function () {
+    $('#button-form-reset').on('click', function () {
+      clearInputFields();
     });
+  });
 
   // Optional: Formular zurücksetzen, wenn das Modal geöffnet wird
   $('#modal-feedback').on('show.bs.modal', function () {
@@ -184,8 +184,39 @@ $(document).ready(function () {
   });
 
   /**
-   * Event handler for drag & drop sorting of author rows.
+   * Sets up the toggle functionality for contact person fields in author rows.
+   * When a contact person checkbox is checked, additional input fields for email and website
+   * are shown. When unchecked, these fields are hidden and cleared.
    */
+  function setupContactPersonToggle() {
+    $("[data-creator-row]").each(function () {
+      var row = $(this);
+      var checkbox = row.find("[id^='checkbox-author-contactperson']");
+      var contactFields = row.find(".contact-person-input");
+
+      // Remove existing click handler to prevent duplicate bindings
+      checkbox.off("click");
+
+      function updateFields() {
+        if (checkbox.prop('checked')) {
+          contactFields.show();
+        } else {
+          contactFields.hide().find("input").val(""); // Clear input values when hiding
+        }
+      }
+
+      updateFields(); // Set initial state
+      checkbox.on("click", updateFields);
+    });
+  }
+
+  // Initial setup of contact person toggle functionality
+  setupContactPersonToggle();
+
+  /**
+  * Initialize sortable functionality for author rows
+  * Allows drag and drop reordering of authors using the drag handle
+  */
   $("#group-author").sortable({
     items: "[data-creator-row]",
     handle: ".drag-handle",
@@ -194,103 +225,67 @@ $(document).ready(function () {
     containment: "parent"
   });
 
-  /**
-   * Event handler for the "Add Author" button click.
-   * Clones the first author row, resets input fields, and appends it to the author group.
-   */
+  // Store a clone of the original author row for later use
   const originalAuthorRow = $("#group-author").children().first().clone();
+
+  /**
+  * Handles the addition of new author rows when the add button is clicked
+  * Creates a new row with unique IDs and proper event handlers
+  */
   $("#button-author-add").click(function () {
     var authorGroup = $("#group-author");
     var newAuthorRow = originalAuthorRow.clone();
 
-    // Clear input fields and remove validation feedback
+    // Reset validation states and clear input values
     newAuthorRow.find("input").val("").removeClass("is-invalid is-valid");
     newAuthorRow.find(".invalid-feedback, .valid-feedback").css("display", "");
 
-    // Generate unique IDs for cloned input elements
+    // Generate unique IDs for the new row's elements using timestamp
     var uniqueSuffix = new Date().getTime();
-    newAuthorRow
-      .find("#input-author-affiliation")
-      .attr("id", "input-author-affiliation" + uniqueSuffix);
-    newAuthorRow.find("#input-author-rorid").attr("id", "input-author-rorid" + uniqueSuffix);
 
-    // Remove old Tagify elements (will be re-initialized in autocompleteAffiliation)
+    // Update IDs of all relevant input fields with unique suffix
+    const fieldsToUpdate = [
+      "input-author-affiliation",
+      "input-author-rorid",
+      "input-contactperson-email",
+      "input-contactperson-website",
+      "checkbox-author-contactperson"
+    ];
+
+    fieldsToUpdate.forEach(fieldId => {
+      newAuthorRow.find(`#${fieldId}`).attr("id", `${fieldId}-${uniqueSuffix}`);
+    });
+
+    // Update label's 'for' attribute to match new checkbox ID
+    newAuthorRow.find("label.btn").attr("for", `checkbox-author-contactperson-${uniqueSuffix}`);
+
+    // Clean up and prepare new row
     newAuthorRow.find(".tagify").remove();
-
-    // Replace the add button with the remove button
     newAuthorRow.find(".addAuthor").replaceWith(removeButton);
-
-    // Remove help buttons
     replaceHelpButtonInClonedRows(newAuthorRow);
 
-    // Append the new author row to the DOM
+    // Add new row to the author group
     authorGroup.append(newAuthorRow);
 
-    // Apply Tagify to the new Author Affiliations field
+    // Initialize autocomplete for affiliation field
     autocompleteAffiliations(
-      "input-author-affiliation" + uniqueSuffix,
-      "input-author-rorid" + uniqueSuffix,
+      `input-author-affiliation-${uniqueSuffix}`,
+      `input-author-rorid-${uniqueSuffix}`,
       affiliationsData
     );
 
-    // Event handler for the remove button
+    // Add remove button functionality
     newAuthorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
     });
 
-    // Reinitialize tooltips for the new row
+    // Initialize Bootstrap tooltips
     newAuthorRow.find('[data-bs-toggle="tooltip"]').each(function () {
       const tooltip = new bootstrap.Tooltip(this);
     });
-  });
 
-  /**
-   * Event handler for the "Add Contact Person" button click.
-   * Clones the first contact person row, resets input fields, and appends it to the contact persons group.
-   */
-  $("#button-contactperson-add").click(function () {
-    var CPGroup = $("#group-contactperson");
-
-    // First row to be used as a template
-    var firstCPLine = CPGroup.children().first();
-
-    // Clone the template
-    var newCPRow = firstCPLine.clone();
-
-    // Clear input fields and remove validation feedback
-    newCPRow.find("input").val("").removeClass("is-invalid is-valid");
-    newCPRow.find(".invalid-feedback, .valid-feedback").css("display", "");
-
-    // Reset required attributes
-    newCPRow.find("input").removeAttr("required");
-
-    var uniqueSuffix = new Date().getTime();
-    newCPRow.find("#input-contactperson-affiliation").attr("id", "input-contactperson-affiliation" + uniqueSuffix);
-    newCPRow.find("#input-contactperson-rorid").attr("id", "input-contactperson-rorid" + uniqueSuffix);
-
-    // Remove old Tagify elements (will be re-initialized in autocompleteAffiliation)
-    newCPRow.find(".tagify").remove();
-
-    // Replace the add button with the remove button
-    newCPRow.find(".addCP").replaceWith(removeButton);
-
-    // Remove help buttons
-    replaceHelpButtonInClonedRows(newCPRow);
-
-    CPGroup.append(newCPRow);
-
-    // Apply autocomplete to the Affiliation field
-    autocompleteAffiliations(
-      "input-contactperson-affiliation" + uniqueSuffix,
-      "input-contactperson-rorid" + uniqueSuffix,
-      affiliationsData
-    );
-
-    // Event handler for the remove button
-    newCPRow.on("click", ".removeButton", function () {
-      $(this).closest(".row").remove();
-      checkMandatoryFields();
-    });
+    // Reinitialize contact person toggle functionality for all rows
+    setupContactPersonToggle();
   });
 
   /**
