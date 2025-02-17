@@ -42,6 +42,26 @@ class VocabController
     }
 
     /**
+     * Adds a timestamp to the provided data structure
+     * 
+     * Creates a wrapper object that includes both the original data
+     * and a timestamp of when the data was last updated.
+     * 
+     * @param mixed $data The original data to be wrapped
+     * @return array An array containing:
+     *               - 'lastUpdated' (string) The timestamp in Y-m-d H:i:s format
+     *               - 'data' (mixed) The original data structure
+     * 
+     */
+    private function addTimestampToData($data)
+    {
+        return [
+            'lastUpdated' => date('Y-m-d H:i:s'),
+            'data' => $data
+        ];
+    }
+
+    /**
      * Validates the API key from the request header
      * 
      * @return bool True if API key is valid, false otherwise
