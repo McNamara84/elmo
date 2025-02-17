@@ -56,6 +56,22 @@ function applyTranslations() {
         }
     });
 
+    // Update tooltips for elements with data-translate-tooltip attribute
+    $('[data-translate-tooltip]').each(function () {
+        const element = $(this);
+        const tooltipKey = element.data('translate-tooltip');
+        const translatedTooltip = getNestedValue(translations, tooltipKey);
+        // If a translation was found, update the tooltip
+        if (translatedTooltip) {
+            element.attr('data-bs-original-title', translatedTooltip);
+            const tooltip = bootstrap.Tooltip.getInstance(element[0]);
+            if (tooltip) {
+                tooltip.dispose();
+            }
+            new bootstrap.Tooltip(element[0]);
+        }
+    });
+
     // Translate placeholders in the first row
     translatePlaceholders($("#group-stc").children().first());
 

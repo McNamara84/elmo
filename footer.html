@@ -5,8 +5,7 @@
       <div class="col d-flex align-items-center justify-content-center">
         <div class="col-auto d-flex align-items-center justify-content-end">
           <button type="button" class="btn btn-danger m-1" data-bs-toggle="tooltip" data-translate="buttons.clear"
-            data-bs-title="Delete all entries or content." id="button-form-reset" 
-            data-translate-tooltip="buttons.clearTooltip">
+            id="button-form-reset" disabled data-translate-tooltip="buttons.clearTooltip">
             Clear
           </button>
           <button class="btn btn-primary m-1" type="button" id="button-form-load" data-action="load"
@@ -14,19 +13,17 @@
             Load
           </button>
           <button type="submit" class="btn btn-warning m-1" form="form-mde" id="button-form-save" data-action="save"
-            aria-label="Save the current data or content under a new file name." data-translate="buttons.saveAs"
-            data-translate-tooltip="buttons.saveTooltip">
+            data-translate="buttons.saveAs" data-translate-tooltip="buttons.saveAsTooltip">
             Save
           </button>
           <button type="submit" class="btn btn-success m-1" form="form-mde" id="button-form-submit" data-action="submit"
-            aria-label="Transmit the entered data or content." data-translate="buttons.submit"
-            data-translate-tooltip="buttons.submitTooltip">
+            data-translate="buttons.submit" data-translate-tooltip="buttons.submitTooltip">
             Submit
           </button>
           <?php if ($showFeedbackLink): ?>
           <button type="button" class="btn feedback-button multi-color-blink m-2" id="button-feedback-openmodalfooter"
             data-bs-toggle="modal" data-bs-target="#modal-feedback" data-translate="feedback.button"
-            data-translate-tooltip="feedback.buttonTooltip">
+            data-translate-tooltip="modals.feedback.buttonTooltip">
             Feedback
           </button>
           <?php endif; ?>
