@@ -62,11 +62,11 @@
 										<xs:element name="givenname" type="xs:string" />
 										<xs:element name="orcid" type="xs:string" minOccurs="0"
 											maxOccurs="1" />
-										<xs:element name="Affiliations">
+										<xs:element name="Affiliations" minOccurs="0">
 											<xs:complexType>
 												<xs:sequence>
 													<xs:element name="Affiliation"
-														maxOccurs="unbounded">
+														minOccurs="0" maxOccurs="unbounded">
 														<xs:complexType>
 															<xs:sequence>
 																<xs:element name="affiliation_id"

@@ -49,7 +49,7 @@ http://www.altova.com/mapforce
 					<CI_ResponsibleParty>
 						<organisationName>
 							<gco:CharacterString>
-								<xsl:value-of select="'GFZ German Research Center for Geosciences'"/>
+								<xsl:value-of select="'GFZ Helmholtz Centre for Geosciences '"/>
 							</gco:CharacterString>
 						</organisationName>
 						<contactInfo>
@@ -72,12 +72,12 @@ http://www.altova.com/mapforce
 										</linkage>
 										<name>
 											<gco:CharacterString>
-												<xsl:value-of select="'GFZ German Research Center for Geosciences'"/>
+												<xsl:value-of select="'GFZ Helmholtz Centre for Geosciences '"/>
 											</gco:CharacterString>
 										</name>
 										<description>
 											<gco:CharacterString>
-												<xsl:value-of select="'GFZ German Research Center for Geosciences'"/>
+												<xsl:value-of select="'GFZ Helmholtz Centre for Geosciences '"/>
 											</gco:CharacterString>
 										</description>
 										<function>
@@ -207,25 +207,45 @@ http://www.altova.com/mapforce
 										</citedResponsibleParty>
 									</xsl:for-each>
 								</xsl:for-each>
+								<xsl:for-each select="(./*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()=''])[not(*[local-name()='Affiliations' and namespace-uri()=''])]">
+									<xsl:variable name="var8_filter" select="."/>
+									<citedResponsibleParty>
+										<xsl:if test="*[local-name()='orcid' and namespace-uri()='']">
+											<xsl:for-each select="*[local-name()='orcid' and namespace-uri()='']">
+												<xsl:variable name="var9_cur" select="."/>
+												<xsl:attribute name="xlink:href">
+													<xsl:value-of select="concat('http://orcid.org/', .)"/>
+												</xsl:attribute>
+											</xsl:for-each>
+										</xsl:if>
+										<CI_ResponsibleParty>
+											<individualName>
+												<gco:CharacterString>
+													<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
+												</gco:CharacterString>
+											</individualName>
+											<role>
+												<CI_RoleCode>
+													<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode</xsl:attribute>
+													<xsl:attribute name="codeListValue" namespace="">author</xsl:attribute>
+													<xsl:value-of select="'author'"/>
+												</CI_RoleCode>
+											</role>
+										</CI_ResponsibleParty>
+									</citedResponsibleParty>
+								</xsl:for-each>
 							</CI_Citation>
 						</citation>
 						<abstract>
 							<xsl:for-each select="(./*[local-name()='Descriptions' and namespace-uri()='']/*[local-name()='Description' and namespace-uri()=''])[contains(*[local-name()='type' and namespace-uri()=''], 'Abstract')]">
-								<xsl:variable name="var8_filter" select="."/>
+								<xsl:variable name="var10_filter" select="."/>
 								<gco:CharacterString>
 									<xsl:value-of select="*[local-name()='description' and namespace-uri()='']"/>
 								</gco:CharacterString>
 							</xsl:for-each>
 						</abstract>
-						<status>
-							<MD_ProgressCode>
-								<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ProgressCode</xsl:attribute>
-								<xsl:attribute name="codeListValue" namespace="">Complete</xsl:attribute>
-								<xsl:value-of select="'Complete'"/>
-							</MD_ProgressCode>
-						</status>
 						<xsl:for-each select="*[local-name()='ContactPersons' and namespace-uri()='']/*[local-name()='ContactPerson' and namespace-uri()='']">
-							<xsl:variable name="var9_cur" select="."/>
+							<xsl:variable name="var11_cur" select="."/>
 							<pointOfContact>
 								<CI_ResponsibleParty>
 									<individualName>
@@ -234,7 +254,7 @@ http://www.altova.com/mapforce
 										</gco:CharacterString>
 									</individualName>
 									<xsl:for-each select="*[local-name()='Affiliations' and namespace-uri()='']/*[local-name()='Affiliation' and namespace-uri()='']">
-										<xsl:variable name="var10_cur" select="."/>
+										<xsl:variable name="var12_cur" select="."/>
 										<organisationName>
 											<gco:CharacterString>
 												<xsl:value-of select="*[local-name()='name' and namespace-uri()='']"/>
@@ -291,7 +311,7 @@ http://www.altova.com/mapforce
 						</xsl:for-each>
 						<descriptiveKeywords>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/paleomagnetism/1.3/')]">
-								<xsl:variable name="var11_filter" select="."/>
+								<xsl:variable name="var13_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -311,7 +331,7 @@ http://www.altova.com/mapforce
 								</MD_Keywords>
 							</xsl:for-each>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/geologicalsetting/1.3/')]">
-								<xsl:variable name="var12_filter" select="."/>
+								<xsl:variable name="var14_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -331,7 +351,7 @@ http://www.altova.com/mapforce
 								</MD_Keywords>
 							</xsl:for-each>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/geologicalage/1.3/')]">
-								<xsl:variable name="var13_filter" select="."/>
+								<xsl:variable name="var15_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -351,7 +371,7 @@ http://www.altova.com/mapforce
 								</MD_Keywords>
 							</xsl:for-each>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/analoguemodelling/1.3/')]">
-								<xsl:variable name="var14_filter" select="."/>
+								<xsl:variable name="var16_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -371,7 +391,7 @@ http://www.altova.com/mapforce
 								</MD_Keywords>
 							</xsl:for-each>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/rockphysics/1.3/')]">
-								<xsl:variable name="var15_filter" select="."/>
+								<xsl:variable name="var17_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -391,7 +411,7 @@ http://www.altova.com/mapforce
 								</MD_Keywords>
 							</xsl:for-each>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/porefluids/1.3/')]">
-								<xsl:variable name="var16_filter" select="."/>
+								<xsl:variable name="var18_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -411,7 +431,7 @@ http://www.altova.com/mapforce
 								</MD_Keywords>
 							</xsl:for-each>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/materials/1.3/')]">
-								<xsl:variable name="var17_filter" select="."/>
+								<xsl:variable name="var19_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -431,7 +451,7 @@ http://www.altova.com/mapforce
 								</MD_Keywords>
 							</xsl:for-each>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/geochemistry/1.3/')]">
-								<xsl:variable name="var18_filter" select="."/>
+								<xsl:variable name="var20_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -451,7 +471,7 @@ http://www.altova.com/mapforce
 								</MD_Keywords>
 							</xsl:for-each>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/testbeds/1.3/')]">
-								<xsl:variable name="var19_filter" select="."/>
+								<xsl:variable name="var21_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -471,7 +491,7 @@ http://www.altova.com/mapforce
 								</MD_Keywords>
 							</xsl:for-each>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/subsurface/1.3/')]">
-								<xsl:variable name="var20_filter" select="."/>
+								<xsl:variable name="var22_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -491,7 +511,7 @@ http://www.altova.com/mapforce
 								</MD_Keywords>
 							</xsl:for-each>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/microscopy/1.3/')]">
-								<xsl:variable name="var21_filter" select="."/>
+								<xsl:variable name="var23_filter" select="."/>
 								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
@@ -514,7 +534,7 @@ http://www.altova.com/mapforce
 						<descriptiveKeywords>
 							<MD_Keywords>
 								<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'NASA/GCMD Earth Science Keywords')]">
-									<xsl:variable name="var22_filter" select="."/>
+									<xsl:variable name="var24_filter" select="."/>
 									<keyword>
 										<gco:CharacterString>
 											<xsl:value-of select="*[local-name()='keyword' and namespace-uri()='']"/>
@@ -534,11 +554,11 @@ http://www.altova.com/mapforce
 							</MD_Keywords>
 						</descriptiveKeywords>
 						<xsl:for-each select="*[local-name()='FreeKeywords' and namespace-uri()='']">
-							<xsl:variable name="var23_cur" select="."/>
+							<xsl:variable name="var25_cur" select="."/>
 							<descriptiveKeywords>
 								<MD_Keywords>
 									<xsl:for-each select="*[local-name()='Keyword' and namespace-uri()='']">
-										<xsl:variable name="var24_cur" select="."/>
+										<xsl:variable name="var26_cur" select="."/>
 										<keyword>
 											<gco:CharacterString>
 												<xsl:value-of select="*[local-name()='free_keyword' and namespace-uri()='']"/>
@@ -549,6 +569,9 @@ http://www.altova.com/mapforce
 							</descriptiveKeywords>
 						</xsl:for-each>
 						<resourceConstraints>
+							<xsl:attribute name="xlink:href">
+								<xsl:value-of select="*[local-name()='Rights' and namespace-uri()='']/*[local-name()='rightsURI' and namespace-uri()='']"/>
+							</xsl:attribute>
 							<MD_Constraints>
 								<useLimitation>
 									<gco:CharacterString>
@@ -583,7 +606,7 @@ http://www.altova.com/mapforce
 							</MD_SecurityConstraints>
 						</resourceConstraints>
 						<xsl:for-each select="*[local-name()='RelatedWorks' and namespace-uri()='']/*[local-name()='RelatedWork' and namespace-uri()='']">
-							<xsl:variable name="var25_cur" select="."/>
+							<xsl:variable name="var27_cur" select="."/>
 							<aggregationInfo>
 								<MD_AggregateInformation>
 									<aggregateDataSetIdentifier>
@@ -617,13 +640,24 @@ http://www.altova.com/mapforce
 								<xsl:value-of select="*[local-name()='Language' and namespace-uri()='']/*[local-name()='code' and namespace-uri()='']"/>
 							</gco:CharacterString>
 						</language>
+						<characterSet>
+							<MD_CharacterSetCode>
+								<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/codeList.xml#MD_CharacterSetCode</xsl:attribute>
+								<xsl:attribute name="codeListValue" namespace="">utf8</xsl:attribute>
+							</MD_CharacterSetCode>
+						</characterSet>
+						<topicCategory>
+							<MD_TopicCategoryCode>
+								<xsl:value-of select="'geoscientificInformation'"/>
+							</MD_TopicCategoryCode>
+						</topicCategory>
 						<xsl:for-each select="*[local-name()='SpatialTemporalCoverages' and namespace-uri()='']/*[local-name()='SpatialTemporalCoverage' and namespace-uri()='']">
-							<xsl:variable name="var26_cur" select="."/>
+							<xsl:variable name="var28_cur" select="."/>
 							<extent>
 								<EX_Extent>
 									<description>
 										<xsl:for-each select="*[local-name()='description' and namespace-uri()='']">
-											<xsl:variable name="var27_cur" select="."/>
+											<xsl:variable name="var29_cur" select="."/>
 											<gco:CharacterString>
 												<xsl:value-of select="."/>
 											</gco:CharacterString>
@@ -633,7 +667,7 @@ http://www.altova.com/mapforce
 										<EX_GeographicBoundingBox>
 											<westBoundLongitude>
 												<xsl:for-each select="*[local-name()='longitudeMin' and namespace-uri()='']">
-													<xsl:variable name="var28_cur" select="."/>
+													<xsl:variable name="var30_cur" select="."/>
 													<gco:Decimal>
 														<xsl:value-of select="number(.)"/>
 													</gco:Decimal>
@@ -643,7 +677,7 @@ http://www.altova.com/mapforce
 												<xsl:choose>
 													<xsl:when test="(((boolean(*[local-name()='latitudeMin' and namespace-uri()='']) and boolean(*[local-name()='latitudeMax' and namespace-uri()=''])) and boolean(*[local-name()='longitudeMin' and namespace-uri()=''])) and boolean(*[local-name()='longitudeMax' and namespace-uri()='']))">
 														<xsl:for-each select="*[local-name()='longitudeMax' and namespace-uri()='']">
-															<xsl:variable name="var29_cur" select="."/>
+															<xsl:variable name="var31_cur" select="."/>
 															<gco:Decimal>
 																<xsl:value-of select="number(.)"/>
 															</gco:Decimal>
@@ -651,7 +685,7 @@ http://www.altova.com/mapforce
 													</xsl:when>
 													<xsl:otherwise>
 														<xsl:for-each select="*[local-name()='longitudeMin' and namespace-uri()='']">
-															<xsl:variable name="var30_cur" select="."/>
+															<xsl:variable name="var32_cur" select="."/>
 															<gco:Decimal>
 																<xsl:value-of select="number(.)"/>
 															</gco:Decimal>
@@ -661,7 +695,7 @@ http://www.altova.com/mapforce
 											</eastBoundLongitude>
 											<southBoundLatitude>
 												<xsl:for-each select="*[local-name()='latitudeMin' and namespace-uri()='']">
-													<xsl:variable name="var31_cur" select="."/>
+													<xsl:variable name="var33_cur" select="."/>
 													<gco:Decimal>
 														<xsl:value-of select="number(.)"/>
 													</gco:Decimal>
@@ -671,7 +705,7 @@ http://www.altova.com/mapforce
 												<xsl:choose>
 													<xsl:when test="(((boolean(*[local-name()='latitudeMin' and namespace-uri()='']) and boolean(*[local-name()='latitudeMax' and namespace-uri()=''])) and boolean(*[local-name()='longitudeMin' and namespace-uri()=''])) and boolean(*[local-name()='longitudeMax' and namespace-uri()='']))">
 														<xsl:for-each select="*[local-name()='latitudeMax' and namespace-uri()='']">
-															<xsl:variable name="var32_cur" select="."/>
+															<xsl:variable name="var34_cur" select="."/>
 															<gco:Decimal>
 																<xsl:value-of select="number(.)"/>
 															</gco:Decimal>
@@ -679,7 +713,7 @@ http://www.altova.com/mapforce
 													</xsl:when>
 													<xsl:otherwise>
 														<xsl:for-each select="*[local-name()='latitudeMin' and namespace-uri()='']">
-															<xsl:variable name="var33_cur" select="."/>
+															<xsl:variable name="var35_cur" select="."/>
 															<gco:Decimal>
 																<xsl:value-of select="number(.)"/>
 															</gco:Decimal>
@@ -694,19 +728,19 @@ http://www.altova.com/mapforce
 											<extent>
 												<gml:TimePeriod>
 													<xsl:for-each select="*[local-name()='dateStart' and namespace-uri()='']">
-														<xsl:variable name="var34_cur" select="."/>
+														<xsl:variable name="var36_cur" select="."/>
 														<xsl:choose>
-															<xsl:when test="$var26_cur/*[local-name()='timeStart' and namespace-uri()='']">
-																<xsl:for-each select="$var26_cur/*[local-name()='timeStart' and namespace-uri()='']">
-																	<xsl:variable name="var35_cur" select="."/>
+															<xsl:when test="$var28_cur/*[local-name()='timeStart' and namespace-uri()='']">
+																<xsl:for-each select="$var28_cur/*[local-name()='timeStart' and namespace-uri()='']">
+																	<xsl:variable name="var37_cur" select="."/>
 																	<xsl:choose>
-																		<xsl:when test="$var26_cur/*[local-name()='timeStart' and namespace-uri()='']">
-																			<xsl:for-each select="$var26_cur/*[local-name()='timezone' and namespace-uri()='']">
-																				<xsl:variable name="var36_cur" select="."/>
+																		<xsl:when test="$var28_cur/*[local-name()='timeStart' and namespace-uri()='']">
+																			<xsl:for-each select="$var28_cur/*[local-name()='timezone' and namespace-uri()='']">
+																				<xsl:variable name="var38_cur" select="."/>
 																				<gml:beginPosition>
-																					<xsl:variable name="var37_nested">
+																					<xsl:variable name="var39_nested">
 																						<xsl:choose>
-																							<xsl:when test="$var26_cur/*[local-name()='timeStart' and namespace-uri()='']">
+																							<xsl:when test="$var28_cur/*[local-name()='timeStart' and namespace-uri()='']">
 																								<xsl:value-of select="'T'"/>
 																							</xsl:when>
 																							<xsl:otherwise>
@@ -714,15 +748,15 @@ http://www.altova.com/mapforce
 																							</xsl:otherwise>
 																						</xsl:choose>
 																					</xsl:variable>
-																					<xsl:value-of select="concat($var34_cur, $var37_nested, $var35_cur, .)"/>
+																					<xsl:value-of select="concat($var36_cur, $var39_nested, $var37_cur, .)"/>
 																				</gml:beginPosition>
 																			</xsl:for-each>
 																		</xsl:when>
 																		<xsl:otherwise>
 																			<gml:beginPosition>
-																				<xsl:variable name="var38_nested">
+																				<xsl:variable name="var40_nested">
 																					<xsl:choose>
-																						<xsl:when test="$var26_cur/*[local-name()='timeStart' and namespace-uri()='']">
+																						<xsl:when test="$var28_cur/*[local-name()='timeStart' and namespace-uri()='']">
 																							<xsl:value-of select="'T'"/>
 																						</xsl:when>
 																						<xsl:otherwise>
@@ -730,19 +764,19 @@ http://www.altova.com/mapforce
 																						</xsl:otherwise>
 																					</xsl:choose>
 																				</xsl:variable>
-																				<xsl:value-of select="concat($var34_cur, $var38_nested, ., '')"/>
+																				<xsl:value-of select="concat($var36_cur, $var40_nested, ., '')"/>
 																			</gml:beginPosition>
 																		</xsl:otherwise>
 																	</xsl:choose>
 																</xsl:for-each>
 															</xsl:when>
-															<xsl:when test="$var26_cur/*[local-name()='timeStart' and namespace-uri()='']">
-																<xsl:for-each select="$var26_cur/*[local-name()='timezone' and namespace-uri()='']">
-																	<xsl:variable name="var39_cur" select="."/>
+															<xsl:when test="$var28_cur/*[local-name()='timeStart' and namespace-uri()='']">
+																<xsl:for-each select="$var28_cur/*[local-name()='timezone' and namespace-uri()='']">
+																	<xsl:variable name="var41_cur" select="."/>
 																	<gml:beginPosition>
-																		<xsl:variable name="var40_nested">
+																		<xsl:variable name="var42_nested">
 																			<xsl:choose>
-																				<xsl:when test="$var26_cur/*[local-name()='timeStart' and namespace-uri()='']">
+																				<xsl:when test="$var28_cur/*[local-name()='timeStart' and namespace-uri()='']">
 																					<xsl:value-of select="'T'"/>
 																				</xsl:when>
 																				<xsl:otherwise>
@@ -750,15 +784,15 @@ http://www.altova.com/mapforce
 																				</xsl:otherwise>
 																			</xsl:choose>
 																		</xsl:variable>
-																		<xsl:value-of select="concat($var34_cur, $var40_nested, '', .)"/>
+																		<xsl:value-of select="concat($var36_cur, $var42_nested, '', .)"/>
 																	</gml:beginPosition>
 																</xsl:for-each>
 															</xsl:when>
 															<xsl:otherwise>
 																<gml:beginPosition>
-																	<xsl:variable name="var41_nested">
+																	<xsl:variable name="var43_nested">
 																		<xsl:choose>
-																			<xsl:when test="$var26_cur/*[local-name()='timeStart' and namespace-uri()='']">
+																			<xsl:when test="$var28_cur/*[local-name()='timeStart' and namespace-uri()='']">
 																				<xsl:value-of select="'T'"/>
 																			</xsl:when>
 																			<xsl:otherwise>
@@ -766,25 +800,25 @@ http://www.altova.com/mapforce
 																			</xsl:otherwise>
 																		</xsl:choose>
 																	</xsl:variable>
-																	<xsl:value-of select="concat(., $var41_nested, '', '')"/>
+																	<xsl:value-of select="concat(., $var43_nested, '', '')"/>
 																</gml:beginPosition>
 															</xsl:otherwise>
 														</xsl:choose>
 													</xsl:for-each>
 													<xsl:for-each select="*[local-name()='dateEnd' and namespace-uri()='']">
-														<xsl:variable name="var42_cur" select="."/>
+														<xsl:variable name="var44_cur" select="."/>
 														<xsl:choose>
-															<xsl:when test="$var26_cur/*[local-name()='timeEnd' and namespace-uri()='']">
-																<xsl:for-each select="$var26_cur/*[local-name()='timeEnd' and namespace-uri()='']">
-																	<xsl:variable name="var43_cur" select="."/>
+															<xsl:when test="$var28_cur/*[local-name()='timeEnd' and namespace-uri()='']">
+																<xsl:for-each select="$var28_cur/*[local-name()='timeEnd' and namespace-uri()='']">
+																	<xsl:variable name="var45_cur" select="."/>
 																	<xsl:choose>
-																		<xsl:when test="$var26_cur/*[local-name()='timeEnd' and namespace-uri()='']">
-																			<xsl:for-each select="$var26_cur/*[local-name()='timezone' and namespace-uri()='']">
-																				<xsl:variable name="var44_cur" select="."/>
+																		<xsl:when test="$var28_cur/*[local-name()='timeEnd' and namespace-uri()='']">
+																			<xsl:for-each select="$var28_cur/*[local-name()='timezone' and namespace-uri()='']">
+																				<xsl:variable name="var46_cur" select="."/>
 																				<gml:endPosition>
-																					<xsl:variable name="var45_nested">
+																					<xsl:variable name="var47_nested">
 																						<xsl:choose>
-																							<xsl:when test="$var26_cur/*[local-name()='timeEnd' and namespace-uri()='']">
+																							<xsl:when test="$var28_cur/*[local-name()='timeEnd' and namespace-uri()='']">
 																								<xsl:value-of select="'T'"/>
 																							</xsl:when>
 																							<xsl:otherwise>
@@ -792,15 +826,15 @@ http://www.altova.com/mapforce
 																							</xsl:otherwise>
 																						</xsl:choose>
 																					</xsl:variable>
-																					<xsl:value-of select="concat($var42_cur, $var45_nested, $var43_cur, .)"/>
+																					<xsl:value-of select="concat($var44_cur, $var47_nested, $var45_cur, .)"/>
 																				</gml:endPosition>
 																			</xsl:for-each>
 																		</xsl:when>
 																		<xsl:otherwise>
 																			<gml:endPosition>
-																				<xsl:variable name="var46_nested">
+																				<xsl:variable name="var48_nested">
 																					<xsl:choose>
-																						<xsl:when test="$var26_cur/*[local-name()='timeEnd' and namespace-uri()='']">
+																						<xsl:when test="$var28_cur/*[local-name()='timeEnd' and namespace-uri()='']">
 																							<xsl:value-of select="'T'"/>
 																						</xsl:when>
 																						<xsl:otherwise>
@@ -808,19 +842,19 @@ http://www.altova.com/mapforce
 																						</xsl:otherwise>
 																					</xsl:choose>
 																				</xsl:variable>
-																				<xsl:value-of select="concat($var42_cur, $var46_nested, ., '')"/>
+																				<xsl:value-of select="concat($var44_cur, $var48_nested, ., '')"/>
 																			</gml:endPosition>
 																		</xsl:otherwise>
 																	</xsl:choose>
 																</xsl:for-each>
 															</xsl:when>
-															<xsl:when test="$var26_cur/*[local-name()='timeEnd' and namespace-uri()='']">
-																<xsl:for-each select="$var26_cur/*[local-name()='timezone' and namespace-uri()='']">
-																	<xsl:variable name="var47_cur" select="."/>
+															<xsl:when test="$var28_cur/*[local-name()='timeEnd' and namespace-uri()='']">
+																<xsl:for-each select="$var28_cur/*[local-name()='timezone' and namespace-uri()='']">
+																	<xsl:variable name="var49_cur" select="."/>
 																	<gml:endPosition>
-																		<xsl:variable name="var48_nested">
+																		<xsl:variable name="var50_nested">
 																			<xsl:choose>
-																				<xsl:when test="$var26_cur/*[local-name()='timeEnd' and namespace-uri()='']">
+																				<xsl:when test="$var28_cur/*[local-name()='timeEnd' and namespace-uri()='']">
 																					<xsl:value-of select="'T'"/>
 																				</xsl:when>
 																				<xsl:otherwise>
@@ -828,15 +862,15 @@ http://www.altova.com/mapforce
 																				</xsl:otherwise>
 																			</xsl:choose>
 																		</xsl:variable>
-																		<xsl:value-of select="concat($var42_cur, $var48_nested, '', .)"/>
+																		<xsl:value-of select="concat($var44_cur, $var50_nested, '', .)"/>
 																	</gml:endPosition>
 																</xsl:for-each>
 															</xsl:when>
 															<xsl:otherwise>
 																<gml:endPosition>
-																	<xsl:variable name="var49_nested">
+																	<xsl:variable name="var51_nested">
 																		<xsl:choose>
-																			<xsl:when test="$var26_cur/*[local-name()='timeEnd' and namespace-uri()='']">
+																			<xsl:when test="$var28_cur/*[local-name()='timeEnd' and namespace-uri()='']">
 																				<xsl:value-of select="'T'"/>
 																			</xsl:when>
 																			<xsl:otherwise>
@@ -844,7 +878,7 @@ http://www.altova.com/mapforce
 																			</xsl:otherwise>
 																		</xsl:choose>
 																	</xsl:variable>
-																	<xsl:value-of select="concat(., $var49_nested, '', '')"/>
+																	<xsl:value-of select="concat(., $var51_nested, '', '')"/>
 																</gml:endPosition>
 															</xsl:otherwise>
 														</xsl:choose>
@@ -867,7 +901,7 @@ http://www.altova.com/mapforce
 										<linkage>
 											<xsl:if test="((string-length(string(*[local-name()='doi' and namespace-uri()=''])) &gt; '1') and true())">
 												<URL>
-													<xsl:value-of select="concat('http://dx.doi.org/doi:', *[local-name()='doi' and namespace-uri()=''])"/>
+													<xsl:value-of select="concat('http://doi.org/', *[local-name()='doi' and namespace-uri()=''])"/>
 												</URL>
 											</xsl:if>
 										</linkage>
@@ -878,19 +912,19 @@ http://www.altova.com/mapforce
 										</protocol>
 										<name>
 											<gco:CharacterString>
-												<xsl:value-of select="'Download'"/>
+												<xsl:value-of select="'Data Access - DOI'"/>
 											</gco:CharacterString>
 										</name>
 										<description>
 											<gco:CharacterString>
-												<xsl:value-of select="'Download'"/>
+												<xsl:value-of select="'Data Access - DOI'"/>
 											</gco:CharacterString>
 										</description>
 										<function>
 											<CI_OnLineFunctionCode>
 												<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode</xsl:attribute>
 												<xsl:attribute name="codeListValue" namespace="">information</xsl:attribute>
-												<xsl:value-of select="'download'"/>
+												<xsl:value-of select="'information'"/>
 											</CI_OnLineFunctionCode>
 										</function>
 									</CI_OnlineResource>
@@ -899,6 +933,20 @@ http://www.altova.com/mapforce
 						</transferOptions>
 					</MD_Distribution>
 				</distributionInfo>
+				<dataQualityInfo>
+					<DQ_DataQuality>
+						<scope>
+							<DQ_Scope>
+								<level>
+									<MD_ScopeCode>
+										<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode</xsl:attribute>
+										<xsl:attribute name="codeListValue" namespace="">dataset</xsl:attribute>
+									</MD_ScopeCode>
+								</level>
+							</DQ_Scope>
+						</scope>
+					</DQ_DataQuality>
+				</dataQualityInfo>
 			</xsl:for-each>
 		</MD_Metadata>
 	</xsl:template>

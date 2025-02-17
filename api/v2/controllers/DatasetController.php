@@ -619,7 +619,7 @@ class DatasetController
             if (isset($author['orcid']) && $author['orcid'] !== '') {
                 $authorXml->addChild('orcid', htmlspecialchars($author['orcid']));
             }
-            if (isset($author['Affiliations'])) {
+            if (!empty($author['Affiliations'])) {
                 $affiliationsXml = $authorXml->addChild('Affiliations');
                 foreach ($author['Affiliations'] as $affiliation) {
                     $affiliationXml = $affiliationsXml->addChild('Affiliation');
