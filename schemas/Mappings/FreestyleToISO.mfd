@@ -1737,15 +1737,19 @@ Only 2 coord fields filled -&gt; Point</text>
 						</comment>
 					</data>
 				</component>
-				<component name="constant" library="core" uid="310" kind="2">
+				<component name="if-else" library="core" uid="111" kind="4">
+					<sources>
+						<datapoint pos="0" key="327"/>
+						<datapoint pos="1" key="323"/>
+						<datapoint/>
+					</sources>
 					<targets>
-						<datapoint pos="0" key="939"/>
+						<datapoint/>
 					</targets>
-					<view ltx="1263" lty="234" rbx="1341" rby="250"/>
+					<view ltx="2044" lty="2504" rbx="2143" rby="2573"/>
 					<data>
-						<constant value="revision" datatype="string"/>
 						<comment>
-							<text>Default CI_DateTypeCode and codeListValue</text>
+							<text>NASA/GCMD Earth Science Scheme</text>
 						</comment>
 					</data>
 				</component>
@@ -1854,27 +1858,11 @@ Only 2 coord fields filled -&gt; Point</text>
 						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\resource_5.xml" outputinstance="..\..\xml\resource_5.xml"/>
 					</data>
 				</component>
-				<component name="if-else" library="core" uid="111" kind="4">
-					<sources>
-						<datapoint pos="0" key="327"/>
-						<datapoint pos="1" key="323"/>
-						<datapoint/>
-					</sources>
-					<targets>
-						<datapoint/>
-					</targets>
-					<view ltx="2044" lty="2504" rbx="2143" rby="2573"/>
-					<data>
-						<comment>
-							<text>NASA/GCMD Earth Science Scheme</text>
-						</comment>
-					</data>
-				</component>
 				<component name="gmd" library="xml" uid="3" kind="14">
 					<properties XSLTTargetEncoding="UTF-8" XSLTDefaultOutput="1"/>
 					<view ltx="1927" lty="-25" rbx="2305" rby="1298"/>
 					<data>
-						<root scrollposition="6040">
+						<root scrollposition="898">
 							<header>
 								<namespaces>
 									<namespace uid="http://www.isotc211.org/2005/gco"/>
@@ -1986,19 +1974,6 @@ Only 2 coord fields filled -&gt; Point</text>
 																	<entry name="CI_DateTypeCode" ns="1" inpkey="780" expanded="1">
 																		<entry name="codeList" ns="2" type="attribute" inpkey="781"/>
 																		<entry name="codeListValue" ns="2" type="attribute" inpkey="782"/>
-																	</entry>
-																</entry>
-															</entry>
-														</entry>
-														<entry name="date" ns="1" inpkey="941" expanded="1" clone="1">
-															<entry name="CI_Date" ns="1" expanded="1">
-																<entry name="date" ns="1" expanded="1">
-																	<entry name="Date" inpkey="942"/>
-																</entry>
-																<entry name="dateType" ns="1" expanded="1">
-																	<entry name="CI_DateTypeCode" ns="1" inpkey="943" expanded="1">
-																		<entry name="codeList" ns="2" type="attribute" inpkey="944"/>
-																		<entry name="codeListValue" ns="2" type="attribute" inpkey="945"/>
 																	</entry>
 																</entry>
 															</entry>
@@ -3091,8 +3066,6 @@ Only 2 coord fields filled -&gt; Point</text>
 							<edge vertexkey="852"/>
 							<edge vertexkey="861"/>
 							<edge vertexkey="923"/>
-							<edge vertexkey="941"/>
-							<edge vertexkey="942"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="494">
@@ -3177,7 +3150,6 @@ Only 2 coord fields filled -&gt; Point</text>
 					<vertex vertexkey="76">
 						<edges>
 							<edge vertexkey="793"/>
-							<edge vertexkey="944"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="165">
@@ -3518,12 +3490,6 @@ Only 2 coord fields filled -&gt; Point</text>
 					<vertex vertexkey="935">
 						<edges>
 							<edge vertexkey="936"/>
-						</edges>
-					</vertex>
-					<vertex vertexkey="939">
-						<edges>
-							<edge vertexkey="943"/>
-							<edge vertexkey="945"/>
 						</edges>
 					</vertex>
 					<vertex vertexkey="946">

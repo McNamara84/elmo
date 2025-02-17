@@ -172,22 +172,6 @@ http://www.altova.com/mapforce
 										</dateType>
 									</CI_Date>
 								</date>
-								<date>
-									<CI_Date>
-										<date>
-											<gco:Date>
-												<xsl:value-of select="*[local-name()='currentDate' and namespace-uri()='']"/>
-											</gco:Date>
-										</date>
-										<dateType>
-											<CI_DateTypeCode>
-												<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ProgressCode</xsl:attribute>
-												<xsl:attribute name="codeListValue" namespace="">revision</xsl:attribute>
-												<xsl:value-of select="'revision'"/>
-											</CI_DateTypeCode>
-										</dateType>
-									</CI_Date>
-								</date>
 								<xsl:for-each select="*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()='']">
 									<xsl:variable name="var5_cur" select="."/>
 									<citedResponsibleParty>
