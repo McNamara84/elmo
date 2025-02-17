@@ -20,7 +20,7 @@ $(document).ready(function () {
             jsTreeId: '#jstree-sciencekeyword',
             searchInputId: '#input-sciencekeyword-search',
             selectedKeywordsListId: 'selected-keywords-gcmd',
-            shouldInitialize: true // Immer initialisieren,
+            shouldInitialize: true // Always initialize
         },
         // GCMD PLATFORMS
         {
@@ -29,7 +29,7 @@ $(document).ready(function () {
             jsTreeId: '#jstree-Platforms',
             searchInputId: '#input-Platforms-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-Platforms-gcmd',
-            shouldInitialize: true // Immer initialisieren,
+            shouldInitialize: true // Always initialize
         },
         // GCMD INSTRUMENTS
         {
@@ -38,25 +38,26 @@ $(document).ready(function () {
             jsTreeId: '#jstree-instruments',
             searchInputId: '#input-instruments-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-instruments-gcmd',
-            shouldInitialize: true // Immer initialisieren,
+            shouldInitialize: true // Always initialize
         },
+        // MSL-Keywords
         {
             inputId: '#input-mslkeyword',
             jsonFile: 'json/msl-vocabularies.json',
             jsTreeId: '#jstree-mslkeyword',
             searchInputId: '#input-mslkeyword-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-msl',
-            shouldInitialize: false // Standardmäßig nicht initialisieren
+            shouldInitialize: false // Do not initialize by default
         }
     ];
 
     fetch('settings.php?setting=all')
         .then(response => response.json())
         .then(data => {
-            // MSL Keyword Konfiguration aktualisieren
+            // Update MSL Keyword configuration
             keywordConfigurations.find(config => config.inputId === '#input-mslkeyword').shouldInitialize = data.showMslLabs;
 
-            // Initialisierung aller Keyword-Felder
+            // Initialize all keyword fields
             keywordConfigurations.forEach(function (config) {
                 if (config.shouldInitialize) {
                     initializeKeywordInput(config);
