@@ -60,7 +60,8 @@
 									<xs:sequence>
 										<xs:element name="familyname" type="xs:string" />
 										<xs:element name="givenname" type="xs:string" />
-										<xs:element name="orcid" type="xs:string" />
+										<xs:element name="orcid" type="xs:string" minOccurs="0"
+											maxOccurs="1" />
 										<xs:element name="Affiliations">
 											<xs:complexType>
 												<xs:sequence>
@@ -318,7 +319,8 @@
 				<xs:element name="SpatialTemporalCoverages">
 					<xs:complexType>
 						<xs:sequence>
-							<xs:element name="SpatialTemporalCoverage" minOccurs="0" maxOccurs="unbounded">
+							<xs:element name="SpatialTemporalCoverage" minOccurs="0"
+								maxOccurs="unbounded">
 								<xs:complexType>
 									<xs:sequence>
 										<xs:element name="spatial_temporal_coverage_id"
@@ -391,8 +393,10 @@
 											type="xs:integer" />
 										<xs:element name="funding_reference_id" type="xs:integer" />
 										<xs:element name="funder" type="xs:string" />
-										<xs:element name="funderid" type="xs:integer" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="funderidtyp" type="xs:string" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="funderid" type="xs:integer" minOccurs="0"
+											maxOccurs="1" />
+										<xs:element name="funderidtyp" type="xs:string"
+											minOccurs="0" maxOccurs="1" />
 										<xs:element name="grantnumber" type="xs:string" />
 										<xs:element name="grantname" type="xs:string" />
 									</xs:sequence>
