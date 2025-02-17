@@ -593,11 +593,11 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
     valueURI `https://epos-msl.uu.nl/voc/materials/1.3/minerals-chemical_elements-selenium`, 
     language `en`
 
-#### GCMD Science Keywords
+#### Thesaurus Keywords
 
-Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and Earth Science Services) are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html))
+Keywords from the GCMD vocabulary. GCMD Science Keywords (Earth Science and Earth Science Services), GCMD Platforms (Earth Observation Satellites) and GCMD Instruments (Earth Remote Sensing Instruments) are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html))
 
-- GCMD Science Keyword
+- **GCMD Science Keyword**
 
   This field contains keywords to describe the content of the resource.
   - Data type: String
@@ -619,6 +619,56 @@ Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and
     scheme `NASA/GCMD Earth Science Keywords`, 
     schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"`, 
     valueURI `https://gcmd.earthdata.nasa.gov/kms/concept/b2318fb3-788c-4f36-a1d1-36670d2da747"`, 
+    language `en`
+
+
+- **GCMD Platforms**
+
+  This field contains keywords to describe the content of the resource.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
+  - Restrictions: Terms can be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - Example Values: `Platforms > Air-based Platforms > Dropwindsondes > DROPWINDSONDES`
+
+- *Saved in backend (not visible to user):* scheme, schemeURI, valueURI, language
+
+  The purpose of these fields is to clearly identify the keyword.
+  - Data type: String
+  - Occurence: 1 for controlled (thesaurus) keywords
+  - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
+  - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - Example values: 
+    scheme `NASA/GCMD Earth Platforms Keywords`, 
+    schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms`, 
+    valueURI `https://gcmd.earthdata.nasa.gov/kms/concept/fa514134-ff56-47d1-bc02-6b8568ad21e7`, 
+    language `en`
+
+
+- **GCMD Instruments**
+
+  This field contains keywords to describe the content of the resource.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
+  - Restrictions: Terms can be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - Example Values: `Instruments > Solar/Space Observing Instruments > Photon/Optical Detectors > Charged Coupled Devices > K-LINE CCD/SOLAR OSCILLATIONS`
+
+- *Saved in backend (not visible to user):* scheme, schemeURI, valueURI, language
+
+  The purpose of these fields is to clearly identify the keyword.
+  - Data type: String
+  - Occurence: 1 for controlled (thesaurus) keywords
+  - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
+  - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - Example values: 
+    scheme `NASA/GCMD Instruments`, 
+    schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments`, 
+    valueURI `https://gcmd.earthdata.nasa.gov/kms/concept/657ac23c-4ee8-400c-bd41-165dfd3845f5`, 
     language `en`
 
 #### Free Keywords
