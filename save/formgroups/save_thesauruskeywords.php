@@ -8,11 +8,11 @@
  *
  * @return void
  */
-function saveThesaurusKeywords($connection, $postData, $resource_id)
+function saveKeywords($connection, $postData, $resource_id)
 {
     // Defines the fields to process
     $fieldsToProcess = [
-        'thesaurusKeywords', // Thesaurus Keywords
+        'gcmdScienceKeywords', // Thesaurus Keywords
         'MSLKeywords',        // MSL Keywords
         'platforms',          // GCMD Platforms
         'instruments'         // GCMD Instruments
@@ -38,7 +38,7 @@ function saveThesaurusKeywords($connection, $postData, $resource_id)
  * @param mysqli $connection  The database connection.
  * @param array  $entry       The data of the keyword.
  * @param int    $resource_id The ID of the associated resource.
- * @param string $field       The current field, either 'thesaurusKeywords' or 'MSLKeywords'.
+ * @param string $field       The current field, either 'gcmdScienceKeywords', 'GCMD Platforms', 'GCMD Instruments' or 'MSLKeywords'.
  *
  * @return void
  */
