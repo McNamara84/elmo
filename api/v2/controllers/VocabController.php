@@ -284,8 +284,10 @@ class VocabController
                 $processedData[] = $this->processItem($item);
             }
 
+            $dataWithTimestamp = $this->addTimestampToData($processedData);
+
             // Save processed data
-            if (file_put_contents($outputFile, json_encode($processedData, JSON_PRETTY_PRINT)) === false) {
+            if (file_put_contents($outputFile, json_encode($dataWithTimestamp, JSON_PRETTY_PRINT)) === false) {
                 throw new Exception("Failed to save processed vocabulary data");
             }
 
