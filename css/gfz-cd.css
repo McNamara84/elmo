@@ -94,9 +94,7 @@
 #jstree-mslkeyword {
     width: 100%;
     max-width: 600px;
-    /* Larger area for the tree structure */
     overflow-x: auto;
-    /* If necessary, horizontal scrolling */
 }
 
 
