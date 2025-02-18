@@ -295,6 +295,7 @@
 										<xs:element name="schemeURI" type="xs:anyURI" />
 										<xs:element name="valueURI" type="xs:anyURI" />
 										<xs:element name="language" type="xs:string" />
+										<xs:element name="lastUpdated" type="xs:date" />
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
