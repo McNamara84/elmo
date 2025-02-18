@@ -745,7 +745,8 @@ class VocabController
         }
 
         $hierarchicalData = $this->buildHierarchy($graph, $conceptScheme, $schemeName);
-        file_put_contents($outputFile, json_encode($hierarchicalData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $dataWithTimestamp = $this->addTimestampToData($hierarchicalData);
+        file_put_contents($outputFile, json_encode($dataWithTimestamp, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         return true;
     }
