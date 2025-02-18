@@ -12,11 +12,76 @@ class DatasetController
     }
 
     /**
-     * Retrieves thesaurus keywords for a given resource.
+     * Loads and parses the lastUpdated information from keyword JSON files.
+     * 
+     * This method reads the lastUpdated timestamps from various JSON files containing
+     * keyword definitions. It handles GCMD Platform, Instrument, and Science keywords,
+     * as well as MSL vocabularies.
      *
-     * @param mysqli $connection The database connection.
-     * @param int $resource_id The ID of the resource.
-     * @return array An array of thesaurus keywords.
+     * @return array An associative array where keys are the JSON filename bases (without extension)
+     *               and values are their corresponding lastUpdated timestamps.
+     *               Format: [
+     *                   'gcmdPlatformsKeywords' => 'YYYY-MM-DD',
+     *                   'gcmdInstrumentsKeywords' => 'YYYY-MM-DD',
+     *                   'gcmdScienceKeywords' => 'YYYY-MM-DD',
+     *                   'msl-vocabularies' => 'YYYY-MM-DD'
+     *               ]
+     */
+    private function loadKeywordData()
+    {
+        $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
+        $jsonDir = $baseDir . '/json';
+
+        $keywordData = [];
+
+        $files = [
+            'gcmdPlatformsKeywords.json',
+            'gcmdInstrumentsKeywords.json',
+            'gcmdScienceKeywords.json',
+            'msl-vocabularies.json'
+        ];
+
+        foreach ($files as $file) {
+            $path = $jsonDir . '/' . $file;
+            if (file_exists($path)) {
+                $data = json_decode(file_get_contents($path), true);
+                if ($data && isset($data['lastUpdated'])) {
+                    $keywordData[basename($file, '.json')] = $data['lastUpdated'];
+                }
+            }
+        }
+
+        return $keywordData;
+    }
+
+    /**
+     * Retrieves thesaurus keywords for a given resource and enriches them with lastUpdated information.
+     * 
+     * This method fetches thesaurus keywords from the database and adds lastUpdated timestamps
+     * from corresponding JSON files based on the keyword scheme. The lastUpdated information
+     * indicates when the vocabulary or keyword set was last modified.
+     *
+     * @param mysqli $connection The database connection
+     * @param int    $resource_id The ID of the resource
+     * 
+     * @return array An array of thesaurus keywords, each containing:
+     *               - All original database fields from the Thesaurus_Keywords table
+     *               - A 'lastUpdated' field containing the timestamp when the keyword's
+     *                 vocabulary was last updated (format: YYYY-MM-DD)
+     *               
+     * Example return structure:
+     * [
+     *     [
+     *         'thesaurus_keywords_id' => 1,
+     *         'keyword' => 'Example Keyword',
+     *         'scheme' => 'NASA/GCMD Earth Platforms Keywords',
+     *         'schemeURI' => 'https://example.com/scheme',
+     *         'valueURI' => 'https://example.com/value',
+     *         'language' => 'en',
+     *         'lastUpdated' => '2024-02-18'
+     *     ],
+     *     // ... more keywords
+     * ]
      */
     function getThesaurusKeywords($connection, $resource_id)
     {
@@ -29,7 +94,30 @@ class DatasetController
         $stmt->bind_param('i', $resource_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        return $result->fetch_all(MYSQLI_ASSOC);
+        $keywords = $result->fetch_all(MYSQLI_ASSOC);
+
+        // Load keyword data
+        $keywordData = $this->loadKeywordData();
+
+        // Add lastUpdated information based on the scheme
+        foreach ($keywords as &$keyword) {
+            switch ($keyword['scheme']) {
+                case 'NASA/GCMD Earth Science Keywords':
+                    $keyword['lastUpdated'] = $keywordData['gcmdScienceKeywords'] ?? null;
+                    break;
+                case 'NASA/GCMD Earth Platforms Keywords':
+                    $keyword['lastUpdated'] = $keywordData['gcmdPlatformsKeywords'] ?? null;
+                    break;
+                case 'NASA/GCMD Earth Instruments Keywords':
+                    $keyword['lastUpdated'] = $keywordData['gcmdInstrumentsKeywords'] ?? null;
+                    break;
+                case 'Master Soil Lookup':
+                    $keyword['lastUpdated'] = $keywordData['msl-vocabularies'] ?? null;
+                    break;
+            }
+        }
+
+        return $keywords;
     }
 
     /**
@@ -813,7 +901,13 @@ class DatasetController
             foreach ($thesaurusKeywords as $keyword) {
                 $keywordXml = $keywordsXml->addChild('Keyword');
                 foreach ($keyword as $key => $value) {
-                    $keywordXml->addChild($key, htmlspecialchars($value ?? ''));
+                    if ($value !== null) {
+                        if ($key === 'lastUpdated') {
+                            $keywordXml->addChild($key, date('Y-m-d', strtotime($value)));
+                        } else {
+                            $keywordXml->addChild($key, htmlspecialchars($value));
+                        }
+                    }
                 }
             }
         }
@@ -869,7 +963,7 @@ class DatasetController
 
         // Funding References
         $fundingReferences = $this->getFundingReferences($connection, $id);
-        if ($fundingReferences){
+        if ($fundingReferences) {
             $fundingReferencesXml = $xml->addChild('FundingReferences');
             foreach ($fundingReferences as $reference) {
                 $referenceXml = $fundingReferencesXml->addChild('FundingReference');
