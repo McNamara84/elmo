@@ -67,7 +67,8 @@ $(document).ready(function () {
          *
          * @param {Array<Object>} data - The keyword data array from the JSON file.
          */
-        function loadKeywords(data) {
+        function loadKeywords(response) {
+            const data = response.data ? response.data : response;
             var filteredData = data;
 
 
