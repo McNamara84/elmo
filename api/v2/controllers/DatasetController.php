@@ -111,7 +111,7 @@ class DatasetController
                 case 'NASA/GCMD Earth Instruments Keywords':
                     $keyword['lastUpdated'] = $keywordData['gcmdInstrumentsKeywords'] ?? null;
                     break;
-                case 'Master Soil Lookup':
+                default:
                     $keyword['lastUpdated'] = $keywordData['msl-vocabularies'] ?? null;
                     break;
             }
