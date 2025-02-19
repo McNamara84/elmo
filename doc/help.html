@@ -54,7 +54,17 @@ include_once "../settings.php";
                     <?php if ($showMslVocabs): ?>
                     <li class="nav-item"><a class="nav-link" href="#help-mslkeywords">EPOS MSL Keywords</a></li>
                     <?php endif; ?>
-                    <li class="nav-item"><a class="nav-link" href="#help-scienceKeywords">GCMD Science Keywords</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#help-keywords">Keywords</a>
+                        <ul class="nav flex-column ms-3">
+                            <li class="nav-item"><a class="nav-link" href="#help-scienceKeywords">GCMD Science
+                                    Keywords</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#help-platformsKeywords">GCMD Platforms
+                                    Keywords</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#help-instrumentsKeywords">GCMD Instruments
+                                    Keywords</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="#help-freeKeywords">Free Keywords</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-dates">Dates</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-tsc">Spatial and Temporal coverage</a></li>
@@ -573,6 +583,34 @@ include_once "../settings.php";
                 <div class="section-divider"></div>
                 <?php endif; ?>
                 <hr>
+                <!-- formgroup GCMD Platforms Keywords -->
+                <div id="help-platformsKeywords" class="section-content">
+                    <div id="help-gcmd-platforms-keyword">
+                        <h3>GCMD Platforms Keywords</h3>
+                        <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                            start
+                            typing to use the autocomplete function. </p>
+                        <p>GCMD Platforms are important for identifying the sources of data collection. We recommend
+                            selecting relevant platform keywords to provide context about how your dataset was
+                            acquired.
+                        </p>
+                    </div>
+                </div>
+                <!-- formgroup GCMD Instruments Keywords -->
+                <div id="help-instrumentsKeywords" class="section-content">
+                    <div id="help-gcmd-instruments-keyword">
+                        <h3>GCMD Instruments Keywords</h3>
+                        <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                            start
+                            typing to use the autocomplete function. </p>
+                        <p>GCMD Instruments help specify the tools used for data collection. We encourage you to
+                            select
+                            appropriate instrument keywords to give users a clear understanding of how your data was
+                            measured or observed.</p>
+                    </div>
+                </div>
                 <!-- formgroup GCMD Science Keywords -->
                 <div id="help-scienceKeywords" class="section-content">
                     <div id="help-scienceKeywords-keyword">
@@ -584,24 +622,6 @@ include_once "../settings.php";
                             Therefore, we highly recommend selecting at least one GCMD Science Keyword to describe
                             your
                             dataset (you are welcome to add more if relevant).</p>
-                    </div>
-                    <div id="help-gcmd-platforms-keyword">
-                        <h3>GCMD Platforms Keywords</h3>
-                        <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or start
-                            typing to use the autocomplete function. </p>
-                        <p>GCMD Platforms are important for identifying the sources of data collection. We recommend
-                            selecting relevant platform keywords to provide context about how your dataset was acquired.
-                        </p>
-                    </div>
-                    <div id="help-gcmd-instruments-keyword">
-                        <h3>GCMD Instruments Keywords</h3>
-                        <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or start
-                            typing to use the autocomplete function. </p>
-                        <p>GCMD Instruments help specify the tools used for data collection. We encourage you to select
-                            appropriate instrument keywords to give users a clear understanding of how your data was
-                            measured or observed.</p>
                     </div>
                     <!-- Explains use of thesaurus modal and the Keyword "tree"-->
                     <div id="help-keywords-keywordviewer">
