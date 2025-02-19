@@ -69,6 +69,7 @@
         "emailInvalid": "Please provide a valid email address in the format xxx.xxx@xxx.xxx.",
         "position": "Position",
         "positionInvalid": "Please provide a position.",
+        "toggleCheckbox": "Contact<br>Person?",
         "website": "Website",
         "websiteInvalid": "Please provide a valid URL."
     },
@@ -127,7 +128,7 @@
         "end": "End",
         "dateTimeInvalid": "Please enter a valid date and time.",
         "timezone": "Timezone",
-        "timezoneInvalid":"Please choose a timezone",
+        "timezoneInvalid": "Please choose a timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)"
     },
     "relatedWork": {
