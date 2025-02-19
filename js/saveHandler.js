@@ -26,6 +26,26 @@ class SaveHandler {
     initializeEventListeners() {
         $('#button-saveas-save').on('click', () => this.handleSaveConfirm());
         $('#modal-saveas').on('hidden.bs.modal', () => this.modals.notification.hide());
+        // Focus on input field
+        $('#modal-saveas').on('shown.bs.modal', () => {
+            $('#input-saveas-filename').select();
+        });
+        $('#modal-saveas').on('keydown', (e) => {
+            // KeyCode 13? (Enter)
+            if (e.which === 13 || e.keyCode === 13) {
+                // Prevent form submission
+                e.preventDefault();
+
+                // If close button is focused, do nothing
+                const activeElement = document.activeElement;
+                if (activeElement.classList.contains('btn-secondary') ||
+                    activeElement.classList.contains('btn-close')) {
+                    return;
+                }
+
+                this.handleSaveConfirm();
+            }
+        });
     }
 
     /**
@@ -136,7 +156,7 @@ class SaveHandler {
         $('#modal-notification .btn-close').on('click', () => {
             this.modals.notification.hide();
         });
-        
+
         $('#modal-notification .btn-primary').on('click', () => {
             this.modals.notification.hide();
         });
