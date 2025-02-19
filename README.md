@@ -641,7 +641,7 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
   - Example values: 
-    scheme `NASA/GCMD Earth Platforms Keywords`, 
+    scheme `NASA/GCMD Platforms Keywords`, 
     schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms`, 
     valueURI `https://gcmd.earthdata.nasa.gov/kms/concept/fa514134-ff56-47d1-bc02-6b8568ad21e7`, 
     language `en`
