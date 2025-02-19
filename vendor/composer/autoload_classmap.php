@@ -1621,6 +1621,8 @@ return array(
     'PHPUnit\\TestFixture\\Issue2085Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/2085/Issue2085Test.php',
     'PHPUnit\\TestFixture\\Issue2137Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/2137/Issue2137Test.php',
     'PHPUnit\\TestFixture\\Issue2145Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/2145/Issue2145Test.php',
+    'PHPUnit\\TestFixture\\Issue2155\\Foo' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/2155/Issue2155Test_NoExpectsLog.php',
+    'PHPUnit\\TestFixture\\Issue2155\\Issue2155Test_NoExpectsLog' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/2155/Issue2155Test_NoExpectsLog.php',
     'PHPUnit\\TestFixture\\Issue2158Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/2158/Issue2158Test.php',
     'PHPUnit\\TestFixture\\Issue2380Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/2380/Issue2380Test.php',
     'PHPUnit\\TestFixture\\Issue2435Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/regression/2435/Issue2435Test.php',
