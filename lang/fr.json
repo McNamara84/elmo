@@ -64,11 +64,8 @@
         "affiliationInvalid": "Veuillez indiquer une affiliation."
     },
     "contactPersons": {
-        "title": "Personne(s) à contacter",
         "email": "Adresse e-mail",
         "emailInvalid": "Veuillez saisir une adresse e-mail valide au format xxx.xxx@xxx.xxx.",
-        "position": "Poste",
-        "positionInvalid": "Veuillez indiquer un poste.",
         "toggleCheckbox": "Personne<br>à contacte?",
         "website": "Site web",
         "websiteInvalid": "Veuillez saisir une URL valide."

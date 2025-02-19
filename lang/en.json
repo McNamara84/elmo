@@ -64,11 +64,8 @@
         "affiliationInvalid": "Please provide an affiliation."
     },
     "contactPersons": {
-        "title": "Contact Person(s)",
         "email": "Email address",
         "emailInvalid": "Please provide a valid email address in the format xxx.xxx@xxx.xxx.",
-        "position": "Position",
-        "positionInvalid": "Please provide a position.",
         "toggleCheckbox": "Contact<br>Person?",
         "website": "Website",
         "websiteInvalid": "Please provide a valid URL."
