@@ -595,7 +595,7 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
 
 #### Thesaurus Keywords
 
-Keywords from the GCMD vocabulary. GCMD Science Keywords (Earth Science and Earth Science Services), GCMD Platforms (Earth Observation Satellites) and GCMD Instruments (Earth Remote Sensing Instruments) are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html))
+Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GCMD Instruments are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html))
 
 - **GCMD Science Keyword**
 
