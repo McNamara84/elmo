@@ -565,6 +565,12 @@ abstract class TestCase extends Assert implements Reorderable, SelfDescribing, T
 
                 $this->status = TestStatus::error($e->getMessage());
 
+                if (!$this->wasPrepared) {
+                    $emitter->testPreparationFailed(
+                        $this->valueObjectForEvents(),
+                    );
+                }
+
                 $emitter->testErrored(
                     $this->valueObjectForEvents(),
                     Event\Code\ThrowableBuilder::from($e),
@@ -582,27 +588,14 @@ abstract class TestCase extends Assert implements Reorderable, SelfDescribing, T
             $this->performAssertionsOnOutput();
         }
 
-        if ($this->status->isSuccess()) {
-            $emitter->testPassed(
-                $this->valueObjectForEvents(),
-            );
-
-            if (!$this->usesDataProvider()) {
-                PassedTests::instance()->testMethodPassed(
-                    $this->valueObjectForEvents(),
-                    $this->testResult,
-                );
-            }
-        }
-
         try {
             $this->mockObjects = [];
 
             /** @phpstan-ignore catch.neverThrown */
-        } catch (Throwable $t) {
+        } catch (Throwable $e) {
             Event\Facade::emitter()->testErrored(
                 $this->valueObjectForEvents(),
-                Event\Code\ThrowableBuilder::from($t),
+                Event\Code\ThrowableBuilder::from($e),
             );
         }
 
@@ -634,6 +627,19 @@ abstract class TestCase extends Assert implements Reorderable, SelfDescribing, T
                 $emitter->testErrored(
                     $this->valueObjectForEvents(),
                     Event\Code\ThrowableBuilder::from($exceptionRaisedDuringTearDown),
+                );
+            }
+        }
+
+        if (!isset($e) && !isset($_e)) {
+            $emitter->testPassed(
+                $this->valueObjectForEvents(),
+            );
+
+            if (!$this->usesDataProvider()) {
+                PassedTests::instance()->testMethodPassed(
+                    $this->valueObjectForEvents(),
+                    $this->testResult,
                 );
             }
         }
