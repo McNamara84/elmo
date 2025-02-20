@@ -21,7 +21,7 @@
     },
     {
         "id": "cdc8a61ba9f1327a72b75602773a8aa4",
-        "name": "Geo?lab - Laboratoire de modélisation analogique Géosciences Le Mans (CNRS-Maine University, France)",
+        "name": "Geoϕlab - Laboratoire de modélisation analogique Géosciences Le Mans (CNRS-Maine University, France)",
         "affiliation": "CNRS-Maine University, Le Mans, France"
     },
     {
@@ -76,7 +76,7 @@
     },
     {
         "id": "25c2850521e61ccfc1056acf7a172a07",
-        "name": "LOGmodel - Laboratoire de modélisation analogique d?Océanologie et de Géosciences (CNRS-Lille 1 University, France)",
+        "name": "LOGmodel - Laboratoire de modélisation analogique d’Océanologie et de Géosciences (CNRS-Lille 1 University, France)",
         "affiliation": "CNRS-Lille 1 University, Lille, France"
     },
     {
@@ -531,7 +531,7 @@
     },
     {
         "id": "ad9d1d9487407914745c98bd65074edc",
-        "name": "Laboratorios Anal?t?cos de Geolog?a (University of Barcelona - CCiT, Spain)",
+        "name": "Laboratorios Analíticos de Geología (University of Barcelona - CCiT, Spain)",
         "affiliation": "University of Barcelona - CCiT, Spain"
     },
     {
@@ -561,8 +561,8 @@
     },
     {
         "id": "a5b3ec1787f0393c8c7b03e6b63948d2",
-        "name": "Scientific Center for Optical and?Electron Microscopy (ScopeM) (ETH: Swiss Federal Institute of Technology in Z?rich, Switzerland)",
-        "affiliation": "ETH: Swiss Federal Institute of Technology in Z?rich, Switzerland"
+        "name": "Scientific Center for Optical and Electron Microscopy (ScopeM) (ETH: Swiss Federal Institute of Technology in Zürich, Switzerland)",
+        "affiliation": "ETH: Swiss Federal Institute of Technology in Zürich, Switzerland"
     },
     {
         "id": "f31ccc8913e82ba9522c3221e237c7b3",
@@ -586,7 +586,7 @@
     },
     {
         "id": "ece44a25524274a91251910c0f7c4d85",
-        "name": "Geodynamics Lab (ISTO: Earth Sciences Institute of Orl?ans, France)",
-        "affiliation": "ISTO: Earth Sciences Institute of Orl?ans, France"
+        "name": "Geodynamics Lab (ISTO: Earth Sciences Institute of Orléans, France)",
+        "affiliation": "ISTO: Earth Sciences Institute of Orléans, France"
     }
 ]
