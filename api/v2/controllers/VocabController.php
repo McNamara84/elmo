@@ -134,8 +134,19 @@ class VocabController
         }
 
         // WORKAROUND: Convert encoding to UTF-8
-        $jsonData = mb_convert_encoding($jsonData, 'ISO-8859-1', 'UTF-8');
-        $jsonData = mb_convert_encoding($jsonData, 'UTF-8', 'ISO-8859-1');
+        $jsonData = mb_convert_encoding($jsonData, 'UTF-16', 'UTF-8');
+        $jsonData = mb_convert_encoding($jsonData, 'UTF-8', 'UTF-16');
+
+        // WORKAROUND: Fix last encoding issues
+        $replacements = [
+            'Geo?lab' => 'Geolab',
+            'Anal?t?cos' => 'Analíticos',
+            'Geolog?a' => 'Geología',
+            'Orl?ans' => 'Orléans',
+            'Z?rich' => 'Zürich',
+            'Optical and?Electron' => 'Optical and Electron',
+        ];
+        $jsonData = str_replace(array_keys($replacements), array_values($replacements), $jsonData);
 
         // Decode JSON data
         $labs = json_decode($jsonData, true);
