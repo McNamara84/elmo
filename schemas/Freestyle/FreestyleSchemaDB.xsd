@@ -295,10 +295,13 @@
 										<xs:element name="schemeURI" type="xs:anyURI" />
 										<xs:element name="valueURI" type="xs:anyURI" />
 										<xs:element name="language" type="xs:string" />
-										<xs:element name="lastUpdated" type="xs:date" />
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
+							<xs:element name="lastUpdatedGcmdPlatformsKeywords" type="xs:date" minOccurs="0"/>
+                            <xs:element name="lastUpdatedGcmdInstrumentsKeywords" type="xs:date" minOccurs="0"/>
+                            <xs:element name="lastUpdatedGcmdScienceKeywords" type="xs:date" minOccurs="0"/>
+                            <xs:element name="lastUpdatedMslVocabularies" type="xs:date" minOccurs="0"/>
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>

@@ -16,14 +16,14 @@ $(document).ready(function () {
     var keywordConfigurations = [
         {
             inputId: '#input-sciencekeyword',
-            jsonFile: 'json/gcmdScienceKeywords.json',
+            jsonFile: 'json/thesauri/gcmdScienceKeywords.json',
             jsTreeId: '#jstree-sciencekeyword',
             searchInputId: '#input-sciencekeyword-search',
             shouldInitialize: true // Immer initialisieren
         },
         {
             inputId: '#input-mslkeyword',
-            jsonFile: 'json/msl-vocabularies.json',
+            jsonFile: 'json/thesauri/msl-vocabularies.json',
             jsTreeId: '#jstree-mslkeyword',
             searchInputId: '#input-mslkeyword-thesaurussearch',
             shouldInitialize: false // Standardmäßig nicht initialisieren

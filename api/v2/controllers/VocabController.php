@@ -250,7 +250,7 @@ class VocabController
             return;
         }
         try {
-            $jsonDir = __DIR__ . '/../../../json/';
+            $jsonDir = __DIR__ . '/../../../json/thesauri/';
             $outputFile = $jsonDir . 'msl-vocabularies.json';
 
             if (!file_exists($jsonDir)) {
@@ -337,7 +337,7 @@ class VocabController
     public function getGcmdScienceKeywords()
     {
         try {
-            $jsonPath = __DIR__ . '/../../../json/gcmdScienceKeywords.json';
+            $jsonPath = __DIR__ . '/../../../json/thesauri/gcmdScienceKeywords.json';
             if (!file_exists($jsonPath)) {
                 throw new Exception("Science Keywords file not found");
             }
@@ -372,7 +372,7 @@ class VocabController
                 throw new Exception('Error encoding data to JSON: ' . json_last_error_msg());
             }
 
-            $result = file_put_contents(__DIR__ . '/../../../json/msl-labs.json', $jsonString);
+            $result = file_put_contents(__DIR__ . '/../../../json/thesauri/msl-labs.json', $jsonString);
 
             if ($result === false) {
                 throw new Exception('Error saving JSON file: ' . error_get_last()['message']);
@@ -771,7 +771,7 @@ class VocabController
         error_reporting(E_ALL & ~E_DEPRECATED);
 
         try {
-            $jsonDir = __DIR__ . '/../../../json/';
+            $jsonDir = __DIR__ . '/../../../json/thesauri/';
             if (!file_exists($jsonDir)) {
                 mkdir($jsonDir, 0755, true);
             }
