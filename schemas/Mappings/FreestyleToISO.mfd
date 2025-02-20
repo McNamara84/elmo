@@ -81,15 +81,6 @@
 						<constant value="doi:" datatype="string"/>
 					</data>
 				</component>
-				<component name="constant" library="core" uid="205" kind="2">
-					<targets>
-						<datapoint pos="0" key="525"/>
-					</targets>
-					<view ltx="2687" lty="-281" rbx="2733" rby="-265"/>
-					<data>
-						<constant value="1" datatype="string"/>
-					</data>
-				</component>
 				<component name="greater" library="core" uid="204" kind="5">
 					<sources>
 						<datapoint pos="0" key="526"/>
@@ -412,7 +403,7 @@
 					<sources>
 						<datapoint pos="0" key="30"/>
 						<datapoint pos="1" key="31"/>
-						<datapoint/>
+						<datapoint pos="2" key="1198"/>
 					</sources>
 					<targets>
 						<datapoint pos="0" key="32"/>
@@ -1135,18 +1126,6 @@
 						<constant value="http://doi.org/" datatype="string"/>
 					</data>
 				</component>
-				<component name="constant" library="core" uid="42" kind="2">
-					<targets>
-						<datapoint pos="0" key="83"/>
-					</targets>
-					<view ltx="1589" lty="347" rbx="1711" rby="363"/>
-					<data>
-						<constant value="Data Access - DOI" datatype="string"/>
-						<comment>
-							<text>Default CharacterString for name and description</text>
-						</comment>
-					</data>
-				</component>
 				<component name="constant" library="core" uid="28" kind="2">
 					<targets>
 						<datapoint pos="0" key="45"/>
@@ -1824,119 +1803,41 @@ Only 2 coord fields filled -&gt; Point</text>
 						</comment>
 					</data>
 				</component>
-				<component name="FreestyleSchemaDB" library="xml" uid="2" kind="14">
-					<properties XSLTTargetEncoding="UTF-8"/>
-					<view ltx="-117" lty="22" rbx="119" rby="1510"/>
+				<component name="constant" library="core" uid="42" kind="2">
+					<targets>
+						<datapoint pos="0" key="83"/>
+					</targets>
+					<view ltx="1589" lty="347" rbx="1677" rby="363"/>
 					<data>
-						<root>
-							<header>
-								<namespaces>
-									<namespace/>
-									<namespace uid="http://www.altova.com/mapforce"/>
-								</namespaces>
-							</header>
-							<entry name="FileInstance" ns="1" expanded="1">
-								<entry name="document" ns="1" expanded="1" casttotargettypemode="cast-in-subtree">
-									<entry name="Resource" outkey="2" expanded="1">
-										<entry name="currentDate" outkey="68"/>
-										<entry name="doi" outkey="38"/>
-										<entry name="dateCreated" outkey="356"/>
-										<entry name="Rights" outkey="590" expanded="1">
-											<entry name="text" outkey="591"/>
-											<entry name="rightsURI" outkey="956"/>
-										</entry>
-										<entry name="ResourceType" expanded="1"/>
-										<entry name="Language" outkey="705" expanded="1">
-											<entry name="code" outkey="39"/>
-										</entry>
-										<entry name="Titles" outkey="946" expanded="1">
-											<entry name="Title" expanded="1">
-												<entry name="text" outkey="11"/>
-												<entry name="type" outkey="12"/>
-											</entry>
-										</entry>
-										<entry name="Authors" expanded="1">
-											<entry name="Author" outkey="979" expanded="1">
-												<entry name="familyname" outkey="123"/>
-												<entry name="givenname" outkey="124"/>
-												<entry name="orcid" outkey="125"/>
-												<entry name="Affiliations" outkey="980" expanded="1">
-													<entry name="Affiliation" outkey="706" expanded="1">
-														<entry name="name" outkey="126"/>
-													</entry>
-												</entry>
-											</entry>
-										</entry>
-										<entry name="ContactPersons" expanded="1">
-											<entry name="ContactPerson" outkey="165" expanded="1">
-												<entry name="familyname" outkey="166"/>
-												<entry name="givenname" outkey="167"/>
-												<entry name="position" outkey="168"/>
-												<entry name="email" outkey="169"/>
-												<entry name="website" outkey="170"/>
-												<entry name="Affiliations" outkey="999" expanded="1">
-													<entry name="Affiliation" outkey="616" expanded="1">
-														<entry name="name" outkey="171"/>
-													</entry>
-												</entry>
-											</entry>
-										</entry>
-										<entry name="Descriptions" outkey="1190" expanded="1">
-											<entry name="Description" expanded="1">
-												<entry name="type" outkey="505"/>
-												<entry name="description" outkey="140"/>
-											</entry>
-										</entry>
-										<entry name="ThesaurusKeywords" expanded="1">
-											<entry name="Keyword" expanded="1">
-												<entry name="keyword" outkey="188"/>
-												<entry name="scheme" outkey="200"/>
-											</entry>
-											<entry name="lastUpdatedGcmdScienceKeywords" outkey="1193"/>
-											<entry name="lastUpdatedMslVocabularies" outkey="1194"/>
-										</entry>
-										<entry name="FreeKeywords" outkey="344" expanded="1">
-											<entry name="Keyword" expanded="1">
-												<entry name="free_keyword" outkey="345"/>
-											</entry>
-										</entry>
-										<entry name="SpatialTemporalCoverages" expanded="1">
-											<entry name="SpatialTemporalCoverage" outkey="402" expanded="1">
-												<entry name="latitudeMin" outkey="403"/>
-												<entry name="latitudeMax" outkey="404"/>
-												<entry name="longitudeMin" outkey="405"/>
-												<entry name="longitudeMax" outkey="406"/>
-												<entry name="description" outkey="506"/>
-												<entry name="dateStart" outkey="507"/>
-												<entry name="timeStart" outkey="513"/>
-												<entry name="dateEnd" outkey="508"/>
-												<entry name="timeEnd" outkey="536"/>
-												<entry name="timezone" outkey="422"/>
-											</entry>
-										</entry>
-										<entry name="RelatedWorks" expanded="1">
-											<entry name="RelatedWork" outkey="917" expanded="1">
-												<entry name="Identifier" outkey="918"/>
-												<entry name="Relation" expanded="1">
-													<entry name="name" outkey="919"/>
-												</entry>
-												<entry name="IdentifierType" outkey="920" expanded="1">
-													<entry name="name" outkey="921"/>
-												</entry>
-											</entry>
-										</entry>
-									</entry>
-								</entry>
-							</entry>
-						</root>
-						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\resource_1.xml" outputinstance="..\..\xml\resource_1.xml"/>
+						<constant value="Download" datatype="string"/>
+						<comment>
+							<text>Default CharacterString for name and description</text>
+						</comment>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="205" kind="2">
+					<targets>
+						<datapoint pos="0" key="525"/>
+					</targets>
+					<view ltx="2687" lty="-281" rbx="2733" rby="-265"/>
+					<data>
+						<constant value="1" datatype="string"/>
+					</data>
+				</component>
+				<component name="constant" library="core" uid="406" kind="2">
+					<targets>
+						<datapoint pos="0" key="1197"/>
+					</targets>
+					<view ltx="2929" lty="-269" rbx="2988" rby="-253"/>
+					<data>
+						<constant value="N/A" datatype="string"/>
 					</data>
 				</component>
 				<component name="gmd" library="xml" uid="3" kind="14">
 					<properties XSLTTargetEncoding="UTF-8" XSLTDefaultOutput="1"/>
 					<view ltx="1927" lty="-25" rbx="2371" rby="1702"/>
 					<data>
-						<root scrollposition="452">
+						<root scrollposition="2510">
 							<header>
 								<namespaces>
 									<namespace uid="http://www.isotc211.org/2005/gco"/>
@@ -2563,7 +2464,7 @@ Only 2 coord fields filled -&gt; Point</text>
 												<entry name="topicCategory" ns="1">
 													<entry name="MD_TopicCategoryCode" ns="1" inpkey="960"/>
 												</entry>
-												<entry name="extent" ns="1" inpkey="888">
+												<entry name="extent" ns="1" inpkey="888" expanded="1">
 													<entry name="EX_Extent" ns="1" expanded="1">
 														<entry name="description" ns="1">
 															<entry name="CharacterString" inpkey="889"/>
@@ -2588,6 +2489,7 @@ Only 2 coord fields filled -&gt; Point</text>
 															<entry name="EX_TemporalExtent" ns="1" expanded="1">
 																<entry name="extent" ns="1" expanded="1">
 																	<entry name="TimePeriod" ns="4" expanded="1">
+																		<entry name="id" ns="4" type="attribute" inpkey="1195"/>
 																		<entry name="beginPosition" ns="4" inpkey="894" expanded="1"/>
 																		<entry name="endPosition" ns="4" inpkey="895" expanded="1"/>
 																	</entry>
@@ -2664,6 +2566,115 @@ Only 2 coord fields filled -&gt; Point</text>
 							</entry>
 						</root>
 						<document schema="..\ISO\gmd.xsd" instanceroot="{http://www.isotc211.org/2005/gmd}MD_Metadata" outputinstance="..\ISO\gmd.xml"/>
+					</data>
+				</component>
+				<component name="FreestyleSchemaDB" library="xml" uid="2" kind="14">
+					<properties XSLTTargetEncoding="UTF-8"/>
+					<view ltx="-117" lty="22" rbx="119" rby="1510"/>
+					<data>
+						<root scrollposition="46">
+							<header>
+								<namespaces>
+									<namespace/>
+									<namespace uid="http://www.altova.com/mapforce"/>
+								</namespaces>
+							</header>
+							<entry name="FileInstance" ns="1" expanded="1">
+								<entry name="document" ns="1" expanded="1" casttotargettypemode="cast-in-subtree">
+									<entry name="Resource" outkey="2" expanded="1">
+										<entry name="currentDate" outkey="68"/>
+										<entry name="doi" outkey="38"/>
+										<entry name="dateCreated" outkey="356"/>
+										<entry name="Rights" outkey="590" expanded="1">
+											<entry name="text" outkey="591"/>
+											<entry name="rightsURI" outkey="956"/>
+										</entry>
+										<entry name="ResourceType" expanded="1"/>
+										<entry name="Language" outkey="705" expanded="1">
+											<entry name="code" outkey="39"/>
+										</entry>
+										<entry name="Titles" outkey="946" expanded="1">
+											<entry name="Title" expanded="1">
+												<entry name="text" outkey="11"/>
+												<entry name="type" outkey="12"/>
+											</entry>
+										</entry>
+										<entry name="Authors" expanded="1">
+											<entry name="Author" outkey="979" expanded="1">
+												<entry name="familyname" outkey="123"/>
+												<entry name="givenname" outkey="124"/>
+												<entry name="orcid" outkey="125"/>
+												<entry name="Affiliations" outkey="980" expanded="1">
+													<entry name="Affiliation" outkey="706" expanded="1">
+														<entry name="name" outkey="126"/>
+													</entry>
+												</entry>
+											</entry>
+										</entry>
+										<entry name="ContactPersons" expanded="1">
+											<entry name="ContactPerson" outkey="165" expanded="1">
+												<entry name="familyname" outkey="166"/>
+												<entry name="givenname" outkey="167"/>
+												<entry name="position" outkey="168"/>
+												<entry name="email" outkey="169"/>
+												<entry name="website" outkey="170"/>
+												<entry name="Affiliations" outkey="999" expanded="1">
+													<entry name="Affiliation" outkey="616" expanded="1">
+														<entry name="name" outkey="171"/>
+													</entry>
+												</entry>
+											</entry>
+										</entry>
+										<entry name="Descriptions" outkey="1190" expanded="1">
+											<entry name="Description" expanded="1">
+												<entry name="type" outkey="505"/>
+												<entry name="description" outkey="140"/>
+											</entry>
+										</entry>
+										<entry name="ThesaurusKeywords" expanded="1">
+											<entry name="Keyword" expanded="1">
+												<entry name="keyword" outkey="188"/>
+												<entry name="scheme" outkey="200"/>
+											</entry>
+											<entry name="lastUpdatedGcmdScienceKeywords" outkey="1193"/>
+											<entry name="lastUpdatedMslVocabularies" outkey="1194"/>
+										</entry>
+										<entry name="FreeKeywords" outkey="344" expanded="1">
+											<entry name="Keyword" expanded="1">
+												<entry name="free_keyword" outkey="345"/>
+											</entry>
+										</entry>
+										<entry name="SpatialTemporalCoverages" expanded="1">
+											<entry name="SpatialTemporalCoverage" outkey="402" expanded="1">
+												<entry name="spatial_temporal_coverage_id" outkey="1199"/>
+												<entry name="latitudeMin" outkey="403"/>
+												<entry name="latitudeMax" outkey="404"/>
+												<entry name="longitudeMin" outkey="405"/>
+												<entry name="longitudeMax" outkey="406"/>
+												<entry name="description" outkey="506"/>
+												<entry name="dateStart" outkey="507"/>
+												<entry name="timeStart" outkey="513"/>
+												<entry name="dateEnd" outkey="508"/>
+												<entry name="timeEnd" outkey="536"/>
+												<entry name="timezone" outkey="422"/>
+											</entry>
+										</entry>
+										<entry name="RelatedWorks" expanded="1">
+											<entry name="RelatedWork" outkey="917" expanded="1">
+												<entry name="Identifier" outkey="918"/>
+												<entry name="Relation" expanded="1">
+													<entry name="name" outkey="919"/>
+												</entry>
+												<entry name="IdentifierType" outkey="920" expanded="1">
+													<entry name="name" outkey="921"/>
+												</entry>
+											</entry>
+										</entry>
+									</entry>
+								</entry>
+							</entry>
+						</root>
+						<document schema="..\Freestyle\FreestyleSchemaDB.xsd" instanceroot="{}Resource" inputinstance="..\..\xml\resource_1.xml" outputinstance="..\..\xml\resource_1.xml"/>
 					</data>
 				</component>
 			</children>
@@ -3898,6 +3909,16 @@ Only 2 coord fields filled -&gt; Point</text>
 					<vertex vertexkey="1190">
 						<edges>
 							<edge vertexkey="1191"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="1199">
+						<edges>
+							<edge vertexkey="1195"/>
+						</edges>
+					</vertex>
+					<vertex vertexkey="1197">
+						<edges>
+							<edge vertexkey="1198"/>
 						</edges>
 					</vertex>
 				</vertices>
