@@ -1711,6 +1711,8 @@ class ComposerStaticInitefe149a1afac895f65c61fc673b16ea7
         'PHPUnit\\TestFixture\\Issue2085Test' => __DIR__ . '/..' . '/phpunit/phpunit/tests/end-to-end/regression/2085/Issue2085Test.php',
         'PHPUnit\\TestFixture\\Issue2137Test' => __DIR__ . '/..' . '/phpunit/phpunit/tests/end-to-end/regression/2137/Issue2137Test.php',
         'PHPUnit\\TestFixture\\Issue2145Test' => __DIR__ . '/..' . '/phpunit/phpunit/tests/end-to-end/regression/2145/Issue2145Test.php',
+        'PHPUnit\\TestFixture\\Issue2155\\Foo' => __DIR__ . '/..' . '/phpunit/phpunit/tests/end-to-end/regression/2155/Issue2155Test_NoExpectsLog.php',
+        'PHPUnit\\TestFixture\\Issue2155\\Issue2155Test_NoExpectsLog' => __DIR__ . '/..' . '/phpunit/phpunit/tests/end-to-end/regression/2155/Issue2155Test_NoExpectsLog.php',
         'PHPUnit\\TestFixture\\Issue2158Test' => __DIR__ . '/..' . '/phpunit/phpunit/tests/end-to-end/regression/2158/Issue2158Test.php',
         'PHPUnit\\TestFixture\\Issue2380Test' => __DIR__ . '/..' . '/phpunit/phpunit/tests/end-to-end/regression/2380/Issue2380Test.php',
         'PHPUnit\\TestFixture\\Issue2435Test' => __DIR__ . '/..' . '/phpunit/phpunit/tests/end-to-end/regression/2435/Issue2435Test.php',
