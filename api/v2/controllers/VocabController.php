@@ -115,22 +115,38 @@ class VocabController
      */
     public function fetchAndProcessMslLabs()
     {
-        // Fetch data from the URL with a custom User-Agent
         $opts = [
             'http' => [
                 'method' => 'GET',
-                'header' => 'User-Agent: PHP Script'
+                'header' => [
+                    'User-Agent: PHP Script',
+                    'Accept: application/json',
+                    'Accept-Charset: UTF-8'
+                ]
             ]
         ];
         $context = stream_context_create($opts);
+
         $jsonData = file_get_contents($this->url, false, $context);
 
         if ($jsonData === false) {
             throw new Exception('Error fetching data from GitHub: ' . error_get_last()['message']);
         }
 
-        // Correct character encoding
-        $jsonData = mb_convert_encoding($jsonData, 'UTF-8', mb_detect_encoding($jsonData, 'UTF-8, ISO-8859-1', true));
+        // WORKAROUND: Convert encoding to UTF-8
+        $jsonData = mb_convert_encoding($jsonData, 'UTF-16', 'UTF-8');
+        $jsonData = mb_convert_encoding($jsonData, 'UTF-8', 'UTF-16');
+
+        // WORKAROUND: Fix last encoding issues
+        $replacements = [
+            'Geo?lab' => 'Geolab',
+            'Anal?t?cos' => 'Analíticos',
+            'Geolog?a' => 'Geología',
+            'Orl?ans' => 'Orléans',
+            'Z?rich' => 'Zürich',
+            'Optical and?Electron' => 'Optical and Electron',
+        ];
+        $jsonData = str_replace(array_keys($replacements), array_values($replacements), $jsonData);
 
         // Decode JSON data
         $labs = json_decode($jsonData, true);
@@ -338,26 +354,37 @@ class VocabController
      */
     public function updateMslLabs()
     {
-        // Validate API key before processing request
         if (!$this->validateApiKey()) {
             return;
         }
+
         try {
             $mslLabs = $this->fetchAndProcessMslLabs();
-            $jsonString = json_encode($mslLabs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+            $jsonString = json_encode(
+                $mslLabs,
+                JSON_PRETTY_PRINT |
+                JSON_UNESCAPED_UNICODE |
+                JSON_UNESCAPED_SLASHES
+            );
 
             if ($jsonString === false) {
                 throw new Exception('Error encoding data to JSON: ' . json_last_error_msg());
             }
 
-            $result = file_put_contents(__DIR__ . '/../../../json/msl-labs.json', $jsonString);
+            $result = file_put_contents(
+                __DIR__ . '/../../../json/msl-labs.json',
+                $jsonString,
+                LOCK_EX
+            );
 
             if ($result === false) {
                 throw new Exception('Error saving JSON file: ' . error_get_last()['message']);
             }
 
-            header('Content-Type: application/json');
+            header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['message' => 'MSL Labs vocabulary successfully updated']);
+
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);
