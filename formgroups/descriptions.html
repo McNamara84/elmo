@@ -15,14 +15,11 @@
         <div id="collapse-abstract" class="accordion-collapse collapse show" data-bs-parent="#accordion-description">
           <div class="accordion-body">
             <div class="input-group has-validation">
-              <div class="form-floating">
-                <textarea class="form-control input-with-help input-right-no-round-corners"
-                  placeholder="Please enter an abstract..." id="input-abstract" name="descriptionAbstract"
-                  style="height: 100px" required></textarea>
-                <label for="input-abstract"><span data-translate="descriptions.abstract">Abstract</span><span
-                    class="text-danger">*</span>
-                </label>
-              </div>
+              <textarea class="form-control input-with-help input-right-no-round-corners"
+                data-translate-placeholder="descriptions.abstractPlaceholder" id="input-abstract"
+                name="descriptionAbstract" style="height: 100px" required></textarea>
+              <label for="input-abstract" style="display: none;"><span
+                  data-translate="descriptions.abstract">Abstract</span><span class="text-danger">*</span></label>
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
                   data-help-section-id="help-description-abstract"></i></span>
             </div>
