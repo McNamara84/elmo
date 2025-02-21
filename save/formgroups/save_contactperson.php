@@ -50,7 +50,7 @@ function saveContactPerson($connection, $postData, $resource_id)
         }
 
         // If there's an email (whether or not other fields are filled), save as a contact person
-        if (!empty($email)) {
+        if (!empty($email)&& !empty($familyname) && !empty($givenname)) {
             // Check if a contact person with the exact data already exists
             $stmt = $connection->prepare("
                 SELECT contact_person_id FROM Contact_Person 
