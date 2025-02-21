@@ -33,6 +33,27 @@ class SubmitHandler {
     initializeEventListeners() {
         $('#input-submit-privacycheck').on('change', () => this.toggleSubmitButton());
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
+
+        // Focus on input field
+        $('#modal-submit').on('shown.bs.modal', () => {
+            $('#input-submit-dataurl').select();
+        });
+        $('#modal-submit').on('keydown', (e) => {
+            // KeyCode 13? (Enter)
+            if (e.which === 13 || e.keyCode === 13) {
+                // Prevent form submission
+                e.preventDefault();
+
+                // If close button is focused, do nothing
+                const activeElement = document.activeElement;
+                if (activeElement.classList.contains('btn-secondary') ||
+                    activeElement.classList.contains('btn-close')) {
+                    return;
+                }
+
+                this.handleModalSubmit();
+            }
+        });
     }
 
     /**
