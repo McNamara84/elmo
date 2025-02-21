@@ -70,7 +70,7 @@ include("formgroups/contactpersons.html");
 if ($showMslLabs) {
     include("formgroups/originatingLaboratory.html");
 }
-include("formgroups/contributors.html");
+include("formgroups/contributorPersons.html");
 include("formgroups/descriptions.html");
 if ($showMslVocabs) {
     include("formgroups/mslKeywords.html");
