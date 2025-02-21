@@ -730,6 +730,8 @@ return array(
     'PHPUnit\\Framework\\Attributes\\UsesMethod' => $vendorDir . '/phpunit/phpunit/src/Framework/Attributes/UsesMethod.php',
     'PHPUnit\\Framework\\Attributes\\UsesTrait' => $vendorDir . '/phpunit/phpunit/src/Framework/Attributes/UsesTrait.php',
     'PHPUnit\\Framework\\Attributes\\WithoutErrorHandler' => $vendorDir . '/phpunit/phpunit/src/Framework/Attributes/WithoutErrorHandler.php',
+    'PHPUnit\\Framework\\ChildProcessResultProcessor' => $vendorDir . '/phpunit/phpunit/src/Framework/TestRunner/ChildProcessResultProcessor.php',
+    'PHPUnit\\Framework\\ChildProcessResultProcessorTest' => $vendorDir . '/phpunit/phpunit/tests/unit/Framework/TestRunner/ChildProcessResultProcessorTest.php',
     'PHPUnit\\Framework\\CodeCoverageException' => $vendorDir . '/phpunit/phpunit/src/Framework/Exception/CodeCoverageException.php',
     'PHPUnit\\Framework\\ComparisonMethodDoesNotAcceptParameterTypeException' => $vendorDir . '/phpunit/phpunit/src/Framework/Exception/ObjectEquals/ComparisonMethodDoesNotAcceptParameterTypeException.php',
     'PHPUnit\\Framework\\ComparisonMethodDoesNotDeclareBoolReturnTypeException' => $vendorDir . '/phpunit/phpunit/src/Framework/Exception/ObjectEquals/ComparisonMethodDoesNotDeclareBoolReturnTypeException.php',
