@@ -9,7 +9,7 @@
         <div class="col-12 col-sm-12 col-md-5 col-lg-3 p-1">
           <div class="input-group has-validation">
             <!-- Toggle-Checkbox als Button (Bootstrap Toggle Button) -->
-            <input type="checkbox" class="btn-check" id="checkbox-author-contactperson" name="contact-s[]" autocomplete="off">
+            <input type="checkbox" class="btn-check" id="checkbox-author-contactperson" name="contacts[]" autocomplete="off">
             <label class="btn btn-outline-primary lh-sm round-corners-left" for="checkbox-author-contactperson"
               data-translate="contactPersons.toggleCheckbox">
               Contact<br>Person
@@ -86,7 +86,7 @@
             <div class="form-floating">
               <input type="email" class="form-control" name="cpEmail[]"
                 pattern="^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$"
-                id="input-contactperson-email" required />
+                id="input-contactperson-email"  />
               <label for="input-contactperson-email"><span data-translate="contactPersons.email">Email
                   address</span><span class="text-danger">*</span>
               </label>
