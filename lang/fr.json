@@ -93,6 +93,7 @@
         "methodsPlaceholder": "Veuillez décrire la méthodologie employée pour l'étude ou la recherche.",
         "technicalInfo": "Informations techniques",
         "technicalInfoTooltip": "Veuillez saisir les informations techniques...",
+        "technicalinfoPlaceholder": "Veuillez saisir des informations détaillées pouvant être associées à la conception, à la mise en œuvre, au fonctionnement, à l'utilisation et/ou à l'entretien d'un processus, d'un système ou d'un instrument.",
         "other": "Autre",
         "otherTooltip": "Veuillez saisir d'autres informations.."
     },

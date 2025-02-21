@@ -93,6 +93,7 @@
         "methodsPlaceholder": "Please enter a description of the methodology employed for the study or research.",
         "technicalInfo": "Technical Information",
         "technicalInfoTooltip": "Please enter technical information...",
+        "technicalinfoPlaceholder": "Please enter detailed information that may be associated with design, implementation, operation, use, and/or maintenance of a process, system, or instrument.",
         "other": "Other",
         "otherTooltip": "Please enter other information.."
     },

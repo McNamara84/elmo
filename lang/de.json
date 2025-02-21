@@ -93,6 +93,7 @@
         "methodsPlaceholder": "Bitte eine Beschreibung der für die Studie oder Forschung verwendeten Methodik eingeben.",
         "technicalInfo": "Technische Informationen",
         "technicalInfoTooltip": "Bitte geben Sie technische Informationen ein...",
+        "technicalinfoPlaceholder": "Bitte detaillierte Informationen angeben, die mit dem Entwurf, der Implementierung, dem Betrieb, der Verwendung und/oder der Wartung eines Prozesses, Systems oder Instruments in Verbindung stehen können.",
         "other": "Sonstiges",
         "otherTooltip": "Bitte geben Sie sonstige Informationen ein.."
     },
