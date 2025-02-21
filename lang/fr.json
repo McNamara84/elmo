@@ -73,11 +73,12 @@
         "websiteInvalid": "Veuillez saisir une URL valide."
     },
     "contributorPersons": {
-        "title": "Personne(s) à contributeurs",
+        "title": "Personne(s) à contributeurs"
+    },
+    "contributorInstitutions": {
+        "title": "Organisation(s) à contributeurs",
         "organization": "Nom de l'organisation",
-        "organizationInvalid": "Veuillez saisir un nom d'organisation valide.",
-        "persons": "Personne(s) contributrice(s)",
-        "institutions": "Institution(s) contributrice(s)"
+        "organizationInvalid": "Veuillez saisir un nom d'organisation valide."
     },
     "laboratory": {
         "title": "Laboratoire d'origine",
