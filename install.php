@@ -499,7 +499,9 @@ function insertLookupData($connection)
             ["text" => "GNU General Public License v3.0 or later", "rightsIdentifier" => "GPL-3.0-or-later", "rightsURI" => "https://www.gnu.org/licenses/gpl-3.0-standalone.html", "forSoftware" => "1"],
             ["text" => "MIT License", "rightsIdentifier" => "MIT", "rightsURI" => "https://opensource.org/license/mit/", "forSoftware" => "1"],
             ["text" => "Apache License 2.0", "rightsIdentifier" => "Apache-2.0", "rightsURI" => "https://www.apache.org/licenses/LICENSE-2.0", "forSoftware" => "1"],
-            ["text" => "European Union Public License 1.2", "rightsIdentifier" => "EUPL-1.2", "rightsURI" => "https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt", "forSoftware" => "0"]
+            ["text" => "European Union Public License 1.2", "rightsIdentifier" => "EUPL-1.2", "rightsURI" => "https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt", "forSoftware" => "0"],
+            ["text" => "BSD 3-Clause License", "rightsIdentifier" => "BSD-3-Clause", "rightsURI" => "https://opensource.org/licenses/BSD-3-Clause", "forSoftware" => "1"],
+            ["text" => "Creative Commons Attribution-NonCommercial 4.0 International", "rightsIdentifier" => "CC-BY-NC-4.0", "rightsURI" => "https://creativecommons.org/licenses/by-nc/4.0/legalcode.en", "forSoftware" => "0"]
         ],
         "Language" => [
             ["code" => "en", "name" => "English"],
