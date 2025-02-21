@@ -95,7 +95,8 @@
         "technicalInfoTooltip": "Veuillez saisir les informations techniques...",
         "technicalinfoPlaceholder": "Veuillez saisir des informations détaillées pouvant être associées à la conception, à la mise en œuvre, au fonctionnement, à l'utilisation et/ou à l'entretien d'un processus, d'un système ou d'un instrument.",
         "other": "Autre",
-        "otherTooltip": "Veuillez saisir d'autres informations.."
+        "otherTooltip": "Veuillez saisir d'autres informations..",
+        "otherPlaceholder": "Veuillez saisir d'autres informations de description qui n'entrent pas dans une catégorie existante."
     },
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",

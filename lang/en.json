@@ -95,7 +95,8 @@
         "technicalInfoTooltip": "Please enter technical information...",
         "technicalinfoPlaceholder": "Please enter detailed information that may be associated with design, implementation, operation, use, and/or maintenance of a process, system, or instrument.",
         "other": "Other",
-        "otherTooltip": "Please enter other information.."
+        "otherTooltip": "Please enter other information..",
+        "otherPlaceholder": "Please enter other description information that does not fit into an existing category."
     },
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
