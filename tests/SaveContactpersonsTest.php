@@ -126,7 +126,7 @@ class SaveContactpersonsTest extends TestCase
             "cpEmail" => ["john.doe@example.com"],
             "cpOnlineResource" => ["http://example.com"],
             "affiliation" => ['[{"value":"Test University"}]'],
-            "hiddenRorId" => ['https://ror.org/03yrm5c26']
+            "authorRorIds" => ['https://ror.org/03yrm5c26']
         ];
 
         saveContactPerson($this->connection, $postData, $resource_id);
@@ -184,7 +184,7 @@ class SaveContactpersonsTest extends TestCase
             "cpEmail" => ["john.doe@example.com", "jane.smith@example.com", "bob.johnson@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com", "http://example3.com"],
             "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
-            "hiddenCPRorId" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
+            "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
         ];
 
         saveContactPerson($this->connection, $postData, $resource_id);
@@ -215,7 +215,7 @@ class SaveContactpersonsTest extends TestCase
 
             $this->assertEquals(json_decode($postData["affiliation"][$i], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals(
-                str_replace("https://ror.org/", "", $postData["hiddenCPRorId"][$i]),
+                str_replace("https://ror.org/", "", $postData["authorRorIds"][$i]),
                 $affiliationResult["rorId"],
                 "Die ROR-ID der Affiliation für Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
@@ -248,7 +248,7 @@ class SaveContactpersonsTest extends TestCase
             "cpEmail" => ["john.doe@example.com", "jane.smith@example.com", "bob.johnson@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com", "http://example3.com"],
             "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[]'],
-            "hiddenCPRorId" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', '']
+            "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', '']
         ];
 
         saveContactPerson($this->connection, $postData, $resource_id);
@@ -288,7 +288,7 @@ class SaveContactpersonsTest extends TestCase
                 $this->assertNotNull($affiliationResult, "Die Affiliation für Contact Person " . ($i + 1) . " wurde nicht gespeichert.");
                 $this->assertEquals(json_decode($postData["affiliation"][$i], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
                 $this->assertEquals(
-                    str_replace("https://ror.org/", "", $postData["hiddenCPRorId"][$i]),
+                    str_replace("https://ror.org/", "", $postData["authorRorIds"][$i]),
                     $affiliationResult["rorId"],
                     "Die ROR-ID der Affiliation für Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert."
                 );
@@ -325,7 +325,7 @@ class SaveContactpersonsTest extends TestCase
             "cpEmail" => ["john.doe@example.com", "", "bob.johnson@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com", ""],
             "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
-            "hiddenCPRorId" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
+            "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
         ];
 
         saveContactPerson($this->connection, $postData, $resource_id);
@@ -377,7 +377,7 @@ class SaveContactpersonsTest extends TestCase
             "cpEmail" => ["john.doe@example.com", "jane.smith@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com"],
             "affiliation" => ['[{"value":"University A"}]', '[]'],
-            "hiddenCPRorId" => ['', 'https://ror.org/02nr0ka47']
+            "authorRorIds" => ['', 'https://ror.org/02nr0ka47']
         ];
 
         saveContactPerson($this->connection, $postData, $resource_id);
