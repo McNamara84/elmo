@@ -87,6 +87,7 @@
         "title": "Descriptions",
         "abstract": "Résumé",
         "abstractTooltip": "Veuillez saisir un résumé...",
+        "abstractPlaceholder": "Veuillez soumettre un résumé des données. Il doit s'agir d'une description courte et concise des données, décrivant le contenu et l'objectif des données. Veuillez ne pas répéter l'abstract du travail, mais décrire les données elles-mêmes.",
         "methods": "Méthodes",
         "methodsTooltip": "Veuillez décrire les méthodes...",
         "technicalInfo": "Informations techniques",
