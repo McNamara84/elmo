@@ -72,16 +72,16 @@
         "website": "Website",
         "websiteInvalid": "Please provide a valid URL."
     },
-    "laboratory": {
-        "title": "Originating Laboratory",
-        "name": "Name of the originating laboratory"
-    },
     "contributors": {
         "title": "Contributors",
         "organization": "Organisation name",
         "organizationInvalid": "Please enter a valid organization name.",
         "persons": "Contributing Person(s)",
         "institutions": "Contributing Institution(s)"
+    },
+    "laboratory": {
+        "title": "Originating Laboratory",
+        "name": "Name of the originating laboratory"
     },
     "descriptions": {
         "title": "Descriptions",

@@ -72,16 +72,16 @@
         "website": "Webseite",
         "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
     },
-    "laboratory": {
-        "title": "Herkunftslabor",
-        "name": "Name des Herkunftslabors"
-    },
     "contributors": {
         "title": "Beitragende",
         "organization": "Name der Organisation",
         "organizationInvalid": "Bitte geben Sie einen gültigen Organisationsnamen ein.",
         "persons": "Beitragende Person(en)",
         "institutions": "Beitragende Institution(en)"
+    },
+    "laboratory": {
+        "title": "Herkunftslabor",
+        "name": "Name des Herkunftslabors"
     },
     "descriptions": {
         "title": "Beschreibungen",
