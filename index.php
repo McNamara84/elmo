@@ -67,10 +67,10 @@ include("formgroups/resourceInformation.html");
 include("formgroups/rights.html");
 include("formgroups/authors.html");
 include("formgroups/contactpersons.html");
+include("formgroups/contributorPersons.html");
 if ($showMslLabs) {
     include("formgroups/originatingLaboratory.html");
 }
-include("formgroups/contributorPersons.html");
 include("formgroups/descriptions.html");
 if ($showMslVocabs) {
     include("formgroups/mslKeywords.html");
