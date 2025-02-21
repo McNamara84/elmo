@@ -15,7 +15,7 @@ include 'api_functions.php';
 // API-Hook für den Abruf aller CGI Simple Lithology Keywords aus der CGI Simple Lithology RDF-Datei
 // Beispielaufruf: api.php?action=getCGIKeywords
 if ($_GET['action'] == 'getCGIKeywords') {
-    $jsonFilePath = 'json/cgi.json';
+    $jsonFilePath = 'json/thesauri/cgi.json';
     $jsonData = fetchAndProcessCGIKeywords();
     file_put_contents($jsonFilePath, json_encode($jsonData, JSON_PRETTY_PRINT));
     echo "JSON-Datei gespeichert unter: " . $jsonFilePath;
@@ -105,7 +105,7 @@ if ($_GET['action'] == 'getChronostratKeywords') {
     });
 
     // JSON-Datei schreiben
-    $jsonFilePath = 'json/ChronostratKeywords.json';
+    $jsonFilePath = 'json/thesauri/ChronostratKeywords.json';
     file_put_contents($jsonFilePath, json_encode(array_values($hierarchy), JSON_PRETTY_PRINT));
 
     // Bestätigungsmeldung zurückgeben
@@ -121,7 +121,7 @@ if ($_GET['action'] == 'getGemetConcepts') {
     // Paths and URLs
     $rdf_url = 'https://www.eionet.europa.eu/gemet/latest/gemet.rdf.gz';
     $rdf_file = 'gemet.rdf.gz';
-    $json_file = 'json/gemet.json';
+    $json_file = 'json/thesauri/gemet.json';
 
     try {
         // Download RDF file
