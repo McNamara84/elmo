@@ -68,6 +68,7 @@ include("formgroups/rights.html");
 include("formgroups/authors.html");
 include("formgroups/contactpersons.html");
 include("formgroups/contributorPersons.html");
+include("formgroups/contributorInstitutions.html");
 if ($showMslLabs) {
     include("formgroups/originatingLaboratory.html");
 }
