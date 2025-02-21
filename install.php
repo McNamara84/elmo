@@ -170,7 +170,7 @@ function createDatabaseStructure($connection)
    `contact_person_id` INT NOT NULL AUTO_INCREMENT,
    `familyname` TEXT(666)  NULL,
    `givenname` TEXT(746) NULL,
-   `orcid` TEXT(45)  NULL,
+   `orcid` VARCHAR(19)  NULL,
    `email` VARCHAR(255)  NULL,
    `website` VARCHAR(255) NULL,
    PRIMARY KEY (`contact_person_id`));",
