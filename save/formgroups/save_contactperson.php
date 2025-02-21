@@ -24,71 +24,75 @@ require_once 'save_affiliations.php';
  */
 function saveContactPerson($connection, $postData, $resource_id)
 {
-    $familynames = $postData['cpLastname'] ?? [];
-    $givennames = $postData['cpFirstname'] ?? [];
-    $positions = $postData['cpPosition'] ?? [];
-    $emails = $postData['cpEmail'] ?? [];
-    $websites = $postData['cpOnlineResource'] ?? [];
-    $affiliations = $postData['cpAffiliation'] ?? [];
-    $rorIds = $postData['hiddenCPRorId'] ?? [];
 
-    $maxLen = max(
-        count($familynames),
-        count($givennames),
-        count($positions),
-        count($emails),
-        count($websites),
-        count($affiliations),
-        count($rorIds)
-    );
-
-    for ($i = 0; $i < $maxLen; $i++) {
-        $familyname = trim($familynames[$i] ?? '');
-        $givenname = trim($givennames[$i] ?? '');
-        $position = trim($positions[$i] ?? '');
-        $email = trim($emails[$i] ?? '');
-        $website = isset($websites[$i]) ? preg_replace('#^https?://#', '', $websites[$i]) : '';
-        $affiliation_data = $affiliations[$i] ?? '';
-        $rorId_data = $rorIds[$i] ?? '';
-
-        // Skip completely empty entries
-        if (empty($familyname) && empty($givenname) && empty($position) && empty($email) && empty($website)) {
-            continue;
-        }
-
-        // Check if a contact person with the exact data already exists
-        $stmt = $connection->prepare("
-            SELECT contact_person_id FROM Contact_Person 
-            WHERE familyname = ? AND givenname = ? AND position = ? AND email = ? AND website = ?
-        ");
-        $stmt->bind_param("sssss", $familyname, $givenname, $position, $email, $website);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            // Exact match found, skip saving
-            $row = $result->fetch_assoc();
-            $contact_person_id = $row['contact_person_id'];
-            $stmt->close();
-        } else {
-            // No match found, insert new contact person
-            $stmt->close();
-            $stmt = $connection->prepare("INSERT INTO Contact_Person (familyname, givenname, position, email, website) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssss", $familyname, $givenname, $position, $email, $website);
+    //if (isset($postData['contact-persons'])){
+        $familynames = $postData['familynames'] ?? [];
+        $givennames = $postData['givennames'] ?? [];
+        $orcids = $postData['orcids'] ?? [];
+        $emails = $postData['cpEmail'] ?? [];
+        $websites = $postData['cpOnlineResource'] ?? [];
+        $affiliations = $postData['affiliation'] ?? [];
+        $rorIds = $postData['authorRorIds'] ?? [];
+    
+        $maxLen = max(
+            count($familynames),
+            count($givennames),
+            count($orcids),
+            count($emails),
+            count($websites),
+            count($affiliations),
+            count($rorIds)
+        );
+    
+        for ($i = 0; $i < $maxLen; $i++) {
+            $familyname = trim($familynames[$i] ?? '');
+            $givenname = trim($givennames[$i] ?? '');
+            $orcid = trim($orcids[$i] ?? '');
+            $email = trim($emails[$i] ?? '');
+            $website = isset($websites[$i]) ? preg_replace('#^https?://#', '', $websites[$i]) : '';
+            $affiliation_data = $affiliations[$i] ?? '';
+            $rorId_data = $rorIds[$i] ?? '';
+    
+            // Skip completely empty entries
+            if (empty($familyname) && empty($givenname) && empty($orcid) && empty($email) && empty($website)) {
+                continue;
+            }
+    
+            // Check if a contact person with the exact data already exists
+            $stmt = $connection->prepare("
+                SELECT contact_person_id FROM Contact_Person 
+                WHERE familyName = ? AND givenname = ? AND orcid = ? AND email = ? AND website = ?
+            ");
+            $stmt->bind_param("sssss", $familyname, $givenname, $orcid, $email, $website);
             $stmt->execute();
-            $contact_person_id = $stmt->insert_id;
+            $result = $stmt->get_result();
+    
+            if ($result->num_rows > 0) {
+                // Exact match found, skip saving
+                $row = $result->fetch_assoc();
+                $contact_person_id = $row['contact_person_id'];
+                $stmt->close();
+            } else {
+                // No match found, insert new contact person
+                $stmt->close();
+                $stmt = $connection->prepare("INSERT INTO Contact_Person (familyName, givenname, orcid, email, website) VALUES (?, ?, ?, ?, ?)");
+                $stmt->bind_param("sssss", $familyname, $givenname, $orcid, $email, $website);
+                $stmt->execute();
+                $contact_person_id = $stmt->insert_id;
+                $stmt->close();
+            }
+    
+            // Insert into Resource_has_Contact_Person
+            $stmt = $connection->prepare("INSERT IGNORE INTO Resource_has_Contact_Person (Resource_resource_id, Contact_Person_contact_person_id) VALUES (?, ?)");
+            $stmt->bind_param("ii", $resource_id, $contact_person_id);
+            $stmt->execute();
             $stmt->close();
+    
+            // Save affiliations if any
+            if (!empty($affiliation_data) || !empty($rorId_data)) {
+                saveAffiliations($connection, $contact_person_id, $affiliation_data, $rorId_data, 'Contact_Person_has_Affiliation', 'Contact_Person_contact_person_id');
+            }
         }
 
-        // Insert into Resource_has_Contact_Person
-        $stmt = $connection->prepare("INSERT IGNORE INTO Resource_has_Contact_Person (Resource_resource_id, Contact_Person_contact_person_id) VALUES (?, ?)");
-        $stmt->bind_param("ii", $resource_id, $contact_person_id);
-        $stmt->execute();
-        $stmt->close();
-
-        // Save affiliations if any
-        if (!empty($affiliation_data) || !empty($rorId_data)) {
-            saveAffiliations($connection, $contact_person_id, $affiliation_data, $rorId_data, 'Contact_Person_has_Affiliation', 'Contact_Person_contact_person_id');
-        }
-    }
+   
 }
