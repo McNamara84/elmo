@@ -73,7 +73,7 @@
         "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
     },
     "contributorPersons": {
-        "title": "Beitragende",
+        "title": "Beitragende Person(en)",
         "organization": "Name der Organisation",
         "organizationInvalid": "Bitte geben Sie einen gültigen Organisationsnamen ein.",
         "persons": "Beitragende Person(en)",
