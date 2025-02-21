@@ -320,7 +320,7 @@ class SaveContactpersonsTest extends TestCase
 
         $postData = [
             "familynames" => ["", "Smith", "Johnson"],
-            "givennames" => ["John", "Jane", "Bob"],
+            "givennames" => ["John", "Jane", ""],
             "orcids" => ["1234-1234-1234-1234", "1111-2222-3333-4444", "9876-9876-9876-9876"],
             "cpEmail" => ["john.doe@example.com", "", "bob.johnson@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com", ""],

@@ -96,7 +96,7 @@
 									<xs:sequence>
 										<xs:element name="familyname" type="xs:string" />
 										<xs:element name="givenname" type="xs:string" />
-										<xs:element name="position" type="xs:string" minOccurs="0"/>
+										<xs:element name="orcid" type="xs:string" minOccurs="0"/>
 										<xs:element name="email" type="xs:string" />
 										<xs:element name="website" type="xs:string" minOccurs="0"/>
 										<xs:element name="Affiliations" minOccurs="0">
