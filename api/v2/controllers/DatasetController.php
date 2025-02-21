@@ -12,11 +12,66 @@ class DatasetController
     }
 
     /**
-     * Retrieves thesaurus keywords for a given resource.
+     * Loads and parses the lastUpdated information from thesauri JSON files.
+     * 
+     * This method reads the lastUpdated timestamps from various JSON files containing
+     * keyword definitions. It handles GCMD Platform, Instrument, and Science keywords,
+     * as well as MSL vocabularies.
      *
-     * @param mysqli $connection The database connection.
-     * @param int $resource_id The ID of the resource.
-     * @return array An array of thesaurus keywords.
+     * @return array An associative array where keys are the JSON filename bases (without extension)
+     *               and values are their corresponding lastUpdated timestamps.
+     *               Format: [
+     *                   'gcmdPlatformsKeywords' => 'YYYY-MM-DD',
+     *                   'gcmdInstrumentsKeywords' => 'YYYY-MM-DD',
+     *                   'gcmdScienceKeywords' => 'YYYY-MM-DD',
+     *                   'msl-vocabularies' => 'YYYY-MM-DD'
+     *               ]
+     */
+    private function loadThesauriData()
+    {
+        $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
+        $jsonDir = $baseDir . '/json/thesauri'; // Path to the 'thesauri' folder
+
+        $keywordData = [];
+
+        // Scan the directory for all .json files inside the thesauri folder
+        $files = glob($jsonDir . '/*.json');  // Match all .json files in thesauri
+
+        foreach ($files as $file) {
+            $fileNameBase = basename($file, '.json'); // Extract the file name without extension
+            $data = json_decode(file_get_contents($file), true);
+
+            if ($data && isset($data['lastUpdated'])) {
+                $keywordData[$fileNameBase] = $data['lastUpdated']; // Store lastUpdated for each file
+            }
+        }
+
+        return $keywordData;
+    }
+
+    /**
+     * Retrieves thesaurus keywords for a given resource.
+     * 
+     * This method fetches thesaurus keywords from the database based on the resource ID.
+     *
+     * @param mysqli $connection The database connection
+     * @param int    $resource_id The ID of the resource
+     * 
+     * @return array An array of thesaurus keywords, each containing:
+     *               - All original database fields from the Thesaurus_Keywords table
+     *               
+     * Example return structure:
+     * [
+     *     [
+     *         'thesaurus_keywords_id' => 1,
+     *         'keyword' => 'Example Keyword',
+     *         'scheme' => 'NASA/GCMD Earth Platforms Keywords',
+     *         'schemeURI' => 'https://example.com/scheme',
+     *         'valueURI' => 'https://example.com/value',
+     *         'language' => 'en'
+     *     ],
+     *     // ... more keywords
+     * ]
      */
     function getThesaurusKeywords($connection, $resource_id)
     {
@@ -28,8 +83,9 @@ class DatasetController
     ");
         $stmt->bind_param('i', $resource_id);
         $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->fetch_all(MYSQLI_ASSOC);
+        $keywords = $stmt->get_result();
+
+        return $keywords->fetch_all(MYSQLI_ASSOC);
     }
 
     /**
@@ -619,7 +675,7 @@ class DatasetController
             if (isset($author['orcid']) && $author['orcid'] !== '') {
                 $authorXml->addChild('orcid', htmlspecialchars($author['orcid']));
             }
-            if (isset($author['Affiliations'])) {
+            if (!empty($author['Affiliations'])) {
                 $affiliationsXml = $authorXml->addChild('Affiliations');
                 foreach ($author['Affiliations'] as $affiliation) {
                     $affiliationXml = $affiliationsXml->addChild('Affiliation');
@@ -810,13 +866,36 @@ class DatasetController
         $thesaurusKeywords = $this->getThesaurusKeywords($connection, $id);
         if ($thesaurusKeywords) {
             $keywordsXml = $xml->addChild('ThesaurusKeywords');
+
+            // Add individual keywords
             foreach ($thesaurusKeywords as $keyword) {
                 $keywordXml = $keywordsXml->addChild('Keyword');
                 foreach ($keyword as $key => $value) {
-                    $keywordXml->addChild($key, htmlspecialchars($value ?? ''));
+                    if ($value !== null) {
+                        $keywordXml->addChild($key, htmlspecialchars($value));
+                    }
+                }
+            }
+
+            // Load lastUpdated data from JSON files
+            $keywordData = $this->loadThesauriData();
+
+            // Map JSON file keys to XSD element names
+            $lastUpdatedMapping = [
+                'gcmdPlatformsKeywords' => 'lastUpdatedGcmdPlatformsKeywords',
+                'gcmdInstrumentsKeywords' => 'lastUpdatedGcmdInstrumentsKeywords',
+                'gcmdScienceKeywords' => 'lastUpdatedGcmdScienceKeywords',
+                'msl-vocabularies' => 'lastUpdatedMslVocabularies'
+            ];
+
+            // Add lastUpdated elements if data is available
+            foreach ($lastUpdatedMapping as $jsonKey => $xmlElement) {
+                if (!empty($keywordData[$jsonKey])) {
+                    $keywordsXml->addChild($xmlElement, date('Y-m-d', strtotime($keywordData[$jsonKey])));
                 }
             }
         }
+
 
         // Free Keywords
         $freeKeywords = $this->getFreeKeywords($connection, $id);
@@ -869,7 +948,7 @@ class DatasetController
 
         // Funding References
         $fundingReferences = $this->getFundingReferences($connection, $id);
-        if ($fundingReferences){
+        if ($fundingReferences) {
             $fundingReferencesXml = $xml->addChild('FundingReferences');
             foreach ($fundingReferences as $reference) {
                 $referenceXml = $fundingReferencesXml->addChild('FundingReference');

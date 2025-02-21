@@ -56,7 +56,7 @@ jobs:
             break
           fi
           echo 'Waiting for MySQL...'
-          sleep 1
+          sleep 5
         done
         if [ "$i" = 0 ]; then
           echo >&2 'MySQL did not start in time.'
@@ -120,7 +120,7 @@ jobs:
         # Start PHP server with error logging
         php -S localhost:8000 -t . tests/server.php 2>&1 > server.log &
         echo $! > server.pid
-        sleep 5  # Wait for server to start
+        sleep 10  # Wait for server to start
         
         # Test initial connection
         echo "Testing initial API endpoints:"
