@@ -23,7 +23,9 @@ function checkContactPerson() {
         
         // Defines the relevant fields for the Contact Person section
         var fields = {
-            email: row.find('[id^="input-contactperson-email"]'),  // Email field
+            firstname: row.find('[id^="input-author-firstname"]'),
+            lastname: row.find('[id^="input-author-lastname"]'),
+            email: row.find('[id^="input-contactperson-email"]'),
             checkbox: row.find('[id^="checkbox-author-contactperson"]') // Checkbox for Contact Person
         };
 
@@ -33,6 +35,8 @@ function checkContactPerson() {
         // Sets or removes the 'required' attribute for the email field based solely on the checkbox state
         if (isCheckboxChecked) {
             fields.email.attr('required', 'required');  // Make email required if checkbox is checked
+            fields.lastname.attr('required', 'required');
+            fields.lastname.attr('required', 'required');
         } else {
             fields.email.removeAttr('required');  // Remove email requirement if checkbox is unchecked
         }

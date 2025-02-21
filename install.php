@@ -168,10 +168,10 @@ function createDatabaseStructure($connection)
 
         "Contact_Person" => "CREATE TABLE IF NOT EXISTS `Contact_Person` (
    `contact_person_id` INT NOT NULL AUTO_INCREMENT,
-   `familyname` TEXT(666)  NULL,
-   `givenname` TEXT(746) NULL,
+   `familyname` TEXT(666)  NOT NULL,
+   `givenname` TEXT(746) NOT NULL,
    `orcid` VARCHAR(19)  NULL,
-   `email` VARCHAR(255)  NULL,
+   `email` VARCHAR(255)  NOT NULL,
    `website` VARCHAR(255) NULL,
    PRIMARY KEY (`contact_person_id`));",
 
