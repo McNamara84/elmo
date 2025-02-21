@@ -87,7 +87,7 @@
         "title": "Beschreibungen",
         "abstract": "Abstract",
         "abstractTooltip": "Bitte geben Sie eine Zusammenfassung ein...",
-        "abstractPlaceholder": "Bitte ein Abstract zu den Daten einreichen. Dies sollte eine kurze, prägnante Beschreibung der Daten sein, die den Inhalt und den Zweck der Daten beschreibt. Bitte nicht das Abstract der Arbeit wiederholen, sondern die Daten selbst beschreiben.",
+        "abstractPlaceholder": "Bitte ein Abstract zu den Daten einreichen. Bitte nicht das Abstract der Arbeit wiederholen, sondern die Daten selbst beschreiben.",
         "methods": "Methoden",
         "methodsTooltip": "Bitte beschreiben Sie die Methoden...",
         "technicalInfo": "Technische Informationen",
