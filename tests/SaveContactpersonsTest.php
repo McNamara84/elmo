@@ -243,10 +243,10 @@ class SaveContactpersonsTest extends TestCase
 
         $postData = [
             "familynames" => ["Doe", "Smith", "Johnson"],
-            "givennames" => ["", "Jane", "Bob"],
+            "givennames" => ["Jane", "Jane", "Bob"],
             "orcids" => ["1234-1234-1234-1234", "", "9876-9876-9876-9876"],
             "cpEmail" => ["john.doe@example.com", "jane.smith@example.com", "bob.johnson@example.com"],
-            "cpOnlineResource" => ["http://example1.com", "http://example2.com", "http://example3.com"],
+            "cpOnlineResource" => ["", "http://example2.com", "http://example3.com"],
             "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[]'],
             "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', '']
         ];
