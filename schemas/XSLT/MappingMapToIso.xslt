@@ -57,7 +57,7 @@ http://www.altova.com/mapforce
 					<CI_ResponsibleParty>
 						<organisationName>
 							<gco:CharacterString>
-								<xsl:value-of select="'GFZ Helmholtz Centre for Geosciences '"/>
+								<xsl:value-of select="'GFZ Helmholtz Centre for Geosciences'"/>
 							</gco:CharacterString>
 						</organisationName>
 						<contactInfo>
@@ -80,12 +80,12 @@ http://www.altova.com/mapforce
 										</linkage>
 										<name>
 											<gco:CharacterString>
-												<xsl:value-of select="'GFZ Helmholtz Centre for Geosciences '"/>
+												<xsl:value-of select="'GFZ Helmholtz Centre for Geosciences'"/>
 											</gco:CharacterString>
 										</name>
 										<description>
 											<gco:CharacterString>
-												<xsl:value-of select="'GFZ Helmholtz Centre for Geosciences '"/>
+												<xsl:value-of select="'GFZ Helmholtz Centre for Geosciences'"/>
 											</gco:CharacterString>
 										</description>
 										<function>

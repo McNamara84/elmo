@@ -1132,7 +1132,7 @@
 					</targets>
 					<view ltx="1585" lty="-24" rbx="1733" rby="-8"/>
 					<data>
-						<constant value="GFZ Helmholtz Centre for Geosciences " datatype="string"/>
+						<constant value="GFZ Helmholtz Centre for Geosciences" datatype="string"/>
 						<comment>
 							<text>Default organisationName for CI_ResponsibleParty</text>
 						</comment>
