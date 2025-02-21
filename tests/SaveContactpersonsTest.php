@@ -120,9 +120,9 @@ class SaveContactpersonsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "LastName" => ["Doe"],
-            "givenname" => ["John"],
-            "orcid" => ["1234-1234-1234-1234"],
+            "familynames" => ["Doe"],
+            "givennames" => ["John"],
+            "orcids" => ["1234-1234-1234-1234"],
             "cpEmail" => ["john.doe@example.com"],
             "cpOnlineResource" => ["http://example.com"],
             "affiliation" => ['[{"value":"Test University"}]'],
@@ -137,9 +137,9 @@ class SaveContactpersonsTest extends TestCase
         $result = $stmt->get_result()->fetch_assoc();
 
         $this->assertNotNull($result, "Die Contact Person wurde nicht gespeichert.");
-        $this->assertEquals($postData["lastname"][0], $result["familyname"], "Der Nachname wurde nicht korrekt gespeichert.");
+        $this->assertEquals($postData["familynames"][0], $result["familyname"], "Der Nachname wurde nicht korrekt gespeichert.");
         $this->assertEquals($postData["givennames"][0], $result["givenname"], "Der Vorname wurde nicht korrekt gespeichert.");
-        $this->assertEquals($postData["orcid"][0], $result["orcid"], "Die ORCID wurde nicht korrekt gespeichert.");
+        $this->assertEquals($postData["orcids"][0], $result["orcid"], "Die ORCID wurde nicht korrekt gespeichert.");
         $this->assertEquals("example.com", $result["website"], "Die Website wurde nicht korrekt gespeichert.");
 
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Contact_Person WHERE Resource_resource_id = ? AND Contact_Person_contact_person_id = ?");
@@ -180,7 +180,7 @@ class SaveContactpersonsTest extends TestCase
         $postData = [
             "familynames" => ["Doe", "Smith", "Johnson"],
             "givennames" => ["John", "Jane", "Bob"],
-            "orcid" => ["1234-1234-1234-1234", "0000-1111-2222-3333", "9876-9876-9765-9876"],
+            "orcids" => ["1234-1234-1234-1234", "0000-1111-2222-3333", "9876-9876-9765-9876"],
             "cpEmail" => ["john.doe@example.com", "jane.smith@example.com", "bob.johnson@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com", "http://example3.com"],
             "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
@@ -198,7 +198,7 @@ class SaveContactpersonsTest extends TestCase
             $this->assertNotNull($result, "Die Contact Person " . ($i + 1) . " wurde nicht gespeichert.");
             $this->assertEquals($postData["familynames"][$i], $result["familyname"], "Der Nachname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals($postData["givennames"][$i], $result["givenname"], "Der Vorname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
-            $this->assertEquals($postData["orcid"][$i], $result["orcid"], "Die ORCID der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals($postData["orcids"][$i], $result["orcid"], "Die ORCID der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals(str_replace(["http://", "https://"], "", $postData["cpOnlineResource"][$i]), $result["website"], "Die Website der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
 
             $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Contact_Person WHERE Resource_resource_id = ? AND Contact_Person_contact_person_id = ?");
@@ -244,7 +244,7 @@ class SaveContactpersonsTest extends TestCase
         $postData = [
             "familynames" => ["Doe", "Smith", "Johnson"],
             "givennames" => ["", "Jane", "Bob"],
-            "orcid" => ["1234-1234-1234-1234", "", "9876-9876-9876-9876"],
+            "orcids" => ["1234-1234-1234-1234", "", "9876-9876-9876-9876"],
             "cpEmail" => ["john.doe@example.com", "jane.smith@example.com", "bob.johnson@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com", "http://example3.com"],
             "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[]'],
@@ -262,7 +262,7 @@ class SaveContactpersonsTest extends TestCase
             $this->assertNotNull($result, "Die Contact Person " . ($i + 1) . " wurde nicht gespeichert.");
             $this->assertEquals($postData["familynames"][$i], $result["familyname"], "Der Nachname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals($postData["givennames"][$i], $result["givenname"], "Der Vorname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
-            $this->assertEquals($postData["orcid"][$i], $result["orcid"], "Die ORCID der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals($postData["orcids"][$i], $result["orcid"], "Die ORCID der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals(str_replace(["http://", "https://"], "", $postData["cpOnlineResource"][$i]), $result["website"], "Die Website der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
 
             $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Contact_Person WHERE Resource_resource_id = ? AND Contact_Person_contact_person_id = ?");
@@ -321,7 +321,7 @@ class SaveContactpersonsTest extends TestCase
         $postData = [
             "familynames" => ["", "Smith", "Johnson"],
             "givennames" => ["John", "Jane", "Bob"],
-            "orcid" => ["1234-1234-1234-1234", "1111-2222-3333-4444", "9876-9876-9876-9876"],
+            "orcids" => ["1234-1234-1234-1234", "1111-2222-3333-4444", "9876-9876-9876-9876"],
             "cpEmail" => ["john.doe@example.com", "", "bob.johnson@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com", ""],
             "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
@@ -373,7 +373,7 @@ class SaveContactpersonsTest extends TestCase
         $postData = [
             "familynames" => ["Doe", "Smith"],
             "givennames" => ["John", "Jane"],
-            "orcid" => ["1234-1234-1234-1234", "9999-8888-7777-6666"],
+            "orcids" => ["1234-1234-1234-1234", "9999-8888-7777-6666"],
             "cpEmail" => ["john.doe@example.com", "jane.smith@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com"],
             "affiliation" => ['[{"value":"University A"}]', '[]'],
@@ -395,7 +395,7 @@ class SaveContactpersonsTest extends TestCase
         $this->assertNotNull($result, "Die erste Contact Person wurde nicht gespeichert.");
         $this->assertEquals($postData["familynames"][0], $result["familyname"], "Der Nachname der ersten Contact Person wurde nicht korrekt gespeichert.");
         $this->assertEquals($postData["givennames"][0], $result["givenname"], "Der Vorname der ersten Contact Person wurde nicht korrekt gespeichert.");
-        $this->assertEquals($postData["orcid"][0], $result["orcid"], "Die ORCID der ersten Contact Person wurde nicht korrekt gespeichert.");
+        $this->assertEquals($postData["orcids"][0], $result["orcid"], "Die ORCID der ersten Contact Person wurde nicht korrekt gespeichert.");
         $this->assertEquals(str_replace(["http://", "https://"], "", $postData["cpOnlineResource"][0]), $result["website"], "Die Website der ersten Contact Person wurde nicht korrekt gespeichert.");
 
         $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
