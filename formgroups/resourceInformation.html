@@ -11,7 +11,7 @@
   </div>
   <form id="form-mde" method="post" action="index.php" class="needs-validation" novalidate>
     <div class="card mb-2">
-      <div class="card-header"><b data-translate="resourceInfo.title"></b> 
+      <div class="card-header"><b data-translate="resourceInfo.title"></b>
         <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-fg"></i>
       </div>
       <div class="card-body">
@@ -39,8 +39,9 @@
               <div class="form-floating">
                 <input type="text" inputmode="numeric" class="form-control input-with-help input-right-no-round-corners"
                   name="year" pattern="^(19(0[1-9]|[1-9][0-9])|20[0-9]{2}|21[0-4][0-9]|215[0-5])$" required
-                  id="input-resourceinformation-publicationyear" />
-                <label for="input-resourceinformation-publicationyear">
+                  id="input-resourceinformation-publicationyear"/>
+                <label for="input-resourceinformation-publicationyear" placeholder="resourceInfo.yearPlaceholder"
+                  data-translate-placeholder="resourceInfo.yearPlaceholder">
                   <span data-translate="resourceInfo.publicationYear"></span><span class="text-danger">*</span>
                 </label>
                 <div class="invalid-feedback" data-translate="resourceInfo.publicationYearInvalid"></div>

@@ -46,6 +46,7 @@
         "doiValid": "Un nouveau DOI sera enregistré",
         "doiInvalid": "Veuillez utiliser le format 10.ORGANISATION/ID (ex.: 10.57757/IUGG23-3081) ou laisser vide",
         "publicationYear": "Année de publication",
+        "yearPlaceholder": "AAAA",
         "publicationYearInvalid": "Veuillez saisir une année valide entre 1901-2155 (4 chiffres).",
         "resourceType": "Type de ressource",
         "version": "Version",
