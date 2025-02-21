@@ -90,6 +90,7 @@
         "abstractPlaceholder": "Veuillez soumettre un résumé des données. Veuillez ne pas répéter l'abstract du travail, mais décrire les données elles-mêmes.",
         "methods": "Méthodes",
         "methodsTooltip": "Veuillez décrire les méthodes...",
+        "methodsPlaceholder": "Veuillez décrire la méthodologie employée pour l'étude ou la recherche.",
         "technicalInfo": "Informations techniques",
         "technicalInfoTooltip": "Veuillez saisir les informations techniques...",
         "other": "Autre",

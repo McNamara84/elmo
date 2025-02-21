@@ -90,6 +90,7 @@
         "abstractPlaceholder": "Bitte ein Abstract zu den Daten einreichen. Bitte nicht das Abstract der Arbeit wiederholen, sondern die Daten selbst beschreiben.",
         "methods": "Methoden",
         "methodsTooltip": "Bitte beschreiben Sie die Methoden...",
+        "methodsPlaceholder": "Bitte eine Beschreibung der für die Studie oder Forschung verwendeten Methodik eingeben.",
         "technicalInfo": "Technische Informationen",
         "technicalInfoTooltip": "Bitte geben Sie technische Informationen ein...",
         "other": "Sonstiges",
