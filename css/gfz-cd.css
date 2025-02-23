@@ -124,11 +124,11 @@ label.mandatory-field::after {
 }
 
 .navbar-sidebar .nav-link {
-    color:#00589C; 
+    color: #00589C;
 }
 
 .navbar-sidebar .nav-link:hover {
-    color: black; /* Optional: Same color or another color on hover */
+    color: black;
 }
 
 /* Installation */
@@ -143,4 +143,12 @@ label.mandatory-field::after {
 
 .settings-menu-link {
     text-decoration: none;
+}
+
+.feedback-message-thanks {
+    display: none;
+    color: green;
+    font-size: 1.2em;
+    text-align: center;
+    margin-bottom: 20px;
 }
