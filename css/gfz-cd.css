@@ -140,3 +140,7 @@ label.mandatory-field::after {
     font-size: 3rem;
     margin-bottom: 1rem;
 }
+
+.settings-menu-link {
+    text-decoration: none;
+}
