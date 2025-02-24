@@ -2,6 +2,29 @@
 
 All notable changes of the PHPUnit 11.5 release series are documented in this file using the [Keep a CHANGELOG](https://keepachangelog.com/) principles.
 
+## [11.5.9] - 2025-02-21
+
+### Fixed
+
+* [#6134](https://github.com/sebastianbergmann/phpunit/issues/6134): Missing event when child process ends unexpectedly
+
+## [11.5.8] - 2025-02-18
+
+### Fixed
+
+* A `Test\PreparationFailed` event is now emitted in addition to a `Test\Errored` event when an unexpected exception is triggered in a before-test method
+* A `Test\Passed` event is no longer emitted in addition to a `Test\Failed` or `Test\Errored` event when an assertion failure or an unexpected exception is triggered in an after-test method  
+* A `TestSuite\Finished` event is now emitted when a before-first-test method errors
+
+## [11.5.7] - 2025-02-06
+
+### Changed
+
+* [#5951](https://github.com/sebastianbergmann/phpunit/issues/5951): The `includeUncoveredFiles` configuration option is no longer deprecated
+* [#6117](https://github.com/sebastianbergmann/phpunit/issues/6117): Include source location information for issues triggered during test in `--debug` output
+* [#6119](https://github.com/sebastianbergmann/phpunit/issues/6119): Improve message for errors that occur while parsing attributes
+* [#6120](https://github.com/sebastianbergmann/phpunit/issues/6120): Allow negative priorities for hook methods
+
 ## [11.5.6] - 2025-01-31
 
 ### Changed
@@ -88,6 +111,9 @@ All notable changes of the PHPUnit 11.5 release series are documented in this fi
 * [#6055](https://github.com/sebastianbergmann/phpunit/issues/6055): `assertNotContainsOnly()` (use `assertContainsNotOnlyArray()`, `assertContainsNotOnlyBool()`, `assertContainsNotOnlyCallable()`, `assertContainsNotOnlyFloat()`, `assertContainsNotOnlyInt()`, `assertContainsNotOnlyIterable()`, `assertContainsNotOnlyNumeric()`, `assertContainsNotOnlyObject()`, `assertContainsNotOnlyResource()`, `assertContainsNotOnlyClosedResource()`, `assertContainsNotOnlyScalar()`, or `assertContainsNotOnlyString()` instead)
 * [#6059](https://github.com/sebastianbergmann/phpunit/issues/6059): `containsOnly()` (use `containsOnlyArray()`, `containsOnlyBool()`, `containsOnlyCallable()`, `containsOnlyFloat()`, `containsOnlyInt()`, `containsOnlyIterable()`, `containsOnlyNumeric()`, `containsOnlyObject()`, `containsOnlyResource()`, `containsOnlyClosedResource()`, `containsOnlyScalar()`, or `containsOnlyString()` instead)
 
+[11.5.9]: https://github.com/sebastianbergmann/phpunit/compare/11.5.8...11.5.9
+[11.5.8]: https://github.com/sebastianbergmann/phpunit/compare/11.5.7...11.5.8
+[11.5.7]: https://github.com/sebastianbergmann/phpunit/compare/11.5.6...11.5.7
 [11.5.6]: https://github.com/sebastianbergmann/phpunit/compare/11.5.5...11.5.6
 [11.5.5]: https://github.com/sebastianbergmann/phpunit/compare/11.5.4...11.5.5
 [11.5.4]: https://github.com/sebastianbergmann/phpunit/compare/11.5.3...11.5.4

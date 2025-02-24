@@ -29,6 +29,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Submitting of metadata directly to data curators.
 - Authors can be sorted by drag & drop.
 - Submission of data descriptions files and link to data is possible.
+- Optional input fields with form groups that can be hidden.
 
 ## Installation
 
@@ -150,7 +151,7 @@ The following third-party dependencies are included in header.html and footer.ht
   For the event handlers in JavaScript and to simplify the JavaScript code.
 - [jQuery UI 1.14.1](https://github.com/jquery/jquery-ui/releases)<br>
   Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
-- [Tagify 4.33.0](https://github.com/yairEO/tagify/releases)<br>
+- [Tagify 4.33.2](https://github.com/yairEO/tagify/releases)<br>
   Is used for the Thesaurus Keywords field, the entry of multiple affiliations and free keywords.
 - [jsTree 3.3.17](https://github.com/vakata/jstree/releases)<br>
   Is used to display the thesauri as a hierarchical tree structure.
@@ -181,387 +182,13 @@ The following third-party dependencies are included in header.html and footer.ht
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
   - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent
+  - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
+  - `$showMslVocabs`: Specifies whether the form group MSL keywords should be displayed (true/false).
 </details>
 
-## API-Dokumentation
+## API
 
-Diese Dokumentation beschreibt die verfügbaren API-Endpunkte für die GFZ Data Services Webanwendung. Sie richtet sich an Administratoren und Techniker, die diese Anwendung auf einem eigenen Webserver installieren und verwalten möchten.
-
-### Allgemeine Informationen
-
-- Basis-URL: `https://elmo.cats4future.de/api.php`
-- Alle Anfragen sollten via HTTPS erfolgen
-- Antworten werden im JSON-Format zurückgegeben, sofern nicht anders angegeben
-
-### API-Endpunkte
-
-[Interaktive Dokumentation](https://elmo.cats4future.de/api/v2/docs/index.html) der neuen APIv2-Endpunkte.
-<details>
-  <summary> 
-  
-  ### 1. GCMD Science Keywords (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-  </summary>
-
-  GET ?action=getGcmdScienceKeywords
-
-  Liefert das kontrollierte Vokabular der GCMD Science Keywords.
-
-  **Antwort:**
-  JSON-Array mit Objekten, die folgende Schlüssel enthalten:
-
-  - `id`: Eindeutige Kennung
-  - `text`: Bezeichnung des Keywords
-  - `language`: Sprachcode
-  - `scheme`: Name des Schemas
-  - `schemeURI`: URI des Schemas
-  - `description`: Beschreibung
-  - `children`: Array von Unterkategorien mit der gleichen Struktur
-</details>
-
-<details>
-  <summary>
-
-  ### 2. Zeitzonen aktualisieren (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-  </summary>
-
-  GET ?action=getTimezones
-
-  Aktualisiert die Liste der Zeitzonen für das Feld `Timezones` in der Gruppe `Spatial and temporal coverage`.
-
-  **Empfohlener Ausführungsintervall:** Monatlich
-
-  **Antwort:**
-  Bestätigungsnachricht über erfolgreiche Aktualisierung
-</details>
-
-<details>
-  <summary>
-  
-  ### 3. NASA Science Keywords (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
-
-  GET ?action=getNasaScienceKeywords
-
-  Aktualisiert den Thesaurus für die NASA Science Keywords.
-
-  **Empfohlener Ausführungsintervall:** Wöchentlich
-
-  **Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
-</details>
-
-### 4. ROR Affiliations (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-
-GET ?action=getRorAffiliations
-
-Aktualisiert die Daten für die Auswahlfelder der Affiliations von Personen.
-
-**Empfohlener Ausführungsintervall:** Wöchentlich
-
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-<details>
-  <summary>
-
-### 5. CrossRef Funders (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
-
-GET ?action=getCrossRefFunders
-
-Aktualisiert die Auswahloptionen im Funders-Dropdown-Feld.
-
-**Empfohlener Ausführungsintervall:** Wöchentlich
-
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
-</details>
-
-<details>
-  <summary>  
-  
-  ### 6. Resource as DataCite XML (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
-  
-  GET ?action=getResourceAsDataciteXml&id={resource_id}&download={true|false}
-
-  Exportiert einen Datensatz als XML-Datei gemäß dem DataCite-Schema (Version 4.5).
-
-  **Parameter:**
-
-  - `id`: ID des Datensatzes (erforderlich)
-  - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
-
-  **Antwort:**
-  XML-Datei oder XML-Inhalt
-</details>
-
-<details>
-<summary>
-
-### 7. Resource as ISO XML (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-
-</summary>
-
-GET ?action=getResourceAsIsoXml&id={resource_id}&download={true|false}
-
-Exportiert einen Datensatz als XML-Datei gemäß dem ISO-Standard.
-
-**Parameter:**
-
-- `id`: ID des Datensatzes (erforderlich)
-- `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
-
-**Antwort:**
-XML-Datei oder XML-Inhalt
-</details>
-
-<details>
-  <summary>
-
-  ### 8. Resource as DIF XML (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-
-  </summary>
-
-  GET ?action=getResourceAsDifXml&id={resource_id}&download={true|false}
-
-  Exportiert einen Datensatz als XML-Datei gemäß dem DIF-Format.
-
-  **Parameter:**
-
-  - `id`: ID des Datensatzes (erforderlich)
-  - `download`: Bei `true` wird die XML-Datei zum Download angeboten, bei `false` wird der XML-Inhalt zurückgegeben (optional, Standard: `false`)
-
-  **Antwort:**
-  XML-Datei oder XML-Inhalt
-</details>
-
-<details>
-  <summary>
-
-  ### 9. All resources as one XML (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-
-  </summary>
-
-  GET ?action=getResourcesAsOneFile&id={resource_id}
-
-  Exportiert einen Datensatz in allen drei XML-Formaten (DataCite, ISO, DIF) in einer einzigen XML-Datei.
-
-  **Parameter:**
-
-  - `id`: ID des Datensatzes (erforderlich)
-
-  **Antwort:**
-  XML-Datei zum Download
-</details>
-
-<details>
-  <summary>
-
-  ### 10. MSL Vokabulare aktualisieren (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-
-  </summary>
-
-  GET ?action=getMslVocab&type={vocab_type}
-
-  Aktualisiert die kontrollierten Vokabulare des Materials Science Laboratory (MSL).
-
-  **Parameter:**
-
-  - `type`: Typ des Vokabulars (erforderlich)
-    - Mögliche Werte: `all`, `analogue`, `geochemistry`, `geologicalage`, `geologicalsetting`, `materials`, `microscopy`, `paleomagnetism`, `porefluids`, `rockphysics`
-
-  **Antwort:**
-  JSON-Objekt mit Aktualisierungsstatus für jedes Vokabular
-</details>
-
-<details>
-  <summary>
-
-### 11. MSL Labs aktualisieren (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-
-  </summary>
-
-  GET ?action=getMslLabs
-
-  Aktualisiert die Liste der MSL Labs.
-
-  **Antwort:**
-  Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-  </details>
-
-### 12. CGI Keywords aktualisieren
-
-GET ?action=getCGIKeywords
-
-Aktualisiert die CGI Simple Lithology Keywords.
-
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-### 13. Chronostrat Keywords aktualisieren
-
-GET ?action=getChronostratKeywords
-
-Aktualisiert die Keywords aus der International Chronostratigraphic Chart.
-
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-### 14. GEMET Concepts aktualisieren
-
-GET ?action=getGemetConcepts
-
-Aktualisiert die Konzepte des GEMET Thesaurus.
-
-**Antwort:**
-Bestätigungsnachricht über erfolgreiche Aktualisierung
-
-<details>
-  <summary>
-
-  ### 15.  Rollen abrufen (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-
-  </summary>
-
-  GET ?action=getRoles&type={role_type}
-
-  Ruft Rollen aus der Datenbank ab.
-
-  **Parameter:**
-
-  - `type`: Typ der Rollen (erforderlich)
-    - Mögliche Werte: `all`, `person`, `institution`, `both`
-
-  **Antwort:**
-  JSON-Array mit Rollen-Objekten
-</details>
-
-<details>
-  <summary>
-
-  ### 16.  NASA Instruments Keywords aktualisieren (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-
-  </summary
-    
-  GET ?action=getNasaInstrumentsKeywords
-
-  Aktualisiert die NASA/GCMD Instruments Keywords.
-
-  **Antwort:**
-  Bestätigungsnachricht über erfolgreiche Aktualisierung
-</details>
-
-<details>
-  <summary>
-
-  ### 17.  NASA Platforms Keywords aktualisieren (deprecated,  neue Version in  [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-
-  </summary
-
-  GET ?action=getNasaPlatformsKeywords
-
-  Aktualisiert die NASA/GCMD Earth Platforms Keywords.
-
-  **Antwort:**
-  Bestätigungsnachricht über erfolgreiche Aktualisierung
-  </details>
-
-<details>
-  <summary>
-
-  ### 18. Lizenzen abrufen (deprecated, use [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))
-
-  </summary
-
-  GET ?action=getLicenses&resourcetype={license_type}
-
-  Ruft Lizenzen aus der Datenbank ab.
-
-  **Parameter:**
-
-  - `resourcetype`: Typ der Lizenzen (erforderlich)
-    - Mögliche Werte: `all`, `software`
-
-  **Antwort:**
-  JSON-Array mit Lizenz-Objekten
-</details>
-
-<details>
-  <summary>
-  
-  ### 19. Keywords abrufen (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
-
-  GET ?action=getKeywords&curationType={curation_type}
-
-  Ruft Keywords aus der Datenbank ab.
-
-  **Parameter:**
-
-  - `curationType`: Typ der Kuration (optional)
-    - Mögliche Werte: `all`, `isCurated`
-
-  **Antwort:**
-  JSON-Array mit Keyword-Objekten
-</details>
-
-<details>
-  <summary>
-  
-  ### 20. Relationen abrufen (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
-
-  GET ?action=getRelations
-
-  Ruft alle Relationen aus der Datenbank ab.
-
-  **Antwort:**
-  JSON-Array mit Relation-Objekten
-</details>
-
-<details>
-  <summary>
-  
-  ### 21. Identifier-Typ ermitteln (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
-
-  GET ?action=getIdentifierType&identifier={identifier_string}
-
-  Ermittelt den Typ eines gegebenen Identifiers.
-
-  **Parameter:**
-
-  - `identifier`: Der zu prüfende Identifier-String (erforderlich)
-
-  **Antwort:**
-  JSON-Objekt mit dem ermittelten Identifier-Typ oder einer Fehlermeldung
-</details>
-
-<details>
-  <summary>
-  
-  ### 22. Identifier-Pattern abrufen (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
-
-  GET ?action=getPattern&type={identifier_type}
-
-  Ruft das Regex-Pattern für einen bestimmten Identifier-Typ ab.
-
-  **Parameter:**
-
-  - `type`: Der Identifier-Typ (erforderlich)
-
-  **Antwort:**
-  JSON-Objekt mit dem Regex-Pattern oder einer Fehlermeldung
-</details>
-
-<details>
-  <summary>
-  
-  ### 23. Alle Identifier-Typen abrufen (deprecated, neue Version in [APIv2](https://elmo.cats4future.de/api/v2/docs/index.html))</summary>
-
-  GET ?action=getIdentifierTypes
-
-  Ruft alle verfügbaren Identifier-Typen aus der Datenbank ab.
-
-  **Antwort:**
-  JSON-Array mit Identifier-Typ-Objekten
-</details>
+[API documentation](https://elmo.cats4future.de/api/v2/docs/index.html)
 
 <details>
   <summary>
@@ -943,7 +570,7 @@ Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD
 
 #### EPOS Multi-Scale Laboratories Keywords
 
-Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://elmo.cats4future.de/api/v2/docs/index.html)).
+Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies) are provided by Utrecht University on [GitHub](https://github.com/UtrechtUniversity/msl_vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://elmo.cats4future.de/api/v2/docs/index.html)).
 
 - EPOS Multi-Scale Laboratories Keyword
 
@@ -1081,7 +708,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - Description
 
-  - This field contains a free-text explanation of the geographic and temporal context.
+  This field contains a free-text explanation of the geographic and temporal context.
   - Data type: Free text
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
@@ -1091,7 +718,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - Start Date
   
-  - This field contains the starting date of the temporal classification of the dataset.
+  This field contains the starting date of the temporal classification of the dataset.
   - Data type: DATE
   - Occurrence: 0-1 
   - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
@@ -1101,9 +728,9 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - Start Time
   
-  - This field contains the starting time.
+  This field contains the starting time.
   - Data type: TIME  
-  - Occurrence: 0-1, becomes mandatory, if End Time is specified
+  - Occurrence: 0-1, becomes mandatory, if any time in Spatial and Temporal Coverage is specified, to achieve data consistency
   - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -1111,7 +738,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - End Date
   
-  - This field contains the ending date of the temporal classification of the dataset.
+  This field contains the ending date of the temporal classification of the dataset.
   - Data type: DATE
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
@@ -1121,9 +748,9 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - End Time
   
-  - This field contains the ending time.
+  This field contains the ending time.
   - Data type: TIME 
-  - Occurrence: 0-1, becomes mandatory, if Start Time is specified
+  - Occurrence: 0-1, becomes mandatory, if any time in Spatial and Temporal Coverage is specified, to achieve data consistency
   - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -1131,8 +758,8 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
 - Timezone
   
-  - This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
-  - Data type: Zeichenkette (Auswahl aus Liste)
+  This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
+  - Data type: String
   - Occurrence: 0-1, mandatory, when Start Date, Start Time, End Date or End Time is filled
   - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
   - Restrictions: Only values from the list are permitted
@@ -1230,6 +857,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 
 <details>
   <summary>
+
 
   ## Data Mapping and Occurences
   </summary>

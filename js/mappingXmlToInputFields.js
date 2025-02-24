@@ -1,3 +1,41 @@
+/**
+ * Processes the resource type from an XML document and selects the corresponding option
+ * in the dropdown based on the visible text matching the `resourceTypeGeneral` attribute.
+ *
+ * @param {Document} xmlDoc - The XML document containing the resourceType element.
+ */
+function processResourceType(xmlDoc) {
+  // Extract the resourceType element
+  const resourceNode = xmlDoc.querySelector('resourceType');
+  if (!resourceNode) {
+    console.error('No resourceType element found in XML');
+    return;
+  }
+
+  // Get the resourceTypeGeneral attribute
+  const resourceTypeGeneral = resourceNode.getAttribute('resourceTypeGeneral');
+  if (!resourceTypeGeneral) {
+    console.error('No resourceTypeGeneral attribute found');
+    return;
+  }
+
+  // Select the corresponding option in the dropdown
+  const selectField = document.querySelector('#input-resourceinformation-resourcetype');
+  if (!selectField) {
+    console.error('Select field not found');
+    return;
+  }
+
+  // Find an option where the visible text matches resourceTypeGeneral
+  const optionToSelect = Array.from(selectField.options).find(option => option.text.trim() === resourceTypeGeneral);
+
+  if (optionToSelect) {
+    optionToSelect.selected = true;
+  } else {
+    console.warn(`No matching option found for text: ${resourceTypeGeneral}`);
+  }
+}
+
 
 /**
  * Extracts license identifier from various formats
@@ -83,11 +121,6 @@ function processTitles(xmlDoc, resolver) {
     null
   );
 
-  // reset Titles
-  $('input[name="title[]"]').closest('.row').not(':first').remove();
-  $('input[name="title[]"]:first').val('');
-  $('#input-resourceinformation-titletype').val('1');
-
   for (let i = 0; i < titleNodes.snapshotLength; i++) {
     const titleNode = titleNodes.snapshotItem(i);
     const titleType = titleNode.getAttribute('titleType');
@@ -155,10 +188,6 @@ function processCreators(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-
-  // Reset existing authors
-  $('#group-author .row[data-creator-row]').not(':first').remove();
-  $('#group-author .row[data-creator-row]:first input').val('');
 
   for (let i = 0; i < creatorNodes.snapshotLength; i++) {
     const creatorNode = creatorNodes.snapshotItem(i);
@@ -242,9 +271,6 @@ function processContactPersons(xmlDoc) {
     null
   );
 
-  // Reset existing contact persons
-  $('#group-contactperson .row[contact-person-row]').not(':first').remove();
-  $('#group-contactperson .row[contact-person-row]:first input').val('');
 
   for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
     const contactPersonNode = contactPersonNodes.snapshotItem(i);
@@ -287,7 +313,6 @@ function processContactPersons(xmlDoc) {
       // Initialize Tagify for affiliations
       const affiliationInput = firstRow.find('input[name="cpAffiliation[]"]')[0];
       if (affiliationInput && affiliationInput.tagify) {
-        affiliationInput.tagify.removeAllTags();
         affiliationInput.tagify.addTags(affiliations.map(a => ({ value: a })));
       }
     } else {
@@ -308,7 +333,6 @@ function processContactPersons(xmlDoc) {
       setTimeout(() => {
         const affiliationInput = newRow.find('input[name="cpAffiliation[]"]')[0];
         if (affiliationInput && affiliationInput.tagify) {
-          affiliationInput.tagify.removeAllTags();
           affiliationInput.tagify.addTags(affiliations.map(a => ({ value: a })));
         }
       }, 100);
@@ -358,7 +382,6 @@ function setLabNameWithTagify(row, labId) {
   try {
     // Check if Tagify instance exists
     if (inputName.tagify) {
-      inputName.tagify.removeAllTags();
       inputName.tagify.addTags([lab.name]);
     } else {
       // Create new Tagify instance
@@ -377,7 +400,6 @@ function setLabNameWithTagify(row, labId) {
 
       // Set value after short delay
       setTimeout(() => {
-        tagify.removeAllTags();
         tagify.addTags([lab.name]);
       }, 100);
     }
@@ -385,7 +407,6 @@ function setLabNameWithTagify(row, labId) {
     // Find and set affiliation field
     const inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]')[0];
     if (inputAffiliation && inputAffiliation.tagify) {
-      inputAffiliation.tagify.removeAllTags();
       inputAffiliation.tagify.addTags([lab.affiliation]);
     }
 
@@ -416,9 +437,7 @@ function processOriginatingLaboratories(xmlDoc, resolver) {
     null
   );
 
-  // reset existing laboratories
-  $('#group-originatinglaboratory .row[data-laboratory-row]').not(':first').remove();
-  $('#group-originatinglaboratory .row[data-laboratory-row]:first input').val('');
+
 
   for (let i = 0; i < laboratoryNodes.snapshotLength; i++) {
     const labNode = laboratoryNodes.snapshotItem(i);
@@ -507,15 +526,6 @@ function processContributors(xmlDoc, resolver) {
     XPathResult.FIRST_ORDERED_NODE_TYPE,
     null
   ).singleNodeValue;
-
-  // reset Contributor Person 
-  $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
-  $('#group-contributorperson .row[contributor-person-row]:first input').val('');
-
-  // reset Contributor Institution
-  $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
-  $('#group-contributororganisation .row[contributors-row]:first input').val('');
-
 
   if (!contributorsNode) return;
 
@@ -657,12 +667,11 @@ function populateFormWithContributors(personMap, orgMap) {
   // Process persons
   for (const person of personMap.values()) {
     const personRow = getOrCreatePersonRow(personIndex++);
-    
+
     // Roles
     const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
     const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
     if (tagifyRoles) {
-      tagifyRoles.removeAllTags();
       tagifyRoles.addTags(person.roles.map(role => ({ value: role })));
     }
 
@@ -679,7 +688,6 @@ function populateFormWithContributors(personMap, orgMap) {
     const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
     const tagifyAffiliations = getTagifyInstance(affiliationInput);  // Get or initialize Tagify
     if (tagifyAffiliations) {
-      tagifyAffiliations.removeAllTags();
       tagifyAffiliations.addTags(person.affiliations.map(aff => ({ value: aff })));
     }
 
@@ -690,12 +698,11 @@ function populateFormWithContributors(personMap, orgMap) {
   // Process organizations
   for (const org of orgMap.values()) {
     const orgRow = getOrCreateOrgRow(orgIndex++);
-    
+
     // Roles
     const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
     const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
     if (tagifyRoles) {
-      tagifyRoles.removeAllTags();
       tagifyRoles.addTags(org.roles.map(role => ({ value: role })));
     }
 
@@ -721,7 +728,7 @@ function populateFormWithContributors(personMap, orgMap) {
 /**
  * Parse temporal data from a date node.
  * This helper function simplifies the processing of temporal data in the main `processSpatialTemporalCoverages` function. 
- * It parses date strings and returns the extracted start and end dates and times as separate components.
+ * It parses date strings and returns the extracted start and end dates, times and the timezone as separate components.
  * @param {Node} dateNode - The XML node containing temporal data.
  * @returns {Object} An object containing startDate, startTime, endDate, and endTime.
  */
@@ -731,20 +738,57 @@ function parseTemporalData(dateNode) {
     startTime: '',
     endDate: '',
     endTime: '',
+    timezoneOffset: '',
   };
 
   if (!dateNode || !dateNode.textContent) return result;
 
   const [start, end] = dateNode.textContent.split('/');
+
+  // Handle start date and time
   if (start) {
-    const [startDate, startTime] = start.includes('T') ? start.split('T') : [start, ''];
-    result.startDate = startDate;
-    result.startTime = startTime ? startTime.split(/[+-]/)[0] : '';
+    if (start.includes('T')) {
+      // Case 1: Date with time and timezone (e.g., 2025-02-28T01:11:00+01:00)
+      const [startDate, startTime] = start.split('T');
+      result.startDate = startDate;
+      result.startTime = startTime.split(/[+-]/)[0];  // Extract time part
+
+      // Extract timezone if present
+      if (start.includes('+') || start.includes('-')) {
+        result.timezoneOffset = start.slice(-6);  // Extract the timezone offset (+01:00, -02:00)
+      }
+    } else {
+      // Case 2: Date with only timezone (e.g., 2025-02-28+02:00)
+      result.startDate = start.replace(/([+-]\d{2}:\d{2})$/, '');  // Remove timezone part from the date
+      result.startTime = '';  // No time
+      const offsetMatch = start.match(/([+-]\d{2}:\d{2})$/);
+      if (offsetMatch) {
+        result.timezoneOffset = offsetMatch[1];  // Extract the timezone offset (+02:00)
+      }
+    }
   }
+
+  // Handle end date and time (similar to start)
   if (end) {
-    const [endDate, endTime] = end.includes('T') ? end.split('T') : [end, ''];
-    result.endDate = endDate;
-    result.endTime = endTime ? endTime.split(/[+-]/)[0] : '';
+    if (end.includes('T')) {
+      // Case 1: Date with time and timezone (e.g., 2025-02-28T22:22:00+01:00)
+      const [endDate, endTime] = end.split('T');
+      result.endDate = endDate;
+      result.endTime = endTime.split(/[+-]/)[0];  // Extract time part
+
+      // Extract timezone if present
+      if (end.includes('+') || end.includes('-')) {
+        result.timezoneOffset = end.slice(-6);  // Extract the timezone offset (+01:00, -02:00)
+      }
+    } else {
+      // Case 2: Date with only timezone (e.g., 2025-02-28+02:00)
+      result.endDate = end.replace(/([+-]\d{2}:\d{2})$/, '');  // Remove timezone part from the date
+      result.endTime = '';  // No time
+      const offsetMatch = end.match(/([+-]\d{2}:\d{2})$/);
+      if (offsetMatch) {
+        result.timezoneOffset = offsetMatch[1];  // Extract the timezone offset (+02:00)
+      }
+    }
   }
 
   return result;
@@ -763,9 +807,6 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-   //reset Related Works
-   $('#group-stc .row[tsc-row]').not(':first').remove();
-   $('#group-stc .row[tsc-row]:first input').val('');
 
   for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
     const geoLocationNode = geoLocationNodes.snapshotItem(i);
@@ -798,18 +839,32 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
     $lastRow.find('input[name="tscLongitudeMin[]"]').val(longitudeMin);
     $lastRow.find('input[name="tscLongitudeMax[]"]').val(longitudeMax);
 
-    // Handle timezone
-    const timezoneField = $lastRow.find('select[name="tscTimezone[]"]');
-    timezoneField.val(i === 0 ? '' : 'UTC+00:00 (Africa/Abidjan)');
-
     // Set date and time if available
+
     const dateNode = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(i);
     const temporalData = parseTemporalData(dateNode);
 
     $lastRow.find('input[name="tscDateStart[]"]').val(temporalData.startDate);
-    $lastRow.find('input[name="tscTimeStart[]"]').val(temporalData.startTime);
+    if (temporalData.startTime != '') {
+      $lastRow.find('input[name="tscTimeStart[]"]').val(temporalData.startTime);
+    }
+    if (temporalData.endTime != '') {
+      $lastRow.find('input[name="tscTimeEnd[]"]').val(temporalData.endTime);
+
+    }
+
     $lastRow.find('input[name="tscDateEnd[]"]').val(temporalData.endDate);
-    $lastRow.find('input[name="tscTimeEnd[]"]').val(temporalData.endTime);
+
+    // Handle timezone
+    const timezoneField = $lastRow.find('select[name="tscTimezone[]"]');
+
+    // Find the option that matches the extracted timezoneOffset and set it as the selected value
+    timezoneField.find('option').each(function () {
+      if ($(this).text().includes(temporalData.timezoneOffset)) {
+        timezoneField.val($(this).val());  // Select the matched option
+        return false;  // Exit the loop once a match is found
+      }
+    });
 
     // Clone row for the next entry, if there is one
     if (i < geoLocationNodes.snapshotLength - 1) {
@@ -841,11 +896,6 @@ function processDescriptions(xmlDoc, resolver) {
     'TechnicalInformation': 'input-technicalinfo',
     'Other': 'input-other'
   };
-
-  // reset all description fields
-  Object.values(descriptionMapping).forEach(inputId => {
-    $(`#${inputId}`).val('');
-  });
 
   // Process each description node
   for (let i = 0; i < descriptionNodes.snapshotLength; i++) {
@@ -885,10 +935,6 @@ function processDates(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-
-  // Reset date fields
-  $('input[name="dateCreated"]').val('');
-  $('input[name="dateEmbargo"]').val('');
 
   for (let i = 0; i < dateNodes.snapshotLength; i++) {
     const dateNode = dateNodes.snapshotItem(i);
@@ -933,10 +979,6 @@ function processKeywords(xmlDoc, resolver) {
   const tagifyMsl = tagifyInputMsl._tagify;
   const tagifyFree = tagifyInputFree._tagify;
 
-  // Clear existing tags
-  tagifyGCMD.removeAllTags();
-  tagifyMsl.removeAllTags();
-  tagifyFree.removeAllTags();
 
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
@@ -980,9 +1022,6 @@ function processRelatedWorks(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-  //reset Related Works
-  $('#group-relatedwork .row[related-work-row]').not(':first').remove();
-  $('#group-relatedwork .row[related-work-row]:first input').val('');
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -1023,9 +1062,6 @@ function processFunders(xmlDoc, resolver) {
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-  // reset Funding References
-  $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
-  $('#group-fundingreference .row[funding-reference-row]:first input').val('');
 
   for (let i = 0; i < funderNodes.snapshotLength; i++) {
     const funderNode = funderNodes.snapshotItem(i);
@@ -1054,11 +1090,14 @@ function processFunders(xmlDoc, resolver) {
   }
 }
 
+
+
 /**
  * Loads XML data into form fields according to mapping configuration
  * @param {Document} xmlDoc - The parsed XML document
  */
 async function loadXmlToForm(xmlDoc) {
+  clearInputFields();
   const resourceNode = xmlDoc.evaluate(
     '//ns:resource | /resource | //resource',
     xmlDoc,
@@ -1103,45 +1142,7 @@ async function loadXmlToForm(xmlDoc) {
       selector: '#input-resourceinformation-version',
       attribute: 'textContent'
     },
-    'resourceType': {
-      selector: '#input-resourceinformation-resourcetype',
-      attribute: 'resourceTypeGeneral',
-      transform: (value) => {
-        const typeMap = {
-          'Audiovisual': '1',
-          'Book': '2',
-          'BookChapter': '3',
-          'Collection': '4',
-          'ComputationalNotebook': '5',
-          'ConferencePaper': '6',
-          'ConferenceProceeding': '7',
-          'DataPaper': '8',
-          'Dataset': '9',
-          'Dissertation': '10',
-          'Event': '11',
-          'Image': '12',
-          'Instrument': '13',
-          'InteractiveResource': '14',
-          'Journal': '15',
-          'JournalArticle': '16',
-          'Model': '17',
-          'OutputManagementPlan': '18',
-          'PeerReview': '19',
-          'PhysicalObject': '20',
-          'Preprint': '21',
-          'Report': '22',
-          'Service': '23',
-          'Software': '24',
-          'Sound': '25',
-          'Standard': '26',
-          'StudyRegistration': '27',
-          'Text': '28',
-          'Workflow': '29',
-          'Other': '30'
-        };
-        return typeMap[value] || '30';
-      }
-    },
+
     // Language mapping
     'language': {
       selector: '#input-resourceinformation-language',
@@ -1203,6 +1204,7 @@ async function loadXmlToForm(xmlDoc) {
     }
   }
 
+  processResourceType(xmlDoc);
   // Process titles
   processTitles(xmlDoc, resolver);
   // Processing Creators
