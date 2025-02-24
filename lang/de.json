@@ -64,6 +64,7 @@
         "affiliationInvalid": "Bitte geben Sie eine Zugehörigkeit an."
     },
     "contactPersons": {
+        "contactPersonError": "Bitte wählen Sie mindestens eine Kontaktperson aus.",
         "email": "E-Mail-Adresse",
         "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse im Format xxx.xxx@xxx.xxx ein.",
         "toggleCheckbox": "Kontakt-<br>person?",

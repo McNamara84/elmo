@@ -9,6 +9,28 @@ function setupContactPersonListener() {
 }
 
 /**
+ * Validates if a Contact Person is selected from group of Authors.
+ */
+function validateContactPerson() {
+    var isValid = $('input[name="contacts[]"]:checked').length > 0;
+    $('#contact-person-error').remove();
+    // 
+    if (!isValid) {
+        $('#group-author').append('<div id="contact-person-error" class="text-danger mt-2" data-translate="contactPersons.contactPersonError"></div>');
+        $('input[name="contacts[]"]').prop('required', true);
+    } else {
+        $('input[name="contacts[]"]').prop('required', false);
+    }
+    return isValid;
+}
+
+$('form').on('submit', function (event) {
+    if (!validateContactPerson()) {
+        event.preventDefault();
+    }
+});
+
+/**
  * Validates the Contact Person section of the form.
  * Ensures that the "Email" field is required only if the checkbox for "Contact Person" is checked, 
  * and not required if the checkbox is unchecked.
@@ -20,7 +42,7 @@ function checkContactPerson() {
     // Loops through each row in the "group-author" container
     $('#group-author').children('.row').each(function () {
         var row = $(this);
-        
+
         // Defines the relevant fields for the Contact Person section
         var fields = {
             firstname: row.find('[id^="input-author-firstname"]'),
@@ -249,6 +271,9 @@ function checkMandatoryFields() {
     // Formgroup Contact person(s)
     checkContactPerson();
 
+    // Formgroup Validate Contact person(s)
+    validateContactPerson()
+
     // Formgroup Contributor Person
     checkContributorPerson();
 
@@ -272,17 +297,17 @@ function checkMandatoryFields() {
 * Triggers checkMandatoryFields() when the user leaves these fields.
 */
 $(document).on('blur',
-    'input[name^="cpLastname"], ' +         
-    'input[name^="cpFirstname"], ' +        
-    'input[name^="cpPosition"], ' +         
-    'input[name^="cpEmail"], ' +            
-    'input[name^="cpOnlineResource"], ' +   
-    'input[name="grantNummer[]"], ' +       
-    'input[name="grantName[]"], ' +         
-    'input[name="cbORCID[]"], ' +           
-    'input[name="cbPersonLastname[]"], ' +  
-    'input[name="cbPersonFirstname[]"], ' + 
-    'input[name="cbOrganisationName[]"],' +  
+    'input[name^="cpLastname"], ' +
+    'input[name^="cpFirstname"], ' +
+    'input[name^="cpPosition"], ' +
+    'input[name^="cpEmail"], ' +
+    'input[name^="cpOnlineResource"], ' +
+    'input[name="grantNummer[]"], ' +
+    'input[name="grantName[]"], ' +
+    'input[name="cbORCID[]"], ' +
+    'input[name="cbPersonLastname[]"], ' +
+    'input[name="cbPersonFirstname[]"], ' +
+    'input[name="cbOrganisationName[]"],' +
     'input[name="tscLongitudeMax[]"],' +
     'input[name="tscLongitudeMin[]"],' +
     'input[name="tscLatitudeMin[]"],' +
@@ -292,7 +317,8 @@ $(document).on('blur',
     'input[name="tscDateEnd[]"],' +
     'input[name="tscTimeStart[]"],' +
     'input[name="tscTimeEnd[]"],' +
-    'input[name="rIdentifier[]"]',           
+    'input[name="rIdentifier[]"]',
+    'input[name="contacts[]"]',
     function () {
         // Check mandatory fields when user leaves any of these input fields
         checkMandatoryFields();
@@ -304,15 +330,15 @@ $(document).on('blur',
  * Triggers checkMandatoryFields() when the value of these fields changes.
  */
 $(document).on('change',
-    'input[name^="cpAffiliation"], ' +            
-    'input[name="cbPersonRoles[]"], ' +           
-    'input[name="cbAffiliation[]"], ' +           
-    'input[name="cbOrganisationRoles[]"], ' +     
-    'input[name="OrganisationAffiliation[]"], ' + 
-    'select[name="relation[]"], ' +           
-    'select[name="rIdentifierType[]"], ' +      
-    'select[name="timezone[]"], ' +             
-    'input[name="funder[]"]',                     
+    'input[name^="cpAffiliation"], ' +
+    'input[name="cbPersonRoles[]"], ' +
+    'input[name="cbAffiliation[]"], ' +
+    'input[name="cbOrganisationRoles[]"], ' +
+    'input[name="OrganisationAffiliation[]"], ' +
+    'select[name="relation[]"], ' +
+    'select[name="rIdentifierType[]"], ' +
+    'select[name="timezone[]"], ' +
+    'input[name="funder[]"]',
     function () {
         // Check mandatory fields when any of these fields' values change
         checkMandatoryFields();

@@ -64,6 +64,7 @@
         "affiliationInvalid": "Please provide an affiliation."
     },
     "contactPersons": {
+        "contactPersonError": "Please choose at least one contact person.",
         "email": "Email address",
         "emailInvalid": "Please provide a valid email address in the format xxx.xxx@xxx.xxx.",
         "toggleCheckbox": "Contact<br>Person?",
