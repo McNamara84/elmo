@@ -72,16 +72,17 @@
         "website": "Site web",
         "websiteInvalid": "Veuillez saisir une URL valide."
     },
+    "contributorPersons": {
+        "title": "Contributeurs (Personnes)"
+    },
+    "contributorInstitutions": {
+        "title": "Contributeurs (Organisations)",
+        "organization": "Nom de l'organisation",
+        "organizationInvalid": "Veuillez saisir un nom d'organisation valide."
+    },
     "laboratory": {
         "title": "Laboratoire d'origine",
         "name": "Nom du laboratoire d'origine"
-    },
-    "contributors": {
-        "title": "Contributeurs",
-        "organization": "Nom de l'organisation",
-        "organizationInvalid": "Veuillez saisir un nom d'organisation valide.",
-        "persons": "Personne(s) contributrice(s)",
-        "institutions": "Institution(s) contributrice(s)"
     },
     "descriptions": {
         "title": "Descriptions",
