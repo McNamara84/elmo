@@ -157,3 +157,7 @@ label.mandatory-field::after {
     margin-left: auto;
     display: block;
 }
+
+.add-button {
+    width: 36px;
+}
