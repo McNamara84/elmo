@@ -51,6 +51,8 @@ function clearInputFields() {
         '#input-author-affiliation',
         '#input-contactperson-affiliation',
         '#input-sciencekeyword', 
+        '#input-Platforms', 
+        '#input-Instruments',
         '#input-mslkeyword', 
         '#input-freekeyword', 
         'input[name="cbPersonRoles[]"]',

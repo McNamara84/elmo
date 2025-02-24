@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     saveOriginatingLaboratories($connection, $_POST, $resource_id);
     saveContributors($connection, $_POST, $resource_id);
     saveDescriptions($connection, $_POST, $resource_id);
-    saveThesaurusKeywords($connection, $_POST, $resource_id);
+    saveKeywords($connection, $_POST, $resource_id);
     saveFreeKeywords($connection, $_POST, $resource_id);
     saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
     saveRelatedWork($connection, $_POST, $resource_id);
