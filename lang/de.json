@@ -114,7 +114,7 @@
         "title": "Daten",
         "created": "Erstellungsdatum",
         "dateInvalid": "Bitte geben Sie ein gültiges Datum ein!",
-        "embargoUntil": "Embargo bis"
+        "embargoUntil": "Embargo bis (nur nach Absprache)"
     },
     "coverage": {
         "title": "Räumliche und zeitliche Abdeckung",

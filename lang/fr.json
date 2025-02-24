@@ -114,7 +114,7 @@
         "title": "Dates",
         "created": "Date de création",
         "dateInvalid": "Veuillez saisir une date valide !",
-        "embargoUntil": "Embargo jusqu'au"
+        "embargoUntil": "Embargo jusqu'au (uniquement sur rendez-vous)"
     },
     "coverage": {
         "title": "Couverture spatiale et temporelle",
