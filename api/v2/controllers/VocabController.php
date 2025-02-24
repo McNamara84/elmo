@@ -42,6 +42,26 @@ class VocabController
     }
 
     /**
+     * Adds a timestamp to the provided data structure
+     * 
+     * Creates a wrapper object that includes both the original data
+     * and a timestamp of when the data was last updated.
+     * 
+     * @param mixed $data The original data to be wrapped
+     * @return array An array containing:
+     *               - 'lastUpdated' (string) The timestamp in Y-m-d H:i:s format
+     *               - 'data' (mixed) The original data structure
+     * 
+     */
+    private function addTimestampToData($data)
+    {
+        return [
+            'lastUpdated' => date('Y-m-d H:i:s'),
+            'data' => $data
+        ];
+    }
+
+    /**
      * Validates the API key from the request header
      * 
      * @return bool True if API key is valid, false otherwise
@@ -115,22 +135,38 @@ class VocabController
      */
     public function fetchAndProcessMslLabs()
     {
-        // Fetch data from the URL with a custom User-Agent
         $opts = [
             'http' => [
                 'method' => 'GET',
-                'header' => 'User-Agent: PHP Script'
+                'header' => [
+                    'User-Agent: PHP Script',
+                    'Accept: application/json',
+                    'Accept-Charset: UTF-8'
+                ]
             ]
         ];
         $context = stream_context_create($opts);
+
         $jsonData = file_get_contents($this->url, false, $context);
 
         if ($jsonData === false) {
             throw new Exception('Error fetching data from GitHub: ' . error_get_last()['message']);
         }
 
-        // Correct character encoding
-        $jsonData = mb_convert_encoding($jsonData, 'UTF-8', mb_detect_encoding($jsonData, 'UTF-8, ISO-8859-1', true));
+        // WORKAROUND: Convert encoding to UTF-8
+        $jsonData = mb_convert_encoding($jsonData, 'UTF-16', 'UTF-8');
+        $jsonData = mb_convert_encoding($jsonData, 'UTF-8', 'UTF-16');
+
+        // WORKAROUND: Fix last encoding issues
+        $replacements = [
+            'Geo?lab' => 'Geolab',
+            'Anal?t?cos' => 'Analíticos',
+            'Geolog?a' => 'Geología',
+            'Orl?ans' => 'Orléans',
+            'Z?rich' => 'Zürich',
+            'Optical and?Electron' => 'Optical and Electron',
+        ];
+        $jsonData = str_replace(array_keys($replacements), array_values($replacements), $jsonData);
 
         // Decode JSON data
         $labs = json_decode($jsonData, true);
@@ -230,7 +266,7 @@ class VocabController
             return;
         }
         try {
-            $jsonDir = __DIR__ . '/../../../json/';
+            $jsonDir = __DIR__ . '/../../../json/thesauri/';
             $outputFile = $jsonDir . 'msl-vocabularies.json';
 
             if (!file_exists($jsonDir)) {
@@ -264,8 +300,10 @@ class VocabController
                 $processedData[] = $this->processItem($item);
             }
 
+            $dataWithTimestamp = $this->addTimestampToData($processedData);
+
             // Save processed data
-            if (file_put_contents($outputFile, json_encode($processedData, JSON_PRETTY_PRINT)) === false) {
+            if (file_put_contents($outputFile, json_encode($dataWithTimestamp, JSON_PRETTY_PRINT)) === false) {
                 throw new Exception("Failed to save processed vocabulary data");
             }
 
@@ -315,7 +353,7 @@ class VocabController
     public function getGcmdScienceKeywords()
     {
         try {
-            $jsonPath = __DIR__ . '/../../../json/gcmdScienceKeywords.json';
+            $jsonPath = __DIR__ . '/../../../json/thesauri/gcmdScienceKeywords.json';
             if (!file_exists($jsonPath)) {
                 throw new Exception("Science Keywords file not found");
             }
@@ -338,26 +376,37 @@ class VocabController
      */
     public function updateMslLabs()
     {
-        // Validate API key before processing request
         if (!$this->validateApiKey()) {
             return;
         }
+
         try {
             $mslLabs = $this->fetchAndProcessMslLabs();
-            $jsonString = json_encode($mslLabs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+            $jsonString = json_encode(
+                $mslLabs,
+                JSON_PRETTY_PRINT |
+                JSON_UNESCAPED_UNICODE |
+                JSON_UNESCAPED_SLASHES
+            );
 
             if ($jsonString === false) {
                 throw new Exception('Error encoding data to JSON: ' . json_last_error_msg());
             }
 
-            $result = file_put_contents(__DIR__ . '/../../../json/msl-labs.json', $jsonString);
+            $result = file_put_contents(
+                __DIR__ . '/../../../json/msl-labs.json',
+                $jsonString,
+                LOCK_EX
+            );
 
             if ($result === false) {
                 throw new Exception('Error saving JSON file: ' . error_get_last()['message']);
             }
 
-            header('Content-Type: application/json');
+            header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['message' => 'MSL Labs vocabulary successfully updated']);
+
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);
@@ -725,7 +774,8 @@ class VocabController
         }
 
         $hierarchicalData = $this->buildHierarchy($graph, $conceptScheme, $schemeName);
-        file_put_contents($outputFile, json_encode($hierarchicalData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $dataWithTimestamp = $this->addTimestampToData($hierarchicalData);
+        file_put_contents($outputFile, json_encode($dataWithTimestamp, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         return true;
     }
@@ -748,7 +798,7 @@ class VocabController
         error_reporting(E_ALL & ~E_DEPRECATED);
 
         try {
-            $jsonDir = __DIR__ . '/../../../json/';
+            $jsonDir = __DIR__ . '/../../../json/thesauri/';
             if (!file_exists($jsonDir)) {
                 mkdir($jsonDir, 0755, true);
             }
