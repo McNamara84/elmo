@@ -73,10 +73,10 @@
         "websiteInvalid": "Please provide a valid URL."
     },
     "contributorPersons": {
-        "title": "Contributor Person(s)"
+        "title": "Contributor (Persons)"
     },
     "contributorInstitutions": {
-        "title": "Contributor Institution(s)",
+        "title": "Contributor (Institutions)",
         "organization": "Organisation name",
         "organizationInvalid": "Please enter a valid organization name."
     },
