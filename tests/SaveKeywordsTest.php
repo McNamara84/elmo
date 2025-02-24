@@ -7,7 +7,7 @@ require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../save/formgroups/save_thesauruskeywords.php';
 require_once __DIR__ . '/TestDatabaseSetup.php';
 
-class SaveThesauruskeywordsTest extends TestCase
+class SaveKeywordsTest extends TestCase
 {
     private $connection;
 
@@ -94,11 +94,11 @@ class SaveThesauruskeywordsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "thesaurusKeywords" => json_encode([["value" => "Keyword1", "id" => "http://example.com/1", "scheme" => "CustomScheme", "schemeURI" => "http://example.com/scheme", "language" => "en"]]),
+            "gcmdScienceKeywords" => json_encode([["value" => "Keyword1", "id" => "http://example.com/1", "scheme" => "CustomScheme", "schemeURI" => "http://example.com/scheme", "language" => "en"]]),
             "MSLKeywords" => json_encode([["value" => "Material1"]]),
         ];
 
-        saveThesaurusKeywords($this->connection, $postData, $resource_id);
+        saveKeywords($this->connection, $postData, $resource_id);
 
         // Check if all keywords were saved correctly
         $stmt = $this->connection->prepare("SELECT * FROM Thesaurus_Keywords");
@@ -144,7 +144,7 @@ class SaveThesauruskeywordsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "thesaurusKeywords" => json_encode([
+            "gcmdScienceKeywords" => json_encode([
                 ["value" => "Keyword1"],
                 ["value" => "Keyword2"],
                 ["value" => "Keyword3"]
@@ -156,7 +156,7 @@ class SaveThesauruskeywordsTest extends TestCase
             ])
         ];
 
-        saveThesaurusKeywords($this->connection, $postData, $resource_id);
+        saveKeywords($this->connection, $postData, $resource_id);
 
         // Check if all keywords were saved correctly
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Thesaurus_Keywords");
@@ -192,11 +192,11 @@ class SaveThesauruskeywordsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "thesaurusKeywords" => json_encode([["value" => "Keyword1"]]),
+            "gcmdScienceKeywords" => json_encode([["value" => "Keyword1"]]),
             "MSLKeywords" => json_encode([["value" => "Age1"]])
         ];
 
-        saveThesaurusKeywords($this->connection, $postData, $resource_id);
+        saveKeywords($this->connection, $postData, $resource_id);
 
         // Check if only the filled keywords were saved
         $stmt = $this->connection->prepare("SELECT * FROM Thesaurus_Keywords");
@@ -232,11 +232,11 @@ class SaveThesauruskeywordsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "thesaurusKeywords" => "",
+            "gcmdScienceKeywords" => "",
             "MSLKeywords" => ""
         ];
 
-        saveThesaurusKeywords($this->connection, $postData, $resource_id);
+        saveKeywords($this->connection, $postData, $resource_id);
 
         // Check if no keywords were saved
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Thesaurus_Keywords");

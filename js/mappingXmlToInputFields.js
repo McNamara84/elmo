@@ -668,6 +668,7 @@ function populateFormWithContributors(personMap, orgMap) {
   for (const person of personMap.values()) {
     const personRow = getOrCreatePersonRow(personIndex++);
 
+
     // Roles
     const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
     const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
@@ -698,6 +699,7 @@ function populateFormWithContributors(personMap, orgMap) {
   // Process organizations
   for (const org of orgMap.values()) {
     const orgRow = getOrCreateOrgRow(orgIndex++);
+
 
     // Roles
     const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
@@ -966,10 +968,12 @@ function processKeywords(xmlDoc, resolver) {
   const tagifyInputGCMD = document.querySelector('#input-sciencekeyword');
   const tagifyInputMsl = document.querySelector('#input-mslkeyword');
   const tagifyInputFree = document.querySelector('#input-freekeyword');
-
+  const tagifyInputPlatforms = document.querySelector('#input-Platforms');
+  const tagifyInputInstruments = document.querySelector('#input-Instruments');
 
   // Error handling
-  if (!tagifyInputGCMD?._tagify || !tagifyInputMsl?._tagify || !tagifyInputFree?._tagify) {
+  if (!tagifyInputGCMD?._tagify || !tagifyInputMsl?._tagify || !tagifyInputFree?._tagify ||
+    !tagifyInputPlatforms?._tagify || !tagifyInputInstruments?._tagify) {
     console.error("One or more Tagify instances are not properly initialized.");
     return;
   }
@@ -978,7 +982,15 @@ function processKeywords(xmlDoc, resolver) {
   const tagifyGCMD = tagifyInputGCMD._tagify;
   const tagifyMsl = tagifyInputMsl._tagify;
   const tagifyFree = tagifyInputFree._tagify;
+  const tagifyPlatforms = tagifyInputPlatforms._tagify;
+  const tagifyInstruments = tagifyInputInstruments._tagify;
 
+  // Clear existing tags
+  tagifyGCMD.removeAllTags();
+  tagifyMsl.removeAllTags();
+  tagifyFree.removeAllTags();
+  tagifyPlatforms.removeAllTags();
+  tagifyInstruments.removeAllTags();
 
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
@@ -999,6 +1011,10 @@ function processKeywords(xmlDoc, resolver) {
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
       // Add the tag to the GCMD Science Keyword input field
       tagifyGCMD.addTags([tagData]);
+    } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
+      tagifyPlatforms.addTags([tagData]);
+    } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
+      tagifyInstruments.addTags([tagData]);
     } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
       // Add the tag to the MSL Keyword input field
       tagifyMsl.addTags([tagData]);
@@ -1008,6 +1024,7 @@ function processKeywords(xmlDoc, resolver) {
     }
   }
 }
+
 
 /**
  * Process related identifiers from XML and populate the formgroup Related Works
