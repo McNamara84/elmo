@@ -133,17 +133,20 @@ $(document).ready(function () {
 
       // Adjust Title Type Dropdown width and make it visible
       newTitleRow.find("#container-resourceinformation-titletype")
-        .removeClass("col-10 col-md-3")
-        .addClass("col-10 col-md-3 col-lg-3")
-        .show();
+        .removeClass("col-10 col-md-3 unvisible")
+        .addClass("col-10 col-md-3 col-lg-3");
 
       // Control the visibility of the title type dropdown.
       if (titlesNumber === 0) {
         // Show the dropdown for the first title.
-        $("#container-resourceinformation-titletype").show();
+        // remove the unvisible class
+        $("#container-resourceinformation-titletype").removeClass("unvisible");
+        //$("#container-resourceinformation-titletype").show();
       } else {
         // Ensure the dropdown is visible for subsequent titles.
-        $(newTitleRow).find("#container-resourceinformation-titletype").show();
+        // add the unvisible class
+        $("#container-resourceinformation-titletype").addClass("unvisible");
+        //$(newTitleRow).find("#container-resourceinformation-titletype").show();
       }
 
       // Capture the main title type for the first row.
