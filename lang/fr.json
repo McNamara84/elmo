@@ -97,9 +97,11 @@
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
-            "title": "GCMD Science Keywords",
-            "name": "Thésaurus",
-            "scienceKeywords": "NASA GCMD Science Keywords",
+            "title": "Thésaurus GCMD",
+            "name": "Thésaurus GCMD",
+            "scienceKeywords": "GCMD Science Keywords",
+            "platforms": "Plateformes GCMD",
+            "instruments": "Instruments GCMD",
             "label": "Ouvrez le thésaurus pour choisir des mots-clés ou commencez à taper..."
         },
         "free": {
