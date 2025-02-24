@@ -161,3 +161,8 @@ label.mandatory-field::after {
 .add-button {
     width: 36px;
 }
+
+.map-panel {
+    height: 500px;
+    width: 100%;
+}
