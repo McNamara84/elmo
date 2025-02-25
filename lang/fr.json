@@ -118,9 +118,9 @@
     "coverage": {
         "title": "Couverture spatiale et temporelle",
         "map": "Carte",
-        "latitude": "Latitude",
+        "latitude": "Latitude (Min/Max)",
         "latitudeInvalid": "Veuillez saisir une latitude comprise entre -90.00 et +90.00 .",
-        "longitude": "Longitude",
+        "longitude": "Longitude (Min/Max)",
         "longitudeInvalid": "Veuillez saisir une longitude comprise entre -180.00 et +180.00.",
         "description": "Description",
         "descriptionPlaceholder": "Veuillez saisir la description de la couverture temporelle et spatiale...",
