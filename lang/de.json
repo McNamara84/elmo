@@ -118,9 +118,9 @@
     "coverage": {
         "title": "Räumliche und zeitliche Abdeckung",
         "map": "Karte",
-        "latitude": "Breitengrad (Min/Max)",
+        "latitude": "Breitengrad (Min|Max)",
         "latitudeInvalid": "Bitte geben Sie einen Breitengrad zwischen -90.00 und +90.00 ein.",
-        "longitude": "Längengrad (Min/Max)",
+        "longitude": "Längengrad (Min|Max)",
         "longitudeInvalid": "Bitte geben Sie einen Längengrad zwischen -180.00 und +180.00 ein.",
         "description": "Beschreibung",
         "descriptionPlaceholder": "Bitte geben Sie die Beschreibung der zeitlichen und räumlichen Abdeckung ein...",
