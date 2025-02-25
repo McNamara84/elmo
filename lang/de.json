@@ -88,12 +88,16 @@
         "title": "Beschreibungen",
         "abstract": "Abstract",
         "abstractTooltip": "Bitte geben Sie eine Zusammenfassung ein...",
+        "abstractPlaceholder": "Bitte ein Abstract zu den Daten einreichen. Bitte nicht das Abstract der dazugehörigen Publikation wiederholen, sondern die Daten an sich beschreiben.",
         "methods": "Methoden",
         "methodsTooltip": "Bitte beschreiben Sie die Methoden...",
+        "methodsPlaceholder": "Bitte eine Beschreibung der für die Studie oder Forschung verwendeten Methodik eingeben.",
         "technicalInfo": "Technische Informationen",
         "technicalInfoTooltip": "Bitte geben Sie technische Informationen ein...",
+        "technicalinfoPlaceholder": "Bitte detaillierte Informationen angeben, die mit dem Entwurf, der Implementierung, dem Betrieb, der Verwendung und/oder der Wartung eines Prozesses, Systems oder Instruments in Verbindung stehen können.",
         "other": "Sonstiges",
-        "otherTooltip": "Bitte geben Sie sonstige Informationen ein.."
+        "otherTooltip": "Bitte geben Sie sonstige Informationen ein..",
+        "otherPlaceholder": "Bitte weitere Beschreibungen eingeben, die nicht in eine der bestehenden Kategorien passen."
     },
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
