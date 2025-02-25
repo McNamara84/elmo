@@ -227,27 +227,37 @@ function processCreators(xmlDoc, resolver) {
       }
     }
 
-    // Find the last row in the form
-    const $lastRow = $('input[name="familynames[]"]').last().closest('.row');
-
-    // Populate fields
-    $lastRow.find('input[name="orcids[]"]').val(orcid);
-    $lastRow.find('input[name="familynames[]"]').val(familyName);
-    $lastRow.find('input[name="givennames[]"]').val(givenName);
-
-    const tagifyInput = $lastRow.find('input[name="affiliation[]"]')[0];
-    if (tagifyInput && tagifyInput.tagify) {
-      tagifyInput.tagify.addTags(affiliations.map(a => ({ value: a })));
-      $lastRow.find('input[name="authorRorIds[]"]').val(rorIds.join(','));
-    }
-
-    // Clone a new row if more creators need to be added
-    if (i < creatorNodes.snapshotLength - 1) {
+    // Find the row to populate (either the first one, or the newly added one)
+    let $row;
+    if (i === 0) {
+      // Use the first row
+      $row = $('div[data-creator-row]').eq(0);
+    } else {
+      // Add a new row and use it
       $('#button-author-add').click();
+      $row = $('div[data-creator-row]').eq(i);
     }
+
+    // Populate fields in the author section
+    $row.find('input[name="orcids[]"]').val(orcid);
+    $row.find('input[name="familynames[]"]').val(familyName);
+    $row.find('input[name="givennames[]"]').val(givenName);
+
+    // Tagify handling for affiliations
+    const tagifyInput = $row.find('input[name="affiliation[]"]')[0];
+    if (tagifyInput && tagifyInput.tagify) {
+      tagifyInput.tagify.removeAllTags(); // Clear existing tags
+      tagifyInput.tagify.addTags(affiliations.map(a => ({ value: a })));
+      $row.find('input[name="authorRorIds[]"]').val(rorIds.join(','));
+    }
+
+    //** Clear Contact Person fields (Crucial!) **
+    $row.find('input[name="contacts[]"]').prop('checked', false);
+    $row.find('.contact-person-input').hide();
+    $row.find('input[name="cpEmail[]"]').val('');
+    $row.find('input[name="cpOnlineResource[]"]').val('');
   }
 }
-
 
 /**
  * Process contact persons from XML and populate the form
@@ -277,66 +287,42 @@ function processContactPersons(xmlDoc) {
 
     // Extract Contact Person details
     const fullName = getNodeText(contactPersonNode, 'gmd:individualName/gco:CharacterString', xmlDoc, nsResolver);
-    const [familyName, givenName] = fullName.split(', ');
+    const [familyName, givenName] = fullName?.split(', '); // Use optional chaining
 
     if (!givenName || !familyName) {
       continue;
     }
 
-    const position = getNodeText(contactPersonNode, 'gmd:positionName/gco:CharacterString', xmlDoc, nsResolver);
-    const email = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString', xmlDoc, nsResolver);
-    const website = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL', xmlDoc, nsResolver);
+    // Extract email and website, handling potential namespace issues
+    let email = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString', xmlDoc, nsResolver);
+    let website = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL', xmlDoc, nsResolver);
 
-    // Extract affiliations
-    const affiliationNodes = xmlDoc.evaluate(
-      'gmd:organisationName/gco:CharacterString',
-      contactPersonNode,
-      nsResolver,
-      XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-      null
-    );
-
-    const affiliations = [];
-    for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
-      affiliations.push(affiliationNodes.snapshotItem(j).textContent);
+    // Fallback: Try extracting without namespaces if necessary (adjust paths accordingly)
+    if (!email) {
+      email = getNodeText(contactPersonNode, '//electronicMailAddress/CharacterString', xmlDoc, null); // No resolver
+    }
+    if (!website) {
+      website = getNodeText(contactPersonNode, '//linkage/URL', xmlDoc, null); // No resolver
     }
 
-    if (i === 0) {
-      // First Contact Person - use existing row
-      const firstRow = $('#group-contactperson .row[contact-person-row]:first');
-      firstRow.find('input[name="cpFirstname[]"]').val(givenName);
-      firstRow.find('input[name="cpLastname[]"]').val(familyName);
-      firstRow.find('input[name="cpPosition[]"]').val(position);
-      firstRow.find('input[name="cpEmail[]"]').val(email);
-      firstRow.find('input[name="cpOnlineResource[]"]').val(website);
+    // **Crucially, apply contact person details to the correct row!**
+    let $row = $('div[data-creator-row]').eq(i);
 
-      // Initialize Tagify for affiliations
-      const affiliationInput = firstRow.find('input[name="cpAffiliation[]"]')[0];
-      if (affiliationInput && affiliationInput.tagify) {
-        affiliationInput.tagify.addTags(affiliations.map(a => ({ value: a })));
-      }
-    } else {
-      // Additional contact persons - simulate button click
-      $('#button-contactperson-add').click();
-
-      // Find newly added row
-      const newRow = $('#group-contactperson .row[contact-person-row]').last();
-
-      // Set values
-      newRow.find('input[name="cpFirstname[]"]').val(givenName);
-      newRow.find('input[name="cpLastname[]"]').val(familyName);
-      newRow.find('input[name="cpPosition[]"]').val(position);
-      newRow.find('input[name="cpEmail[]"]').val(email);
-      newRow.find('input[name="cpOnlineResource[]"]').val(website);
-
-      // Wait briefly for Tagify initialization
-      setTimeout(() => {
-        const affiliationInput = newRow.find('input[name="cpAffiliation[]"]')[0];
-        if (affiliationInput && affiliationInput.tagify) {
-          affiliationInput.tagify.addTags(affiliations.map(a => ({ value: a })));
-        }
-      }, 100);
+    // Ensure the row exists; add it if needed
+    if ($row.length === 0) {
+      $('#button-author-add').click();
+      $row = $('div[data-creator-row]').eq(i);
     }
+
+    // Mark the row as contact person
+    $row.find('input[name="contacts[]"]').prop('checked', true);
+
+    // Show the contact person fields
+    $row.find('.contact-person-input').show();
+
+    // Populate the contact person fields
+    $row.find('input[name="cpEmail[]"]').val(email || '');
+    $row.find('input[name="cpOnlineResource[]"]').val(website || '');
   }
 }
 
