@@ -34,17 +34,31 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="label-mslkeyword-modal" data-translate="keywords.mslKeywords">EPOS
-                    Multi-Scale Laboratories Keywords</h5>
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                        data-help-section-id="help-mslKeywords-keywordviewer"></i></span>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="label-mslkeyword-modal" data-translate="keywords.mslKeywords">
+                    EPOS Multi-Scale Laboratories Keywords
+                </h5>
+                <span class="input-group-text">
+                    <i class="bi bi-question-circle-fill" data-help-section-id="help-mslKeywords-keywordviewer"></i>
+                </span>
             </div>
-            <div class="modal-body">
-                <div id="panel-mslkeyword-thesaurus">
-                    <input type="text" class="form-control mb-3" id="input-mslkeyword-thesaurussearch" placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
+            <div class="modal-body d-flex">
+                <!-- Left Side: Keyword Selection Tree -->
+                <div id="panel-mslkeyword-thesaurus" class="w-50 pe-3 border-end">
+                    <input type="text" class="form-control mb-3" id="input-mslkeyword-thesaurussearch"
+                        placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
                     <div id="jstree-mslkeyword"></div>
                 </div>
+
+                <!-- Right Side: Selected Keywords -->
+                <div class="w-50 ps-3">
+                    <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+                    <ul id="selected-keywords-msl" class="list-group">
+                        <!-- Selected keywords will appear here dynamically -->
+                    </ul>                    
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>

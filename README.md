@@ -15,6 +15,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
     - [API-Endpunkte](#api-endpunkte)
   - [Formularfelder](#formularfelder)
   - [Data validation](#data-validation)
+  - [Data Mapping and Occurences](#data-mapping-and-occurences)
   - [Database structure](#database-structure)
   - [Contributing](#contributing)
   - [Testing](#testing)
@@ -278,7 +279,8 @@ The following third-party dependencies are included in header.html and footer.ht
 ### Licenses & Rights
 
 - Rights Title
-The content of this field is mapped to `<rights>` in the DataCite scheme and to `<resourceConstraints> <gmd:MD_Constraints> <gmd:useLimitation>` as well as `<gmd:resourceConstraints> <gmd:MD_LegalConstraints>` in the ISO scheme.
+
+  The content of this field is mapped to `<rights>` in the DataCite scheme and to `<resourceConstraints> <gmd:MD_Constraints> <gmd:useLimitation>` as well as `<gmd:resourceConstraints> <gmd:MD_LegalConstraints>` in the ISO scheme.
 
   This field contains the title of the license with its abbreviation.
   - Data type: String
@@ -302,7 +304,7 @@ The content of this field is mapped to `<rights>` in the DataCite scheme and to 
 
   This field specifies if the license is used for software (forSoftware=1) or not (forSoftware=0). The controlled list changes for users based on this parameter when resource type Software is chosen.
 
-### Authors
+### Author(s)
 Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsibleParty>` in the ISO scheme.
 Occurrence is: 1-n
 
@@ -358,7 +360,7 @@ Occurrence is: 1-n
 ### Contact Person(s)
 A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
 
-- Last name
+- Last Name
 
   This field contains the surname of the person.
   - Data type: String
@@ -367,7 +369,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Restrictions: Mandatory
   - Example values: `Jemison`, `Smith`
 
-- Firstname
+- First Name
 
   This field contains the first name of the person.
   - Data type: String
@@ -404,6 +406,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Example values: `gfz.de`, `fh-potsdam.de`
 
 - Affiliation
+    
   This field contains the affiliation of the person.
   - Data type: String
   - Occurrence: 0-n
@@ -593,11 +596,11 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
     valueURI `https://epos-msl.uu.nl/voc/materials/1.3/minerals-chemical_elements-selenium`, 
     language `en`
 
-#### GCMD Science Keywords
+#### Thesaurus Keywords
 
-Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and Earth Science Services) are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html))
+Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GCMD Instruments are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html))
 
-- GCMD Science Keyword
+- **GCMD Science Keyword**
 
   This field contains keywords to describe the content of the resource.
   - Data type: String
@@ -619,6 +622,56 @@ Keywords from the GCMD vocabulary. Only GCMD Science Keywords (Earth Science and
     scheme `NASA/GCMD Earth Science Keywords`, 
     schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"`, 
     valueURI `https://gcmd.earthdata.nasa.gov/kms/concept/b2318fb3-788c-4f36-a1d1-36670d2da747"`, 
+    language `en`
+
+
+- **GCMD Platforms**
+
+  This field contains keywords to describe the content of the resource.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
+  - Restrictions: Terms can be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - Example Values: `Platforms > Air-based Platforms > Dropwindsondes > DROPWINDSONDES`
+
+- *Saved in backend (not visible to user):* scheme, schemeURI, valueURI, language
+
+  The purpose of these fields is to clearly identify the keyword.
+  - Data type: String
+  - Occurence: 1 for controlled (thesaurus) keywords
+  - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
+  - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - Example values: 
+    scheme `NASA/GCMD Platforms Keywords`, 
+    schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms`, 
+    valueURI `https://gcmd.earthdata.nasa.gov/kms/concept/fa514134-ff56-47d1-bc02-6b8568ad21e7`, 
+    language `en`
+
+
+- **GCMD Instruments**
+
+  This field contains keywords to describe the content of the resource.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
+  - Restrictions: Terms can be selected from controlled list
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - Example Values: `Instruments > Solar/Space Observing Instruments > Photon/Optical Detectors > Charged Coupled Devices > K-LINE CCD/SOLAR OSCILLATIONS`
+
+- *Saved in backend (not visible to user):* scheme, schemeURI, valueURI, language
+
+  The purpose of these fields is to clearly identify the keyword.
+  - Data type: String
+  - Occurence: 1 for controlled (thesaurus) keywords
+  - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
+  - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - Example values: 
+    scheme `NASA/GCMD Instruments`, 
+    schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments`, 
+    valueURI `https://gcmd.earthdata.nasa.gov/kms/concept/657ac23c-4ee8-400c-bd41-165dfd3845f5`, 
     language `en`
 
 #### Free Keywords
@@ -855,6 +908,104 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 <details>
   <summary>
 
+
+  ## Data Mapping and Occurences
+  </summary>
+The following table gives a quick overview on the occurences of the form fields in comparison to the occurences of the corresponding DataCite metadata as described in the [DataCite 4.5 documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/). Input fields visable to the user are marked **bold** in the table whereas hidden fields are in *italics*.
+
+| Form group                 | **Input Field**                           |            Occurence in ELMO            | Occurence in DataCite metadata scheme | Mapped to in DataCite                                                                                                                                                       |
+| -------------------------- | ----------------------------------------- | :-------------------------------------: | :-----------------------------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Resource Information       |                                           |                                         |                                       |                                                                                                                                                                             |
+|                            | **DOI**                                   |                   0-1                   |                   1                   | `<identifier>` with `<identifier identifierType="DOI">`                                                                                                                     |
+|                            | **Publication Year**                      |                    1                    |                   1                   | `<publicationYear>`                                                                                                                                                         |
+|                            | **Resource Type**                         |                    1                    |                   1                   | `<resourceType>` as well as `<resourceTypeGeneral>`                                                                                                                         |
+|                            | **Version**                               |                   0-1                   |                  0-1                  | `<version>`                                                                                                                                                                 |
+|                            | **Language of Dataset**                   |                    1                    |                  0-1                  | `<language>`                                                                                                                                                                |
+|                            | **Title**                                 |   1-n (n=$maxTitles in settings.php)    |                  1-n                  | `<title>`                                                                                                                                                                   |
+|                            | **Title Type**                            | 1 (if corresponding title ≠ main title) |                  0-1                  | `<titleType>`                                                                                                                                                               |
+| Licenses & Rights          |                                           |                                         |                                       |                                                                                                                                                                             |
+|                            | **Rights Title**                          |                    1                    |                  0-n                  | `<rights>`                                                                                                                                                                  |
+|                            | *rightsURI*                               |                    1                    |                  0-1                  | `<rights rightsURI="...">`                                                                                                                                                  |
+| Author(s)                  |                                           |                   1-n                   |                  1-n                  | `<creators>`                                                                                                                                                                |
+|                            | **Last Name**                             |                    1                    |                   1                   | `<creator><creatorName><familyName>`                                                                                                                                        |
+|                            | **First Name**                            |                    1                    |                   1                   | `<creator><creatorName><givenName>`                                                                                                                                         |
+|                            | **Author ORCID**                          |                   0-1                   |                  0-n                  | `<nameIdentifier schemeURI="https://orcid.org/" nameIdentifierScheme="ORCID">`                                                                                              |
+|                            | **Affiliation**                           |                   0-n                   |                  0-n                  | `<creator><creatorName><affiliation>`                                                                                                                                       |
+|                            | *rorID*                                   |                   0-1                   |                  0-1                  | `<creator><creatorName><affiliation>` long: `<affiliation affiliationIdentifier="https://ror.org/XXXXXXXXX" affiliationIdentifierScheme="ROR" schemeURI="https://ror.org">` |
+| Contact Person(s)          |                                           |                   0-n                   |                  0-n                  | `<contributor contributorType="Contact Person">`                                                                                                                            |
+|                            | **Last Name**                             |                    1                    |                  0-1                  | `<contributorName><familyName>`                                                                                                                                             |
+|                            | **First Name**                            |                    1                    |                  0-1                  | `<contributorName><givenName>`                                                                                                                                              |
+|                            | **Position**                              |                   0-1                   |                  --                   | --                                                                                                                                                                          |
+|                            | **Email adress**                          |                    1                    |                  --                   | --                                                                                                                                                                          |
+|                            | **Website**                               |                   0-1                   |                  --                   | --                                                                                                                                                                          |
+|                            | **Affiliation**                           |                   0-n                   |                  0-n                  | `<contributor><affiliation>`                                                                                                                                                |
+|                            | *rorID*                                   |                   0-1                   |                  0-1                  | `<contributor><contributorName><affiliation>`                                                                                                                               |
+| Originating Laboratory     |                                           |                   0-n                   |                  0-n                  | `<contributor contributorType="HostingInstitution"><contributorName>`                                                                                                       |
+|                            | *LabID*                                   |                    1                    |                   1                   | `<nameIdentifier nameIdentifierScheme="labid">`                                                                                                                             |
+|                            | *laboratoryAffiliation*                   |                    1                    |                  0-n                  | `<affiliation>`                                                                                                                                                             |
+| Contributors (Person)      |                                           |                   0-n                   |                  0-n                  | `<contributor nameType="Personal">`                                                                                                                                         |
+|                            | **ORCID**                                 |                   0-1                   |                   1                   | `<nameIdentifier>`                                                                                                                                                          |
+|                            | **Last Name**                             |                    1                    |                  0-1                  | `<familyName>`                                                                                                                                                              |
+|                            | **First Name**                            |                    1                    |                  0-1                  | `<givenName>`                                                                                                                                                               |
+|                            | **Role**                                  |                  1-10                   |                   1                   | `<contributorType>`                                                                                                                                                         |
+|                            | **Affiliation**                           |                   0-n                   |                  0-n                  | `<affiliation>`                                                                                                                                                             |
+|                            | *rorID*                                   |                   0-1                   |                  0-1                  | `<affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org" affiliationIdentifier="https://ror.org/*rorID*">`                                               |
+| Contributors (Institution) |                                           |                   0-n                   |                  0-n                  | `<contributor nameType="Organizational">`                                                                                                                                   |
+|                            | **Organisation Name**                     |                    1                    |                   1                   | `<contributorName>`                                                                                                                                                         |
+|                            | **Role**                                  |                  1-10                   |                   1                   | `<contributorType>`                                                                                                                                                         |
+|                            | **Affiliation**                           |                   0-n                   |                  0-n                  | `<affiliation>`                                                                                                                                                             |
+|                            | *rorID*                                   |                   0-1                   |                  0-1                  | `<contributor><contributorName><affiliation>`                                                                                                                               |
+| Descriptions               |                                           |                                         |                                       | `<descriptions>`                                                                                                                                                            |
+|                            | **Abstract**                              |                    1                    |                  0-n                  | `<description descriptionType="Abstract">`                                                                                                                                  |
+|                            | **Methods**                               |                   0-1                   |                  0-n                  | `<description descriptionType="Methods">`                                                                                                                                   |
+|                            | **TechnicalInfo**                         |                   0-1                   |                  0-n                  | `<description descriptionType="TechnicalInfo">`                                                                                                                             |
+|                            | **Other**                                 |                   0-1                   |                  0-n                  | `<description descriptionType="Other">`                                                                                                                                     |
+| Keywords                   |                                           |                                         |                                       | `<subjects>`                                                                                                                                                                |
+|                            | **EPOS Multi-Scale Laboratories Keyword** |                   0-n                   |                  0-n                  | `<subject>`                                                                                                                                                                 |
+|                            | *scheme*                                  |                    1                    |                  0-1                  | `<subject subjectScheme="https://epos-msl.uu.nl/voc/paleomagnetism/1.3/">`                                                                                                  |
+|                            | *schemeURI*                               |                    1                    |                  0-1                  | `<subject schemeURI="https://epos-msl.uu.nl/voc/paleomagnetism/1.3/">`                                                                                                      |
+|                            | *valueURI*                                |                    1                    |                  0-1                  | `<subject valueURI="...">`                                                                                                                                                  |
+|                            | *language*                                |                    1                    |                  --                   | `<subject xml:lang="en">`                                                                                                                                                   |
+|                            | **GCMD Science Keywords**                 |                   0-n                   |                  0-n                  | `<subject>`                                                                                                                                                                 |
+|                            | *scheme*                                  |                    1                    |                  0-1                  | `<subjectScheme="NASA/GCMD Earth Science Keywords">`                                                                                                                        |
+|                            | *schemeURI*                               |                    1                    |                  0-1                  | `<subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">`                                                                         |
+|                            | *valueURI*                                |                    1                    |                  0-1                  | `<subject valueURI="...">`                                                                                                                                                  |
+|                            | *language*                                |                    1                    |                  --                   | `<subject xml:lang>`                                                                                                                                                        |
+|                            | **Free Keyword**                          |                   0-n                   |                  0-n                  | `<subject>`                                                                                                                                                                 |
+| Dates                      |                                           |                                         |                                       | `<date>`                                                                                                                                                                    |
+|                            | **Date created**                          |                    1                    |                  0-n                  | `<date dateType="Created">`                                                                                                                                                 |
+|                            | **Embargo until**                         |                   0-1                   |                  0-n                  | `<date dateType="Available">`                                                                                                                                               |
+| Spatial Coverage           |                                           |                   0-n                   |                  0-n                  | `<geoLocation><geoLocationPoint>` or `<geoLocation><geoLocationBox>`                                                                                                        |
+|                            | **Latitude Min**                          |                    1                    |                   1                   | `<pointLatitude>`                                                                                                                                                           |
+|                            | **Longitude Min**                         |                    1                    |                   1                   | `<pointLongitude>`                                                                                                                                                          |
+|                            | **Latitude Min**                          |                    1                    |                   1                   | `<southBoundLatitude>`                                                                                                                                                      |
+|                            | **Latitude Max**                          |                    1                    |                   1                   | `<northBoundLatitude>`                                                                                                                                                      |
+|                            | **Longitude Min**                         |                    1                    |                   1                   | `<westBoundLongitude>`                                                                                                                                                      |
+|                            | **Longitude Max**                         |                    1                    |                   1                   | `<eastBoundLongitudens>`                                                                                                                                                    |
+|                            | **Description**                           |                    1                    |                   1                   | `<geoLocationPlace>`                                                                                                                                                        |
+| Temporal Coverage          |                                           |                   0-n                   |                  0-n                  | `<date>`                                                                                                                                                                    |
+|                            | **Start Date**                            |                    1                    |                   1                   | `<date dateType="Collected">`                                                                                                                                               |
+|                            | **Start Time**                            |                   0-1                   |                   1                   | `<date dateType "Collected">`                                                                                                                                               |
+|                            | **End Date**                              |                    1                    |                   1                   | `<date dateType="Collected">`                                                                                                                                               |
+|                            | **End Time**                              |                   0-1                   |                   1                   | `<date dateType="Collected">`                                                                                                                                               |
+|                            | **Timezone**                              |                   0-1                   |                   1                   | `<date dateType="Collected">`                                                                                                                                               |
+| Related Work               |                                           |                   0-n                   |                  0-n                  |                                                                                                                                                                             |
+|                            | **Relation**                              |                    1                    |                   1                   | `<relationType>`                                                                                                                                                            |
+|                            | **Identifier**                            |                    1                    |                  0-n                  | `<relatedIdentifier>`                                                                                                                                                       |
+|                            | **Identifier Type**                       |                    1                    |                   1                   | `<relatedIdentifier relatedIdentifiertype>`                                                                                                                                 |
+| Funding Reference          |                                           |                   0-n                   |                  0-n                  | `<fundingReferences>`                                                                                                                                                       |
+|                            | **Funder**                                |                    1                    |                  0-n                  | `<funderName>`                                                                                                                                                              |
+|                            | *funderId*                                |                   0-1                   |                  0-1                  | `<funderIdentifier>`                                                                                                                                                        |
+|                            | *funderidtyp*                             |                   0-1                   |                   1                   | `<funderIdentifier funderIdentifierType>`                                                                                                                                   |
+|                            | *schemeURI*                               |                   0-1                   |                  0-1                  | `<funderIdentifier schemeURI>`                                                                                                                                              |
+|                            | **Grant Number**                          |                   0-1                   |                  0-1                  | `<awardNumber>`                                                                                                                                                             |
+|                            | **Grant Name**                            |                   0-1                   |                  0-1                  | `<awardTitle>`                                                                                                                                                              |
+
+</details>
+
+<details>
+  <summary>
+
   ## Data validation
   </summary>
 
@@ -915,5 +1066,5 @@ The flollowing unit tests are available:
 - `vendor/bin/phpunit tests/SaveRelatedworkTest.php`
 - `vendor/bin/phpunit tests/SaveResourceInformationAndRightsTest.php`
 - `vendor/bin/phpunit tests/SaveSpatialTemporalCoverageTest.php`
-- `vendor/bin/phpunit tests/SaveThesauruskeywordsTest.php`
+- `vendor/bin/phpunit tests/SaveKeywordsTest.php`
 The user interface is also tested with Selenium. All tests are executed automatically during a pull.

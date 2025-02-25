@@ -1,27 +1,116 @@
 <div class="card mb-2">
-  <div class="card-header"><b data-translate="keywords.thesaurus.title">GCMD Science Keywords</b></div>
-  <div class="card-body reduce-padding">
-    <!------------------------------- NASA GCMD SCIENCE KEYWORDS ------------------------------------------------------------>
-    <!-- Input field -->
-    <div class="input-group has-validation input-margin-top-bottom">
-      <div class="form-floating">
-        <div class="input-group has-validation">
-          <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-sciencekeyword"
-            name="thesaurusKeywords" />
-          <span class="input-group-text"><i class="bi bi-question-circle-fill"
-              data-help-section-id="help-scienceKeywords-keyword"></i></span>
+  <div class="card-header">
+    <b data-translate="keywords.thesaurus.name"></b>
+  </div>
+
+  <div id="thesaurusKeywordsGroup">
+    <div class="accordion p-2" id="accordionThesauri">
+
+      <!------------------------------- GCMD SCIENCE KEYWORDS ------------------------------------------------------------>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingScienceKeywords">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapseScienceKeywords" aria-expanded="false" aria-controls="collapseScienceKeywords">
+            GCMD Science Keywords
+          </button>
+        </h2>
+        <div id="collapseScienceKeywords" class="accordion-collapse collapse show" aria-labelledby="headingScienceKeywords"
+          data-bs-parent="#accordionThesauri">
+          <div class="accordion-body">
+            <!-- Input field -->
+            <div class="input-group has-validation input-margin-top-bottom">
+              <div class="form-floating">
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="input-sciencekeyword" name="gcmdScienceKeywords" />
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-scienceKeywords-keyword"></i></span>
+                </div>
+              </div>
+              <!-- Thesaurus button -->
+              <div class="col-auto p-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                  data-bs-target="#modal-sciencekeyword" id="button-sciencekeyword-open">
+                  <i class="bi bi-diagram-3"></i>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <!-- Thesaurus button -->
-      <div class="col-auto p-2">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-sciencekeyword"
-          id="button-sciencekeyword-open">
-          <i class="bi bi-diagram-3"></i>
-        </button>
+
+      <!------------------------------- GCMD PLATFORMS ------------------------------------------------------------>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingPlatforms">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapsePlatforms" aria-expanded="false" aria-controls="collapsePlatforms">
+            GCMD Platforms
+          </button>
+        </h2>
+        <div id="collapsePlatforms" class="accordion-collapse collapse" data-bs-parent="#accordionThesauri">
+          <div class="accordion-body">
+            <!-- Input field -->
+            <div class="input-group has-validation input-margin-top-bottom">
+              <div class="form-floating">
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="input-Platforms" name="platforms" />
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-gcmd-platforms-keyword"></i></span>
+                </div>
+              </div>
+              <!-- Thesaurus button -->
+              <div class="col-auto p-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-Platforms"
+                  id="platformKeywordsThesaurus">
+                  <i class="bi bi-diagram-3"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!------------------------------- GCMD INSTRUMENTS ------------------------------------------------------------>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingInstruments">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapseInstruments" aria-expanded="false" aria-controls="collapseInstruments">
+            GCMD Instruments
+          </button>
+        </h2>
+        <div id="collapseInstruments" class="accordion-collapse collapse" data-bs-parent="#accordionThesauri">
+          <div class="accordion-body">
+            <!-- Input field -->
+            <div class="input-group has-validation input-margin-top-bottom">
+              <div class="form-floating">
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="input-Instruments" name="instruments" />
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-gcmd-instruments-keyword"></i></span>
+                </div>
+              </div>
+              <!-- Thesaurus button -->
+              <div class="col-auto p-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-instruments"
+                  id="openInstrumentsThesaurus">
+                  <i class="bi bi-diagram-3"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
+</div>
+
+
+<!------------------------------- Modals ------------------------------------------------------------>
+
 <!-- Modal for Science Keywords -->
 <div class="modal fade <?php if 
       (isset($_SESSION['scienceModal']) && $_SESSION['scienceModal'] == 'true') 
@@ -30,18 +119,106 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="label-sciencekeyword-modal" data-translate="keywords.thesaurus.title">GCMD Science
-          Keywords</h5>
+        <h5 class="modal-title" id="label-sciencekeyword-modal" data-translate="keywords.sciencekeywords">
+          GCMD Science Keywords
+        </h5>
         <span class="input-group-text"><i class="bi bi-question-circle-fill"
-            data-help-section-id="help-scienceKeywords-keywordviewer"></i></span>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            data-help-section-id="help-keywords-keywordviewer"></i></span>
       </div>
-      <div class="modal-body">
-        <div id="panel-sciencekeyword-thesaurus">
-          <input type="text" class="form-control mb-3" id="input-sciencekeyword-search"
+      <div class="modal-body d-flex">
+        <!-- Left Side: Keyword Selection Tree -->
+        <div id="panel-sciencekeyword-thesaurus" class="w-50 pe-3 border-end">
+          <input type="text" class="form-control mb-3" id="input-sciencekeyword-thesaurussearch"
             placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
           <div id="jstree-sciencekeyword"></div>
         </div>
+
+        <!-- Right Side: Selected Keywords -->
+        <div class="w-50 ps-3">
+          <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+          <ul id="selected-keywords-gcmd" class="list-group">
+            <!-- Selected keywords will appear here dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal for GCMD PLATFORMS -->
+<div class="modal fade <?php if 
+      (isset($_SESSION['PlatformsModal']) && $_SESSION['PlatformsModal'] == 'true') 
+      {echo 'show'; } ?>
+      " id="modal-Platforms" tabindex="-1" aria-labelledby="label-Platforms-modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="label-Platforms-modal" data-translate="keywords.Platforms">
+          GCMD Platforms
+        </h5>
+        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+            data-help-section-id="help-keywords-keywordviewer"></i></span>
+      </div>
+      <div class="modal-body d-flex">
+        <!-- Left Side: Keyword Selection Tree -->
+        <div id="panel-Platforms-thesaurus" class="w-50 pe-3 border-end">
+          <input type="text" class="form-control mb-3" id="input-Platforms-thesaurussearch"
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
+          <div id="jstree-Platforms"></div>
+        </div>
+
+        <!-- Right Side: Selected Keywords -->
+        <div class="w-50 ps-3">
+          <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+          <ul id="selected-keywords-Platforms-gcmd" class="list-group">
+            <!-- Selected keywords will appear here dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal for GCMD INSTRUMENTS -->
+<div class="modal fade <?php if 
+      (isset($_SESSION['instrumentsModal']) && $_SESSION['instrumentsModal'] == 'true') 
+      {echo 'show'; } ?>
+      " id="modal-instruments" tabindex="-1" aria-labelledby="label-instruments-modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="label-instruments-modal" data-translate="keywords.instruments">
+          GCMD Instruments
+        </h5>
+        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+            data-help-section-id="help-keywords-keywordviewer"></i></span>
+      </div>
+      <div class="modal-body d-flex">
+        <!-- Left Side: Keyword Selection Tree -->
+        <div id="panel-instruments-thesaurus" class="w-50 pe-3 border-end">
+          <input type="text" class="form-control mb-3" id="input-instruments-thesaurussearch"
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
+          <div id="jstree-instruments"></div>
+        </div>
+
+        <!-- Right Side: Selected Keywords -->
+        <div class="w-50 ps-3">
+          <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+          <ul id="selected-keywords-instruments-gcmd" class="list-group">
+            <!-- Selected keywords will appear here dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
       </div>
     </div>
   </div>
