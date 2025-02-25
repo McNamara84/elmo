@@ -84,6 +84,18 @@
     animation: multi-color-blink 2s linear infinite;
 }
 
+.modal-dialog {
+    max-width: 90vw;
+    /* Set width to 90% of the viewport */
+    width: 90vw;
+}
+
+#jstree-sciencekeyword,
+#jstree-mslkeyword {
+    width: 100%;
+    max-width: 600px;
+    overflow-x: auto;
+}
 
 
 /* Upload Modal */

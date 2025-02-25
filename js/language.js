@@ -72,6 +72,17 @@ function applyTranslations() {
         }
     });
 
+    // Update placeholder for elements with data-translate-placeholder attribute
+    $('[data-translate-placeholder]').each(function () {
+        const element = $(this);
+        const placeholderKey = element.data('translate-placeholder');
+        const translatedPlaceholder = getNestedValue(translations, placeholderKey);
+
+        if (translatedPlaceholder) {
+            element.attr('placeholder', translatedPlaceholder);
+        }
+    });
+
     // Translate placeholders in the first row
     translatePlaceholders($("#group-stc").children().first());
 

@@ -15,13 +15,11 @@
         <div id="collapse-abstract" class="accordion-collapse collapse show" data-bs-parent="#accordion-description">
           <div class="accordion-body">
             <div class="input-group has-validation">
-              <div class="form-floating">
-                <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
-                  placeholder="Please enter an abstract..." id="input-abstract" name="descriptionAbstract" required></textarea>
-                <label for="input-abstract"><span data-translate="descriptions.abstract">Abstract</span><span
-                    class="text-danger">*</span>
-                </label>
-              </div>
+              <textarea class="form-control input-with-help input-right-no-round-corners"
+                data-translate-placeholder="descriptions.abstractPlaceholder" id="input-abstract"
+                name="descriptionAbstract" style="height: 100px" required></textarea>
+              <label for="input-abstract" style="display: none;"><span
+                  data-translate="descriptions.abstract">Abstract</span><span class="text-danger">*</span></label>
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
                   data-help-section-id="help-description-abstract"></i></span>
             </div>
@@ -40,13 +38,12 @@
         <div id="collapse-methods" class="accordion-collapse collapse" data-bs-parent="#accordion-description">
           <div class="accordion-body">
             <div class="input-group has-validation">
-              <div class="form-floating">
-                <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
-                  placeholder="Please describe the methods..." id="input-methods" name="descriptionMethods"></textarea>
-                <label for="input-methods" data-translate="descriptions.methods">
+                <textarea class="form-control input-with-help input-right-no-round-corners"
+                  id="input-methods" name="descriptionMethods"
+                  data-translate-placeholder="descriptions.methodsPlaceholder" style="height: 100px"></textarea>
+                <label for="input-methods" data-translate="descriptions.methods" style="display: none;">
                   Methods
                 </label>
-              </div>
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
                   data-help-section-id="help-description-methods"></i></span>
             </div>
@@ -65,14 +62,12 @@
         <div id="collapse-technicalinfo" class="accordion-collapse collapse" data-bs-parent="#accordion-description">
           <div class="accordion-body">
             <div class="input-group has-validation">
-              <div class="form-floating">
-                <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
-                  placeholder="Please enter technical information..." id="input-technicalinfo"
-                  name="descriptionTechnical"></textarea>
-                <label for="input-technicalinfo" data-translate="descriptions.technicalInfo">
+                <textarea class="form-control input-with-help input-right-no-round-corners"
+                data-translate-placeholder="descriptions.technicalinfoPlaceholder" id="input-technicalinfo"
+                  name="descriptionTechnical" style="height: 100px"></textarea>
+                <label for="input-technicalinfo" data-translate="descriptions.technicalInfo" style="display: none;">
                   Technical Information
                 </label>
-              </div>
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
                   data-help-section-id="help-description-technicalinfo"></i></span>
             </div>
@@ -91,13 +86,12 @@
         <div id="collapse-other" class="accordion-collapse collapse" data-bs-parent="#accordion-description">
           <div class="accordion-body">
             <div class="input-group has-validation">
-              <div class="form-floating">
-                <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
-                  placeholder="Please enter other information..." id="input-other" name="descriptionOther"></textarea>
-                <label for="input-other" data-translate="descriptions.other">
+                <textarea class="form-control input-with-help input-right-no-round-corners"
+                data-translate-placeholder="descriptions.otherPlaceholder" id="input-other" name="descriptionOther"
+                  style="height: 100px"></textarea>
+                <label for="input-other" data-translate="descriptions.other" style="display: none;">
                   Other
                 </label>
-              </div>
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
                   data-help-section-id="help-description-other"></i></span>
             </div>
