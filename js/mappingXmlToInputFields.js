@@ -297,21 +297,22 @@ function processContactPersons(xmlDoc) {
     let email = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString', xmlDoc, nsResolver);
     let website = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL', xmlDoc, nsResolver);
 
-    // Fallback: Try extracting without namespaces if necessary (adjust paths accordingly)
     if (!email) {
-      email = getNodeText(contactPersonNode, '//electronicMailAddress/CharacterString', xmlDoc, null); // No resolver
+      email = getNodeText(contactPersonNode, '//electronicMailAddress/CharacterString', xmlDoc, null); 
     }
     if (!website) {
-      website = getNodeText(contactPersonNode, '//linkage/URL', xmlDoc, null); // No resolver
+      website = getNodeText(contactPersonNode, '//linkage/URL', xmlDoc, null);
     }
 
-    // **Crucially, apply contact person details to the correct row!**
-    let $row = $('div[data-creator-row]').eq(i);
+    // Find the matching author row based on name
+    let $row = $('div[data-creator-row]').filter(function () {
+      return $(this).find('input[name="familynames[]"]').val() === familyName &&
+        $(this).find('input[name="givennames[]"]').val() === givenName;
+    }).first();
 
-    // Ensure the row exists; add it if needed
     if ($row.length === 0) {
-      $('#button-author-add').click();
-      $row = $('div[data-creator-row]').eq(i);
+      console.warn(`No matching author row found for contact person: ${givenName} ${familyName}`);
+      continue;
     }
 
     // Mark the row as contact person
