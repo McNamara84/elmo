@@ -84,6 +84,18 @@
     animation: multi-color-blink 2s linear infinite;
 }
 
+.modal-dialog {
+    max-width: 90vw;
+    /* Set width to 90% of the viewport */
+    width: 90vw;
+}
+
+#jstree-sciencekeyword,
+#jstree-mslkeyword {
+    width: 100%;
+    max-width: 600px;
+    overflow-x: auto;
+}
 
 
 /* Upload Modal */
@@ -124,11 +136,11 @@ label.mandatory-field::after {
 }
 
 .navbar-sidebar .nav-link {
-    color:#00589C; 
+    color: #00589C;
 }
 
 .navbar-sidebar .nav-link:hover {
-    color: black; /* Optional: Same color or another color on hover */
+    color: black;
 }
 
 /* Installation */
@@ -139,4 +151,42 @@ label.mandatory-field::after {
 .status-icon {
     font-size: 3rem;
     margin-bottom: 1rem;
+}
+
+.settings-menu-link {
+    text-decoration: none;
+}
+
+.feedback-message-thanks {
+    display: none;
+    color: green;
+    font-size: 1.2em;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.feedback-button-send {
+    margin-left: auto;
+    display: block;
+}
+
+.add-button {
+    width: 36px;
+}
+
+.map-panel {
+    height: 500px;
+    width: 100%;
+}
+
+.textarea-description {
+    height: 100px !important;
+}
+
+.space-between-row {
+    height: 10px;
+}
+
+.unvisible {
+    display: none !important;
 }

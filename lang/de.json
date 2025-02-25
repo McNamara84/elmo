@@ -71,34 +71,41 @@
         "website": "Webseite",
         "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
     },
+    "contributorPersons": {
+        "title": "Beitragende (Personen)"
+    },
+    "contributorInstitutions": {
+        "title": "Beitragende (Organisationen)",
+        "organization": "Name der Organisation",
+        "organizationInvalid": "Bitte geben Sie einen gültigen Organisationsnamen ein."
+    },
     "laboratory": {
         "title": "Herkunftslabor",
         "name": "Name des Herkunftslabors"
-    },
-    "contributors": {
-        "title": "Beitragende",
-        "organization": "Name der Organisation",
-        "organizationInvalid": "Bitte geben Sie einen gültigen Organisationsnamen ein.",
-        "persons": "Beitragende Person(en)",
-        "institutions": "Beitragende Institution(en)"
     },
     "descriptions": {
         "title": "Beschreibungen",
         "abstract": "Abstract",
         "abstractTooltip": "Bitte geben Sie eine Zusammenfassung ein...",
+        "abstractPlaceholder": "Bitte ein Abstract zu den Daten einreichen. Bitte nicht das Abstract der dazugehörigen Publikation wiederholen, sondern die Daten an sich beschreiben.",
         "methods": "Methoden",
         "methodsTooltip": "Bitte beschreiben Sie die Methoden...",
+        "methodsPlaceholder": "Bitte eine Beschreibung der für die Studie oder Forschung verwendeten Methodik eingeben.",
         "technicalInfo": "Technische Informationen",
         "technicalInfoTooltip": "Bitte geben Sie technische Informationen ein...",
+        "technicalinfoPlaceholder": "Bitte detaillierte Informationen angeben, die mit dem Entwurf, der Implementierung, dem Betrieb, der Verwendung und/oder der Wartung eines Prozesses, Systems oder Instruments in Verbindung stehen können.",
         "other": "Sonstiges",
-        "otherTooltip": "Bitte geben Sie sonstige Informationen ein.."
+        "otherTooltip": "Bitte geben Sie sonstige Informationen ein..",
+        "otherPlaceholder": "Bitte weitere Beschreibungen eingeben, die nicht in eine der bestehenden Kategorien passen."
     },
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
-            "title": "GCMD Science Keywords",
-            "name": "Thesaurus",
-            "scienceKeywords": "NASA GCMD Science Keywords",
+            "title": "GCMD Thesauri",
+            "name": "GCMD Thesauri",
+            "scienceKeywords": "GCMD Science Keywords",
+            "platforms": "GCMD Plattformen",
+            "instruments": "GCMD Instrumente",
             "label": "Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe..."
         },
         "free": {
@@ -111,7 +118,7 @@
         "title": "Daten",
         "created": "Erstellungsdatum",
         "dateInvalid": "Bitte geben Sie ein gültiges Datum ein!",
-        "embargoUntil": "Embargo bis"
+        "embargoUntil": "Embargo bis (nur nach Absprache)"
     },
     "coverage": {
         "title": "Räumliche und zeitliche Abdeckung",
