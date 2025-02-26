@@ -84,6 +84,18 @@
     animation: multi-color-blink 2s linear infinite;
 }
 
+.modal-dialog {
+    max-width: 90vw;
+    /* Set width to 90% of the viewport */
+    width: 90vw;
+}
+
+#jstree-sciencekeyword,
+#jstree-mslkeyword {
+    width: 100%;
+    max-width: 600px;
+    overflow-x: auto;
+}
 
 
 /* Upload Modal */
@@ -129,6 +141,7 @@ label.mandatory-field::after {
 
 .navbar-sidebar .nav-link:hover {
     color: black;
+
     /* Optional: Same color or another color on hover */
 }
 
@@ -142,10 +155,48 @@ label.mandatory-field::after {
     margin-bottom: 1rem;
 }
 
+
 /* Greyed out input fields */
 .input-greyed-out {
     background-color: #e9ecef;
     /* Light grey background for normal mode */
     color: #6c757d;
     /* Grey text color */
+
+.settings-menu-link {
+    text-decoration: none;
+}
+
+.feedback-message-thanks {
+    display: none;
+    color: green;
+    font-size: 1.2em;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.feedback-button-send {
+    margin-left: auto;
+    display: block;
+}
+
+.add-button {
+    width: 36px;
+}
+
+.map-panel {
+    height: 500px;
+    width: 100%;
+}
+
+.textarea-description {
+    height: 100px !important;
+}
+
+.space-between-row {
+    height: 10px;
+}
+
+.unvisible {
+    display: none !important;
 }

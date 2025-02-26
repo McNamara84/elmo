@@ -144,7 +144,7 @@
                     Description (as mentioned in the Data Description Template)</label>
                 <div class="input-group">
                     <input type="file" class="form-control" id="input-submit-datadescription" accept=".pdf,.doc,.docx">
-                    <button class="btn btn-outline-danger" type="button" id="remove-file-btn" style="display: none;">
+                    <button class="btn btn-outline-danger" type="button" id="remove-file-btn">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
@@ -177,7 +177,7 @@
             <div class="modal-body">
                 <div id="panel-feedback-status"></div>
                 <div id="panel-feedback-message"
-                    style="display: none; color: green; font-size: 1.2em; text-align: center; margin-bottom: 20px;"
+                    class="feedback-message-thanks"
                     data-translate="modals.feedback.thankYou"></div>
 
                 <form id="form-feedback" method="POST" action="send_feedback_mail.php">
@@ -223,7 +223,7 @@
                         <textarea class="form-control" id="input-feedback-question7" name="feedbackQuestion7" rows="3"
                             required></textarea>
                     </div>
-                    <button class="btn btn-primary" id="button-feedback-send" style="margin-left: auto; display: block;"
+                    <button class="btn btn-primary" id="button-feedback-send" class="feedback-button-send"
                         data-translate="modals.feedback.sendButton"></button>
                 </form>
             </div>

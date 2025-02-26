@@ -1,0 +1,57 @@
+<div class="card mb-2">
+    <div class="card-header">
+      <b data-translate="contributorInstitutions.title">Contributor Institution(s)</b>
+      <i class="bi bi-question-circle-fill" data-help-section-id="help-contributors-fg"></i>
+    </div>
+    <div class="card-body">
+      <div id="group-contributorperson">
+      <!-- Row for Contributor Organisation -->
+      <div id="group-contributororganisation">
+        <div class="row" contributors-row>
+          <!-- Input field for Organisation Name-->
+          <div class="col-12 col-sm-12 col-md-12 col-lg-4 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                  id="input-contributor-name" name="cbOrganisationName[]"  />
+                <label for="input-contributor-name" data-translate="contributorInstitutions.organization">Organisation name</label>
+                <div class="invalid-feedback" data-translate="contributorInstitutions.organizationInvalid">Please enter a valid organization name.</div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="bi bi-question-circle-fill"    
+                    data-help-section-id="help-contributor-organisationname"></i></span>
+              </div>
+            </div>
+          </div>
+          <!-- Input field for Organisation Role(s)-->
+          <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
+            <div class="input-group has-validation">
+              <input name="cbOrganisationRoles[]"  id="input-contributor-organisationrole"
+                class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
+                data-translate-placeholder="general.roleLabel" />
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-contributor-organisationrole"></i></span>
+              <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
+            </div>
+          </div>
+          <!-- Input field for Organisation Affiliation -->
+          <div class="col-10 col-sm-10 col-md-7 col-lg-5 p-1">
+            <div class="input-group has-validation">
+              <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]" />
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-contributor-organisationaffiliation"></i></span>
+              <input type="hidden" id="input-contributor-organisationrorid" name="hiddenOrganisationRorId[]" />
+            </div>
+          </div>
+          <!-- Button for cloning Contributor row -->
+          <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
+            <button type="button" class="btn btn-primary addContributor add-button" id="button-contributor-addorganisation" data-translate="general.add">
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>

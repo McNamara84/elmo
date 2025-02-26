@@ -25,6 +25,7 @@ class SubmitHandler {
 
         this.initializeEventListeners();
         this.initializeFileHandlers();
+        this.$removeFileBtn.hide();
     }
 
     /**

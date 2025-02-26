@@ -133,17 +133,20 @@ $(document).ready(function () {
 
       // Adjust Title Type Dropdown width and make it visible
       newTitleRow.find("#container-resourceinformation-titletype")
-        .removeClass("col-10 col-md-3")
-        .addClass("col-10 col-md-3 col-lg-3")
-        .show();
+        .removeClass("col-10 col-md-3 unvisible")
+        .addClass("col-10 col-md-3 col-lg-3");
 
       // Control the visibility of the title type dropdown.
       if (titlesNumber === 0) {
         // Show the dropdown for the first title.
-        $("#container-resourceinformation-titletype").show();
+        // remove the unvisible class
+        $("#container-resourceinformation-titletype").removeClass("unvisible");
+        //$("#container-resourceinformation-titletype").show();
       } else {
         // Ensure the dropdown is visible for subsequent titles.
-        $(newTitleRow).find("#container-resourceinformation-titletype").show();
+        // add the unvisible class
+        $("#container-resourceinformation-titletype").addClass("unvisible");
+        //$(newTitleRow).find("#container-resourceinformation-titletype").show();
       }
 
       // Capture the main title type for the first row.
@@ -679,6 +682,9 @@ $(document).ready(function () {
       labData = data;
       var firstRow = $("#group-originatinglaboratory .row").first();
       initializeTagify(firstRow, data);
+
+      // Register event listener for translations after initial setup
+      document.addEventListener('translationsLoaded', refreshLaboratoryTagifyInstances);
     });
   }
 
@@ -723,7 +729,13 @@ $(document).ready(function () {
 
     // Event handler for the remove button
     newOriginatingLaboratoryRow.on("click", ".removeButton", function () {
-      $(this).closest(".row").remove();
+      // Find and remove the corresponding instance from tracking array
+      const rowElement = $(this).closest(".row")[0];
+      laboratoryTagifyInstances = laboratoryTagifyInstances.filter(instance =>
+        instance.row[0] !== rowElement);
+
+      // Remove the row from DOM
+      $(rowElement).remove();
     });
   });
 
@@ -760,6 +772,12 @@ $(document).ready(function () {
   });
 
   /**
+   * Stores all initialized laboratory Tagify instances for later reference.
+   * @type {Array<Object>}
+   */
+  var laboratoryTagifyInstances = [];
+
+  /**
    * Initializes Tagify on the laboratory name and affiliation fields.
    *
    * @param {jQuery} row - The row element containing the input fields.
@@ -771,6 +789,9 @@ $(document).ready(function () {
     var inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]')[0];
     var hiddenRorId = row.find('input[name="laboratoryRorIds[]"]')[0];
     var hiddenLabId = row.find('input[name="LabId[]"]')[0];
+
+    // Skip if elements don't exist
+    if (!inputName || !inputAffiliation) return null;
 
     /**
      * Finds a lab object by its name.
@@ -785,7 +806,7 @@ $(document).ready(function () {
     var tagifyName = new Tagify(inputName, {
       whitelist: data.map((item) => item.name),
       enforceWhitelist: true,
-      placeholder: translations.laboratory.name,
+      placeholder: translations.laboratory.name || "Lab name",
       maxTags: 1,
       dropdown: {
         maxItems: 90,
@@ -852,9 +873,57 @@ $(document).ready(function () {
       }
     });
 
-    return { tagifyName, tagifyAffiliation };
+    // Store references to the Tagify instances and their elements
+    const instance = {
+      tagifyName,
+      tagifyAffiliation,
+      row: row
+    };
+
+    // Add to global tracking array
+    laboratoryTagifyInstances.push(instance);
+
+    return instance;
   }
 
+  /**
+   * Updates the placeholder text for all laboratory Tagify instances.
+   * This is a lightweight alternative to completely refreshing the instances.
+   * 
+   * @returns {void}
+   */
+  function refreshLaboratoryTagifyInstances() {
+    if (!laboratoryTagifyInstances.length) return;
+
+    const labPlaceholder = translations.laboratory.name || "Lab name";
+
+    // For each instance, update only the placeholder text
+    laboratoryTagifyInstances.forEach(instance => {
+      if (!instance.tagifyName || !instance.tagifyName.DOM || !instance.tagifyName.DOM.input) return;
+
+      // Update the placeholder in Tagify settings
+      instance.tagifyName.settings.placeholder = labPlaceholder;
+
+      // Update the DOM placeholder attribute
+      instance.tagifyName.DOM.input.setAttribute('data-placeholder', labPlaceholder);
+    });
+
+    console.log(`Updated placeholders for ${laboratoryTagifyInstances.length} laboratory Tagify instances`);
+  }
+
+  var labData;
+
+  if ($("#group-originatinglaboratory").length) {
+    // Load lab data from JSON and initialize Tagify on the first laboratory row
+    $.getJSON("json/msl-labs.json", function (data) {
+      labData = data;
+      var firstRow = $("#group-originatinglaboratory .row").first();
+      initializeTagify(firstRow, data);
+
+      // Register event listener for translations after initial setup
+      document.addEventListener('translationsLoaded', refreshLaboratoryTagifyInstances);
+    });
+  }
   /////////////////////////////// HELP BUTTONS /////////////////////////////////////////////////////////////////
 
   /**

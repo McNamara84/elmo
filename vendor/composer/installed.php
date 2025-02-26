@@ -3,7 +3,8 @@
         'name' => 'elmo/elmo',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '59f54657fd1d0e8984690aa8257ac4362822769b',
+        'reference' => '059a55dcd97d9363cf3ac6a013dc43972b1542d5',
+
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +23,9 @@
         'elmo/elmo' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '59f54657fd1d0e8984690aa8257ac4362822769b',
+
+            'reference' => '059a55dcd97d9363cf3ac6a013dc43972b1542d5',
+
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -110,9 +113,9 @@
             'dev_requirement' => false,
         ),
         'phpunit/php-code-coverage' => array(
-            'pretty_version' => '11.0.8',
-            'version' => '11.0.8.0',
-            'reference' => '418c59fd080954f8c4aa5631d9502ecda2387118',
+            'pretty_version' => '11.0.9',
+            'version' => '11.0.9.0',
+            'reference' => '14d63fbcca18457e49c6f8bebaa91a87e8e188d7',
             'type' => 'library',
             'install_path' => __DIR__ . '/../phpunit/php-code-coverage',
             'aliases' => array(),

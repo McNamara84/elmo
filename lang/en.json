@@ -73,34 +73,41 @@
         "website": "Website",
         "websiteInvalid": "Please provide a valid URL."
     },
+    "contributorPersons": {
+        "title": "Contributor (Persons)"
+    },
+    "contributorInstitutions": {
+        "title": "Contributor (Institutions)",
+        "organization": "Organisation name",
+        "organizationInvalid": "Please enter a valid organization name."
+    },
     "laboratory": {
         "title": "Originating Laboratory",
         "name": "Name of the originating laboratory"
-    },
-    "contributors": {
-        "title": "Contributors",
-        "organization": "Organisation name",
-        "organizationInvalid": "Please enter a valid organization name.",
-        "persons": "Contributing Person(s)",
-        "institutions": "Contributing Institution(s)"
     },
     "descriptions": {
         "title": "Descriptions",
         "abstract": "Abstract",
         "abstractTooltip": "Please enter an abstract...",
+        "abstractPlaceholder": "Please enter an abstract of the data. Please do not repeat the abstract of a paper, but describe the data itself.",
         "methods": "Methods",
         "methodsTooltip": "Please describe the methods...",
+        "methodsPlaceholder": "Please enter a description of the methodology employed for the study or research.",
         "technicalInfo": "Technical Information",
         "technicalInfoTooltip": "Please enter technical information...",
+        "technicalinfoPlaceholder": "Please enter detailed information that may be associated with design, implementation, operation, use, and/or maintenance of a process, system, or instrument.",
         "other": "Other",
-        "otherTooltip": "Please enter other information.."
+        "otherTooltip": "Please enter other information..",
+        "otherPlaceholder": "Please enter other description information that does not fit into an existing category."
     },
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
-            "title": "GCMD Science Keywords",
-            "name": "Thesaurus",
-            "scienceKeywords": "NASA GCMD Science Keywords",
+            "title": "GCMD Thesauri",
+            "name": "GCMD Thesauri",
+            "scienceKeywords": "GCMD Science Keywords",
+            "platforms": "GCMD Platforms",
+            "instruments": "GCMD Instruments",
             "label": "Open thesaurus to choose keywords or start typing..."
         },
         "free": {
@@ -113,7 +120,7 @@
         "title": "Dates",
         "created": "Date created",
         "dateInvalid": "Please enter a valid date!",
-        "embargoUntil": "Embargo until"
+        "embargoUntil": "Embargo until (only by arrangement)"
     },
     "coverage": {
         "title": "Spatial and Temporal Coverages",
@@ -128,7 +135,7 @@
         "end": "End",
         "dateTimeInvalid": "Please enter a valid date and time.",
         "timezone": "Timezone",
-        "timezoneInvalid":"Please choose a timezone",
+        "timezoneInvalid": "Please choose a timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)"
     },
     "relatedWork": {

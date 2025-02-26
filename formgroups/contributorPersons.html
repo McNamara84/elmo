@@ -1,0 +1,79 @@
+<div class="card mb-2">
+  <div class="card-header">
+    <b data-translate="contributorPersons.title">Contributors</b>
+    <i class="bi bi-question-circle-fill" data-help-section-id="help-contributors-fg"></i>
+  </div>
+  <div class="card-body">
+    <div id="group-contributorperson">
+      <!-- Row for Contributor Persons -->
+      <div class="row" contributor-person-row>
+        <!-- Input field for Contributor ORCID -->
+        <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                id="input-contributor-orcid" name="cbORCID[]" 
+                pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
+              <label for="input-contributor-orcid" data-translate="general.ORCID">ORCID</label>
+              <div class="invalid-feedback" data-translate="general.orcidInvalid">Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))</div>
+            </div>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-contributor-orcid"></i></span>
+            </div>
+          </div>
+        </div>
+        <!-- Input field for Contributor Lastname -->
+        <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="input-contributor-lastname" pattern="^[a-zA-ZäöüÄÖÜß \-]*$"
+                name="cbPersonLastname[]"  />
+              <label for="input-contributor-lastname" data-translate="general.lastName">Last Name</label>
+              <div class="invalid-feedback" data-translate="general.lastNameInvalid">Please provide a lastname. Only letters are allowed.</div>
+            </div>
+          </div>
+        </div>
+        <!-- Input field for Contributor Firstname -->
+        <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="input-contributor-firstname" pattern="^[a-zA-ZäöüÄÖÜß \-.]*$"
+                name="cbPersonFirstname[]"  />
+              <label for="input-contributor-firstname" data-translate="general.firstName">First Name</label>
+              <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Input field for Contributor Person Role(s) -->
+        <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
+          <div class="input-group has-validation">
+            <input name="cbPersonRoles[]"  id="input-contributor-personrole"
+              class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
+              data-translate-placeholder="general.roleLabel" />
+            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-contributor-role"></i></span>
+            <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+          </div>
+        </div>
+        <!-- Input field for Contributor Affiliation -->
+        <div class="col-10 col-sm-10 col-md-7 col-lg-3 p-1">
+          <div class="input-group has-validation">
+            <input type="text" class="form-control input-with-help input-right-no-round-corners"
+              id="input-contributor-personaffiliation" name="cbAffiliation[]" />
+            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-contributor-affiliation"></i></span>
+            <input type="hidden" id="input-contributor-personrorid" name="cbpRorIds[]" />
+          </div>
+        </div>
+        <!-- Button for Cloning Contributor Person row -->
+        <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
+          <button type="button" class="btn btn-primary addContributorPerson add-button" id="button-contributor-addperson"
+            data-translate="general.add">
+            +
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

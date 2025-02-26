@@ -106,7 +106,7 @@
           </div>
         </div>
         <!-- Spacing between rows -->
-        <div style="height: 10px;"></div>
+        <div class="space-between-row"></div>
         <div class="row">
           <!-- Input field Title -->
           <div class="col-10 col-sm-11 col-md-11 col-lg-11 p-1">
@@ -128,7 +128,7 @@
             </div>
           </div>
           <!-- Input field for Title Type (hidden until second title) -->
-          <div class="col-10 col-md-3 p-1" id="container-resourceinformation-titletype" style="display:none;">
+          <div class="col-10 col-md-3 p-1 unvisible" id="container-resourceinformation-titletype">
             <div class="input-group has-validation">
               <div class="form-floating">
                 <select class="form-select input-with-help input-right-no-round-corners"
@@ -150,8 +150,8 @@
           <!-- Button for cloning new rows for other titles -->
           <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
             <div class="align-items-center">
-              <button type="button" class="btn btn-primary addTitle" id="button-resourceinformation-addtitle"
-                style="width: 36px" data-translate="general.add"></button>
+              <button type="button" class="btn btn-primary addTitle add-button" id="button-resourceinformation-addtitle"
+               data-translate="general.add"></button>
             </div>
           </div>
         </div>
