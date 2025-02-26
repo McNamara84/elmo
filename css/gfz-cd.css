@@ -141,6 +141,8 @@ label.mandatory-field::after {
 
 .navbar-sidebar .nav-link:hover {
     color: black;
+
+    /* Optional: Same color or another color on hover */
 }
 
 /* Installation */
@@ -152,6 +154,14 @@ label.mandatory-field::after {
     font-size: 3rem;
     margin-bottom: 1rem;
 }
+
+
+/* Greyed out input fields */
+.input-greyed-out {
+    background-color: #e9ecef;
+    /* Light grey background for normal mode */
+    color: #6c757d;
+    /* Grey text color */
 
 .settings-menu-link {
     text-decoration: none;
