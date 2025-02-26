@@ -319,7 +319,6 @@ $(document).on('blur',
     'input[name="tscTimeStart[]"],' +
     'input[name="tscTimeEnd[]"],' +
     'input[name="rIdentifier[]"]',
-    'input[name="contacts[]"]',
     function () {
         // Check mandatory fields when user leaves any of these input fields
         checkMandatoryFields();
@@ -339,7 +338,8 @@ $(document).on('change',
     'select[name="relation[]"], ' +
     'select[name="rIdentifierType[]"], ' +
     'select[name="timezone[]"], ' +
-    'input[name="funder[]"]',
+    'input[name="funder[]"],' +
+    'input[name="contacts[]"]',
     function () {
         // Check mandatory fields when any of these fields' values change
         checkMandatoryFields();
