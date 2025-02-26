@@ -15,12 +15,18 @@ require_once 'save_affiliations.php';
  *                           - authorRorIds: array
  * @param int    $resource_id The ID of the associated resource.
  *
- * @return void
+ * @return void|false
  *
  * @throws mysqli_sql_exception If a database error occurs.
  */
 function saveAuthors($connection, $postData, $resource_id)
 {
+    // Validate required fields
+    $requiredArrayFields = ['familynames', 'givennames'];
+    
+    if (!validateRequiredFields($postData, [], $requiredArrayFields)) {
+        return false;
+    }
     $familynames = $postData['familynames'] ?? [];
     $givennames = $postData['givennames'] ?? [];
     $orcids = $postData['orcids'] ?? [];
