@@ -17,6 +17,7 @@ function validateContactPerson() {
     // 
     if (!isValid) {
         $('#group-author').append('<div id="contact-person-error" class="text-danger mt-2" data-translate="contactPersons.contactPersonError"></div>');
+        applyTranslations();
         $('input[name="contacts[]"]').prop('required', true);
     } else {
         $('input[name="contacts[]"]').prop('required', false);
