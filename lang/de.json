@@ -45,7 +45,7 @@
         "doi": "DOI",
         "doiValid": "Eine neue DOI wird registriert",
         "doiInvalid": "Bitte verwenden Sie das Format 10.ORGANISATION/ID (z.B.: 10.57757/IUGG23-3081) oder lassen Sie es leer.",
-        "publicationYear": "Erscheinungsjahr",
+        "publicationYear": "Erscheinungsjahr (JJJJ)",
         "yearPlaceholder": "JJJJ",
         "publicationYearInvalid": "Bitte geben Sie ein gültiges Jahr zwischen 1901-2155 ein (4 Ziffern im Format JJJJ).",
         "resourceType": "Ressourcentyp",
