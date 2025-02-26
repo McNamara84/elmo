@@ -19,10 +19,17 @@ $(() => {
 
     const action = $(document.activeElement).data('action');
 
+    // Validate dates before
     validateDates()
-   // if (!validateDates()) {
+    // if (!validateDates()) {
     // preventDefault();
     //};
+    if (!validateDates()) {
+      // If validation fails, show in console
+      console.error(`Date validation failed`);
+      this.showNotification('Error');
+      return;
+    }
 
     if (action === 'save') {
       saveHandler.handleSave();
@@ -32,8 +39,6 @@ $(() => {
 
   });
 });
-
-
 
 /**
  * Validates the Formgroup Dates.
@@ -47,7 +52,7 @@ var form = document.getElementById("#group-dates");
 function validateDates() {
   var createDate = new Date(createDateInput.value);
   var embargoDate = new Date(embargoDateInput.value);
-console.log(embargoDate);
+  console.log(embargoDate);
   if (embargoDate < createDate) {
     return false;
   } else {
