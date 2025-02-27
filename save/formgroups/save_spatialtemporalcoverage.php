@@ -1,15 +1,6 @@
 <?php
 require_once __DIR__ . '/../validation.php';
 
-/**
- * Saves the Spatial Temporal Coverage (STC) information into the database.
- *
- * @param mysqli $connection  The database connection.
- * @param array  $postData    The POST data from the form.
- * @param int    $resource_id The ID of the associated resource.
- *
- * @return bool Returns true if the saving was successful, otherwise false.
- */
 function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
 {
     // Basic array field validation
@@ -22,26 +13,30 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         'tscTimezone'
     ];
 
-    if (!validateRequiredFields($postData, [], $requiredArrayFields)) {
-        return false;
+    // Ensure arrays exist
+    foreach ($requiredArrayFields as $field) {
+        if (!isset($postData[$field]) || !is_array($postData[$field])) {
+            return false;
+        }
     }
 
+    // Get the length from any of the required arrays
     $len = count($postData['tscLatitudeMin']);
     $allSuccessful = true;
 
     for ($i = 0; $i < $len; $i++) {
         // Extract data for easier handling
         $entry = [
-            'latitudeMin' => $postData['tscLatitudeMin'][$i] ?? null,
-            'latitudeMax' => $postData['tscLatitudeMax'][$i] ?? null,
-            'longitudeMin' => $postData['tscLongitudeMin'][$i] ?? null,
-            'longitudeMax' => $postData['tscLongitudeMax'][$i] ?? null,
-            'description' => $postData['tscDescription'][$i] ?? null,
-            'dateStart' => $postData['tscDateStart'][$i] ?? null,
-            'dateEnd' => $postData['tscDateEnd'][$i] ?? null,
-            'timeStart' => $postData['tscTimeStart'][$i] ?? null,
-            'timeEnd' => $postData['tscTimeEnd'][$i] ?? null,
-            'timezone' => $postData['tscTimezone'][$i] ?? null
+            'latitudeMin' => $postData['tscLatitudeMin'][$i] ?? '',
+            'latitudeMax' => $postData['tscLatitudeMax'][$i] ?? '',
+            'longitudeMin' => $postData['tscLongitudeMin'][$i] ?? '',
+            'longitudeMax' => $postData['tscLongitudeMax'][$i] ?? '',
+            'description' => $postData['tscDescription'][$i] ?? '',
+            'dateStart' => $postData['tscDateStart'][$i] ?? '',
+            'dateEnd' => $postData['tscDateEnd'][$i] ?? '',
+            'timeStart' => $postData['tscTimeStart'][$i] ?? '',
+            'timeEnd' => $postData['tscTimeEnd'][$i] ?? '',
+            'timezone' => $postData['tscTimezone'][$i] ?? ''
         ];
 
         if (!validateSTCDependencies($entry)) {

@@ -102,24 +102,25 @@ function validateKeywordEntries($keywordData, $requiredFields = ['value', 'id', 
  */
 function validateSTCDependencies($entry)
 {
-    // If all fields are empty, entry is invalid
+    // Validate required base fields
     if (
-        empty($entry['latitudeMin']) && empty($entry['latitudeMax']) &&
-        empty($entry['longitudeMin']) && empty($entry['longitudeMax']) &&
-        empty($entry['description']) && empty($entry['dateStart']) &&
-        empty($entry['dateEnd']) && empty($entry['timeStart']) &&
-        empty($entry['timeEnd']) && empty($entry['timezone'])
+        empty($entry['latitudeMin']) || empty($entry['longitudeMin']) ||
+        empty($entry['description']) || empty($entry['dateStart']) ||
+        empty($entry['dateEnd']) || empty($entry['timezone'])
     ) {
         return false;
     }
 
-    // Validate time dependencies
+    // If timeStart is given, timeEnd must also be given
     if (!empty($entry['timeStart']) && empty($entry['timeEnd'])) {
         return false;
     }
 
-    // Validate coordinate dependencies
-    if (!empty($entry['longitudeMax']) && empty($entry['latitudeMax'])) {
+    // If longitudeMax is given, latitudeMax must also be given and vice versa
+    if (
+        (!empty($entry['longitudeMax']) && empty($entry['latitudeMax'])) ||
+        (empty($entry['longitudeMax']) && !empty($entry['latitudeMax']))
+    ) {
         return false;
     }
 
