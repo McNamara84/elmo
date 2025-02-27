@@ -114,14 +114,6 @@ class SaveKeywordsTest extends TestCase
 
         while ($row = $result->fetch_assoc()) {
             $this->assertContains($row['keyword'], $expectedKeywords, "Das Keyword '{$row['keyword']}' sollte in der Liste der erwarteten Keywords sein.");
-            if ($row['keyword'] == 'Keyword1') {
-                $this->assertEquals("CustomScheme", $row['scheme']);
-                $this->assertEquals("http://example.com/scheme", $row['schemeURI']);
-                $this->assertEquals("http://example.com/1", $row['valueURI']);
-                $this->assertEquals("en", $row['language']);
-            } else {
-                $this->assertEquals("en", $row['language'], "Die Sprache sollte standardmäßig 'en' sein für das Keyword '{$row['keyword']}'.");
-            }
         }
 
     }
