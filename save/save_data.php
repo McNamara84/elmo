@@ -22,7 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once 'formgroups/save_contactperson.php';
     require_once 'formgroups/save_originatinglaboratory.php';
     require_once 'formgroups/save_freekeywords.php';
-    require_once 'formgroups/save_contributors.php';
+    require_once 'formgroups/save_contributorpersons.php';
+    require_once 'formgroups/save_contributorinstitutions.php';
     require_once 'formgroups/save_descriptions.php';
     require_once 'formgroups/save_thesauruskeywords.php';
     require_once 'formgroups/save_spatialtemporalcoverage.php';
@@ -42,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     saveAuthors($connection, $_POST, $resource_id);
     saveContactPerson($connection, $_POST, $resource_id);
     saveOriginatingLaboratories($connection, $_POST, $resource_id);
-    saveContributors($connection, $_POST, $resource_id);
+    saveContributorPersons($connection, $_POST, $resource_id);
+    saveContributorInstitutions($connection, $_POST, $resource_id);
     saveDescriptions($connection, $_POST, $resource_id);
     saveKeywords($connection, $_POST, $resource_id);
     saveFreeKeywords($connection, $_POST, $resource_id);

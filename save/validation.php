@@ -71,6 +71,51 @@ function validateArrayDependencies($data, $dependencies)
 }
 
 /**
+ * Validates contributor person dependencies.
+ * 
+ * @param array $entry Array containing the fields for one contributor person entry
+ * @return bool True if the entry is valid
+ */
+function validateContributorPersonDependencies($entry)
+{
+    // If all fields are empty, entry is valid (no data provided)
+    if (
+        empty($entry['lastname']) && empty($entry['firstname']) &&
+        empty($entry['orcid']) && empty($entry['roles'])
+    ) {
+        return true;
+    }
+
+    // If any field is filled, lastname and roles are required
+    if (empty($entry['lastname']) || empty($entry['roles'])) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validates contributor institution dependencies.
+ * 
+ * @param array $entry Array containing the fields for one contributor institution entry
+ * @return bool True if the entry is valid
+ */
+function validateContributorInstitutionDependencies($entry)
+{
+    // If all fields are empty, entry is valid (no data provided)
+    if (empty($entry['name']) && empty($entry['roles'])) {
+        return true;
+    }
+
+    // Both name and roles are required if any is filled
+    if (empty($entry['name']) || empty($entry['roles'])) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * Validates that all required fields are present in JSON-structured keyword entries.
  *
  * @param array $keywordData The decoded JSON data to validate
@@ -176,4 +221,23 @@ function validateFundingReferenceDependencies($entry)
 
     // If only funder is filled, that's valid
     return true;
+}
+
+/**
+ * Retrieves valid roles from the database.
+ *
+ * @param mysqli $connection The database connection.
+ * @return array An array with role names as keys and role IDs as values.
+ */
+function getValidRoles($connection)
+{
+    $valid_roles = [];
+    $stmt = $connection->prepare("SELECT role_id, name FROM Role");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $valid_roles[$row['name']] = $row['role_id'];
+    }
+    $stmt->close();
+    return $valid_roles;
 }
