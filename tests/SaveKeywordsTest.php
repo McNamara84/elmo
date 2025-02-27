@@ -137,14 +137,50 @@ class SaveKeywordsTest extends TestCase
 
         $postData = [
             "gcmdScienceKeywords" => json_encode([
-                ["value" => "Keyword1"],
-                ["value" => "Keyword2"],
-                ["value" => "Keyword3"]
+                [
+                    "value" => "Keyword1",
+                    "id" => "http://gcmd.nasa.gov/keyword1",
+                    "scheme" => "GCMD Science Keywords",
+                    "schemeURI" => "http://gcmd.nasa.gov",
+                    "language" => "en"
+                ],
+                [
+                    "value" => "Keyword2",
+                    "id" => "http://gcmd.nasa.gov/keyword2",
+                    "scheme" => "GCMD Science Keywords",
+                    "schemeURI" => "http://gcmd.nasa.gov",
+                    "language" => "en"
+                ],
+                [
+                    "value" => "Keyword3",
+                    "id" => "http://gcmd.nasa.gov/keyword3",
+                    "scheme" => "GCMD Science Keywords",
+                    "schemeURI" => "http://gcmd.nasa.gov",
+                    "language" => "en"
+                ]
             ]),
             "MSLKeywords" => json_encode([
-                ["value" => "Material1"],
-                ["value" => "Material2"],
-                ["value" => "Material3"]
+                [
+                    "value" => "Material1",
+                    "id" => "http://msl.org/material1",
+                    "scheme" => "MSL Keywords",
+                    "schemeURI" => "http://epos-msl.org",
+                    "language" => "en"
+                ],
+                [
+                    "value" => "Material2",
+                    "id" => "http://msl.org/material2",
+                    "scheme" => "MSL Keywords",
+                    "schemeURI" => "http://epos-msl.org",
+                    "language" => "en"
+                ],
+                [
+                    "value" => "Material3",
+                    "id" => "http://msl.org/material3",
+                    "scheme" => "MSL Keywords",
+                    "schemeURI" => "http://test-epos-msl.org",
+                    "language" => "en"
+                ]
             ])
         ];
 
