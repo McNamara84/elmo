@@ -162,6 +162,7 @@ label.mandatory-field::after {
     /* Light grey background for normal mode */
     color: #6c757d;
     /* Grey text color */
+}
 
 .settings-menu-link {
     text-decoration: none;
