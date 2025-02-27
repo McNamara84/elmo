@@ -1,4 +1,26 @@
 /**
+* Validates that the embargo date is not before the creation date.
+*/
+function validateEmbargoDate() {
+    const dateCreatedInput = document.getElementById('input-date-created');
+    const dateEmbargoInput = document.getElementById('input-date-embargo');
+    const embargoInvalidFeedback = document.querySelector('.embargo-invalid'); // Correct selector
+
+    const dateCreated = new Date(dateCreatedInput.value);
+    const dateEmbargo = new Date(dateEmbargoInput.value);
+
+    if (dateCreated > dateEmbargo) {
+        dateEmbargoInput.setCustomValidity("Embargo date must be after the creation date.");
+        embargoInvalidFeedback.textContent = "Embargo date must be after the creation date.";
+    } else {
+        dateEmbargoInput.setCustomValidity("");
+        embargoInvalidFeedback.textContent = "Please enter a valid date!";
+    }
+
+    dateEmbargoInput.reportValidity(); // Trigger validation and show message
+}
+
+/**
  * @description Handles saving functionality for dataset metadata
  * @requires bootstrap
  * @requires jquery
@@ -53,7 +75,7 @@ class SaveHandler {
      */
     async handleSave() {
         // Check form validity before proceeding
-        if (!this.$form[0].checkValidity()) {
+        if (!this.$form[0].checkValidity() || !validateEmbargoDate()) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });

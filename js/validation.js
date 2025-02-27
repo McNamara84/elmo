@@ -19,18 +19,6 @@ $(() => {
 
     const action = $(document.activeElement).data('action');
 
-    // Validate dates before
-    validateDates()
-    // if (!validateDates()) {
-    // preventDefault();
-    //};
-    if (!validateDates()) {
-      // If validation fails, show in console
-      console.error(`Date validation failed`);
-      this.showNotification('Error');
-      return;
-    }
-
     if (action === 'save') {
       saveHandler.handleSave();
     } else if (action === 'submit') {
@@ -39,26 +27,3 @@ $(() => {
 
   });
 });
-
-/**
- * Validates the Formgroup Dates.
- * Emargo date should not be before Date created
- * */
-
-var createDateInput = document.getElementById("input-date-created");
-var embargoDateInput = document.getElementById("input-date-embargo");
-var form = document.getElementById("#group-dates");
-
-function validateDates() {
-  var createDate = new Date(createDateInput.value);
-  var embargoDate = new Date(embargoDateInput.value);
-  console.log(embargoDate);
-  if (embargoDate < createDate) {
-    return false;
-  } else {
-    return true;
-  }
-}
-
-createDateInput.addEventListener("change", validateDates);
-embargoDateInput.addEventListener("change", validateDates);
