@@ -93,3 +93,35 @@ function validateKeywordEntries($keywordData, $requiredFields = ['value', 'id', 
 
     return true;
 }
+
+/**
+ * Validates dependencies for Spatial Temporal Coverage entries.
+ * 
+ * @param array $entry The STC entry data
+ * @return bool Returns true if dependencies are valid
+ */
+function validateSTCDependencies($entry)
+{
+    // If all fields are empty, entry is invalid
+    if (
+        empty($entry['latitudeMin']) && empty($entry['latitudeMax']) &&
+        empty($entry['longitudeMin']) && empty($entry['longitudeMax']) &&
+        empty($entry['description']) && empty($entry['dateStart']) &&
+        empty($entry['dateEnd']) && empty($entry['timeStart']) &&
+        empty($entry['timeEnd']) && empty($entry['timezone'])
+    ) {
+        return false;
+    }
+
+    // Validate time dependencies
+    if (!empty($entry['timeStart']) && empty($entry['timeEnd'])) {
+        return false;
+    }
+
+    // Validate coordinate dependencies
+    if (!empty($entry['longitudeMax']) && empty($entry['latitudeMax'])) {
+        return false;
+    }
+
+    return true;
+}
