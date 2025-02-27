@@ -148,3 +148,32 @@ function validateRelatedWorkDependencies($entry)
 
     return true;
 }
+
+/**
+ * Validates funding reference dependencies.
+ * If any of FunderID, GrantNumber, or GrantName is filled, Funder must also be filled.
+ *
+ * @param array $entry Array containing the fields for one funding reference entry
+ * @return bool True if the entry is valid
+ */
+function validateFundingReferenceDependencies($entry)
+{
+    // If all fields are empty, the entry is valid (no data provided)
+    if (
+        empty($entry['funder']) && empty($entry['funderId']) &&
+        empty($entry['grantNumber']) && empty($entry['grantName'])
+    ) {
+        return true;
+    }
+
+    // If any dependent field is filled, funder must be filled
+    if (
+        !empty($entry['funderId']) || !empty($entry['grantNumber']) ||
+        !empty($entry['grantName'])
+    ) {
+        return !empty($entry['funder']);
+    }
+
+    // If only funder is filled, that's valid
+    return true;
+}
