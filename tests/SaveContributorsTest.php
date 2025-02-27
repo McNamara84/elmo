@@ -320,7 +320,7 @@ class SaveContributorsTest extends TestCase
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Contributor_Person");
         $stmt->execute();
         $personCount = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(1, $personCount, "Es sollte keine Contributor Person gespeichert worden sein.");
+        $this->assertEquals(0, $personCount, "Es sollte keine Contributor Person gespeichert worden sein.");
 
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Contributor_Institution");
         $stmt->execute();
