@@ -78,7 +78,7 @@ function validateArrayDependencies($data, $dependencies)
  */
 function validateContributorPersonDependencies($entry)
 {
-    // If all fields are empty, entry is valid (no data provided)
+    // If all relevant fields are empty, entry is valid (no data provided)
     if (
         empty($entry['lastname']) && empty($entry['firstname']) &&
         empty($entry['orcid']) && empty($entry['roles'])
@@ -86,9 +86,18 @@ function validateContributorPersonDependencies($entry)
         return true;
     }
 
-    // If any field is filled, lastname and roles are required
-    if (empty($entry['lastname']) || empty($entry['roles'])) {
-        return false;
+    // If any field is filled, check if required fields (lastname and roles) are filled
+    if (!empty($entry['firstname']) || !empty($entry['orcid']) || !empty($entry['roles'])) {
+        if (empty($entry['lastname'])) {
+            return false;
+        }
+    }
+
+    // If lastname is filled, roles must also be filled
+    if (!empty($entry['lastname'])) {
+        if (empty($entry['roles']) || !is_array($entry['roles']) || empty($entry['roles'][0])) {
+            return false;
+        }
     }
 
     return true;
