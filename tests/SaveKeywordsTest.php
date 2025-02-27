@@ -94,8 +94,8 @@ class SaveKeywordsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "gcmdScienceKeywords" => json_encode([["value" => "Keyword1", "id" => "http://example.com/1", "scheme" => "CustomScheme", "schemeURI" => "http://example.com/scheme", "language" => "en"]]),
-            "MSLKeywords" => json_encode([["value" => "Material1"]]),
+            "gcmdScienceKeywords" => json_encode([["value" => "Keyword1", "id" => "ert6445667758we", "scheme" => "CustomScheme", "schemeURI" => "http://example.com/scheme", "language" => "en"]]),
+            "MSLKeywords" => json_encode([["value" => "Material1", "id" => "35457687243", "scheme" => "TestScheme", "schemeURI" => "http://example.de/scheme", "language" => "en"]]),
         ];
 
         saveKeywords($this->connection, $postData, $resource_id);
