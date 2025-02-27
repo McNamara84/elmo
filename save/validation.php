@@ -69,3 +69,27 @@ function validateArrayDependencies($data, $dependencies)
 
     return true;
 }
+
+/**
+ * Validates that all required fields are present in JSON-structured keyword entries.
+ *
+ * @param array $keywordData The decoded JSON data to validate
+ * @param array $requiredFields Array of field names that must be present in each entry
+ * @return bool True if all entries contain all required fields with non-empty values
+ */
+function validateKeywordEntries($keywordData, $requiredFields = ['value', 'id', 'scheme', 'schemeURI', 'language'])
+{
+    if (!is_array($keywordData)) {
+        return false;
+    }
+
+    foreach ($keywordData as $entry) {
+        foreach ($requiredFields as $field) {
+            if (!isset($entry[$field]) || empty($entry[$field])) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
