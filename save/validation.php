@@ -25,3 +25,47 @@ function validateRequiredFields($postData, $requiredFields = [], $requiredArrayF
 
     return true;
 }
+
+/**
+ * Validates that dependent array fields have matching entries.
+ * Each primary array element must have a corresponding dependent element.
+ *
+ * @param array $data The data to validate
+ * @param array $dependencies Array of ['primary' => 'field1', 'dependent' => 'field2']
+ * @return bool True if all dependencies are satisfied
+ */
+function validateArrayDependencies($data, $dependencies)
+{
+    foreach ($dependencies as $dep) {
+        $primaryField = $dep['primary'];
+        $dependentField = $dep['dependent'];
+
+        // Check if primary field exists and is array
+        if (!isset($data[$primaryField]) || !is_array($data[$primaryField])) {
+            return false;
+        }
+
+        // Check each primary value for corresponding dependent value
+        foreach ($data[$primaryField] as $i => $primaryValue) {
+            // Skip empty primary values
+            if (empty($primaryValue)) {
+                continue;
+            }
+
+            // Decode JSON if needed and check value
+            if (is_string($primaryValue) && json_decode($primaryValue)) {
+                $decoded = json_decode($primaryValue, true);
+                if (empty($decoded[0]['value'])) {
+                    continue;
+                }
+            }
+
+            // Check if corresponding dependent value exists
+            if (!isset($data[$dependentField][$i]) || empty($data[$dependentField][$i])) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
