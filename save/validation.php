@@ -126,3 +126,25 @@ function validateSTCDependencies($entry)
 
     return true;
 }
+
+/**
+ * Validates related work entries.
+ * If any field in a row is filled, all fields in that row must be filled.
+ *
+ * @param array $entry Array containing the fields for one related work entry
+ * @return bool True if the entry is valid
+ */
+function validateRelatedWorkDependencies($entry)
+{
+    // If all fields are empty, the entry is valid (no data provided)
+    if (empty($entry['identifier']) && empty($entry['relation']) && empty($entry['identifierType'])) {
+        return true;
+    }
+
+    // If any field is filled, all fields must be filled
+    if (empty($entry['identifier']) || empty($entry['relation']) || empty($entry['identifierType'])) {
+        return false;
+    }
+
+    return true;
+}
