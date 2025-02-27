@@ -9,29 +9,6 @@ function setupContactPersonListener() {
 }
 
 /**
- * Validates if a Contact Person is selected from group of Authors.
- */
-function validateContactPerson() {
-    var isValid = $('input[name="contacts[]"]:checked').length > 0;
-    $('#contact-person-error').remove();
-    // 
-    if (!isValid) {
-        $('#group-author').append('<div id="contact-person-error" class="text-danger mt-2" data-translate="contactPersons.contactPersonError"></div>');
-        applyTranslations();
-        $('input[name="contacts[]"]').prop('required', true);
-    } else {
-        $('input[name="contacts[]"]').prop('required', false);
-    }
-    return isValid;
-}
-
-$('form').on('submit', function (event) {
-    if (!validateContactPerson()) {
-        event.preventDefault();
-    }
-});
-
-/**
  * Validates the Contact Person section of the form.
  * Ensures that the "Email" field is required only if the checkbox for "Contact Person" is checked, 
  * and not required if the checkbox is unchecked.
@@ -272,9 +249,6 @@ function checkMandatoryFields() {
     // Formgroup Contact person(s)
     checkContactPerson();
 
-    // Formgroup Validate Contact person(s)
-    validateContactPerson()
-
     // Formgroup Contributor Person
     checkContributorPerson();
 
@@ -338,8 +312,7 @@ $(document).on('change',
     'select[name="relation[]"], ' +
     'select[name="rIdentifierType[]"], ' +
     'select[name="timezone[]"], ' +
-    'input[name="funder[]"],' +
-    'input[name="contacts[]"]',
+    'input[name="funder[]"]',
     function () {
         // Check mandatory fields when any of these fields' values change
         checkMandatoryFields();
