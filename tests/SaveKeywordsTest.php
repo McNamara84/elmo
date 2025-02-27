@@ -203,7 +203,7 @@ class SaveKeywordsTest extends TestCase
     }
 
     /**
-     * Nur einzelne Thesaurus Keyword Eingabefelder wurden befüllt
+     * Nur einzelne Thesaurus Keyword Eingabefelder wurden befüllt. Diese sollten dann natürlich nicht gespeichert werden.
      */
     public function testSavePartialThesaurusKeywords()
     {
@@ -231,15 +231,7 @@ class SaveKeywordsTest extends TestCase
         $stmt->execute();
         $result = $stmt->get_result();
 
-        $this->assertEquals(2, $result->num_rows, "Es sollten genau 2 Thesaurus Keywords gespeichert worden sein.");
-
-        $keywords = [];
-        while ($row = $result->fetch_assoc()) {
-            $keywords[] = $row['keyword'];
-        }
-
-        $this->assertContains("Keyword1", $keywords, "Keyword1 sollte gespeichert worden sein.");
-        $this->assertContains("Age1", $keywords, "Age1 sollte gespeichert worden sein.");
+        $this->assertEquals(0, $result->num_rows, "Es sollten genau 0 Thesaurus Keywords gespeichert worden sein.");
     }
 
     /**
