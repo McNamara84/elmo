@@ -154,11 +154,11 @@ class VocabController
         }
 
         // WORKAROUND: Convert encoding to UTF-8
-        $jsonData = mb_convert_encoding($jsonData, 'UTF-16', 'UTF-8');
-        $jsonData = mb_convert_encoding($jsonData, 'UTF-8', 'UTF-16');
+        //$jsonData = mb_convert_encoding($jsonData, 'UTF-16', 'UTF-8');
+        //$jsonData = mb_convert_encoding($jsonData, 'UTF-8', 'UTF-16');
 
         // WORKAROUND: Fix last encoding issues
-        $replacements = [
+        /*$replacements = [
             'Geo?lab' => 'Geolab',
             'Anal?t?cos' => 'Analíticos',
             'Geolog?a' => 'Geología',
@@ -166,7 +166,7 @@ class VocabController
             'Z?rich' => 'Zürich',
             'Optical and?Electron' => 'Optical and Electron',
         ];
-        $jsonData = str_replace(array_keys($replacements), array_values($replacements), $jsonData);
+        $jsonData = str_replace(array_keys($replacements), array_values($replacements), $jsonData);*/
 
         // Decode JSON data
         $labs = json_decode($jsonData, true);
@@ -178,9 +178,10 @@ class VocabController
         // Process data and retain only necessary fields
         $processedLabs = array_map(function ($lab) {
             return [
-                'id' => $lab['id'],
-                'name' => $lab['lab_editor_name'],
-                'affiliation' => $lab['affiliation']
+                'id' => $lab['identifier'],
+                'name' => $lab['name'],
+                'affiliation' => $lab['affiliation_name'],
+                'rorid' => $lab['affiliation_ror']
             ];
         }, $labs);
 
