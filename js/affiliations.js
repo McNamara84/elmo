@@ -2,6 +2,52 @@
 var affiliationsData = [];
 
 /**
+ * Refreshes all Tagify instances when translations are changed.
+ * This function destroys existing Tagify instances, reinitializes them with updated translations,
+ * and restores any previously selected values.
+ * 
+ * @returns {void}
+ */
+function refreshTagifyInstances() {
+  // Only proceed if affiliations data is available
+  if (!window.affiliationsData) return;
+
+  // Definition of input fields and their associated hidden fields
+  const tagifyPairs = [
+    { input: "input-author-affiliation", hidden: "input-author-rorid" },
+    { input: "input-contactperson-affiliation", hidden: "input-contactperson-rorid" },
+    { input: "input-contributor-personaffiliation", hidden: "input-contributor-personrorid" },
+    { input: "input-contributor-organisationaffiliation", hidden: "input-contributor-organisationrorid" }
+  ];
+
+  // Process each field pair
+  tagifyPairs.forEach(pair => {
+    const inputElement = document.getElementById(pair.input);
+
+    // Skip if element doesn't exist or doesn't have a Tagify instance
+    if (!inputElement || !inputElement.tagify) return;
+
+    // Save current values
+    const currentValues = [...inputElement.tagify.value]; // Create a copy
+
+    // Destroy current Tagify instance
+    inputElement.tagify.destroy();
+
+    // Reinitialize with updated translations
+    autocompleteAffiliations(pair.input, pair.hidden, window.affiliationsData);
+
+    // Restore previously selected values
+    if (currentValues && currentValues.length > 0) {
+      setTimeout(() => {
+        if (inputElement.tagify) {
+          inputElement.tagify.addTags(currentValues);
+        }
+      }, 50); // Small delay to ensure Tagify is fully initialized
+    }
+  });
+}
+
+/**
  * Loads affiliations data from a JSON file and initializes Tagify for specified input fields.
  */
 $.getJSON("json/affiliations.json", function (data) {
@@ -13,6 +59,7 @@ $.getJSON("json/affiliations.json", function (data) {
     autocompleteAffiliations("input-author-affiliation", "input-author-rorid", affiliationsData);
     autocompleteAffiliations("input-contributor-personaffiliation", "input-contributor-personrorid", affiliationsData);
     autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid", affiliationsData);
+    document.addEventListener('translationsLoaded', refreshTagifyInstances);
   });
 });
 
