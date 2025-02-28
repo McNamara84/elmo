@@ -1,4 +1,89 @@
 /**
+ * Validates that the embargo date is not before the creation date.
+ * @returns {boolean} True if the dates are valid, false otherwise.
+ */
+function validateEmbargoDate() {
+    const dateCreatedInput = document.getElementById('input-date-created');
+    const dateEmbargoInput = document.getElementById('input-date-embargo');
+    const embargoInvalidFeedback = document.querySelector('.embargo-invalid');
+
+    const dateCreated = new Date(dateCreatedInput.value);
+    const dateEmbargo = new Date(dateEmbargoInput.value);
+
+    if (!dateEmbargoInput.value) {
+        resetFieldState(dateEmbargoInput, embargoInvalidFeedback);
+        return true;
+    }
+
+    if (dateCreated > dateEmbargo) {
+        setInvalidState(dateEmbargoInput, embargoInvalidFeedback, translations.dates.embargoDateError);
+        return false;
+    } else {
+        setValidState(dateEmbargoInput, embargoInvalidFeedback);
+        return true;
+    }
+}
+
+/**
+ * Validates that the start date is not after the end date in the temporal coverage section.
+ * @param {HTMLElement} row - The row containing the start and end dates.
+ * @returns {boolean} True if the dates are valid, false otherwise.
+ */
+function validateTemporalCoverage(row) {
+    const dateStartInput = row.querySelector('[id*="input-stc-datestart"]');
+    const dateEndInput = row.querySelector('[id*="input-stc-dateend"]');
+    const dateTimeInvalidFeedback = row.querySelector('.invalid-feedback[data-translate="coverage.dateTimeInvalid"]');
+
+    if (!dateStartInput || !dateEndInput) {
+        return true;
+    }
+
+    const dateStart = new Date(dateStartInput.value);
+    const dateEnd = new Date(dateEndInput.value);
+
+    if (dateStart > dateEnd) {
+        setInvalidState(dateEndInput, dateTimeInvalidFeedback, translations.coverage.endDateError);
+        return false;
+    } else {
+        setValidState(dateEndInput, dateTimeInvalidFeedback);
+        return true;
+    }
+}
+
+function setInvalidState(input, feedback, message) {
+    input.classList.remove('is-valid');
+    input.classList.add('is-invalid');
+    input.setCustomValidity(message);
+    feedback.textContent = message;
+}
+
+function setValidState(input, feedback) {
+    input.classList.remove('is-invalid');
+    input.classList.add('is-valid');
+    input.setCustomValidity("");
+    feedback.textContent = "";
+}
+
+function resetFieldState(input, feedback) {
+    input.classList.remove('is-valid', 'is-invalid');
+    input.setCustomValidity("");
+    feedback.textContent = "";
+}
+
+// Event listeners for immediate validation
+document.getElementById('input-date-created').addEventListener('change', validateEmbargoDate);
+document.getElementById('input-date-embargo').addEventListener('change', validateEmbargoDate);
+
+// Event listener for temporal coverage validation
+document.getElementById('group-stc').addEventListener('change', function(event) {
+    if (event.target && (event.target.id.includes('input-stc-datestart') || event.target.id.includes('input-stc-dateend'))) {
+        const row = event.target.closest('[tsc-row]');
+        validateTemporalCoverage(row);
+    }
+});
+
+
+/**
  * Validates if a Contact Person is selected from group of Authors.
  */
 function validateContactPerson() {
@@ -14,7 +99,6 @@ function validateContactPerson() {
     }
     return isValid;
 }
-
 
 /**
  * @description Handles submission functionality for dataset metadata
@@ -118,6 +202,7 @@ class SubmitHandler {
      * Handle submit action
      */
     handleSubmit() {
+        validateEmbargoDate();
         if (!this.$form[0].checkValidity() || !validateContactPerson()) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();

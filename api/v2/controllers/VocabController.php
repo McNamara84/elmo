@@ -903,15 +903,10 @@ class VocabController
                 $keywords[] = ['free_keyword' => $row['free_keyword']];
             }
 
-            if (empty($keywords)) {
-                http_response_code(404);
-                echo json_encode(['error' => 'No curated keywords found']);
-                return;
-            }
-
+            // Immer Status 200 zurückgeben, auch bei leerer Liste
             http_response_code(200);
             header('Content-Type: application/json');
-            echo json_encode($keywords);
+            echo json_encode($keywords);  // Gibt leeres Array zurück wenn keine Keywords existieren
 
         } catch (Exception $e) {
             error_log("API Error in getCuratedFreeKeywords: " . $e->getMessage());

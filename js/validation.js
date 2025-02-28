@@ -24,5 +24,6 @@ $(() => {
     } else if (action === 'submit') {
       submitHandler.handleSubmit();
     }
+
   });
 });

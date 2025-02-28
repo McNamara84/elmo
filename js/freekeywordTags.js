@@ -105,9 +105,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }, 50);
         }
-
-        // Log completion for debugging
-        console.log("Free keyword Tagify refreshed with new translations");
     }
 
     /**
@@ -133,6 +130,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
 
+                    // Check if the array is empty
+                    if (data.length === 0) {
+                        console.log("ELMO currently has no curated keywords.");
+                        return;
+                    }
+
                     // Transform API response to a Tagify-friendly whitelist
                     currentWhitelist = data.map(item => item.free_keyword);
 
@@ -150,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .fail((jqXHR, textStatus, errorThrown) => {
-                console.error('Failed to fetch keywords:', {
+                console.warn('Failed to fetch keywords:', {
                     status: jqXHR.status,
                     statusText: jqXHR.statusText,
                     responseText: jqXHR.responseText,

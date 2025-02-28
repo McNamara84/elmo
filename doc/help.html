@@ -101,8 +101,9 @@ include_once "../settings.php";
                         <h4>DOI</h4>
                         <p>The DOI is a unique string that identifies a resource. Format should be 10.ORGANISATION/ID.
                             GFZ DataServices will register a DOI for your Dataset after submission and curation.
-                            <strong>Please leave this field empty if your dataset is not published yet.</strong>
                         </p>
+                        <p><strong>Optional field. Please leave this field empty if your dataset is not published
+                                yet.</strong></p>
                     </div>
                     <div id="help-resourceinformation-publicationyear">
                         <h4>Publication Year</h4>
@@ -137,8 +138,8 @@ include_once "../settings.php";
                             here.
                             The suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
                             changes in the dataset. Major changes typically require registration of a new DOI.
-                            <strong>If unsure, leave blank.</strong>
                         </p>
+                        <p><strong>Optional field. If unsure, leave blank.</strong></p>
                     </div>
                     <div id="help-resourceinformation-language">
                         <h4>Language of dataset</h4>
@@ -235,6 +236,7 @@ include_once "../settings.php";
                             an attempt will be made to fill in the remaining required fields automatically. Results are
                             depending on the information provided in the ORCID profile.
                         </p>
+                        <p><strong>Optional field.</strong></p>
                     </div>
                     <div id="help-author-affiliation">
                         <h4>Affiliation</h4>
@@ -300,6 +302,7 @@ include_once "../settings.php";
                             normally not mention as authors. These are not named in the citation but are always related
                             to the dataset and findable just as all the other metadata fields.
                         </p>
+                        <p><strong>Optional field.</strong></p>
                     </div>
                     <div>
                         <h4>Contributing Person(s)</h4>
@@ -400,6 +403,7 @@ include_once "../settings.php";
                                 target="_blank">ORCID search page</a>. If you enter a valid ORCID, an attempt will be
                             made to fill in the remaining required fields automatically. Results are depending on the
                             information provided in the ORCID profile.</p>
+                            <p><strong>Optional field.</strong></p>
                     </div>
                     <div id="help-contributor-affiliation">
                         <h5>Affiliation</h5>
@@ -670,17 +674,22 @@ include_once "../settings.php";
                     </div>
                     <div id="help-date-created">
                         <h4>Date created</h4>
-                        <p>The date on which the dataset was created. If the dataset is a collection of data from
+                        <p>The date on which the dataset was created. The date should be between 01.01.1900 and
+                            31.12.2100.
+                        </p>
+                        <p>If the dataset is a collection of data from
                             different sources, use the date when the dataset was compiled. If the dataset is a
                             simulation, use the date when the simulation was completed. If the dataset is a
                             reanalysis,
                             use the date when the reanalysis was completed. If the dataset is a combination of data
                             from
-                            different sources, use the date when the dataset was compiled.</p>
+                            different sources, use the date when the dataset was compiled.
+                        </p>
                     </div>
                     <div id="help-date-embargo">
                         <h4>Embargo until</h4>
-                        <p>The date until which the dataset is under embargo. Only by arrangement. If the dataset is not under embargo,
+                        <p>The date until which the dataset is under embargo. Only by arrangement. If the dataset is not
+                            under embargo,
                             leave this field empty.</p>
                     </div>
                 </div>
@@ -733,6 +742,7 @@ include_once "../settings.php";
                     </div>
                     <div id="help-tsc-temporalcoverage">
                         <h4>Temporal Coverage</h4>
+                        <p>Both Start and End Date should be between 01.01.1900 and 31.12.2100.</p>
                         <ul>
                             <li><strong>Start Date:</strong> Date of the beginning of the temporal coverage of the
                                 dataset.
@@ -773,6 +783,7 @@ include_once "../settings.php";
                             the data description and discovery), even after the registration of the DOI. We encourage
                             you to inform us if you want to add new references to the published datasets.
                         </p>
+                        <p><strong>Optional field.</strong></p>
                     </div>
                     <div id="help-relatedwork-relation">
                         <h4>Relation Type</h4>

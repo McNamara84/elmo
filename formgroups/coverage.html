@@ -54,8 +54,7 @@
                                 <textarea rows="4"
                                     class="form-control input-right-no-round-corners input-with-help input-right-with-round-corners"
                                     placeholder="coverage.descriptionPlaceholder"
-                                    data-translate-placeholder="coverage.descriptionPlaceholder" 
-                                    name="tscDescription[]"
+                                    data-translate-placeholder="coverage.descriptionPlaceholder" name="tscDescription[]"
                                     id="input-stc-description"></textarea>
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                         data-help-section-id="help-tsc-description"></i></span>
@@ -66,7 +65,8 @@
                             <label for="input-stc-datestart" class="form-label"
                                 data-translate="coverage.start">Start</label>
                             <div class="input-group has-validation">
-                                <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]">
+                                <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]"
+                                    min="1900-01-01" max="2100-12-31">
                                 <input type="time" class="form-control input-with-help input-right-no-round-corners"
                                     id="input-stc-timestart" name="tscTimeStart[]">
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -76,7 +76,8 @@
                             </div>
                             <label for="input-stc-dateend" class="form-label" data-translate="coverage.end">End</label>
                             <div class="input-group has-validation">
-                                <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]">
+                                <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]"
+                                    min="1900-01-01" max="2100-12-31">
                                 <input type="time" class="form-control input-with-help input-right-no-round-corners"
                                     id="input-stc-timeend" name="tscTimeEnd[]">
                                 <span class="input-group-text"><i class="bi bi-question-circle-fill"

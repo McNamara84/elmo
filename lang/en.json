@@ -118,8 +118,9 @@
     "dates": {
         "title": "Dates",
         "created": "Date created",
-        "dateInvalid": "Please enter a valid date!",
-        "embargoUntil": "Embargo until (only by arrangement)"
+        "dateInvalid": "Please enter a valid date between 01.01.1900 and 31.12.2100!",
+        "embargoUntil": "Embargo until (only by arrangement)",
+        "embargoDateError": "Embargo date must be after or equal to the creation date."
     },
     "coverage": {
         "title": "Spatial and Temporal Coverages",
