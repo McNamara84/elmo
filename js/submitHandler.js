@@ -44,7 +44,7 @@ function resetFieldState(input, feedback) {
     feedback.textContent = "";
 }
 
-// Event-Listener für sofortige Validierung
+// Event listener for immediate validation
 document.getElementById('input-date-created').addEventListener('change', validateEmbargoDate);
 document.getElementById('input-date-embargo').addEventListener('change', validateEmbargoDate);
 
