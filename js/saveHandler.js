@@ -158,9 +158,7 @@ class SaveHandler {
     async handleSave() {
         validateEmbargoDate();
         // Check form validity before proceeding
-        console.log("handleSave() wurde aufgerufen");
         if (!this.$form[0].checkValidity() || !validateContactPerson()) {
-            console.log("Validierung wurde aufgerufen");
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
