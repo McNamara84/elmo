@@ -119,7 +119,8 @@
         "title": "Dates",
         "created": "Date de création",
         "dateInvalid": "Veuillez saisir une date valide entre 01.01.1900 et 31.12.2100!",
-        "embargoUntil": "Embargo jusqu'au (uniquement sur rendez-vous)"
+        "embargoUntil": "Embargo jusqu'au (uniquement sur rendez-vous)",
+        "embargoDateError": "La date d'embargo doit être postérieure ou égale à la date de création."
     },
     "coverage": {
         "title": "Couverture spatiale et temporelle",

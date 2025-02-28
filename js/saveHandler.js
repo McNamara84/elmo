@@ -16,7 +16,7 @@ function validateEmbargoDate() {
     }
 
     if (dateCreated > dateEmbargo) {
-        setInvalidState(dateEmbargoInput, embargoInvalidFeedback, "Embargo date must be after or equal to the creation date.");
+        setInvalidState(dateEmbargoInput, embargoInvalidFeedback, translations.dates.embargoDateError);
         return false;
     } else {
         setValidState(dateEmbargoInput, embargoInvalidFeedback);
