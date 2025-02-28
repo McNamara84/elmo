@@ -43,17 +43,19 @@ function saveOriginatingLaboratories($connection, $postData, $resource_id)
 
             $affiliationArray = json_decode($affiliationData, true);
             if ($affiliationArray && isset($affiliationArray[0]['value'])) {
-                $affiliation = $affiliationArray[0]['value'];;
+                $affiliation = $affiliationArray[0]['value'];
+                ;
             }
         }
 
         if (isset($postData['laboratoryRorIds'][$i])) {
             $rorData = $postData['laboratoryRorIds'][$i];
 
-
             $rorArray = json_decode($rorData, true);
             if ($rorArray && isset($rorArray[0]['value'])) {
                 $rorId = $rorArray[0]['value'];
+            } else {
+                $rorId = $rorData;
             }
         }
 
