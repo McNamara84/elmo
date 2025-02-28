@@ -683,17 +683,22 @@ include_once "../settings.php";
                     </div>
                     <div id="help-date-created">
                         <h4>Date created</h4>
-                        <p>The date on which the dataset was created. If the dataset is a collection of data from
+                        <p>The date on which the dataset was created. The date should be between 01.01.1900 and
+                            31.12.2100.
+                        </p>
+                        <p>If the dataset is a collection of data from
                             different sources, use the date when the dataset was compiled. If the dataset is a
                             simulation, use the date when the simulation was completed. If the dataset is a
                             reanalysis,
                             use the date when the reanalysis was completed. If the dataset is a combination of data
                             from
-                            different sources, use the date when the dataset was compiled.</p>
+                            different sources, use the date when the dataset was compiled.
+                        </p>
                     </div>
                     <div id="help-date-embargo">
                         <h4>Embargo until</h4>
-                        <p>The date until which the dataset is under embargo. Only by arrangement. If the dataset is not under embargo,
+                        <p>The date until which the dataset is under embargo. Only by arrangement. If the dataset is not
+                            under embargo,
                             leave this field empty.</p>
                     </div>
                 </div>
@@ -746,6 +751,7 @@ include_once "../settings.php";
                     </div>
                     <div id="help-tsc-temporalcoverage">
                         <h4>Temporal Coverage</h4>
+                        <p>Both Start and End Date should be between 01.01.1900 and 31.12.2100.</p>
                         <ul>
                             <li><strong>Start Date:</strong> Date of the beginning of the temporal coverage of the
                                 dataset.
