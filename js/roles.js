@@ -43,27 +43,37 @@ function refreshRoleTagifyInstances() {
 }
 
 /**
- * Configures a dropdown field for selecting roles.
- * Fetches roles based on specified types from the APIv2 endpoint and updates the dropdown options.
- *
- * @param {Array} roletypes - Array of role types (e.g., "person", "institution", "both")
- * @param {string} inputSelector - CSS selector of the input field to be configured
+ * Configures a dropdown field for selecting roles using Tagify.
+ * Fetches roles from API if not cached, then initializes Tagify with the roles.
+ * 
+ * @param {string[]} roletypes - Array of role types ("person", "institution", "both")
+ * @param {string} inputSelector - CSS selector for the input element
+ * @returns {void}
  */
 function setupRolesDropdown(roletypes, inputSelector) {
-  // If we already have the data cached, use it directly
-  if (roletypes.includes("person") && personRoles.length > 0 &&
-    roletypes.includes("institution") && organizationRoles.length > 0) {
-    initializeTagifyWithRoles(inputSelector, [...personRoles, ...organizationRoles]);
+  const input = document.querySelector(inputSelector);
+  if (!input) {
+    console.error(`Input element not found for selector: ${inputSelector}`);
     return;
   }
 
-  if (roletypes.includes("person") && personRoles.length > 0 && !roletypes.includes("institution")) {
-    initializeTagifyWithRoles(inputSelector, personRoles);
-    return;
+  if (input._tagify) {
+    input._tagify.destroy();
   }
 
-  if (roletypes.includes("institution") && organizationRoles.length > 0 && !roletypes.includes("person")) {
-    initializeTagifyWithRoles(inputSelector, organizationRoles);
+  let rolesToUse = [];
+  if (roletypes.includes("person")) {
+    rolesToUse = [...rolesToUse, ...personRoles];
+  }
+  if (roletypes.includes("institution")) {
+    rolesToUse = [...rolesToUse, ...organizationRoles];
+  }
+  if (roletypes.includes("both")) {
+    rolesToUse = [...rolesToUse, ...personRoles, ...organizationRoles];
+  }
+
+  if (rolesToUse.length > 0) {
+    initializeTagifyWithRoles(inputSelector, rolesToUse);
     return;
   }
 
@@ -79,25 +89,17 @@ function setupRolesDropdown(roletypes, inputSelector) {
 
   Promise.all(rolePromises)
     .then(results => {
-      // Cache the results
       results.forEach((roles, index) => {
         if (roletypes[index] === "person" || roletypes[index] === "both") {
-          personRoles = [...personRoles, ...roles];
+          personRoles = [...new Set([...personRoles, ...roles])];
         }
         if (roletypes[index] === "institution" || roletypes[index] === "both") {
-          organizationRoles = [...organizationRoles, ...roles];
+          organizationRoles = [...new Set([...organizationRoles, ...roles])];
         }
       });
 
-      const roleNames = results.flatMap(roles =>
-        roles.map(role => role.name)
-      );
-
-      const uniqueSortedRoles = [...new Set(roleNames)].sort((a, b) =>
-        a.localeCompare(b, undefined, { sensitivity: 'base' })
-      );
-
-      initializeTagifyWithRoles(inputSelector, uniqueSortedRoles);
+      const allRoles = results.flat();
+      initializeTagifyWithRoles(inputSelector, allRoles);
     })
     .catch(error => {
       console.error(`Error fetching roles for ${inputSelector}:`, error);
@@ -105,38 +107,47 @@ function setupRolesDropdown(roletypes, inputSelector) {
 }
 
 /**
- * Initializes a Tagify instance for role selection
- * 
- * @param {string} inputSelector - CSS selector for the input element
- * @param {Array} roles - List of role names to use as options
- */
+* Initializes a Tagify instance for role selection on a specific input element.
+* Converts roles to strings if they are objects, sets up Tagify with options,
+* and attaches event listeners.
+* 
+* @param {string} inputSelector - CSS selector for the input element
+* @param {(string|Object)[]} roles - Array of role names or role objects
+* @returns {void}
+*/
 function initializeTagifyWithRoles(inputSelector, roles) {
-  const inputElement = document.querySelector(inputSelector);
+  const input = document.querySelector(inputSelector);
+  if (!input) return;
 
-  if (!inputElement) {
-    console.error(`Input element not found for selector: ${inputSelector}`);
-    return;
-  }
+  const roleNames = roles.map(role =>
+    typeof role === 'string' ? role : role.name
+  );
 
-  // Initialize Tagify
-  const rolesTagify = new Tagify(inputElement, {
-    whitelist: roles,
+  const tagifyOptions = {
+    whitelist: roleNames,
     enforceWhitelist: true,
     maxTags: 10,
-    placeholder: window.translations && window.translations.general ?
-      window.translations.general.roleLabel :
-      "Select roles",
     dropdown: {
       maxItems: 20,
       classname: "tags-look",
       enabled: 0,
-      closeOnSelect: false,
+      closeOnSelect: false
     },
     editTags: false,
-  });
+    placeholder: window.translations?.general?.roleLabel || "Select roles"
+  };
 
-  // Assign the Tagify instance to the input
-  inputElement._tagify = rolesTagify;
+  try {
+    const tagify = new Tagify(input, tagifyOptions);
+
+    tagify.on('add', () => console.log('Tag added'));
+    tagify.on('remove', () => console.log('Tag removed'));
+    tagify.on('invalid', () => console.log('Invalid tag attempted'));
+
+    input._tagify = tagify;
+  } catch (error) {
+    console.error('Error initializing Tagify:', error);
+  }
 }
 
 // Initialize on DOM content loaded

@@ -65,11 +65,10 @@
         "affiliationInvalid": "Please provide an affiliation."
     },
     "contactPersons": {
-        "title": "Contact Person(s)",
+        "contactPersonError": "Please choose at least one contact person.",
         "email": "Email address",
         "emailInvalid": "Please provide a valid email address in the format xxx.xxx@xxx.xxx.",
-        "position": "Position",
-        "positionInvalid": "Please provide a position.",
+        "toggleCheckbox": "Contact<br>Person?",
         "website": "Website",
         "websiteInvalid": "Please provide a valid URL."
     },
@@ -197,7 +196,7 @@
             "urgency": "Urgency",
             "url": "URL to data",
             "dataDescription": "Data description (please use <a href='https://gfzpublic.gfz.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_5007103' target='_blank' class='link-primary'>description template</a>)",
-            "privacypolice": "I have read the <a href='docs/privacyPolicy.html' target='_blank' class='link-primary'>privacy policy</a> and agree to the processing of my data.",
+            "privacypolice": "I have read the <a href='doc/privacyPolicy.html' target='_blank' class='link-primary'>privacy policy</a> and agree to the processing of my data.",
             "urgencyNotice": "Please select an urgency",
             "high": "high",
             "normal": "normal",

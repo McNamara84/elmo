@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<Resource>
+  <currentDate>2025-02-21</currentDate>
+  <year>2025</year>
+  <dateCreated>2025-02-06</dateCreated>
+  <Rights>
+    <rights_id>1</rights_id>
+    <text>Creative Commons Attribution 4.0 International</text>
+    <rightsIdentifier>CC-BY-4.0</rightsIdentifier>
+    <rightsURI>https://creativecommons.org/licenses/by/4.0/legalcode</rightsURI>
+    <forSoftware>0</forSoftware>
+  </Rights>
+  <ResourceType>
+    <resource_name_id>1</resource_name_id>
+    <resource_type_general>Audiovisual</resource_type_general>
+    <description>A series of visual representations imparting an impression of motion when shown in succession. May or may not include sound.</description>
+  </ResourceType>
+  <Language>
+    <language_id>1</language_id>
+    <code>en</code>
+    <name>English</name>
+  </Language>
+  <Titles>
+    <Title>
+      <text>This is the best title in the woooorld</text>
+      <type>Main Title</type>
+    </Title>
+  </Titles>
+  <Authors>
+    <Author>
+      <familyname>Rosenau</familyname>
+      <givenname>Matthias</givenname>
+      <orcid>0000-0003-1134-5381</orcid>
+    </Author>
+    <Author>
+      <familyname>Hernandez</familyname>
+      <givenname>Sofia</givenname>
+      <orcid>0000-0002-2771-9344</orcid>
+    </Author>
+  </Authors>
+  <ContactPersons>
+    <ContactPerson>
+      <familyname>Hernandez</familyname>
+      <givenname>Sofia</givenname>
+      <email>CP@cp.de</email>
+    </ContactPerson>
+  </ContactPersons>
+  <Descriptions>
+    <Description>
+      <type>Abstract</type>
+      <description>ffffffffffffffff</description>
+    </Description>
+  </Descriptions>
+  <SpatialTemporalCoverages/>
+</Resource>

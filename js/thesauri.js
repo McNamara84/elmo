@@ -25,7 +25,7 @@ $(document).ready(function () {
         // GCMD PLATFORMS
         {
             inputId: '#input-Platforms',
-            jsonFile: 'json/gcmdPlatformsKeywords.json',
+            jsonFile: 'json/thesauri/gcmdPlatformsKeywords.json',
             jsTreeId: '#jstree-Platforms',
             searchInputId: '#input-Platforms-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-Platforms-gcmd',
@@ -34,7 +34,7 @@ $(document).ready(function () {
         // GCMD INSTRUMENTS
         {
             inputId: '#input-Instruments',
-            jsonFile: 'json/gcmdInstrumentsKeywords.json',
+            jsonFile: 'json/thesauri/gcmdInstrumentsKeywords.json',
             jsTreeId: '#jstree-instruments',
             searchInputId: '#input-instruments-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-instruments-gcmd',

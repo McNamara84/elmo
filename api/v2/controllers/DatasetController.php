@@ -410,7 +410,7 @@ class DatasetController
             $contactPerson = [
                 'familyname' => $row['familyname'] ?? null,
                 'givenname' => $row['givenname'] ?? null,
-                'position' => $row['position'] ?? null,
+                'orcid' => $row['orcid'] ?? null,
                 'email' => $row['email'] ?? null,
                 'website' => $row['website'] ?? null,
                 'Affiliations' => $this->getContactPersonAffiliations($connection, $row['contact_person_id']) ?? null
@@ -699,7 +699,7 @@ class DatasetController
             if (
                 !empty($contactPerson['familyname']) ||
                 !empty($contactPerson['givenname']) ||
-                !empty($contactPerson['position']) ||
+                !empty($contactPerson['orcid']) ||
                 !empty($contactPerson['email']) ||
                 !empty($contactPerson['website']) ||
                 !empty($contactPerson['Affiliations'])
@@ -717,7 +717,7 @@ class DatasetController
                 if (
                     !empty($contactPerson['familyname']) ||
                     !empty($contactPerson['givenname']) ||
-                    !empty($contactPerson['position']) ||
+                    !empty($contactPerson['orcid']) ||
                     !empty($contactPerson['email']) ||
                     !empty($contactPerson['website']) ||
                     !empty($contactPerson['Affiliations'])
@@ -731,8 +731,8 @@ class DatasetController
                     if ($contactPerson['givenname']) {
                         $contactPersonXml->addChild('givenname', htmlspecialchars($contactPerson['givenname']));
                     }
-                    if ($contactPerson['position']) {
-                        $contactPersonXml->addChild('position', htmlspecialchars($contactPerson['position']));
+                    if ($contactPerson['orcid']) {
+                        $contactPersonXml->addChild('orcid', htmlspecialchars($contactPerson['orcid']));
                     }
                     if ($contactPerson['email']) {
                         $contactPersonXml->addChild('email', htmlspecialchars($contactPerson['email']));

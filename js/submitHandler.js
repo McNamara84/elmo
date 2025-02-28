@@ -1,4 +1,22 @@
 /**
+ * Validates if a Contact Person is selected from group of Authors.
+ */
+function validateContactPerson() {
+    var isValid = $('input[name="contacts[]"]:checked').length > 0;
+    $('#contact-person-error').remove();
+    // 
+    if (!isValid) {
+        $('#group-author').append('<div id="contact-person-error" class="text-danger mt-2" data-translate="contactPersons.contactPersonError"></div>');
+        applyTranslations();
+        $('input[name="contacts[]"]').prop('required', true);
+    } else {
+        $('input[name="contacts[]"]').prop('required', false);
+    }
+    return isValid;
+}
+
+
+/**
  * @description Handles submission functionality for dataset metadata
  * @requires bootstrap
  * @requires jquery
@@ -34,6 +52,7 @@ class SubmitHandler {
     initializeEventListeners() {
         $('#input-submit-privacycheck').on('change', () => this.toggleSubmitButton());
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
+        this.$form.on('change', 'input[name="contacts[]"]', validateContactPerson);
 
         // Focus on input field
         $('#modal-submit').on('shown.bs.modal', () => {
@@ -99,7 +118,7 @@ class SubmitHandler {
      * Handle submit action
      */
     handleSubmit() {
-        if (!this.$form[0].checkValidity()) {
+        if (!this.$form[0].checkValidity() || !validateContactPerson()) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });

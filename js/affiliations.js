@@ -57,7 +57,6 @@ $.getJSON("json/affiliations.json", function (data) {
   // Initialize Tagify for existing input fields when the document is ready
   $(document).ready(function () {
     autocompleteAffiliations("input-author-affiliation", "input-author-rorid", affiliationsData);
-    autocompleteAffiliations("input-contactperson-affiliation", "input-contactperson-rorid", affiliationsData);
     autocompleteAffiliations("input-contributor-personaffiliation", "input-contributor-personrorid", affiliationsData);
     autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid", affiliationsData);
     document.addEventListener('translationsLoaded', refreshTagifyInstances);
@@ -143,7 +142,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   });
 
   // Remove all tags if the input field is not among the known fields
-  if (!["input-author-affiliation", "input-contactperson-affiliation", "input-contributor-personaffiliation", "input-contributor-organisationaffiliation"].includes(inputFieldId)) {
+  if (!["input-author-affiliation", "input-contributor-personaffiliation", "input-contributor-organisationaffiliation"].includes(inputFieldId)) {
     tagify.removeAllTags();
   }
 

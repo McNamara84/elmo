@@ -70,3 +70,8 @@
     margin-top: 0.6rem;
     margin-bottom: 0.6rem;
 }
+
+.round-corners-left {
+    border-top-left-radius: 0.375rem !important;
+    border-bottom-left-radius: 0.375rem !important;
+}

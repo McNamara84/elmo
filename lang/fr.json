@@ -65,11 +65,10 @@
         "affiliationInvalid": "Veuillez indiquer une affiliation."
     },
     "contactPersons": {
-        "title": "Personne(s) à contacter",
+        "contactPersonError": "Veuillez choisir au moins une personne de contact.",
         "email": "Adresse e-mail",
         "emailInvalid": "Veuillez saisir une adresse e-mail valide au format xxx.xxx@xxx.xxx.",
-        "position": "Poste",
-        "positionInvalid": "Veuillez indiquer un poste.",
+        "toggleCheckbox": "Personne<br>à contacte?",
         "website": "Site web",
         "websiteInvalid": "Veuillez saisir une URL valide."
     },
@@ -135,7 +134,7 @@
         "end": "Fin",
         "dateTimeInvalid": "Veuillez saisir une date et une heure valides.",
         "timezone": "Fuseau horaire",
-        "timezoneInvalid":"Veuillez sélectionner le fuseau horaire",
+        "timezoneInvalid": "Veuillez sélectionner le fuseau horaire",
         "mapInfo": "(Veuillez choisir les coordonnées par rectangle ou marqueur)"
     },
     "relatedWork": {
@@ -197,7 +196,7 @@
             "urgency": "Urgence",
             "url": "URL des données",
             "dataDescription": "Description des données (conformément au <a href='https://gfzpublic.gfz.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_5007103' target='_blank' class='link-primary'>modèle de description</a> des données)",
-            "privacypolice": "J'ai lu la <a href='docs/privacyPolicy.html' target='_blank' class='link-primary'>politique de confidentialité</a> et je consens au traitement de mes données.",
+            "privacypolice": "J'ai lu la <a href='doc/privacyPolicy.html' target='_blank' class='link-primary'>politique de confidentialité</a> et je consens au traitement de mes données.",
             "urgencyNotice": "Veuillez sélectionner l'urgence",
             "high": "élevée",
             "normal": "normale",
