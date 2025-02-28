@@ -43,7 +43,8 @@ class SaveHandler {
     initializeEventListeners() {
         $('#button-saveas-save').on('click', () => this.handleSaveConfirm());
         $('#modal-saveas').on('hidden.bs.modal', () => this.modals.notification.hide());
-        $('input[name="contacts[]"]').on('change', validateContactPerson);
+        this.$form.on('change', 'input[name="contacts[]"]', validateContactPerson);
+
         // Focus on input field
         $('#modal-saveas').on('shown.bs.modal', () => {
             $('#input-saveas-filename').select();
@@ -71,7 +72,9 @@ class SaveHandler {
      */
     async handleSave() {
         // Check form validity before proceeding
+        console.log("handleSave() wurde aufgerufen");
         if (!this.$form[0].checkValidity() || !validateContactPerson()) {
+            console.log("Validierung wurde aufgerufen");
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });

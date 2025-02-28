@@ -52,7 +52,7 @@ class SubmitHandler {
     initializeEventListeners() {
         $('#input-submit-privacycheck').on('change', () => this.toggleSubmitButton());
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
-        $('input[name="contacts[]"]').on('change', validateContactPerson);
+        this.$form.on('change', 'input[name="contacts[]"]', validateContactPerson);
 
         // Focus on input field
         $('#modal-submit').on('shown.bs.modal', () => {
