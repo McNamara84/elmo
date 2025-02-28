@@ -118,7 +118,7 @@
     "dates": {
         "title": "Dates",
         "created": "Date created",
-        "dateInvalid": "Please enter a valid date!",
+        "dateInvalid": "Please enter a valid date between 01.01.1900 and 31.12.2100!",
         "embargoUntil": "Embargo until (only by arrangement)"
     },
     "coverage": {

@@ -118,7 +118,7 @@
     "dates": {
         "title": "Daten",
         "created": "Erstellungsdatum",
-        "dateInvalid": "Bitte geben Sie ein gültiges Datum ein!",
+        "dateInvalid": "Bitte geben Sie ein gültiges Datum zwischen 01.01.1900 und 31.12.2100 ein!",
         "embargoUntil": "Embargo bis (nur nach Absprache)"
     },
     "coverage": {
