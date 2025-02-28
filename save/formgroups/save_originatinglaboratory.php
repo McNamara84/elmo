@@ -12,9 +12,14 @@ require_once __DIR__ . '/save_affiliations.php';
  */
 function saveOriginatingLaboratories($connection, $postData, $resource_id)
 {
-
-    if (!isset($postData['laboratoryName']) || !is_array($postData['laboratoryName'])) {
-        return false;
+    // Validate dependencies only if laboratories are provided
+    if (isset($postData['laboratoryName']) && is_array($postData['laboratoryName'])) {
+        $dependencies = [
+            ['primary' => 'laboratoryName', 'dependent' => 'laboratoryAffiliation']
+        ];
+        if (!validateArrayDependencies($postData, $dependencies)) {
+            return false;
+        }
     }
 
     $success = true;
@@ -44,7 +49,6 @@ function saveOriginatingLaboratories($connection, $postData, $resource_id)
             $affiliationArray = json_decode($affiliationData, true);
             if ($affiliationArray && isset($affiliationArray[0]['value'])) {
                 $affiliation = $affiliationArray[0]['value'];
-                ;
             }
         }
 

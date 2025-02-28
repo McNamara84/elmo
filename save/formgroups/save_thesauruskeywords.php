@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../validation.php';
+
 /**
  * Saves the thesaurus keywords into the database.
  *
@@ -6,16 +8,16 @@
  * @param array  $postData    The POST data from the form.
  * @param int    $resource_id The ID of the associated resource.
  *
- * @return void
+ * @return bool Returns true if keywords are saved successfully, false if validation fails
  */
 function saveKeywords($connection, $postData, $resource_id)
 {
     // Defines the fields to process
     $fieldsToProcess = [
-        'gcmdScienceKeywords', // Thesaurus Keywords
-        'MSLKeywords',        // MSL Keywords
-        'platforms',          // GCMD Platforms
-        'instruments'         // GCMD Instruments
+        'gcmdScienceKeywords',  // Thesaurus Keywords
+        'MSLKeywords',          // MSL Keywords
+        'platforms',            // GCMD Platforms
+        'instruments'           // GCMD Instruments
     ];
 
     // Iterates over the fields and checks if they exist in the POST data and are not empty
@@ -24,12 +26,19 @@ function saveKeywords($connection, $postData, $resource_id)
             $fieldObject = $postData[$field];                 // JSON string
             $fieldArray = json_decode($fieldObject, true);   // Decodes the JSON string into an array
 
+            // Validate the keyword entries if they exist
+            if ($fieldArray && !validateKeywordEntries($fieldArray)) {
+                return false;
+            }
+
             // Processes each keyword in the array
             foreach ($fieldArray as $entry) {
                 processThesaurusKeyword($connection, $entry, $resource_id, $field);
             }
         }
     }
+
+    return true;
 }
 
 /**
