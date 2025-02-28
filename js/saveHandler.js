@@ -1,24 +1,54 @@
 /**
-* Validates that the embargo date is not before the creation date.
-*/
+ * Validates that the embargo date is not before the creation date.
+ * @returns {boolean} True if the dates are valid, false otherwise.
+ */
 function validateEmbargoDate() {
     const dateCreatedInput = document.getElementById('input-date-created');
     const dateEmbargoInput = document.getElementById('input-date-embargo');
-    const embargoInvalidFeedback = document.querySelector('.embargo-invalid'); // Correct selector
+    const embargoInvalidFeedback = document.querySelector('.embargo-invalid');
 
     const dateCreated = new Date(dateCreatedInput.value);
     const dateEmbargo = new Date(dateEmbargoInput.value);
 
-    if (dateCreated > dateEmbargo) {
-        dateEmbargoInput.setCustomValidity("Embargo date must be after the creation date.");
-        embargoInvalidFeedback.textContent = "Embargo date must be after the creation date.";
-    } else {
-        dateEmbargoInput.setCustomValidity("");
-        embargoInvalidFeedback.textContent = "Please enter a valid date!";
+    if (!dateEmbargoInput.value) {
+        resetFieldState(dateEmbargoInput, embargoInvalidFeedback);
+        return true;
     }
 
-    dateEmbargoInput.reportValidity(); // Trigger validation and show message
+    if (dateCreated > dateEmbargo) {
+        setInvalidState(dateEmbargoInput, embargoInvalidFeedback, "Embargo date must be after or equal to the creation date.");
+        return false;
+    } else {
+        setValidState(dateEmbargoInput, embargoInvalidFeedback);
+        return true;
+    }
 }
+
+function setInvalidState(input, feedback, message) {
+    input.classList.remove('is-valid');
+    input.classList.add('is-invalid');
+    input.setCustomValidity(message);
+    feedback.textContent = message;
+}
+
+function setValidState(input, feedback) {
+    input.classList.remove('is-invalid');
+    input.classList.add('is-valid');
+    input.setCustomValidity("");
+    feedback.textContent = "";
+}
+
+function resetFieldState(input, feedback) {
+    input.classList.remove('is-valid', 'is-invalid');
+    input.setCustomValidity("");
+    feedback.textContent = "";
+}
+
+
+// Event-Listener für sofortige Validierung
+document.getElementById('input-date-created').addEventListener('change', validateEmbargoDate);
+document.getElementById('input-date-embargo').addEventListener('change', validateEmbargoDate);
+
 
 /**
  * @description Handles saving functionality for dataset metadata
@@ -74,8 +104,9 @@ class SaveHandler {
      * Handle save action
      */
     async handleSave() {
+        validateEmbargoDate();
         // Check form validity before proceeding
-        if (!this.$form[0].checkValidity() || !validateEmbargoDate()) {
+        if (!this.$form[0].checkValidity()) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
