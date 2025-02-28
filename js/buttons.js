@@ -836,7 +836,7 @@ $(document).ready(function () {
       if (lab) {
         tagifyAffiliation.removeAllTags();
         tagifyAffiliation.addTags([lab.affiliation]);
-        hiddenRorId.value = lab.ror_id || "";
+        hiddenRorId.value = lab.rorid || "";
         hiddenLabId.value = lab.id;
         tagifyAffiliation.setReadonly(true);
       } else {
