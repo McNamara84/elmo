@@ -150,12 +150,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .fail((jqXHR, textStatus, errorThrown) => {
-                console.error('Failed to fetch keywords:', {
-                    status: jqXHR.status,
-                    statusText: jqXHR.statusText,
-                    responseText: jqXHR.responseText,
-                    error: errorThrown
-                });
+                if (jqXHR.status === 404 && jqXHR.responseText.includes("No curated keywords found")) {
+                    console.log("ELMO currently has no curated keywords.");
+                } else {
+                    console.warn('Failed to fetch keywords:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText,
+                        error: errorThrown
+                    });
+                }
             });
     }
 
