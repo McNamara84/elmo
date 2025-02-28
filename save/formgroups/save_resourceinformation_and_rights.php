@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__FILE__) . '/../validation.php';
 
 /**
  * Saves or updates resource information and rights in the database.
@@ -27,7 +28,10 @@ function saveResourceInformationAndRights($connection, $postData)
 {
     try {
         // Validate required fields
-        if (!validateRequiredFields($postData)) {
+        $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language', 'Rights'];
+        $requiredArrayFields = ['title', 'titleType'];
+
+        if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
             return false;
         }
 
@@ -58,32 +62,6 @@ function saveResourceInformationAndRights($connection, $postData)
         error_log("Error in saveResourceInformationAndRights: " . $e->getMessage());
         throw $e;
     }
-}
-
-/**
- * Validates that all required fields are present and properly formatted.
- *
- * @param array $postData The POST data to validate
- * @return bool True if validation passes, false otherwise
- */
-function validateRequiredFields($postData)
-{
-    $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language', 'Rights', 'title', 'titleType'];
-
-    foreach ($requiredFields as $field) {
-        if (!isset($postData[$field]) || $postData[$field] === '' || $postData[$field] === null) {
-            return false;
-        }
-    }
-
-    if (
-        !is_array($postData['title']) || !is_array($postData['titleType']) ||
-        empty($postData['title']) || empty($postData['titleType'])
-    ) {
-        return false;
-    }
-
-    return true;
 }
 
 /**

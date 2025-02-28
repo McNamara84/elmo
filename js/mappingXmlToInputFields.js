@@ -401,7 +401,7 @@ function setLabNameWithTagify(row, labId) {
     const hiddenRorId = row.find('input[name="laboratoryRorIds[]"]');
     const hiddenLabId = row.find('input[name="LabId[]"]');
 
-    if (hiddenRorId.length) hiddenRorId.val(lab.ror_id || '');
+    if (hiddenRorId.length) hiddenRorId.val(lab.rorid || '');
     if (hiddenLabId.length) hiddenLabId.val(lab.id);
 
   } catch (error) {

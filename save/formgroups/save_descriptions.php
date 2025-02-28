@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../validation.php';
+
 /**
  * Saves the descriptions of a resource in the database.
  *
@@ -10,17 +12,17 @@
  */
 function saveDescriptions($connection, $postData, $resource_id)
 {
+    // Validate that abstract is present
+    if (!validateRequiredFields($postData, ['descriptionAbstract'])) {
+        return false;
+    }
+
     $descriptionTypes = [
         'Abstract' => 'descriptionAbstract',
         'Methods' => 'descriptionMethods',
         'Technical Information' => 'descriptionTechnical',
         'Other' => 'descriptionOther'
     ];
-
-    // Ensure that the 'Abstract' description is provided
-    if (!isset($postData['descriptionAbstract']) || empty($postData['descriptionAbstract'])) {
-        return false;
-    }
 
     // Iterate over each description type and insert if present
     foreach ($descriptionTypes as $type => $postKey) {
