@@ -82,6 +82,8 @@ document.getElementById('group-stc').addEventListener('change', function(event) 
     }
 });
 
+
+/**
  * Validates if a Contact Person is selected from group of Authors.
  */
 function validateContactPerson() {
