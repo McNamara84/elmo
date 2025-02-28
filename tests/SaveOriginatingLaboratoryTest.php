@@ -96,7 +96,7 @@ class SaveOriginatingLaboratoryTest extends TestCase
         $postData = [
             "laboratoryName" => ['[{"value":"Test Lab"}]'],
             "LabId" => ["1b9abbf97c7caa2d763b647d476b2910"],
-            "laboratoryAffiliation" => ['[{"value":"Test University"}]'],
+            "laboratoryAffiliation" => ['[{"value":"California Digital Library"}]'],
             "laboratoryRorIds" => ['[{"value":"https://ror.org/03yrm5c26"}]']
         ];
 
@@ -151,7 +151,7 @@ class SaveOriginatingLaboratoryTest extends TestCase
         $postData = [
             "laboratoryName" => ['[{"value":"Lab A"}]', '[{"value":"Lab B"}]', '[{"value":"Lab C"}]'],
             "LabId" => ["1b9abbf97c7caa2d763b647d476b2910", "9cd562c216daa82792972a074a222c52", "09e434194091574963c80f83d586875d"],
-            "laboratoryAffiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
+            "laboratoryAffiliation" => ['[{"value":"California Digital Library"}]', '[{"value":"OurResearch"}]', '[{"value":"University of California, San Diego"}]'],
             "laboratoryRorIds" => ['[{"value":"https://ror.org/03yrm5c26"}]', '[{"value":"https://ror.org/02nr0ka47"}]', '[{"value":"https://ror.org/0168r3w48"}]']
         ];
 

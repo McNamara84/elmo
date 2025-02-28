@@ -27,7 +27,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Always up-to-date controlled vocabularies through regular automatic updates.
 - Easy input of authors and contributors using ORCID preload.
 - Submitting of metadata directly to data curators.
-- Authors can be sorted by drag & drop.
+- Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
 
@@ -357,8 +357,8 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#a-affiliationidentifier)
   - Example values: `03v4gjf40`, `04z8jg394`
 
-### Contact Person(s)
-A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13)
+#### Contact Person(s)
+A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). Authors can be labelled as a contact person with the help of a toggle switch button which adds the additional fields required for contact (Email address, Website).
 
 - Last Name
 
@@ -377,15 +377,6 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - The corresponding field in the database where the value is stored is called: givenname in the table Contact_Person
   - Restrictions: Mandatory
   - Example values: `John`, `Jane`
-
-- Position
-
-  This field contains the position of the person in the organisation.
-  - Data type: String
-  - Occurrence: 0-1
-  - The corresponding field in the database where the value is saved is called: position in the Contact_Person table
-  - Restrictions: Optional
-  - Example values: `Working group leader`, `Project leader`
 
 - Email address
 
@@ -416,7 +407,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
 ### Originating Laboratory
-The controlled list is provided and maintained by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/labnames.json)) and can be updated via API call (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html)).
+The controlled list is provided and maintained by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/laboratories.json)) and can be updated via API call (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html)).
 
 - Laboratory Name
   This field contains the laboratory, where the research data came from. Its content is mapped to `<contributor contributorType="HostingInstitution"><contributorName>` in the DataCite scheme. 
@@ -427,15 +418,16 @@ The controlled list is provided and maintained by Utrecht University ([MSL Labor
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
   - Example values: `Fragmentation Lab (Ludwig-Maximilians-University Munich, Germany)`, `TecMOD - GRmodel (CNRS-Rennes 1 University, France)`
 
-- *Saved in backend (not visible to user):* LabId, laboratoryAffiliation
+- *Saved in backend (not visible to user):* LabId, laboratoryAffiliation, laboratoryRorId
     The purpose of these fields is to clearly identify the originating laboratory. The contents are mapped to `<nameIdentifier nameIdentifierScheme="labid">` and `<affiliation>` in the DataCite scheme.
     - Data type: String
     - Occurence: 1
-    - The corresponding field in the database where the values are saved are called: `labId` in the table `originating_laboratory` and `name` in the table `affiliation`
+    - The corresponding field in the database where the values are saved are called: `labId` in the table `originating_laboratory` and `name` and `rorId` in the table `affiliation`
     - Restrictions: Fields are filled automatically with data provided by the vocabulary provider and maintainer
     - Example values: 
       LabID `9cd562c216daa82792972a074a222c52`, 
       laboratoryAffiliation `Ludwig-Maximilians-University Munich, Munich, Germany`
+      laboratoryRorId `https://ror.org/02e2c7k09`
 
 
 ### Contributors
@@ -1014,7 +1006,7 @@ The metadata editor has some mandatory fields which are necessary for the submis
 
 
 The other fields are optional and are used to further enrich the data set with metadata. The following fields are optional:
-- **DOI**, **Version**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Position**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields**.✅
+- **DOI**, **Version**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields**.✅
 
 
 In certain cases, some subfields within a formgroup become mandatory. This affects the following fields:

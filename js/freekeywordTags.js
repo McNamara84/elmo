@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * @type {HTMLInputElement}
      */
     var input = document.getElementById('input-freekeyword');
+    if (!input) return; // Exit if element doesn't exist
 
     /**
      * The Tagify instance for the Free Keyword input.
@@ -22,23 +23,47 @@ document.addEventListener('DOMContentLoaded', function () {
     var freeKeywordstagify;
 
     /**
-     * Initializes the Tagify instance with a fallback placeholder if translations are not yet loaded.
+     * Currently loaded whitelist for keywords
+     * @type {Array}
+     */
+    var currentWhitelist = [];
+
+    /**
+     * Gets a nested value from an object using dot notation.
+     * 
+     * @function getNestedValue
+     * @param {Object} obj - The object to search within
+     * @param {string} path - The dot-notation path to the desired property
+     * @returns {*} The value at the specified path or undefined if not found
+     */
+    function getNestedValue(obj, path) {
+        return path ? path.split('.').reduce((prev, curr) => prev && prev[curr], obj) : undefined;
+    }
+
+    /**
+     * Gets the current translation for the placeholder or falls back to default text.
+     * 
+     * @function getPlaceholderTranslation
+     * @returns {string} The translated placeholder text or fallback text
+     */
+    function getPlaceholderTranslation() {
+        const translationKey = input.getAttribute('data-translate-placeholder');
+        return getNestedValue(window.translations, translationKey) ||
+            'Please enter keywords and separate them by a comma.';
+    }
+
+    /**
+     * Initializes the Tagify instance with current translations.
      *
      * @function initTagify
      * @returns {void}
      */
     function initTagify() {
-        // Fallback for the placeholder in case translations.header.on is not yet defined
-        var placeholderValue = (
-            window.translations &&
-            window.translations.header &&
-            window.translations.header.on
-        )
-            ? window.translations.header.on
-            : 'Please enter keywords and separate them by a comma.'; // Fallback text
+        const placeholderValue = getPlaceholderTranslation();
 
+        // Create Tagify instance
         freeKeywordstagify = new Tagify(input, {
-            whitelist: [],
+            whitelist: currentWhitelist,
             placeholder: placeholderValue,
             dropdown: {
                 maxItems: 50,
@@ -54,26 +79,35 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
-     * Updates the Tagify placeholder once translations have been loaded successfully.
+     * Completely refreshes the Tagify instance when translations change.
+     * This preserves all tags while updating the placeholder text.
      *
-     * @function updateTagifyPlaceholder
-     * @fires translationsLoaded
+     * @function refreshTagifyInstance
      * @returns {void}
      */
-    function updateTagifyPlaceholder() {
-        if (freeKeywordstagify && freeKeywordstagify.settings) {
-            var newPlaceholder = (
-                window.translations &&
-                window.translations.header &&
-                window.translations.header.on
-            )
-                ? window.translations.header.on
-                : freeKeywordstagify.settings.placeholder;
+    function refreshTagifyInstance() {
+        if (!input._tagify) return;
 
-            freeKeywordstagify.settings.placeholder = newPlaceholder;
-            // Reflect the new placeholder in the actual input element
-            freeKeywordstagify.DOM.input.placeholder = newPlaceholder;
+        // Store current tags and whitelist
+        const currentTags = input._tagify.value || [];
+
+        // Destroy current instance
+        input._tagify.destroy();
+
+        // Reinitialize with current translations
+        initTagify();
+
+        // Restore tags
+        if (currentTags.length > 0) {
+            setTimeout(() => {
+                if (input._tagify) {
+                    input._tagify.addTags(currentTags);
+                }
+            }, 50);
         }
+
+        // Log completion for debugging
+        console.log("Free keyword Tagify refreshed with new translations");
     }
 
     /**
@@ -100,18 +134,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     // Transform API response to a Tagify-friendly whitelist
-                    const whitelist = data.map(item => item.free_keyword);
+                    currentWhitelist = data.map(item => item.free_keyword);
 
-                    // Update Tagify settings
-                    if (typeof freeKeywordstagify !== 'undefined' && freeKeywordstagify.settings) {
-                        freeKeywordstagify.settings.whitelist = whitelist;
+                    // Update Tagify settings if instance exists
+                    if (input._tagify && input._tagify.settings) {
+                        input._tagify.settings.whitelist = currentWhitelist;
 
                         // If the dropdown is open, update the visible suggestions
-                        if (freeKeywordstagify.dropdown.visible) {
-                            freeKeywordstagify.dropdown.refilter.call(freeKeywordstagify);
+                        if (input._tagify.dropdown.visible) {
+                            input._tagify.dropdown.refilter.call(input._tagify);
                         }
-                    } else {
-                        console.error('Tagify instance not found or not properly initialized');
                     }
                 } catch (error) {
                     console.error('Error processing keyword data:', error);
@@ -127,15 +159,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    // 1) Initialize Tagify with a fallback placeholder
+    // 1) Initialize Tagify with current translations
     initTagify();
 
-    /**
-     * Event listener for the custom "translationsLoaded" event.
-     * This event is dispatched from language.js once the translation JSON is loaded.
-     */
-    document.addEventListener('translationsLoaded', updateTagifyPlaceholder);
+    // 2) Register event listener for translation changes
+    document.addEventListener('translationsLoaded', refreshTagifyInstance);
 
-    // 2) Load curated keywords from the API
+    // 3) Load curated keywords from the API
     loadKeywordsFromAPI();
 });

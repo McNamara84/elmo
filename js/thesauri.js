@@ -25,7 +25,7 @@ $(document).ready(function () {
         // GCMD PLATFORMS
         {
             inputId: '#input-Platforms',
-            jsonFile: 'json/gcmdPlatformsKeywords.json',
+            jsonFile: 'json/thesauri/gcmdPlatformsKeywords.json',
             jsTreeId: '#jstree-Platforms',
             searchInputId: '#input-Platforms-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-Platforms-gcmd',
@@ -34,7 +34,7 @@ $(document).ready(function () {
         // GCMD INSTRUMENTS
         {
             inputId: '#input-Instruments',
-            jsonFile: 'json/gcmdInstrumentsKeywords.json',
+            jsonFile: 'json/thesauri/gcmdInstrumentsKeywords.json',
             jsTreeId: '#jstree-instruments',
             searchInputId: '#input-instruments-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-instruments-gcmd',
@@ -68,7 +68,41 @@ $(document).ready(function () {
             console.error('Fehler beim Abruf der Settings:', error);
         });
 
+    /**
+     * Refreshes all Tagify instances for thesaurus inputs when translations are changed.
+     * This function updates the placeholder text for existing Tagify instances without
+     * destroying them, preserving all selected values and functionality.
+     * 
+     * @returns {void}
+     */
+    function refreshThesaurusTagifyInstances() {
+        // Define all thesaurus input IDs that use Tagify
+        const thesaurusInputIds = [
+            'input-sciencekeyword',
+            'input-Platforms',
+            'input-Instruments',
+            'input-mslkeyword'
+        ];
 
+        // Update each Tagify instance if it exists
+        thesaurusInputIds.forEach(inputId => {
+            const inputElement = document.getElementById(inputId);
+
+            // Skip if element doesn't exist or doesn't have a Tagify instance
+            if (!inputElement || !inputElement._tagify) return;
+
+            // Update placeholder with current translation
+            if (translations && translations.keywords && translations.keywords.thesaurus) {
+                inputElement._tagify.settings.placeholder = translations.keywords.thesaurus.label;
+
+                // Update the placeholder in the DOM
+                const placeholderElement = inputElement.parentElement.querySelector('.tagify__input');
+                if (placeholderElement) {
+                    placeholderElement.setAttribute('data-placeholder', translations.keywords.thesaurus.label);
+                }
+            }
+        });
+    }
 
     /**
      * Initializes a keyword input field with tag management and hierarchical tree data and search capabilities used in modal.
@@ -309,4 +343,5 @@ $(document).ready(function () {
             loadKeywords(data);
         });
     }
+    document.addEventListener('translationsLoaded', refreshThesaurusTagifyInstances);
 });

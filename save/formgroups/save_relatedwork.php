@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../validation.php';
 /**
  * Saves the related work information into the database.
  *
@@ -10,39 +11,58 @@
  * @param array  $postData    The POST data from the form.
  * @param int    $resource_id The ID of the associated resource.
  *
- * @return void
+ * @return bool Returns true if saving was successful, false otherwise.
  *
  * @throws mysqli_sql_exception If a database error occurs.
  */
 function saveRelatedWork($connection, $postData, $resource_id)
 {
+    // Check if the required arrays exist
     if (
-        isset($postData['rIdentifier'], $postData['relation'], $postData['rIdentifierType']) &&
-        is_array($postData['rIdentifier']) && is_array($postData['relation']) &&
-        is_array($postData['rIdentifierType'])
+        !isset($postData['rIdentifier'], $postData['relation'], $postData['rIdentifierType']) ||
+        !is_array($postData['rIdentifier']) || !is_array($postData['relation']) ||
+        !is_array($postData['rIdentifierType'])
     ) {
-        $rIdentifier = $postData['rIdentifier'];
-        $relation = $postData['relation'];
-        $rIdentifierType = $postData['rIdentifierType'];
-        $len = count($rIdentifier);
+        return true; // No data provided is valid
+    }
 
-        for ($i = 0; $i < $len; $i++) {
-            // Skip empty identifiers or if no relation is selected
-            if (empty($rIdentifier[$i]) || empty($relation[$i])) {
-                continue;
+    $allSuccessful = true;
+    $len = count($postData['rIdentifier']);
+
+    for ($i = 0; $i < $len; $i++) {
+        $entry = [
+            'identifier' => $postData['rIdentifier'][$i] ?? '',
+            'relation' => $postData['relation'][$i] ?? '',
+            'identifierType' => $postData['rIdentifierType'][$i] ?? ''
+        ];
+
+        // Validate dependencies for this entry
+        if (!validateRelatedWorkDependencies($entry)) {
+            $allSuccessful = false;
+            continue;
+        }
+
+        // Skip if no data provided for this entry
+        if (empty($entry['identifier']) && empty($entry['relation']) && empty($entry['identifierType'])) {
+            continue;
+        }
+
+        $relation_id = getRelationId($connection, $entry['relation']);
+        $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
+
+        if ($relation_id && $identifier_type_id) {
+            $related_work_id = insertRelatedWork($connection, $entry['identifier'], $relation_id, $identifier_type_id);
+            if ($related_work_id) {
+                linkResourceToRelatedWork($connection, $resource_id, $related_work_id);
+            } else {
+                $allSuccessful = false;
             }
-
-            $relation_id = getRelationId($connection, $relation[$i]);
-            $identifier_type_id = getIdentifierTypeId($connection, $rIdentifierType[$i]);
-
-            if ($relation_id && $identifier_type_id) {
-                $related_work_id = insertRelatedWork($connection, $rIdentifier[$i], $relation_id, $identifier_type_id);
-                if ($related_work_id) {
-                    linkResourceToRelatedWork($connection, $resource_id, $related_work_id);
-                }
-            }
+        } else {
+            $allSuccessful = false;
         }
     }
+
+    return $allSuccessful;
 }
 
 /**

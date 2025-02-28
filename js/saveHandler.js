@@ -82,6 +82,21 @@ document.getElementById('group-stc').addEventListener('change', function(event) 
     }
 });
 
+ * Validates if a Contact Person is selected from group of Authors.
+ */
+function validateContactPerson() {
+    var isValid = $('input[name="contacts[]"]:checked').length > 0;
+    $('#contact-person-error').remove();
+    // 
+    if (!isValid) {
+        $('#group-author').append('<div id="contact-person-error" class="text-danger mt-2" data-translate="contactPersons.contactPersonError"></div>');
+        applyTranslations();
+        $('input[name="contacts[]"]').prop('required', true);
+    } else {
+        $('input[name="contacts[]"]').prop('required', false);
+    }
+    return isValid;
+}
 
 /**
  * @description Handles saving functionality for dataset metadata
@@ -111,6 +126,8 @@ class SaveHandler {
     initializeEventListeners() {
         $('#button-saveas-save').on('click', () => this.handleSaveConfirm());
         $('#modal-saveas').on('hidden.bs.modal', () => this.modals.notification.hide());
+        this.$form.on('change', 'input[name="contacts[]"]', validateContactPerson);
+
         // Focus on input field
         $('#modal-saveas').on('shown.bs.modal', () => {
             $('#input-saveas-filename').select();
@@ -139,7 +156,9 @@ class SaveHandler {
     async handleSave() {
         validateEmbargoDate();
         // Check form validity before proceeding
-        if (!this.$form[0].checkValidity()) {
+        console.log("handleSave() wurde aufgerufen");
+        if (!this.$form[0].checkValidity() || !validateContactPerson()) {
+            console.log("Validierung wurde aufgerufen");
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });

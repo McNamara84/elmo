@@ -43,16 +43,17 @@
     "resourceInfo": {
         "title": "Informations sur la ressource",
         "doi": "DOI",
-        "doiValid": "Un nouveau DOI sera enregistré",
-        "doiInvalid": "Veuillez utiliser le format 10.ORGANISATION/ID (ex.: 10.57757/IUGG23-3081) ou laisser vide",
-        "publicationYear": "Année de publication",
-        "publicationYearInvalid": "Veuillez saisir une année valide entre 1901-2155 (4 chiffres).",
+        "doiValid": "Un nouveau DOI sera enregistré.",
+        "doiInvalid": "Veuillez utiliser le format 10.ORGANISATION/ID (ex.: 10.57757/IUGG23-3081) ou laisser vide.",
+        "publicationYear": "Année de publication (AAAA)",
+        "yearPlaceholder": "AAAA",
+        "publicationYearInvalid": "Veuillez saisir une année valide entre 1901-2155 (4 chiffres au format AAAA).",
         "resourceType": "Type de ressource",
         "version": "Version",
         "versionInvalid": "Laissez vide en cas de doute",
         "datasetLanguage": "Langue du jeu de données",
         "resourceTitle": "Titre",
-        "resourceTitleInvalid": "Veuillez fournir un titre descriptif (qui ne répète pas le titre de l'article, mais qui décrit les données)",
+        "resourceTitleInvalid": "Veuillez fournir un titre descriptif (qui ne répète pas le titre de l'article, mais qui décrit les données).",
         "titleType": "Type de titre"
     },
     "rights": {
@@ -64,11 +65,10 @@
         "affiliationInvalid": "Veuillez indiquer une affiliation."
     },
     "contactPersons": {
-        "title": "Personne(s) à contacter",
+        "contactPersonError": "Veuillez choisir au moins une personne de contact.",
         "email": "Adresse e-mail",
         "emailInvalid": "Veuillez saisir une adresse e-mail valide au format xxx.xxx@xxx.xxx.",
-        "position": "Poste",
-        "positionInvalid": "Veuillez indiquer un poste.",
+        "toggleCheckbox": "Personne<br>à contacte?",
         "website": "Site web",
         "websiteInvalid": "Veuillez saisir une URL valide."
     },
@@ -125,9 +125,9 @@
     "coverage": {
         "title": "Couverture spatiale et temporelle",
         "map": "Carte",
-        "latitude": "Latitude",
+        "latitude": "Latitude (Min|Max)",
         "latitudeInvalid": "Veuillez saisir une latitude comprise entre -90.00 et +90.00 .",
-        "longitude": "Longitude",
+        "longitude": "Longitude (Min|Max)",
         "longitudeInvalid": "Veuillez saisir une longitude comprise entre -180.00 et +180.00.",
         "description": "Description",
         "descriptionPlaceholder": "Veuillez saisir la description de la couverture temporelle et spatiale...",
@@ -135,7 +135,7 @@
         "end": "Fin",
         "dateTimeInvalid": "Veuillez saisir une date et une heure valides.",
         "timezone": "Fuseau horaire",
-        "timezoneInvalid":"Veuillez sélectionner le fuseau horaire",
+        "timezoneInvalid": "Veuillez sélectionner le fuseau horaire",
         "mapInfo": "(Veuillez choisir les coordonnées par rectangle ou marqueur)"
     },
     "relatedWork": {
@@ -197,7 +197,7 @@
             "urgency": "Urgence",
             "url": "URL des données",
             "dataDescription": "Description des données (conformément au <a href='https://gfzpublic.gfz.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_5007103' target='_blank' class='link-primary'>modèle de description</a> des données)",
-            "privacypolice": "J'ai lu la <a href='docs/privacyPolicy.html' target='_blank' class='link-primary'>politique de confidentialité</a> et je consens au traitement de mes données.",
+            "privacypolice": "J'ai lu la <a href='doc/privacyPolicy.html' target='_blank' class='link-primary'>politique de confidentialité</a> et je consens au traitement de mes données.",
             "urgencyNotice": "Veuillez sélectionner l'urgence",
             "high": "élevée",
             "normal": "normale",

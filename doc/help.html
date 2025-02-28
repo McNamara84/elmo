@@ -44,7 +44,6 @@ include_once "../settings.php";
                     </li>
                     <li class="nav-item"><a class="nav-link" href="#help-rights">Licenses and rights</a></li>
                     <li class="nav-item"><a class="nav-link" href="#help-authors">Author(s)</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-contactperson">Contact Person(s)</a></li>
                     <?php if ($showMslLabs): ?>
                     <li class="nav-item"><a class="nav-link" href="#help-originatinglaboratory">Originating
                             Laboratory</a></li>
@@ -110,7 +109,7 @@ include_once "../settings.php";
                         <h4>Publication Year</h4>
                         <p>The year when the data was or will be made publicly available. In the case of datasets,
                             “publish” is understood to mean making the data available on a specific date to the
-                            community of researchers. Values between 1901 and 2155 are allowed.</p>
+                            community of researchers. Values between 1901 and 2155 are allowed in the format YYYY.</p>
                     </div>
                     <div>
                         <ul class="list-unstyled">
@@ -225,6 +224,8 @@ include_once "../settings.php";
                             titles. Ideally you provide an ORCID. Entering an ORCID loads
                             data from the corresponding ORCID profile. To add more authors, use the "add" button on the
                             right. The order of the authors can be changed using drag & drop. </p>
+                        <p><strong>Please mark at least one author as contact person.</strong> (Person with knowledge of
+                            how to access, troubleshoot, or otherwise field issues related to the resource.)</p>
                     </div>
                     <div id="help-author-orcid">
                         <h4>ORCID</h4>
@@ -243,35 +244,21 @@ include_once "../settings.php";
                         <p>It is recommended to select the affiliation from the list, if the required affiliation is not
                             among the available options, it can be entered manually.</p>
                     </div>
-                </div>
-                <div class="section-divider"></div>
-                <hr>
-                <!-- formgroup contactperson -->
-                <div id="help-contactperson" class="section-content">
-                    <div id="help-contactperson-fg">
-                        <h3>Contact Person(s)</h3>
-                        <p>Person with knowledge of how to access, troubleshoot, or otherwise field issues related to
-                            the resource; May also be "Point of Contact" in organisation that controls access to the
-                            resource. Please enter at least one contact person.</p>
+                    <div>
+                        <h4>Contact Person(s)</h3>
+                            <p>Person with knowledge of how to access, troubleshoot, or otherwise field issues related
+                                to
+                                the resource. May also be "Point of Contact" in organisation that controls access to the
+                                resource. Please enter at least one contact person.</p>
+                            <p>After filling in the list of authors, the Contact Person can be selected by simply
+                                clicking the button on the left. The email address of the author, who is labelled as the
+                                contact person, must also be provided. The specification of a website is optional.</p>
+                            <h5>Website</h5>
+                            <p>Professional or specialized website, excluding any private websites. The specification of
+                                a
+                                website, such as that of your institution, offers further contact options in case of
+                                questions.</p>
                     </div>
-                    <div id="help-contactperson-position">
-                        <h4>Position</h4>
-                        <p>The position of the person in the organisation.</p>
-                    </div>
-                    <div id="help-contactperson-website">
-                        <h4>Website</h4>
-                        <p>Professional or specialized website, excluding any private websites. The specification of a
-                            website, such as that of your institution, offers further contact options in case of
-                            questions.</p>
-                    </div>
-                    <div id="help-contactperson-affiliation">
-                        <h4>Affiliation</h4>
-                        <p>The organisational or institutional affiliation of the Person.
-                            It is recommended to select the affiliation from the list, if the required affiliation is
-                            not
-                            among the available options, it can be entered manually.</p>
-                    </div>
-                    <div class="section-divider"></div>
                 </div>
                 <div class="section-divider"></div>
                 <?php if ($showMslLabs): ?>

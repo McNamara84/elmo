@@ -120,13 +120,13 @@ class SaveContactpersonsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "cpLastname" => ["Doe"],
-            "cpFirstname" => ["John"],
-            "cpPosition" => ["Researcher"],
+            "familynames" => ["Doe"],
+            "givennames" => ["John"],
+            "orcids" => ["1234-1234-1234-1234"],
             "cpEmail" => ["john.doe@example.com"],
             "cpOnlineResource" => ["http://example.com"],
-            "cpAffiliation" => ['[{"value":"Test University"}]'],
-            "hiddenCPRorId" => ['https://ror.org/03yrm5c26']
+            "affiliation" => ['[{"value":"Test University"}]'],
+            "authorRorIds" => ['https://ror.org/03yrm5c26']
         ];
 
         saveContactPerson($this->connection, $postData, $resource_id);
@@ -137,9 +137,9 @@ class SaveContactpersonsTest extends TestCase
         $result = $stmt->get_result()->fetch_assoc();
 
         $this->assertNotNull($result, "Die Contact Person wurde nicht gespeichert.");
-        $this->assertEquals($postData["cpLastname"][0], $result["familyname"], "Der Nachname wurde nicht korrekt gespeichert.");
-        $this->assertEquals($postData["cpFirstname"][0], $result["givenname"], "Der Vorname wurde nicht korrekt gespeichert.");
-        $this->assertEquals($postData["cpPosition"][0], $result["position"], "Die Position wurde nicht korrekt gespeichert.");
+        $this->assertEquals($postData["familynames"][0], $result["familyname"], "Der Nachname wurde nicht korrekt gespeichert.");
+        $this->assertEquals($postData["givennames"][0], $result["givenname"], "Der Vorname wurde nicht korrekt gespeichert.");
+        $this->assertEquals($postData["orcids"][0], $result["orcid"], "Die ORCID wurde nicht korrekt gespeichert.");
         $this->assertEquals("example.com", $result["website"], "Die Website wurde nicht korrekt gespeichert.");
 
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Contact_Person WHERE Resource_resource_id = ? AND Contact_Person_contact_person_id = ?");
@@ -178,13 +178,13 @@ class SaveContactpersonsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "cpLastname" => ["Doe", "Smith", "Johnson"],
-            "cpFirstname" => ["John", "Jane", "Bob"],
-            "cpPosition" => ["Researcher", "Professor", "Assistant"],
+            "familynames" => ["Doe", "Smith", "Johnson"],
+            "givennames" => ["John", "Jane", "Bob"],
+            "orcids" => ["1234-1234-1234-1234", "0000-1111-2222-3333", "9876-9876-9765-9876"],
             "cpEmail" => ["john.doe@example.com", "jane.smith@example.com", "bob.johnson@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com", "http://example3.com"],
-            "cpAffiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
-            "hiddenCPRorId" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
+            "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
+            "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
         ];
 
         saveContactPerson($this->connection, $postData, $resource_id);
@@ -196,9 +196,9 @@ class SaveContactpersonsTest extends TestCase
             $result = $stmt->get_result()->fetch_assoc();
 
             $this->assertNotNull($result, "Die Contact Person " . ($i + 1) . " wurde nicht gespeichert.");
-            $this->assertEquals($postData["cpLastname"][$i], $result["familyname"], "Der Nachname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
-            $this->assertEquals($postData["cpFirstname"][$i], $result["givenname"], "Der Vorname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
-            $this->assertEquals($postData["cpPosition"][$i], $result["position"], "Die Position der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals($postData["familynames"][$i], $result["familyname"], "Der Nachname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals($postData["givennames"][$i], $result["givenname"], "Der Vorname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals($postData["orcids"][$i], $result["orcid"], "Die ORCID der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals(str_replace(["http://", "https://"], "", $postData["cpOnlineResource"][$i]), $result["website"], "Die Website der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
 
             $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Contact_Person WHERE Resource_resource_id = ? AND Contact_Person_contact_person_id = ?");
@@ -213,9 +213,9 @@ class SaveContactpersonsTest extends TestCase
             $stmt->execute();
             $affiliationResult = $stmt->get_result()->fetch_assoc();
 
-            $this->assertEquals(json_decode($postData["cpAffiliation"][$i], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals(json_decode($postData["affiliation"][$i], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals(
-                str_replace("https://ror.org/", "", $postData["hiddenCPRorId"][$i]),
+                str_replace("https://ror.org/", "", $postData["authorRorIds"][$i]),
                 $affiliationResult["rorId"],
                 "Die ROR-ID der Affiliation für Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
@@ -242,13 +242,13 @@ class SaveContactpersonsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "cpLastname" => ["Doe", "Smith", "Johnson"],
-            "cpFirstname" => ["", "Jane", "Bob"],
-            "cpPosition" => ["Researcher", "", "Assistant"],
+            "familynames" => ["Doe", "Smith", "Johnson"],
+            "givennames" => ["Jane", "Jane", "Bob"],
+            "orcids" => ["1234-1234-1234-1234", "", "9876-9876-9876-9876"],
             "cpEmail" => ["john.doe@example.com", "jane.smith@example.com", "bob.johnson@example.com"],
-            "cpOnlineResource" => ["http://example1.com", "http://example2.com", "http://example3.com"],
-            "cpAffiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[]'],
-            "hiddenCPRorId" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', '']
+            "cpOnlineResource" => ["", "http://example2.com", "http://example3.com"],
+            "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[]'],
+            "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', '']
         ];
 
         saveContactPerson($this->connection, $postData, $resource_id);
@@ -260,9 +260,9 @@ class SaveContactpersonsTest extends TestCase
             $result = $stmt->get_result()->fetch_assoc();
 
             $this->assertNotNull($result, "Die Contact Person " . ($i + 1) . " wurde nicht gespeichert.");
-            $this->assertEquals($postData["cpLastname"][$i], $result["familyname"], "Der Nachname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
-            $this->assertEquals($postData["cpFirstname"][$i], $result["givenname"], "Der Vorname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
-            $this->assertEquals($postData["cpPosition"][$i], $result["position"], "Die Position der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals($postData["familynames"][$i], $result["familyname"], "Der Nachname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals($postData["givennames"][$i], $result["givenname"], "Der Vorname der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals($postData["orcids"][$i], $result["orcid"], "Die ORCID der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
             $this->assertEquals(str_replace(["http://", "https://"], "", $postData["cpOnlineResource"][$i]), $result["website"], "Die Website der Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
 
             $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Contact_Person WHERE Resource_resource_id = ? AND Contact_Person_contact_person_id = ?");
@@ -275,7 +275,7 @@ class SaveContactpersonsTest extends TestCase
             $stmt->execute();
             $affiliationCount = $stmt->get_result()->fetch_assoc()['count'];
 
-            if (!empty($postData["cpAffiliation"][$i]) && $postData["cpAffiliation"][$i] !== '[]') {
+            if (!empty($postData["affiliation"][$i]) && $postData["affiliation"][$i] !== '[]') {
                 $this->assertEquals(1, $affiliationCount, "Es sollte eine Affiliation für Contact Person " . ($i + 1) . " gespeichert worden sein.");
 
                 $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
@@ -286,9 +286,9 @@ class SaveContactpersonsTest extends TestCase
                 $affiliationResult = $stmt->get_result()->fetch_assoc();
 
                 $this->assertNotNull($affiliationResult, "Die Affiliation für Contact Person " . ($i + 1) . " wurde nicht gespeichert.");
-                $this->assertEquals(json_decode($postData["cpAffiliation"][$i], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+                $this->assertEquals(json_decode($postData["affiliation"][$i], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert.");
                 $this->assertEquals(
-                    str_replace("https://ror.org/", "", $postData["hiddenCPRorId"][$i]),
+                    str_replace("https://ror.org/", "", $postData["authorRorIds"][$i]),
                     $affiliationResult["rorId"],
                     "Die ROR-ID der Affiliation für Contact Person " . ($i + 1) . " wurde nicht korrekt gespeichert."
                 );
@@ -319,13 +319,13 @@ class SaveContactpersonsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "cpLastname" => ["", "Smith", "Johnson"],
-            "cpFirstname" => ["John", "Jane", "Bob"],
-            "cpPosition" => ["Researcher", "Professor", "Assistant"],
+            "familynames" => ["", "Smith", "Johnson"],
+            "givennames" => ["John", "Jane", "Bob"],
+            "orcids" => ["1234-1234-1234-1234", "1111-2222-3333-4444", "9876-9876-9876-9876"],
             "cpEmail" => ["john.doe@example.com", "", "bob.johnson@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com", ""],
-            "cpAffiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
-            "hiddenCPRorId" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
+            "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
+            "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
         ];
 
         saveContactPerson($this->connection, $postData, $resource_id);
@@ -334,7 +334,7 @@ class SaveContactpersonsTest extends TestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
-            3,
+            1,
             $count,
             "Es sollten keine Contact Persons gespeichert worden sein."
         );
@@ -344,7 +344,7 @@ class SaveContactpersonsTest extends TestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
-            3,
+            1,
             $count,
             "Es sollten keine Verknüpfungen zur Resource erstellt worden sein."
         );
@@ -371,13 +371,13 @@ class SaveContactpersonsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "cpLastname" => ["Doe", "Smith"],
-            "cpFirstname" => ["John", "Jane"],
-            "cpPosition" => ["Researcher", "Professor"],
+            "familynames" => ["Doe", "Smith"],
+            "givennames" => ["John", "Jane"],
+            "orcids" => ["1234-1234-1234-1234", "9999-8888-7777-6666"],
             "cpEmail" => ["john.doe@example.com", "jane.smith@example.com"],
             "cpOnlineResource" => ["http://example1.com", "http://example2.com"],
-            "cpAffiliation" => ['[{"value":"University A"}]', '[]'],
-            "hiddenCPRorId" => ['', 'https://ror.org/02nr0ka47']
+            "affiliation" => ['[{"value":"University A"}]', '[]'],
+            "authorRorIds" => ['', 'https://ror.org/02nr0ka47']
         ];
 
         saveContactPerson($this->connection, $postData, $resource_id);
@@ -393,9 +393,9 @@ class SaveContactpersonsTest extends TestCase
         $result = $stmt->get_result()->fetch_assoc();
 
         $this->assertNotNull($result, "Die erste Contact Person wurde nicht gespeichert.");
-        $this->assertEquals($postData["cpLastname"][0], $result["familyname"], "Der Nachname der ersten Contact Person wurde nicht korrekt gespeichert.");
-        $this->assertEquals($postData["cpFirstname"][0], $result["givenname"], "Der Vorname der ersten Contact Person wurde nicht korrekt gespeichert.");
-        $this->assertEquals($postData["cpPosition"][0], $result["position"], "Die Position der ersten Contact Person wurde nicht korrekt gespeichert.");
+        $this->assertEquals($postData["familynames"][0], $result["familyname"], "Der Nachname der ersten Contact Person wurde nicht korrekt gespeichert.");
+        $this->assertEquals($postData["givennames"][0], $result["givenname"], "Der Vorname der ersten Contact Person wurde nicht korrekt gespeichert.");
+        $this->assertEquals($postData["orcids"][0], $result["orcid"], "Die ORCID der ersten Contact Person wurde nicht korrekt gespeichert.");
         $this->assertEquals(str_replace(["http://", "https://"], "", $postData["cpOnlineResource"][0]), $result["website"], "Die Website der ersten Contact Person wurde nicht korrekt gespeichert.");
 
         $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
@@ -406,7 +406,7 @@ class SaveContactpersonsTest extends TestCase
         $affiliationResult = $stmt->get_result()->fetch_assoc();
 
         $this->assertNotNull($affiliationResult, "Die Affiliation für die erste Contact Person wurde nicht gespeichert.");
-        $this->assertEquals(json_decode($postData["cpAffiliation"][0], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für die erste Contact Person wurde nicht korrekt gespeichert.");
+        $this->assertEquals(json_decode($postData["affiliation"][0], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für die erste Contact Person wurde nicht korrekt gespeichert.");
         $this->assertNull(
             $affiliationResult["rorId"],
             "Die ROR-ID der Affiliation für die erste Contact Person sollte null sein."

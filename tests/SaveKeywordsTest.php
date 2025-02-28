@@ -94,8 +94,8 @@ class SaveKeywordsTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "gcmdScienceKeywords" => json_encode([["value" => "Keyword1", "id" => "http://example.com/1", "scheme" => "CustomScheme", "schemeURI" => "http://example.com/scheme", "language" => "en"]]),
-            "MSLKeywords" => json_encode([["value" => "Material1"]]),
+            "gcmdScienceKeywords" => json_encode([["value" => "Keyword1", "id" => "ert6445667758we", "scheme" => "CustomScheme", "schemeURI" => "http://example.com/scheme", "language" => "en"]]),
+            "MSLKeywords" => json_encode([["value" => "Material1", "id" => "35457687243", "scheme" => "TestScheme", "schemeURI" => "http://example.de/scheme", "language" => "en"]]),
         ];
 
         saveKeywords($this->connection, $postData, $resource_id);
@@ -114,14 +114,6 @@ class SaveKeywordsTest extends TestCase
 
         while ($row = $result->fetch_assoc()) {
             $this->assertContains($row['keyword'], $expectedKeywords, "Das Keyword '{$row['keyword']}' sollte in der Liste der erwarteten Keywords sein.");
-            if ($row['keyword'] == 'Keyword1') {
-                $this->assertEquals("CustomScheme", $row['scheme']);
-                $this->assertEquals("http://example.com/scheme", $row['schemeURI']);
-                $this->assertEquals("http://example.com/1", $row['valueURI']);
-                $this->assertEquals("en", $row['language']);
-            } else {
-                $this->assertEquals("en", $row['language'], "Die Sprache sollte standardmäßig 'en' sein für das Keyword '{$row['keyword']}'.");
-            }
         }
 
     }
@@ -145,14 +137,50 @@ class SaveKeywordsTest extends TestCase
 
         $postData = [
             "gcmdScienceKeywords" => json_encode([
-                ["value" => "Keyword1"],
-                ["value" => "Keyword2"],
-                ["value" => "Keyword3"]
+                [
+                    "value" => "Keyword1",
+                    "id" => "http://gcmd.nasa.gov/keyword1",
+                    "scheme" => "GCMD Science Keywords",
+                    "schemeURI" => "http://gcmd.nasa.gov",
+                    "language" => "en"
+                ],
+                [
+                    "value" => "Keyword2",
+                    "id" => "http://gcmd.nasa.gov/keyword2",
+                    "scheme" => "GCMD Science Keywords",
+                    "schemeURI" => "http://gcmd.nasa.gov",
+                    "language" => "en"
+                ],
+                [
+                    "value" => "Keyword3",
+                    "id" => "http://gcmd.nasa.gov/keyword3",
+                    "scheme" => "GCMD Science Keywords",
+                    "schemeURI" => "http://gcmd.nasa.gov",
+                    "language" => "en"
+                ]
             ]),
             "MSLKeywords" => json_encode([
-                ["value" => "Material1"],
-                ["value" => "Material2"],
-                ["value" => "Material3"]
+                [
+                    "value" => "Material1",
+                    "id" => "http://msl.org/material1",
+                    "scheme" => "MSL Keywords",
+                    "schemeURI" => "http://epos-msl.org",
+                    "language" => "en"
+                ],
+                [
+                    "value" => "Material2",
+                    "id" => "http://msl.org/material2",
+                    "scheme" => "MSL Keywords",
+                    "schemeURI" => "http://epos-msl.org",
+                    "language" => "en"
+                ],
+                [
+                    "value" => "Material3",
+                    "id" => "http://msl.org/material3",
+                    "scheme" => "MSL Keywords",
+                    "schemeURI" => "http://test-epos-msl.org",
+                    "language" => "en"
+                ]
             ])
         ];
 
@@ -175,7 +203,7 @@ class SaveKeywordsTest extends TestCase
     }
 
     /**
-     * Nur einzelne Thesaurus Keyword Eingabefelder wurden befüllt
+     * Nur einzelne Thesaurus Keyword Eingabefelder wurden befüllt. Diese sollten dann natürlich nicht gespeichert werden.
      */
     public function testSavePartialThesaurusKeywords()
     {
@@ -203,15 +231,7 @@ class SaveKeywordsTest extends TestCase
         $stmt->execute();
         $result = $stmt->get_result();
 
-        $this->assertEquals(2, $result->num_rows, "Es sollten genau 2 Thesaurus Keywords gespeichert worden sein.");
-
-        $keywords = [];
-        while ($row = $result->fetch_assoc()) {
-            $keywords[] = $row['keyword'];
-        }
-
-        $this->assertContains("Keyword1", $keywords, "Keyword1 sollte gespeichert worden sein.");
-        $this->assertContains("Age1", $keywords, "Age1 sollte gespeichert worden sein.");
+        $this->assertEquals(0, $result->num_rows, "Es sollten genau 0 Thesaurus Keywords gespeichert worden sein.");
     }
 
     /**

@@ -20,13 +20,20 @@ function clearInputFields() {
     // Reset Rights License select field
     $('#input-rights-license').val('');
   
-    // Reset existing authors
-    $('#group-author .row[data-creator-row]').not(':first').remove();
-    $('#group-author .row[data-creator-row]:first input').val('');
-  
-    // Reset existing contact persons
-    $('#group-contactperson .row[contact-person-row]').not(':first').remove();
-    $('#group-contactperson .row[contact-person-row]:first input').val('');
+    // Reset existing authors (now using data-creator-row)
+    $('div[data-creator-row]').not(':first').remove();
+    $('div[data-creator-row]:first').find('input').val('');
+    $('div[data-creator-row]:first').find('.contact-person-input').hide();
+    $('div[data-creator-row]:first').find('input[name="contacts[]"]').prop('checked', false);
+
+    // Clear Tagify for affiliations in the first author row
+    const firstAffiliationTagify = $('div[data-creator-row]:first').find('input[name="affiliation[]"]')[0];
+    if (firstAffiliationTagify && firstAffiliationTagify.tagify) {
+        firstAffiliationTagify.tagify.removeAllTags();
+    }
+
+    // Clear author ROR IDs
+    $('div[data-creator-row]:first').find('input[name="authorRorIds[]"]').val('');
   
     // Reset existing laboratories
     $('#group-originatinglaboratory .row[data-laboratory-row]').not(':first').remove();
@@ -48,8 +55,6 @@ function clearInputFields() {
   
     // Clear all Tagify fields
     const tagifySelectors = [
-        '#input-author-affiliation',
-        '#input-contactperson-affiliation',
         '#input-sciencekeyword', 
         '#input-Platforms', 
         '#input-Instruments',
@@ -85,4 +90,4 @@ function clearInputFields() {
     // Clear Funding References
     $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
     $('#group-fundingreference .row[funding-reference-row]:first input').val('');
-  }
+}

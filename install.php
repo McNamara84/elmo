@@ -168,10 +168,10 @@ function createDatabaseStructure($connection)
 
         "Contact_Person" => "CREATE TABLE IF NOT EXISTS `Contact_Person` (
    `contact_person_id` INT NOT NULL AUTO_INCREMENT,
-   `familyname` TEXT(666)  NULL,
-   `givenname` TEXT(746) NULL,
-   `position` TEXT(45)  NULL,
-   `email` VARCHAR(255)  NULL,
+   `familyname` TEXT(666)  NOT NULL,
+   `givenname` TEXT(746) NOT NULL,
+   `orcid` VARCHAR(19)  NULL,
+   `email` VARCHAR(255)  NOT NULL,
    `website` VARCHAR(255) NULL,
    PRIMARY KEY (`contact_person_id`));",
 
@@ -640,9 +640,9 @@ function insertTestResourceData($connection)
             ["text" => "Long-term CO2 and CH4 flux measurements and associated environmental variables from a rewetted peatland", "Title_Type_fk" => 1, "Resource_resource_id" => 3]
         ],
         "Contact_Person" => [
-            ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "position" => "Arbeitsgruppenleiter", "email" => "Kwiatek.Grzegorz@gfz.de", "website" => "gfz.de"],
-            ["familyName" => "Goebel", "givenname" => "Thomas", "position" => "Projektleiter", "email" => "Thomas.Goebel@tu-berlin.de", "website" => "www.tu.berlin"],
-            ["familyName" => "Wille", "givenname" => "Christian", "position" => "Abteilungsleiter", "email" => "Christian.Wille@fh-potsdam.de", "website" => "fh-potsdam.de"]
+            ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "1234-1234-1234-1234", "email" => "Kwiatek.Grzegorz@gfz.de", "website" => "gfz.de"],
+            ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "5678-5678-5678-5678", "email" => "Thomas.Goebel@tu-berlin.de", "website" => "www.tu.berlin"],
+            ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "9012-9012-9012-9012", "email" => "Christian.Wille@fh-potsdam.de", "website" => "fh-potsdam.de"]
         ],
         "Originating_Laboratory" => [
             ["laboratoryname" => "Lab 1", "labId" => "123456789c7caa2d763b647d476b2910"],

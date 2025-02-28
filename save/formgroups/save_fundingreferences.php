@@ -1,17 +1,13 @@
 <?php
+require_once __DIR__ . '/../validation.php';
 /**
  * Saves the funding reference information into the database.
- *
- * This function processes the input data for funding references,
- * saves them into the database, and creates the linkage to the resource.
  *
  * @param mysqli $connection  The database connection.
  * @param array  $postData    The POST data from the form.
  * @param int    $resource_id The ID of the associated resource.
  *
  * @return bool Returns true if the saving was successful, otherwise false.
- *
- * @throws mysqli_sql_exception If a database error occurs.
  */
 function saveFundingReferences($connection, $postData, $resource_id)
 {
@@ -20,63 +16,77 @@ function saveFundingReferences($connection, $postData, $resource_id)
         return false;
     }
 
-    $saveSuccessful = false; // Explicitly initialize before checking funders
-
+    // Check if the required arrays exist
     if (
-        isset($postData['funder'], $postData['funderId'], $postData['grantNummer'], $postData['grantName']) &&
-        is_array($postData['funder']) && is_array($postData['funderId']) &&
-        is_array($postData['grantNummer']) && is_array($postData['grantName'])
+        !isset(
+        $postData['funder'],
+        $postData['funderId'],
+        $postData['grantNummer'],
+        $postData['grantName']
+    ) ||
+        !is_array($postData['funder']) || !is_array($postData['funderId']) ||
+        !is_array($postData['grantNummer']) || !is_array($postData['grantName'])
     ) {
-        $funder = $postData['funder'];
-        $funderId = $postData['funderId'];
-        $grantNumber = $postData['grantNummer'];
-        $grantName = $postData['grantName'];
-        $len = count($funder);
+        return true; // No data provided is valid
+    }
 
-        for ($i = 0; $i < $len; $i++) {
-            if (empty($funder[$i])) {
-                continue; // Skip if no funder name is provided
-            }
-        
-            // Only set funderId and funderIdType if a funderId exists
-            if (!empty($funderId[$i])) {
-                $funderIdString = extractLastTenDigits($funderId[$i]);
-                $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
-            } else {
-                $funderIdString = null;
-                $funderIdType = null;
-            }
+    $allSuccessful = true;
+    $len = count($postData['funder']);
 
-            error_log("Processing funding reference for funder: " . $funder[$i]);
-        
-            $funding_reference_id = insertFundingReference(
-                $connection,
-                $funder[$i],
-                $funderIdString,
-                $funderIdType,
-                $grantNumber[$i],
-                $grantName[$i]
-            );
-        
-            if ($funding_reference_id) {
-                error_log("Successfully inserted funding reference with ID: " . $funding_reference_id);
-                $linkResult = linkResourceToFundingReference($connection, $resource_id, $funding_reference_id);
-                if ($linkResult) {
-                    $saveSuccessful = true;
-                    error_log("Successfully linked resource to funding reference");
-                } else {
-                    error_log("Failed to link resource to funding reference");
-                }
-            } else {
-                error_log("Failed to insert Funding Reference");
+    for ($i = 0; $i < $len; $i++) {
+        $entry = [
+            'funder' => $postData['funder'][$i] ?? '',
+            'funderId' => $postData['funderId'][$i] ?? '',
+            'grantNumber' => $postData['grantNummer'][$i] ?? '',
+            'grantName' => $postData['grantName'][$i] ?? ''
+        ];
+
+        // Validate dependencies for this entry
+        if (!validateFundingReferenceDependencies($entry)) {
+            $allSuccessful = false;
+            continue;
+        }
+
+        // Skip if no data provided for this entry
+        if (
+            empty($entry['funder']) && empty($entry['funderId']) &&
+            empty($entry['grantNumber']) && empty($entry['grantName'])
+        ) {
+            continue;
+        }
+
+        // Process funder ID if it exists
+        if (!empty($entry['funderId'])) {
+            $funderIdString = extractLastTenDigits($entry['funderId']);
+            $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
+        } else {
+            $funderIdString = null;
+            $funderIdType = null;
+        }
+
+        $funding_reference_id = insertFundingReference(
+            $connection,
+            $entry['funder'],
+            $funderIdString,
+            $funderIdType,
+            $entry['grantNumber'],
+            $entry['grantName']
+        );
+
+        if ($funding_reference_id) {
+            $linkResult = linkResourceToFundingReference($connection, $resource_id, $funding_reference_id);
+            if (!$linkResult) {
+                error_log("Failed to link resource to funding reference");
+                $allSuccessful = false;
             }
+        } else {
+            error_log("Failed to insert Funding Reference");
+            $allSuccessful = false;
         }
     }
 
-    return $saveSuccessful; // Ensures false is returned when no funders are processed
+    return $allSuccessful;
 }
-
-
 
 /**
  * Inserts a funding reference into the database if it doesn't already exist.
@@ -149,8 +159,6 @@ function insertFundingReference($connection, $funder, $funderId, $funderIdType, 
         return null;
     }
 }
-
-
 
 /**
  * Extracts the last ten digits from a given funder ID.

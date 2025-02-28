@@ -4,7 +4,8 @@ use PHPUnit\Framework\TestCase;
 use mysqli_sql_exception;
 
 require_once __DIR__ . '/../settings.php';
-require_once __DIR__ . '/../save/formgroups/save_contributors.php';
+require_once __DIR__ . '/../save/formgroups/save_contributorpersons.php';
+require_once __DIR__ . '/../save/formgroups/save_contributorinstitutions.php';
 require_once __DIR__ . '/TestDatabaseSetup.php';
 
 /**
@@ -127,7 +128,7 @@ class SaveContributorsTest extends TestCase
             "cbPersonRoles" => [["Data Collector", "Data Curator"]]
         ];
 
-        saveContributors($this->connection, $postData, $resource_id);
+        saveContributorPersons($this->connection, $postData, $resource_id);
 
         $stmt = $this->connection->prepare("SELECT * FROM Contributor_Person WHERE orcid = ?");
         $stmt->bind_param("s", $postData["cbORCID"][0]);
@@ -189,7 +190,7 @@ class SaveContributorsTest extends TestCase
             "hiddenOrganisationRorId" => ['https://ror.org/03yrm5c26']
         ];
 
-        saveContributors($this->connection, $postData, $resource_id);
+        saveContributorInstitutions($this->connection, $postData, $resource_id);
 
         $stmt = $this->connection->prepare("SELECT * FROM Contributor_Institution WHERE name = ?");
         $stmt->bind_param("s", $postData["cbOrganisationName"][0]);
@@ -252,7 +253,7 @@ class SaveContributorsTest extends TestCase
             "cbPersonRoles" => [["Data Collector"]]
         ];
 
-        saveContributors($this->connection, $postData, $resource_id);
+        saveContributorPersons($this->connection, $postData, $resource_id);
 
         $stmt = $this->connection->prepare("SELECT * FROM Contributor_Person WHERE orcid = ?");
         $stmt->bind_param("s", $postData["cbORCID"][0]);
@@ -313,12 +314,13 @@ class SaveContributorsTest extends TestCase
             "hiddenOrganisationRorId" => ['https://ror.org/03yrm5c26']
         ];
 
-        saveContributors($this->connection, $postData, $resource_id);
+        saveContributorPersons($this->connection, $postData, $resource_id);
+        saveContributorInstitutions($this->connection, $postData, $resource_id);
 
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Contributor_Person");
         $stmt->execute();
         $personCount = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(1, $personCount, "Es sollte keine Contributor Person gespeichert worden sein.");
+        $this->assertEquals(0, $personCount, "Es sollte keine Contributor Person gespeichert worden sein.");
 
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Contributor_Institution");
         $stmt->execute();
@@ -355,7 +357,7 @@ class SaveContributorsTest extends TestCase
             "cbPersonRoles" => [["Data Collector"], ["Data Curator"], ["Researcher"]]
         ];
 
-        saveContributors($this->connection, $postData, $resource_id);
+        saveContributorPersons($this->connection, $postData, $resource_id);
 
         for ($i = 0; $i < 3; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Contributor_Person WHERE orcid = ?");
@@ -420,7 +422,7 @@ class SaveContributorsTest extends TestCase
             "hiddenOrganisationRorId" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
         ];
 
-        saveContributors($this->connection, $postData, $resource_id);
+        saveContributorInstitutions($this->connection, $postData, $resource_id);
 
         for ($i = 0; $i < 3; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Contributor_Institution WHERE name = ?");
@@ -490,7 +492,8 @@ class SaveContributorsTest extends TestCase
             "hiddenOrganisationRorId" => ['https://ror.org/0168r3w48', 'https://ror.org/04m7fg108']
         ];
 
-        saveContributors($this->connection, $postData, $resource_id);
+        saveContributorPersons($this->connection, $postData, $resource_id);
+        saveContributorInstitutions($this->connection, $postData, $resource_id);
 
         for ($i = 0; $i < 2; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Contributor_Person WHERE orcid = ?");

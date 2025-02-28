@@ -197,8 +197,39 @@ $(document).ready(function () {
   });
 
   /**
-   * Event handler for drag & drop sorting of author rows.
+   * Sets up the toggle functionality for contact person fields in author rows.
+   * When a contact person checkbox is checked, additional input fields for email and website
+   * are shown. When unchecked, these fields are hidden and cleared.
    */
+  function setupContactPersonToggle() {
+    $("[data-creator-row]").each(function () {
+      var row = $(this);
+      var checkbox = row.find("[id^='checkbox-author-contactperson']");
+      var contactFields = row.find(".contact-person-input");
+
+      // Remove existing click handler to prevent duplicate bindings
+      checkbox.off("click");
+
+      function updateFields() {
+        if (checkbox.prop('checked')) {
+          contactFields.show();
+        } else {
+          contactFields.hide().find("input").val(""); // Clear input values when hiding
+        }
+      }
+
+      updateFields(); // Set initial state
+      checkbox.on("click", updateFields);
+    });
+  }
+
+  // Initial setup of contact person toggle functionality
+  setupContactPersonToggle();
+
+  /**
+  * Initialize sortable functionality for author rows
+  * Allows drag and drop reordering of authors using the drag handle
+  */
   $("#group-author").sortable({
     items: "[data-creator-row]",
     handle: ".drag-handle",
@@ -207,286 +238,198 @@ $(document).ready(function () {
     containment: "parent"
   });
 
-  /**
-   * Event handler for the "Add Author" button click.
-   * Clones the first author row, resets input fields, and appends it to the author group.
-   */
+  // Store a clone of the original author row for later use
   const originalAuthorRow = $("#group-author").children().first().clone();
+
+  /**
+  * Handles the addition of new author rows when the add button is clicked
+  * Creates a new row with unique IDs and proper event handlers
+  */
   $("#button-author-add").click(function () {
     var authorGroup = $("#group-author");
     var newAuthorRow = originalAuthorRow.clone();
 
-    // Clear input fields and remove validation feedback
+    // Reset validation states and clear input values
     newAuthorRow.find("input").val("").removeClass("is-invalid is-valid");
     newAuthorRow.find(".invalid-feedback, .valid-feedback").css("display", "");
 
-    // Generate unique IDs for cloned input elements
+    // Generate unique IDs for the new row's elements using timestamp
     var uniqueSuffix = new Date().getTime();
-    newAuthorRow
-      .find("#input-author-affiliation")
-      .attr("id", "input-author-affiliation" + uniqueSuffix);
-    newAuthorRow.find("#input-author-rorid").attr("id", "input-author-rorid" + uniqueSuffix);
 
-    // Remove old Tagify elements (will be re-initialized in autocompleteAffiliation)
+    // Update IDs of all relevant input fields with unique suffix
+    const fieldsToUpdate = [
+      "input-author-affiliation",
+      "input-author-rorid",
+      "input-contactperson-email",
+      "input-contactperson-website",
+      "checkbox-author-contactperson"
+    ];
+
+    fieldsToUpdate.forEach(fieldId => {
+      newAuthorRow.find(`#${fieldId}`).attr("id", `${fieldId}-${uniqueSuffix}`);
+    });
+
+    // Update label's 'for' attribute to match new checkbox ID
+    newAuthorRow.find("label.btn").attr("for", `checkbox-author-contactperson-${uniqueSuffix}`);
+
+    // Clean up and prepare new row
     newAuthorRow.find(".tagify").remove();
-
-    // Replace the add button with the remove button
     newAuthorRow.find(".addAuthor").replaceWith(removeButton);
-
-    // Remove help buttons
     replaceHelpButtonInClonedRows(newAuthorRow);
 
-    // Append the new author row to the DOM
+    // Add new row to the author group
     authorGroup.append(newAuthorRow);
 
-    // Apply Tagify to the new Author Affiliations field
+    // Initialize autocomplete for affiliation field
     autocompleteAffiliations(
-      "input-author-affiliation" + uniqueSuffix,
-      "input-author-rorid" + uniqueSuffix,
+      `input-author-affiliation-${uniqueSuffix}`,
+      `input-author-rorid-${uniqueSuffix}`,
       affiliationsData
     );
 
-    // Event handler for the remove button
+    // Add remove button functionality
     newAuthorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
     });
 
-    // Reinitialize tooltips for the new row
+    // Initialize Bootstrap tooltips
     newAuthorRow.find('[data-bs-toggle="tooltip"]').each(function () {
       const tooltip = new bootstrap.Tooltip(this);
     });
+
+    // Reinitialize contact person toggle functionality for all rows
+    setupContactPersonToggle();
   });
 
   /**
-   * Event handler for the "Add Contact Person" button click.
-   * Clones the first contact person row, resets input fields, and appends it to the contact persons group.
+   * Event handler for adding a new contributor person row.
+   * Clones the first contributor person row, resets all input fields,
+   * updates IDs to ensure uniqueness, and initializes all necessary components.
+   * 
+   * @event #button-contributor-addperson#click
+   * @requires jQuery
+   * @requires Tagify
    */
-  $("#button-contactperson-add").click(function () {
-    var CPGroup = $("#group-contactperson");
-
-    // First row to be used as a template
-    var firstCPLine = CPGroup.children().first();
-
-    // Clone the template
-    var newCPRow = firstCPLine.clone();
-
-    // Clear input fields and remove validation feedback
-    newCPRow.find("input").val("").removeClass("is-invalid is-valid");
-    newCPRow.find(".invalid-feedback, .valid-feedback").css("display", "");
-
-    // Reset required attributes
-    newCPRow.find("input").removeAttr("required");
-
-    var uniqueSuffix = new Date().getTime();
-    newCPRow.find("#input-contactperson-affiliation").attr("id", "input-contactperson-affiliation" + uniqueSuffix);
-    newCPRow.find("#input-contactperson-rorid").attr("id", "input-contactperson-rorid" + uniqueSuffix);
-
-    // Remove old Tagify elements (will be re-initialized in autocompleteAffiliation)
-    newCPRow.find(".tagify").remove();
-
-    // Replace the add button with the remove button
-    newCPRow.find(".addCP").replaceWith(removeButton);
-
-    // Remove help buttons
-    replaceHelpButtonInClonedRows(newCPRow);
-
-    CPGroup.append(newCPRow);
-
-    // Apply autocomplete to the Affiliation field
-    autocompleteAffiliations(
-      "input-contactperson-affiliation" + uniqueSuffix,
-      "input-contactperson-rorid" + uniqueSuffix,
-      affiliationsData
-    );
-
-    // Event handler for the remove button
-    newCPRow.on("click", ".removeButton", function () {
-      $(this).closest(".row").remove();
-      checkMandatoryFields();
-    });
-  });
-
-  /**
-  * Event handler for the "Add Contributor Person" button click.
-  * Clones the first contributor person row, resets input fields,
-  * updates IDs and labels to ensure uniqueness,
-  * and appends it to the contributors group.
-  */
   $("#button-contributor-addperson").click(function () {
-    /**
-     * The contributors group where new contributor person rows are appended.
-     * @type {jQuery}
-     */
-    var contributorGroup = $("#group-contributorperson");
+    const contributorGroup = $("#group-contributorperson");
+    const firstContributorRow = contributorGroup.children().first();
+    const uniqueSuffix = new Date().getTime();
 
-    /**
-     * The first contributor person row used as a template for cloning.
-     * @type {jQuery}
-     */
-    var firstContributorRow = contributorGroup.children().first();
+    const newContributorRow = firstContributorRow.clone();
 
-    // Clone the template
-    var newContributorRow = firstContributorRow.clone();
-
-    // Reset values and validation feedback in the cloned element
     newContributorRow.find("input").val("").removeClass("is-invalid is-valid");
     newContributorRow.find(".tagify").remove();
     newContributorRow.find(".invalid-feedback, .valid-feedback").css("display", "");
-
-    // Remove help buttons
     replaceHelpButtonInClonedRows(newContributorRow);
-
-    // Hide the row label in cloned rows
     newContributorRow.find(".row-label").hide();
-
-    // Reset required attributes
     newContributorRow.find("input").removeAttr("required");
 
-    /**
-     * Unique suffix to avoid duplicate IDs.
-     * @type {number}
-     */
-    var uniqueSuffix = new Date().getTime();
+    const rolesInputHtml = `<input name="cbPersonRoles[]" 
+      id="input-contributor-personrole${uniqueSuffix}" 
+      class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners" 
+      data-translate-placeholder="general.roleLabel" />`;
+    newContributorRow.find("#input-contributor-personrole").replaceWith(rolesInputHtml);
 
-    // Update the IDs of input fields to ensure uniqueness
-    newContributorRow
-      .find("#input-contributor-personaffiliation")
-      .attr("id", "input-contributor-personaffiliation" + uniqueSuffix);
-    newContributorRow
-      .find("#input-contributor-personrorid")
-      .attr("id", "input-contributor-personrorid" + uniqueSuffix);
-    newContributorRow
-      .find("#input-contributor-personrole")
-      .attr("id", "input-contributor-personrole" + uniqueSuffix);
-    newContributorRow
-      .find("#input-contributor-orcid")
-      .attr("id", "input-contributor-orcid" + uniqueSuffix);
-    newContributorRow
-      .find("#input-contributor-lastname")
-      .attr("id", "input-contributor-lastname" + uniqueSuffix);
-    newContributorRow
-      .find("#input-contributor-firstname")
-      .attr("id", "input-contributor-firstname" + uniqueSuffix);
+    // Update input field IDs
+    const idMappings = {
+      "personaffiliation": "input-contributor-personaffiliation",
+      "personrorid": "input-contributor-personrorid",
+      "orcid": "input-contributor-orcid",
+      "lastname": "input-contributor-lastname",
+      "firstname": "input-contributor-firstname"
+    };
 
-    // Update the corresponding 'for' attributes in labels
-    newContributorRow
-      .find("label[for='input-contributor-orcid']")
-      .attr("for", "input-contributor-orcid" + uniqueSuffix);
-    newContributorRow
-      .find("label[for='input-contributor-lastname']")
-      .attr("for", "input-contributor-lastname" + uniqueSuffix);
-    newContributorRow
-      .find("label[for='input-contributor-firstname']")
-      .attr("for", "input-contributor-firstname" + uniqueSuffix);
+    Object.values(idMappings).forEach(id => {
+      newContributorRow
+        .find(`#${id}`)
+        .attr("id", `${id}${uniqueSuffix}`);
+    });
 
-    // Replace the add button with the remove button
+    // Update label references
+    const labelMappings = ["orcid", "lastname", "firstname"];
+    labelMappings.forEach(label => {
+      newContributorRow
+        .find(`label[for='input-contributor-${label}']`)
+        .attr("for", `input-contributor-${label}${uniqueSuffix}`);
+    });
+
     newContributorRow.find(".addContributorPerson").replaceWith(removeButton);
-
-    // Append the new contributor row to the DOM
     contributorGroup.append(newContributorRow);
 
-    // Apply Tagify to the new Contributor Affiliations field
+    setupRolesDropdown(["person", "both"], `#input-contributor-personrole${uniqueSuffix}`);
     autocompleteAffiliations(
-      "input-contributor-personaffiliation" + uniqueSuffix,
-      "input-contributor-personrorid" + uniqueSuffix,
+      `input-contributor-personaffiliation${uniqueSuffix}`,
+      `input-contributor-personrorid${uniqueSuffix}`,
       affiliationsData
     );
 
-    // Initialize Tagify for the new Roles field
-    setupRolesDropdown(["person", "both"], "#input-contributor-personrole" + uniqueSuffix);
-
-    // Event handler for the remove button in the new row
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
       checkMandatoryFields();
     });
   });
 
-
   /**
- * Event handler for the "Add Contributor Organization" button click.
- * Clones the first contributor organization row, resets input fields,
- * updates IDs and labels to ensure uniqueness,
- * and appends it to the contributor organization group.
- */
+  * Event handler for adding a new contributor organization row.
+  * Clones the first contributor organization row, resets all input fields,
+  * updates IDs to ensure uniqueness, and initializes all necessary components.
+  * 
+  * @event #button-contributor-addorganisation#click
+  * @requires jQuery
+  * @requires Tagify
+  */
   $("#button-contributor-addorganisation").click(function () {
-    /**
-     * The contributor organization group where new contributor organization rows are appended.
-     * @type {jQuery}
-     */
-    var contributorGroup = $("#group-contributororganisation");
+    const contributorGroup = $("#group-contributororganisation");
+    const firstContributorRow = contributorGroup.children().first();
+    const uniqueSuffix = new Date().getTime();
 
-    /**
-     * The first contributor organization row used as a template for cloning.
-     * @type {jQuery}
-     */
-    var firstContributorRow = contributorGroup.children().first();
+    const newContributorRow = firstContributorRow.clone();
 
-    // Clone the template
-    var newContributorRow = firstContributorRow.clone();
-
-    // Reset values and validation feedback in the cloned element
     newContributorRow.find("input").val("").removeClass("is-invalid is-valid");
     newContributorRow.find(".tagify").remove();
     newContributorRow.find(".invalid-feedback, .valid-feedback").css("display", "");
-
-    // Remove help buttons
     replaceHelpButtonInClonedRows(newContributorRow);
-
-    // Hide the row label in cloned rows
     newContributorRow.find(".row-label").hide();
-
-    // Reset required attributes
     newContributorRow.find("input").removeAttr("required");
 
-    /**
-     * Unique suffix to avoid duplicate IDs.
-     * @type {number}
-     */
-    var uniqueSuffix = new Date().getTime();
+    const rolesInputHtml = `<input name="cbOrganisationRoles[]" 
+      id="input-contributor-organisationrole${uniqueSuffix}" 
+      class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners" 
+      data-translate-placeholder="general.roleLabel" />`;
+    newContributorRow.find("#input-contributor-organisationrole").replaceWith(rolesInputHtml);
 
-    // Update the IDs of input fields to ensure uniqueness
-    newContributorRow
-      .find("#input-contributor-organisationaffiliation")
-      .attr("id", "input-contributor-organisationaffiliation" + uniqueSuffix);
-    newContributorRow
-      .find("#input-contributor-organisationrorid")
-      .attr("id", "input-contributor-organisationrorid" + uniqueSuffix);
-    newContributorRow
-      .find("#input-contributor-organisationrole")
-      .attr("id", "input-contributor-organisationrole" + uniqueSuffix);
-    newContributorRow
-      .find("#input-contributor-name")
-      .attr("id", "input-contributor-name" + uniqueSuffix);
+    // Update input field IDs
+    const idMappings = {
+      "organisationaffiliation": "input-contributor-organisationaffiliation",
+      "organisationrorid": "input-contributor-organisationrorid",
+      "name": "input-contributor-name"
+    };
 
-    // Update the corresponding 'for' attributes in labels
+    Object.values(idMappings).forEach(id => {
+      newContributorRow
+        .find(`#${id}`)
+        .attr("id", `${id}${uniqueSuffix}`);
+    });
+
     newContributorRow
       .find("label[for='input-contributor-name']")
-      .attr("for", "input-contributor-name" + uniqueSuffix);
+      .attr("for", `input-contributor-name${uniqueSuffix}`);
 
-    // Replace the add button with the remove button
     newContributorRow.find(".addContributor").replaceWith(removeButton);
-
-    // Append the new contributor row to the DOM
     contributorGroup.append(newContributorRow);
 
-    // Apply Tagify to the new Organization Affiliations field
+    setupRolesDropdown(["institution", "both"], `#input-contributor-organisationrole${uniqueSuffix}`);
     autocompleteAffiliations(
-      "input-contributor-organisationaffiliation" + uniqueSuffix,
-      "hiddenOrganisationRorId" + uniqueSuffix,
+      `input-contributor-organisationaffiliation${uniqueSuffix}`,
+      `hiddenOrganisationRorId${uniqueSuffix}`,
       affiliationsData
     );
 
-    // Initialize Tagify for the new Roles field
-    setupRolesDropdown(["institution", "both"], "#input-contributor-organisationrole" + uniqueSuffix);
-
-    // Event handler for the remove button in the new row
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
       checkMandatoryFields();
     });
   });
-
 
   /**
   * Global variable to keep track of unique tsc-row-ids.
@@ -682,6 +625,9 @@ $(document).ready(function () {
       labData = data;
       var firstRow = $("#group-originatinglaboratory .row").first();
       initializeTagify(firstRow, data);
+
+      // Register event listener for translations after initial setup
+      document.addEventListener('translationsLoaded', refreshLaboratoryTagifyInstances);
     });
   }
 
@@ -726,7 +672,13 @@ $(document).ready(function () {
 
     // Event handler for the remove button
     newOriginatingLaboratoryRow.on("click", ".removeButton", function () {
-      $(this).closest(".row").remove();
+      // Find and remove the corresponding instance from tracking array
+      const rowElement = $(this).closest(".row")[0];
+      laboratoryTagifyInstances = laboratoryTagifyInstances.filter(instance =>
+        instance.row[0] !== rowElement);
+
+      // Remove the row from DOM
+      $(rowElement).remove();
     });
   });
 
@@ -763,6 +715,12 @@ $(document).ready(function () {
   });
 
   /**
+   * Stores all initialized laboratory Tagify instances for later reference.
+   * @type {Array<Object>}
+   */
+  var laboratoryTagifyInstances = [];
+
+  /**
    * Initializes Tagify on the laboratory name and affiliation fields.
    *
    * @param {jQuery} row - The row element containing the input fields.
@@ -774,6 +732,9 @@ $(document).ready(function () {
     var inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]')[0];
     var hiddenRorId = row.find('input[name="laboratoryRorIds[]"]')[0];
     var hiddenLabId = row.find('input[name="LabId[]"]')[0];
+
+    // Skip if elements don't exist
+    if (!inputName || !inputAffiliation) return null;
 
     /**
      * Finds a lab object by its name.
@@ -788,7 +749,7 @@ $(document).ready(function () {
     var tagifyName = new Tagify(inputName, {
       whitelist: data.map((item) => item.name),
       enforceWhitelist: true,
-      placeholder: translations.laboratory.name,
+      placeholder: translations.laboratory.name || "Lab name",
       maxTags: 1,
       dropdown: {
         maxItems: 90,
@@ -818,7 +779,7 @@ $(document).ready(function () {
       if (lab) {
         tagifyAffiliation.removeAllTags();
         tagifyAffiliation.addTags([lab.affiliation]);
-        hiddenRorId.value = lab.ror_id || "";
+        hiddenRorId.value = lab.rorid || "";
         hiddenLabId.value = lab.id;
         tagifyAffiliation.setReadonly(true);
       } else {
@@ -855,9 +816,57 @@ $(document).ready(function () {
       }
     });
 
-    return { tagifyName, tagifyAffiliation };
+    // Store references to the Tagify instances and their elements
+    const instance = {
+      tagifyName,
+      tagifyAffiliation,
+      row: row
+    };
+
+    // Add to global tracking array
+    laboratoryTagifyInstances.push(instance);
+
+    return instance;
   }
 
+  /**
+   * Updates the placeholder text for all laboratory Tagify instances.
+   * This is a lightweight alternative to completely refreshing the instances.
+   * 
+   * @returns {void}
+   */
+  function refreshLaboratoryTagifyInstances() {
+    if (!laboratoryTagifyInstances.length) return;
+
+    const labPlaceholder = translations.laboratory.name || "Lab name";
+
+    // For each instance, update only the placeholder text
+    laboratoryTagifyInstances.forEach(instance => {
+      if (!instance.tagifyName || !instance.tagifyName.DOM || !instance.tagifyName.DOM.input) return;
+
+      // Update the placeholder in Tagify settings
+      instance.tagifyName.settings.placeholder = labPlaceholder;
+
+      // Update the DOM placeholder attribute
+      instance.tagifyName.DOM.input.setAttribute('data-placeholder', labPlaceholder);
+    });
+
+    console.log(`Updated placeholders for ${laboratoryTagifyInstances.length} laboratory Tagify instances`);
+  }
+
+  var labData;
+
+  if ($("#group-originatinglaboratory").length) {
+    // Load lab data from JSON and initialize Tagify on the first laboratory row
+    $.getJSON("json/msl-labs.json", function (data) {
+      labData = data;
+      var firstRow = $("#group-originatinglaboratory .row").first();
+      initializeTagify(firstRow, data);
+
+      // Register event listener for translations after initial setup
+      document.addEventListener('translationsLoaded', refreshLaboratoryTagifyInstances);
+    });
+  }
   /////////////////////////////// HELP BUTTONS /////////////////////////////////////////////////////////////////
 
   /**

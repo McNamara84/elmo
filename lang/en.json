@@ -43,16 +43,17 @@
     "resourceInfo": {
         "title": "Resource Information",
         "doi": "DOI",
-        "doiValid": "A new DOI will be registered",
-        "doiInvalid": "Please use format 10.ORGANISATION/ID (i.e.: 10.57757/IUGG23-3081) or leave empty",
-        "publicationYear": "Publication Year",
-        "publicationYearInvalid": "Please provide a valid year ranging from 1901-2155 (4 digits).",
+        "doiValid": "A new DOI will be registered.",
+        "doiInvalid": "Please use format 10.ORGANISATION/ID (i.e.: 10.57757/IUGG23-3081) or leave empty.",
+        "publicationYear": "Publication Year (YYYY)",
+        "yearPlaceholder": "YYYY",
+        "publicationYearInvalid": "Please provide a valid year ranging from 1901-2155 (4 digits in the format YYYY).",
         "resourceType": "Resource Type",
         "version": "Version",
         "versionInvalid": "If unsure leave blank",
         "datasetLanguage": "Language of dataset",
         "resourceTitle": "Title",
-        "resourceTitleInvalid": "Please provide a descriptive title (that does not repeat the paper title, but describes the data)",
+        "resourceTitleInvalid": "Please provide a descriptive title (that does not repeat the paper title, but describes the data).",
         "titleType": "Title Type"
     },
     "rights": {
@@ -64,11 +65,10 @@
         "affiliationInvalid": "Please provide an affiliation."
     },
     "contactPersons": {
-        "title": "Contact Person(s)",
+        "contactPersonError": "Please choose at least one contact person.",
         "email": "Email address",
         "emailInvalid": "Please provide a valid email address in the format xxx.xxx@xxx.xxx.",
-        "position": "Position",
-        "positionInvalid": "Please provide a position.",
+        "toggleCheckbox": "Contact<br>Person?",
         "website": "Website",
         "websiteInvalid": "Please provide a valid URL."
     },
@@ -125,9 +125,9 @@
     "coverage": {
         "title": "Spatial and Temporal Coverages",
         "map": "Map",
-        "latitude": "Latitude",
+        "latitude": "Latitude (Min|Max)",
         "latitudeInvalid": "Please enter a latitude between -90.00 and +90.00.",
-        "longitude": "Longitude",
+        "longitude": "Longitude (Min|Max)",
         "longitudeInvalid": "Please enter a longitude between -180.00 and +180.00",
         "description": "Description",
         "descriptionPlaceholder": "Please enter the description of the temporal and spatial coverage...",
@@ -197,7 +197,7 @@
             "urgency": "Urgency",
             "url": "URL to data",
             "dataDescription": "Data description (please use <a href='https://gfzpublic.gfz.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_5007103' target='_blank' class='link-primary'>description template</a>)",
-            "privacypolice": "I have read the <a href='docs/privacyPolicy.html' target='_blank' class='link-primary'>privacy policy</a> and agree to the processing of my data.",
+            "privacypolice": "I have read the <a href='doc/privacyPolicy.html' target='_blank' class='link-primary'>privacy policy</a> and agree to the processing of my data.",
             "urgencyNotice": "Please select an urgency",
             "high": "high",
             "normal": "normal",
