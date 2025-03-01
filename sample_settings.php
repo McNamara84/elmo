@@ -35,6 +35,8 @@ $apiKeyTimezone = 'your_timezone_api_key';
 // Maximum number of titles that can be entered
 $maxTitles = 2;
 
+// Show Contributor Persons form group
+$showContributorPersons = true;
 // Show MSL labs form group
 $showMslLabs = true;
 // URL to the source with all laboratories for MSL
