@@ -53,7 +53,6 @@ function refreshRoleTagifyInstances() {
 function setupRolesDropdown(roletypes, inputSelector) {
   const input = document.querySelector(inputSelector);
   if (!input) {
-    console.error(`Input element not found for selector: ${inputSelector}`);
     return;
   }
 
