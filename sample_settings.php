@@ -47,6 +47,8 @@ $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabular
 $showMslVocabs = true;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+// Show GCMD Thesauri form group
+$showGcmdThesauri = true;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
