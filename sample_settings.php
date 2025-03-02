@@ -51,6 +51,8 @@ $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabul
 $showGcmdThesauri = true;
 // Show Free Keywords form group
 $showFreeKeywords = true;
+// Show Spatial and Temporal Coverage form group
+$showSpatialTemporalCoverage = true;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
