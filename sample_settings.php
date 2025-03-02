@@ -37,6 +37,8 @@ $maxTitles = 2;
 
 // Show Contributor Persons form group
 $showContributorPersons = true;
+// Show Contrubutor Institutios form group
+$showContributorInstitutions = true;
 // Show MSL labs form group
 $showMslLabs = true;
 // URL to the source with all laboratories for MSL
