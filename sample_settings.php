@@ -49,6 +49,8 @@ $showMslVocabs = true;
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 // Show GCMD Thesauri form group
 $showGcmdThesauri = true;
+// Show Free Keywords form group
+$showFreeKeywords = true;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
