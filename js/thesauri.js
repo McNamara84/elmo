@@ -19,54 +19,37 @@ $(document).ready(function () {
             jsonFile: 'json/thesauri/gcmdScienceKeywords.json',
             jsTreeId: '#jstree-sciencekeyword',
             searchInputId: '#input-sciencekeyword-search',
-            selectedKeywordsListId: 'selected-keywords-gcmd',
-            shouldInitialize: true // Always initialize
+            selectedKeywordsListId: 'selected-keywords-gcmd'
         },
-        // GCMD PLATFORMS
         {
             inputId: '#input-Platforms',
             jsonFile: 'json/thesauri/gcmdPlatformsKeywords.json',
             jsTreeId: '#jstree-Platforms',
             searchInputId: '#input-Platforms-thesaurussearch',
-            selectedKeywordsListId: 'selected-keywords-Platforms-gcmd',
-            shouldInitialize: true // Always initialize
+            selectedKeywordsListId: 'selected-keywords-Platforms-gcmd'
         },
-        // GCMD INSTRUMENTS
         {
             inputId: '#input-Instruments',
             jsonFile: 'json/thesauri/gcmdInstrumentsKeywords.json',
             jsTreeId: '#jstree-instruments',
             searchInputId: '#input-instruments-thesaurussearch',
-            selectedKeywordsListId: 'selected-keywords-instruments-gcmd',
-            shouldInitialize: true // Always initialize
+            selectedKeywordsListId: 'selected-keywords-instruments-gcmd'
         },
-        // MSL-Keywords
         {
             inputId: '#input-mslkeyword',
             jsonFile: 'json/thesauri/msl-vocabularies.json',
             jsTreeId: '#jstree-mslkeyword',
             searchInputId: '#input-mslkeyword-thesaurussearch',
-            selectedKeywordsListId: 'selected-keywords-msl',
-            shouldInitialize: false // Do not initialize by default
+            selectedKeywordsListId: 'selected-keywords-msl'
         }
     ];
 
-    fetch('settings.php?setting=all')
-        .then(response => response.json())
-        .then(data => {
-            // Update MSL Keyword configuration
-            keywordConfigurations.find(config => config.inputId === '#input-mslkeyword').shouldInitialize = data.showMslLabs;
-
-            // Initialize all keyword fields
-            keywordConfigurations.forEach(function (config) {
-                if (config.shouldInitialize) {
-                    initializeKeywordInput(config);
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Fehler beim Abruf der Settings:', error);
-        });
+    // Initialisiere nur die Konfigurationen, deren Eingabefelder existieren
+    keywordConfigurations.forEach(function (config) {
+        if ($(config.inputId).length) {
+            initializeKeywordInput(config);
+        }
+    });
 
     /**
      * Refreshes all Tagify instances for thesaurus inputs when translations are changed.
@@ -76,26 +59,12 @@ $(document).ready(function () {
      * @returns {void}
      */
     function refreshThesaurusTagifyInstances() {
-        // Define all thesaurus input IDs that use Tagify
-        const thesaurusInputIds = [
-            'input-sciencekeyword',
-            'input-Platforms',
-            'input-Instruments',
-            'input-mslkeyword'
-        ];
-
-        // Update each Tagify instance if it exists
-        thesaurusInputIds.forEach(inputId => {
-            const inputElement = document.getElementById(inputId);
-
-            // Skip if element doesn't exist or doesn't have a Tagify instance
+        keywordConfigurations.forEach(config => {
+            const inputElement = document.querySelector(config.inputId);
             if (!inputElement || !inputElement._tagify) return;
 
-            // Update placeholder with current translation
-            if (translations && translations.keywords && translations.keywords.thesaurus) {
+            if (translations?.keywords?.thesaurus) {
                 inputElement._tagify.settings.placeholder = translations.keywords.thesaurus.label;
-
-                // Update the placeholder in the DOM
                 const placeholderElement = inputElement.parentElement.querySelector('.tagify__input');
                 if (placeholderElement) {
                     placeholderElement.setAttribute('data-placeholder', translations.keywords.thesaurus.label);
