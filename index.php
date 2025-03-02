@@ -82,7 +82,9 @@ if ($showMslVocabs) {
 if ($showGcmdThesauri) {
     include("formgroups/thesaurusKeywords.html");
 }
-include("formgroups/freeKeywords.html");
+if ($showFreeKeywords) {
+    include("formgroups/freeKeywords.html");
+}
 include("formgroups/dates.html");
 include("formgroups/coverage.html");
 include("formgroups/relatedwork.html");
