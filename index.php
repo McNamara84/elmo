@@ -69,7 +69,9 @@ include("formgroups/authors.html");
 if ($showContributorPersons) {
     include("formgroups/contributorPersons.html");
 }
-include("formgroups/contributorInstitutions.html");
+if ($showContributorInstitutions) {
+    include("formgroups/contributorInstitutions.html");
+}
 if ($showMslLabs) {
     include("formgroups/originatingLaboratory.html");
 }
