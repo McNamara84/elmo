@@ -79,7 +79,9 @@ include("formgroups/descriptions.html");
 if ($showMslVocabs) {
     include("formgroups/mslKeywords.html");
 }
-include("formgroups/thesaurusKeywords.html");
+if ($showGcmdThesauri) {
+    include("formgroups/thesaurusKeywords.html");
+}
 include("formgroups/freeKeywords.html");
 include("formgroups/dates.html");
 include("formgroups/coverage.html");
