@@ -55,6 +55,8 @@ $showFreeKeywords = true;
 $showSpatialTemporalCoverage = true;
 // Show Related Work form group
 $showRelatedWork = true;
+// Show Funding Reference form group
+$showFundingReference = true;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
