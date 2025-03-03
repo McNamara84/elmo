@@ -54,6 +54,10 @@ $(document).ready(function () {
    * Sets up event listeners for drawing rectangles and markers on the map.
    */
   async function initMap() {
+    const mapElement = document.getElementById("panel-stc-map");
+    if (!mapElement) {
+      return;
+    }
     const { Map } = await google.maps.importLibrary("maps");
     const { DrawingManager } = await google.maps.importLibrary("drawing");
 

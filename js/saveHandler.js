@@ -7,6 +7,10 @@ function validateEmbargoDate() {
     const dateEmbargoInput = document.getElementById('input-date-embargo');
     const embargoInvalidFeedback = document.querySelector('.embargo-invalid');
 
+    if (!dateCreatedInput || !dateEmbargoInput || !embargoInvalidFeedback) {
+        return true;
+    }
+
     const dateCreated = new Date(dateCreatedInput.value);
     const dateEmbargo = new Date(dateEmbargoInput.value);
 
@@ -70,18 +74,28 @@ function resetFieldState(input, feedback) {
     feedback.textContent = "";
 }
 
+const dateCreatedInput = document.getElementById('input-date-created');
+const dateEmbargoInput = document.getElementById('input-date-embargo');
+const groupStc = document.getElementById('group-stc');
+
 // Event listeners for immediate validation
-document.getElementById('input-date-created').addEventListener('change', validateEmbargoDate);
-document.getElementById('input-date-embargo').addEventListener('change', validateEmbargoDate);
+if (dateCreatedInput) {
+    dateCreatedInput.addEventListener('change', validateEmbargoDate);
+}
+
+if (dateEmbargoInput) {
+    dateEmbargoInput.addEventListener('change', validateEmbargoDate);
+}
 
 // Event listener for temporal coverage validation
-document.getElementById('group-stc').addEventListener('change', function(event) {
-    if (event.target && (event.target.id.includes('input-stc-datestart') || event.target.id.includes('input-stc-dateend'))) {
-        const row = event.target.closest('[tsc-row]');
-        validateTemporalCoverage(row);
-    }
-});
-
+if (groupStc) {
+    groupStc.addEventListener('change', function (event) {
+        if (event.target && (event.target.id.includes('input-stc-datestart') || event.target.id.includes('input-stc-dateend'))) {
+            const row = event.target.closest('[tsc-row]');
+            validateTemporalCoverage(row);
+        }
+    });
+}
 
 /**
  * Validates if a Contact Person is selected from group of Authors.

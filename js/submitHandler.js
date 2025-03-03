@@ -71,16 +71,28 @@ function resetFieldState(input, feedback) {
 }
 
 // Event listeners for immediate validation
-document.getElementById('input-date-created').addEventListener('change', validateEmbargoDate);
-document.getElementById('input-date-embargo').addEventListener('change', validateEmbargoDate);
+const dateCreatedInput = document.getElementById('input-date-created');
+const dateEmbargoInput = document.getElementById('input-date-embargo');
+const groupStc = document.getElementById('group-stc');
+
+// Nur Event Listener hinzufügen, wenn die Elemente existieren
+if (dateCreatedInput) {
+    dateCreatedInput.addEventListener('change', validateEmbargoDate);
+}
+
+if (dateEmbargoInput) {
+    dateEmbargoInput.addEventListener('change', validateEmbargoDate);
+}
 
 // Event listener for temporal coverage validation
-document.getElementById('group-stc').addEventListener('change', function(event) {
-    if (event.target && (event.target.id.includes('input-stc-datestart') || event.target.id.includes('input-stc-dateend'))) {
-        const row = event.target.closest('[tsc-row]');
-        validateTemporalCoverage(row);
-    }
-});
+if (groupStc) {
+    groupStc.addEventListener('change', function(event) {
+        if (event.target && (event.target.id.includes('input-stc-datestart') || event.target.id.includes('input-stc-dateend'))) {
+            const row = event.target.closest('[tsc-row]');
+            validateTemporalCoverage(row);
+        }
+    });
+}
 
 
 /**
