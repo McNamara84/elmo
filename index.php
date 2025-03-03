@@ -89,7 +89,9 @@ include("formgroups/dates.html");
 if ($showSpatialTemporalCoverage) {
     include("formgroups/coverage.html");
 }
-include("formgroups/relatedwork.html");
+if ($showRelatedWork) {
+    include("formgroups/relatedwork.html");
+}
 include("formgroups/fundingreference.html");
 include("modals.html");
 include("footer.html");

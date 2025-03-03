@@ -53,6 +53,8 @@ $showGcmdThesauri = true;
 $showFreeKeywords = true;
 // Show Spatial and Temporal Coverage form group
 $showSpatialTemporalCoverage = true;
+// Show Related Work form group
+$showRelatedWork = true;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
