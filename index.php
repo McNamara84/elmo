@@ -86,7 +86,9 @@ if ($showFreeKeywords) {
     include("formgroups/freeKeywords.html");
 }
 include("formgroups/dates.html");
-include("formgroups/coverage.html");
+if ($showSpatialTemporalCoverage) {
+    include("formgroups/coverage.html");
+}
 include("formgroups/relatedwork.html");
 include("formgroups/fundingreference.html");
 include("modals.html");
