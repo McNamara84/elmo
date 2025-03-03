@@ -92,7 +92,9 @@ if ($showSpatialTemporalCoverage) {
 if ($showRelatedWork) {
     include("formgroups/relatedwork.html");
 }
-include("formgroups/fundingreference.html");
+if ($showFundingReference) {
+    include("formgroups/fundingreference.html");
+}
 include("modals.html");
 include("footer.html");
 
