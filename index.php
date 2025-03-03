@@ -66,8 +66,12 @@ include("header.html");
 include("formgroups/resourceInformation.html");
 include("formgroups/rights.html");
 include("formgroups/authors.html");
-include("formgroups/contributorPersons.html");
-include("formgroups/contributorInstitutions.html");
+if ($showContributorPersons) {
+    include("formgroups/contributorPersons.html");
+}
+if ($showContributorInstitutions) {
+    include("formgroups/contributorInstitutions.html");
+}
 if ($showMslLabs) {
     include("formgroups/originatingLaboratory.html");
 }
@@ -75,12 +79,22 @@ include("formgroups/descriptions.html");
 if ($showMslVocabs) {
     include("formgroups/mslKeywords.html");
 }
-include("formgroups/thesaurusKeywords.html");
-include("formgroups/freeKeywords.html");
+if ($showGcmdThesauri) {
+    include("formgroups/thesaurusKeywords.html");
+}
+if ($showFreeKeywords) {
+    include("formgroups/freeKeywords.html");
+}
 include("formgroups/dates.html");
-include("formgroups/coverage.html");
-include("formgroups/relatedwork.html");
-include("formgroups/fundingreference.html");
+if ($showSpatialTemporalCoverage) {
+    include("formgroups/coverage.html");
+}
+if ($showRelatedWork) {
+    include("formgroups/relatedwork.html");
+}
+if ($showFundingReference) {
+    include("formgroups/fundingreference.html");
+}
 include("modals.html");
 include("footer.html");
 

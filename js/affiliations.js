@@ -13,12 +13,17 @@ function refreshTagifyInstances() {
   if (!window.affiliationsData) return;
 
   // Definition of input fields and their associated hidden fields
-  const tagifyPairs = [
+  const allPairs = [
     { input: "input-author-affiliation", hidden: "input-author-rorid" },
     { input: "input-contactperson-affiliation", hidden: "input-contactperson-rorid" },
     { input: "input-contributor-personaffiliation", hidden: "input-contributor-personrorid" },
     { input: "input-contributor-organisationaffiliation", hidden: "input-contributor-organisationrorid" }
   ];
+
+  const tagifyPairs = allPairs.filter(pair => {
+    const inputElement = document.getElementById(pair.input);
+    return inputElement !== null;
+  });
 
   // Process each field pair
   tagifyPairs.forEach(pair => {
@@ -78,6 +83,9 @@ $.getJSON("json/affiliations.json", function (data) {
  */
 function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   var inputElement = $("#" + inputFieldId);
+  if (!inputElement.length) {
+    return;
+  }
   var hiddenField = $("#" + hiddenFieldId);
 
   // Initialize Tagify on the input element with specified options

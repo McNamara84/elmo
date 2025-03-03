@@ -182,8 +182,15 @@ The following third-party dependencies are included in header.html and footer.ht
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
   - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent
+  - `$showContributorPersons`: Specifies whether the form group Contributor Persons should be displayed (true/false).
+  - `$showContributorInstitutions`: Specifies whether the form group Contributor Institutions should be displayed (true/false).
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
-  - `$showMslVocabs`: Specifies whether the form group MSL keywords should be displayed (true/false).
+  - `$showMslVocabs`: Specifies whether the form group EPOS Multi-Scale Laboratories Keywords should be displayed (true/false).
+  - `$showGcmdThesauri`: Specifies whether the form group GCMD Thesauri should be displayed (true/false).
+  - `$showFreeKeywords`: Specifies whether the form group Free Keywords should be displayed (true/false).
+  - `$showSpatialTemporalCoverage`: Specifies whether the form group Spatial and Temporal Coverages should be displayed (true/false).
+  - `$showRelatedWork`: Specifies whether the form group Related Work should be displayed (true/false).
+  - `$showFundingReference`: Specifies whether the form group Funding Reference should be displayed (true/false).
 </details>
 
 ## API

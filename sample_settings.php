@@ -35,6 +35,10 @@ $apiKeyTimezone = 'your_timezone_api_key';
 // Maximum number of titles that can be entered
 $maxTitles = 2;
 
+// Show Contributor Persons form group
+$showContributorPersons = true;
+// Show Contrubutor Institutios form group
+$showContributorInstitutions = true;
 // Show MSL labs form group
 $showMslLabs = true;
 // URL to the source with all laboratories for MSL
@@ -43,6 +47,16 @@ $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabular
 $showMslVocabs = true;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+// Show GCMD Thesauri form group
+$showGcmdThesauri = true;
+// Show Free Keywords form group
+$showFreeKeywords = true;
+// Show Spatial and Temporal Coverage form group
+$showSpatialTemporalCoverage = true;
+// Show Related Work form group
+$showRelatedWork = true;
+// Show Funding Reference form group
+$showFundingReference = true;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
