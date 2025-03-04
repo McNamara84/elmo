@@ -8,19 +8,16 @@ $(document).ready(function () {
     var feedbackForm = $("#form-feedback");
     var feedbackData = feedbackForm.serialize();
 
-
     // Disable the button and show a loading spinner
     $("#button-feedback-send")
       .prop("disabled", true)
       .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
-
 
     $.ajax({
       url: "send_feedback_mail.php",
       type: "POST",
       data: feedbackData,
       success: function (response) {
-
         // Formular ausblenden
         feedbackForm.hide();
 
@@ -32,8 +29,6 @@ $(document).ready(function () {
         setTimeout(function () {
           $("#modal-feedback").modal("hide");
         }, 3000);
-
-
       },
       error: function (xhr, status, error) {
         // Display error message
@@ -53,19 +48,22 @@ $(document).ready(function () {
           $("#button-feedback-send").prop("disabled", false).html("Senden");
         });
       }
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+      console.error('Error sending feedback:', textStatus, errorThrown);
     });
   });
 
-
   /**
-* Event listener for the clear button that resets all input fields
-* @requires jQuery
-* @requires Bootstrap
-* 
-*/
+   * Event listener for the clear button that resets all input fields
+   * @requires jQuery
+   * @requires Bootstrap
+   * 
+   */
   $(document).ready(function () {
     $('#button-form-reset').on('click', function () {
       clearInputFields();
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+      console.error('Error resetting form:', textStatus, errorThrown);
     });
   });
 
@@ -628,6 +626,8 @@ $(document).ready(function () {
 
       // Register event listener for translations after initial setup
       document.addEventListener('translationsLoaded', refreshLaboratoryTagifyInstances);
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+      console.error('Error loading lab data:', textStatus, errorThrown);
     });
   }
 
@@ -691,6 +691,8 @@ $(document).ready(function () {
   $(document).ready(function () {
     $('#button-form-load').on('click', function () {
       $('#modal-uploadxml').modal('show');
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+      console.error('Error opening XML upload modal:', textStatus, errorThrown);
     });
   });
 
@@ -710,6 +712,8 @@ $(document).ready(function () {
       $('#panel-changelog-content').load('doc/changelog.html', function () {
         // Displays the modal after the content has been successfully loaded.
         $('#modal-changelog').modal('show');
+      }).fail(function (jqXHR, textStatus, errorThrown) {
+        console.error('Error loading changelog content:', textStatus, errorThrown);
       });
     });
   });
@@ -865,6 +869,8 @@ $(document).ready(function () {
 
       // Register event listener for translations after initial setup
       document.addEventListener('translationsLoaded', refreshLaboratoryTagifyInstances);
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+      console.error('Error loading lab data:', textStatus, errorThrown);
     });
   }
   /////////////////////////////// HELP BUTTONS /////////////////////////////////////////////////////////////////

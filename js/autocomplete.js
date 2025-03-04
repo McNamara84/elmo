@@ -31,7 +31,12 @@ $(document).ready(function () {
  * @returns {boolean} - True if the affiliation is current, false otherwise
  */
 function isCurrentAffiliation(affiliation) {
-  return !affiliation?.['end-date']?.year;
+  try {
+    return !affiliation?.['end-date']?.year;
+  } catch (error) {
+    console.error('Error checking affiliation end date:', error);
+    return false;
+  }
 }
 
 /**
