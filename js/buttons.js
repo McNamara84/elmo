@@ -324,26 +324,45 @@ $(document).ready(function () {
     newContributorRow.find(".row-label").hide();
     newContributorRow.find("input").removeAttr("required");
 
-    const rolesInputHtml = `<input name="cbPersonRoles[]" 
-      id="input-contributor-personrole${uniqueSuffix}" 
-      class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners" 
-      data-translate-placeholder="general.roleLabel" />`;
-    newContributorRow.find("#input-contributor-personrole").replaceWith(rolesInputHtml);
+    // Completely replace the role input field container with fresh HTML
+    const roleFieldContainer = newContributorRow.find("#input-contributor-personrole").closest(".input-group");
+    const roleFieldHtml = `
+    <div class="input-group has-validation">
+      <input name="cbPersonRoles[]" id="input-contributor-personrole${uniqueSuffix}"
+        class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
+        data-translate-placeholder="general.roleLabel" />
+      <span class="input-group-text"><i class="bi bi-question-circle-fill"
+        data-help-section-id="help-contributor-role"></i></span>
+      <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+    </div>
+  `;
+    roleFieldContainer.replaceWith(roleFieldHtml);
 
-    // Update input field IDs
-    const idMappings = {
-      "personaffiliation": "input-contributor-personaffiliation",
-      "personrorid": "input-contributor-personrorid",
-      "orcid": "input-contributor-orcid",
-      "lastname": "input-contributor-lastname",
-      "firstname": "input-contributor-firstname"
-    };
+    // Also replace the affiliation input field with fresh HTML
+    const affFieldContainer = newContributorRow.find("#input-contributor-personaffiliation").closest(".input-group");
+    const affFieldHtml = `
+    <div class="input-group has-validation">
+      <input type="text" name="cbPersonAffiliations[]" id="input-contributor-personaffiliation${uniqueSuffix}"
+        class="form-control input-with-help input-right-no-round-corners" 
+        data-translate-placeholder="general.affiliation" />
+      <input type="hidden" name="cbPersonRorIds[]" id="input-contributor-personrorid${uniqueSuffix}" />
+      <span class="input-group-text"><i class="bi bi-question-circle-fill"
+        data-help-section-id="help-contributor-affiliation"></i></span>
+      <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+    </div>
+  `;
+    affFieldContainer.replaceWith(affFieldHtml);
 
-    Object.values(idMappings).forEach(id => {
-      newContributorRow
-        .find(`#${id}`)
-        .attr("id", `${id}${uniqueSuffix}`);
-    });
+    // Update remaining input IDs
+    newContributorRow
+      .find("#input-contributor-orcid")
+      .attr("id", "input-contributor-orcid" + uniqueSuffix);
+    newContributorRow
+      .find("#input-contributor-lastname")
+      .attr("id", "input-contributor-lastname" + uniqueSuffix);
+    newContributorRow
+      .find("#input-contributor-firstname")
+      .attr("id", "input-contributor-firstname" + uniqueSuffix);
 
     // Update label references
     const labelMappings = ["orcid", "lastname", "firstname"];
@@ -356,12 +375,17 @@ $(document).ready(function () {
     newContributorRow.find(".addContributorPerson").replaceWith(removeButton);
     contributorGroup.append(newContributorRow);
 
+    // Initialize Tagify for roles
     setupRolesDropdown(["person", "both"], `#input-contributor-personrole${uniqueSuffix}`);
-    autocompleteAffiliations(
-      `input-contributor-personaffiliation${uniqueSuffix}`,
-      `input-contributor-personrorid${uniqueSuffix}`,
-      affiliationsData
-    );
+
+    // Check if affiliationsData is available in global scope
+    if (window.affiliationsData && Array.isArray(window.affiliationsData)) {
+      autocompleteAffiliations(
+        `input-contributor-personaffiliation${uniqueSuffix}`,
+        `input-contributor-personrorid${uniqueSuffix}`,
+        window.affiliationsData
+      );
+    }
 
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
@@ -392,24 +416,39 @@ $(document).ready(function () {
     newContributorRow.find(".row-label").hide();
     newContributorRow.find("input").removeAttr("required");
 
-    const rolesInputHtml = `<input name="cbOrganisationRoles[]" 
-      id="input-contributor-organisationrole${uniqueSuffix}" 
-      class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners" 
-      data-translate-placeholder="general.roleLabel" />`;
-    newContributorRow.find("#input-contributor-organisationrole").replaceWith(rolesInputHtml);
+    // Completely replace the role input field container with fresh HTML
+    const roleFieldContainer = newContributorRow.find("#input-contributor-organisationrole").closest(".input-group");
+    const roleFieldHtml = `
+    <div class="input-group has-validation">
+      <input name="cbOrganisationRoles[]" id="input-contributor-organisationrole${uniqueSuffix}"
+        class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
+        data-translate-placeholder="general.roleLabel" />
+      <span class="input-group-text"><i class="bi bi-question-circle-fill"
+        data-help-section-id="help-contributor-organisationrole"></i></span>
+      <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
+    </div>
+  `;
+    roleFieldContainer.replaceWith(roleFieldHtml);
+
+    // Also replace the affiliation input field with fresh HTML
+    const affFieldContainer = newContributorRow.find("#input-contributor-organisationaffiliation").closest(".input-group");
+    const affFieldHtml = `
+    <div class="input-group has-validation">
+      <input type="text" name="cbOrganisationAffiliations[]" id="input-contributor-organisationaffiliation${uniqueSuffix}"
+        class="form-control input-with-help input-right-no-round-corners" 
+        data-translate-placeholder="general.affiliation" />
+      <input type="hidden" name="cbOrganisationRorIds[]" id="input-contributor-organisationrorid${uniqueSuffix}" />
+      <span class="input-group-text"><i class="bi bi-question-circle-fill"
+        data-help-section-id="help-contributor-organisation-affiliation"></i></span>
+      <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+    </div>
+  `;
+    affFieldContainer.replaceWith(affFieldHtml);
 
     // Update input field IDs
-    const idMappings = {
-      "organisationaffiliation": "input-contributor-organisationaffiliation",
-      "organisationrorid": "input-contributor-organisationrorid",
-      "name": "input-contributor-name"
-    };
-
-    Object.values(idMappings).forEach(id => {
-      newContributorRow
-        .find(`#${id}`)
-        .attr("id", `${id}${uniqueSuffix}`);
-    });
+    newContributorRow
+      .find("#input-contributor-name")
+      .attr("id", "input-contributor-name" + uniqueSuffix);
 
     newContributorRow
       .find("label[for='input-contributor-name']")
@@ -418,12 +457,17 @@ $(document).ready(function () {
     newContributorRow.find(".addContributor").replaceWith(removeButton);
     contributorGroup.append(newContributorRow);
 
+    // Initialize Tagify for roles
     setupRolesDropdown(["institution", "both"], `#input-contributor-organisationrole${uniqueSuffix}`);
-    autocompleteAffiliations(
-      `input-contributor-organisationaffiliation${uniqueSuffix}`,
-      `hiddenOrganisationRorId${uniqueSuffix}`,
-      affiliationsData
-    );
+
+    // Check if affiliationsData is available in global scope
+    if (window.affiliationsData && Array.isArray(window.affiliationsData)) {
+      autocompleteAffiliations(
+        `input-contributor-organisationaffiliation${uniqueSuffix}`,
+        `input-contributor-organisationrorid${uniqueSuffix}`,
+        window.affiliationsData
+      );
+    }
 
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
