@@ -777,8 +777,17 @@ $(document).ready(function () {
     var hiddenRorId = row.find('input[name="laboratoryRorIds[]"]')[0];
     var hiddenLabId = row.find('input[name="LabId[]"]')[0];
 
-    // Skip if elements don't exist
+    // Check if the input fields are available
     if (!inputName || !inputAffiliation) return null;
+    
+    // Check if the elements are already tagified
+    if (inputName.classList.contains('tagify') || 
+        $(inputName).next('.tagify').length || 
+        inputAffiliation.classList.contains('tagify') ||
+        $(inputAffiliation).next('.tagify').length) {
+      console.log('Elemente bereits tagifiziert, überspringe Initialisierung');
+      return null;
+    }
 
     /**
      * Finds a lab object by its name.
@@ -898,19 +907,6 @@ $(document).ready(function () {
     console.log(`Updated placeholders for ${laboratoryTagifyInstances.length} laboratory Tagify instances`);
   }
 
-  var labData;
-
-  if ($("#group-originatinglaboratory").length) {
-    // Load lab data from JSON and initialize Tagify on the first laboratory row
-    $.getJSON("json/msl-labs.json", function (data) {
-      labData = data;
-      var firstRow = $("#group-originatinglaboratory .row").first();
-      initializeTagify(firstRow, data);
-
-      // Register event listener for translations after initial setup
-      document.addEventListener('translationsLoaded', refreshLaboratoryTagifyInstances);
-    });
-  }
   /////////////////////////////// HELP BUTTONS /////////////////////////////////////////////////////////////////
 
   /**
