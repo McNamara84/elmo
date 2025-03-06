@@ -1203,8 +1203,6 @@ async function loadXmlToForm(xmlDoc) {
       const transformedValue = config.transform ? config.transform(value) : value;
 
       $(config.selector).val(transformedValue);
-    } else {
-      console.log('No node found for path:', nsPath);
     }
   }
 
