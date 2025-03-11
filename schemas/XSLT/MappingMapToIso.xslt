@@ -776,120 +776,120 @@ http://www.altova.com/mapforce
 							</xsl:for-each>
 						</descriptiveKeywords>
 						<descriptiveKeywords>
-							<MD_Keywords>
-								<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'NASA/GCMD Earth Science Keywords')]">
-									<xsl:variable name="var39_filter" select="."/>
+							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'NASA/GCMD Earth Science Keywords')]">
+								<xsl:variable name="var39_filter" select="."/>
+								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
 											<xsl:value-of select="*[local-name()='keyword' and namespace-uri()='']"/>
 										</gco:CharacterString>
 									</keyword>
-								</xsl:for-each>
-								<thesaurusName>
-									<CI_Citation>
-										<title>
-											<gco:CharacterString>
-												<xsl:value-of select="'NASA/GCMD Earth Science Keywords'"/>
-											</gco:CharacterString>
-										</title>
-										<date>
-											<CI_Date>
-												<date>
-													<xsl:for-each select="*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='lastUpdatedGcmdScienceKeywords' and namespace-uri()='']">
-														<xsl:variable name="var40_cur" select="."/>
-														<gco:Date>
-															<xsl:value-of select="."/>
-														</gco:Date>
-													</xsl:for-each>
-												</date>
-												<dateType>
-													<CI_DateTypeCode>
-														<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode</xsl:attribute>
-														<xsl:attribute name="codeListValue" namespace="">lastUpdate</xsl:attribute>
-														<xsl:value-of select="'lastUpdate'"/>
-													</CI_DateTypeCode>
-												</dateType>
-											</CI_Date>
-										</date>
-									</CI_Citation>
-								</thesaurusName>
-							</MD_Keywords>
-							<MD_Keywords>
-								<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'NASA/GCMD Earth Platforms Keywords')]">
-									<xsl:variable name="var41_filter" select="."/>
+									<thesaurusName>
+										<CI_Citation>
+											<title>
+												<gco:CharacterString>
+													<xsl:value-of select="'NASA/GCMD Earth Science Keywords'"/>
+												</gco:CharacterString>
+											</title>
+											<date>
+												<CI_Date>
+													<date>
+														<xsl:for-each select="$var2_cur/*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='lastUpdatedGcmdScienceKeywords' and namespace-uri()='']">
+															<xsl:variable name="var40_cur" select="."/>
+															<gco:Date>
+																<xsl:value-of select="."/>
+															</gco:Date>
+														</xsl:for-each>
+													</date>
+													<dateType>
+														<CI_DateTypeCode>
+															<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode</xsl:attribute>
+															<xsl:attribute name="codeListValue" namespace="">lastUpdate</xsl:attribute>
+															<xsl:value-of select="'lastUpdate'"/>
+														</CI_DateTypeCode>
+													</dateType>
+												</CI_Date>
+											</date>
+										</CI_Citation>
+									</thesaurusName>
+								</MD_Keywords>
+							</xsl:for-each>
+							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'NASA/GCMD Earth Platforms Keywords')]">
+								<xsl:variable name="var41_filter" select="."/>
+								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
 											<xsl:value-of select="*[local-name()='keyword' and namespace-uri()='']"/>
 										</gco:CharacterString>
 									</keyword>
-								</xsl:for-each>
-								<thesaurusName>
-									<CI_Citation>
-										<title>
-											<gco:CharacterString>
-												<xsl:value-of select="'NASA/GCMD Earth Platforms Keywords'"/>
-											</gco:CharacterString>
-										</title>
-										<date>
-											<CI_Date>
-												<date>
-													<xsl:for-each select="*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='lastUpdatedGcmdPlatformsKeywords' and namespace-uri()='']">
-														<xsl:variable name="var42_cur" select="."/>
-														<gco:Date>
-															<xsl:value-of select="."/>
-														</gco:Date>
-													</xsl:for-each>
-												</date>
-												<dateType>
-													<CI_DateTypeCode>
-														<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode</xsl:attribute>
-														<xsl:attribute name="codeListValue" namespace="">lastUpdate</xsl:attribute>
-														<xsl:value-of select="'lastUpdate'"/>
-													</CI_DateTypeCode>
-												</dateType>
-											</CI_Date>
-										</date>
-									</CI_Citation>
-								</thesaurusName>
-							</MD_Keywords>
-							<MD_Keywords>
-								<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'NASA/GCMD Instruments')]">
-									<xsl:variable name="var43_filter" select="."/>
+									<thesaurusName>
+										<CI_Citation>
+											<title>
+												<gco:CharacterString>
+													<xsl:value-of select="'NASA/GCMD Earth Platforms Keywords'"/>
+												</gco:CharacterString>
+											</title>
+											<date>
+												<CI_Date>
+													<date>
+														<xsl:for-each select="$var2_cur/*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='lastUpdatedGcmdPlatformsKeywords' and namespace-uri()='']">
+															<xsl:variable name="var42_cur" select="."/>
+															<gco:Date>
+																<xsl:value-of select="."/>
+															</gco:Date>
+														</xsl:for-each>
+													</date>
+													<dateType>
+														<CI_DateTypeCode>
+															<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode</xsl:attribute>
+															<xsl:attribute name="codeListValue" namespace="">lastUpdate</xsl:attribute>
+															<xsl:value-of select="'lastUpdate'"/>
+														</CI_DateTypeCode>
+													</dateType>
+												</CI_Date>
+											</date>
+										</CI_Citation>
+									</thesaurusName>
+								</MD_Keywords>
+							</xsl:for-each>
+							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'NASA/GCMD Instruments')]">
+								<xsl:variable name="var43_filter" select="."/>
+								<MD_Keywords>
 									<keyword>
 										<gco:CharacterString>
 											<xsl:value-of select="*[local-name()='keyword' and namespace-uri()='']"/>
 										</gco:CharacterString>
 									</keyword>
-								</xsl:for-each>
-								<thesaurusName>
-									<CI_Citation>
-										<title>
-											<gco:CharacterString>
-												<xsl:value-of select="'NASA/GCMD Instruments'"/>
-											</gco:CharacterString>
-										</title>
-										<date>
-											<CI_Date>
-												<date>
-													<xsl:for-each select="*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='lastUpdatedGcmdInstrumentsKeywords' and namespace-uri()='']">
-														<xsl:variable name="var44_cur" select="."/>
-														<gco:Date>
-															<xsl:value-of select="."/>
-														</gco:Date>
-													</xsl:for-each>
-												</date>
-												<dateType>
-													<CI_DateTypeCode>
-														<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode</xsl:attribute>
-														<xsl:attribute name="codeListValue" namespace="">lastUpdate</xsl:attribute>
-														<xsl:value-of select="'lastUpdate'"/>
-													</CI_DateTypeCode>
-												</dateType>
-											</CI_Date>
-										</date>
-									</CI_Citation>
-								</thesaurusName>
-							</MD_Keywords>
+									<thesaurusName>
+										<CI_Citation>
+											<title>
+												<gco:CharacterString>
+													<xsl:value-of select="'NASA/GCMD Instruments'"/>
+												</gco:CharacterString>
+											</title>
+											<date>
+												<CI_Date>
+													<date>
+														<xsl:for-each select="$var2_cur/*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='lastUpdatedGcmdInstrumentsKeywords' and namespace-uri()='']">
+															<xsl:variable name="var44_cur" select="."/>
+															<gco:Date>
+																<xsl:value-of select="."/>
+															</gco:Date>
+														</xsl:for-each>
+													</date>
+													<dateType>
+														<CI_DateTypeCode>
+															<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode</xsl:attribute>
+															<xsl:attribute name="codeListValue" namespace="">lastUpdate</xsl:attribute>
+															<xsl:value-of select="'lastUpdate'"/>
+														</CI_DateTypeCode>
+													</dateType>
+												</CI_Date>
+											</date>
+										</CI_Citation>
+									</thesaurusName>
+								</MD_Keywords>
+							</xsl:for-each>
 						</descriptiveKeywords>
 						<xsl:for-each select="*[local-name()='FreeKeywords' and namespace-uri()='']">
 							<xsl:variable name="var45_cur" select="."/>
