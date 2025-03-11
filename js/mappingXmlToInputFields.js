@@ -298,7 +298,7 @@ function processContactPersons(xmlDoc) {
     let website = getNodeText(contactPersonNode, 'gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL', xmlDoc, nsResolver);
 
     if (!email) {
-      email = getNodeText(contactPersonNode, '//electronicMailAddress/CharacterString', xmlDoc, null); 
+      email = getNodeText(contactPersonNode, '//electronicMailAddress/CharacterString', xmlDoc, null);
     }
     if (!website) {
       website = getNodeText(contactPersonNode, '//linkage/URL', xmlDoc, null);
@@ -632,9 +632,40 @@ function updateContributorMap(map, key, newData) {
   }
 }
 
+/**
+ * Get or retrieve the Tagify instance for an input element
+ * @param {HTMLElement} inputElement - The input element
+ * @returns {Tagify|null} The Tagify instance or null if not available
+ */
+function getTagifyInstance(inputElement) {
+  if (!inputElement) return null;
+
+  // Check for direct property
+  if (inputElement.tagify) {
+    return inputElement.tagify;
+  }
+
+  // Check for _tagify property
+  if (inputElement._tagify) {
+    return inputElement._tagify;
+  }
+
+  // Check for jQuery element with tagify
+  if (inputElement[0] && inputElement[0].tagify) {
+    return inputElement[0].tagify;
+  }
+
+  // Look for data- attribute
+  if (inputElement.dataset && inputElement.dataset.tagify) {
+    return window[inputElement.dataset.tagify];
+  }
+
+  console.log("No existing Tagify instance found for element, returning null", inputElement);
+  return null;
+}
 
 /**
- * Populate the form with processed contributor data
+ * Populate the form with processed contributor data, handling both original and cloned field names
  * @param {Map} personMap - Map containing person contributors
  * @param {Map} orgMap - Map containing organization contributors
  */
@@ -642,25 +673,19 @@ function populateFormWithContributors(personMap, orgMap) {
   let personIndex = 0;
   let orgIndex = 0;
 
-  // Helper function to get the Tagify instance (or initialize it if not already initialized)
-  function getTagifyInstance(inputElement) {
-    if (!inputElement) return null;
-    if (!inputElement._tagify) {
-      inputElement._tagify = new Tagify(inputElement);
-    }
-    return inputElement._tagify;
-  }
-
   // Process persons
   for (const person of personMap.values()) {
     const personRow = getOrCreatePersonRow(personIndex++);
-
+    let isClonedRow = personIndex > 1; // First row is original, others are cloned
 
     // Roles
     const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
-    const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
+    const tagifyRoles = getTagifyInstance(roleInput);
     if (tagifyRoles) {
+      tagifyRoles.removeAllTags();
       tagifyRoles.addTags(person.roles.map(role => ({ value: role })));
+    } else {
+      console.warn("No Tagify instance found for role input:", roleInput);
     }
 
     // ORCID
@@ -672,47 +697,80 @@ function populateFormWithContributors(personMap, orgMap) {
     personRow.find('input[name="cbPersonLastname[]"]').val(person.familyName);
     personRow.find('input[name="cbPersonFirstname[]"]').val(person.givenName);
 
-    // Affiliations
-    const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
-    const tagifyAffiliations = getTagifyInstance(affiliationInput);  // Get or initialize Tagify
-    if (tagifyAffiliations) {
-      tagifyAffiliations.addTags(person.affiliations.map(aff => ({ value: aff })));
+    // Affiliations - handle both original and cloned field names
+    let affiliationInput;
+    if (isClonedRow) {
+      // Cloned rows use cbPersonAffiliations[] as the name
+      affiliationInput = personRow.find('input[name="cbPersonAffiliations[]"]')[0];
+    } else {
+      // Original row uses cbAffiliation[] as the name
+      affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
     }
 
-    // ROR IDs
-    personRow.find('input[name="cbRorIds[]"]').val(person.rorIds.join(','));
+    const tagifyAffiliations = getTagifyInstance(affiliationInput);
+    if (tagifyAffiliations) {
+      tagifyAffiliations.removeAllTags();
+      tagifyAffiliations.addTags(person.affiliations.map(aff => ({ value: aff })));
+    } else {
+      console.warn("No Tagify instance found for affiliation input:", affiliationInput, "in row", isClonedRow ? "cloned" : "original");
+    }
+
+    // ROR IDs - handle both original and cloned field names
+    if (isClonedRow) {
+      // Cloned rows use cbPersonRorIds[] as the name
+      personRow.find('input[name="cbPersonRorIds[]"]').val(person.rorIds.join(','));
+    } else {
+      // Original row uses cbpRorIds[] as the name
+      personRow.find('input[name="cbpRorIds[]"]').val(person.rorIds.join(','));
+    }
   }
 
   // Process organizations
   for (const org of orgMap.values()) {
     const orgRow = getOrCreateOrgRow(orgIndex++);
-
+    let isClonedRow = orgIndex > 1; // First row is original, others are cloned
 
     // Roles
     const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
-    const tagifyRoles = getTagifyInstance(roleInput);  // Get or initialize Tagify
+    const tagifyRoles = getTagifyInstance(roleInput);
     if (tagifyRoles) {
+      tagifyRoles.removeAllTags();
       tagifyRoles.addTags(org.roles.map(role => ({ value: role })));
+    } else {
+      console.warn("No Tagify instance found for organization role input:", roleInput);
     }
 
     // Organization name
     orgRow.find('input[name="cbOrganisationName[]"]').val(org.name);
 
-    // Affiliations
-    const affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
-    const tagifyAffiliations = getTagifyInstance(affiliationInput);  // Get or initialize Tagify
+    // Affiliations - handle both original and cloned field names
+    let affiliationInput;
+    if (isClonedRow) {
+      // Cloned rows use cbOrganisationAffiliations[] as the name
+      affiliationInput = orgRow.find('input[name="cbOrganisationAffiliations[]"]')[0];
+    } else {
+      // Original row uses OrganisationAffiliation[] as the name
+      affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
+    }
+
+    const tagifyAffiliations = getTagifyInstance(affiliationInput);
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
       tagifyAffiliations.addTags(org.affiliations.map(aff => ({ value: aff })));
+    } else {
+      console.warn("No Tagify instance found for organization affiliation input:", affiliationInput, "in row", isClonedRow ? "cloned" : "original");
     }
 
-    // ROR IDs
-    orgRow.find('input[name="OrganisationRorIds[]"]').val(org.rorIds.join(','));
+    // ROR IDs - handle both original and cloned field names
+    if (isClonedRow) {
+      // Cloned rows use cbOrganisationRorIds[] as the name
+      orgRow.find('input[name="cbOrganisationRorIds[]"]').val(org.rorIds.join(','));
+    } else {
+      // Original row uses hiddenOrganisationRorId[] as the name
+      orgRow.find('input[name="hiddenOrganisationRorId[]"]').val(org.rorIds.join(','));
+    }
   }
 }
-
-
-
 
 /**
  * Parse temporal data from a date node.
@@ -1203,8 +1261,6 @@ async function loadXmlToForm(xmlDoc) {
       const transformedValue = config.transform ? config.transform(value) : value;
 
       $(config.selector).val(transformedValue);
-    } else {
-      console.log('No node found for path:', nsPath);
     }
   }
 
