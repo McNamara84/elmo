@@ -26,6 +26,8 @@ require_once dirname(__FILE__) . '/../validation.php';
  */
 function saveResourceInformationAndRights($connection, $postData)
 {
+    // Iterates over $requiredFields to check if each field is present and not empty in $postData.
+    // Iterates over $requiredArrayFields to check if each array field is present and not empty in $postData.
     try {
         // Validate required fields
         $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language', 'Rights'];
