@@ -139,8 +139,6 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   try {
     const tagify = new Tagify(input, tagifyOptions);
 
-    tagify.on('add', () => console.log('Tag added'));
-    tagify.on('remove', () => console.log('Tag removed'));
     tagify.on('invalid', () => console.log('Invalid tag attempted'));
 
     input._tagify = tagify;
