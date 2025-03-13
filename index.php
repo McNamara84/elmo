@@ -66,7 +66,9 @@ include("header.html");
 include("formgroups/resourceInformation.html");
 include("formgroups/rights.html");
 include("formgroups/authors.html");
-include("formgroups/GGMsCharacteristics.html");
+if ($characteristicsOfTheModel) {
+    include("formgroups/GGMsCharacteristics.html");
+}
 if ($showContributorPersons) {
     include("formgroups/contributorPersons.html");
 }

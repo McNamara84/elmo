@@ -35,6 +35,8 @@ $apiKeyTimezone = 'your_timezone_api_key';
 // Maximum number of titles that can be entered
 $maxTitles = 2;
 
+// Show Characteristics of the model form group
+$characteristicsOfTheModel = true;
 // Show Contributor Persons form group
 $showContributorPersons = true;
 // Show Contrubutor Institutios form group
