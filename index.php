@@ -66,7 +66,7 @@ include("header.html");
 include("formgroups/resourceInformation.html");
 include("formgroups/rights.html");
 include("formgroups/authors.html");
-include("formgroups/gravitymodelessentials.html");
+include("formgroups/GGMsCharacteristics.html");
 if ($showContributorPersons) {
     include("formgroups/contributorPersons.html");
 }
