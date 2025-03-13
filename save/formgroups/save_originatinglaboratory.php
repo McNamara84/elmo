@@ -27,15 +27,25 @@ function saveOriginatingLaboratories($connection, $postData, $resource_id)
 
     for ($i = 0; $i < $len; $i++) {
 
-        // Parse laboratory name
+        // Parse laboratory name - handle both standard select values and JSON from Tagify
         $labNameData = $postData['laboratoryName'][$i];
+        $labName = '';
 
+        // Check if the data is a JSON string (legacy Tagify format) or a direct value (select element)
         $labNameArray = json_decode($labNameData, true);
-        if (!$labNameArray || !isset($labNameArray[0]['value'])) {
+        if ($labNameArray && isset($labNameArray[0]['value'])) {
+            // It's a JSON string from Tagify
+            $labName = $labNameArray[0]['value'];
+        } else {
+            // It's a direct value from a select element
+            $labName = $labNameData;
+        }
+
+        // Skip if lab name is empty
+        if (empty($labName)) {
             continue;
         }
 
-        $labName = $labNameArray[0]['value'];
         $labId = isset($postData['LabId'][$i]) ? $postData['LabId'][$i] : null;
 
         // Parse affiliation data
@@ -44,7 +54,6 @@ function saveOriginatingLaboratories($connection, $postData, $resource_id)
 
         if (isset($postData['laboratoryAffiliation'][$i])) {
             $affiliationData = $postData['laboratoryAffiliation'][$i];
-
 
             $affiliationArray = json_decode($affiliationData, true);
             if ($affiliationArray && isset($affiliationArray[0]['value'])) {
