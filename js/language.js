@@ -144,8 +144,14 @@ $(document).ready(function () {
     );
 
     // Load initial language
-    const savedLanguage = localStorage.getItem('userLanguage') || 'en';
-    loadTranslations(savedLanguage);
+    const savedLanguage = localStorage.getItem('userLanguage') || 'auto';
+    if (savedLanguage === 'auto') {
+        const browserLang = getBrowserLanguage();
+        loadTranslations(browserLang)
+            .catch(() => loadTranslations('en'));
+    } else {
+        loadTranslations(savedLanguage);
+    }
 
     // Handle language selection
     $('[data-bs-language-value]').click(function (e) {
@@ -153,6 +159,8 @@ $(document).ready(function () {
         const lang = $(this).data('bs-language-value');
 
         if (lang === 'auto') {
+            // Speichern der Einstellung "auto" im localStorage
+            localStorage.setItem('userLanguage', 'auto');
             const browserLang = getBrowserLanguage();
             // Try to load browser language, fallback to English if not available
             loadTranslations(browserLang)
