@@ -765,26 +765,24 @@ $(document).ready(function () {
   var laboratoryTagifyInstances = [];
 
   /**
-   * Initializes Tagify on the laboratory name and affiliation fields.
+   * Initializes the laboratory selection and Tagify on the affiliation field.
    *
    * @param {jQuery} row - The row element containing the input fields.
    * @param {Object[]} data - The lab data array used for autocompletion.
-   * @returns {Object} - An object containing the Tagify instances for name and affiliation fields.
+   * @returns {Object} - An object containing the Tagify instance for the affiliation field and references.
    */
   function initializeTagify(row, data) {
-    var inputName = row.find('input[name="laboratoryName[]"]')[0];
+    var selectName = row.find('select[name="laboratoryName[]"]')[0];
     var inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]')[0];
     var hiddenRorId = row.find('input[name="laboratoryRorIds[]"]')[0];
     var hiddenLabId = row.find('input[name="LabId[]"]')[0];
 
     // Check if the input fields are available
-    if (!inputName || !inputAffiliation) return null;
-    
-    // Check if the elements are already tagified
-    if (inputName.classList.contains('tagify') || 
-        $(inputName).next('.tagify').length || 
-        inputAffiliation.classList.contains('tagify') ||
-        $(inputAffiliation).next('.tagify').length) {
+    if (!selectName || !inputAffiliation) return null;
+
+    // Check if the affiliation element is already tagified
+    if (inputAffiliation.classList.contains('tagify') ||
+      $(inputAffiliation).next('.tagify').length) {
       console.log('Elemente bereits tagifiziert, überspringe Initialisierung');
       return null;
     }
@@ -799,18 +797,38 @@ $(document).ready(function () {
       return data.find((lab) => lab.name === name);
     }
 
-    var tagifyName = new Tagify(inputName, {
-      whitelist: data.map((item) => item.name),
-      enforceWhitelist: true,
-      placeholder: translations.laboratory.name || "Lab name",
-      maxTags: 1,
-      dropdown: {
-        maxItems: 90,
-        closeOnSelect: true,
-        highlightFirst: true,
-      },
-      delimiters: null,
-      mode: "select",
+    // Populate select options with lab names
+    // First, add an empty option
+    var emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = translations.general.choose;
+    selectName.appendChild(emptyOption);
+
+    // Then add all lab options
+    data.forEach(function (lab) {
+      var option = document.createElement('option');
+      option.value = lab.name;
+      option.textContent = lab.name;
+      selectName.appendChild(option);
+    });
+
+    // Set up event handlers for the select element
+    $(selectName).on('change', function () {
+      var labName = this.value;
+      var lab = findLabByName(labName);
+
+      if (lab) {
+        tagifyAffiliation.removeAllTags();
+        tagifyAffiliation.addTags([lab.affiliation]);
+        hiddenRorId.value = lab.rorid || "";
+        hiddenLabId.value = lab.id;
+        tagifyAffiliation.setReadonly(true);
+      } else {
+        tagifyAffiliation.removeAllTags();
+        hiddenRorId.value = "";
+        hiddenLabId.value = "";
+        tagifyAffiliation.setReadonly(false);
+      }
     });
 
     var tagifyAffiliation = new Tagify(inputAffiliation, {
@@ -826,42 +844,6 @@ $(document).ready(function () {
       mode: "select",
     });
 
-    tagifyName.on("add", function (e) {
-      var labName = e.detail.data.value;
-      var lab = findLabByName(labName);
-      if (lab) {
-        tagifyAffiliation.removeAllTags();
-        tagifyAffiliation.addTags([lab.affiliation]);
-        hiddenRorId.value = lab.rorid || "";
-        hiddenLabId.value = lab.id;
-        tagifyAffiliation.setReadonly(true);
-      } else {
-        tagifyAffiliation.removeAllTags();
-        hiddenRorId.value = "";
-        hiddenLabId.value = "";
-        tagifyAffiliation.setReadonly(false);
-      }
-    });
-
-    tagifyName.on("remove", function () {
-      tagifyAffiliation.removeAllTags();
-      hiddenRorId.value = "";
-      hiddenLabId.value = "";
-      tagifyAffiliation.setReadonly(false);
-    });
-
-    tagifyName.on("input", function (e) {
-      var value = e.detail.value;
-      if (value) {
-        var lab = findLabByName(value);
-        if (!lab) {
-          tagifyAffiliation.removeAllTags();
-          hiddenRorId.value = "";
-          tagifyAffiliation.setReadonly(false);
-        }
-      }
-    });
-
     tagifyAffiliation.on("input", function (e) {
       var value = e.detail.value;
       if (value && !tagifyAffiliation.state.readonly) {
@@ -871,7 +853,7 @@ $(document).ready(function () {
 
     // Store references to the Tagify instances and their elements
     const instance = {
-      tagifyName,
+      selectName,
       tagifyAffiliation,
       row: row
     };
@@ -883,7 +865,7 @@ $(document).ready(function () {
   }
 
   /**
-   * Updates the placeholder text for all laboratory Tagify instances.
+   * Updates the placeholder text for all laboratory inputs and Tagify instances.
    * This is a lightweight alternative to completely refreshing the instances.
    * 
    * @returns {void}
@@ -893,18 +875,23 @@ $(document).ready(function () {
 
     const labPlaceholder = translations.laboratory.name || "Lab name";
 
-    // For each instance, update only the placeholder text
+    // For each instance, update the placeholder text
     laboratoryTagifyInstances.forEach(instance => {
-      if (!instance.tagifyName || !instance.tagifyName.DOM || !instance.tagifyName.DOM.input) return;
+      // Update select placeholder (first empty option)
+      if (instance.selectName) {
+        const firstOption = instance.selectName.querySelector('option[value=""]');
+        if (firstOption) {
+          firstOption.textContent = labPlaceholder;
+        }
+      }
 
-      // Update the placeholder in Tagify settings
-      instance.tagifyName.settings.placeholder = labPlaceholder;
-
-      // Update the DOM placeholder attribute
-      instance.tagifyName.DOM.input.setAttribute('data-placeholder', labPlaceholder);
+      // Update Tagify placeholders for affiliation
+      if (instance.tagifyAffiliation && instance.tagifyAffiliation.DOM && instance.tagifyAffiliation.DOM.input) {
+        // This part is unchanged as it wasn't in the original function
+      }
     });
 
-    console.log(`Updated placeholders for ${laboratoryTagifyInstances.length} laboratory Tagify instances`);
+    console.log(`Updated placeholders for ${laboratoryTagifyInstances.length} laboratory instances`);
   }
 
   /////////////////////////////// HELP BUTTONS /////////////////////////////////////////////////////////////////
