@@ -62,7 +62,12 @@ include_once "../settings.php";
                         </li>
                         <?php endif; ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="#help-contributors" data-bs-dismiss="offcanvas">Contributor(s)</a>
+                            <a class="nav-link" href="#help-contributorpersons" data-bs-dismiss="offcanvas">Contributor
+                                Persons</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-contributorinstitutions"
+                                data-bs-dismiss="offcanvas">Contributor Institutions</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-descriptions" data-bs-dismiss="offcanvas">Description(s)</a>
@@ -314,30 +319,36 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <?php endif; ?>
             <hr>
-            <!-- formgroup contributors -->
-            <div id="help-contributors" class="section-content">
-                <div id="help-contributors-fg">
-                    <h3>Contributors</h3>
+            <!-- formgroup contributor persons -->
+            <div id="help-contributorpersons" class="section-content">
+                <div id="help-contributorpersons-fg">
+                    <h3>Contributor Persons</h3>
                     <p>
-                        A contributor is an institution or a person responsible for collecting, managing,
-                        distributing, or otherwise contributing to the development of the resource. To add more than
-                        one contributor, use the "add" button on the right.
+                        A contributor person is a person responsible for collecting, managing, distributing, or
+                        otherwise contributing to the development of the resource. To add more than one contributor, use
+                        the "add" button on the right.
                     </p>
                     <p>
-                        With <code>Contributing Person(s)</code> or <code>Contributing Institution(s)</code> you
-                        have the possibility
-                        to acknowledge additional persons or institutions related to the dataset which you would
-                        normally not mention as authors. These are not named in the citation but are always related
-                        to the dataset and findable just as all the other metadata fields.
+                        With <code>Contributing Person(s)</code> you have the possibility to acknowledge additional
+                        persons or institutions related to the dataset which you would normally not mention as authors.
+                        These are not named in the citation but are always related to the dataset and findable just as
+                        all the other metadata fields.
                     </p>
                     <p><strong>Optional field.</strong></p>
                 </div>
-                <div>
-                    <h4>Contributing Person(s)</h4>
+                <div id="help-contributorpersons-orcid">
+                    <h4>ORCID</h4>
+                    <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
+                        a valid ORCID in form of XXXX-XXXX-XXXX-XXX(X) (i.e. 0000-0001-5727-2427). You can find your
+                        colleagues' ORCID on the <a href="https://orcid.org/orcid-search/search" target="_blank">ORCID
+                            search page</a>. If you enter a valid ORCID, an attempt will be
+                        made to fill in the remaining required fields automatically. Results are depending on the
+                        information provided in the ORCID profile.</p>
+                    <p><strong>Optional field.</strong></p>
                 </div>
-                <div id="help-contributor-role">
-                    <h5>Roles (Person)</h5>
-                    <p>The role of the contributing person/s in the creation of the resource. Please choose one or
+                <div id="help-contributorpersons-role">
+                    <h4>Roles</h4>
+                    <p>The role of the contributing person(s) in the creation of the resource. Please choose one or
                         more roles from the controlled list provided by DataCite.</p>
                     <ul>
                         <li>
@@ -423,31 +434,38 @@ include_once "../settings.php";
                         </li>
                     </ul>
                 </div>
-                <div id="help-contributor-orcid">
-                    <h5>ORCID</h5>
-                    <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
-                        a valid ORCID in form of XXXX-XXXX-XXXX-XXX(X) (i.e. 0000-0001-5727-2427). You can find your
-                        colleagues' ORCID on the <a href="https://orcid.org/orcid-search/search" target="_blank">ORCID
-                            search page</a>. If you enter a valid ORCID, an attempt will be
-                        made to fill in the remaining required fields automatically. Results are depending on the
-                        information provided in the ORCID profile.</p>
-                    <p><strong>Optional field.</strong></p>
-                </div>
-                <div id="help-contributor-affiliation">
-                    <h5>Affiliation</h5>
+                <div id="help-contributorpersons-affiliation">
+                    <h4>Affiliation</h4>
                     <p>The organisational or institutional affiliation of the person/s.</p>
                     <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                         among the available options, it can be entered manually.</p>
                 </div>
-                <div>
-                    <h4>Contributing Institutions(s)</h4>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup contributor institutions -->
+            <div id="help-contributorinstitutions" class="section-content">
+                <div id="help-contributorinstitutions-fg">
+                    <h3>Contributor Institutions</h3>
+                    <p>
+                        A contributor institution is an organisation responsible for collecting, managing, distributing,
+                        or otherwise contributing to the development of the resource. To add more than one contributor,
+                        use the "add" button on the right.
+                    </p>
+                    <p>
+                        With <code>Contributing Institution(s)</code> you have the possibility to acknowledge additional
+                        persons or institutions related to the dataset which you would normally not mention as authors.
+                        These are not named in the citation but are always related to the dataset and findable just as
+                        all the other metadata fields.
+                    </p>
+                    <p><strong>Optional field.</strong></p>
                 </div>
-                <div id="help-contributor-organisationname">
-                    <h5>Organisation Name</h5>
+                <div id="help-contributorinstitutions-organisationname">
+                    <h4>Organisation Name</h4>
                     <p>The name of the institution.</p>
                 </div>
-                <div id="help-contributor-organisationrole">
-                    <h5>Roles (Organisation)</h5>
+                <div id="help-contributorinstitutions-organisationrole">
+                    <h4>Roles</h4>
                     <p>The role of the contributor organisation/s in the creation of the resource. Please choose one
                         or more roles from the controlled list values provided by DataCite:</p>
                     <ul>
@@ -474,8 +492,7 @@ include_once "../settings.php";
                             support. May also be used for an organisation that stores the data offline. If your data
                             was derived from a laboratory, please include the name of the laboratory (with
                             affiliation) as contributor with the role “HostingInstitution”. There may be two hosting
-                            institutions if the data or work is stored in both.
-                            Often a data centre (if that data centre is not the
+                            institutions if the data or work is stored in both. Often a data centre.
                         </li>
                         <li>
                             <strong>Producer: </strong>Typically a organisation responsible for the artistry and
@@ -517,8 +534,8 @@ include_once "../settings.php";
                         </li>
                     </ul>
                 </div>
-                <div id="help-contributor-organisationaffiliation">
-                    <h5>Affiliation</h5>
+                <div id="help-contributorinstitutions-affiliation">
+                    <h4>Affiliation</h4>
                     <p>The organisational or institutional affiliation of the Institution.</p>
                     <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                         among the available options, it can be entered manually.</p>
