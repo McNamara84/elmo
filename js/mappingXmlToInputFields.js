@@ -805,18 +805,36 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
     const boxNode = geoLocationNode.querySelector('geoLocationBox');
     const pointNode = geoLocationNode.querySelector('geoLocationPoint');
 
-    const westBoundLongitude = boxNode?.querySelector('westBoundLongitude')?.textContent || '';
-    const eastBoundLongitude = boxNode?.querySelector('eastBoundLongitude')?.textContent || '';
-    const southBoundLatitude = boxNode?.querySelector('southBoundLatitude')?.textContent || '';
-    const northBoundLatitude = boxNode?.querySelector('northBoundLatitude')?.textContent || '';
-    const pointLongitude = pointNode?.querySelector('pointLongitude')?.textContent || '';
-    const pointLatitude = pointNode?.querySelector('pointLatitude')?.textContent || '';
+    let latitudeMin = '';
+    let latitudeMax = '';
+    let longitudeMin = '';
+    let longitudeMax = '';
 
-    // Determine latitude and longitude values
-    const latitudeMin = southBoundLatitude || pointLatitude;
-    const latitudeMax = northBoundLatitude || pointLatitude;
-    const longitudeMin = westBoundLongitude || pointLongitude;
-    const longitudeMax = eastBoundLongitude || pointLongitude;
+    if (boxNode) {
+      const west = boxNode.querySelector('westBoundLongitude')?.textContent || '';
+      const east = boxNode.querySelector('eastBoundLongitude')?.textContent || '';
+      const south = boxNode.querySelector('southBoundLatitude')?.textContent || '';
+      const north = boxNode.querySelector('northBoundLatitude')?.textContent || '';
+
+      // Longitude-Handling
+      if (west === east) {
+        longitudeMin = west;
+      } else {
+        longitudeMin = west;
+        longitudeMax = east;
+      }
+
+      // Latitude-Handling
+      if (south === north) {
+        latitudeMin = south;
+      } else {
+        latitudeMin = south;
+        latitudeMax = north;
+      }
+    } else if (pointNode) {
+      longitudeMin = pointNode.querySelector('pointLongitude')?.textContent || '';
+      latitudeMin = pointNode.querySelector('pointLatitude')?.textContent || '';
+    }
 
     // Find last row
     const $lastRow = $('textarea[name="tscDescription[]"]').last().closest('.row');
