@@ -61,7 +61,7 @@ function checkContributorPerson() {
             lastname: row.find('[id^="input-contributor-lastname"]'),
             firstname: row.find('[id^="input-contributor-firstname"]'),
             role: row.find('[id^="input-contributor-personrole"]'),
-            affiliation: row.find('[id^="input-contributor-personaffiliation"]')
+            affiliation: row.find('[id^="input-contributorpersons-affiliation"]')
         };
 
         // Checks if any field in the row is filled

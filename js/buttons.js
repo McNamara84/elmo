@@ -339,10 +339,10 @@ $(document).ready(function () {
     roleFieldContainer.replaceWith(roleFieldHtml);
 
     // Also replace the affiliation input field with fresh HTML
-    const affFieldContainer = newContributorRow.find("#input-contributor-personaffiliation").closest(".input-group");
+    const affFieldContainer = newContributorRow.find("#input-contributorpersons-affiliation").closest(".input-group");
     const affFieldHtml = `
     <div class="input-group has-validation">
-      <input type="text" name="cbPersonAffiliations[]" id="input-contributor-personaffiliation${uniqueSuffix}"
+      <input type="text" name="cbPersonAffiliations[]" id="input-contributorpersons-affiliation${uniqueSuffix}"
         class="form-control input-with-help input-right-no-round-corners" 
         data-translate-placeholder="general.affiliation" />
       <input type="hidden" name="cbPersonRorIds[]" id="input-contributor-personrorid${uniqueSuffix}" />
@@ -381,7 +381,7 @@ $(document).ready(function () {
     // Check if affiliationsData is available in global scope
     if (window.affiliationsData && Array.isArray(window.affiliationsData)) {
       autocompleteAffiliations(
-        `input-contributor-personaffiliation${uniqueSuffix}`,
+        `input-contributorpersons-affiliation${uniqueSuffix}`,
         `input-contributor-personrorid${uniqueSuffix}`,
         window.affiliationsData
       );
