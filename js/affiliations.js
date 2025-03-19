@@ -3,16 +3,13 @@ var affiliationsData = [];
 
 /**
  * Refreshes all Tagify instances when translations are changed.
- * This function destroys existing Tagify instances, reinitializes them with updated translations,
- * and restores any previously selected values.
+ * This function updates the whitelist and restores any previously selected values without destroying instances.
  * 
  * @returns {void}
  */
 function refreshTagifyInstances() {
-  // Only proceed if affiliations data is available
   if (!window.affiliationsData) return;
 
-  // Definition of input fields and their associated hidden fields
   const allPairs = [
     { input: "input-author-affiliation", hidden: "input-author-rorid" },
     { input: "input-contactperson-affiliation", hidden: "input-contactperson-rorid" },
@@ -20,35 +17,19 @@ function refreshTagifyInstances() {
     { input: "input-contributor-organisationaffiliation", hidden: "input-contributor-organisationrorid" }
   ];
 
-  const tagifyPairs = allPairs.filter(pair => {
+  allPairs.forEach(pair => {
     const inputElement = document.getElementById(pair.input);
-    return inputElement !== null;
-  });
-
-  // Process each field pair
-  tagifyPairs.forEach(pair => {
-    const inputElement = document.getElementById(pair.input);
-
-    // Skip if element doesn't exist or doesn't have a Tagify instance
     if (!inputElement || !inputElement.tagify) return;
 
     // Save current values
     const currentValues = [...inputElement.tagify.value]; // Create a copy
 
-    // Destroy current Tagify instance
-    inputElement.tagify.destroy();
-
-    // Reinitialize with updated translations
-    autocompleteAffiliations(pair.input, pair.hidden, window.affiliationsData);
+    // Update whitelist without destroying the instance
+    inputElement.tagify.settings.whitelist = window.affiliationsData.map(item => item.name);
 
     // Restore previously selected values
-    if (currentValues && currentValues.length > 0) {
-      setTimeout(() => {
-        if (inputElement.tagify) {
-          inputElement.tagify.addTags(currentValues);
-        }
-      }, 50); // Small delay to ensure Tagify is fully initialized
-    }
+    inputElement.tagify.removeAllTags();
+    inputElement.tagify.addTags(currentValues);
   });
 }
 
@@ -82,30 +63,39 @@ $.getJSON("json/affiliations.json", function (data) {
  * @param {Affiliation[]} data - The affiliation data array used for autocompletion.
  */
 function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
-  var inputElement = $("#" + inputFieldId);
-  if (!inputElement.length) {
-    return;
-  }
-  var hiddenField = $("#" + hiddenFieldId);
+  const inputElement = $("#" + inputFieldId);
+  if (!inputElement.length) return;
 
-  // Initialize Tagify on the input element with specified options
-  var tagify = new Tagify(inputElement[0], {
+  const hiddenField = $("#" + hiddenFieldId);
+
+  const tagify = new Tagify(inputElement[0], {
     enforceWhitelist: false,
     duplicates: false,
     placeholder: translations.general.affiliation,
-    whitelist: data.map((item) => item.name),
+    whitelist: data.map(item => item.name),
     dropdown: {
       maxItems: 20,
       classname: "affiliation",
       enabled: 3,
-      closeOnSelect: true,
+      closeOnSelect: true
     },
     editTags: false,
     keepInvalidTags: false,
     autoComplete: {
-      enabled: true,
-    },
+      enabled: true
+    }
   });
+
+  /**
+   * Updates the hidden input field with the IDs of the selected affiliations.
+   */
+  function updateHiddenField() {
+    const allSelectedItems = tagify.value.map(tag => {
+      const item = data.find(affiliationItem => affiliationItem.name === tag.value);
+      return item ? item.id : "";
+    });
+    hiddenField.val(allSelectedItems.join(','));
+  }
 
   /**
    * Hides the Tagify dropdown menu.
@@ -114,45 +104,31 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     tagify.dropdown.hide.call(tagify.dropdown);
   }
 
-  /**
-   * Updates the hidden input field with the IDs of the selected affiliations.
-   */
-  function updateHiddenField() {
-    var allSelectedItems = tagify.value
-      .map(function (tag) {
-        var item = data.find(function (affiliationItem) {
-          return affiliationItem.name === tag.value;
-        });
-        return item ? item.id : "";
-      })
-    hiddenField.val(allSelectedItems.join(','));
-  }
-
   // Event listener for when a tag is added
   tagify.on("add", function (e) {
     updateHiddenField();
 
-    var selectedName = e.detail.data.value;
-    var isOnWhitelist = tagify.whitelist.some((item) => item === selectedName);
+    const selectedName = e.detail.data.value;
+    const isOnWhitelist = tagify.whitelist.includes(selectedName);
     if (!isOnWhitelist) {
       closeDropdown();
     }
   });
 
   // Event listener for when a tag is removed
-  tagify.on("remove", function (e) {
+  tagify.on("remove", function () {
     updateHiddenField();
+
+    // Clear tags if no contact person is selected
+    if (!document.getElementById("contact-person-field").value) {
+      tagify.removeAllTags();
+    }
   });
 
-  // Event listener for input changes to adjust the input field width
+  // Event listener for input changes to adjust the input field width dynamically
   tagify.on("input", function (e) {
     tagify.DOM.input.style.width = (e.detail.value.length + 1) * 8 + "px";
   });
-
-  // Remove all tags if the input field is not among the known fields
-  if (!["input-author-affiliation", "input-contributor-personaffiliation", "input-contributor-organisationaffiliation"].includes(inputFieldId)) {
-    tagify.removeAllTags();
-  }
 
   // Store the Tagify instance in the DOM element for later access
   inputElement[0].tagify = tagify;
