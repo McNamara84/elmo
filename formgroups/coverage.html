@@ -19,7 +19,8 @@
                         <div class="col-9 col-sm-9 col-md-10 col-lg-2 p-1">
                             <!-- Input fields for Latitude Min and Max -->
                             <label for="input-stc-latmin_1" class="form-label"
-                                data-translate="coverage.latitude">Latitude</label>
+                                data-translate="coverage.latitude">Latitude Min</label>
+                            <label for="input-stc-latmax_1" class="visually-hidden">Latitude Max</label>
                             <div class="input-group has-validation">
                                 <input type="text" class="form-control" id="input-stc-latmin_1" placeholder="Min"
                                     name="tscLatitudeMin[]" pattern="^-?(90(\.0+)?|[1-8]?\d(\.\d+)?)$">
@@ -33,7 +34,8 @@
                             </div>
                             <!-- Input fields for Longitude Min and Max -->
                             <label for="input-stc-longmin_1" class="form-label"
-                                data-translate="coverage.longitude">Longitude</label>
+                                data-translate="coverage.longitude">Longitude Min</label>
+                            <label for="input-stc-longmax_1" class="visually-hidden">Longitude Max</label>
                             <div class="input-group has-validation">
                                 <input type="text" class="form-control" id="input-stc-longmin_1" placeholder="Min"
                                     name="tscLongitudeMin[]" pattern="^-?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$">
@@ -62,8 +64,9 @@
                         </div>
                         <!-- Input fields for Date and Time -->
                         <div class="col-12 col-sm-12 col-md-8 col-lg-3 p-1">
-                            <label for="input-stc-datestart" class="form-label"
-                                data-translate="coverage.start">Start</label>
+                            <label for="input-stc-datestart" class="form-label" data-translate="coverage.start">Start
+                                Date</label>
+                            <label for="input-stc-timestart" class="visually-hidden">Start Time</label>
                             <div class="input-group has-validation">
                                 <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]"
                                     min="1900-01-01" max="2100-12-31">
@@ -74,7 +77,9 @@
                                 <div class="invalid-feedback" data-translate="coverage.dateTimeInvalid">Please enter a
                                     valid date and time!</div>
                             </div>
-                            <label for="input-stc-dateend" class="form-label" data-translate="coverage.end">End</label>
+                            <label for="input-stc-dateend" class="form-label" data-translate="coverage.end">End
+                                Date</label>
+                            <label for="input-stc-timeend" class="visually-hidden">End Time</label>
                             <div class="input-group has-validation">
                                 <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]"
                                     min="1900-01-01" max="2100-12-31">
