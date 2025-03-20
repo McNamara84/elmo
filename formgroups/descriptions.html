@@ -14,14 +14,17 @@
         <!-- Input field Abstract -->
         <div id="collapse-abstract" class="accordion-collapse collapse show" data-bs-parent="#accordion-description">
           <div class="accordion-body">
+            <label for="input-abstract" class="visually-hidden">
+              <span data-translate="descriptions.abstract">Abstract</span><span class="text-danger">*</span>
+            </label>
             <div class="input-group has-validation">
               <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
                 data-translate-placeholder="descriptions.abstractPlaceholder" id="input-abstract"
-                name="descriptionAbstract" required></textarea>
-              <label for="input-abstract" style="display: none;"><span
-                  data-translate="descriptions.abstract">Abstract</span><span class="text-danger">*</span></label>
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-description-abstract"></i></span>
+                name="descriptionAbstract" required aria-describedby="abstract-help"></textarea>
+              <span class="input-group-text">
+                <i class="bi bi-question-circle-fill" id="abstract-help"
+                  data-help-section-id="help-description-abstract"></i>
+              </span>
             </div>
           </div>
         </div>
