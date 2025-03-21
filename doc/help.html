@@ -19,917 +19,953 @@ include_once "../settings.php";
     <link rel="manifest" href="../site.webmanifest" />
 </head>
 
-<body data-bs-spy="scroll" data-bs-target="#nav-help-menu" data-bs-offset="120">
+<body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand navbar-light navbar-help-header sticky-top">
-        <div class="container">
-            <a class="navbar-brand text-white m-3" href="#">
-                Enhanced Laboratory Metadata Optimizer - Guide
-            </a>
-            <!-- Link to legal notice -->
-            <div class="navbar-collapse justify-content-end" id="navbar-help-menu">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="https://dataservices-cms.gfz.de/about-us/legal-notice"
-                            target="_blank" rel="noopener">
-                            Legal notice
-                        </a>
-                    </li>
-                </ul>
+    <nav class="navbar navbar-dark fixed-top navbar-help-header">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <button class="navbar-toggler ms-2" type="button" data-bs-toggle="offcanvas"
+                    data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a class="navbar-brand ms-3" href="#">ELMO User Guide</a>
+            </div>
+            <a class="nav-link text-white" href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
+                rel="noopener">Legal notice</a>
+            <div class="offcanvas offcanvas-start navbar-help-header text-white" tabindex="-1" id="offcanvasNavbar"
+                aria-labelledby="offcanvasNavbarLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Main Menu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                        aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#help-introduction"
+                                data-bs-dismiss="offcanvas">Introduction</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-resourceinformation" data-bs-dismiss="offcanvas">Resource
+                                Information</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-rights" data-bs-dismiss="offcanvas">Licenses and rights</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors</a>
+                        </li>
+                        <?php if ($showMslLabs): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-originatinglaboratory"
+                                data-bs-dismiss="offcanvas">Originating Laboratory</a>
+                        </li>
+                        <?php endif; ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-contributorpersons" data-bs-dismiss="offcanvas">Contributor
+                                Persons</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-contributorinstitutions"
+                                data-bs-dismiss="offcanvas">Contributor Institutions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-descriptions" data-bs-dismiss="offcanvas">Description(s)</a>
+                        </li>
+                        <?php if ($showMslVocabs): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-mslkeywords" data-bs-dismiss="offcanvas">EPOS MSL
+                                Keywords</a>
+                        </li>
+                        <?php endif; ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-scienceKeywords" data-bs-dismiss="offcanvas">Keywords</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-freeKeywords" data-bs-dismiss="offcanvas">Free Keywords</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-dates" data-bs-dismiss="offcanvas">Dates</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-tsc" data-bs-dismiss="offcanvas">Spatial and Temporal
+                                coverage</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-relatedwork" data-bs-dismiss="offcanvas">Related Work</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-fundingreference" data-bs-dismiss="offcanvas">Funding
+                                Reference</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
     <div class="container">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-xs-12 col-md-3" id="nav-help-menu">
-                <ul class="nav nav-pills flex-column">
-                    <li class="nav-item"><a class="nav-link active" href="#help-introduction">Introduction</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-resourceinformation">Resource Information</a>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="#help-rights">Licenses and rights</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-authors">Author(s)</a></li>
-                    <?php if ($showMslLabs): ?>
-                    <li class="nav-item"><a class="nav-link" href="#help-originatinglaboratory">Originating
-                            Laboratory</a></li>
-                    <?php endif; ?>
-                    <li class="nav-item"><a class="nav-link" href="#help-contributors">Contributor(s)</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-descriptions">Description(s)</a></li>
-                    <?php if ($showMslVocabs): ?>
-                    <li class="nav-item"><a class="nav-link" href="#help-mslkeywords">EPOS MSL Keywords</a></li>
-                    <?php endif; ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#help-keywords">Keywords</a>
-                        <ul class="nav flex-column ms-3">
-                            <li class="nav-item"><a class="nav-link" href="#help-scienceKeywords">GCMD Science
-                                    Keywords</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#help-platformsKeywords">GCMD Platforms
-                                    Keywords</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#help-instrumentsKeywords">GCMD Instruments
-                                    Keywords</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="#help-freeKeywords">Free Keywords</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-dates">Dates</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-tsc">Spatial and Temporal coverage</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-relatedwork">Related Work</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#help-fundingreference">Funding Reference</a></li>
-                </ul>
-            </nav>
-            <!-- page content -->
-            <div class="col-xs-12 col-md-9">
-                <!-- Introduction -->
-                <div id="help-introduction" class="section-content">
-                    <h3>Introduction</h3>
-                    <p class="lead">Translations exist for the metadata editor in various languages. You can see whether
-                        your
-                        language already exists in the language selection drop-down menu at the top right. However, the
-                        form must be filled out in english. There is also
-                        a switch for changing from light mode to dark mode for better contrast ratios.</p>
+        <!-- page content -->
+        <div class="col-xs-12">
+            <!-- Introduction -->
+            <div id="help-introduction" class="section-content">
+                <h3>Introduction</h3>
+                <p class="lead">Translations exist for the metadata editor in various languages. You can see whether
+                    your
+                    language already exists in the language selection drop-down menu at the top right. However, the
+                    form must be filled out in english. There is also
+                    a switch for changing from light mode to dark mode for better contrast ratios.</p>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup resource information -->
+            <div id="help-resourceinformation" class="section-content">
+                <div id="help-resourceinformation-fg">
+                    <h3>Resource Information</h3>
+                    <p>Please specify general metadata for the data set here. Mandatory
+                        fields are: Publication Year, Resource Type, Language of dataset, Title.
+                    </p>
+                    <p>By default, GFZ Data Services is the publisher. If this should not be the case, e.g. in some
+                        cooperation projects, please contact us for further advice. Note: the
+                        publisher will be named in the citation of the dataset as requested by the citation
+                        guidelines of DataCite.
+                    </p>
                 </div>
-                <div class="section-divider"></div>
-                <hr>
-                <!-- formgroup resource information -->
-                <div id="help-resourceinformation" class="section-content">
-                    <div id="help-resourceinformation-fg">
-                        <h3>Resource Information</h3>
-                        <p>Please specify general metadata for the data set here. Mandatory
-                            fields are: Publication Year, Resource Type, Language of dataset, Title.
-                        </p>
-                        <p>By default, GFZ Data Services is the publisher. If this should not be the case, e.g. in some
-                            cooperation projects, please contact us for further advice. Note: the
-                            publisher will be named in the citation of the dataset as requested by the citation
-                            guidelines of DataCite.
-                        </p>
-                    </div>
-                    <div id="help-resourceinformation-doi">
-                        <h4>DOI</h4>
-                        <p>The DOI is a unique string that identifies a resource. Format should be 10.ORGANISATION/ID.
-                            GFZ DataServices will register a DOI for your Dataset after submission and curation.
-                        </p>
-                        <p><strong>Optional field. Please leave this field empty if your dataset is not published
-                                yet.</strong></p>
-                    </div>
-                    <div id="help-resourceinformation-publicationyear">
-                        <h4>Publication Year</h4>
-                        <p>The year when the data was or will be made publicly available. In the case of datasets,
-                            “publish” is understood to mean making the data available on a specific date to the
-                            community of researchers. Values between 1901 and 2155 are allowed in the format YYYY.</p>
-                    </div>
-                    <div>
-                        <ul class="list-unstyled">
-                            <ul>
-                                <li>If that date cannot be determined, use the date of registration.
-                                </li>
-                                <li>If an embargo period is in effect, use the date when the embargo
-                                    period ends.</li>
-                                <li>If there is no standard publication year value, use the date
-                                    that would be preferred
-                                    from a citation perspective.</li>
-                            </ul>
-                    </div>
-                    <div id="help-resourceinformation-resourcetype">
-                        <h4>Resource Type</h4>
-                        <p>Please specify the type of Dataset here. See <a
-                                href="https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/"
-                                target="_blank">DataCite Documentation</a> for definition of the controlled list and
-                            examples.</p>
-
-                    </div>
-                    <div id="help-resourceinformation-version">
-                        <h4>Version</h4>
-                        <p>The version number or other identifier of the dataset. If your dataset is published for the
-                            first time, this field can be left empty. If it has been updated, specify the version number
-                            here.
-                            The suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
-                            changes in the dataset. Major changes typically require registration of a new DOI.
-                        </p>
-                        <p><strong>Optional field. If unsure, leave blank.</strong></p>
-                    </div>
-                    <div id="help-resourceinformation-language">
-                        <h4>Language of dataset</h4>
-                        <p>The primary language of the dataset. Choose from a list of supported languages. Default is
-                            English.</p>
-                    </div>
-                    <div id="help-resourceinformation-title">
-                        <h4>Title</h4>
-                        <p>The title of the dataset. Please note that the title shall describe the data and not repeat
-                            the title of the corresponding article! The first row is reserved for the main title. You
-                            can specify
-                            up to
-                            <?php echo $maxTitles-1; ?> additional titles if your dataset is known by multiple names
-                            or translations.
-                        </p>
-                    </div>
-                    <div id="help-resourceinformation-titletype">
-                        <h5>Title Type</h5>
-                        <p>Indicates the type of title being provided, such as an alternative title or translated title.
-                            Mandatory for every title except the main title in the first row.</p>
+                <div id="help-resourceinformation-doi">
+                    <h4>DOI</h4>
+                    <p>The DOI is a unique string that identifies a resource. Format should be 10.ORGANISATION/ID.
+                        GFZ DataServices will register a DOI for your Dataset after submission and curation.
+                    </p>
+                    <p><strong>Optional field. Please leave this field empty if your dataset is not published
+                            yet.</strong></p>
+                </div>
+                <div id="help-resourceinformation-publicationyear">
+                    <h4>Publication Year</h4>
+                    <p>The year when the data was or will be made publicly available. In the case of datasets,
+                        “publish” is understood to mean making the data available on a specific date to the
+                        community of researchers. Values between 1901 and 2155 are allowed in the format YYYY.</p>
+                </div>
+                <div>
+                    <ul class="list-unstyled">
                         <ul>
-                            <li><strong>Alternative Title:</strong> You can also add an alternative title if required.
+                            <li>If that date cannot be determined, use the date of registration.
                             </li>
-                            <li><strong>Translated Title:</strong> If the dataset is also to be published with a
-                                translated title, this title should have this title type.</li>
+                            <li>If an embargo period is in effect, use the date when the embargo
+                                period ends.</li>
+                            <li>If there is no standard publication year value, use the date
+                                that would be preferred
+                                from a citation perspective.</li>
                         </ul>
-                    </div>
                 </div>
-                <div class="section-divider"></div>
-                <hr>
-                <!-- formgroup rights & licenses -->
-                <div id="help-rights" class="section-content">
-                    <h3>Licenses and Rights</h3>
-                    <p>Rights information for the data set. Following the Guidelines for the Handling of Research Data
-                        of the GFZ German Research Centre for Geosciences for open science, we recommend a Creative
-                        Commons Attribution 4.0 (CC-BY) license whenever possible.</p>
-                    <p>Please choose between:
+                <div id="help-resourceinformation-resourcetype">
+                    <h4>Resource Type</h4>
+                    <p>Please specify the type of Dataset here. See <a
+                            href="https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/"
+                            target="_blank">DataCite Documentation</a> for definition of the controlled list and
+                        examples.</p>
+
+                </div>
+                <div id="help-resourceinformation-version">
+                    <h4>Version</h4>
+                    <p>The version number or other identifier of the dataset. If your dataset is published for the
+                        first time, this field can be left empty. If it has been updated, specify the version number
+                        here.
+                        The suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
+                        changes in the dataset. Major changes typically require registration of a new DOI.
+                    </p>
+                    <p><strong>Optional field. If unsure, leave blank.</strong></p>
+                </div>
+                <div id="help-resourceinformation-language">
+                    <h4>Language of dataset</h4>
+                    <p>The primary language of the dataset. Choose from a list of supported languages. Default is
+                        English.</p>
+                </div>
+                <div id="help-resourceinformation-title">
+                    <h4>Title</h4>
+                    <p>The title of the dataset. Please note that the title shall describe the data and not repeat
+                        the title of the corresponding article! The first row is reserved for the main title. You
+                        can specify
+                        up to
+                        <?php echo $maxTitles-1; ?> additional titles if your dataset is known by multiple names
+                        or translations.
+                    </p>
+                </div>
+                <div id="help-resourceinformation-titletype">
+                    <h5>Title Type</h5>
+                    <p>Indicates the type of title being provided, such as an alternative title or translated title.
+                        Mandatory for every title except the main title in the first row.</p>
                     <ul>
-                        <li><a href="https://creativecommons.org/licenses/by/4.0/ " target="_blank">Creative
-                                Commons Attribution 4.0 International</a>: Authorises the free use, distribution and
-                            adaptation of the work as long as the author is named.</li>
-                        <li><a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">Creative
-                                Commons Zero v1.0 Universal</a>: Waives all rights to the work so that it can be used
-                            without any restrictions.</li>
-                        <li><a href="https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt"
-                                target="_blank">European Union Public License 2.0</a>: An open source copyleft licence
-                            developed by the European Union to promote the distribution and use of software within the
-                            EU.</li>
-                        <li><a href="https://www.gnu.org/licenses/gpl-3.0-standalone.html" target="_blank">GNU General
-                                Public License v3.0 or later</a> (for Software): An open source copyleft licence that
-                            ensures that the source code remains freely available and that changes must be published
-                            under the same licence.</li>
-                        <li><a href="https://opensource.org/license/mit/" target="_blank">MIT License</a> (for
-                            Software): Allows free use, distribution and editing of the source code as long as the
-                            copyright information is retained.
+                        <li><strong>Alternative Title:</strong> You can also add an alternative title if required.
                         </li>
-                        <li><a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License 2.0</a>
-                            (for Software): Allows the free use and distribution of the source code as long as the
-                            licence conditions are complied with.</li>
-                        <li><a href="https://opensource.org/licenses/BSD-3-Clause" target="_blank">BSD 3-Clause
-                                License</a>
-                            (for Software) : A permissive license allowing redistribution and use in source and binary
-                            forms, with or without modification, as long as certain conditions are met.</li>
+                        <li><strong>Translated Title:</strong> If the dataset is also to be published with a
+                            translated title, this title should have this title type.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup rights & licenses -->
+            <div id="help-rights" class="section-content">
+                <h3>Licenses and Rights</h3>
+                <p>Rights information for the data set. Following the Guidelines for the Handling of Research Data
+                    of the GFZ German Research Centre for Geosciences for open science, we recommend a Creative
+                    Commons Attribution 4.0 (CC-BY) license whenever possible.</p>
+                <p>Please choose between:
+                <ul>
+                    <li><a href="https://creativecommons.org/licenses/by/4.0/ " target="_blank">Creative
+                            Commons Attribution 4.0 International</a>: Authorises the free use, distribution and
+                        adaptation of the work as long as the author is named.</li>
+                    <li><a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">Creative
+                            Commons Zero v1.0 Universal</a>: Waives all rights to the work so that it can be used
+                        without any restrictions.</li>
+                    <li><a href="https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt"
+                            target="_blank">European Union Public License 2.0</a>: An open source copyleft licence
+                        developed by the European Union to promote the distribution and use of software within the
+                        EU.</li>
+                    <li><a href="https://www.gnu.org/licenses/gpl-3.0-standalone.html" target="_blank">GNU General
+                            Public License v3.0 or later</a> (for Software): An open source copyleft licence that
+                        ensures that the source code remains freely available and that changes must be published
+                        under the same licence.</li>
+                    <li><a href="https://opensource.org/license/mit/" target="_blank">MIT License</a> (for
+                        Software): Allows free use, distribution and editing of the source code as long as the
+                        copyright information is retained.
+                    </li>
+                    <li><a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License 2.0</a>
+                        (for Software): Allows the free use and distribution of the source code as long as the
+                        licence conditions are complied with.</li>
+                    <li><a href="https://opensource.org/licenses/BSD-3-Clause" target="_blank">BSD 3-Clause
+                            License</a>
+                        (for Software) : A permissive license allowing redistribution and use in source and binary
+                        forms, with or without modification, as long as certain conditions are met.</li>
+                    <li>
+                        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">
+                            Creative Commons Attribution-NonCommercial 4.0 International
+                        </a>:
+                        Allows use, distribution, and adaptation of the work for non-commercial purposes only.
+                        <strong class="text-danger">This license requires prior consultation. Please clarify the
+                            usage with us in advance.</strong>
+                    </li>
+                </ul>
+                </p>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup authors -->
+            <div id="help-authors" class="section-content">
+                <div id="help-authors-fg">
+                    <h3>Author(s)</h3>
+                    <p> Please enter authors of the dataset here by entering their last and first name without any
+                        titles. Ideally you provide an ORCID. Entering an ORCID loads
+                        data from the corresponding ORCID profile. To add more authors, use the "add" button on the
+                        right. The order of the authors can be changed using drag & drop. </p>
+                    <p><strong>Please mark at least one author as contact person.</strong> (Person with knowledge of
+                        how to access, troubleshoot, or otherwise field issues related to the resource.)</p>
+                </div>
+                <div id="help-author-orcid">
+                    <h4>ORCID</h4>
+                    <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
+                        a valid ORCID in the format XXXX-XXXX-XXXX-XXXX (i.e. 0000-0001-5727-2427). If you do not
+                        have an ORCID iD yet, you can learn about it and register
+                        <a href="https://orcid.org/register" target="_blank">here</a>. If you enter a valid ORCID,
+                        an attempt will be made to fill in the remaining required fields automatically. Results are
+                        depending on the information provided in the ORCID profile.
+                    </p>
+                    <p><strong>Optional field.</strong></p>
+                </div>
+                <div id="help-author-affiliation">
+                    <h4>Affiliation</h4>
+                    <p>The organisational or institutional affiliation of the creator.</p>
+                    <p>It is recommended to select the affiliation from the list, if the required affiliation is not
+                        among the available options, it can be entered manually.</p>
+                </div>
+                <div>
+                    <h4>Contact Person(s)</h3>
+                        <p>Person with knowledge of how to access, troubleshoot, or otherwise field issues related
+                            to
+                            the resource. May also be "Point of Contact" in organisation that controls access to the
+                            resource. Please enter at least one contact person.</p>
+                        <p>After filling in the list of authors, the Contact Person can be selected by simply
+                            clicking the button on the left. The email address of the author, who is labelled as the
+                            contact person, must also be provided. The specification of a website is optional.</p>
+                        <h5>Website</h5>
+                        <p>Professional or specialized website, excluding any private websites. The specification of
+                            a
+                            website, such as that of your institution, offers further contact options in case of
+                            questions.</p>
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <?php if ($showMslLabs): ?>
+            <hr>
+            <!-- formgroup originating laboratory -->
+            <div id="help-originatinglaboratory" class="section-content">
+                <div id="help-originatinglaboratory-fg">
+                    <h3>Originating Laboratory</h3>
+                    <p>
+                        Please specify the laboratory from which the data originates. This is essential for retrieval of
+                        data publications from a laboratory and improving the findability of your data.<br>
+                        You can choose from a list of the EPOS multi-scale laboratories. <a
+                            href="https://epos-msl.uu.nl/labs/map" target="_blank">This list</a> is provided and
+                        maintained by Utrecht University.
+                    </p>
+                </div>
+
+                <div id="help-originatinglaboratory-name">
+                    <h4>Name of the originating laboratory</h4>
+                    <p>Click on the input field to browse the list of multi-scale laboratories or start typing to
+                        filter.</p>
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <?php endif; ?>
+            <hr>
+            <!-- formgroup contributor persons -->
+            <div id="help-contributorpersons" class="section-content">
+                <div id="help-contributorpersons-fg">
+                    <h3>Contributor Persons</h3>
+                    <p>
+                        A contributor person is a person responsible for collecting, managing, distributing, or
+                        otherwise contributing to the development of the resource. To add more than one contributor, use
+                        the "add" button on the right.
+                    </p>
+                    <p>
+                        With <code>Contributing Person(s)</code> you have the possibility to acknowledge additional
+                        persons or institutions related to the dataset which you would normally not mention as authors.
+                        These are not named in the citation but are always related to the dataset and findable just as
+                        all the other metadata fields.
+                    </p>
+                    <p><strong>Optional field.</strong></p>
+                </div>
+                <div id="help-contributorpersons-orcid">
+                    <h4>ORCID</h4>
+                    <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
+                        a valid ORCID in form of XXXX-XXXX-XXXX-XXX(X) (i.e. 0000-0001-5727-2427). You can find your
+                        colleagues' ORCID on the <a href="https://orcid.org/orcid-search/search" target="_blank">ORCID
+                            search page</a>. If you enter a valid ORCID, an attempt will be
+                        made to fill in the remaining required fields automatically. Results are depending on the
+                        information provided in the ORCID profile.</p>
+                    <p><strong>Optional field.</strong></p>
+                </div>
+                <div id="help-contributorpersons-role">
+                    <h4>Roles</h4>
+                    <p>The role of the contributing person(s) in the creation of the resource. Please choose one or
+                        more roles from the controlled list provided by DataCite.</p>
+                    <ul>
                         <li>
-                            <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">
-                                Creative Commons Attribution-NonCommercial 4.0 International
-                            </a>:
-                            Allows use, distribution, and adaptation of the work for non-commercial purposes only.
-                            <strong class="text-danger">This license requires prior consultation. Please clarify the
-                                usage with us in advance.</strong>
+                            <strong>Data Collector: </strong>Person responsible for finding or gathering/collecting
+                            data under the guidelines of the author(s) or Principal Investigator (PI).
                         </li>
+                        <li>
+                            <strong>Data Curator: </strong>Person tasked with reviewing, enhancing, cleaning, or
+                            standardizing metadata and the associated data submitted for storage, use, and
+                            maintenance within a data center or repository; While the "DataManager" is concerned
+                            with digital maintenance, the DataCurator's role encompasses quality assurance focused
+                            on content and metadata. This includes checking whether the submitted dataset is
+                            complete, with all files and components as described by submitter, whether the metadata
+                            is standardized to appropriate systems and schema, whether specialized metadata is
+                            needed to add value and ensure access across disciplines, and determining how the
+                            metadata might map to search engines, database products, and automated feeds.
+                        </li>
+                        <li>
+                            <strong>Data Manager: </strong>Person responsible for maintaining the finished resource.
+                            The work done by this person ensures that the resource is periodically "refreshed" in
+                            terms of software/hardware support, is kept available or is protected from unauthorized
+                            access, is stored in accordance with industry standards, and is handled in accordance
+                            with the records management requirements applicable to it.
+                        </li>
+                        <li>
+                            <strong>Editor: </strong>A person who oversees the details related to the publication
+                            format of the resource. Note: if the Editor is to be credited in place of multiple
+                            authors, the Editor's name may be supplied as Author, with "(Ed.)" appended to the name.
+                        </li>
+                        <li>
+                            <strong>Producer: </strong>Typically a person or organisation responsible for the
+                            artistry and form of a media product. In the data industry, this may be a company
+                        </li>
+                        <li>
+                            <strong>Project Leader: </strong>Person officially designated as head of project team or
+                            sub-project team instrumental in the work necessary to development of the resource.
+                        </li>
+                        <li>
+                            <strong>Project Manager: </strong>Person officially designated as manager of a project.
+                            Project may on consist of one or many project teams and sub-teams. The manager of a
+                            project normally has more administrative responsibility than actual work involvement.
+                        </li>
+                        <li>
+                            <strong>Member: </strong>Person on the membership list of a designated project/project
+                            team. This vocabulary may or may not indicate the quality, quantity, or substance of the
+                            person's involvement.
+                        </li>
+                        <li>
+                            <strong>Related Person: </strong>A person without a specifically defined role in the
+                            development of the resource, but who is someone the author wishes to recognize. This
+                            person could be an author's intellectual mentor, a person providing intellectual
+                            leadership in the discipline or subject domain, etc.
+                        </li>
+                        <li>
+                            <strong>Researcher: </strong>A person involved in analyzing data or the results of an
+                            experiment or formal study. May indicate an intern or assistant to one of the authors
+                            who helped with research but who was not so “key” as to be listed as an author.
+                        </li>
+                        <li>
+                            <strong>Rights Holder: </strong>Person owning or managing property rights, including
+                            intellectual property rights over the resource.
+                        </li>
+                        <li>
+                            <strong>Sponsor: </strong>Person that issued a contract or under the auspices of which a
+                            work has been written, printed, published, developed, etc. Includes organisations that
+                            provide in-kind support, through donation, provision of people or a facility or
+                            instrumentation necessary for the development of the resource, etc.
+                        </li>
+                        <li>
+                            <strong>Supervisor: </strong>Designated administrator over one or more groups/teams
+                            working to produce a resource or over one or more steps of a development process.
+                        </li>
+                        <li>
+                            <strong>WorkPackage Leader: </strong>A Work Package is a recognized data product, not
+                            all of which is included in publication. The package, instead, may include notes,
+                            discarded documents, etc. The Work Package Leader is responsible for ensuring the
+                            comprehensive contents, versioning, and availability of the Work Package during the
+                            development of the resource.
+                        </li>
+                        <li>
+                            <strong>Other: </strong>Any person making a significant contribution to the development
+                            and/or maintenance of the resource, but whose contribution does not
+                        </li>
+                    </ul>
+                </div>
+                <div id="help-contributorpersons-affiliation">
+                    <h4>Affiliation</h4>
+                    <p>The organisational or institutional affiliation of the person/s.</p>
+                    <p>It is recommended to select the affiliation from the list. If the required affiliation is not
+                        among the available options, it can be entered manually.</p>
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup contributor institutions -->
+            <div id="help-contributorinstitutions" class="section-content">
+                <div id="help-contributorinstitutions-fg">
+                    <h3>Contributor Institutions</h3>
+                    <p>
+                        A contributor institution is an organisation responsible for collecting, managing, distributing,
+                        or otherwise contributing to the development of the resource. To add more than one contributor,
+                        use the "add" button on the right.
+                    </p>
+                    <p>
+                        With <code>Contributing Institution(s)</code> you have the possibility to acknowledge additional
+                        persons or institutions related to the dataset which you would normally not mention as authors.
+                        These are not named in the citation but are always related to the dataset and findable just as
+                        all the other metadata fields.
+                    </p>
+                    <p><strong>Optional field.</strong></p>
+                </div>
+                <div id="help-contributorinstitutions-organisationname">
+                    <h4>Organisation Name</h4>
+                    <p>The name of the institution.</p>
+                </div>
+                <div id="help-contributorinstitutions-organisationrole">
+                    <h4>Roles</h4>
+                    <p>The role of the contributor organisation/s in the creation of the resource. Please choose one
+                        or more roles from the controlled list values provided by DataCite:</p>
+                    <ul>
+                        <li>
+                            <strong>Data Collector: </strong>Institution responsible for finding or
+                            gathering/collecting data under the guidelines of the author(s) or Principal
+                            Investigator (PI).
+                        </li>
+                        <li>
+                            <strong>Data Manager: </strong>Institution responsible for maintaining the finished
+                            resource. The work done by this person ensures that the resource is periodically
+                            "refreshed" in terms of software/hardware support, is kept available or is protected
+                            from unauthorized access, is stored in accordance with industry standards, and is
+                            handled in accordance with the records management requirements applicable to it.
+                        </li>
+                        <li>
+                            <strong>Distributor: </strong>Institution tasked with responsibility to
+                            generate/disseminate copies of the resource in either electronic or print form. Works
+                            stored in more than one archive/repository may credit each as a distributor.
+                        </li>
+                        <li>
+                            <strong>Hosting Institution: </strong>Typically, the organisation allowing the resource
+                            to be available on the internet through the provision of its hardware/software/operating
+                            support. May also be used for an organisation that stores the data offline. If your data
+                            was derived from a laboratory, please include the name of the laboratory (with
+                            affiliation) as contributor with the role “HostingInstitution”. There may be two hosting
+                            institutions if the data or work is stored in both. Often a data centre.
+                        </li>
+                        <li>
+                            <strong>Producer: </strong>Typically a organisation responsible for the artistry and
+                            form of a media product. In the data industry, this may be a company
+                        </li>
+                        <li>
+                            <strong>Registration Agency: </strong>Institution/organisation officially appointed by a
+                            Registration Authority to handle specific tasks within a defined area of responsibility.
+                            DataCite is a Registration Agency for the International DOI Foundation (IDF). One of
+                            Data Cite's tasks is to assign DOI prefixes to the allocating agents who then assign the
+                            full, specific character string to data clients, provide metadata back to the Data Cite
+                            registry, etc.
+                        </li>
+                        <li>
+                            <strong>Registration Authority: </strong>A standards-setting body from which
+                            Registration Agencies obtain official recognition and guidance. The IDF serves as the
+                            Registration Authority for the International Standards Organisation (ISO) in the
+                            area/domain of Digital Object Identifiers.
+                        </li>
+                        <li>
+                            <strong>Research Group: </strong>Typically refers to a group of individuals with a lab,
+                            department, or on division; the group has a particular, defined focus of activity. May
+                            operate at a narrower level of scope; may or may not hold less administrative
+                            responsibility than a project team.
+                        </li>
+                        <li>
+                            <strong>Rights Holder: </strong>Institution owning or managing property rights,
+                            including intellectual property rights over the resource.
+                        </li>
+                        <li>
+                            <strong>Sponsor: </strong>Organisation that issued a contract or under the auspices of
+                            which a work has been written, printed, published, developed, etc. Includes
+                            organisations that provide in-kind support, through donation, provision of people or a
+                            facility or instrumentation necessary for the development of the resource, etc.
+                        </li>
+                        <li>
+                            <strong>Other: </strong>Any institution making a significant contribution to the
+                            development and/or maintenance of the resource, but whose contribution does not
+                        </li>
+                    </ul>
+                </div>
+                <div id="help-contributorinstitutions-affiliation">
+                    <h4>Affiliation</h4>
+                    <p>The organisational or institutional affiliation of the Institution.</p>
+                    <p>It is recommended to select the affiliation from the list. If the required affiliation is not
+                        among the available options, it can be entered manually.</p>
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup descriptions -->
+            <div id="help-descriptions" class="section-content">
+                <div id="help-descriptions-fg">
+                    <h3>Descriptions</h3>
+                    <p>
+                        Filling in the description fields greatly improves the discoverability of your data
+                        publication.<br>
+                        The abstract is a mandatory field, because it is (just like the abstract of a paper) highly
+                        valuable
+                        to other scholars in finding your data and then determining whether or not the resource is
+                        worth investigating further, re-using, or validating.<br>
+                        <strong>Please keep in mind that the descriptions should describe the resource itself and
+                            not the corresponding article.</strong>
+                    </p>
+                </div>
+                <div id="help-description-abstract">
+                    <h4>Abstract</h4>
+                    <p>A brief description of the resource and the context in which the resource was created.
+                        <strong>Please
+                            keep in mind that this abstract is describing the resource itself and should not simply
+                            be
+                            the abstract of a corresponding article.</strong><br>
+                        When writing the abstract, please keep in mind:
+                    <ul>
+                        <li>The audience is the broader scientific community, not only your own subdomain.</li>
+                        <li>Although your abstract must be focused on the data, we recommend beginning with the
+                            description of the original purpose of data collection and a short introduction to the
+                            project or method. Please do not provide the abstract of the paper here.</li>
+                        <li>Please provide a technical description of the data generation (e.g. sampling method,
+                            location, method of analysis, detection limits, data processing steps, conversions,
+                            etc.), partners/partner institutions, and a summary of datasets included in this data
+                            publication (e.g. “7 boreholes reaching depths from 2-14 m” or “This data set
+                            encompasses broadband seismic data from c. 20 stations in Northern Chile, recorded since
+                            2006” or “… paleomagnetic and rock magnetic dataset from two Calypso giant piston cores
+                            collected at the crest of the Bellsund (GS191-01PC) and Isfjorden (GS191-02PC) sediment
+                            drifts during the Eurofleets-2 PREPARED cruise, on board the R/V G.O. Sars (Lucchi et
+                            al., 2014).”). </li>
+                        <li>Please specify the data formats and form (e.g. do you have several individual datasets
+                            or
+                            combined files, e.g. as zip folder?). In case of complex (zip)-folder structures, we
+                            recommend
+                            to provide the file overview in the data description or as additional document “List of
+                            files”
+                            (e.g. http://doi.org/10.5880/GFZ.4.1.2019.005)</li>
                     </ul>
                     </p>
                 </div>
-                <div class="section-divider"></div>
-                <hr>
-                <!-- formgroup authors -->
-                <div id="help-authors" class="section-content">
-                    <div id="help-authors-fg">
-                        <h3>Author(s)</h3>
-                        <p> Please enter authors of the dataset here by entering their last and first name without any
-                            titles. Ideally you provide an ORCID. Entering an ORCID loads
-                            data from the corresponding ORCID profile. To add more authors, use the "add" button on the
-                            right. The order of the authors can be changed using drag & drop. </p>
-                        <p><strong>Please mark at least one author as contact person.</strong> (Person with knowledge of
-                            how to access, troubleshoot, or otherwise field issues related to the resource.)</p>
-                    </div>
-                    <div id="help-author-orcid">
-                        <h4>ORCID</h4>
-                        <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
-                            a valid ORCID in the format XXXX-XXXX-XXXX-XXXX (i.e. 0000-0001-5727-2427). If you do not
-                            have an ORCID iD yet, you can learn about it and register
-                            <a href="https://orcid.org/register" target="_blank">here</a>. If you enter a valid ORCID,
-                            an attempt will be made to fill in the remaining required fields automatically. Results are
-                            depending on the information provided in the ORCID profile.
-                        </p>
-                        <p><strong>Optional field.</strong></p>
-                    </div>
-                    <div id="help-author-affiliation">
-                        <h4>Affiliation</h4>
-                        <p>The organisational or institutional affiliation of the creator.</p>
-                        <p>It is recommended to select the affiliation from the list, if the required affiliation is not
-                            among the available options, it can be entered manually.</p>
-                    </div>
-                    <div>
-                        <h4>Contact Person(s)</h3>
-                            <p>Person with knowledge of how to access, troubleshoot, or otherwise field issues related
-                                to
-                                the resource. May also be "Point of Contact" in organisation that controls access to the
-                                resource. Please enter at least one contact person.</p>
-                            <p>After filling in the list of authors, the Contact Person can be selected by simply
-                                clicking the button on the left. The email address of the author, who is labelled as the
-                                contact person, must also be provided. The specification of a website is optional.</p>
-                            <h5>Website</h5>
-                            <p>Professional or specialized website, excluding any private websites. The specification of
-                                a
-                                website, such as that of your institution, offers further contact options in case of
-                                questions.</p>
-                    </div>
+                <div id="help-description-methods">
+                    <h4>Methods</h4>
+                    <p>The methodology employed for the study or research.</p>
                 </div>
-                <div class="section-divider"></div>
-                <?php if ($showMslLabs): ?>
-                <hr>
-                <!-- formgroup originating laboratory -->
-                <div id="help-originatinglaboratory" class="section-content">
-                    <div id="help-originatinglaboratory-fg">
-                        <h3>Originating Laboratory</h3>
-                        <p>
-                            Please specify the laboratory from which the data originates. This is essential for
-                            retrieval of data publications from a laboratory and improving the findability of your
-                            data.<br>
-                            You can choose from a list of the EPOS multi-scale laboratories.
-                            <a href="https://epos-msl.uu.nl/labs/list"
-                                target="_blank">This list</a> is provided and maintained by Utrecht University.
-                        </p>
-                    </div>
-
-                    <div id="help-originatinglaboratory-name">
-                        <h4>Name of the originating laboratory</h4>
-                        <p>Click on the input field to browse the list of multi-scale laboratories or start typing to
-                            filter.</p>
-                    </div>
+                <div id="help-description-technicalinfo">
+                    <h4>Technical Information</h4>
+                    <p>Detailed information that may be associated with design, implementation, operation, use,
+                        and/or maintenance of a process, system, or instrument.</p>
                 </div>
-                <div class="section-divider"></div>
-                <?php endif; ?>
-                <hr>
-                <!-- formgroup contributors -->
-                <div id="help-contributors" class="section-content">
-                    <div id="help-contributors-fg">
-                        <h3>Contributors</h3>
-                        <p>
-                            A contributor is an institution or a person responsible for collecting, managing,
-                            distributing, or otherwise contributing to the development of the resource. To add more than
-                            one contributor, use the "add" button on the right.
-                        </p>
-                        <p>
-                            With <code>Contributing Person(s)</code> or <code>Contributing Institution(s)</code> you
-                            have the possibility
-                            to acknowledge additional persons or institutions related to the dataset which you would
-                            normally not mention as authors. These are not named in the citation but are always related
-                            to the dataset and findable just as all the other metadata fields.
-                        </p>
-                        <p><strong>Optional field.</strong></p>
-                    </div>
-                    <div>
-                        <h4>Contributing Person(s)</h4>
-                    </div>
-                    <div id="help-contributor-role">
-                        <h5>Roles (Person)</h5>
-                        <p>The role of the contributing person/s in the creation of the resource. Please choose one or
-                            more roles from the controlled list provided by DataCite.</p>
-                        <ul>
-                            <li>
-                                <strong>Data Collector: </strong>Person responsible for finding or gathering/collecting
-                                data under the guidelines of the author(s) or Principal Investigator (PI).
-                            </li>
-                            <li>
-                                <strong>Data Curator: </strong>Person tasked with reviewing, enhancing, cleaning, or
-                                standardizing metadata and the associated data submitted for storage, use, and
-                                maintenance within a data center or repository; While the "DataManager" is concerned
-                                with digital maintenance, the DataCurator's role encompasses quality assurance focused
-                                on content and metadata. This includes checking whether the submitted dataset is
-                                complete, with all files and components as described by submitter, whether the metadata
-                                is standardized to appropriate systems and schema, whether specialized metadata is
-                                needed to add value and ensure access across disciplines, and determining how the
-                                metadata might map to search engines, database products, and automated feeds.
-                            </li>
-                            <li>
-                                <strong>Data Manager: </strong>Person responsible for maintaining the finished resource.
-                                The work done by this person ensures that the resource is periodically "refreshed" in
-                                terms of software/hardware support, is kept available or is protected from unauthorized
-                                access, is stored in accordance with industry standards, and is handled in accordance
-                                with the records management requirements applicable to it.
-                            </li>
-                            <li>
-                                <strong>Editor: </strong>A person who oversees the details related to the publication
-                                format of the resource. Note: if the Editor is to be credited in place of multiple
-                                authors, the Editor's name may be supplied as Author, with "(Ed.)" appended to the name.
-                            </li>
-                            <li>
-                                <strong>Producer: </strong>Typically a person or organisation responsible for the
-                                artistry and form of a media product. In the data industry, this may be a company
-                            </li>
-                            <li>
-                                <strong>Project Leader: </strong>Person officially designated as head of project team or
-                                sub-project team instrumental in the work necessary to development of the resource.
-                            </li>
-                            <li>
-                                <strong>Project Manager: </strong>Person officially designated as manager of a project.
-                                Project may on consist of one or many project teams and sub-teams. The manager of a
-                                project normally has more administrative responsibility than actual work involvement.
-                            </li>
-                            <li>
-                                <strong>Member: </strong>Person on the membership list of a designated project/project
-                                team. This vocabulary may or may not indicate the quality, quantity, or substance of the
-                                person's involvement.
-                            </li>
-                            <li>
-                                <strong>Related Person: </strong>A person without a specifically defined role in the
-                                development of the resource, but who is someone the author wishes to recognize. This
-                                person could be an author's intellectual mentor, a person providing intellectual
-                                leadership in the discipline or subject domain, etc.
-                            </li>
-                            <li>
-                                <strong>Researcher: </strong>A person involved in analyzing data or the results of an
-                                experiment or formal study. May indicate an intern or assistant to one of the authors
-                                who helped with research but who was not so “key” as to be listed as an author.
-                            </li>
-                            <li>
-                                <strong>Rights Holder: </strong>Person owning or managing property rights, including
-                                intellectual property rights over the resource.
-                            </li>
-                            <li>
-                                <strong>Sponsor: </strong>Person that issued a contract or under the auspices of which a
-                                work has been written, printed, published, developed, etc. Includes organisations that
-                                provide in-kind support, through donation, provision of people or a facility or
-                                instrumentation necessary for the development of the resource, etc.
-                            </li>
-                            <li>
-                                <strong>Supervisor: </strong>Designated administrator over one or more groups/teams
-                                working to produce a resource or over one or more steps of a development process.
-                            </li>
-                            <li>
-                                <strong>WorkPackage Leader: </strong>A Work Package is a recognized data product, not
-                                all of which is included in publication. The package, instead, may include notes,
-                                discarded documents, etc. The Work Package Leader is responsible for ensuring the
-                                comprehensive contents, versioning, and availability of the Work Package during the
-                                development of the resource.
-                            </li>
-                            <li>
-                                <strong>Other: </strong>Any person making a significant contribution to the development
-                                and/or maintenance of the resource, but whose contribution does not
-                            </li>
-                        </ul>
-                    </div>
-                    <div id="help-contributor-orcid">
-                        <h5>ORCID</h5>
-                        <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
-                            a valid ORCID in form of XXXX-XXXX-XXXX-XXX(X) (i.e. 0000-0001-5727-2427). You can find your
-                            colleagues' ORCID on the <a href="https://orcid.org/orcid-search/search"
-                                target="_blank">ORCID search page</a>. If you enter a valid ORCID, an attempt will be
-                            made to fill in the remaining required fields automatically. Results are depending on the
-                            information provided in the ORCID profile.</p>
-                        <p><strong>Optional field.</strong></p>
-                    </div>
-                    <div id="help-contributor-affiliation">
-                        <h5>Affiliation</h5>
-                        <p>The organisational or institutional affiliation of the person/s.</p>
-                        <p>It is recommended to select the affiliation from the list. If the required affiliation is not
-                            among the available options, it can be entered manually.</p>
-                    </div>
-                    <div>
-                        <h4>Contributing Institutions(s)</h4>
-                    </div>
-                    <div id="help-contributor-organisationname">
-                        <h5>Organisation Name</h5>
-                        <p>The name of the institution.</p>
-                    </div>
-                    <div id="help-contributor-organisationrole">
-                        <h5>Roles (Organisation)</h5>
-                        <p>The role of the contributor organisation/s in the creation of the resource. Please choose one
-                            or more roles from the controlled list values provided by DataCite:</p>
-                        <ul>
-                            <li>
-                                <strong>Data Collector: </strong>Institution responsible for finding or
-                                gathering/collecting data under the guidelines of the author(s) or Principal
-                                Investigator (PI).
-                            </li>
-                            <li>
-                                <strong>Data Manager: </strong>Institution responsible for maintaining the finished
-                                resource. The work done by this person ensures that the resource is periodically
-                                "refreshed" in terms of software/hardware support, is kept available or is protected
-                                from unauthorized access, is stored in accordance with industry standards, and is
-                                handled in accordance with the records management requirements applicable to it.
-                            </li>
-                            <li>
-                                <strong>Distributor: </strong>Institution tasked with responsibility to
-                                generate/disseminate copies of the resource in either electronic or print form. Works
-                                stored in more than one archive/repository may credit each as a distributor.
-                            </li>
-                            <li>
-                                <strong>Hosting Institution: </strong>Typically, the organisation allowing the resource
-                                to be available on the internet through the provision of its hardware/software/operating
-                                support. May also be used for an organisation that stores the data offline. If your data
-                                was derived from a laboratory, please include the name of the laboratory (with
-                                affiliation) as contributor with the role “HostingInstitution”. There may be two hosting
-                                institutions if the data or work is stored in both.
-                                Often a data centre (if that data centre is not the
-                            </li>
-                            <li>
-                                <strong>Producer: </strong>Typically a organisation responsible for the artistry and
-                                form of a media product. In the data industry, this may be a company
-                            </li>
-                            <li>
-                                <strong>Registration Agency: </strong>Institution/organisation officially appointed by a
-                                Registration Authority to handle specific tasks within a defined area of responsibility.
-                                DataCite is a Registration Agency for the International DOI Foundation (IDF). One of
-                                Data Cite's tasks is to assign DOI prefixes to the allocating agents who then assign the
-                                full, specific character string to data clients, provide metadata back to the Data Cite
-                                registry, etc.
-                            </li>
-                            <li>
-                                <strong>Registration Authority: </strong>A standards-setting body from which
-                                Registration Agencies obtain official recognition and guidance. The IDF serves as the
-                                Registration Authority for the International Standards Organisation (ISO) in the
-                                area/domain of Digital Object Identifiers.
-                            </li>
-                            <li>
-                                <strong>Research Group: </strong>Typically refers to a group of individuals with a lab,
-                                department, or on division; the group has a particular, defined focus of activity. May
-                                operate at a narrower level of scope; may or may not hold less administrative
-                                responsibility than a project team.
-                            </li>
-                            <li>
-                                <strong>Rights Holder: </strong>Institution owning or managing property rights,
-                                including intellectual property rights over the resource.
-                            </li>
-                            <li>
-                                <strong>Sponsor: </strong>Organisation that issued a contract or under the auspices of
-                                which a work has been written, printed, published, developed, etc. Includes
-                                organisations that provide in-kind support, through donation, provision of people or a
-                                facility or instrumentation necessary for the development of the resource, etc.
-                            </li>
-                            <li>
-                                <strong>Other: </strong>Any institution making a significant contribution to the
-                                development and/or maintenance of the resource, but whose contribution does not
-                            </li>
-                        </ul>
-                    </div>
-                    <div id="help-contributor-organisationaffiliation">
-                        <h5>Affiliation</h5>
-                        <p>The organisational or institutional affiliation of the Institution.</p>
-                        <p>It is recommended to select the affiliation from the list. If the required affiliation is not
-                            among the available options, it can be entered manually.</p>
-                    </div>
+                <div id="help-description-other">
+                    <h4>Other</h4>
+                    <p>Other description information that does not fit into an existing category.</p>
                 </div>
-                <div class="section-divider"></div>
-                <hr>
-                <!-- formgroup descriptions -->
-                <div id="help-descriptions" class="section-content">
-                    <div id="help-descriptions-fg">
-                        <h3>Descriptions</h3>
-                        <p>
-                            Filling in the description fields greatly improves the discoverability of your data
-                            publication.<br>
-                            The abstract is a mandatory field, because it is (just like the abstract of a paper) highly
-                            valuable
-                            to other scholars in finding your data and then determining whether or not the resource is
-                            worth investigating further, re-using, or validating.<br>
-                            <strong>Please keep in mind that the descriptions should describe the resource itself and
-                                not the corresponding article.</strong>
-                        </p>
-                    </div>
-                    <div id="help-description-abstract">
-                        <h4>Abstract</h4>
-                        <p>A brief description of the resource and the context in which the resource was created.
-                            <strong>Please
-                                keep in mind that this abstract is describing the resource itself and should not simply
-                                be
-                                the abstract of a corresponding article.</strong><br>
-                            When writing the abstract, please keep in mind:
-                        <ul>
-                            <li>The audience is the broader scientific community, not only your own subdomain.</li>
-                            <li>Although your abstract must be focused on the data, we recommend beginning with the
-                                description of the original purpose of data collection and a short introduction to the
-                                project or method. Please do not provide the abstract of the paper here.</li>
-                            <li>Please provide a technical description of the data generation (e.g. sampling method,
-                                location, method of analysis, detection limits, data processing steps, conversions,
-                                etc.), partners/partner institutions, and a summary of datasets included in this data
-                                publication (e.g. “7 boreholes reaching depths from 2-14 m” or “This data set
-                                encompasses broadband seismic data from c. 20 stations in Northern Chile, recorded since
-                                2006” or “… paleomagnetic and rock magnetic dataset from two Calypso giant piston cores
-                                collected at the crest of the Bellsund (GS191-01PC) and Isfjorden (GS191-02PC) sediment
-                                drifts during the Eurofleets-2 PREPARED cruise, on board the R/V G.O. Sars (Lucchi et
-                                al., 2014).”). </li>
-                            <li>Please specify the data formats and form (e.g. do you have several individual datasets
-                                or
-                                combined files, e.g. as zip folder?). In case of complex (zip)-folder structures, we
-                                recommend
-                                to provide the file overview in the data description or as additional document “List of
-                                files”
-                                (e.g. http://doi.org/10.5880/GFZ.4.1.2019.005)</li>
-                        </ul>
-                        </p>
-                    </div>
-                    <div id="help-description-methods">
-                        <h4>Methods</h4>
-                        <p>The methodology employed for the study or research.</p>
-                    </div>
-                    <div id="help-description-technicalinfo">
-                        <h4>Technical Information</h4>
-                        <p>Detailed information that may be associated with design, implementation, operation, use,
-                            and/or maintenance of a process, system, or instrument.</p>
-                    </div>
-                    <div id="help-description-other">
-                        <h4>Other</h4>
-                        <p>Other description information that does not fit into an existing category.</p>
-                    </div>
-                </div>
-                <div class="section-divider"></div>
-                <?php if ($showMslVocabs): ?>
-                <hr>
-                <!-- formgroup MSL Keywords -->
-                <div id="help-mslkeywords" class="section-content">
-                    <div id="help-mslKeywords-keyword">
-                        <h3>EPOS Multi-Scale Laboratories Keywords</h3>
-                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
-                            start typing to use the autocomplete function. By adding terms like these, you make it much
-                            easier for us to find your data and to make it discoverable in this catalogue and the EPOS
-                            data
-                            portal.</p>
-                        <p>
-                            The selectable keywords are taken from <a target="_blank"
-                                href="https://epos-msl.uu.nl/keyword-selector">EPOS Multi-Scale Laboratories
-                                vocabularies</a>,
-                            available on <a target="_blank"
-                                href="https://github.com/UtrechtUniversity/msl_vocabularies">GitHub</a>.
-                        </p>
-                    </div>
-                    <div id="help-mslKeywords-keywordviewer">
-                        <h4>Keyword Viewer</h4>
-                        <p>Please try to choose your keywords as specific as possible. Always check if there is a
-                            more fitting keyword further down the hierarchy. Definitions of keywords can be read via
-                            mouse
-                            over, if provided by the thesaurus maintainer.</p>
-                        <p>To open the hierarchy ("tree"), click on the small arrow or double-click the keyword.
-                            Choose a keyword by clicking on it and thereby checking the checkbox. The keyword is than
-                            automatically added. Selected keywords have a checkmark in their checkbox.</p>
-                        <p>You can also use the search bar on top. It searches the keywords and their definitions or
-                            descriptions.</p>
-                    </div>
-                </div>
-                <div class="section-divider"></div>
-                <?php endif; ?>
-                <hr>
-                <!-- formgroup GCMD Platforms Keywords -->
-                <div id="help-platformsKeywords" class="section-content">
-                    <div id="help-gcmd-platforms-keyword">
-                        <h3>GCMD Platforms Keywords</h3>
-                        <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
-                            start
-                            typing to use the autocomplete function. </p>
-                        <p>GCMD Platforms are important for identifying the sources of data collection. We recommend
-                            selecting relevant platform keywords to provide context about how your dataset was
-                            acquired.
-                        </p>
-                    </div>
-                </div>
-                <!-- formgroup GCMD Instruments Keywords -->
-                <div id="help-instrumentsKeywords" class="section-content">
-                    <div id="help-gcmd-instruments-keyword">
-                        <h3>GCMD Instruments Keywords</h3>
-                        <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
-                            start
-                            typing to use the autocomplete function. </p>
-                        <p>GCMD Instruments help specify the tools used for data collection. We encourage you to
-                            select
-                            appropriate instrument keywords to give users a clear understanding of how your data was
-                            measured or observed.</p>
-                    </div>
-                </div>
-                <!-- formgroup GCMD Science Keywords -->
-                <div id="help-scienceKeywords" class="section-content">
-                    <div id="help-scienceKeywords-keyword">
-                        <h3>GCMD Science Keywords</h3>
-                        <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                        <p>Please click on the Thesaurus button to the right to select keywords from the tree
-                            or start typing to use the autocomplete function. </p>
-                        <p>GCMD Science Keywords are essential for filtering options within the GFZ Metadata Portal.
-                            Therefore, we highly recommend selecting at least one GCMD Science Keyword to describe
-                            your
-                            dataset (you are welcome to add more if relevant).</p>
-                    </div>
-                    <!-- Explains use of thesaurus modal and the Keyword "tree"-->
-                    <div id="help-keywords-keywordviewer">
-                        <h4>Keyword Viewer</h4>
-                        <p>Please try to choose your keywords as specific as possible. Always check if there is a
-                            more fitting keyword further down the hierarchy. Definitions of keywords can be read via
-                            mouse
-                            over, if provided by the thesaurus maintainer.</p>
-                        <p>To open the hierarchy ("tree"), click on the small arrow or double-click the keyword.
-                            Choose a keyword by clicking on it and thereby checking the checkbox. The keyword is than
-                            automatically added. Selected keywords have a checkmark in their checkbox.</p>
-                        <p>You can also use the search bar on top. It searches the keywords and their definitions or
-                            descriptions.</p>
-                    </div>
-                </div>
-                <div class="section-divider"></div>
-                <hr>
-                <!-- formgroup descriptions -->
-                <div id="help-freeKeywords" class="section-content">
-                    <h3>Free Keywords</h3>
-                    <p>Free keywords are user-defined tags that complement predefined thesaurus terms.
-                        They allow for individual description and categorization of your content and improve its
-                        discoverability.
-                        Before adding a free keyword, please check if a suitable term already exists in one of the
-                        thesauri above.</p>
-                </div>
-                <div class="section-divider"></div>
-                <hr>
-                <!-- formgroup descriptions -->
-                <div id="help-dates" class="section-content">
-                    <div id="help-dates-fg">
-                        <h3>Dates</h3>
-                        <p>
-                            This group of fields refers to important data in the life cycle of the data set. Please
-                            enter the information as precisely as possible to ensure the chronological classification
-                            and availability of the data set.
-                        </p>
-                    </div>
-                    <div id="help-date-created">
-                        <h4>Date created</h4>
-                        <p>The date on which the dataset was created. The date should be between 01.01.1900 and
-                            31.12.2100.
-                        </p>
-                        <p>If the dataset is a collection of data from
-                            different sources, use the date when the dataset was compiled. If the dataset is a
-                            simulation, use the date when the simulation was completed. If the dataset is a
-                            reanalysis,
-                            use the date when the reanalysis was completed. If the dataset is a combination of data
-                            from
-                            different sources, use the date when the dataset was compiled.
-                        </p>
-                    </div>
-                    <div id="help-date-embargo">
-                        <h4>Embargo until</h4>
-                        <p>The date until which the dataset is under embargo. Only by arrangement. If the dataset is not
-                            under embargo,
-                            leave this field empty.</p>
-                    </div>
-                </div>
-                <div class="section-divider"></div>
-                <hr>
-                <!-- formgroup temporal and spacial coverage -->
-                <div id="help-tsc" class="section-content">
-                    <div id="help-stc-fg">
-                        <h3>Spatial and Temporal coverage</h3>
-                        <p>
-                            Geographic location and time period covered by the dataset. Includes coordinates
-                            (latitude/longitude), dates, times, and time zones. Essential for data discovery and
-                            relevance assessment. Enables users to search for datasets in specific regions or time
-                            frames. Please provide accurate information to enhance the findability and usability of your
-                            research data in our repository.
-                        </p>
-                    </div>
-                    <div id="help-tsc-geographicalcoverage">
-                        <h4>Geographic Coverage</h4>
-                        <p>You can add singles coordinates with <code>Latitude Min</code> and <code>Longitude Min</code>
-                            or a bounding box with <code>Latitude Min</code>, <code>Latitude Max</code>,
-                            <code>Longitude Min</code> and <code>Longitude Max</code>.
-                        </p>
-                        <p>You can also use the map to set the coordinates either for rectangles or points.
-                        </p>
-                        <ul>
-                            <li><strong>Latitude Min:</strong> Geographic latitude of a single coordinate or the
-                                smaller geographic latitude of a rectangle as a floating point number with a dot as the
-                                separator. Only positive and negative numbers in the range from -90.00 to +90.00 are
-                                allowed.
-                            </li>
-                            <li><strong>Latitude Max:</strong> Geographic latitude of a rectangle as a floating
-                                point number with a dot as the separator. Optional field. Only positive and negative
-                                numbers in
-                                the range from -90.00 to +90.00 are allowed.</li>
-                            <li><strong>Longitude Min:</strong> Geographic longitude of a single coordinate or the
-                                smaller geographic longitude of a rectangle as a floating point number with a dot as the
-                                separator. Only positive and negative numbers in the range from -180.00 to +180.00
-                                are allowed.</li>
-                            <li><strong>Longitude Max:</strong> Geographic longitude of a rectangle as a floating
-                                point number with a dot as the separator. Optional field. Only positive and negative
-                                numbers in the range from -180.00 to +180.00 are allowed.</li>
-                        </ul>
-                    </div>
-                    <div id="help-tsc-description">
-                        <h4>Description</h4>
-                        <p>Free text field for explaining the geographic and temporal
-                            context. Required field without any restrictions.
-                        </p>
-                    </div>
-                    <div id="help-tsc-temporalcoverage">
-                        <h4>Temporal Coverage</h4>
-                        <p>Both Start and End Date should be between 01.01.1900 and 31.12.2100.</p>
-                        <ul>
-                            <li><strong>Start Date:</strong> Date of the beginning of the temporal coverage of the
-                                dataset.
-                                Can be selected via the date picker. Required field.</li>
-                            <li><strong>Start Time:</strong> Time specification in format hh:mm:ss. Can be selected
-                                via
-                                the
-                                time picker.</li>
-                            <li><strong>End Date:</strong> Date of the end of the temporal coverage of the dataset.
-                                Can
-                                be
-                                selected via the date picker. Required field.</li>
-                            <li><strong>End Time:</strong> Time specification in format hh:mm:ss. Can be selected
-                                via
-                                the
-                                time picker.</li>
-                        </ul>
-                    </div>
-                    <div id="help-tsc-timezone">
-                        <h4>Timezone</h4>
-                        Specifies the UTC-based time zone for start and end times.<br>
-                        This field allows selection from all worldwide time zones to accurately represent the
-                        temporal details of your data.
-                    </div>
-                </div>
-                <div class="section-divider"></div>
-                <hr>
-                <!-- formgroup related work-->
-                <div id="help-relatedwork" class="section-content">
-                    <div id="help-relatedwork-fg">
-                        <h3>Related Work</h3>
-                        <p>
-                            Please enter resources related to your data. This helps connecting your data to other work
-                            like articles, samples, etc. Identifiers must be globally unique.
-                        </p>
-                        <p>
-                            Note: related references may always be added to the metadata of a datasets (thus improving
-                            the data description and discovery), even after the registration of the DOI. We encourage
-                            you to inform us if you want to add new references to the published datasets.
-                        </p>
-                        <p><strong>Optional field.</strong></p>
-                    </div>
-                    <div id="help-relatedwork-relation">
-                        <h4>Relation Type</h4>
-                        <p>The following different relation types are available for selection:</p>
-                        <ul>
-                            <li><strong>IsCitedBy:</strong> indicates that B includes A in a citation</li>
-                            <li><strong>Cites:</strong> indicates that A includes B in a citation</li>
-                            <li><strong>IsSupplementTo:</strong> indicates that A is a supplement to B</li>
-                            <li><strong>IsSupplementedBy:</strong> indicates that B is a supplement to A</li>
-                            <li><strong>IsContinuedBy:</strong> indicates A is continued by the work B</li>
-                            <li><strong>Continues:</strong> indicates A is a continuation of the work B</li>
-                            <li><strong>Describes:</strong> indicates A describes B</li>
-                            <li><strong>IsDescribedBy:</strong> indicates A is described by B</li>
-                            <li><strong>HasMetadata:</strong> indicates resource A has additional metadata B</li>
-                            <li><strong>IsMetadataFor:</strong> indicates additional metadata A for a resource B
-                            </li>
-                            <li><strong>HasVersion:</strong> indicates A has a version B</li>
-                            <li><strong>IsVersionOf:</strong> indicates A is a version of B</li>
-                            <li><strong>IsNewVersionOf:</strong> indicates A is a new edition of B, where the new
-                                edition has been modified or updated</li>
-                            <li><strong>IsPreviousVersionOf:</strong> indicates A is a previous edition of B</li>
-                            <li><strong>IsPartOf:</strong> indicates A is a portion of B; may be used for elements
-                                of a series</li>
-                            <li><strong>HasPart:</strong> indicates A includes the part B</li>
-                            <li><strong>IsPublishedIn:</strong> indicates A is published inside B, but is
-                                independent of other things published inside of B</li>
-                            <li><strong>IsReferencedBy:</strong> indicates A is used as a source of information by B
-                            </li>
-                            <li><strong>References:</strong> indicates B is used as a source of information for A
-                            </li>
-                            <li><strong>IsDocumentedBy:</strong> indicates B is documentation about/explaining A (e.g.
-                                points to software documentation or a data report)
-                            </li>
-                            <li><strong>Documents:</strong> indicates A is documentation about/explaining B (e.g. points
-                                to
-                                software documentation or a data report)</li>
-                            <li><strong>IsCompiledBy:</strong> indicates B is used to compile or create A</li>
-                            <li><strong>Compiles:</strong> indicates B is the result of a compile or creation event
-                                using A</li>
-                            <li><strong>IsVariantFormOf:</strong> indicates A is a variant or different form of B
-                            </li>
-                            <li><strong>IsOriginalFormOf:</strong> indicates A is the original form of B</li>
-                            <li><strong>IsIdenticalTo:</strong> indicates that A is identical to B, for use when
-                                there is a need to register two separate instances of the same resource</li>
-                            <li><strong>IsReviewedBy:</strong> indicates that A is reviewed by B</li>
-                            <li><strong>Reviews:</strong> indicates that A is a review of B</li>
-                            <li><strong>IsDerivedFrom:</strong> indicates B is a source upon which A is based</li>
-                            <li><strong>IsSourceOf:</strong> indicates A is a source upon which B is based</li>
-                            <li><strong>IsRequiredBy:</strong> Indicates A is required by B</li>
-                            <li><strong>Requires:</strong> Indicates A requires B</li>
-                            <li><strong>Obsoletes:</strong> Indicates A replaces B</li>
-                            <li><strong>IsObsoletedBy:</strong> Indicates A is replaced by B</li>
-                            <li><strong>IsCollectedBy:</strong> Indicates A is collected by B</li>
-                            <li><strong>Collects:</strong> Indicates A collects B</li>
-                        </ul>
-                    </div>
-                    <div id="help-relatedwork-identifier">
-                        <h4>Identifier</h4>
-                        <p>Identifiers of related resources. These must be globally unique identifiers.</p>
-                    </div>
-                    <div id="help-relatedwork-identifiertype">
-                        <h4>Identifier Type</h4>
-                        <p>The type of the Related Identifier.</p>
-                        <ul>
-                            <li><strong>ARK:</strong> A URI designed to support long-term access to information
-                                objects. In general, ARK syntax is of the form (brackets, []. indicate optional
-                                elements).</li>
-                            <li><strong>arXiv:</strong> arXiv.org is a repository of preprints of scientific papers
-                                in the fields of mathematics, physics, astronomy, computer science, quantitative
-                                biology, statistics, and quantitative financ.</li>
-                            <li><strong>bibcode:</strong> A standardized 19-character identifier according to the
-                                syntax yyyyjjjjjvvvvmppppa.</li>
-                            <li><strong>DOI:</strong> A character string used to uniquely identify an object. Format
-                                should be 10.ORGANISATION/ID.</li>
-                            <li><strong>EAN13:</strong> A 13-digit barcoding standard that is a superset of the
-                                original 12-digit Universal Product Code (UPC) system.</li>
-                            <li><strong>EISSN:</strong> ISSN used to identify periodicals in electronic form (eISSN
-                                or e-ISSN).</li>
-                            <li><strong>Handle:</strong> This refers specifically to an ID in the Handle system
-                                operated by the Corporation for National Research Initiatives (CNRI).</li>
-                            <li><strong>IGSN:</strong> A code that uniquely identifies samples from our natural
-                                environment and related features-of-interest.</li>
-                            <li><strong>ISBN:</strong> A unique numeric book identifier. There are 2 formats: a
-                                10-digit ISBN format and a 13-digit ISBN.</li>
-                            <li><strong>ISSN:</strong> A unique 8-digit number used to identify a print or
-                                electronic periodical publication.</li>
-                            <li><strong>ISTC:</strong> A unique “number” assigned to a textual work. An ISTC
-                                consists of 16 numbers and/or letters..</li>
-                            <li><strong>LISSN:</strong> The linking ISSN or ISSN-L enables collocation or linking
-                                among different media versions of a continuing resource.</li>
-                            <li><strong>LSID:</strong> A unique identifier for data in the Life Science domain.
-                                Format: urn:lsid:authority:namespace:identifier:revision.</li>
-                            <li><strong>PMID:</strong> A unique number assigned to each PubMed record.</li>
-                            <li><strong>PURL:</strong> A PURL has three parts: (1) a protocol, (2) a resolver
-                                address, and (3) a name.</li>
-                            <li><strong>UPC:</strong> A barcode symbology used for tracking trade items in stores.
-                                Its most common form, the UPC-A, consists of 12 numerical digits.</li>
-                            <li><strong>URL:</strong> Also known as web address, a URL is a specific character
-                                string that constitutes a reference to a resource. The syntax is:
-                                scheme://domain:port/path?query_string#fragment_id.</li>
-                            <li><strong>URN:</strong> A unique and persistent identifier of an electronic document.
-                                The syntax is: urn:<NID>:<NSS>. The leading urn: sequence is case-insensitive, <NID>
-                                            is the namespace identifier, <NSS> is the namespace-specific string.
-                            </li>
-                            <li><strong>w3id:</strong> Mostly used to publish vocabularies and ontologies. The
-                                letters ‘w3’ stand for “World Wide Web”.</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="section-divider"></div>
-                <hr>
-                <!-- formgroup funding reference -->
-                <div id="help-fundingreference" class="section-content">
-                    <div id="help-fundingreference-fg">
-                        <h3>Funding Reference</h3>
-                        <p>Information about financial support (funding) for the resource being registered. It is a best
-                            practice to supply funding information when financial support has been received.</p>
-                    </div>
-                    <div id="help-fundingreference-funder">
-                        <h4>Funder</h4>
-                        <p>The name of the funding provider. To receive suggestions, please enter at
-                            least the first two letters. If possible, please choose from the controlled list. You can
-                            also manually enter the funding provider. Please use the funder name in
-                            the corresponding national language (e.g. "Deutsche Forschungsgemein-
-                            schaft" for DFG, "Vetenskapsrådet" for the Swedish Research
-                            Council). Several grant numbers by the same funder should
-                            be entered as individual entries (several lines).</p>
-                    </div>
-                    <div id="help-fundingreference-grantnumber">
-                        <h4>Grant Number</h4>
-                        <p>Free text field for entering the grant number assigned by the funding provider.</p>
-                    </div>
-                    <div id="help-fundingreference-grantname">
-                        <h4>Grant Name</h4>
-                        <p>Free text field for entering the title or name of the grant.</p>
-                    </div>
-                </div>
-                <hr>
-                <!-- for better scrolling -->
-                <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
             </div>
+            <div class="section-divider"></div>
+            <?php if ($showMslVocabs): ?>
+            <hr>
+            <!-- formgroup MSL Keywords -->
+            <div id="help-mslkeywords" class="section-content">
+                <div id="help-mslKeywords-keyword">
+                    <h3>EPOS Multi-Scale Laboratories Keywords</h3>
+                    <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                        start typing to use the autocomplete function. By adding terms like these, you make it much
+                        easier for us to find your data and to make it discoverable in this catalogue and the EPOS
+                        data
+                        portal.</p>
+                    <p>
+                        The selectable keywords are taken from <a target="_blank"
+                            href="https://epos-msl.uu.nl/keyword-selector">EPOS Multi-Scale Laboratories
+                            vocabularies</a>,
+                        available on <a target="_blank"
+                            href="https://github.com/UtrechtUniversity/msl_vocabularies">GitHub</a>.
+                    </p>
+                </div>
+                <div id="help-mslKeywords-keywordviewer">
+                    <h4>Keyword Viewer</h4>
+                    <p>Please try to choose your keywords as specific as possible. Always check if there is a
+                        more fitting keyword further down the hierarchy. Definitions of keywords can be read via
+                        mouse
+                        over, if provided by the thesaurus maintainer.</p>
+                    <p>To open the hierarchy ("tree"), click on the small arrow or double-click the keyword.
+                        Choose a keyword by clicking on it and thereby checking the checkbox. The keyword is than
+                        automatically added. Selected keywords have a checkmark in their checkbox.</p>
+                    <p>You can also use the search bar on top. It searches the keywords and their definitions or
+                        descriptions.</p>
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <?php endif; ?>
+            <hr>
+            <!-- formgroup GCMD Platforms Keywords -->
+            <div id="help-platformsKeywords" class="section-content">
+                <div id="help-gcmd-platforms-keyword">
+                    <h3>GCMD Platforms Keywords</h3>
+                    <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
+                    <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                        start
+                        typing to use the autocomplete function. </p>
+                    <p>GCMD Platforms are important for identifying the sources of data collection. We recommend
+                        selecting relevant platform keywords to provide context about how your dataset was
+                        acquired.
+                    </p>
+                </div>
+            </div>
+            <!-- formgroup GCMD Instruments Keywords -->
+            <div id="help-instrumentsKeywords" class="section-content">
+                <div id="help-gcmd-instruments-keyword">
+                    <h3>GCMD Instruments Keywords</h3>
+                    <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
+                    <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                        start
+                        typing to use the autocomplete function. </p>
+                    <p>GCMD Instruments help specify the tools used for data collection. We encourage you to
+                        select
+                        appropriate instrument keywords to give users a clear understanding of how your data was
+                        measured or observed.</p>
+                </div>
+            </div>
+            <!-- formgroup GCMD Science Keywords -->
+            <div id="help-scienceKeywords" class="section-content">
+                <div id="help-scienceKeywords-keyword">
+                    <h3>GCMD Science Keywords</h3>
+                    <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
+                    <p>Please click on the Thesaurus button to the right to select keywords from the tree
+                        or start typing to use the autocomplete function. </p>
+                    <p>GCMD Science Keywords are essential for filtering options within the GFZ Metadata Portal.
+                        Therefore, we highly recommend selecting at least one GCMD Science Keyword to describe
+                        your
+                        dataset (you are welcome to add more if relevant).</p>
+                </div>
+                <!-- Explains use of thesaurus modal and the Keyword "tree"-->
+                <div id="help-keywords-keywordviewer">
+                    <h4>Keyword Viewer</h4>
+                    <p>Please try to choose your keywords as specific as possible. Always check if there is a
+                        more fitting keyword further down the hierarchy. Definitions of keywords can be read via
+                        mouse
+                        over, if provided by the thesaurus maintainer.</p>
+                    <p>To open the hierarchy ("tree"), click on the small arrow or double-click the keyword.
+                        Choose a keyword by clicking on it and thereby checking the checkbox. The keyword is than
+                        automatically added. Selected keywords have a checkmark in their checkbox.</p>
+                    <p>You can also use the search bar on top. It searches the keywords and their definitions or
+                        descriptions.</p>
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup descriptions -->
+            <div id="help-freeKeywords" class="section-content">
+                <h3>Free Keywords</h3>
+                <p>Free keywords are user-defined tags that complement predefined thesaurus terms.
+                    They allow for individual description and categorization of your content and improve its
+                    discoverability.
+                    Before adding a free keyword, please check if a suitable term already exists in one of the
+                    thesauri above.</p>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup descriptions -->
+            <div id="help-dates" class="section-content">
+                <div id="help-dates-fg">
+                    <h3>Dates</h3>
+                    <p>
+                        This group of fields refers to important data in the life cycle of the data set. Please
+                        enter the information as precisely as possible to ensure the chronological classification
+                        and availability of the data set.
+                    </p>
+                </div>
+                <div id="help-date-created">
+                    <h4>Date created</h4>
+                    <p>The date on which the dataset was created. The date should be between 01.01.1900 and
+                        31.12.2100.
+                    </p>
+                    <p>If the dataset is a collection of data from
+                        different sources, use the date when the dataset was compiled. If the dataset is a
+                        simulation, use the date when the simulation was completed. If the dataset is a
+                        reanalysis,
+                        use the date when the reanalysis was completed. If the dataset is a combination of data
+                        from
+                        different sources, use the date when the dataset was compiled.
+                    </p>
+                </div>
+                <div id="help-date-embargo">
+                    <h4>Embargo until</h4>
+                    <p>The date until which the dataset is under embargo. Only by arrangement. If the dataset is not
+                        under embargo,
+                        leave this field empty.</p>
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup temporal and spacial coverage -->
+            <div id="help-tsc" class="section-content">
+                <div id="help-stc-fg">
+                    <h3>Spatial and Temporal coverage</h3>
+                    <p>
+                        Geographic location and time period covered by the dataset. Includes coordinates
+                        (latitude/longitude), dates, times, and time zones. Essential for data discovery and
+                        relevance assessment. Enables users to search for datasets in specific regions or time
+                        frames. Please provide accurate information to enhance the findability and usability of your
+                        research data in our repository.
+                    </p>
+                </div>
+                <div id="help-tsc-geographicalcoverage">
+                    <h4>Geographic Coverage</h4>
+                    <p>You can add singles coordinates with <code>Latitude Min</code> and <code>Longitude Min</code>
+                        or a bounding box with <code>Latitude Min</code>, <code>Latitude Max</code>,
+                        <code>Longitude Min</code> and <code>Longitude Max</code>.
+                    </p>
+                    <p>You can also use the map to set the coordinates either for rectangles or points.
+                    </p>
+                    <ul>
+                        <li><strong>Latitude Min:</strong> Geographic latitude of a single coordinate or the
+                            smaller geographic latitude of a rectangle as a floating point number with a dot as the
+                            separator. Only positive and negative numbers in the range from -90.00 to +90.00 are
+                            allowed.
+                        </li>
+                        <li><strong>Latitude Max:</strong> Geographic latitude of a rectangle as a floating
+                            point number with a dot as the separator. Optional field. Only positive and negative
+                            numbers in
+                            the range from -90.00 to +90.00 are allowed.</li>
+                        <li><strong>Longitude Min:</strong> Geographic longitude of a single coordinate or the
+                            smaller geographic longitude of a rectangle as a floating point number with a dot as the
+                            separator. Only positive and negative numbers in the range from -180.00 to +180.00
+                            are allowed.</li>
+                        <li><strong>Longitude Max:</strong> Geographic longitude of a rectangle as a floating
+                            point number with a dot as the separator. Optional field. Only positive and negative
+                            numbers in the range from -180.00 to +180.00 are allowed.</li>
+                    </ul>
+                </div>
+                <div id="help-tsc-description">
+                    <h4>Description</h4>
+                    <p>Free text field for explaining the geographic and temporal
+                        context. Required field without any restrictions.
+                    </p>
+                </div>
+                <div id="help-tsc-temporalcoverage">
+                    <h4>Temporal Coverage</h4>
+                    <p>Both Start and End Date should be between 01.01.1900 and 31.12.2100.</p>
+                    <ul>
+                        <li><strong>Start Date:</strong> Date of the beginning of the temporal coverage of the
+                            dataset.
+                            Can be selected via the date picker. Required field.</li>
+                        <li><strong>Start Time:</strong> Time specification in format hh:mm:ss. Can be selected
+                            via
+                            the
+                            time picker.</li>
+                        <li><strong>End Date:</strong> Date of the end of the temporal coverage of the dataset.
+                            Can
+                            be
+                            selected via the date picker. Required field.</li>
+                        <li><strong>End Time:</strong> Time specification in format hh:mm:ss. Can be selected
+                            via
+                            the
+                            time picker.</li>
+                    </ul>
+                </div>
+                <div id="help-tsc-timezone">
+                    <h4>Timezone</h4>
+                    Specifies the UTC-based time zone for start and end times.<br>
+                    This field allows selection from all worldwide time zones to accurately represent the
+                    temporal details of your data.
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup related work-->
+            <div id="help-relatedwork" class="section-content">
+                <div id="help-relatedwork-fg">
+                    <h3>Related Work</h3>
+                    <p>
+                        Please enter resources related to your data. This helps connecting your data to other work
+                        like articles, samples, etc. Identifiers must be globally unique.
+                    </p>
+                    <p>
+                        Note: related references may always be added to the metadata of a datasets (thus improving
+                        the data description and discovery), even after the registration of the DOI. We encourage
+                        you to inform us if you want to add new references to the published datasets.
+                    </p>
+                    <p><strong>Optional field.</strong></p>
+                </div>
+                <div id="help-relatedwork-relation">
+                    <h4>Relation Type</h4>
+                    <p>The following different relation types are available for selection:</p>
+                    <ul>
+                        <li><strong>IsCitedBy:</strong> indicates that B includes A in a citation</li>
+                        <li><strong>Cites:</strong> indicates that A includes B in a citation</li>
+                        <li><strong>IsSupplementTo:</strong> indicates that A is a supplement to B</li>
+                        <li><strong>IsSupplementedBy:</strong> indicates that B is a supplement to A</li>
+                        <li><strong>IsContinuedBy:</strong> indicates A is continued by the work B</li>
+                        <li><strong>Continues:</strong> indicates A is a continuation of the work B</li>
+                        <li><strong>Describes:</strong> indicates A describes B</li>
+                        <li><strong>IsDescribedBy:</strong> indicates A is described by B</li>
+                        <li><strong>HasMetadata:</strong> indicates resource A has additional metadata B</li>
+                        <li><strong>IsMetadataFor:</strong> indicates additional metadata A for a resource B
+                        </li>
+                        <li><strong>HasVersion:</strong> indicates A has a version B</li>
+                        <li><strong>IsVersionOf:</strong> indicates A is a version of B</li>
+                        <li><strong>IsNewVersionOf:</strong> indicates A is a new edition of B, where the new
+                            edition has been modified or updated</li>
+                        <li><strong>IsPreviousVersionOf:</strong> indicates A is a previous edition of B</li>
+                        <li><strong>IsPartOf:</strong> indicates A is a portion of B; may be used for elements
+                            of a series</li>
+                        <li><strong>HasPart:</strong> indicates A includes the part B</li>
+                        <li><strong>IsPublishedIn:</strong> indicates A is published inside B, but is
+                            independent of other things published inside of B</li>
+                        <li><strong>IsReferencedBy:</strong> indicates A is used as a source of information by B
+                        </li>
+                        <li><strong>References:</strong> indicates B is used as a source of information for A
+                        </li>
+                        <li><strong>IsDocumentedBy:</strong> indicates B is documentation about/explaining A (e.g.
+                            points to software documentation or a data report)
+                        </li>
+                        <li><strong>Documents:</strong> indicates A is documentation about/explaining B (e.g. points
+                            to
+                            software documentation or a data report)</li>
+                        <li><strong>IsCompiledBy:</strong> indicates B is used to compile or create A</li>
+                        <li><strong>Compiles:</strong> indicates B is the result of a compile or creation event
+                            using A</li>
+                        <li><strong>IsVariantFormOf:</strong> indicates A is a variant or different form of B
+                        </li>
+                        <li><strong>IsOriginalFormOf:</strong> indicates A is the original form of B</li>
+                        <li><strong>IsIdenticalTo:</strong> indicates that A is identical to B, for use when
+                            there is a need to register two separate instances of the same resource</li>
+                        <li><strong>IsReviewedBy:</strong> indicates that A is reviewed by B</li>
+                        <li><strong>Reviews:</strong> indicates that A is a review of B</li>
+                        <li><strong>IsDerivedFrom:</strong> indicates B is a source upon which A is based</li>
+                        <li><strong>IsSourceOf:</strong> indicates A is a source upon which B is based</li>
+                        <li><strong>IsRequiredBy:</strong> Indicates A is required by B</li>
+                        <li><strong>Requires:</strong> Indicates A requires B</li>
+                        <li><strong>Obsoletes:</strong> Indicates A replaces B</li>
+                        <li><strong>IsObsoletedBy:</strong> Indicates A is replaced by B</li>
+                        <li><strong>IsCollectedBy:</strong> Indicates A is collected by B</li>
+                        <li><strong>Collects:</strong> Indicates A collects B</li>
+                    </ul>
+                </div>
+                <div id="help-relatedwork-identifier">
+                    <h4>Identifier</h4>
+                    <p>Identifiers of related resources. These must be globally unique identifiers.</p>
+                </div>
+                <div id="help-relatedwork-identifiertype">
+                    <h4>Identifier Type</h4>
+                    <p>The type of the Related Identifier.</p>
+                    <ul>
+                        <li><strong>ARK:</strong> A URI designed to support long-term access to information
+                            objects. In general, ARK syntax is of the form (brackets, []. indicate optional
+                            elements).</li>
+                        <li><strong>arXiv:</strong> arXiv.org is a repository of preprints of scientific papers
+                            in the fields of mathematics, physics, astronomy, computer science, quantitative
+                            biology, statistics, and quantitative financ.</li>
+                        <li><strong>bibcode:</strong> A standardized 19-character identifier according to the
+                            syntax yyyyjjjjjvvvvmppppa.</li>
+                        <li><strong>DOI:</strong> A character string used to uniquely identify an object. Format
+                            should be 10.ORGANISATION/ID.</li>
+                        <li><strong>EAN13:</strong> A 13-digit barcoding standard that is a superset of the
+                            original 12-digit Universal Product Code (UPC) system.</li>
+                        <li><strong>EISSN:</strong> ISSN used to identify periodicals in electronic form (eISSN
+                            or e-ISSN).</li>
+                        <li><strong>Handle:</strong> This refers specifically to an ID in the Handle system
+                            operated by the Corporation for National Research Initiatives (CNRI).</li>
+                        <li><strong>IGSN:</strong> A code that uniquely identifies samples from our natural
+                            environment and related features-of-interest.</li>
+                        <li><strong>ISBN:</strong> A unique numeric book identifier. There are 2 formats: a
+                            10-digit ISBN format and a 13-digit ISBN.</li>
+                        <li><strong>ISSN:</strong> A unique 8-digit number used to identify a print or
+                            electronic periodical publication.</li>
+                        <li><strong>ISTC:</strong> A unique “number” assigned to a textual work. An ISTC
+                            consists of 16 numbers and/or letters..</li>
+                        <li><strong>LISSN:</strong> The linking ISSN or ISSN-L enables collocation or linking
+                            among different media versions of a continuing resource.</li>
+                        <li><strong>LSID:</strong> A unique identifier for data in the Life Science domain.
+                            Format: urn:lsid:authority:namespace:identifier:revision.</li>
+                        <li><strong>PMID:</strong> A unique number assigned to each PubMed record.</li>
+                        <li><strong>PURL:</strong> A PURL has three parts: (1) a protocol, (2) a resolver
+                            address, and (3) a name.</li>
+                        <li><strong>UPC:</strong> A barcode symbology used for tracking trade items in stores.
+                            Its most common form, the UPC-A, consists of 12 numerical digits.</li>
+                        <li><strong>URL:</strong> Also known as web address, a URL is a specific character
+                            string that constitutes a reference to a resource. The syntax is:
+                            scheme://domain:port/path?query_string#fragment_id.</li>
+                        <li><strong>URN:</strong> A unique and persistent identifier of an electronic document.
+                            The syntax is: urn:<NID>:<NSS>. The leading urn: sequence is case-insensitive, <NID>
+                                        is the namespace identifier, <NSS> is the namespace-specific string.
+                        </li>
+                        <li><strong>w3id:</strong> Mostly used to publish vocabularies and ontologies. The
+                            letters ‘w3’ stand for “World Wide Web”.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <!-- formgroup funding reference -->
+            <div id="help-fundingreference" class="section-content">
+                <div id="help-fundingreference-fg">
+                    <h3>Funding Reference</h3>
+                    <p>Information about financial support (funding) for the resource being registered. It is a best
+                        practice to supply funding information when financial support has been received.</p>
+                </div>
+                <div id="help-fundingreference-funder">
+                    <h4>Funder</h4>
+                    <p>The name of the funding provider. To receive suggestions, please enter at
+                        least the first two letters. If possible, please choose from the controlled list. You can
+                        also manually enter the funding provider. Please use the funder name in
+                        the corresponding national language (e.g. "Deutsche Forschungsgemein-
+                        schaft" for DFG, "Vetenskapsrådet" for the Swedish Research
+                        Council). Several grant numbers by the same funder should
+                        be entered as individual entries (several lines).</p>
+                </div>
+                <div id="help-fundingreference-grantnumber">
+                    <h4>Grant Number</h4>
+                    <p>Free text field for entering the grant number assigned by the funding provider.</p>
+                </div>
+                <div id="help-fundingreference-grantname">
+                    <h4>Grant Name</h4>
+                    <p>Free text field for entering the title or name of the grant.</p>
+                </div>
+            </div>
+            <hr>
         </div>
     </div>
     <!-- Bootstrap 5 -->
@@ -940,6 +976,8 @@ include_once "../settings.php";
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
         integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Custom jQuery Script -->
+    <script src="helpMenu.js"></script>
 </body>
 
 </html>
