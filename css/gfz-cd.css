@@ -222,3 +222,6 @@ label.mandatory-field::after {
     color: var(--bs-con-reduce-color, #0d6efd);
 }
   
+.text-feedback {
+    color: var(--bs-text-feedback-color, #000000);
+}
