@@ -39,4 +39,5 @@
     --tagify-dd-bg-color: var(--bs-body-bg);
     --tagify-dd-color-primary: var(--bs-secondary-bg);
     --tagify-dd-text-color: var(--bs-body-color);
-  }
+    --bs-red-star-color: #ff6b6b;
+}

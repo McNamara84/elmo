@@ -213,3 +213,8 @@ label.mandatory-field::after {
     white-space: nowrap;
     border: 0;
 }
+
+.red-star {
+    color: var(--bs-red-star-color, #dc3545);
+  }
+  

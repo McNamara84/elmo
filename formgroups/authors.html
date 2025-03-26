@@ -36,7 +36,7 @@
               <input type="text" class="form-control" id="input-author-lastname" name="familynames[]"
                 pattern="^[a-zA-ZäöüÄéÖÜß \-]*$" required />
               <label for="input-author-lastname"><span data-translate="general.lastName">Last Name</span><span
-                  class="text-danger">*</span></label>
+                  class="red-star">*</span></label>
               <div class="invalid-feedback" data-translate="general.lastNameInvalid">
                 Please provide a lastname. Only letters are allowed.
               </div>
@@ -50,7 +50,7 @@
               <input type="text" class="form-control" id="input-author-firstname" name="givennames[]"
                 pattern="^[a-zA-ZäöüÄéÖÜß \-.]*$" required />
               <label for="input-author-firstname"><span data-translate="general.firstName">First Name</span><span
-                  class="text-danger">*</span></label>
+                  class="red-star">*</span></label>
               <div class="invalid-feedback" data-translate="authors.firstNameInvalid">
                 Please provide a firstname. Only letters are allowed.
               </div>
@@ -88,7 +88,7 @@
                 pattern="^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$"
                 id="input-contactperson-email"  />
               <label for="input-contactperson-email"><span data-translate="contactPersons.email">Email
-                  address</span><span class="text-danger">*</span>
+                  address</span><span class="red-star">*</span>
               </label>
               <div class="invalid-feedback" data-translate="contactPersons.emailInvalid">
                 Please provide a valid email address in the format xxx.xxx@xxx.xxx.
