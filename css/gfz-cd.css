@@ -216,5 +216,9 @@ label.mandatory-field::after {
 
 .red-star {
     color: var(--bs-red-star-color, #dc3545);
-  }
+}
+
+.con-reduce {
+    color: var(--bs-con-reduce-color, #0d6efd);
+}
   
