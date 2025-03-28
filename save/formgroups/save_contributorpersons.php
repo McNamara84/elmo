@@ -13,6 +13,7 @@ require_once 'save_affiliations.php';
  */
 function saveContributorPersons($connection, $postData, $resource_id)
 {
+
     $valid_roles = getValidRoles($connection);
 
     if (
@@ -45,26 +46,13 @@ function saveContributorPersons($connection, $postData, $resource_id)
             $allSuccessful = false;
             continue;
         }
-
         // Skip if no data provided
-        if (
-            empty($entry['lastname']) && empty($entry['firstname']) &&
-            empty($entry['orcid']) && empty($entry['roles'])
-        ) {
+        if (empty($entry['lastname']) && empty($entry['firstname']) && empty($entry['orcid']) && empty($entry['roles'])) {
             continue;
         }
 
-        // Insert new contributor person
-        $stmt = $connection->prepare("INSERT INTO Contributor_Person (familyname, givenname, orcid) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $entry['lastname'], $entry['firstname'], $entry['orcid']);
-
-        if (!$stmt->execute()) {
-            $allSuccessful = false;
-            continue;
-        }
-
-        $contributor_person_id = $stmt->insert_id;
-        $stmt->close();
+        // Get or create contributor person
+        $contributor_person_id = saveOrUpdateContributorPerson($connection, $entry['lastname'], $entry['firstname'], $entry['orcid']);
 
         // Link resource to contributor person
         if (!linkResourceToContributorPerson($connection, $resource_id, $contributor_person_id)) {
@@ -94,6 +82,39 @@ function saveContributorPersons($connection, $postData, $resource_id)
     }
 
     return $allSuccessful;
+}
+
+
+
+/**
+ * Saves or updates a Contributor Institution in the database.
+ *
+ * @param mysqli $connection    The Database Connection.
+ * @param string $name          The Name of the Contributor Institution.
+ *
+ * @return int                  The ID of the saved or updated Contributor Institution.
+ */
+function saveOrUpdateContributorPerson($connection, $lastname, $firstname, $orcid)
+{
+
+    $stmt = $connection->prepare("SELECT contributor_person_id FROM Contributor_Person WHERE familyname = ? AND givenname = ? AND orcid = ?");
+    $stmt->bind_param("sss", $lastname, $firstname, $orcid);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        return $row['contributor_person_id'];
+    }
+
+    $stmt = $connection->prepare("INSERT INTO Contributor_Person (familyname, givenname, orcid) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $lastname, $firstname, $orcid);
+    $stmt->execute();
+    $id = $stmt->insert_id;
+    $stmt->close();
+
+    return $id;
 }
 
 /**

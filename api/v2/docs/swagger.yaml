@@ -25,7 +25,7 @@ info:
   license:
     name: GPL-2.0-only
     url: https://raw.githubusercontent.com/McNamara84/gfz-metadata-editor-msl-v2/refs/heads/main/LICENSE.md
-  version: 2.0.0
+  version: 2.0.1
 externalDocs:
   description: Documentation of the API V1 at GitHub
   url: https://github.com/McNamara84/gfz-metadata-editor-msl-v2#api-endpunkte

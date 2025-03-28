@@ -13,7 +13,7 @@ function refreshTagifyInstances() {
   const allPairs = [
     { input: "input-author-affiliation", hidden: "input-author-rorid" },
     { input: "input-contactperson-affiliation", hidden: "input-contactperson-rorid" },
-    { input: "input-contributor-personaffiliation", hidden: "input-contributor-personrorid" },
+    { input: "input-contributorpersons-affiliation", hidden: "input-contributor-personrorid" },
     { input: "input-contributor-organisationaffiliation", hidden: "input-contributor-organisationrorid" }
   ];
 
@@ -43,7 +43,7 @@ $.getJSON("json/affiliations.json", function (data) {
   // Initialize Tagify for existing input fields when the document is ready
   $(document).ready(function () {
     autocompleteAffiliations("input-author-affiliation", "input-author-rorid", affiliationsData);
-    autocompleteAffiliations("input-contributor-personaffiliation", "input-contributor-personrorid", affiliationsData);
+    autocompleteAffiliations("input-contributorpersons-affiliation", "input-contributor-personrorid", affiliationsData);
     autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid", affiliationsData);
     document.addEventListener('translationsLoaded', refreshTagifyInstances);
   });
