@@ -2,6 +2,36 @@
 
 All notable changes of the PHPUnit 11.5 release series are documented in this file using the [Keep a CHANGELOG](https://keepachangelog.com/) principles.
 
+## [11.5.15] - 2025-03-23
+
+### Changed
+
+* [#6150](https://github.com/sebastianbergmann/phpunit/issues/6150): Reverted change introduced in PHPUnit 11.5.13
+
+## [11.5.14] - 2025-03-19
+
+### Changed
+
+* Updated dependencies for PHAR distribution
+
+## [11.5.13] - 2025-03-18
+
+### Changed
+
+* [#6150](https://github.com/sebastianbergmann/phpunit/issues/6150): Trigger warning when code coverage analysis is performed and no cache directory is configured
+
+## [11.5.12] - 2025-03-07
+
+### Fixed
+
+* [#5976](https://github.com/sebastianbergmann/phpunit/issues/5976): TestDox result printer does not display details about errors triggered in before-first-test and after-last-test methods
+
+## [11.5.11] - 2025-03-05
+
+### Fixed
+
+* [#6142](https://github.com/sebastianbergmann/phpunit/issues/6142): `$expected` and `$actual` are mixed up in failure description when `assertJsonFileEqualsJsonFile()` fails
+
 ## [11.5.10] - 2025-02-25
 
 ### Fixed
@@ -117,6 +147,11 @@ All notable changes of the PHPUnit 11.5 release series are documented in this fi
 * [#6055](https://github.com/sebastianbergmann/phpunit/issues/6055): `assertNotContainsOnly()` (use `assertContainsNotOnlyArray()`, `assertContainsNotOnlyBool()`, `assertContainsNotOnlyCallable()`, `assertContainsNotOnlyFloat()`, `assertContainsNotOnlyInt()`, `assertContainsNotOnlyIterable()`, `assertContainsNotOnlyNumeric()`, `assertContainsNotOnlyObject()`, `assertContainsNotOnlyResource()`, `assertContainsNotOnlyClosedResource()`, `assertContainsNotOnlyScalar()`, or `assertContainsNotOnlyString()` instead)
 * [#6059](https://github.com/sebastianbergmann/phpunit/issues/6059): `containsOnly()` (use `containsOnlyArray()`, `containsOnlyBool()`, `containsOnlyCallable()`, `containsOnlyFloat()`, `containsOnlyInt()`, `containsOnlyIterable()`, `containsOnlyNumeric()`, `containsOnlyObject()`, `containsOnlyResource()`, `containsOnlyClosedResource()`, `containsOnlyScalar()`, or `containsOnlyString()` instead)
 
+[11.5.15]: https://github.com/sebastianbergmann/phpunit/compare/11.5.14...11.5.15
+[11.5.14]: https://github.com/sebastianbergmann/phpunit/compare/11.5.13...11.5.14
+[11.5.13]: https://github.com/sebastianbergmann/phpunit/compare/11.5.12...11.5.13
+[11.5.12]: https://github.com/sebastianbergmann/phpunit/compare/11.5.11...11.5.12
+[11.5.11]: https://github.com/sebastianbergmann/phpunit/compare/11.5.10...11.5.11
 [11.5.10]: https://github.com/sebastianbergmann/phpunit/compare/11.5.9...11.5.10
 [11.5.9]: https://github.com/sebastianbergmann/phpunit/compare/11.5.8...11.5.9
 [11.5.8]: https://github.com/sebastianbergmann/phpunit/compare/11.5.7...11.5.8
