@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once 'formgroups/save_spatialtemporalcoverage.php';
     require_once 'formgroups/save_relatedwork.php';
     require_once 'formgroups/save_fundingreferences.php';
+    require_once 'formgroups/save_ggmsproperties.php';
 
     // Check if this is a resource ID request
     if (isset($_POST['get_resource_id']) && $_POST['get_resource_id'] === '1') {
@@ -51,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
     saveRelatedWork($connection, $_POST, $resource_id);
     saveFundingReferences($connection, $_POST, $resource_id);
+    saveGGMsProperties($connection, $_POST, $resource_id);
 
     // Handle file download if requested
     if (isset($_POST['filename'])) {
