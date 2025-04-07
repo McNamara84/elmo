@@ -664,14 +664,9 @@ $(document).ready(function () {
   var labData;
 
   if ($("#group-originatinglaboratory").length) {
-    // Load lab data from JSON and initialize Tagify on the first laboratory row
+    // Load lab data from JSON
     $.getJSON("json/msl-labs.json", function (data) {
       labData = data;
-      var firstRow = $("#group-originatinglaboratory .row").first();
-      initializeTagify(firstRow, data);
-
-      // Register event listener for translations after initial setup
-      document.addEventListener('translationsLoaded', refreshLaboratoryTagifyInstances);
     });
   }
 
@@ -691,8 +686,6 @@ $(document).ready(function () {
     newOriginatingLaboratoryRow.find("input").val("").removeClass("is-invalid is-valid");
     newOriginatingLaboratoryRow.find(".invalid-feedback, .valid-feedback").hide();
 
-    // Remove old Tagify elements
-    newOriginatingLaboratoryRow.find(".tagify").remove();
 
     // Update IDs
     rowCounter++;
@@ -710,9 +703,6 @@ $(document).ready(function () {
 
     // Remove help buttons
     replaceHelpButtonInClonedRows(newOriginatingLaboratoryRow);
-
-    // Initialize Tagify for the new row
-    initializeTagify(newOriginatingLaboratoryRow, labData);
 
     // Event handler for the remove button
     newOriginatingLaboratoryRow.on("click", ".removeButton", function () {
@@ -742,11 +732,6 @@ $(document).ready(function () {
   * Initializes the event handler once the document is fully loaded.
   */
   $(document).ready(function () {
-    /**
-     * Click event handler for showing the changelog modal.
-     *
-     * @param {Event} event - The event object associated with the click action.
-     */
     $('#button-changelog-show').click(function (event) {
       event.preventDefault(); // Prevents the default behavior of the link.
 
@@ -763,149 +748,6 @@ $(document).ready(function () {
    * @type {Array<Object>}
    */
   var laboratoryTagifyInstances = [];
-
-  /**
-   * Initializes Tagify on the laboratory name and affiliation fields.
-   *
-   * @param {jQuery} row - The row element containing the input fields.
-   * @param {Object[]} data - The lab data array used for autocompletion.
-   * @returns {Object} - An object containing the Tagify instances for name and affiliation fields.
-   */
-  function initializeTagify(row, data) {
-    var inputName = row.find('input[name="laboratoryName[]"]')[0];
-    var inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]')[0];
-    var hiddenRorId = row.find('input[name="laboratoryRorIds[]"]')[0];
-    var hiddenLabId = row.find('input[name="LabId[]"]')[0];
-
-    // Check if the input fields are available
-    if (!inputName || !inputAffiliation) return null;
-    
-    // Check if the elements are already tagified
-    if (inputName.classList.contains('tagify') || 
-        $(inputName).next('.tagify').length || 
-        inputAffiliation.classList.contains('tagify') ||
-        $(inputAffiliation).next('.tagify').length) {
-      console.log('Elemente bereits tagifiziert, überspringe Initialisierung');
-      return null;
-    }
-
-    /**
-     * Finds a lab object by its name.
-     *
-     * @param {string} name - The name of the lab to find.
-     * @returns {Object|undefined} - The lab object if found, otherwise undefined.
-     */
-    function findLabByName(name) {
-      return data.find((lab) => lab.name === name);
-    }
-
-    var tagifyName = new Tagify(inputName, {
-      whitelist: data.map((item) => item.name),
-      enforceWhitelist: true,
-      placeholder: translations.laboratory.name || "Lab name",
-      maxTags: 1,
-      dropdown: {
-        maxItems: 90,
-        closeOnSelect: true,
-        highlightFirst: true,
-      },
-      delimiters: null,
-      mode: "select",
-    });
-
-    var tagifyAffiliation = new Tagify(inputAffiliation, {
-      whitelist: data.map((item) => item.affiliation),
-      enforceWhitelist: true,
-      maxTags: 1,
-      dropdown: {
-        maxItems: 20,
-        closeOnSelect: true,
-        highlightFirst: true,
-      },
-      delimiters: null,
-      mode: "select",
-    });
-
-    tagifyName.on("add", function (e) {
-      var labName = e.detail.data.value;
-      var lab = findLabByName(labName);
-      if (lab) {
-        tagifyAffiliation.removeAllTags();
-        tagifyAffiliation.addTags([lab.affiliation]);
-        hiddenRorId.value = lab.rorid || "";
-        hiddenLabId.value = lab.id;
-        tagifyAffiliation.setReadonly(true);
-      } else {
-        tagifyAffiliation.removeAllTags();
-        hiddenRorId.value = "";
-        hiddenLabId.value = "";
-        tagifyAffiliation.setReadonly(false);
-      }
-    });
-
-    tagifyName.on("remove", function () {
-      tagifyAffiliation.removeAllTags();
-      hiddenRorId.value = "";
-      hiddenLabId.value = "";
-      tagifyAffiliation.setReadonly(false);
-    });
-
-    tagifyName.on("input", function (e) {
-      var value = e.detail.value;
-      if (value) {
-        var lab = findLabByName(value);
-        if (!lab) {
-          tagifyAffiliation.removeAllTags();
-          hiddenRorId.value = "";
-          tagifyAffiliation.setReadonly(false);
-        }
-      }
-    });
-
-    tagifyAffiliation.on("input", function (e) {
-      var value = e.detail.value;
-      if (value && !tagifyAffiliation.state.readonly) {
-        tagifyAffiliation.addTags([value]);
-      }
-    });
-
-    // Store references to the Tagify instances and their elements
-    const instance = {
-      tagifyName,
-      tagifyAffiliation,
-      row: row
-    };
-
-    // Add to global tracking array
-    laboratoryTagifyInstances.push(instance);
-
-    return instance;
-  }
-
-  /**
-   * Updates the placeholder text for all laboratory Tagify instances.
-   * This is a lightweight alternative to completely refreshing the instances.
-   * 
-   * @returns {void}
-   */
-  function refreshLaboratoryTagifyInstances() {
-    if (!laboratoryTagifyInstances.length) return;
-
-    const labPlaceholder = translations.laboratory.name || "Lab name";
-
-    // For each instance, update only the placeholder text
-    laboratoryTagifyInstances.forEach(instance => {
-      if (!instance.tagifyName || !instance.tagifyName.DOM || !instance.tagifyName.DOM.input) return;
-
-      // Update the placeholder in Tagify settings
-      instance.tagifyName.settings.placeholder = labPlaceholder;
-
-      // Update the DOM placeholder attribute
-      instance.tagifyName.DOM.input.setAttribute('data-placeholder', labPlaceholder);
-    });
-
-    console.log(`Updated placeholders for ${laboratoryTagifyInstances.length} laboratory Tagify instances`);
-  }
 
   /////////////////////////////// HELP BUTTONS /////////////////////////////////////////////////////////////////
 
