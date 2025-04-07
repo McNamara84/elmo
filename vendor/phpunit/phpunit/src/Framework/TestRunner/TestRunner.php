@@ -182,21 +182,6 @@ final class TestRunner
 
         ErrorHandler::instance()->disable();
 
-        /**
-         * Workaround for tests that fail due to mock object expectations
-         * that are verified while the test is running and not after the
-         * test has finished running.
-         *
-         * @see https://github.com/sebastianbergmann/phpunit/issues/6138
-         */
-        if ($failure &&
-            !$error &&
-            !$incomplete &&
-            !$skipped &&
-            $test->numberOfAssertionsPerformed() === 0) {
-            $test->addToAssertionCount(1);
-        }
-
         if (!$error &&
             !$incomplete &&
             !$skipped &&
@@ -229,7 +214,7 @@ final class TestRunner
             Facade::emitter()->testConsideredRisky(
                 $test->valueObjectForEvents(),
                 sprintf(
-                    'This test printed output: %s',
+                    'Test code or tested code printed unexpected output: %s',
                     $test->output(),
                 ),
             );
