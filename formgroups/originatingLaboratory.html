@@ -9,9 +9,13 @@
                 <div class="col-10 col-sm-11 col-md-11 col-lg-11 p-1">
                     <label for="input-originatinglaboratory-name" class="visually-hidden">Originating Laboratory</label>
                     <div class="input-group has-validation">
-                        <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                            id="input-originatinglaboratory-name" name="laboratoryName[]"
-                            data-translate-placeholder="laboratory.name" />
+                        <div class="form-floating">
+                            <select type="text" class="form-select input-with-help input-right-no-round-corners"
+                                id="input-originatinglaboratory-name" name="laboratoryName[]">
+                            </select>
+                            <label for="input-originatinglaboratory-name" data-translate="laboratory.name">Laboratory
+                                Name</label>
+                        </div>
                         <input type="hidden" class="LabId" name="LabId[]">
                         <span class="input-group-text"><i class="bi bi-question-circle-fill"
                                 data-help-section-id="help-originatinglaboratory-name"></i></span>
