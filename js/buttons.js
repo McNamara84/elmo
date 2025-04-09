@@ -661,61 +661,6 @@ $(document).ready(function () {
     setUpAutocompleteFunder(newInput[0]);
   });
 
-  var labData;
-
-  if ($("#group-originatinglaboratory").length) {
-    // Load lab data from JSON
-    $.getJSON("json/msl-labs.json", function (data) {
-      labData = data;
-    });
-  }
-
-  var rowCounter = 1;
-
-  /**
-   * Event handler for the "Add Laboratory" button click.
-   * Clones the first laboratory row, resets input fields, updates IDs, and appends it to the laboratory group.
-   */
-  $("#button-originatinglaboratory-add").click(function () {
-    var laboratoryGroup = $("#group-originatinglaboratory");
-    var firstOriginatingLaboratoryLine = laboratoryGroup.children().first();
-
-    var newOriginatingLaboratoryRow = firstOriginatingLaboratoryLine.clone();
-
-    // Clear input fields and remove validation feedback
-    newOriginatingLaboratoryRow.find("input").val("").removeClass("is-invalid is-valid");
-    newOriginatingLaboratoryRow.find(".invalid-feedback, .valid-feedback").hide();
-
-
-    // Update IDs
-    rowCounter++;
-    newOriginatingLaboratoryRow.find("[id]").each(function () {
-      var oldId = $(this).attr("id");
-      var newId = oldId + "_" + rowCounter;
-      $(this).attr("id", newId);
-    });
-
-    // Replace the add button with the remove button
-    newOriginatingLaboratoryRow.find(".addLaboratory").replaceWith(removeButton);
-
-    // Append the new laboratory row to the DOM
-    laboratoryGroup.append(newOriginatingLaboratoryRow);
-
-    // Remove help buttons
-    replaceHelpButtonInClonedRows(newOriginatingLaboratoryRow);
-
-    // Event handler for the remove button
-    newOriginatingLaboratoryRow.on("click", ".removeButton", function () {
-      // Find and remove the corresponding instance from tracking array
-      const rowElement = $(this).closest(".row")[0];
-      laboratoryTagifyInstances = laboratoryTagifyInstances.filter(instance =>
-        instance.row[0] !== rowElement);
-
-      // Remove the row from DOM
-      $(rowElement).remove();
-    });
-  });
-
   /**
   * Event listener for the load button that opens the XML upload modal
   * @requires jQuery
@@ -732,6 +677,11 @@ $(document).ready(function () {
   * Initializes the event handler once the document is fully loaded.
   */
   $(document).ready(function () {
+    /**
+     * Click event handler for showing the changelog modal.
+     *
+     * @param {Event} event - The event object associated with the click action.
+     */
     $('#button-changelog-show').click(function (event) {
       event.preventDefault(); // Prevents the default behavior of the link.
 
@@ -742,12 +692,6 @@ $(document).ready(function () {
       });
     });
   });
-
-  /**
-   * Stores all initialized laboratory Tagify instances for later reference.
-   * @type {Array<Object>}
-   */
-  var laboratoryTagifyInstances = [];
 
   /////////////////////////////// HELP BUTTONS /////////////////////////////////////////////////////////////////
 
