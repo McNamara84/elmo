@@ -1,7 +1,7 @@
 $(document).ready(function () {
     /**
-     * Ensures all laboratory name select elements are populated with options
-     * @param {Array} data - The lab data array used for options
+     * Populates all laboratory name select elements with options.
+     * @param {Array} data - The lab data array used for options.
      * @returns {void}
      */
     function populateAllLabSelectOptions(data) {
@@ -14,17 +14,17 @@ $(document).ready(function () {
         $('select[name="laboratoryName[]"]').each(function () {
             const selectElement = $(this)[0];
 
-            // Clear existing options (außer der leeren Option)
+            // Clear existing options
             selectElement.innerHTML = '';
 
-            // Leere Option mit data-translate hinzufügen
+            // Add empty option with data-translate attribute
             const emptyOption = document.createElement('option');
             emptyOption.value = '';
             emptyOption.hidden = true;
             emptyOption.setAttribute('data-translate', 'general.choose');
             selectElement.appendChild(emptyOption);
 
-            // Lab-Optionen hinzufügen
+            // Add lab options
             data.forEach(function (lab) {
                 const option = document.createElement('option');
                 option.value = lab.name;
@@ -34,14 +34,13 @@ $(document).ready(function () {
         });
     }
 
-
     /**
-    * Replaces help buttons in cloned rows with invisible placeholders.
-    * This helps maintain the structure and prevents changes in field sizes.
-    *
-    * @param {jQuery} row - The cloned row from which to replace help buttons.
-    * @param {string} [roundCornersClass="input-right-with-round-corners"] - The CSS class for rounded corners.
-    */
+     * Replaces help buttons in cloned rows with invisible placeholders
+     * to maintain layout consistency and prevent input field size changes.
+     *
+     * @param {jQuery} row - The cloned row.
+     * @param {string} [roundCornersClass="input-right-with-round-corners"] - Class for styling input corners.
+     */
     function replaceHelpButtonInClonedRows(
         row,
         roundCornersClass = "input-right-with-round-corners"
@@ -61,61 +60,55 @@ $(document).ready(function () {
     }
 
     /**
-     * Event handler for the "Add Laboratory" button click.
+     * Event handler for clicking the "Add Laboratory" button.
+     * Clones the first laboratory row, resets values, updates IDs,
+     * and adds a remove button.
      */
     $("#button-originatinglaboratory-add").click(function () {
-        var laboratoryGroup = $("#group-originatinglaboratory");
-        var firstOriginatingLaboratoryLine = laboratoryGroup.children(".row").first();
-        var removeButton = '<button type="button" class="btn btn-danger removeButton">-</button>';
-        var newOriginatingLaboratoryRow = firstOriginatingLaboratoryLine.clone();
+        const laboratoryGroup = $("#group-originatinglaboratory");
+        const firstRow = laboratoryGroup.children(".row").first();
+        const newRow = firstRow.clone();
+        const removeButton = '<button type="button" class="btn btn-danger removeButton">-</button>';
 
-        // Clear input fields and remove validation feedback
-        newOriginatingLaboratoryRow.find("input").val("").removeClass("is-invalid is-valid");
-        newOriginatingLaboratoryRow.find("select").val(""); // Reset select elements too
-        newOriginatingLaboratoryRow.find(".invalid-feedback, .valid-feedback").hide();
+        // Clear input/select values and remove validation feedback
+        newRow.find("input").val("").removeClass("is-invalid is-valid");
+        newRow.find("select").val("");
+        newRow.find(".invalid-feedback, .valid-feedback").hide();
 
-
-        // Update IDs
+        // Update all IDs to ensure uniqueness
         rowCounter++;
-        newOriginatingLaboratoryRow.find("[id]").each(function () {
-            var oldId = $(this).attr("id");
-            var newId = oldId + "_" + rowCounter;
+        newRow.find("[id]").each(function () {
+            const oldId = $(this).attr("id");
+            const newId = oldId + "_" + rowCounter;
             $(this).attr("id", newId);
         });
 
-        newOriginatingLaboratoryRow.find(".addLaboratory").replaceWith(removeButton);
+        // Replace add button with remove button
+        newRow.find(".addLaboratory").replaceWith(removeButton);
 
-        // Append the new laboratory row to the DOM
-        laboratoryGroup.append(newOriginatingLaboratoryRow);
+        // Append cloned row
+        laboratoryGroup.append(newRow);
 
-        // Remove help buttons
-        replaceHelpButtonInClonedRows(newOriginatingLaboratoryRow);
+        // Replace help icons in the new row
+        replaceHelpButtonInClonedRows(newRow);
 
-
-        // Direktes Event-Binding statt Delegation
-        newOriginatingLaboratoryRow.find(".removeButton").on("click", function () {
-            console.log("Remove button clicked");
+        // Attach remove functionality directly
+        newRow.find(".removeButton").on("click", function () {
             const row = $(this).closest(".row");
-
-            // Remove the row from DOM
             row.remove();
         });
     });
 
     /**
-     * Stores all initialized laboratory Tagify instances for later reference.
+     * Initializes lab data and populates select fields if the group container exists.
      */
-    var labData;
-    var rowCounter = 1;
+    let labData;
+    let rowCounter = 1;
 
     if ($("#group-originatinglaboratory").length) {
-        // Load lab data from JSON
         $.getJSON("json/msl-labs.json", function (data) {
             labData = data;
-
-            // Explizit alle vorhandenen Select-Elemente befüllen
             populateAllLabSelectOptions(data);
-
         });
     }
 });
