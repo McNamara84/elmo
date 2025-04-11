@@ -7,11 +7,13 @@
             <div class="row" data-laboratory-row>
                 <!-- Input field for Laboratory Name -->
                 <div class="col-10 col-sm-11 col-md-11 col-lg-11 p-1">
-                    <label for="input-originatinglaboratory-name" class="visually-hidden">Originating Laboratory</label>
+                    <label for="input-originatinglaboratory-name" class="visually-hidden"
+                        data-translate="laboratory.name">Laboratory Name</label>
                     <div class="input-group has-validation">
                         <div class="form-floating">
-                            <select type="text" class="form-select input-with-help input-right-no-round-corners"
+                            <select class="form-select input-with-help input-right-no-round-corners"
                                 id="input-originatinglaboratory-name" name="laboratoryName[]">
+                                <option value="" hidden data-translate="general.choose"></option>
                             </select>
                             <label for="input-originatinglaboratory-name" data-translate="laboratory.name">Laboratory
                                 Name</label>

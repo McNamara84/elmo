@@ -14,21 +14,17 @@ $(document).ready(function () {
         $('select[name="laboratoryName[]"]').each(function () {
             const selectElement = $(this)[0];
 
-            // Skip if options are already populated (more than one option)
-            if (selectElement.options.length > 1) {
-                return;
-            }
-
-            // Clear existing options
+            // Clear existing options (außer der leeren Option)
             selectElement.innerHTML = '';
 
-            // Add empty option as placeholder
+            // Leere Option mit data-translate hinzufügen
             const emptyOption = document.createElement('option');
             emptyOption.value = '';
-            emptyOption.textContent = translations?.laboratory?.name || "Lab name";
+            emptyOption.hidden = true;
+            emptyOption.setAttribute('data-translate', 'general.choose');
             selectElement.appendChild(emptyOption);
 
-            // Add lab options
+            // Lab-Optionen hinzufügen
             data.forEach(function (lab) {
                 const option = document.createElement('option');
                 option.value = lab.name;
