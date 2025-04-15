@@ -2,6 +2,19 @@
 
 All notable changes of the PHPUnit 11.5 release series are documented in this file using the [Keep a CHANGELOG](https://keepachangelog.com/) principles.
 
+## [11.5.17] - 2025-04-08
+
+### Fixed
+
+* [#6104](https://github.com/sebastianbergmann/phpunit/issues/6104): Reverted change introduced in PHPUnit 11.5.16
+
+## [11.5.16] - 2025-04-08
+
+### Fixed
+
+* [#6104](https://github.com/sebastianbergmann/phpunit/issues/6104): Test with dependencies and data provider fails
+* [#6174](https://github.com/sebastianbergmann/phpunit/issues/6174): `willReturnMap()` fails with nullable parameters when their default is `null` and no argument is passed for them
+
 ## [11.5.15] - 2025-03-23
 
 ### Changed
@@ -147,6 +160,8 @@ All notable changes of the PHPUnit 11.5 release series are documented in this fi
 * [#6055](https://github.com/sebastianbergmann/phpunit/issues/6055): `assertNotContainsOnly()` (use `assertContainsNotOnlyArray()`, `assertContainsNotOnlyBool()`, `assertContainsNotOnlyCallable()`, `assertContainsNotOnlyFloat()`, `assertContainsNotOnlyInt()`, `assertContainsNotOnlyIterable()`, `assertContainsNotOnlyNumeric()`, `assertContainsNotOnlyObject()`, `assertContainsNotOnlyResource()`, `assertContainsNotOnlyClosedResource()`, `assertContainsNotOnlyScalar()`, or `assertContainsNotOnlyString()` instead)
 * [#6059](https://github.com/sebastianbergmann/phpunit/issues/6059): `containsOnly()` (use `containsOnlyArray()`, `containsOnlyBool()`, `containsOnlyCallable()`, `containsOnlyFloat()`, `containsOnlyInt()`, `containsOnlyIterable()`, `containsOnlyNumeric()`, `containsOnlyObject()`, `containsOnlyResource()`, `containsOnlyClosedResource()`, `containsOnlyScalar()`, or `containsOnlyString()` instead)
 
+[11.5.17]: https://github.com/sebastianbergmann/phpunit/compare/11.5.16...11.5.17
+[11.5.16]: https://github.com/sebastianbergmann/phpunit/compare/11.5.15...11.5.16
 [11.5.15]: https://github.com/sebastianbergmann/phpunit/compare/11.5.14...11.5.15
 [11.5.14]: https://github.com/sebastianbergmann/phpunit/compare/11.5.13...11.5.14
 [11.5.13]: https://github.com/sebastianbergmann/phpunit/compare/11.5.12...11.5.13
