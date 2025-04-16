@@ -19,3 +19,8 @@ RUN apt-get update && \
         pdo_mysql \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+##
+# Copy the application files from ELMO into the container
+##
+COPY . /var/www/html/
