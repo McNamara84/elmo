@@ -7,13 +7,10 @@
             <div class="row" data-laboratory-row>
                 <!-- Input field for Laboratory Name -->
                 <div class="col-10 col-sm-11 col-md-11 col-lg-11 p-1">
-                    <label for="input-originatinglaboratory-name" class="visually-hidden"
-                        data-translate="laboratory.name">Laboratory Name</label>
                     <div class="input-group has-validation">
                         <div class="form-floating">
-                            <select class="form-select input-with-help input-right-no-round-corners"
+                            <select type="text" class="form-select input-with-help input-right-no-round-corners"
                                 id="input-originatinglaboratory-name" name="laboratoryName[]">
-                                <option value="" hidden data-translate="general.choose"></option>
                             </select>
                             <label for="input-originatinglaboratory-name" data-translate="laboratory.name">Laboratory
                                 Name</label>
@@ -25,7 +22,6 @@
                 </div>
                 <!-- Hidden input field for Laboratory Affiliation -->
                 <div class="col-sm-5 col-md-5 col-lg-4 p-1 d-none">
-                    <label for="input-originatinglaboratory-affiliation" class="visually-hidden">Laboratory-Affiliation</label>
                     <input type="text" class="form-control input-with-help input-right-no-round-corners"
                         id="input-originatinglaboratory-affiliation" name="laboratoryAffiliation[]" />
                     <input type="hidden" id="input-originatinglaboratory-rorid" name="laboratoryRorIds[]" />

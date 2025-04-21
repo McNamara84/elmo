@@ -1,9 +1,7 @@
 $(document).ready(function () {
-    /**
-     * Populates all laboratory name select elements with options.
-     * @param {Array} data - The lab data array used for options.
-     * @returns {void}
-     */
+    let labData;
+    let rowCounter = 1;
+
     function populateAllLabSelectOptions(data) {
         if (!data || !data.length) {
             console.error('No lab data available for populating selects');
@@ -32,20 +30,30 @@ $(document).ready(function () {
                 selectElement.appendChild(option);
             });
         });
+
+        attachChangeListeners(); // <- wichtig
     }
 
-    /**
-     * Replaces help buttons in cloned rows with invisible placeholders
-     * to maintain layout consistency and prevent input field size changes.
-     *
-     * @param {jQuery} row - The cloned row.
-     * @param {string} [roundCornersClass="input-right-with-round-corners"] - Class for styling input corners.
-     */
-    function replaceHelpButtonInClonedRows(
-        row,
-        roundCornersClass = "input-right-with-round-corners"
-    ) {
-        // Check whether the help buttons are visible
+    function attachChangeListeners() {
+        $('select[name="laboratoryName[]"]').off('change').on('change', function () {
+            const selectedName = $(this).val();
+            const row = $(this).closest('.row');
+
+            const lab = labData.find(item => item.name === selectedName);
+
+            if (lab) {
+                row.find('input[name="LabId[]"]').val(lab.id || '');
+                row.find('input[name="laboratoryAffiliation[]"]').val(lab.affiliation || '');
+                row.find('input[name="laboratoryRorIds[]"]').val(lab.rorid || '');
+            } else {
+                row.find('input[name="LabId[]"]').val('');
+                row.find('input[name="laboratoryAffiliation[]"]').val('');
+                row.find('input[name="laboratoryRorIds[]"]').val('');
+            }
+        });
+    }
+
+    function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-with-round-corners") {
         if ($(".input-group-text").is(":visible")) {
             // Find all span elements with the help icon
             row.find("span.input-group-text:has(i.bi-question-circle-fill)").each(function () {
@@ -92,18 +100,13 @@ $(document).ready(function () {
         // Replace help icons in the new row
         replaceHelpButtonInClonedRows(newRow);
 
-        // Attach remove functionality directly
+        attachChangeListeners();
+
         newRow.find(".removeButton").on("click", function () {
             const row = $(this).closest(".row");
             row.remove();
         });
     });
-
-    /**
-     * Initializes lab data and populates select fields if the group container exists.
-     */
-    let labData;
-    let rowCounter = 1;
 
     if ($("#group-originatinglaboratory").length) {
         $.getJSON("json/msl-labs.json", function (data) {
