@@ -26,87 +26,46 @@ function saveOriginatingLaboratories($connection, $postData, $resource_id)
     $len = count($postData['laboratoryName']);
 
     for ($i = 0; $i < $len; $i++) {
+        $labName = trim($postData['laboratoryName'][$i] ?? '');
 
-        // Parse laboratory name - handle both standard select values and JSON from Tagify
-        $labNameData = $postData['laboratoryName'][$i];
-        $labName = '';
-
-        // Check if the data is a JSON string (legacy Tagify format) or a direct value (select element)
-        $labNameArray = json_decode($labNameData, true);
-        if ($labNameArray && isset($labNameArray[0]['value'])) {
-            // It's a JSON string from Tagify
-            $labName = $labNameArray[0]['value'];
-        } else {
-            // It's a direct value from a select element
-            $labName = $labNameData;
-        }
-
-        // Skip if lab name is empty
         if (empty($labName)) {
             continue;
         }
 
-        $labId = isset($postData['LabId'][$i]) ? $postData['LabId'][$i] : null;
+        $labId = $postData['LabId'][$i] ?? null;
+        $affiliation = trim($postData['laboratoryAffiliation'][$i] ?? '');
+        $rorId = trim($postData['laboratoryRorIds'][$i] ?? '');
 
-        // Parse affiliation data
-        $affiliation = null;
-        $rorId = null;
+        try {
+            $lab_id = saveOrUpdateOriginatingLaboratory($connection, $labName, $labId);
 
-        if (isset($postData['laboratoryAffiliation'][$i])) {
-            $affiliationData = $postData['laboratoryAffiliation'][$i];
-
-            $affiliationArray = json_decode($affiliationData, true);
-            if ($affiliationArray && isset($affiliationArray[0]['value'])) {
-                $affiliation = $affiliationArray[0]['value'];
+            if (!$lab_id) {
+                $success = false;
+                continue;
             }
-        }
 
-        if (isset($postData['laboratoryRorIds'][$i])) {
-            $rorData = $postData['laboratoryRorIds'][$i];
+            $linkResult = linkResourceToOriginatingLaboratory($connection, $resource_id, $lab_id);
 
-            $rorArray = json_decode($rorData, true);
-            if ($rorArray && isset($rorArray[0]['value'])) {
-                $rorId = $rorArray[0]['value'];
-            } else {
-                $rorId = $rorData;
+            if (!$linkResult) {
+                $success = false;
+                continue;
             }
-        }
 
-        // Save laboratory
-        if (!empty($labName)) {
-            try {
-                $lab_id = saveOrUpdateOriginatingLaboratory($connection, $labName, $labId);
+            if (!empty($affiliation)) {
+                $affiliation_id = saveLabAffiliation($connection, $affiliation, $rorId);
 
-                if (!$lab_id) {
-                    $success = false;
-                    continue;
-                }
+                if ($affiliation_id) {
+                    $linkAffResult = linkLaboratoryToAffiliation($connection, $lab_id, $affiliation_id);
 
-                $linkResult = linkResourceToOriginatingLaboratory($connection, $resource_id, $lab_id);
-
-                if (!$linkResult) {
-                    $success = false;
-                    continue;
-                }
-
-                if (!empty($affiliation)) {
-                    $affiliation_id = saveLabAffiliation($connection, $affiliation, $rorId);
-
-                    if ($affiliation_id) {
-                        $linkAffResult = linkLaboratoryToAffiliation($connection, $lab_id, $affiliation_id);
-
-                        if (!$linkAffResult) {
-                            $success = false;
-                        }
-                    } else {
+                    if (!$linkAffResult) {
                         $success = false;
                     }
+                } else {
+                    $success = false;
                 }
-            } catch (Exception $e) {
-                $success = false;
             }
-        } else {
-            error_log("Empty laboratory name, skipping");
+        } catch (Exception $e) {
+            $success = false;
         }
     }
 
