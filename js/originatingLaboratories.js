@@ -19,7 +19,7 @@ $(document).ready(function () {
             const emptyOption = document.createElement('option');
             emptyOption.value = '';
             emptyOption.hidden = true;
-            emptyOption.setAttribute('data-translate', 'general.choose');
+            emptyOption.textContent = '';
             selectElement.appendChild(emptyOption);
 
             // Add lab options
