@@ -373,11 +373,10 @@ function setLabDataInRow(row, labId) {
     // Trigger change event to ensure any attached handlers run
     selectName.trigger('change');
 
-    // Find and set affiliation field
-    const inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]')[0];
-    if (inputAffiliation && inputAffiliation.tagify) {
-      inputAffiliation.tagify.removeAllTags();
-      inputAffiliation.tagify.addTags([lab.affiliation]);
+    // Set affiliation
+    const inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]');
+    if (inputAffiliation.length) {
+      inputAffiliation.val(lab.affiliation || '');
     }
 
     // Set hidden fields
@@ -400,7 +399,7 @@ function setLabDataInRow(row, labId) {
  */
 function processOriginatingLaboratories(xmlDoc, resolver) {
   const laboratoryNodes = xmlDoc.evaluate(
-    './/ns:contributors/ns:contributor[@contributorType="HostingInstitution"]',
+    './/ns:contributors/ns:contributor[@contributorType="HostingInstitution" and ns:nameIdentifier[@nameIdentifierScheme="labid"]]',
     xmlDoc,
     resolver,
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
