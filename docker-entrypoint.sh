@@ -24,3 +24,6 @@ if [ ! -f "$FLAG_FILE" ]; then
 fi
 
 exec apache2-foreground
+
+# Clean up install files
+rm -f /var/www/html/install.{php,html}
