@@ -4,11 +4,15 @@ set -e
 FLAG_FILE="/var/www/html/.installed"
 
 wait_for_db() {
-  echo "⏳  Waiting for MariaDB at $DB_HOST …"
-  until mysql -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" -e "SELECT 1" "$DB_NAME" >/dev/null 2>&1; do
-    sleep 2
-  done
-  echo "✅  Database is reachable."
+  php -r '
+  $max = 30;
+  while ($max--) {
+      @$c = new mysqli(getenv("DB_HOST"), getenv("DB_USER"), getenv("DB_PASSWORD"));
+      if (!$c->connect_errno) { echo "✅  MariaDB reachable\n"; exit(0); }
+      sleep(2);
+  }
+  echo "❌  MariaDB not reachable\n"; exit(1);
+  ' || exit 1
 }
 
 if [ ! -f "$FLAG_FILE" ]; then
