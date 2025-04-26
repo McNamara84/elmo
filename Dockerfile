@@ -1,31 +1,27 @@
-# Image for PHP 8.4
 FROM php:8.4-apache
 
-##
-# Install required packages:
-#   - libzip-dev and libxslt-dev for enabling ZIP and XSL in PHP
-#   - libxml2-dev often needed for XSL
-# Enable the extensions in PHP (zip, xsl, mysqli, pdo_mysql)
-##
-RUN apt-get update && \
-    apt-get install -y \
-        libzip-dev \
-        libxslt-dev \
+# Install required packages and enable PHP extensions
+RUN apt-get update && apt-get install -y --no-install-recommends mariadb-client \
         libxml2-dev \
+        libxslt-dev \
+        libzip-dev \
     && docker-php-ext-install \
-        zip \
-        xsl \
         mysqli \
         pdo_mysql \
-    && apt-get clean \
+        xsl \
+        zip \
     && rm -rf /var/lib/apt/lists/*
 
-# Apache: .htaccess & Co.
+# Set Apache document root and enable rewrite module
 ENV APACHE_DOCUMENT_ROOT=/var/www/html
 RUN sed -i 's|/var/www/html|${APACHE_DOCUMENT_ROOT}|g' /etc/apache2/sites-available/000-default.conf \
- && a2enmod rewrite
+    && a2enmod rewrite
 
-##
-# Copy the application files from ELMO into the container
-##
+# Copy application files
 COPY . /var/www/html/
+
+# Install database schema and set entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["apache2-foreground"]
