@@ -1,0 +1,168 @@
+<div class="card mb-2">
+    <div class="card-header"><b data-translate="dataSources.title">Data Sources</b> <i class="bi bi-question-circle-fill" 
+        data-help-section-id="help-datasources-fg"></i></div>
+    <div class="card-body">
+      <div id="group-datasources">
+        <div class="row" data-source-row>
+          <!-- Data Source Type (Dropdown) -->
+          <div class="col-12 col-sm-12 col-md-4 col-lg-3 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <select class="form-select input-with-help input-right-no-round-corners"
+                  aria-label="Default select example" id="input-datasource-type" name="datasource_type[]"
+                  onchange="updateDetailsOptions(this)" required>
+                  <option disabled selected hidden value="">Choose...</option>
+                  <option value="S">Satellite</option>
+                  <option value="G">Ground</option>
+                  <option value="A">Airborne</option>
+                  <option value="M">Model</option>
+                  <option value="T">Other</option>
+                </select>
+                <label for="input-datasource-type" data-translate="dataSources.type">Type<span class="text-danger">*</span></label>
+                <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-datasource-type"></i></span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Details (Dropdown) -->
+          <div class="col-12 col-sm-12 col-md-4 col-lg-3 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <select class="form-select input-with-help input-right-no-round-corners"
+                  aria-label="Default select example" id="input-datasource-details" name="datasource_details[]" required>
+                  <option disabled selected hidden value="">Select type first</option>
+                </select>
+                <label for="input-datasource-details" data-translate="dataSources.details">Details<span class="text-danger">*</span></label>
+                <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-datasource-details"></i></span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Identifier (Text Input) -->
+          <div class="col-12 col-sm-12 col-md-3 col-lg-3 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                  id="input-datasource-identifier" name="dIdentifier[]" />
+                <label for="input-datasource-identifier" data-translate="dataSources.identifier">Identifier</label>
+                <div class="invalid-feedback" data-translate="dataSources.identifierInvalid">Please enter a valid identifier.</div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-datasource-identifier"></i></span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Identifier Type (Dropdown) -->
+          <div class="col-10 col-sm-10 col-md-2 col-lg-2 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <select class="form-select input-with-help input-right-no-round-corners"
+                  aria-label="Default select example" id="input-datasource-identifiertype" name="dIdentifierType[]">
+                </select>
+                <label for="input-datasource-identifiertype" data-translate="dataSources.identifierType">Identifier type</label>
+                <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-datasource-identifier-type"></i></span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Add Button -->
+          <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
+            <button type="button" class="btn btn-primary addDataSource" id="button-datasource-add" data-translate="general.add">
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Data structure for hierarchical details options
+    const detailsOptions = {
+      'S': ['GRACE', 'GOCE', 'CHAMP', 'LAGEOS', 'Other'],
+      'G': ['Absolute Gravimetry', 'Relative Gravimetry', 'GNSS', 'Leveling', 'Other'],
+      'A': ['Airborne Gravimetry', 'Airborne Gradiometry', 'Other'],
+      'M': ['Geoid Model', 'Gravity Model', 'Digital Elevation Model', 'Other'],
+      'T': ['Literature', 'Software', 'Other']
+    };
+  
+    // Function to update details dropdown based on selected type
+    function updateDetailsOptions(typeSelect) {
+      const detailsSelect = typeSelect.closest('.row').querySelector('[name="datasource_details[]"]');
+      const selectedType = typeSelect.value;
+      
+      // Clear current options
+      detailsSelect.innerHTML = '';
+      
+      // Add default option
+      const defaultOption = document.createElement('option');
+      defaultOption.disabled = true;
+      defaultOption.selected = true;
+      defaultOption.hidden = true;
+      defaultOption.value = '';
+      defaultOption.textContent = 'Choose...';
+      detailsSelect.appendChild(defaultOption);
+      
+      // Add options based on selected type
+      if (selectedType && detailsOptions[selectedType]) {
+        detailsOptions[selectedType].forEach(detail => {
+          const option = document.createElement('option');
+          option.value = detail;
+          option.textContent = detail;
+          detailsSelect.appendChild(option);
+        });
+      }
+    }
+  
+    // Add new data source entry
+    let dataSourceEntryCount = 1; // Start at 1 because we already have entry #0
+
+// Add new data source entry with proper IDs
+    document.getElementById('add-datasource-btn').addEventListener('click', function() {
+        const container = document.getElementById('data-sources-container');
+        const template = container.querySelector('.data-source-entry').cloneNode(true);
+        
+        // Clear values in the cloned template
+        template.querySelectorAll('input').forEach(input => input.value = '');
+        template.querySelectorAll('select').forEach(select => {
+            select.selectedIndex = 0;
+        });
+        
+        // Update IDs to ensure they are unique and follow the pattern
+        template.querySelector('[id="input-datasource-type"]').id = 'input-datasource-type' + dataSourceEntryCount;
+        template.querySelector('[id="input-datasource-details"]').id = 'input-datasource-details' + dataSourceEntryCount;
+        template.querySelector('[id="input-datasource-identifier"]').id = 'input-datasource-identifier' + dataSourceEntryCount;
+        
+        // Update the identifier type dropdown ID and clear existing options
+        const identifierTypeSelect = template.querySelector('[id^="input-identifier-type"]');
+        identifierTypeSelect.id = 'input-identifier-type' + dataSourceEntryCount;
+        
+        // Add the new entry to the container
+        container.appendChild(template);
+        
+        // Initialize the new identifier type dropdown
+        setupIdentifierTypesDropdown('#' + identifierTypeSelect.id);
+        
+        // Increment counter for next entry
+        dataSourceEntryCount++;
+    });
+
+    // Initialize the first identifier type dropdown when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        setupIdentifierTypesDropdown('#input-identifier-type0');
+    });
+  </script>
