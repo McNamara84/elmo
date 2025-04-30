@@ -390,7 +390,8 @@ function setupIdentifierTypesDropdown(id) {
  */
 function updateIdentifierType(inputElement) {
   var identifier = $(inputElement).val();
-  var selectElement = $(inputElement).closest(".row").find('select[name="rIdentifierType[]"]');
+  // Apply the function to the identifier type select elements of related work and data sources
+  var selectElement = $(inputElement).closest(".row").find('select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]');
 
   if (identifier) {
     $.ajax({
@@ -492,6 +493,38 @@ function updateIdsAndNames() {
       .attr("id", "input-relatedwork-identifiertype" + index);
   });
 }
-
-// Initialize the dropdowns for identifier types
 setupIdentifierTypesDropdown("#input-relatedwork-identifiertype");
+
+function updateDataSourceIdsAndNames() {
+  $("#group-datasources .row").each(function (index) {
+    $(this)
+      .find('select[name="datasource_type[]"]')
+      .attr("id", "input-datasource-type" + index);
+    $(this)
+      .find('select[name="datasource_details[]"]')
+      .attr("id", "input-datasource-details" + index);
+    $(this)
+      .find('input[name="dIdentifier[]"]')
+      .attr("id", "input-datasource-identifier" + index);
+    $(this)
+      .find('select[name="dIdentifierType[]"]')
+      .attr("id", "input-datasource-identifiertype" + index);
+  });
+}
+// Initialize the dropdown for data sources identifier types
+
+setupIdentifierTypesDropdown("#input-datasource-identifiertype");
+
+// Event listener for input in the data source identifier input field with debounce
+$(document).on(
+  "input",
+  'input[name="dIdentifier[]"]',
+  debounce(function () {
+    updateDataSourceIdsAndNames(this);
+  }, 300)
+);
+
+// Event listener for leaving the data source identifier input field
+$(document).on("blur", 'input[name="dIdentifier[]"]', function () {
+  updateIdentifierType(this);
+});

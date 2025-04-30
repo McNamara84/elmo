@@ -68,6 +68,7 @@ include("formgroups/rights.html");
 include("formgroups/authors.html");
 if ($showGGMsProperties) {
     include("formgroups/GGMsProperties.html");
+    include("formgroups/dataSources.html");
 }
 if ($showContributorPersons) {
     include("formgroups/contributorPersons.html");

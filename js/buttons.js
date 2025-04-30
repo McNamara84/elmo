@@ -1023,4 +1023,55 @@ $(document).ready(function () {
   const tooltipList = [...tooltipTriggerList].map(
     (tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl)
   );
+  
+  setupIdentifierTypesDropdown("#input-datasource-identifiertype");
+  
+  /**
+   * Event handler for adding a new data source row.
+   * Clones the first data source row, resets input fields, and appends it to the data sources group.
+   */
+  $("#button-datasource-add").click(function () {
+    var datasourceGroup = $("#group-datasources");
+    var firstDataSourceLine = datasourceGroup.children().first();
+    
+    // Clone the template
+    var newDataSourceRow = firstDataSourceLine.clone();
+    
+    // Clear input fields
+    newDataSourceRow.find("input").val("").removeClass("is-invalid");
+    
+    // Reset select elements
+    newDataSourceRow.find("select").each(function() {
+      $(this).prop('selectedIndex', 0);
+    });
+    
+    // Remove required attributes initially
+    newDataSourceRow.find("input, select").removeAttr("required");
+    
+    // Remove help buttons - this now works because it's in the same scope
+    replaceHelpButtonInClonedRows(newDataSourceRow);
+    
+    // Replace the add button with the remove button
+    newDataSourceRow.find("#button-datasource-add").replaceWith(removeButton);
+    
+    // Append the new data source row to the DOM
+    datasourceGroup.append(newDataSourceRow);
+    
+    // Update IDs for all rows (calls your function from select.js)
+    updateDataSourceIdsAndNames();
+    
+    // Re-initialize identifier type dropdown for the new row
+    var newIdentifierTypeSelect = newDataSourceRow.find('select[name="dIdentifierType[]"]');
+    setupIdentifierTypesDropdown("#" + newIdentifierTypeSelect.attr("id"));
+    
+    // Make sure the updateDetailsOptions function works with the new row
+    newDataSourceRow.find('select[name="datasource_type[]"]').on('change', function() {
+      updateDetailsOptions(this);
+    });
+    
+    // Event handler for the remove button
+    newDataSourceRow.on("click", ".removeButton", function () {
+      $(this).closest(".row").remove();
+    });
+  });
 });
