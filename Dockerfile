@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends mariadb-client 
         libxml2-dev \
         libxslt-dev \
         libzip-dev \
+        dos2unix \
     && docker-php-ext-install \
         mysqli \
         pdo_mysql \
@@ -22,6 +23,8 @@ COPY . /var/www/html/
 
 # Install database schema and set entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-ENTRYPOINT ["docker-entrypoint.sh"]
+RUN dos2unix /usr/local/bin/docker-entrypoint.sh \
+    && chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
