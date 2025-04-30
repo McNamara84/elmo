@@ -2,6 +2,49 @@
 
 All notable changes of the PHPUnit 11.5 release series are documented in this file using the [Keep a CHANGELOG](https://keepachangelog.com/) principles.
 
+## [11.5.18] - 2025-04-22
+
+### Changed
+
+* When gathering the telemetry information that each event has, the real size of memory allocated from the operating system is no longer used as this is grown by PHP's memory manager in chunks that are so large that small(er) increases in peak memory usage cannot be seen
+* The peak memory usage returned by `memory_get_peak_usage()` is now reset immediately before the `Test\Prepared` event is emitted using `memory_reset_peak_usage()` so that (memory usage at `Test\Finished` - memory usage at `Test\Prepared`) is a better approximation of the memory usage of the test
+* The string representation of `Telemetry\Info` now uses peak memory usage instead of memory usage (this affects `--log-events-verbose-text`) 
+
+### Fixed
+
+* A "Before Test Method Errored" event is no longer emitted when a test is skipped in a "before test" method
+
+## [11.5.17] - 2025-04-08
+
+### Fixed
+
+* [#6104](https://github.com/sebastianbergmann/phpunit/issues/6104): Reverted change introduced in PHPUnit 11.5.16
+
+## [11.5.16] - 2025-04-08
+
+### Fixed
+
+* [#6104](https://github.com/sebastianbergmann/phpunit/issues/6104): Test with dependencies and data provider fails
+* [#6174](https://github.com/sebastianbergmann/phpunit/issues/6174): `willReturnMap()` fails with nullable parameters when their default is `null` and no argument is passed for them
+
+## [11.5.15] - 2025-03-23
+
+### Changed
+
+* [#6150](https://github.com/sebastianbergmann/phpunit/issues/6150): Reverted change introduced in PHPUnit 11.5.13
+
+## [11.5.14] - 2025-03-19
+
+### Changed
+
+* Updated dependencies for PHAR distribution
+
+## [11.5.13] - 2025-03-18
+
+### Changed
+
+* [#6150](https://github.com/sebastianbergmann/phpunit/issues/6150): Trigger warning when code coverage analysis is performed and no cache directory is configured
+
 ## [11.5.12] - 2025-03-07
 
 ### Fixed
@@ -129,6 +172,12 @@ All notable changes of the PHPUnit 11.5 release series are documented in this fi
 * [#6055](https://github.com/sebastianbergmann/phpunit/issues/6055): `assertNotContainsOnly()` (use `assertContainsNotOnlyArray()`, `assertContainsNotOnlyBool()`, `assertContainsNotOnlyCallable()`, `assertContainsNotOnlyFloat()`, `assertContainsNotOnlyInt()`, `assertContainsNotOnlyIterable()`, `assertContainsNotOnlyNumeric()`, `assertContainsNotOnlyObject()`, `assertContainsNotOnlyResource()`, `assertContainsNotOnlyClosedResource()`, `assertContainsNotOnlyScalar()`, or `assertContainsNotOnlyString()` instead)
 * [#6059](https://github.com/sebastianbergmann/phpunit/issues/6059): `containsOnly()` (use `containsOnlyArray()`, `containsOnlyBool()`, `containsOnlyCallable()`, `containsOnlyFloat()`, `containsOnlyInt()`, `containsOnlyIterable()`, `containsOnlyNumeric()`, `containsOnlyObject()`, `containsOnlyResource()`, `containsOnlyClosedResource()`, `containsOnlyScalar()`, or `containsOnlyString()` instead)
 
+[11.5.18]: https://github.com/sebastianbergmann/phpunit/compare/11.5.17...11.5.18
+[11.5.17]: https://github.com/sebastianbergmann/phpunit/compare/11.5.16...11.5.17
+[11.5.16]: https://github.com/sebastianbergmann/phpunit/compare/11.5.15...11.5.16
+[11.5.15]: https://github.com/sebastianbergmann/phpunit/compare/11.5.14...11.5.15
+[11.5.14]: https://github.com/sebastianbergmann/phpunit/compare/11.5.13...11.5.14
+[11.5.13]: https://github.com/sebastianbergmann/phpunit/compare/11.5.12...11.5.13
 [11.5.12]: https://github.com/sebastianbergmann/phpunit/compare/11.5.11...11.5.12
 [11.5.11]: https://github.com/sebastianbergmann/phpunit/compare/11.5.10...11.5.11
 [11.5.10]: https://github.com/sebastianbergmann/phpunit/compare/11.5.9...11.5.10
