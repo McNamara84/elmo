@@ -93,11 +93,11 @@
   <script>
     // Data structure for hierarchical details options
     const detailsOptions = {
-      'S': ['GRACE', 'GOCE', 'CHAMP', 'LAGEOS', 'Other'],
-      'G': ['Absolute Gravimetry', 'Relative Gravimetry', 'GNSS', 'Leveling', 'Other'],
-      'A': ['Airborne Gravimetry', 'Airborne Gradiometry', 'Other'],
-      'M': ['Geoid Model', 'Gravity Model', 'Digital Elevation Model', 'Other'],
-      'T': ['Literature', 'Software', 'Other']
+      'S': ['GRACE', 'GOCE', 'CHAMP', 'LAGEOS', 'Other'], // to be replaced with keywords from GCMD
+      'G': ['Terrestrial', 'Shipborne', 'Airborne', 'Ground data computed from GGM', 'Other'],
+      'A': ['Airborne Gravimetry', 'Airborne Gradiometry', 'Other'], // to be replaced with keywords from GCMD
+      'T': ['Bathymetry', 'Isostasy', 'Other'], 
+      'M': ['Digital Elevation Model (DEM)', 'Density Model', 'Global Gravitational Model (GGM)', 'Digital Terrain Model (DTM)']
     };
   
     // Function to update details dropdown based on selected type
@@ -131,38 +131,4 @@
     // Add new data source entry
     let dataSourceEntryCount = 1; // Start at 1 because we already have entry #0
 
-// Add new data source entry with proper IDs
-    document.getElementById('add-datasource-btn').addEventListener('click', function() {
-        const container = document.getElementById('data-sources-container');
-        const template = container.querySelector('.data-source-entry').cloneNode(true);
-        
-        // Clear values in the cloned template
-        template.querySelectorAll('input').forEach(input => input.value = '');
-        template.querySelectorAll('select').forEach(select => {
-            select.selectedIndex = 0;
-        });
-        
-        // Update IDs to ensure they are unique and follow the pattern
-        template.querySelector('[id="input-datasource-type"]').id = 'input-datasource-type' + dataSourceEntryCount;
-        template.querySelector('[id="input-datasource-details"]').id = 'input-datasource-details' + dataSourceEntryCount;
-        template.querySelector('[id="input-datasource-identifier"]').id = 'input-datasource-identifier' + dataSourceEntryCount;
-        
-        // Update the identifier type dropdown ID and clear existing options
-        const identifierTypeSelect = template.querySelector('[id^="input-identifier-type"]');
-        identifierTypeSelect.id = 'input-identifier-type' + dataSourceEntryCount;
-        
-        // Add the new entry to the container
-        container.appendChild(template);
-        
-        // Initialize the new identifier type dropdown
-        setupIdentifierTypesDropdown('#' + identifierTypeSelect.id);
-        
-        // Increment counter for next entry
-        dataSourceEntryCount++;
-    });
-
-    // Initialize the first identifier type dropdown when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        setupIdentifierTypesDropdown('#input-identifier-type0');
-    });
   </script>
