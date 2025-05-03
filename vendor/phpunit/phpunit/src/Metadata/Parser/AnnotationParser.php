@@ -174,7 +174,7 @@ final class AnnotationParser implements Parser
                 ),
             );
         } catch (InvalidVersionRequirementException $e) {
-            EventFacade::emitter()->testRunnerTriggeredWarning(
+            EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
                 sprintf(
                     'Class %s is annotated using an invalid version requirement: %s',
                     $className,
@@ -186,7 +186,7 @@ final class AnnotationParser implements Parser
         if (!empty($result) &&
             !isset(self::$deprecationEmittedForClass[$className]) &&
             !str_starts_with($className, 'PHPUnit\TestFixture')) {
-            EventFacade::emitter()->testRunnerTriggeredDeprecation(
+            EventFacade::emitter()->testRunnerTriggeredPhpunitDeprecation(
                 sprintf(
                     'Metadata found in doc-comment for class %s. Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.',
                     $className,
@@ -407,31 +407,29 @@ final class AnnotationParser implements Parser
             }
         }
 
-        if (method_exists($className, $methodName)) {
-            try {
-                $result = array_merge(
-                    $result,
-                    $this->parseRequirements(
-                        AnnotationRegistry::getInstance()->forMethod($className, $methodName)->requirements(),
-                        'method',
-                    ),
-                );
-            } catch (InvalidVersionRequirementException $e) {
-                EventFacade::emitter()->testRunnerTriggeredWarning(
-                    sprintf(
-                        'Method %s::%s is annotated using an invalid version requirement: %s',
-                        $className,
-                        $methodName,
-                        $e->getMessage(),
-                    ),
-                );
-            }
+        try {
+            $result = array_merge(
+                $result,
+                $this->parseRequirements(
+                    AnnotationRegistry::getInstance()->forMethod($className, $methodName)->requirements(),
+                    'method',
+                ),
+            );
+        } catch (InvalidVersionRequirementException $e) {
+            EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
+                sprintf(
+                    'Method %s::%s is annotated using an invalid version requirement: %s',
+                    $className,
+                    $methodName,
+                    $e->getMessage(),
+                ),
+            );
         }
 
         if (!empty($result) &&
             !isset(self::$deprecationEmittedForMethod[$className . '::' . $methodName]) &&
             !str_starts_with($className, 'PHPUnit\TestFixture')) {
-            EventFacade::emitter()->testRunnerTriggeredDeprecation(
+            EventFacade::emitter()->testRunnerTriggeredPhpunitDeprecation(
                 sprintf(
                     'Metadata found in doc-comment for method %s::%s(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.',
                     $className,
