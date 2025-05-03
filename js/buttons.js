@@ -324,26 +324,45 @@ $(document).ready(function () {
     newContributorRow.find(".row-label").hide();
     newContributorRow.find("input").removeAttr("required");
 
-    const rolesInputHtml = `<input name="cbPersonRoles[]" 
-      id="input-contributor-personrole${uniqueSuffix}" 
-      class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners" 
-      data-translate-placeholder="general.roleLabel" />`;
-    newContributorRow.find("#input-contributor-personrole").replaceWith(rolesInputHtml);
+    // Completely replace the role input field container with fresh HTML
+    const roleFieldContainer = newContributorRow.find("#input-contributor-personrole").closest(".input-group");
+    const roleFieldHtml = `
+    <div class="input-group has-validation">
+      <input name="cbPersonRoles[]" id="input-contributor-personrole${uniqueSuffix}"
+        class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
+        data-translate-placeholder="general.roleLabel" />
+      <span class="input-group-text"><i class="bi bi-question-circle-fill"
+        data-help-section-id="help-contributor-role"></i></span>
+      <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+    </div>
+  `;
+    roleFieldContainer.replaceWith(roleFieldHtml);
 
-    // Update input field IDs
-    const idMappings = {
-      "personaffiliation": "input-contributor-personaffiliation",
-      "personrorid": "input-contributor-personrorid",
-      "orcid": "input-contributor-orcid",
-      "lastname": "input-contributor-lastname",
-      "firstname": "input-contributor-firstname"
-    };
+    // Also replace the affiliation input field with fresh HTML
+    const affFieldContainer = newContributorRow.find("#input-contributorpersons-affiliation").closest(".input-group");
+    const affFieldHtml = `
+    <div class="input-group has-validation">
+      <input type="text" name="cbPersonAffiliations[]" id="input-contributorpersons-affiliation${uniqueSuffix}"
+        class="form-control input-with-help input-right-no-round-corners" 
+        data-translate-placeholder="general.affiliation" />
+      <input type="hidden" name="cbPersonRorIds[]" id="input-contributor-personrorid${uniqueSuffix}" />
+      <span class="input-group-text"><i class="bi bi-question-circle-fill"
+        data-help-section-id="help-contributor-affiliation"></i></span>
+      <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+    </div>
+  `;
+    affFieldContainer.replaceWith(affFieldHtml);
 
-    Object.values(idMappings).forEach(id => {
-      newContributorRow
-        .find(`#${id}`)
-        .attr("id", `${id}${uniqueSuffix}`);
-    });
+    // Update remaining input IDs
+    newContributorRow
+      .find("#input-contributor-orcid")
+      .attr("id", "input-contributor-orcid" + uniqueSuffix);
+    newContributorRow
+      .find("#input-contributor-lastname")
+      .attr("id", "input-contributor-lastname" + uniqueSuffix);
+    newContributorRow
+      .find("#input-contributor-firstname")
+      .attr("id", "input-contributor-firstname" + uniqueSuffix);
 
     // Update label references
     const labelMappings = ["orcid", "lastname", "firstname"];
@@ -356,12 +375,17 @@ $(document).ready(function () {
     newContributorRow.find(".addContributorPerson").replaceWith(removeButton);
     contributorGroup.append(newContributorRow);
 
+    // Initialize Tagify for roles
     setupRolesDropdown(["person", "both"], `#input-contributor-personrole${uniqueSuffix}`);
-    autocompleteAffiliations(
-      `input-contributor-personaffiliation${uniqueSuffix}`,
-      `input-contributor-personrorid${uniqueSuffix}`,
-      affiliationsData
-    );
+
+    // Check if affiliationsData is available in global scope
+    if (window.affiliationsData && Array.isArray(window.affiliationsData)) {
+      autocompleteAffiliations(
+        `input-contributorpersons-affiliation${uniqueSuffix}`,
+        `input-contributor-personrorid${uniqueSuffix}`,
+        window.affiliationsData
+      );
+    }
 
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
@@ -392,24 +416,39 @@ $(document).ready(function () {
     newContributorRow.find(".row-label").hide();
     newContributorRow.find("input").removeAttr("required");
 
-    const rolesInputHtml = `<input name="cbOrganisationRoles[]" 
-      id="input-contributor-organisationrole${uniqueSuffix}" 
-      class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners" 
-      data-translate-placeholder="general.roleLabel" />`;
-    newContributorRow.find("#input-contributor-organisationrole").replaceWith(rolesInputHtml);
+    // Completely replace the role input field container with fresh HTML
+    const roleFieldContainer = newContributorRow.find("#input-contributor-organisationrole").closest(".input-group");
+    const roleFieldHtml = `
+    <div class="input-group has-validation">
+      <input name="cbOrganisationRoles[]" id="input-contributor-organisationrole${uniqueSuffix}"
+        class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
+        data-translate-placeholder="general.roleLabel" />
+      <span class="input-group-text"><i class="bi bi-question-circle-fill"
+        data-help-section-id="help-contributor-organisationrole"></i></span>
+      <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
+    </div>
+  `;
+    roleFieldContainer.replaceWith(roleFieldHtml);
+
+    // Also replace the affiliation input field with fresh HTML
+    const affFieldContainer = newContributorRow.find("#input-contributor-organisationaffiliation").closest(".input-group");
+    const affFieldHtml = `
+    <div class="input-group has-validation">
+      <input type="text" name="cbOrganisationAffiliations[]" id="input-contributor-organisationaffiliation${uniqueSuffix}"
+        class="form-control input-with-help input-right-no-round-corners" 
+        data-translate-placeholder="general.affiliation" />
+      <input type="hidden" name="cbOrganisationRorIds[]" id="input-contributor-organisationrorid${uniqueSuffix}" />
+      <span class="input-group-text"><i class="bi bi-question-circle-fill"
+        data-help-section-id="help-contributor-organisation-affiliation"></i></span>
+      <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+    </div>
+  `;
+    affFieldContainer.replaceWith(affFieldHtml);
 
     // Update input field IDs
-    const idMappings = {
-      "organisationaffiliation": "input-contributor-organisationaffiliation",
-      "organisationrorid": "input-contributor-organisationrorid",
-      "name": "input-contributor-name"
-    };
-
-    Object.values(idMappings).forEach(id => {
-      newContributorRow
-        .find(`#${id}`)
-        .attr("id", `${id}${uniqueSuffix}`);
-    });
+    newContributorRow
+      .find("#input-contributor-name")
+      .attr("id", "input-contributor-name" + uniqueSuffix);
 
     newContributorRow
       .find("label[for='input-contributor-name']")
@@ -418,12 +457,17 @@ $(document).ready(function () {
     newContributorRow.find(".addContributor").replaceWith(removeButton);
     contributorGroup.append(newContributorRow);
 
+    // Initialize Tagify for roles
     setupRolesDropdown(["institution", "both"], `#input-contributor-organisationrole${uniqueSuffix}`);
-    autocompleteAffiliations(
-      `input-contributor-organisationaffiliation${uniqueSuffix}`,
-      `hiddenOrganisationRorId${uniqueSuffix}`,
-      affiliationsData
-    );
+
+    // Check if affiliationsData is available in global scope
+    if (window.affiliationsData && Array.isArray(window.affiliationsData)) {
+      autocompleteAffiliations(
+        `input-contributor-organisationaffiliation${uniqueSuffix}`,
+        `input-contributor-organisationrorid${uniqueSuffix}`,
+        window.affiliationsData
+      );
+    }
 
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
@@ -617,71 +661,6 @@ $(document).ready(function () {
     setUpAutocompleteFunder(newInput[0]);
   });
 
-  var labData;
-
-  if ($("#group-originatinglaboratory").length) {
-    // Load lab data from JSON and initialize Tagify on the first laboratory row
-    $.getJSON("json/msl-labs.json", function (data) {
-      labData = data;
-      var firstRow = $("#group-originatinglaboratory .row").first();
-      initializeTagify(firstRow, data);
-
-      // Register event listener for translations after initial setup
-      document.addEventListener('translationsLoaded', refreshLaboratoryTagifyInstances);
-    });
-  }
-
-  var rowCounter = 1;
-
-  /**
-   * Event handler for the "Add Laboratory" button click.
-   * Clones the first laboratory row, resets input fields, updates IDs, and appends it to the laboratory group.
-   */
-  $("#button-originatinglaboratory-add").click(function () {
-    var laboratoryGroup = $("#group-originatinglaboratory");
-    var firstOriginatingLaboratoryLine = laboratoryGroup.children().first();
-
-    var newOriginatingLaboratoryRow = firstOriginatingLaboratoryLine.clone();
-
-    // Clear input fields and remove validation feedback
-    newOriginatingLaboratoryRow.find("input").val("").removeClass("is-invalid is-valid");
-    newOriginatingLaboratoryRow.find(".invalid-feedback, .valid-feedback").hide();
-
-    // Remove old Tagify elements
-    newOriginatingLaboratoryRow.find(".tagify").remove();
-
-    // Update IDs
-    rowCounter++;
-    newOriginatingLaboratoryRow.find("[id]").each(function () {
-      var oldId = $(this).attr("id");
-      var newId = oldId + "_" + rowCounter;
-      $(this).attr("id", newId);
-    });
-
-    // Replace the add button with the remove button
-    newOriginatingLaboratoryRow.find(".addLaboratory").replaceWith(removeButton);
-
-    // Append the new laboratory row to the DOM
-    laboratoryGroup.append(newOriginatingLaboratoryRow);
-
-    // Remove help buttons
-    replaceHelpButtonInClonedRows(newOriginatingLaboratoryRow);
-
-    // Initialize Tagify for the new row
-    initializeTagify(newOriginatingLaboratoryRow, labData);
-
-    // Event handler for the remove button
-    newOriginatingLaboratoryRow.on("click", ".removeButton", function () {
-      // Find and remove the corresponding instance from tracking array
-      const rowElement = $(this).closest(".row")[0];
-      laboratoryTagifyInstances = laboratoryTagifyInstances.filter(instance =>
-        instance.row[0] !== rowElement);
-
-      // Remove the row from DOM
-      $(rowElement).remove();
-    });
-  });
-
   /**
   * Event listener for the load button that opens the XML upload modal
   * @requires jQuery
@@ -714,159 +693,6 @@ $(document).ready(function () {
     });
   });
 
-  /**
-   * Stores all initialized laboratory Tagify instances for later reference.
-   * @type {Array<Object>}
-   */
-  var laboratoryTagifyInstances = [];
-
-  /**
-   * Initializes Tagify on the laboratory name and affiliation fields.
-   *
-   * @param {jQuery} row - The row element containing the input fields.
-   * @param {Object[]} data - The lab data array used for autocompletion.
-   * @returns {Object} - An object containing the Tagify instances for name and affiliation fields.
-   */
-  function initializeTagify(row, data) {
-    var inputName = row.find('input[name="laboratoryName[]"]')[0];
-    var inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]')[0];
-    var hiddenRorId = row.find('input[name="laboratoryRorIds[]"]')[0];
-    var hiddenLabId = row.find('input[name="LabId[]"]')[0];
-
-    // Skip if elements don't exist
-    if (!inputName || !inputAffiliation) return null;
-
-    /**
-     * Finds a lab object by its name.
-     *
-     * @param {string} name - The name of the lab to find.
-     * @returns {Object|undefined} - The lab object if found, otherwise undefined.
-     */
-    function findLabByName(name) {
-      return data.find((lab) => lab.name === name);
-    }
-
-    var tagifyName = new Tagify(inputName, {
-      whitelist: data.map((item) => item.name),
-      enforceWhitelist: true,
-      placeholder: translations.laboratory.name || "Lab name",
-      maxTags: 1,
-      dropdown: {
-        maxItems: 90,
-        closeOnSelect: true,
-        highlightFirst: true,
-      },
-      delimiters: null,
-      mode: "select",
-    });
-
-    var tagifyAffiliation = new Tagify(inputAffiliation, {
-      whitelist: data.map((item) => item.affiliation),
-      enforceWhitelist: true,
-      maxTags: 1,
-      dropdown: {
-        maxItems: 20,
-        closeOnSelect: true,
-        highlightFirst: true,
-      },
-      delimiters: null,
-      mode: "select",
-    });
-
-    tagifyName.on("add", function (e) {
-      var labName = e.detail.data.value;
-      var lab = findLabByName(labName);
-      if (lab) {
-        tagifyAffiliation.removeAllTags();
-        tagifyAffiliation.addTags([lab.affiliation]);
-        hiddenRorId.value = lab.rorid || "";
-        hiddenLabId.value = lab.id;
-        tagifyAffiliation.setReadonly(true);
-      } else {
-        tagifyAffiliation.removeAllTags();
-        hiddenRorId.value = "";
-        hiddenLabId.value = "";
-        tagifyAffiliation.setReadonly(false);
-      }
-    });
-
-    tagifyName.on("remove", function () {
-      tagifyAffiliation.removeAllTags();
-      hiddenRorId.value = "";
-      hiddenLabId.value = "";
-      tagifyAffiliation.setReadonly(false);
-    });
-
-    tagifyName.on("input", function (e) {
-      var value = e.detail.value;
-      if (value) {
-        var lab = findLabByName(value);
-        if (!lab) {
-          tagifyAffiliation.removeAllTags();
-          hiddenRorId.value = "";
-          tagifyAffiliation.setReadonly(false);
-        }
-      }
-    });
-
-    tagifyAffiliation.on("input", function (e) {
-      var value = e.detail.value;
-      if (value && !tagifyAffiliation.state.readonly) {
-        tagifyAffiliation.addTags([value]);
-      }
-    });
-
-    // Store references to the Tagify instances and their elements
-    const instance = {
-      tagifyName,
-      tagifyAffiliation,
-      row: row
-    };
-
-    // Add to global tracking array
-    laboratoryTagifyInstances.push(instance);
-
-    return instance;
-  }
-
-  /**
-   * Updates the placeholder text for all laboratory Tagify instances.
-   * This is a lightweight alternative to completely refreshing the instances.
-   * 
-   * @returns {void}
-   */
-  function refreshLaboratoryTagifyInstances() {
-    if (!laboratoryTagifyInstances.length) return;
-
-    const labPlaceholder = translations.laboratory.name || "Lab name";
-
-    // For each instance, update only the placeholder text
-    laboratoryTagifyInstances.forEach(instance => {
-      if (!instance.tagifyName || !instance.tagifyName.DOM || !instance.tagifyName.DOM.input) return;
-
-      // Update the placeholder in Tagify settings
-      instance.tagifyName.settings.placeholder = labPlaceholder;
-
-      // Update the DOM placeholder attribute
-      instance.tagifyName.DOM.input.setAttribute('data-placeholder', labPlaceholder);
-    });
-
-    console.log(`Updated placeholders for ${laboratoryTagifyInstances.length} laboratory Tagify instances`);
-  }
-
-  var labData;
-
-  if ($("#group-originatinglaboratory").length) {
-    // Load lab data from JSON and initialize Tagify on the first laboratory row
-    $.getJSON("json/msl-labs.json", function (data) {
-      labData = data;
-      var firstRow = $("#group-originatinglaboratory .row").first();
-      initializeTagify(firstRow, data);
-
-      // Register event listener for translations after initial setup
-      document.addEventListener('translationsLoaded', refreshLaboratoryTagifyInstances);
-    });
-  }
   /////////////////////////////// HELP BUTTONS /////////////////////////////////////////////////////////////////
 
   /**
@@ -944,43 +770,4 @@ $(document).ready(function () {
     $(".input-group-text").hide();
     localStorage.setItem("inputGroupTextVisible", "false");
   });
-
-
-  /**
-   * Automatically sets the language based on the browser's language settings.
-   */
-  function setAutoLanguage() {
-    var userLang = navigator.language || navigator.userLanguage;
-    userLang = userLang.substring(0, 2);
-    if (userLang !== "en" && userLang !== "de") {
-      userLang = "en"; // Default to English if the language is not supported
-    }
-    localStorage.setItem("userLanguage", userLang);
-  }
-
-  // Check if a language is set in localStorage; if not, default to English
-  if (!localStorage.getItem("userLanguage")) {
-    localStorage.setItem("userLanguage", "en");
-  }
-
-  /**
-   * Event handler for clicks on language selection buttons.
-   * Sets the language or auto-detects it based on browser settings.
-   */
-  $("[data-bs-language-value]").click(function (event) {
-    event.preventDefault();
-    var language = $(this).data("bs-language-value");
-    if (language === "auto") {
-      setAutoLanguage();
-    } else {
-      localStorage.setItem("userLanguage", language);
-    }
-  });
-
-
-  // Initialize tooltips
-  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-  const tooltipList = [...tooltipTriggerList].map(
-    (tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl)
-  );
 });

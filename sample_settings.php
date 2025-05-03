@@ -12,10 +12,10 @@
  */
 function connectDb()
 {
-    $host = getenv('DB_HOST') ?: "localhost";
-    $username = getenv('DB_USER') ?: "your_database_username";
-    $password = getenv('DB_PASSWORD') ?: "your_database_password";
-    $database = getenv('DB_NAME') ?: "your_database_name";
+    $host = "localhost";
+    $username = "your_database_username";
+    $password = "your_database_password";
+    $database = "your_database_name";
     $conn = new mysqli($host, $username, $password, $database);
     return $conn;
 }

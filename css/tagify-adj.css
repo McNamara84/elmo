@@ -30,6 +30,13 @@
     border-bottom-right-radius: 0;
 }
 
+/* Makes the square corners round */
+.input-group-text {
+    border-top-right-radius: 0.375rem !important;
+    border-bottom-right-radius: 0.375rem !important;
+}
+
+
 .input-right-with-round-corners {
     border-top-right-radius: 0.375rem !important;
     border-bottom-right-radius: 0.375rem !important;

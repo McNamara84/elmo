@@ -896,11 +896,3 @@ if (isset($_POST['action'])) {
     echo json_encode($result);
     exit;
 }
-
-// Handle CLI requests
-if (php_sapi_name() === 'cli' && $argc >= 2) {
-    $action = $argv[1] ?? 'basic';
-    $result = processInstallation($connection, $action);
-    fwrite(STDOUT, $result['message'] . PHP_EOL);
-    exit($result['status'] === 'success' ? 0 : 1);
-}

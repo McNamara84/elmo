@@ -57,12 +57,6 @@ Following conditions are required for installation:
 11. The metadata editor is now accessible in the browser via `localhost/directoryname`.
 12. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 
-### Installation via Docker
-1. Install [Docker](https://docs.docker.com/engine/install/).
-2. Clone the repository.
-3. Run `docker compose build` in the cloned project folder via bash.
-4. Run `docker compose up -d` to start the container.
-
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
 
 <details> 

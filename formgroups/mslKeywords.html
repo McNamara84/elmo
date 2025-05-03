@@ -5,6 +5,7 @@
     <div class="card-body reduce-padding">
         <!-- Input field -->
         <div class="input-group has-validation input-margin-top-bottom">
+            <label for="input-mslkeyword" class="visually-hidden">MSL keyword</label>
             <div class="form-floating">
                 <div class="input-group has-validation">
                     <input type="text"
@@ -19,7 +20,8 @@
             <div class="col-auto p-2">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-mslkeyword"
                     id="button-mslkeyword-thesaurus">
-                    <i class="bi bi-diagram-3"></i>
+                    <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                    <span class="visually-hidden">Thesaurus öffnen</span>
                 </button>
 
             </div>
@@ -44,8 +46,10 @@
             <div class="modal-body d-flex">
                 <!-- Left Side: Keyword Selection Tree -->
                 <div id="panel-mslkeyword-thesaurus" class="w-50 pe-3 border-end">
+                    <label for="input-mslkeyword-thesaurussearch" class="visually-hidden">Search for keywords</label>
                     <input type="text" class="form-control mb-3" id="input-mslkeyword-thesaurussearch"
-                        placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
+                        placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder"
+                        aria-label="Search for keywords">
                     <div id="jstree-mslkeyword"></div>
                 </div>
 

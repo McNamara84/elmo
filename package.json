@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@yaireo/tagify": "^4.33.2"
+  }
+}

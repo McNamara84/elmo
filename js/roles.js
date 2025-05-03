@@ -4,8 +4,7 @@ var organizationRoles = [];
 
 /**
  * Refreshes all role Tagify instances when translations are changed.
- * Destroys existing instances, reinitializes them with updated translations,
- * and restores previously selected values.
+ * Updates only the placeholder, avoiding full reinitialization.
  */
 function refreshRoleTagifyInstances() {
   const roleFields = [
@@ -19,26 +18,13 @@ function refreshRoleTagifyInstances() {
     // Skip if element doesn't exist or doesn't have a Tagify instance
     if (!inputElement || !inputElement._tagify) return;
 
-    // Save current values
-    const currentValues = [...inputElement._tagify.value]; // Create a copy
+    // Update only the placeholder
+    const placeholderValue = window.translations?.general?.roleLabel || "Select roles";
 
-    // Destroy current Tagify instance
-    inputElement._tagify.destroy();
+    // Assign directly
+    inputElement._tagify.settings.placeholder = placeholderValue;
 
-    // Remove _tagify property
-    delete inputElement._tagify;
 
-    // Reinitialize with updated translations
-    setupRolesDropdown(field.types, field.selector);
-
-    // Restore previously selected values (with a delay to ensure initialization is complete)
-    if (currentValues && currentValues.length > 0) {
-      setTimeout(() => {
-        if (inputElement._tagify) {
-          inputElement._tagify.addTags(currentValues);
-        }
-      }, 50);
-    }
   });
 }
 
@@ -106,14 +92,14 @@ function setupRolesDropdown(roletypes, inputSelector) {
 }
 
 /**
-* Initializes a Tagify instance for role selection on a specific input element.
-* Converts roles to strings if they are objects, sets up Tagify with options,
-* and attaches event listeners.
-* 
-* @param {string} inputSelector - CSS selector for the input element
-* @param {(string|Object)[]} roles - Array of role names or role objects
-* @returns {void}
-*/
+ * Initializes a Tagify instance for role selection on a specific input element.
+ * Converts roles to strings if they are objects, sets up Tagify with options,
+ * and attaches event listeners.
+ * 
+ * @param {string} inputSelector - CSS selector for the input element
+ * @param {(string|Object)[]} roles - Array of role names or role objects
+ * @returns {void}
+ */
 function initializeTagifyWithRoles(inputSelector, roles) {
   const input = document.querySelector(inputSelector);
   if (!input) return;
@@ -139,8 +125,6 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   try {
     const tagify = new Tagify(input, tagifyOptions);
 
-    tagify.on('add', () => console.log('Tag added'));
-    tagify.on('remove', () => console.log('Tag removed'));
     tagify.on('invalid', () => console.log('Invalid tag attempted'));
 
     input._tagify = tagify;

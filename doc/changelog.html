@@ -6,7 +6,7 @@
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                 data-bs-target="#collapse-changelog-version6" aria-expanded="true"
                 aria-controls="collapse-changelog-version6">
-                Version 2.0.1 - 2025/xx/xx
+                Version 2.0.1 - 2025/05/09
             </button>
         </h2>
         <div id="collapse-changelog-version6" class="accordion-collapse collapse show"
@@ -22,6 +22,7 @@
                         <ul>
                             <li>Early loading of Tagify for affiliations</li>
                             <li>Embedded correct favicon of GFZ</li>
+                            <li>Error source Tagify removed from Originating Laboratories</li>
                             <li>Strange menu design of ELMOs User Guide</li>
                             <li>Language menu doesn't show active language setting</li>
                             <li>Saving Contributor Person(s)</li>
@@ -29,6 +30,17 @@
                             <li>GCMD Platform and Instrument Keywords are saved with thesaurus information in ISO scheme</li>
                             <li>Updated link to EPOS MSL vocabularies</li>
                             <li>Tagify installed locally instead of via CDN to improve loading time</li>
+                            <li>Corrected re-initialization of Tagify fields after removing contact persons, preventing duplicate entries in role, affiliation, and free keyword fields</li>
+                            <li>Changed square corners of the timezone input field to rounded corners</li>
+                            <li>Fixed loading issue for geographic coverage data</li>
+                            <li>Addressed accessibility issues:
+                                <ul>
+                                    <li>Enhanced contrast for better readability</li>
+                                    <li>Added labels to empty buttons</li>
+                                    <li>Included missing form labels</li>
+                                </ul>
+                            </li>
+                            <li>Tagify has been removed from the Originating Laboratories section.</li>
                         </ul>
                     </li>
                 </ul>
@@ -39,12 +51,12 @@
     <div class="accordion-item">
         <h2 class="accordion-header" id="heading-changelog-version5">
             <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse-changelog-version5" aria-expanded="true"
+                data-bs-target="#collapse-changelog-version5" aria-expanded="false"
                 aria-controls="collapse-changelog-version5">
                 Version 2.0.0 - 2025/03/04
             </button>
         </h2>
-        <div id="collapse-changelog-version5" class="accordion-collapse collapse show"
+        <div id="collapse-changelog-version5" class="accordion-collapse collapse"
             aria-labelledby="heading-changelog-version5" data-bs-parent="#accordion-changelog">
             <div class="accordion-body">
                 <ul>
@@ -75,7 +87,8 @@
                             <li>Timezones are loaded from xml files</li>
                             <li>Various bug fixes through Tagify update to version 4.33.2</li>
                             <li>Help buttons in cloned title rows</li>
-                            <li>Mapping to Datacite scheme for: Coverage without times, Funders without Crossref Funder ID and Contact Person</li>
+                            <li>Mapping to Datacite scheme for: Coverage without times, Funders without Crossref Funder
+                                ID and Contact Person</li>
                             <li>Improved Mapping to ISO Scheme</li>
                             <li>Charset encoding in for MSL labs</li>
                             <li>Trigger saving with return command in save dialog</li>
