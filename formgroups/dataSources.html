@@ -46,45 +46,88 @@
             </div>
           </div>
           
-          <!-- Identifier (Text Input) -->
-          <div class="col-12 col-sm-12 col-md-3 col-lg-3 p-1">
-            <div class="input-group has-validation">
+        <!-- Satellite-specific Section -->
+          <div class="col-12 satellite-controls d-none">
+            <div class="input-group has-validation input-margin-top-bottom">
               <div class="form-floating">
-                <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                  id="input-datasource-identifier" name="dIdentifier[]" />
-                <label for="input-datasource-identifier" data-translate="dataSources.identifier">Identifier</label>
-                <div class="invalid-feedback" data-translate="dataSources.identifierInvalid">Please enter a valid identifier.</div>
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="input-satellite-platform" name="satellite_platform[]" />
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-gcmd-platforms-keyword"></i></span>
+                </div>
               </div>
-              <div class="input-group-append">
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-datasource-identifier"></i></span>
+              <div class="col-auto p-2">
+                <button type="button" class="btn btn-primary platform-thesaurus"
+                  data-bs-toggle="modal" data-bs-target="#modal-Platforms">
+                  <i class="bi bi-diagram-3"></i>
+                </button>
               </div>
             </div>
           </div>
-          
-          <!-- Identifier Type (Dropdown) -->
-          <div class="col-10 col-sm-10 col-md-2 col-lg-2 p-1">
-            <div class="input-group has-validation">
-              <div class="form-floating">
-                <select class="form-select input-with-help input-right-no-round-corners"
-                  aria-label="Default select example" id="input-datasource-identifiertype" name="dIdentifierType[]">
-                </select>
-                <label for="input-datasource-identifiertype" data-translate="dataSources.identifierType">Identifier type</label>
-                <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
-              </div>
-              <div class="input-group-append">
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-datasource-identifier-type"></i></span>
+
+            <!-- Model-specific Section (existing identifier fields) -->
+          <div class="model-controls d-none">
+            <!-- Identifier (Text Input) -->
+            <div class="col-12 col-sm-12 col-md-3 col-lg-3 p-1">
+              <div class="input-group has-validation">
+                <div class="form-floating">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="input-datasource-identifier" name="dIdentifier[]" />
+                  <label for="input-datasource-identifier" data-translate="dataSources.identifier">Identifier</label>
+                  <div class="invalid-feedback" data-translate="dataSources.identifierInvalid">Please enter a valid identifier.</div>
+                </div>
+                <div class="input-group-append">
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-datasource-identifier"></i></span>
+                </div>
               </div>
             </div>
-          </div>
           
+            <!-- Identifier Type (Dropdown) -->
+            <div class="col-10 col-sm-10 col-md-2 col-lg-2 p-1">
+              <div class="input-group has-validation">
+                <div class="form-floating">
+                  <select class="form-select input-with-help input-right-no-round-corners"
+                    aria-label="Default select example" id="input-datasource-identifiertype" name="dIdentifierType[]">
+                  </select>
+                  <label for="input-datasource-identifiertype" data-translate="dataSources.identifierType">Identifier type</label>
+                  <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+                </div>
+                <div class="input-group-append">
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-datasource-identifier-type"></i></span>
+                </div>
+              </div>
+            </div>
+          </div>  
           <!-- Add Button -->
           <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
             <button type="button" class="btn btn-primary addDataSource" id="button-datasource-add" data-translate="general.add">
               +
             </button>
-          </div>
+          </div>  
+            <!-- Add this at the end of the file, outside the card -->
+            <div class="modal fade" id="modal-Platforms" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Select Satellite Platform</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div id="platforms-hierarchy">
+                      <!-- This will be populated with platform data -->
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="select-platform">Select</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          
         </div>
       </div>
     </div>
@@ -116,11 +159,35 @@
         }
       });
     }
+    function handlePlatformSelection() {
+      $('#select-platform').on('click', function() {
+        const selectedPlatform = $('#platforms-hierarchy').find('.selected-platform').data('platform');
+        if (selectedPlatform) {
+          $('#input-satellite-platform').val(selectedPlatform.name);
+          $('#modal-Platforms').modal('hide');
+        }
+      });
+    }
     // Function to update details dropdown based on selected type
     function updateDetailsOptions(typeSelect) {
-      const detailsSelect = typeSelect.closest('.row').querySelector('[name="datasource_details[]"]');
+      const row = typeSelect.closest('.row');
+      const detailsSelect = row.querySelector('[name="datasource_details[]"]');
       const selectedType = typeSelect.value;
       
+          // Get all the type-specific sections
+      const satelliteControls = row.querySelector('.satellite-controls');
+      const modelControls = row.querySelector('.model-controls');
+      
+      // Hide all sections first
+      satelliteControls.classList.add('d-none');
+      modelControls.classList.add('d-none');
+      
+      // Show the appropriate section based on type
+      if (selectedType === 'S') {
+        satelliteControls.classList.remove('d-none');
+      } else if (selectedType === 'M') {
+        modelControls.classList.remove('d-none');
+      }
       // Clear current options
       detailsSelect.innerHTML = '';
       
@@ -151,8 +218,8 @@
           option.textContent = detail;
           detailsSelect.appendChild(option);
         });
-  }
-}
+      }
+    }
   
     // Add new data source entry
     let dataSourceEntryCount = 1; // Start at 1 because we already have entry #0
