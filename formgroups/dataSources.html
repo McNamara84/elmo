@@ -100,6 +100,22 @@
       'M': ['Topographic model', 'Global Gravitational Model (GGM)']
     };
   
+      // Function to fetch satellite platforms from GCMD
+    function fetchSatellitePlatforms(callback) {
+      $.ajax({
+        url: "./api/v2/gcmd/category/platforms",
+        data: {
+          subcategory: "Space-based Platforms",
+          term: "Earth Observation Satellites"
+        },
+        success: callback,
+        error: function(xhr, status, error) {
+          console.error("Error fetching satellite platforms:", error);
+          // Fallback to the static list if GCMD API fails
+          callback(detailsOptions['S'].map(name => ({ name: name })));
+        }
+      });
+    }
     // Function to update details dropdown based on selected type
     function updateDetailsOptions(typeSelect) {
       const detailsSelect = typeSelect.closest('.row').querySelector('[name="datasource_details[]"]');
@@ -117,16 +133,26 @@
       defaultOption.textContent = 'Choose...';
       detailsSelect.appendChild(defaultOption);
       
-      // Add options based on selected type
-      if (selectedType && detailsOptions[selectedType]) {
+      // If Satellite is selected, fetch GCMD platforms
+      if (selectedType === "S") {
+        fetchSatellitePlatforms(function(satellites) {
+          satellites.forEach(sat => {
+            const option = document.createElement('option');
+            option.value = sat.uuid || sat.name;
+            option.textContent = sat.name;
+            detailsSelect.appendChild(option);
+          });
+        });
+      } else if (selectedType && detailsOptions[selectedType]) {
+        // Existing code for other types
         detailsOptions[selectedType].forEach(detail => {
           const option = document.createElement('option');
           option.value = detail;
           option.textContent = detail;
           detailsSelect.appendChild(option);
         });
-      }
-    }
+  }
+}
   
     // Add new data source entry
     let dataSourceEntryCount = 1; // Start at 1 because we already have entry #0
