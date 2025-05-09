@@ -49,7 +49,7 @@
     },
     {
         "value": "Africa\/Cairo",
-        "label": "UTC+02:00 (Africa\/Cairo)"
+        "label": "UTC+03:00 (Africa\/Cairo)"
     },
     {
         "value": "Africa\/Casablanca",
@@ -57,7 +57,7 @@
     },
     {
         "value": "Africa\/Ceuta",
-        "label": "UTC+01:00 (Africa\/Ceuta)"
+        "label": "UTC+02:00 (Africa\/Ceuta)"
     },
     {
         "value": "Africa\/Conakry",
@@ -209,11 +209,11 @@
     },
     {
         "value": "America\/Adak",
-        "label": "UTC-10:00 (America\/Adak)"
+        "label": "UTC-09:00 (America\/Adak)"
     },
     {
         "value": "America\/Anchorage",
-        "label": "UTC-09:00 (America\/Anchorage)"
+        "label": "UTC-08:00 (America\/Anchorage)"
     },
     {
         "value": "America\/Anguilla",
@@ -321,11 +321,11 @@
     },
     {
         "value": "America\/Boise",
-        "label": "UTC-07:00 (America\/Boise)"
+        "label": "UTC-06:00 (America\/Boise)"
     },
     {
         "value": "America\/Cambridge_Bay",
-        "label": "UTC-07:00 (America\/Cambridge_Bay)"
+        "label": "UTC-06:00 (America\/Cambridge_Bay)"
     },
     {
         "value": "America\/Campo_Grande",
@@ -349,7 +349,7 @@
     },
     {
         "value": "America\/Chicago",
-        "label": "UTC-06:00 (America\/Chicago)"
+        "label": "UTC-05:00 (America\/Chicago)"
     },
     {
         "value": "America\/Chihuahua",
@@ -357,11 +357,15 @@
     },
     {
         "value": "America\/Ciudad_Juarez",
-        "label": "UTC-07:00 (America\/Ciudad_Juarez)"
+        "label": "UTC-06:00 (America\/Ciudad_Juarez)"
     },
     {
         "value": "America\/Costa_Rica",
         "label": "UTC-06:00 (America\/Costa_Rica)"
+    },
+    {
+        "value": "America\/Coyhaique",
+        "label": "UTC-03:00 (America\/Coyhaique)"
     },
     {
         "value": "America\/Creston",
@@ -389,11 +393,11 @@
     },
     {
         "value": "America\/Denver",
-        "label": "UTC-07:00 (America\/Denver)"
+        "label": "UTC-06:00 (America\/Denver)"
     },
     {
         "value": "America\/Detroit",
-        "label": "UTC-05:00 (America\/Detroit)"
+        "label": "UTC-04:00 (America\/Detroit)"
     },
     {
         "value": "America\/Dominica",
@@ -401,7 +405,7 @@
     },
     {
         "value": "America\/Edmonton",
-        "label": "UTC-07:00 (America\/Edmonton)"
+        "label": "UTC-06:00 (America\/Edmonton)"
     },
     {
         "value": "America\/Eirunepe",
@@ -421,15 +425,15 @@
     },
     {
         "value": "America\/Glace_Bay",
-        "label": "UTC-04:00 (America\/Glace_Bay)"
+        "label": "UTC-03:00 (America\/Glace_Bay)"
     },
     {
         "value": "America\/Goose_Bay",
-        "label": "UTC-04:00 (America\/Goose_Bay)"
+        "label": "UTC-03:00 (America\/Goose_Bay)"
     },
     {
         "value": "America\/Grand_Turk",
-        "label": "UTC-05:00 (America\/Grand_Turk)"
+        "label": "UTC-04:00 (America\/Grand_Turk)"
     },
     {
         "value": "America\/Grenada",
@@ -453,11 +457,11 @@
     },
     {
         "value": "America\/Halifax",
-        "label": "UTC-04:00 (America\/Halifax)"
+        "label": "UTC-03:00 (America\/Halifax)"
     },
     {
         "value": "America\/Havana",
-        "label": "UTC-05:00 (America\/Havana)"
+        "label": "UTC-04:00 (America\/Havana)"
     },
     {
         "value": "America\/Hermosillo",
@@ -465,43 +469,43 @@
     },
     {
         "value": "America\/Indiana\/Indianapolis",
-        "label": "UTC-05:00 (America\/Indiana\/Indianapolis)"
+        "label": "UTC-04:00 (America\/Indiana\/Indianapolis)"
     },
     {
         "value": "America\/Indiana\/Knox",
-        "label": "UTC-06:00 (America\/Indiana\/Knox)"
+        "label": "UTC-05:00 (America\/Indiana\/Knox)"
     },
     {
         "value": "America\/Indiana\/Marengo",
-        "label": "UTC-05:00 (America\/Indiana\/Marengo)"
+        "label": "UTC-04:00 (America\/Indiana\/Marengo)"
     },
     {
         "value": "America\/Indiana\/Petersburg",
-        "label": "UTC-05:00 (America\/Indiana\/Petersburg)"
+        "label": "UTC-04:00 (America\/Indiana\/Petersburg)"
     },
     {
         "value": "America\/Indiana\/Tell_City",
-        "label": "UTC-06:00 (America\/Indiana\/Tell_City)"
+        "label": "UTC-05:00 (America\/Indiana\/Tell_City)"
     },
     {
         "value": "America\/Indiana\/Vevay",
-        "label": "UTC-05:00 (America\/Indiana\/Vevay)"
+        "label": "UTC-04:00 (America\/Indiana\/Vevay)"
     },
     {
         "value": "America\/Indiana\/Vincennes",
-        "label": "UTC-05:00 (America\/Indiana\/Vincennes)"
+        "label": "UTC-04:00 (America\/Indiana\/Vincennes)"
     },
     {
         "value": "America\/Indiana\/Winamac",
-        "label": "UTC-05:00 (America\/Indiana\/Winamac)"
+        "label": "UTC-04:00 (America\/Indiana\/Winamac)"
     },
     {
         "value": "America\/Inuvik",
-        "label": "UTC-07:00 (America\/Inuvik)"
+        "label": "UTC-06:00 (America\/Inuvik)"
     },
     {
         "value": "America\/Iqaluit",
-        "label": "UTC-05:00 (America\/Iqaluit)"
+        "label": "UTC-04:00 (America\/Iqaluit)"
     },
     {
         "value": "America\/Jamaica",
@@ -509,15 +513,15 @@
     },
     {
         "value": "America\/Juneau",
-        "label": "UTC-09:00 (America\/Juneau)"
+        "label": "UTC-08:00 (America\/Juneau)"
     },
     {
         "value": "America\/Kentucky\/Louisville",
-        "label": "UTC-05:00 (America\/Kentucky\/Louisville)"
+        "label": "UTC-04:00 (America\/Kentucky\/Louisville)"
     },
     {
         "value": "America\/Kentucky\/Monticello",
-        "label": "UTC-05:00 (America\/Kentucky\/Monticello)"
+        "label": "UTC-04:00 (America\/Kentucky\/Monticello)"
     },
     {
         "value": "America\/Kralendijk",
@@ -533,7 +537,7 @@
     },
     {
         "value": "America\/Los_Angeles",
-        "label": "UTC-08:00 (America\/Los_Angeles)"
+        "label": "UTC-07:00 (America\/Los_Angeles)"
     },
     {
         "value": "America\/Lower_Princes",
@@ -561,7 +565,7 @@
     },
     {
         "value": "America\/Matamoros",
-        "label": "UTC-06:00 (America\/Matamoros)"
+        "label": "UTC-05:00 (America\/Matamoros)"
     },
     {
         "value": "America\/Mazatlan",
@@ -569,7 +573,7 @@
     },
     {
         "value": "America\/Menominee",
-        "label": "UTC-06:00 (America\/Menominee)"
+        "label": "UTC-05:00 (America\/Menominee)"
     },
     {
         "value": "America\/Merida",
@@ -577,7 +581,7 @@
     },
     {
         "value": "America\/Metlakatla",
-        "label": "UTC-09:00 (America\/Metlakatla)"
+        "label": "UTC-08:00 (America\/Metlakatla)"
     },
     {
         "value": "America\/Mexico_City",
@@ -585,11 +589,11 @@
     },
     {
         "value": "America\/Miquelon",
-        "label": "UTC-03:00 (America\/Miquelon)"
+        "label": "UTC-02:00 (America\/Miquelon)"
     },
     {
         "value": "America\/Moncton",
-        "label": "UTC-04:00 (America\/Moncton)"
+        "label": "UTC-03:00 (America\/Moncton)"
     },
     {
         "value": "America\/Monterrey",
@@ -605,15 +609,15 @@
     },
     {
         "value": "America\/Nassau",
-        "label": "UTC-05:00 (America\/Nassau)"
+        "label": "UTC-04:00 (America\/Nassau)"
     },
     {
         "value": "America\/New_York",
-        "label": "UTC-05:00 (America\/New_York)"
+        "label": "UTC-04:00 (America\/New_York)"
     },
     {
         "value": "America\/Nome",
-        "label": "UTC-09:00 (America\/Nome)"
+        "label": "UTC-08:00 (America\/Nome)"
     },
     {
         "value": "America\/Noronha",
@@ -621,23 +625,23 @@
     },
     {
         "value": "America\/North_Dakota\/Beulah",
-        "label": "UTC-06:00 (America\/North_Dakota\/Beulah)"
+        "label": "UTC-05:00 (America\/North_Dakota\/Beulah)"
     },
     {
         "value": "America\/North_Dakota\/Center",
-        "label": "UTC-06:00 (America\/North_Dakota\/Center)"
+        "label": "UTC-05:00 (America\/North_Dakota\/Center)"
     },
     {
         "value": "America\/North_Dakota\/New_Salem",
-        "label": "UTC-06:00 (America\/North_Dakota\/New_Salem)"
+        "label": "UTC-05:00 (America\/North_Dakota\/New_Salem)"
     },
     {
         "value": "America\/Nuuk",
-        "label": "UTC-02:00 (America\/Nuuk)"
+        "label": "UTC-01:00 (America\/Nuuk)"
     },
     {
         "value": "America\/Ojinaga",
-        "label": "UTC-06:00 (America\/Ojinaga)"
+        "label": "UTC-05:00 (America\/Ojinaga)"
     },
     {
         "value": "America\/Panama",
@@ -653,7 +657,7 @@
     },
     {
         "value": "America\/Port-au-Prince",
-        "label": "UTC-05:00 (America\/Port-au-Prince)"
+        "label": "UTC-04:00 (America\/Port-au-Prince)"
     },
     {
         "value": "America\/Port_of_Spain",
@@ -673,7 +677,7 @@
     },
     {
         "value": "America\/Rankin_Inlet",
-        "label": "UTC-06:00 (America\/Rankin_Inlet)"
+        "label": "UTC-05:00 (America\/Rankin_Inlet)"
     },
     {
         "value": "America\/Recife",
@@ -685,7 +689,7 @@
     },
     {
         "value": "America\/Resolute",
-        "label": "UTC-06:00 (America\/Resolute)"
+        "label": "UTC-05:00 (America\/Resolute)"
     },
     {
         "value": "America\/Rio_Branco",
@@ -697,7 +701,7 @@
     },
     {
         "value": "America\/Santiago",
-        "label": "UTC-03:00 (America\/Santiago)"
+        "label": "UTC-04:00 (America\/Santiago)"
     },
     {
         "value": "America\/Santo_Domingo",
@@ -709,11 +713,11 @@
     },
     {
         "value": "America\/Scoresbysund",
-        "label": "UTC-02:00 (America\/Scoresbysund)"
+        "label": "UTC-01:00 (America\/Scoresbysund)"
     },
     {
         "value": "America\/Sitka",
-        "label": "UTC-09:00 (America\/Sitka)"
+        "label": "UTC-08:00 (America\/Sitka)"
     },
     {
         "value": "America\/St_Barthelemy",
@@ -721,7 +725,7 @@
     },
     {
         "value": "America\/St_Johns",
-        "label": "UTC-04:30 (America\/St_Johns)"
+        "label": "UTC-03:30 (America\/St_Johns)"
     },
     {
         "value": "America\/St_Kitts",
@@ -749,15 +753,15 @@
     },
     {
         "value": "America\/Thule",
-        "label": "UTC-04:00 (America\/Thule)"
+        "label": "UTC-03:00 (America\/Thule)"
     },
     {
         "value": "America\/Tijuana",
-        "label": "UTC-08:00 (America\/Tijuana)"
+        "label": "UTC-07:00 (America\/Tijuana)"
     },
     {
         "value": "America\/Toronto",
-        "label": "UTC-05:00 (America\/Toronto)"
+        "label": "UTC-04:00 (America\/Toronto)"
     },
     {
         "value": "America\/Tortola",
@@ -765,7 +769,7 @@
     },
     {
         "value": "America\/Vancouver",
-        "label": "UTC-08:00 (America\/Vancouver)"
+        "label": "UTC-07:00 (America\/Vancouver)"
     },
     {
         "value": "America\/Whitehorse",
@@ -773,11 +777,11 @@
     },
     {
         "value": "America\/Winnipeg",
-        "label": "UTC-06:00 (America\/Winnipeg)"
+        "label": "UTC-05:00 (America\/Winnipeg)"
     },
     {
         "value": "America\/Yakutat",
-        "label": "UTC-09:00 (America\/Yakutat)"
+        "label": "UTC-08:00 (America\/Yakutat)"
     },
     {
         "value": "Antarctica\/Casey",
@@ -793,7 +797,7 @@
     },
     {
         "value": "Antarctica\/Macquarie",
-        "label": "UTC+11:00 (Antarctica\/Macquarie)"
+        "label": "UTC+10:00 (Antarctica\/Macquarie)"
     },
     {
         "value": "Antarctica\/Mawson",
@@ -801,7 +805,7 @@
     },
     {
         "value": "Antarctica\/McMurdo",
-        "label": "UTC+13:00 (Antarctica\/McMurdo)"
+        "label": "UTC+12:00 (Antarctica\/McMurdo)"
     },
     {
         "value": "Antarctica\/Palmer",
@@ -817,7 +821,7 @@
     },
     {
         "value": "Antarctica\/Troll",
-        "label": "UTC+00:00 (Antarctica\/Troll)"
+        "label": "UTC+02:00 (Antarctica\/Troll)"
     },
     {
         "value": "Antarctica\/Vostok",
@@ -825,7 +829,7 @@
     },
     {
         "value": "Arctic\/Longyearbyen",
-        "label": "UTC+01:00 (Arctic\/Longyearbyen)"
+        "label": "UTC+02:00 (Arctic\/Longyearbyen)"
     },
     {
         "value": "Asia\/Aden",
@@ -881,7 +885,7 @@
     },
     {
         "value": "Asia\/Beirut",
-        "label": "UTC+02:00 (Asia\/Beirut)"
+        "label": "UTC+03:00 (Asia\/Beirut)"
     },
     {
         "value": "Asia\/Bishkek",
@@ -921,15 +925,15 @@
     },
     {
         "value": "Asia\/Famagusta",
-        "label": "UTC+02:00 (Asia\/Famagusta)"
+        "label": "UTC+03:00 (Asia\/Famagusta)"
     },
     {
         "value": "Asia\/Gaza",
-        "label": "UTC+02:00 (Asia\/Gaza)"
+        "label": "UTC+03:00 (Asia\/Gaza)"
     },
     {
         "value": "Asia\/Hebron",
-        "label": "UTC+02:00 (Asia\/Hebron)"
+        "label": "UTC+03:00 (Asia\/Hebron)"
     },
     {
         "value": "Asia\/Ho_Chi_Minh",
@@ -957,7 +961,7 @@
     },
     {
         "value": "Asia\/Jerusalem",
-        "label": "UTC+02:00 (Asia\/Jerusalem)"
+        "label": "UTC+03:00 (Asia\/Jerusalem)"
     },
     {
         "value": "Asia\/Kabul",
@@ -1021,7 +1025,7 @@
     },
     {
         "value": "Asia\/Nicosia",
-        "label": "UTC+02:00 (Asia\/Nicosia)"
+        "label": "UTC+03:00 (Asia\/Nicosia)"
     },
     {
         "value": "Asia\/Novokuznetsk",
@@ -1157,15 +1161,15 @@
     },
     {
         "value": "Atlantic\/Azores",
-        "label": "UTC-01:00 (Atlantic\/Azores)"
+        "label": "UTC+00:00 (Atlantic\/Azores)"
     },
     {
         "value": "Atlantic\/Bermuda",
-        "label": "UTC-04:00 (Atlantic\/Bermuda)"
+        "label": "UTC-03:00 (Atlantic\/Bermuda)"
     },
     {
         "value": "Atlantic\/Canary",
-        "label": "UTC+00:00 (Atlantic\/Canary)"
+        "label": "UTC+01:00 (Atlantic\/Canary)"
     },
     {
         "value": "Atlantic\/Cape_Verde",
@@ -1173,11 +1177,11 @@
     },
     {
         "value": "Atlantic\/Faroe",
-        "label": "UTC+00:00 (Atlantic\/Faroe)"
+        "label": "UTC+01:00 (Atlantic\/Faroe)"
     },
     {
         "value": "Atlantic\/Madeira",
-        "label": "UTC+00:00 (Atlantic\/Madeira)"
+        "label": "UTC+01:00 (Atlantic\/Madeira)"
     },
     {
         "value": "Atlantic\/Reykjavik",
@@ -1197,7 +1201,7 @@
     },
     {
         "value": "Australia\/Adelaide",
-        "label": "UTC+10:30 (Australia\/Adelaide)"
+        "label": "UTC+09:30 (Australia\/Adelaide)"
     },
     {
         "value": "Australia\/Brisbane",
@@ -1205,7 +1209,7 @@
     },
     {
         "value": "Australia\/Broken_Hill",
-        "label": "UTC+10:30 (Australia\/Broken_Hill)"
+        "label": "UTC+09:30 (Australia\/Broken_Hill)"
     },
     {
         "value": "Australia\/Darwin",
@@ -1217,7 +1221,7 @@
     },
     {
         "value": "Australia\/Hobart",
-        "label": "UTC+11:00 (Australia\/Hobart)"
+        "label": "UTC+10:00 (Australia\/Hobart)"
     },
     {
         "value": "Australia\/Lindeman",
@@ -1225,11 +1229,11 @@
     },
     {
         "value": "Australia\/Lord_Howe",
-        "label": "UTC+11:00 (Australia\/Lord_Howe)"
+        "label": "UTC+10:30 (Australia\/Lord_Howe)"
     },
     {
         "value": "Australia\/Melbourne",
-        "label": "UTC+11:00 (Australia\/Melbourne)"
+        "label": "UTC+10:00 (Australia\/Melbourne)"
     },
     {
         "value": "Australia\/Perth",
@@ -1237,15 +1241,15 @@
     },
     {
         "value": "Australia\/Sydney",
-        "label": "UTC+11:00 (Australia\/Sydney)"
+        "label": "UTC+10:00 (Australia\/Sydney)"
     },
     {
         "value": "Europe\/Amsterdam",
-        "label": "UTC+01:00 (Europe\/Amsterdam)"
+        "label": "UTC+02:00 (Europe\/Amsterdam)"
     },
     {
         "value": "Europe\/Andorra",
-        "label": "UTC+01:00 (Europe\/Andorra)"
+        "label": "UTC+02:00 (Europe\/Andorra)"
     },
     {
         "value": "Europe\/Astrakhan",
@@ -1253,63 +1257,63 @@
     },
     {
         "value": "Europe\/Athens",
-        "label": "UTC+02:00 (Europe\/Athens)"
+        "label": "UTC+03:00 (Europe\/Athens)"
     },
     {
         "value": "Europe\/Belgrade",
-        "label": "UTC+01:00 (Europe\/Belgrade)"
+        "label": "UTC+02:00 (Europe\/Belgrade)"
     },
     {
         "value": "Europe\/Berlin",
-        "label": "UTC+01:00 (Europe\/Berlin)"
+        "label": "UTC+02:00 (Europe\/Berlin)"
     },
     {
         "value": "Europe\/Bratislava",
-        "label": "UTC+01:00 (Europe\/Bratislava)"
+        "label": "UTC+02:00 (Europe\/Bratislava)"
     },
     {
         "value": "Europe\/Brussels",
-        "label": "UTC+01:00 (Europe\/Brussels)"
+        "label": "UTC+02:00 (Europe\/Brussels)"
     },
     {
         "value": "Europe\/Bucharest",
-        "label": "UTC+02:00 (Europe\/Bucharest)"
+        "label": "UTC+03:00 (Europe\/Bucharest)"
     },
     {
         "value": "Europe\/Budapest",
-        "label": "UTC+01:00 (Europe\/Budapest)"
+        "label": "UTC+02:00 (Europe\/Budapest)"
     },
     {
         "value": "Europe\/Busingen",
-        "label": "UTC+01:00 (Europe\/Busingen)"
+        "label": "UTC+02:00 (Europe\/Busingen)"
     },
     {
         "value": "Europe\/Chisinau",
-        "label": "UTC+02:00 (Europe\/Chisinau)"
+        "label": "UTC+03:00 (Europe\/Chisinau)"
     },
     {
         "value": "Europe\/Copenhagen",
-        "label": "UTC+01:00 (Europe\/Copenhagen)"
+        "label": "UTC+02:00 (Europe\/Copenhagen)"
     },
     {
         "value": "Europe\/Dublin",
-        "label": "UTC+00:00 (Europe\/Dublin)"
+        "label": "UTC+01:00 (Europe\/Dublin)"
     },
     {
         "value": "Europe\/Gibraltar",
-        "label": "UTC+01:00 (Europe\/Gibraltar)"
+        "label": "UTC+02:00 (Europe\/Gibraltar)"
     },
     {
         "value": "Europe\/Guernsey",
-        "label": "UTC+00:00 (Europe\/Guernsey)"
+        "label": "UTC+01:00 (Europe\/Guernsey)"
     },
     {
         "value": "Europe\/Helsinki",
-        "label": "UTC+02:00 (Europe\/Helsinki)"
+        "label": "UTC+03:00 (Europe\/Helsinki)"
     },
     {
         "value": "Europe\/Isle_of_Man",
-        "label": "UTC+00:00 (Europe\/Isle_of_Man)"
+        "label": "UTC+01:00 (Europe\/Isle_of_Man)"
     },
     {
         "value": "Europe\/Istanbul",
@@ -1317,7 +1321,7 @@
     },
     {
         "value": "Europe\/Jersey",
-        "label": "UTC+00:00 (Europe\/Jersey)"
+        "label": "UTC+01:00 (Europe\/Jersey)"
     },
     {
         "value": "Europe\/Kaliningrad",
@@ -1329,35 +1333,35 @@
     },
     {
         "value": "Europe\/Kyiv",
-        "label": "UTC+02:00 (Europe\/Kyiv)"
+        "label": "UTC+03:00 (Europe\/Kyiv)"
     },
     {
         "value": "Europe\/Lisbon",
-        "label": "UTC+00:00 (Europe\/Lisbon)"
+        "label": "UTC+01:00 (Europe\/Lisbon)"
     },
     {
         "value": "Europe\/Ljubljana",
-        "label": "UTC+01:00 (Europe\/Ljubljana)"
+        "label": "UTC+02:00 (Europe\/Ljubljana)"
     },
     {
         "value": "Europe\/London",
-        "label": "UTC+00:00 (Europe\/London)"
+        "label": "UTC+01:00 (Europe\/London)"
     },
     {
         "value": "Europe\/Luxembourg",
-        "label": "UTC+01:00 (Europe\/Luxembourg)"
+        "label": "UTC+02:00 (Europe\/Luxembourg)"
     },
     {
         "value": "Europe\/Madrid",
-        "label": "UTC+01:00 (Europe\/Madrid)"
+        "label": "UTC+02:00 (Europe\/Madrid)"
     },
     {
         "value": "Europe\/Malta",
-        "label": "UTC+01:00 (Europe\/Malta)"
+        "label": "UTC+02:00 (Europe\/Malta)"
     },
     {
         "value": "Europe\/Mariehamn",
-        "label": "UTC+02:00 (Europe\/Mariehamn)"
+        "label": "UTC+03:00 (Europe\/Mariehamn)"
     },
     {
         "value": "Europe\/Minsk",
@@ -1365,7 +1369,7 @@
     },
     {
         "value": "Europe\/Monaco",
-        "label": "UTC+01:00 (Europe\/Monaco)"
+        "label": "UTC+02:00 (Europe\/Monaco)"
     },
     {
         "value": "Europe\/Moscow",
@@ -1373,27 +1377,27 @@
     },
     {
         "value": "Europe\/Oslo",
-        "label": "UTC+01:00 (Europe\/Oslo)"
+        "label": "UTC+02:00 (Europe\/Oslo)"
     },
     {
         "value": "Europe\/Paris",
-        "label": "UTC+01:00 (Europe\/Paris)"
+        "label": "UTC+02:00 (Europe\/Paris)"
     },
     {
         "value": "Europe\/Podgorica",
-        "label": "UTC+01:00 (Europe\/Podgorica)"
+        "label": "UTC+02:00 (Europe\/Podgorica)"
     },
     {
         "value": "Europe\/Prague",
-        "label": "UTC+01:00 (Europe\/Prague)"
+        "label": "UTC+02:00 (Europe\/Prague)"
     },
     {
         "value": "Europe\/Riga",
-        "label": "UTC+02:00 (Europe\/Riga)"
+        "label": "UTC+03:00 (Europe\/Riga)"
     },
     {
         "value": "Europe\/Rome",
-        "label": "UTC+01:00 (Europe\/Rome)"
+        "label": "UTC+02:00 (Europe\/Rome)"
     },
     {
         "value": "Europe\/Samara",
@@ -1401,11 +1405,11 @@
     },
     {
         "value": "Europe\/San_Marino",
-        "label": "UTC+01:00 (Europe\/San_Marino)"
+        "label": "UTC+02:00 (Europe\/San_Marino)"
     },
     {
         "value": "Europe\/Sarajevo",
-        "label": "UTC+01:00 (Europe\/Sarajevo)"
+        "label": "UTC+02:00 (Europe\/Sarajevo)"
     },
     {
         "value": "Europe\/Saratov",
@@ -1417,23 +1421,23 @@
     },
     {
         "value": "Europe\/Skopje",
-        "label": "UTC+01:00 (Europe\/Skopje)"
+        "label": "UTC+02:00 (Europe\/Skopje)"
     },
     {
         "value": "Europe\/Sofia",
-        "label": "UTC+02:00 (Europe\/Sofia)"
+        "label": "UTC+03:00 (Europe\/Sofia)"
     },
     {
         "value": "Europe\/Stockholm",
-        "label": "UTC+01:00 (Europe\/Stockholm)"
+        "label": "UTC+02:00 (Europe\/Stockholm)"
     },
     {
         "value": "Europe\/Tallinn",
-        "label": "UTC+02:00 (Europe\/Tallinn)"
+        "label": "UTC+03:00 (Europe\/Tallinn)"
     },
     {
         "value": "Europe\/Tirane",
-        "label": "UTC+01:00 (Europe\/Tirane)"
+        "label": "UTC+02:00 (Europe\/Tirane)"
     },
     {
         "value": "Europe\/Ulyanovsk",
@@ -1441,19 +1445,19 @@
     },
     {
         "value": "Europe\/Vaduz",
-        "label": "UTC+01:00 (Europe\/Vaduz)"
+        "label": "UTC+02:00 (Europe\/Vaduz)"
     },
     {
         "value": "Europe\/Vatican",
-        "label": "UTC+01:00 (Europe\/Vatican)"
+        "label": "UTC+02:00 (Europe\/Vatican)"
     },
     {
         "value": "Europe\/Vienna",
-        "label": "UTC+01:00 (Europe\/Vienna)"
+        "label": "UTC+02:00 (Europe\/Vienna)"
     },
     {
         "value": "Europe\/Vilnius",
-        "label": "UTC+02:00 (Europe\/Vilnius)"
+        "label": "UTC+03:00 (Europe\/Vilnius)"
     },
     {
         "value": "Europe\/Volgograd",
@@ -1461,15 +1465,15 @@
     },
     {
         "value": "Europe\/Warsaw",
-        "label": "UTC+01:00 (Europe\/Warsaw)"
+        "label": "UTC+02:00 (Europe\/Warsaw)"
     },
     {
         "value": "Europe\/Zagreb",
-        "label": "UTC+01:00 (Europe\/Zagreb)"
+        "label": "UTC+02:00 (Europe\/Zagreb)"
     },
     {
         "value": "Europe\/Zurich",
-        "label": "UTC+01:00 (Europe\/Zurich)"
+        "label": "UTC+02:00 (Europe\/Zurich)"
     },
     {
         "value": "Indian\/Antananarivo",
@@ -1521,7 +1525,7 @@
     },
     {
         "value": "Pacific\/Auckland",
-        "label": "UTC+13:00 (Pacific\/Auckland)"
+        "label": "UTC+12:00 (Pacific\/Auckland)"
     },
     {
         "value": "Pacific\/Bougainville",
@@ -1529,7 +1533,7 @@
     },
     {
         "value": "Pacific\/Chatham",
-        "label": "UTC+13:45 (Pacific\/Chatham)"
+        "label": "UTC+12:45 (Pacific\/Chatham)"
     },
     {
         "value": "Pacific\/Chuuk",
@@ -1537,7 +1541,7 @@
     },
     {
         "value": "Pacific\/Easter",
-        "label": "UTC-05:00 (Pacific\/Easter)"
+        "label": "UTC-06:00 (Pacific\/Easter)"
     },
     {
         "value": "Pacific\/Efate",
@@ -1613,7 +1617,7 @@
     },
     {
         "value": "Pacific\/Norfolk",
-        "label": "UTC+12:00 (Pacific\/Norfolk)"
+        "label": "UTC+11:00 (Pacific\/Norfolk)"
     },
     {
         "value": "Pacific\/Noumea",
