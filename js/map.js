@@ -50,7 +50,7 @@ $(document).ready(function () {
   });
 
   /**
-   * Initializes the Google Map and Drawing Manager.
+   * Initializes the Google Map, Drawing Manager and Places SearchBox.
    * Sets up event listeners for drawing rectangles and markers on the map.
    */
   async function initMap() {
@@ -58,15 +58,20 @@ $(document).ready(function () {
     if (!mapElement) {
       return;
     }
+
+    // Import required libraries
     const { Map } = await google.maps.importLibrary("maps");
     const { DrawingManager } = await google.maps.importLibrary("drawing");
+    const { SearchBox } = await google.maps.importLibrary("places");
 
-    map = new Map(document.getElementById("panel-stc-map"), {
+    // Initialize map
+    map = new Map(mapElement, {
       center: { lat: 52.37929540757325, lng: 13.065966655404743 },
       zoom: 2,
       mapTypeId: google.maps.MapTypeId.SATELLITE,
     });
 
+    // Setup Drawing Manager for rectangles and markers
     const drawingManager = new DrawingManager({
       drawingMode: google.maps.drawing.OverlayType.MARKER,
       drawingControl: true,
@@ -74,19 +79,57 @@ $(document).ready(function () {
         position: google.maps.ControlPosition.TOP_CENTER,
         drawingModes: [
           google.maps.drawing.OverlayType.RECTANGLE,
-          google.maps.drawing.OverlayType.MARKER,
-        ],
+          google.maps.drawing.OverlayType.MARKER
+        ]
       },
       rectangleOptions: {
         strokeColor: "#FF0000",
         strokeOpacity: 0.8,
         strokeWeight: 2,
         fillColor: "#FF0000",
-        fillOpacity: 0.35,
-      },
+        fillOpacity: 0.35
+      }
+    });
+    drawingManager.setMap(map);
+
+    // Prepare SearchBox for place lookups
+    /** @type {HTMLInputElement} */
+    const searchInput = document.getElementById("input-stc-map-search");
+    $(searchInput).css({ width: "40%" });
+    const searchBox = new SearchBox(searchInput);
+    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(searchInput);
+
+    // Bias search results to current viewport
+    map.addListener("bounds_changed", () => {
+      searchBox.setBounds(map.getBounds());
     });
 
-    drawingManager.setMap(map);
+    // Handle user selecting a place
+    let searchMarker;
+    searchBox.addListener("places_changed", () => {
+      const places = searchBox.getPlaces();
+      if (!places || !places.length) return;
+
+      // Clear previous search marker
+      if (searchMarker) {
+        searchMarker.setMap(null);
+      }
+
+      const place = places[0];
+      if (!place.geometry || !place.geometry.location) {
+        return;
+      }
+
+      // Center and zoom the map to the selected place
+      map.panTo(place.geometry.location);
+      map.setZoom(15);
+
+      // Add marker for selected place
+      searchMarker = new google.maps.Marker({
+        map: map,
+        position: place.geometry.location
+      });
+    });
 
     /**
      * Event listener for when a rectangle is completed.
@@ -155,6 +198,21 @@ $(document).ready(function () {
         drawnOverlays.push({ rowId: rowId, overlay: marker });
       }
     );
+  }
+
+  /**
+  * Handles the 'shown.bs.modal' event for the STC map modal.
+  * Triggers a map resize, fits all overlays, and re-adds the search control.
+  */
+  function onStcMapModalShown() {
+    google.maps.event.trigger(map, "resize");
+    fitMapBounds();
+
+    // Ensure search control is right-aligned and rebias
+    if (typeof searchInput !== 'undefined' && typeof searchBox !== 'undefined') {
+      map.controls[google.maps.ControlPosition.TOP_RIGHT].push(searchInput);
+      searchBox.setBounds(map.getBounds());
+    }
   }
 
   /**
@@ -389,4 +447,5 @@ $(document).ready(function () {
   window.deleteDrawnOverlaysForRow = deleteDrawnOverlaysForRow;
   window.fitMapBounds = fitMapBounds;
   window.updateOverlayLabels = updateOverlayLabels;
+  $("#modal-stc-map").one("shown.bs.modal", onStcMapModalShown);
 });
