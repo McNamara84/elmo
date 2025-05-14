@@ -172,9 +172,6 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
   return node ? node.textContent.trim() : '';
 }
 
-// Globale Variable für die Labor-Daten
-let labData = [];
-
 /**
  * Process creators from XML and populate the form
  * @param {Document} xmlDoc - The parsed XML document
@@ -327,6 +324,9 @@ function processContactPersons(xmlDoc) {
   }
 }
 
+// Global variable to store labs data
+let labData = [];
+
 /**
  * Helper function to find lab name by ID
  * @param {string} labId - The laboratory ID
@@ -341,60 +341,42 @@ function findLabNameById(labId) {
 }
 
 /**
- * Helper function to set laboratory name with Tagify
+ * Helper function to set laboratory data in a row
  * @param {jQuery} row - The jQuery row element
  * @param {string} labId - The laboratory ID
  */
-function setLabNameWithTagify(row, labId) {
+function setLabDataInRow(row, labId) {
   // Check if labData is available
   if (typeof labData === 'undefined') {
     console.error('labData is not available');
     return;
   }
 
-  const inputName = row.find('input[name="laboratoryName[]"]')[0];
+  const selectName = row.find('select[name="laboratoryName[]"]');
 
-  if (!inputName) {
-    console.error('Input element not found');
+  if (!selectName.length) {
+    console.error('Select element for laboratory name not found');
     return;
   }
 
   const lab = findLabNameById(labId);
 
   if (!lab) {
-    console.error('Lab not found');
+    console.error('Lab not found with ID:', labId);
     return;
   }
 
   try {
-    // Check if Tagify instance exists
-    if (inputName.tagify) {
-      inputName.tagify.addTags([lab.name]);
-    } else {
-      // Create new Tagify instance
-      const tagify = new Tagify(inputName, {
-        whitelist: labData.map(item => item.name),
-        enforceWhitelist: true,
-        maxTags: 1,
-        dropdown: {
-          maxItems: 20,
-          closeOnSelect: true,
-          highlightFirst: true
-        },
-        delimiters: null,
-        mode: "select"
-      });
+    // Set the select value to the lab name
+    selectName.val(lab.name);
 
-      // Set value after short delay
-      setTimeout(() => {
-        tagify.addTags([lab.name]);
-      }, 100);
-    }
+    // Trigger change event to ensure any attached handlers run
+    selectName.trigger('change');
 
-    // Find and set affiliation field
-    const inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]')[0];
-    if (inputAffiliation && inputAffiliation.tagify) {
-      inputAffiliation.tagify.addTags([lab.affiliation]);
+    // Set affiliation
+    const inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]');
+    if (inputAffiliation.length) {
+      inputAffiliation.val(lab.affiliation || '');
     }
 
     // Set hidden fields
@@ -405,7 +387,7 @@ function setLabNameWithTagify(row, labId) {
     if (hiddenLabId.length) hiddenLabId.val(lab.id);
 
   } catch (error) {
-    console.error('Error in setLabNameWithTagify:', error);
+    console.error('Error in setLabDataInRow:', error);
     console.error('Error stack:', error.stack);
   }
 }
@@ -417,14 +399,12 @@ function setLabNameWithTagify(row, labId) {
  */
 function processOriginatingLaboratories(xmlDoc, resolver) {
   const laboratoryNodes = xmlDoc.evaluate(
-    './/ns:contributors/ns:contributor[@contributorType="HostingInstitution"]',
+    './/ns:contributors/ns:contributor[@contributorType="HostingInstitution" and ns:nameIdentifier[@nameIdentifierScheme="labid"]]',
     xmlDoc,
     resolver,
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
-
-
 
   for (let i = 0; i < laboratoryNodes.snapshotLength; i++) {
     const labNode = laboratoryNodes.snapshotItem(i);
@@ -441,11 +421,8 @@ function processOriginatingLaboratories(xmlDoc, resolver) {
       // First laboratory - use existing row
       const firstRow = $('#group-originatinglaboratory .row[data-laboratory-row]:first');
 
-      // Set lab ID in hidden field
-      firstRow.find('input[name="LabId[]"]').val(labId);
-
-      // Set lab name using Tagify
-      setLabNameWithTagify(firstRow, labId);
+      // Set lab data in the row
+      setLabDataInRow(firstRow, labId);
 
     } else {
       // Additional laboratories - clone new row
@@ -454,11 +431,8 @@ function processOriginatingLaboratories(xmlDoc, resolver) {
       // Find the newly added row
       const newRow = $('#group-originatinglaboratory .row[data-laboratory-row]').last();
 
-      // Set lab ID
-      newRow.find('input[name="LabId[]"]').val(labId);
-
-      // Set lab name using Tagify
-      setLabNameWithTagify(newRow, labId);
+      // Set lab data in the row
+      setLabDataInRow(newRow, labId);
     }
   }
 }

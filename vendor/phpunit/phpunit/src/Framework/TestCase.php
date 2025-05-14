@@ -1225,35 +1225,6 @@ abstract class TestCase extends Assert implements Reorderable, SelfDescribing, T
     }
 
     /**
-     * @throws AssertionFailedError
-     * @throws Exception
-     * @throws ExpectationFailedException
-     * @throws Throwable
-     *
-     * @internal This method is not covered by the backward compatibility promise for PHPUnit
-     */
-    final protected function runTest(): mixed
-    {
-        $testArguments = array_merge($this->data, array_values($this->dependencyInput));
-
-        try {
-            $testResult = $this->{$this->methodName}(...$testArguments);
-        } catch (Throwable $exception) {
-            if (!$this->shouldExceptionExpectationsBeVerified($exception)) {
-                throw $exception;
-            }
-
-            $this->verifyExceptionExpectations($exception);
-
-            return null;
-        }
-
-        $this->expectedExceptionWasNotRaised();
-
-        return $testResult;
-    }
-
-    /**
      * This method is a wrapper for the ini_set() function that automatically
      * resets the modified php.ini setting to its original value after the
      * test is run.
@@ -1669,6 +1640,33 @@ abstract class TestCase extends Assert implements Reorderable, SelfDescribing, T
     protected function onNotSuccessfulTest(Throwable $t): never
     {
         throw $t;
+    }
+
+    /**
+     * @throws AssertionFailedError
+     * @throws Exception
+     * @throws ExpectationFailedException
+     * @throws Throwable
+     */
+    private function runTest(): mixed
+    {
+        $testArguments = array_merge($this->data, array_values($this->dependencyInput));
+
+        try {
+            $testResult = $this->{$this->methodName}(...$testArguments);
+        } catch (Throwable $exception) {
+            if (!$this->shouldExceptionExpectationsBeVerified($exception)) {
+                throw $exception;
+            }
+
+            $this->verifyExceptionExpectations($exception);
+
+            return null;
+        }
+
+        $this->expectedExceptionWasNotRaised();
+
+        return $testResult;
     }
 
     /**
@@ -2447,7 +2445,7 @@ abstract class TestCase extends Assert implements Reorderable, SelfDescribing, T
 
             $methodsInvoked[] = $methodInvoked;
 
-            if (isset($t)) {
+            if (isset($t) && !$t instanceof SkippedTest) {
                 $emitter->{$erroredMethod}(
                     static::class,
                     $methodInvoked,

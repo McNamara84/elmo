@@ -103,7 +103,7 @@
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
             "title": "Thésaurus GCMD",
-            "name": "Thésaurus GCMD",
+            "name": "Thésaurus GCMD Keywords",
             "scienceKeywords": "GCMD Science Keywords",
             "platforms": "Plateformes GCMD",
             "instruments": "Instruments GCMD",
@@ -136,7 +136,8 @@
         "dateTimeInvalid": "Veuillez saisir une date et une heure valides.",
         "timezone": "Fuseau horaire",
         "timezoneInvalid": "Veuillez sélectionner le fuseau horaire",
-        "mapInfo": "(Veuillez choisir les coordonnées par rectangle ou marqueur)"
+        "mapInfo": "(Veuillez choisir les coordonnées par rectangle ou marqueur)",
+        "mapSearch": "Rechercher des noms de lieux"
     },
     "relatedWork": {
         "title": "Travaux connexes",
