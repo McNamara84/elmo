@@ -59,6 +59,8 @@ $showSpatialTemporalCoverage = true;
 $showRelatedWork = true;
 // Show Funding Reference form group
 $showFundingReference = true;
+// Show GGMs Properties form group
+$showGGMsProperties = true;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
