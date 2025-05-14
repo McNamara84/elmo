@@ -2447,7 +2447,7 @@
       "id": "2344142f-9834-4acb-8a55-695e61e18bf2",
       "comment": "",
       "command": "executeScript",
-      "target": "document.querySelector('#input-contributor-personaffiliation').value=\"GFZ\"",
+      "target": "document.querySelector('#input-contributorpersons-affiliation').value=\"GFZ\"",
       "targets": [],
       "value": ""
     }, {
@@ -5354,7 +5354,7 @@
       "id": "745f4cfd-9991-4c8c-aadd-81b64b0475ba",
       "comment": "",
       "command": "executeScript",
-      "target": "document.querySelector('#input-contributor-personaffiliation').value ='CONTRIBUTOR_AFFILIATION';",
+      "target": "document.querySelector('#input-contributorpersons-affiliation').value ='CONTRIBUTOR_AFFILIATION';",
       "targets": [],
       "value": "30000"
     }, {
@@ -6316,7 +6316,7 @@
       "id": "8ebc5195-604b-4b2f-bb5f-700663cc7888",
       "comment": "",
       "command": "executeScript",
-      "target": "document.querySelector('#input-contributor-personaffiliation').value ='CONTRIBUTOR_AFFILIATION';",
+      "target": "document.querySelector('#input-contributorpersons-affiliation').value ='CONTRIBUTOR_AFFILIATION';",
       "targets": [],
       "value": "30000"
     }, {

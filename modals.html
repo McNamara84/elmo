@@ -5,9 +5,9 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modal-uploadxml"></h5>
+                <h5 class="modal-title" id="modal-uploadxml">XML hochladen</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+            </div>            
             <div class="modal-body">
                 <div class="mb-3">
                     <label for="input-uploadxml-file" class="form-label" data-translate="modals.upload.title">Select XML file:</label>
@@ -144,9 +144,10 @@
                     Description (as mentioned in the Data Description Template)</label>
                 <div class="input-group">
                     <input type="file" class="form-control" id="input-submit-datadescription" accept=".pdf,.doc,.docx">
-                    <button class="btn btn-outline-danger" type="button" id="remove-file-btn">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
+                    <button class="btn btn-outline-danger" type="button" id="remove-file-btn" style="display: none;">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        <span class="visually-hidden">Datei entfernen</span>
+                      </button>                      
                 </div>
                 <small class="form-text text-muted" id="selected-file-name"></small>
             </div>
@@ -171,9 +172,9 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="label-feedbackmodal" data-translate="modals.feedback.title"></h5>
+                <h5 class="modal-title" id="label-feedbackmodal" data-translate="modals.feedback.title">Feedback</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+            </div>            
             <div class="modal-body">
                 <div id="panel-feedback-status"></div>
                 <div id="panel-feedback-message"

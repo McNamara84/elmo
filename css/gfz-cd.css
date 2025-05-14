@@ -55,28 +55,28 @@
 }
 
 .feedback-button.blink {
-    animation: blink 2s infinite;
+    animation: blink 8s infinite;
 }
 
 @keyframes multi-color-blink {
     0% {
-        background-color: #ffc107;
+        background-color: #ffe9a0;
     }
 
     25% {
-        background-color: #dc3545;
+        background-color: #ff9aa4;
     }
 
     50% {
-        background-color: #0dcaf0;
+        background-color: #9beeff;
     }
 
     75% {
-        background-color: #198754;
+        background-color: #89ffc8;
     }
 
     100% {
-        background-color: #ffc107;
+        background-color: #ffe79e;
     }
 }
 
@@ -200,4 +200,28 @@ label.mandatory-field::after {
 
 .unvisible {
     display: none !important;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.red-star {
+    color: var(--bs-red-star-color, #dc3545);
+}
+
+.con-reduce {
+    color: var(--bs-con-reduce-color, #0d6efd);
+}
+  
+.text-feedback {
+    color: var(--bs-text-feedback-color, #000000);
 }

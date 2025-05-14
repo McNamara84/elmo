@@ -87,24 +87,26 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function refreshTagifyInstance() {
         if (!input._tagify) return;
-
-        // Store current tags and whitelist
+    
+        // Hide the field
+        input.style.display = 'none';
+    
+        // Save current tags
         const currentTags = input._tagify.value || [];
-
-        // Destroy current instance
-        input._tagify.destroy();
-
-        // Reinitialize with current translations
-        initTagify();
-
-        // Restore tags
-        if (currentTags.length > 0) {
-            setTimeout(() => {
-                if (input._tagify) {
-                    input._tagify.addTags(currentTags);
-                }
-            }, 50);
-        }
+    
+        // Update placeholder
+        const placeholderValue = getPlaceholderTranslation();
+        input._tagify.settings.placeholder = placeholderValue;
+    
+        // Update whitelist
+        input._tagify.settings.whitelist = currentWhitelist;
+    
+        // Remove all tags and add the new tags
+        input._tagify.removeAllTags();
+        input._tagify.addTags(currentTags);
+    
+        // Show the field again
+        input.style.display = 'block';
     }
 
     /**

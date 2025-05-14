@@ -302,6 +302,20 @@ function createDatabaseStructure($connection)
     FOREIGN KEY (`identifier_type_fk`)
     REFERENCES `Identifier_Type` (`identifier_type_id`));",
 
+        "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
+    `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
+    `Model_Name` VARCHAR(100) NOT NULL,
+    `Model_Type` VARCHAR(100) NOT NULL,
+    `Mathematical_Representation` VARCHAR(100) NOT NULL,
+    `Celestial_Body` VARCHAR(100) NULL,
+    `File_Format` VARCHAR(100) NOT NULL,
+    `Product_Type` VARCHAR(100) NULL,
+    `Degree` INT NULL,
+    `Errors` VARCHAR(100) NULL,
+    `Error_Handling_Approach` TEXT NULL,
+    `Tide_System` VARCHAR(100) NULL,
+    PRIMARY KEY (`GGM_Properties_id`));",
+
         "Resource_has_Related_Work" => "CREATE TABLE IF NOT EXISTS `Resource_has_Related_Work` (
     `Resource_has_Related_Work_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
@@ -989,4 +1003,12 @@ if (isset($_POST['action'])) {
     $result = processInstallation($connection, $_POST['action']);
     echo json_encode($result);
     exit;
+}
+
+// Handle CLI requests
+if (php_sapi_name() === 'cli' && $argc >= 2) {
+    $action = $argv[1] ?? 'basic';
+    $result = processInstallation($connection, $action);
+    fwrite(STDOUT, $result['message'] . PHP_EOL);
+    exit($result['status'] === 'success' ? 0 : 1);
 }

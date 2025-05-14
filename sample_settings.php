@@ -12,10 +12,10 @@
  */
 function connectDb()
 {
-    $host = "localhost";
-    $username = "your_database_username";
-    $password = "your_database_password";
-    $database = "your_database_name";
+    $host = getenv('DB_HOST') ?: "localhost";
+    $username = getenv('DB_USER') ?: "your_database_username";
+    $password = getenv('DB_PASSWORD') ?: "your_database_password";
+    $database = getenv('DB_NAME') ?: "your_database_name";
     $conn = new mysqli($host, $username, $password, $database);
     return $conn;
 }
@@ -25,30 +25,18 @@ $connection = connectDb();
 
 // ELMO API Key
 $apiKeyElmo = '1234-1234-1234-1234';
-
 // Google Maps API Key
 $apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
-
 // API Key for https://timezonedb.com/
 $apiKeyTimezone = 'your_timezone_api_key';
 
-// Maximum number of titles that can be entered
+// SETTINGS FOR GENERIC DATACITE RESEARCH DATA
+// maximale Anzahl der eingebbaren Titel
 $maxTitles = 2;
-
-// Show Characteristics of the model form group
-$characteristicsOfTheModel = true;
 // Show Contributor Persons form group
 $showContributorPersons = true;
 // Show Contrubutor Institutios form group
 $showContributorInstitutions = true;
-// Show MSL labs form group
-$showMslLabs = false;
-// URL to the source with all laboratories for MSL
-$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
-// Show MSL vocabularies
-$showMslVocabs = false;
-// URL to the source with all vocabularies for MSL
-$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 // Show GCMD Thesauri form group
 $showGcmdThesauri = true;
 // Show Free Keywords form group
@@ -59,6 +47,22 @@ $showSpatialTemporalCoverage = true;
 $showRelatedWork = true;
 // Show Funding Reference form group
 $showFundingReference = true;
+
+// SETTINGS FOR EPOS MSL
+// Show MSL labs form group
+$showMslLabs = true;
+// URL to the source with all laboratories for MSL
+$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
+// Show MSL vocabularies
+$showMslVocabs = true;
+// URL to the source with all vocabularies for MSL
+$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+
+// SETTINGS FOR ICGEM
+// Show GGMs Properties form group
+$showGGMsProperties = true;
+// Show Characteristics of the model form group
+$characteristicsOfTheModel = false;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
