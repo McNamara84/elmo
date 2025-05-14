@@ -78,6 +78,12 @@ function dropTables($connection)
         // ICGEM-specific variables to describe beautiful GGMs 
         'GGM_Properties',
         'Resource_has_GGM_Properties'
+        'Resource_has_Model_Type',
+        'Resource_has_Mathematical_Representation',
+        'Resource_has_File_Format',
+        'Model_Type',
+        'Mathematical_Representation',
+        'File_Format'
     ];
 
     // Disable foreign key checks to allow dropping tables with dependencies
@@ -445,10 +451,7 @@ function createDatabaseStructure($connection)
         "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
     `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
     `Model_Name` VARCHAR(100) NOT NULL,
-    `Model_Type` VARCHAR(100) NOT NULL,
-    `Mathematical_Representation` VARCHAR(100) NOT NULL,
     `Celestial_Body` VARCHAR(100) NULL,
-    `File_Format` VARCHAR(100) NOT NULL,
     `Product_Type` VARCHAR(100) NULL,
     `Degree` INT NULL,
     `Errors` VARCHAR(100) NULL,
@@ -465,6 +468,55 @@ function createDatabaseStructure($connection)
     REFERENCES `Resource` (`resource_id`),
     FOREIGN KEY (`GGM_Properties_GGM_Properties_id`)
     REFERENCES `GGM_Properties` (`GGM_Properties_id`));"
+    
+
+        "Model_Type" => "CREATE TABLE IF NOT EXISTS `Model_Type` (
+    `Model_type_id` INT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(100) NOT NULL,
+    `description` TEXT NULL,
+    PRIMARY KEY (`Model_type_id`));",
+
+        "Mathematical_Representation" => "CREATE TABLE IF NOT EXISTS `Mathematical_Representation` (
+    `Mathematical_representation_id` INT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(100) NOT NULL,
+    `description` TEXT NULL,
+    PRIMARY KEY (`Mathematical_representation_id`));",
+
+        "File_Format" => "CREATE TABLE IF NOT EXISTS `File_Format` (
+    `File_format_id` INT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(100) NOT NULL,
+    `description` TEXT NULL,
+    PRIMARY KEY (`File_format_id`));",
+
+        "Resource_has_Model_Type" => "CREATE TABLE IF NOT EXISTS `Resource_has_Model_Type` (
+    `Resource_has_Model_Type_id` INT NOT NULL AUTO_INCREMENT,
+    `Resource_resource_id` INT NOT NULL,
+    `Model_Type_model_type_id` INT NOT NULL,
+    PRIMARY KEY (`Resource_has_Model_Type_id`),
+    FOREIGN KEY (`Resource_resource_id`)
+    REFERENCES `Resource` (`resource_id`),
+    FOREIGN KEY (`Model_Type_model_type_id`)
+    REFERENCES `Model_Type` (`Model_type_id`));",
+
+        "Resource_has_Mathematical_Representation" => "CREATE TABLE IF NOT EXISTS `Resource_has_Mathematical_Representation` (
+    `Resource_has_Mathematical_Representation_id` INT NOT NULL AUTO_INCREMENT,
+    `Resource_resource_id` INT NOT NULL,
+    `Mathematical_Representation_mathematical_representation_id` INT NOT NULL,
+    PRIMARY KEY (`Resource_has_Mathematical_Representation_id`),
+    FOREIGN KEY (`Resource_resource_id`)
+    REFERENCES `Resource` (`resource_id`),
+    FOREIGN KEY (`Mathematical_Representation_mathematical_representation_id`)
+    REFERENCES `Mathematical_Representation` (`Mathematical_representation_id`));",
+
+        "Resource_has_File_Format" => "CREATE TABLE IF NOT EXISTS `Resource_has_File_Format` (
+    `Resource_has_File_Format_id` INT NOT NULL AUTO_INCREMENT,
+    `Resource_resource_id` INT NOT NULL,
+    `File_Format_file_format_id` INT NOT NULL,
+    PRIMARY KEY (`Resource_has_File_Format_id`),
+    FOREIGN KEY (`Resource_resource_id`)
+    REFERENCES `Resource` (`resource_id`),
+    FOREIGN KEY (`File_Format_file_format_id`)
+    REFERENCES `File_Format` (`File_format_id`));"
     ];
 
     $created = 0;
@@ -620,7 +672,22 @@ function insertLookupData($connection)
             ["name" => "URL", "description" => "Also known as web address, a URL is a specific character string that constitutes a reference to a resource. The syntax is: scheme://domain:port/path?query_string#fragment_id.", "pattern" => "(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?"],
             ["name" => "URN", "description" => "A unique and persistent identifier of an electronic document. The syntax is: urn:<NID>:<NSS>. The leading urn: sequence is case-insensitive, <NID> is the namespace identifier, <NSS> is the namespace-specific string.", "pattern" => "^urn:nbn:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$"],
             ["name" => "w3id", "description" => "Mostly used to publish vocabularies and ontologies. The letters ‘w3’ stand for “World Wide Web”.", "pattern" => "^https:\/\/w3id\.org\/[a-zA-Z0-9\/._-]+(?:#[a-zA-Z0-9._-]+)?$"],
-        ]
+        ],
+        // ICGEM-related lookup insert
+        "File_Format" => [
+            ["name" => "icgem1.0", "description" => "icgem1.0 or ICGEM-format is a Linux /Unix ASCII-format for the representation of Earth Gravity Field models in terms of spherical harmonic coefficients"],
+            ["name" => "icgem2.0", "description" => "icgem2.0 has been introduced to indicate time-limited validity periods of the time-varying coefficients"]
+        ],
+        "Model_Type" => [
+            ["name" => "static", "description" => "Models of gravity field potential computed from the satellite-based gravity measurements and the spatial details of the gravity field (i.e. short wavelengths or high frequencies) are collected via terrestrial, airborne and shipborne gravity measurements and radar altimetry."],
+            ["name" => "temporal", "description" => "Models derived from input data of dedicated time periods, enabling to monitor the temporal changes in the gravity field."],
+            ["name" => "topographic", "description" => "Models represent the gravitational potential generated by the attraction of the Earth's topographic masses. Gravity from these models is computed based on very high-resolution digital elevation models which describe the shape of the Earth and model of mass densities inside the topography therefore, they are not based on real gravity measurements."],
+            ["name" => "simulated", "description" => "Models based on simulated data, not based on any measurements."]
+        ],
+        "Mathematical_Representation" => [
+            ["name" => "Spherical harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of solid spherical harmonics, which are solutions to Laplace's equation in a spherical coordinate system. This representation is the most common for global gravity field models"],
+            ["name" => "Ellipsoidal harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of ellipsoidal harmonics, which are solutions to Laplace's equation in an ellipsoidal coordinate system."],
+        ] 
     ];
 
     foreach ($lookupData as $tableName => $data) {

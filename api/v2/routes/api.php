@@ -32,6 +32,8 @@ return [
     ['GET', '/vocabs/freekeywords/all', [new VocabController(), 'getAllFreeKeywords']],
     ['GET', '/vocabs/freekeywords/curated', [new VocabController(), 'getCuratedFreeKeywords']],
     ['GET', '/vocabs/freekeywords/uncurated', [new VocabController(), 'getUncuratedFreeKeywords']],
+    // Vocabulary retrieval for ICGEM implementation
+    ['GET', '/vocabs/icgemfileformats', [new VocabController(), 'getICGEMFileFormats']],
 
     // Validation endpoints
     ['GET', '/validation/patterns[/{type}]', [new ValidationController(), 'getPattern']],
