@@ -77,7 +77,7 @@ function dropTables($connection)
         'Resource_has_Funding_Reference',
         // ICGEM-specific variables to describe beautiful GGMs 
         'GGM_Properties',
-        'Resource_has_GGM_Properties'
+        'Resource_has_GGM_Properties',
         'Resource_has_Model_Type',
         'Resource_has_Mathematical_Representation',
         'Resource_has_File_Format',
@@ -456,8 +456,8 @@ function createDatabaseStructure($connection)
     `Degree` INT NULL,
     `Errors` VARCHAR(100) NULL,
     `Error_Handling_Approach` TEXT NULL,
-    `Tide_System` VARCHAR(100) NULL
-    PRIMARY KEY (`GGM_Properties_id`);",
+    `Tide_System` VARCHAR(100) NULL,
+    PRIMARY KEY (`GGM_Properties_id`));",
 
         "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
     `Resource_has_GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
@@ -467,7 +467,7 @@ function createDatabaseStructure($connection)
     FOREIGN KEY (`Resource_resource_id`)
     REFERENCES `Resource` (`resource_id`),
     FOREIGN KEY (`GGM_Properties_GGM_Properties_id`)
-    REFERENCES `GGM_Properties` (`GGM_Properties_id`));"
+    REFERENCES `GGM_Properties` (`GGM_Properties_id`));",
     
 
         "Model_Type" => "CREATE TABLE IF NOT EXISTS `Model_Type` (
@@ -686,7 +686,7 @@ function insertLookupData($connection)
         ],
         "Mathematical_Representation" => [
             ["name" => "Spherical harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of solid spherical harmonics, which are solutions to Laplace's equation in a spherical coordinate system. This representation is the most common for global gravity field models"],
-            ["name" => "Ellipsoidal harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of ellipsoidal harmonics, which are solutions to Laplace's equation in an ellipsoidal coordinate system."],
+            ["name" => "Ellipsoidal harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of ellipsoidal harmonics, which are solutions to Laplace's equation in an ellipsoidal coordinate system."]
         ] 
     ];
 
