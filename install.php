@@ -296,6 +296,20 @@ function createDatabaseStructure($connection)
     FOREIGN KEY (`identifier_type_fk`)
     REFERENCES `Identifier_Type` (`identifier_type_id`));",
 
+        "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
+    `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
+    `Model_Name` VARCHAR(100) NOT NULL,
+    `Model_Type` VARCHAR(100) NOT NULL,
+    `Mathematical_Representation` VARCHAR(100) NOT NULL,
+    `Celestial_Body` VARCHAR(100) NULL,
+    `File_Format` VARCHAR(100) NOT NULL,
+    `Product_Type` VARCHAR(100) NULL,
+    `Degree` INT NULL,
+    `Errors` VARCHAR(100) NULL,
+    `Error_Handling_Approach` TEXT NULL,
+    `Tide_System` VARCHAR(100) NULL,
+    PRIMARY KEY (`GGM_Properties_id`));",
+
         "Resource_has_Related_Work" => "CREATE TABLE IF NOT EXISTS `Resource_has_Related_Work` (
     `Resource_has_Related_Work_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
@@ -442,20 +456,6 @@ function createDatabaseStructure($connection)
     FOREIGN KEY (`Spatial_Temporal_Coverage_spatial_temporal_coverage_id`)
     REFERENCES `Spatial_Temporal_Coverage` (`spatial_temporal_coverage_id`));",
 
-        "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
-    `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
-    `Model_Name` VARCHAR(100) NOT NULL,
-    `Model_Type` VARCHAR(100) NOT NULL,
-    `Mathematical_Representation` VARCHAR(100) NOT NULL,
-    `Celestial_Body` VARCHAR(100) NULL,
-    `File_Format` VARCHAR(100) NOT NULL,
-    `Product_Type` VARCHAR(100) NULL,
-    `Degree` INT NULL,
-    `Errors` VARCHAR(100) NULL,
-    `Error_Handling_Approach` TEXT NULL,
-    `Tide_System` VARCHAR(100) NULL
-    PRIMARY KEY (`GGM_Properties_id`);",
-
         "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
     `Resource_has_GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
@@ -464,7 +464,7 @@ function createDatabaseStructure($connection)
     FOREIGN KEY (`Resource_resource_id`)
     REFERENCES `Resource` (`resource_id`),
     FOREIGN KEY (`GGM_Properties_GGM_Properties_id`)
-    REFERENCES `GGM_Properties` (`GGM_Properties_id`));"
+    REFERENCES `GGM_Properties` (`GGM_Properties_id`));",
     ];
 
     $created = 0;
