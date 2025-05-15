@@ -39,20 +39,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Full save operation
+    // Saving all mandatory fields & optional fields if needed
     $resource_id = saveResourceInformationAndRights($connection, $_POST);
     saveAuthors($connection, $_POST, $resource_id);
     saveContactPerson($connection, $_POST, $resource_id);
-    saveOriginatingLaboratories($connection, $_POST, $resource_id);
-    saveContributorPersons($connection, $_POST, $resource_id);
-    saveContributorInstitutions($connection, $_POST, $resource_id);
+    if ($showMslLabs) {
+        saveOriginatingLaboratories($connection, $_POST, $resource_id);
+    }
+    if ($showContributorPersons) {
+        saveContributorPersons($connection, $_POST, $resource_id);
+    }
+    if ($showContributorInstitutions) {
+        saveContributorInstitutions($connection, $_POST, $resource_id);
+    }
     saveDescriptions($connection, $_POST, $resource_id);
-    saveKeywords($connection, $_POST, $resource_id);
-    saveFreeKeywords($connection, $_POST, $resource_id);
-    saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
-    saveRelatedWork($connection, $_POST, $resource_id);
-    saveFundingReferences($connection, $_POST, $resource_id);
-    saveGGMsProperties($connection, $_POST, $resource_id);
+    if ($showGcmdThesauri) {
+        saveKeywords($connection, $_POST, $resource_id);
+    }
+    if ($showFreeKeywords) {
+        saveFreeKeywords($connection, $_POST, $resource_id);
+    }
+    if ($showSpatialTemporalCoverage) {
+        saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
+    }
+    if ($showRelatedWork) {
+        saveRelatedWork($connection, $_POST, $resource_id);
+    }
+    if ($showFundingReference) {
+        saveFundingReferences($connection, $_POST, $resource_id);
+    }
+    if ($showGGMsProperties) {
+        saveGGMsProperties($connection, $_POST, $resource_id);
+    }
 
     // Handle file download if requested
     if (isset($_POST['filename'])) {
