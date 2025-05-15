@@ -78,9 +78,6 @@ function dropTables($connection)
         // ICGEM-specific variables to describe beautiful GGMs 
         'GGM_Properties',
         'Resource_has_GGM_Properties',
-        'Resource_has_Model_Type',
-        'Resource_has_Mathematical_Representation',
-        'Resource_has_File_Format',
         'Model_Type',
         'Mathematical_Representation',
         'File_Format'
@@ -475,52 +472,30 @@ function createDatabaseStructure($connection)
 
         "Model_Type" => "CREATE TABLE IF NOT EXISTS `Model_Type` (
     `Model_type_id` INT NOT NULL AUTO_INCREMENT,
+    `Resource_resource_id` INT NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
-    PRIMARY KEY (`Model_type_id`));",
+    PRIMARY KEY (`Model_type_id`),
+    FOREIGN KEY (`Resource_resource_id`)
+    REFERENCES `Resource` (`resource_id`));",
 
         "Mathematical_Representation" => "CREATE TABLE IF NOT EXISTS `Mathematical_Representation` (
     `Mathematical_representation_id` INT NOT NULL AUTO_INCREMENT,
+    `Resource_resource_id` INT NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
-    PRIMARY KEY (`Mathematical_representation_id`));",
+    PRIMARY KEY (`Mathematical_representation_id`),
+    FOREIGN KEY (`Resource_resource_id`)
+    REFERENCES `Resource` (`resource_id`));",
 
         "File_Format" => "CREATE TABLE IF NOT EXISTS `File_Format` (
     `File_format_id` INT NOT NULL AUTO_INCREMENT,
+    `Resource_resource_id` INT NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
-    PRIMARY KEY (`File_format_id`));",
-
-        "Resource_has_Model_Type" => "CREATE TABLE IF NOT EXISTS `Resource_has_Model_Type` (
-    `Resource_has_Model_Type_id` INT NOT NULL AUTO_INCREMENT,
-    `Resource_resource_id` INT NOT NULL,
-    `Model_Type_model_type_id` INT NOT NULL,
-    PRIMARY KEY (`Resource_has_Model_Type_id`),
+    PRIMARY KEY (`File_format_id`),
     FOREIGN KEY (`Resource_resource_id`)
-    REFERENCES `Resource` (`resource_id`),
-    FOREIGN KEY (`Model_Type_model_type_id`)
-    REFERENCES `Model_Type` (`Model_type_id`));",
-
-        "Resource_has_Mathematical_Representation" => "CREATE TABLE IF NOT EXISTS `Resource_has_Mathematical_Representation` (
-    `Resource_has_Mathematical_Representation_id` INT NOT NULL AUTO_INCREMENT,
-    `Resource_resource_id` INT NOT NULL,
-    `Mathematical_Representation_mathematical_representation_id` INT NOT NULL,
-    PRIMARY KEY (`Resource_has_Mathematical_Representation_id`),
-    FOREIGN KEY (`Resource_resource_id`)
-    REFERENCES `Resource` (`resource_id`),
-    FOREIGN KEY (`Mathematical_Representation_mathematical_representation_id`)
-    REFERENCES `Mathematical_Representation` (`Mathematical_representation_id`));",
-
-        "Resource_has_File_Format" => "CREATE TABLE IF NOT EXISTS `Resource_has_File_Format` (
-    `Resource_has_File_Format_id` INT NOT NULL AUTO_INCREMENT,
-    `Resource_resource_id` INT NOT NULL,
-    `File_Format_file_format_id` INT NOT NULL,
-    PRIMARY KEY (`Resource_has_File_Format_id`),
-    FOREIGN KEY (`Resource_resource_id`)
-    REFERENCES `Resource` (`resource_id`),
-    FOREIGN KEY (`File_Format_file_format_id`)
-    REFERENCES `File_Format` (`File_format_id`));"
-    ];
+    REFERENCES `Resource` (`resource_id`));",
 
     $created = 0;
     $total = count($tables);
@@ -679,7 +654,8 @@ function insertLookupData($connection)
         // ICGEM-related lookup insert
         "File_Format" => [
             ["name" => "icgem1.0", "description" => "icgem1.0 or ICGEM-format is a Linux /Unix ASCII-format for the representation of Earth Gravity Field models in terms of spherical harmonic coefficients"],
-            ["name" => "icgem2.0", "description" => "icgem2.0 has been introduced to indicate time-limited validity periods of the time-varying coefficients"]
+            ["name" => "icgem2.0", "description" => "icgem2.0 has been introduced to indicate time-limited validity periods of the time-varying coefficients"],
+            ["name" => "ASCII", "description" => "American Standard Code for Information Interchange "]
         ],
         "Model_Type" => [
             ["name" => "static", "description" => "Models of gravity field potential computed from the satellite-based gravity measurements and the spatial details of the gravity field (i.e. short wavelengths or high frequencies) are collected via terrestrial, airborne and shipborne gravity measurements and radar altimetry."],
