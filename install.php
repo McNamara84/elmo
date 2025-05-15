@@ -462,17 +462,6 @@ function createDatabaseStructure($connection)
     FOREIGN KEY (`Spatial_Temporal_Coverage_spatial_temporal_coverage_id`)
     REFERENCES `Spatial_Temporal_Coverage` (`spatial_temporal_coverage_id`));",
 
-        "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
-    `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
-    `Model_Name` VARCHAR(100) NOT NULL,
-    `Celestial_Body` VARCHAR(100) NULL,
-    `Product_Type` VARCHAR(100) NULL,
-    `Degree` INT NULL,
-    `Errors` VARCHAR(100) NULL,
-    `Error_Handling_Approach` TEXT NULL,
-    `Tide_System` VARCHAR(100) NULL,
-    PRIMARY KEY (`GGM_Properties_id`));",
-
         "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
     `Resource_has_GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
