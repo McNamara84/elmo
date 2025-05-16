@@ -567,45 +567,6 @@ $(document).ready(function () {
 
 
   /**
-   * Event handler for the "Add Related Work" button click.
-   * Clones the first related work row, resets input fields, and appends it to the related work group.
-   */
-  $("#button-relatedwork-add").click(function () {
-    var relatedworkGroup = $("#group-relatedwork");
-    // First row used as a template
-    var firstRelatedWorkLine = relatedworkGroup.children().first();
-
-    // Clone the template
-    var newRelatedWorkRow = firstRelatedWorkLine.clone();
-
-
-    // Clear input fields
-    newRelatedWorkRow.find("input").val("").removeClass("is-invalid");
-
-    // Remove required attributes initially
-    newRelatedWorkRow.find("input, select").removeAttr("required");
-
-    // Remove help buttons
-    replaceHelpButtonInClonedRows(newRelatedWorkRow);
-
-
-    // Replace the add button with the remove button
-    newRelatedWorkRow.find("#button-relatedwork-add").replaceWith(removeButton);
-
-    // Append the new related work row to the DOM
-    relatedworkGroup.append(newRelatedWorkRow);
-
-    // Event handler for the remove button
-    newRelatedWorkRow.on("click", ".removeButton", function () {
-      $(this).closest(".row").remove();
-      // Event handler for the remove button
-      newRelatedWorkRow.on("click", ".removeButton", function () {
-        $(this).closest(".row").remove();
-      });
-    });
-  });
-
-  /**
    * Event handler for the "Add Funding Reference" button click.
    * Clones the first funding reference row, resets input fields, and appends it to the funding reference group.
    */
