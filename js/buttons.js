@@ -481,13 +481,6 @@ $(document).ready(function () {
   */
   var tscRowIdCounter = 1;
 
-  /**
-   * Creates the Remove button element.
-   * @returns {jQuery} A jQuery object representing the Remove button.
-   */
-  function createRemoveButton() {
-    return $('<button type="button" class="btn btn-danger removeButton" style="width: 36px;">-</button>');
-  }
 
   /**
    * Event handler for the "Add TSC" button click.
@@ -572,14 +565,6 @@ $(document).ready(function () {
     }
   });
 
-  /**
-   * Updates the labels on the map overlays to match the current row numbering.
-   */
-  function updateOverlayLabels() {
-    if (typeof window.updateOverlayLabels === 'function') {
-      window.updateOverlayLabels();
-    }
-  }
 
   /**
    * Event handler for the "Add Related Work" button click.
@@ -695,79 +680,4 @@ $(document).ready(function () {
 
   /////////////////////////////// HELP BUTTONS /////////////////////////////////////////////////////////////////
 
-  /**
-   * Replaces help buttons in cloned rows with invisible placeholders.
-   * This helps maintain the structure and prevents changes in field sizes.
-   *
-   * @param {jQuery} row - The cloned row from which to replace help buttons.
-   * @param {string} [roundCornersClass="input-right-with-round-corners"] - The CSS class for rounded corners.
-   */
-  function replaceHelpButtonInClonedRows(
-    row,
-    roundCornersClass = "input-right-with-round-corners"
-  ) {
-    // Check whether the help buttons are visible
-    if ($(".input-group-text").is(":visible")) {
-      // Find all span elements with the help icon
-      row.find("span.input-group-text:has(i.bi-question-circle-fill)").each(function () {
-        // Replace the span with an empty div that has fixed dimensions
-        $(this).replaceWith('<div class="input-group-text" style="visibility: hidden; width: 42px; height: 38px;"></div>');
-      });
-
-      // Remove non-rounded corners class to keep structure intact
-      row.find(".input-with-help").removeClass("input-right-no-round-corners");
-      row.find(".input-with-help").addClass(roundCornersClass);
-    }
-  }
-
-  let hoverCount = 0;
-  let timer = null;
-
-  /**
-   * Resets the hover count to zero.
-   */
-  function resetHoverCount() {
-    hoverCount = 0;
-  }
-
-  /**
-   * Event handler for hover over help buttons.
-   * Tracks hover events and opens an Easter egg if hovered over 30 times within 1 second intervals.
-   */
-  $("#buttonHelp, #bd-theme").hover(function () {
-    hoverCount++;
-
-    if (hoverCount === 30) {
-      window.open(
-        "doc/egg.html",
-        "Egg",
-        "width=650,height=450,scrollbars=no,resizable=no,location=no"
-      );
-      resetHoverCount();
-    }
-
-    clearTimeout(timer);
-    timer = setTimeout(resetHoverCount, 1000); // Set timer to reset hover count after 1 second
-  });
-
-  // Check if the input group text visibility setting is saved
-  if (localStorage.getItem("inputGroupTextVisible") === "false") {
-    $(".input-group-text").hide();
-  }
-
-  /**
-   * Event handler to show help elements when the "Help On" button is clicked.
-   */
-  $("#buttonHelpOn").click(function () {
-    $(".input-group-text").show();
-    localStorage.setItem("inputGroupTextVisible", "true");
-  });
-
-  /**
-   * Event handler to hide help elements when the "Help Off" button is clicked.
-   */
-  $("#buttonHelpOff").click(function () {
-    $(".input-group-text").hide();
-    localStorage.setItem("inputGroupTextVisible", "false");
-  });
 });
