@@ -496,6 +496,7 @@ function createDatabaseStructure($connection)
     PRIMARY KEY (`File_format_id`),
     FOREIGN KEY (`Resource_resource_id`)
     REFERENCES `Resource` (`resource_id`));",
+    ];
 
     $created = 0;
     $total = count($tables);
