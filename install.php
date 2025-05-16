@@ -335,10 +335,7 @@ function createDatabaseStructure($connection)
         "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
     `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
     `Model_Name` VARCHAR(100) NOT NULL,
-    `Model_Type` VARCHAR(100) NOT NULL,
-    `Mathematical_Representation` VARCHAR(100) NOT NULL,
     `Celestial_Body` VARCHAR(100) NULL,
-    `File_Format` VARCHAR(100) NOT NULL,
     `Product_Type` VARCHAR(100) NULL,
     `Degree` INT NULL,
     `Errors` VARCHAR(100) NULL,
