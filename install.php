@@ -723,12 +723,18 @@ function insertTestResourceData($connection)
         "Title" => [
             ["text" => "Acoustic Emission and Seismic moment tensor catalogs associated with triaxial stick-slip experiments performed on Westerly Granite samples", "Title_Type_fk" => 1, "Resource_resource_id" => 1],
             ["text" => "A decade of short-period earthquake rupture histories from multi-array back-projection", "Title_Type_fk" => 1, "Resource_resource_id" => 2],
-            ["text" => "Long-term CO2 and CH4 flux measurements and associated environmental variables from a rewetted peatland", "Title_Type_fk" => 1, "Resource_resource_id" => 3]
+            ["text" => "Long-term CO2 and CH4 flux measurements and associated environmental variables from a rewetted peatland", "Title_Type_fk" => 1, "Resource_resource_id" => 3],
+            ["text" => "GRACE-FO Level-2 Monthly Geopotential Spherical Harmonics GFZ Release 06.3 (RL06.3)", "Title_Type_fk" => 1, "Resource_resource_id" => 4],
+            ["text" => "ROLI topographic gravity field model, from four-layer Earth decomposition", "Title_Type_fk" => 1, "Resource_resource_id" => 5],
+
         ],
         "Contact_Person" => [
             ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "1234-1234-1234-1234", "email" => "Kwiatek.Grzegorz@gfz.de", "website" => "gfz.de"],
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "5678-5678-5678-5678", "email" => "Thomas.Goebel@tu-berlin.de", "website" => "www.tu.berlin"],
-            ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "9012-9012-9012-9012", "email" => "Christian.Wille@fh-potsdam.de", "website" => "fh-potsdam.de"]
+            ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "9012-9012-9012-9012", "email" => "Christian.Wille@fh-potsdam.de", "website" => "fh-potsdam.de"],
+            ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "https://orcid.org/0000-0003-1463-412X", "email" => "oleh.abrykosov@gfz-potsdam.de", "website"=>null],
+
+
         ],
         "Originating_Laboratory" => [
             ["laboratoryname" => "Lab 1", "labId" => "123456789c7caa2d763b647d476b2910"],
@@ -738,7 +744,9 @@ function insertTestResourceData($connection)
         "Contributor_Person" => [
             ["familyName" => "Müller", "givenname" => "Anna", "orcid" => "4100-4503-1076-415X"],
             ["familyName" => "Schmidt", "givenname" => "Johann", "orcid" => "4500-8523-8552-0861"],
-            ["familyName" => "Fischer", "givenname" => "Lena", "orcid" => "7854-3000-5930-6527"]
+            ["familyName" => "Fischer", "givenname" => "Lena", "orcid" => "7854-3000-5930-6527"],
+            ["familyName" => "Reißland", "givenname" => "Sven", "orcid" => "https://orcid.org/000-0001-6293-5336"], //ICGEM main contributors
+            ["familyName" => "Ince", "givenname" => "E. Sinem", "orcid" => "https://orcid.org/0000-0002-3393-1392"] //ICGEM main contributors
         ],
         "Contributor_Institution" => [
             ["name" => "GFZ German Research Centre for Geosciences"],
@@ -767,7 +775,13 @@ function insertTestResourceData($connection)
             ["keyword" => "Platforms > Land-based Platforms > Field Sites > Ice Shelf", "scheme" => "NASA/GCMD Earth Platforms Keywords", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms", "valueURI" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms", "language" => "en"],
             ["keyword" => "Phanerozoic > Cenozoic > Neogene > Pliocene > Zanclean", "scheme" => "Chronostratigraphic Chart", "schemeUri" => "https://stratigraphy.org", "valueUri" => "http://resource.geosciml.org/classifier/ics/ischart/Zanclean", "language" => "en"],
             ["keyword" => "compound material > breccia", "scheme" => "CGI Simple Lithology", "schemeUri" => "https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology", "valueUri" => "http://resource.geosciml.org/classifier/cgi/lithology/breccia", "language" => "en"],
-            ["keyword" => "GEMET Concepts > hydrosphere > water (geographic) > surface water > freshwater > ice", "scheme" => "GEMET - Concepts, version 4.2.3", "schemeUri" => "http://www.eionet.europa.eu/gemet/gemetThesaurus", "valueUri" => "http://www.eionet.europa.eu/gemet/concept/4131", "language" => "en"]
+            ["keyword" => "GEMET Concepts > hydrosphere > water (geographic) > surface water > freshwater > ice", "scheme" => "GEMET - Concepts, version 4.2.3", "schemeUri" => "http://www.eionet.europa.eu/gemet/gemetThesaurus", "valueUri" => "http://www.eionet.europa.eu/gemet/concept/4131", "language" => "en"],
+            //ICGEM-related, double check schemeURI please
+            ["keyword" => "? > GRACE-FO", "scheme" => "GCMD Platform/Sources Keywords", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms", "language" => "en"],
+            ["keyword" => "EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD > GRAVITY", "scheme" => "GCMD Earth Sciences Keywords ", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms", "valueUri" => "https://gcmd.earthdata.nasa.gov/kms/concept/69af3046-08e0-4c24-981d-803c0412ce58", "language" => "en"],
+            ["keyword" => "EARTH SCIENCE > LAND SURFACE > TOPOGRAPHY > TOPOGRAPHIC EFFECTS", "scheme" => "GCMD Earth Sciences Keywords ", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms", "valueUri" =>"https://gcmd.earthdata.nasa.gov/kms/concept/05bef198-cfff-48be-b0cb-14e296d38dbc" ,"language" => "en"],
+            ["keyword" => "EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD", "scheme" => "GCMD Earth Sciences Keywords ", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms", "valueUri" =>"https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa" ,"language" => "en"],
+ 
         ],
         "Free_Keywords" => [
             ["free_keyword" => "Acoustic Emission", "isCurated" => "1"],
@@ -792,6 +806,9 @@ function insertTestResourceData($connection)
             ["free_keyword" => "Multi-scale laboratories", "isCurated" => "1"],
             ["free_keyword" => "Rock and melt physical properties", "isCurated" => "1"],
             ["free_keyword" => "CH5 flux measurements", "isCurated" => "0"],
+            ["free_keyword" => "ICGEM", "isCurated" => "1"],
+            ["free_keyword" => "Forward gravity modelling", "isCurated" => "1"],
+            ["free_keyword" => "topographic gravity field modelling", "isCurated" => "1"]
         ],
         "Spatial_Temporal_Coverage" => [
             ["latitudeMin" => "53.773072687072634", "latitudeMax" => "56.19295930435612", "longitudeMin" => "49.417527009637524", "longitudeMax" => "57.503464509637524", "description" => "Ein großes Sedimentbecken in Westaustralien, das reich an fossilen Brennstoffen und bedeutenden Erdöl- und Erdgasvorkommen ist.", "dateStart" => "2024-06-03", "dateEnd" => "2024-06-03", "timeStart" => "", "timeEnd" => "", "timezone" => "+00:00"],
@@ -870,7 +887,9 @@ function insertTestResourceData($connection)
         "Resource_has_Contributor_Person" => [
             ["Resource_resource_id" => 3, "Contributor_Person_contributor_person_id" => 1],
             ["Resource_resource_id" => 2, "Contributor_Person_contributor_person_id" => 3],
-            ["Resource_resource_id" => 1, "Contributor_Person_contributor_person_id" => 2]
+            ["Resource_resource_id" => 1, "Contributor_Person_contributor_person_id" => 2],
+            ["Resource_resource_id" => 5, "Contributor_Person_contributor_person_id" => 4]
+
         ],
         "Contributor_Institution_has_Role" => [
             ["Role_role_id" => 3, "Contributor_Institution_contributor_institution_id" => 1],
@@ -909,11 +928,20 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 1, "Thesaurus_Keywords_thesaurus_keywords_id" => 4],
             ["Resource_resource_id" => 1, "Thesaurus_Keywords_thesaurus_keywords_id" => 5],
             ["Resource_resource_id" => 1, "Thesaurus_Keywords_thesaurus_keywords_id" => 6]
+            ["Resource_resource_id" => 4, "Thesaurus_Keywords_thesaurus_keywords_id" => 7],
+            ["Resource_resource_id" => 4, "Thesaurus_Keywords_thesaurus_keywords_id" => 8],
+            ["Resource_resource_id" => 5, "Thesaurus_Keywords_thesaurus_keywords_id" => 9],
+            ["Resource_resource_id" => 5, "Thesaurus_Keywords_thesaurus_keywords_id" => 10],
+        
         ],
         "Resource_has_Free_Keywords" => [
             ["Resource_resource_id" => 3, "Free_Keywords_free_keywords_id" => 1],
             ["Resource_resource_id" => 2, "Free_Keywords_free_keywords_id" => 2],
             ["Resource_resource_id" => 1, "Free_Keywords_free_keywords_id" => 3]
+            ["Resource_resource_id" => 5, "Free_Keywords_free_keywords_id" => 23],
+            ["Resource_resource_id" => 5, "Free_Keywords_free_keywords_id" => 24],
+            ["Resource_resource_id" => 5, "Free_Keywords_free_keywords_id" => 25],
+
         ],
         "Originating_Laboratory_has_Affiliation" => [
             ["Affiliation_affiliation_id" => 2, "Originating_Laboratory_originating_laboratory_id" => 1],
