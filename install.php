@@ -104,18 +104,6 @@ function dropTables($connection)
 function createDatabaseStructure($connection)
 {
     $tables = [
-        "Resource" => "CREATE TABLE IF NOT EXISTS `Resource` (
-    `resource_id` INT NOT NULL AUTO_INCREMENT,
-    `doi` VARCHAR(100) NULL,
-    `version` FLOAT NULL,
-    `year` YEAR(4) NOT NULL,
-    `dateCreated` DATE NOT NULL,
-    `dateEmbargoUntil` DATE NULL,
-    `Rights_rights_id` INT NOT NULL,
-    `Resource_Type_resource_name_id` INT NOT NULL,
-    `Language_language_id` INT NOT NULL,
-    PRIMARY KEY (`resource_id`));",
-
         "Resource_Type" => "CREATE TABLE IF NOT EXISTS `Resource_Type` (
     `resource_name_id` INT NOT NULL AUTO_INCREMENT,
     `resource_type_general` VARCHAR(30) NULL,
@@ -160,6 +148,52 @@ function createDatabaseStructure($connection)
     `title_type_id` INT NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(25) NOT NULL,
     PRIMARY KEY (`title_type_id`));",
+
+        "Model_Type" => "CREATE TABLE IF NOT EXISTS `Model_Type` (
+    `Model_type_id` INT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(100) NOT NULL,
+    `description` TEXT NULL,
+    PRIMARY KEY (`Model_type_id`));",
+
+        "Mathematical_Representation" => "CREATE TABLE IF NOT EXISTS `Mathematical_Representation` (
+    `Mathematical_representation_id` INT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(100) NOT NULL,
+    `description` TEXT NULL,
+    PRIMARY KEY (`Mathematical_representation_id`));",
+
+        "File_Format" => "CREATE TABLE IF NOT EXISTS `File_Format` (
+    `File_format_id` INT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(100) NOT NULL,
+    `description` TEXT NULL,
+    PRIMARY KEY (`File_format_id`));",
+
+        "Resource" => "CREATE TABLE IF NOT EXISTS `Resource` (
+    `resource_id` INT NOT NULL AUTO_INCREMENT,
+    `doi` VARCHAR(100) NULL,
+    `version` FLOAT NULL,
+    `year` YEAR(4) NOT NULL,
+    `dateCreated` DATE NOT NULL,
+    `dateEmbargoUntil` DATE NULL,
+    `Rights_rights_id` INT NOT NULL,
+    `Resource_Type_resource_name_id` INT NOT NULL,
+    `Language_language_id` INT NOT NULL,
+    `Model_type_id` INT,
+    `Mathematical_Representation` INT,
+    `File_format_id` INT,
+    PRIMARY KEY (`resource_id`),
+    FOREIGN KEY (`Rights_rights_id`)
+    REFERENCES `Rights` (`rights_id`),
+    FOREIGN KEY (`Resource_Type_resource_name_id`)
+    REFERENCES `Resource_Type` (`resource_name_id`),
+    FOREIGN KEY (`Language_language_id`)
+    REFERENCES `Language` (`language_id`),
+    FOREIGN KEY (`Model_type_id`)
+    REFERENCES `Model_Type` (`Model_type_id`),
+    FOREIGN KEY (`Mathematical_Representation`)
+    REFERENCES `Mathematical_Representation` (`Mathematical_representation_id`),
+    FOREIGN KEY (`File_format_id`)
+    REFERENCES `File_Format` (`File_format_id`)
+    );",
 
         "Title" => "CREATE TABLE IF NOT EXISTS `Title` (
     `title_id` INT NOT NULL AUTO_INCREMENT,
@@ -260,7 +294,6 @@ function createDatabaseStructure($connection)
     FOREIGN KEY (Resource_resource_id) REFERENCES Resource (resource_id),
     FOREIGN KEY (Free_Keywords_free_keywords_id) REFERENCES Free_Keywords (free_keywords_id))",
 
-
         "Spatial_Temporal_Coverage" => "CREATE TABLE IF NOT EXISTS `Spatial_Temporal_Coverage` (
     `spatial_temporal_coverage_id` INT NOT NULL AUTO_INCREMENT,
     `latitudeMin` FLOAT NULL,
@@ -357,7 +390,6 @@ function createDatabaseStructure($connection)
     REFERENCES `Resource` (`resource_id`),
     FOREIGN KEY (`Author_author_id`)
     REFERENCES `Author` (`author_id`));",
-
 
         "Author_has_Affiliation" => "CREATE TABLE IF NOT EXISTS `Author_has_Affiliation` (
     `Author_has_Affiliation_id` INT NOT NULL AUTO_INCREMENT,
@@ -468,34 +500,6 @@ function createDatabaseStructure($connection)
     REFERENCES `Resource` (`resource_id`),
     FOREIGN KEY (`GGM_Properties_GGM_Properties_id`)
     REFERENCES `GGM_Properties` (`GGM_Properties_id`));",
-    
-
-        "Model_Type" => "CREATE TABLE IF NOT EXISTS `Model_Type` (
-    `Model_type_id` INT NOT NULL AUTO_INCREMENT,
-    `Resource_resource_id` INT NOT NULL,
-    `name` VARCHAR(100) NOT NULL,
-    `description` TEXT NULL,
-    PRIMARY KEY (`Model_type_id`),
-    FOREIGN KEY (`Resource_resource_id`)
-    REFERENCES `Resource` (`resource_id`));",
-
-        "Mathematical_Representation" => "CREATE TABLE IF NOT EXISTS `Mathematical_Representation` (
-    `Mathematical_representation_id` INT NOT NULL AUTO_INCREMENT,
-    `Resource_resource_id` INT NOT NULL,
-    `name` VARCHAR(100) NOT NULL,
-    `description` TEXT NULL,
-    PRIMARY KEY (`Mathematical_representation_id`),
-    FOREIGN KEY (`Resource_resource_id`)
-    REFERENCES `Resource` (`resource_id`));",
-
-        "File_Format" => "CREATE TABLE IF NOT EXISTS `File_Format` (
-    `File_format_id` INT NOT NULL AUTO_INCREMENT,
-    `Resource_resource_id` INT NOT NULL,
-    `name` VARCHAR(100) NOT NULL,
-    `description` TEXT NULL,
-    PRIMARY KEY (`File_format_id`),
-    FOREIGN KEY (`Resource_resource_id`)
-    REFERENCES `Resource` (`resource_id`));",
     ];
 
     $created = 0;
@@ -667,7 +671,7 @@ function insertLookupData($connection)
         "Mathematical_Representation" => [
             ["name" => "Spherical harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of solid spherical harmonics, which are solutions to Laplace's equation in a spherical coordinate system. This representation is the most common for global gravity field models"],
             ["name" => "Ellipsoidal harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of ellipsoidal harmonics, which are solutions to Laplace's equation in an ellipsoidal coordinate system."]
-        ] 
+        ]
     ];
 
     foreach ($lookupData as $tableName => $data) {
