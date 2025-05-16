@@ -565,48 +565,6 @@ $(document).ready(function () {
     }
   });
 
-
-  /**
-   * Event handler for the "Add Funding Reference" button click.
-   * Clones the first funding reference row, resets input fields, and appends it to the funding reference group.
-   */
-  $("#button-fundingreference-add").click(function () {
-    var fundingreferenceGroup = $("#group-fundingreference");
-    var firstFundingReferenceLine = fundingreferenceGroup.children().first();
-    var newFundingReferenceRow = firstFundingReferenceLine.clone();
-
-    // Clear input fields and remove validation feedback
-    newFundingReferenceRow.find("input").val("").removeClass("is-invalid");
-    newFundingReferenceRow.find(".invalid-feedback, .valid-feedback").css("display", "");
-
-    // Replace the add button with the remove button
-    newFundingReferenceRow.find(".addFundingReference").replaceWith(removeButton);
-
-    // Append the new funding reference row to the DOM
-    fundingreferenceGroup.append(newFundingReferenceRow);
-
-    // Remove help buttons
-    replaceHelpButtonInClonedRows(newFundingReferenceRow);
-
-    // Reset required attributes
-    newFundingReferenceRow.find("input").removeAttr("required");
-
-    // Event handler for the remove button
-    newFundingReferenceRow.on("click", ".removeButton", function () {
-      $(this).closest(".row").remove();
-      checkMandatoryFields();
-    });
-
-    // Destroy autocomplete
-    const newInput = newFundingReferenceRow.find(".inputFunder");
-    if (newInput.data('ui-autocomplete')) {
-      newInput.autocomplete('destroy');
-    }
-
-    // Initialize autocomplete again for the new row
-    setUpAutocompleteFunder(newInput[0]);
-  });
-
   /**
   * Event listener for the load button that opens the XML upload modal
   * @requires jQuery
