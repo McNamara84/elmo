@@ -19,11 +19,6 @@ require_once __DIR__ . '/TestDatabaseSetup.php';
 class SaveAuthorsTest extends DatabaseTestCase
 {
     /**
-     * @var \mysqli Database connection instance
-     */
-    private $connection;
-
-    /**
      * Set up the test environment.
      * Creates test database if it doesn't exist and initializes database structure.
      *

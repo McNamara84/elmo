@@ -17,11 +17,6 @@ require_once __DIR__ . '/TestDatabaseSetup.php';
 class SaveContributorsTest extends DatabaseTestCase
 {
     /**
-     * @var \mysqli Database connection
-     */
-    private $connection;
-
-    /**
      * Set up test environment
      * Creates test database if it doesn't exist and initializes database structure
      *

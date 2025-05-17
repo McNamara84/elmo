@@ -14,8 +14,6 @@ require_once __DIR__ . '/TestDatabaseSetup.php';
  */
 class SaveResourceInformationAndRightsTest extends DatabaseTestCase
 {
-    private $connection;
-
     protected function setUp(): void
     {
         global $connection;

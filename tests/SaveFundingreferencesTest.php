@@ -9,8 +9,6 @@ require_once __DIR__ . '/TestDatabaseSetup.php';
 
 class SaveFundingreferencesTest extends DatabaseTestCase
 {
-    private $connection;
-
     protected function setUp(): void
     {
         global $connection;
