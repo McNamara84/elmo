@@ -7,7 +7,7 @@ require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../save/formgroups/save_fundingreferences.php';
 require_once __DIR__ . '/TestDatabaseSetup.php';
 
-class SaveFundingreferencesTest extends TestCase
+class SaveFundingreferencesTest extends DatabaseTestCase
 {
     private $connection;
 
@@ -39,41 +39,6 @@ class SaveFundingreferencesTest extends TestCase
     protected function tearDown(): void
     {
         $this->cleanupTestData();
-    }
-
-    private function cleanupTestData()
-    {
-        $this->connection->query("SET FOREIGN_KEY_CHECKS=0");
-        $this->connection->query("DELETE FROM Resource_has_Spatial_Temporal_Coverage");
-        $this->connection->query("DELETE FROM Resource_has_Thesaurus_Keywords");
-        $this->connection->query("DELETE FROM Resource_has_Related_Work");
-        $this->connection->query("DELETE FROM Resource_has_Originating_Laboratory");
-        $this->connection->query("DELETE FROM Resource_has_Funding_Reference");
-        $this->connection->query("DELETE FROM Resource_has_Contact_Person");
-        $this->connection->query("DELETE FROM Resource_has_Contributor_Person");
-        $this->connection->query("DELETE FROM Resource_has_Contributor_Institution");
-        $this->connection->query("DELETE FROM Resource_has_Author");
-        $this->connection->query("DELETE FROM Resource_has_Free_Keywords");
-        $this->connection->query("DELETE FROM Author_has_Affiliation");
-        $this->connection->query("DELETE FROM Contact_Person_has_Affiliation");
-        $this->connection->query("DELETE FROM Contributor_Person_has_Affiliation");
-        $this->connection->query("DELETE FROM Contributor_Institution_has_Affiliation");
-        $this->connection->query("DELETE FROM Originating_Laboratory_has_Affiliation");
-        $this->connection->query("DELETE FROM Free_Keywords");
-        $this->connection->query("DELETE FROM Affiliation");
-        $this->connection->query("DELETE FROM Title");
-        $this->connection->query("DELETE FROM Description");
-        $this->connection->query("DELETE FROM Spatial_Temporal_Coverage");
-        $this->connection->query("DELETE FROM Thesaurus_Keywords");
-        $this->connection->query("DELETE FROM Related_Work");
-        $this->connection->query("DELETE FROM Originating_Laboratory");
-        $this->connection->query("DELETE FROM Funding_Reference");
-        $this->connection->query("DELETE FROM Contact_Person");
-        $this->connection->query("DELETE FROM Contributor_Person");
-        $this->connection->query("DELETE FROM Contributor_Institution");
-        $this->connection->query("DELETE FROM Author");
-        $this->connection->query("DELETE FROM Resource");
-        $this->connection->query("SET FOREIGN_KEY_CHECKS=1");
     }
 
     /**
