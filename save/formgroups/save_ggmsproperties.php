@@ -14,7 +14,8 @@
 function lookupForeignKeyId(mysqli $connection, string $table, string $idColumn, string $nameColumn, string $value): ?int
 {
     $sql = "SELECT `$idColumn` FROM `$table` WHERE `$nameColumn` = ? LIMIT 1";
-    if (!$stmt = $connection->prepare($sql)) {
+    $stmt = $connection->prepare($sql);
+    if (!$stmt) {
         throw new Exception("Failed to prepare lookup on {$table}: " . $connection->error);
     }
     $stmt->bind_param("s", $value);
