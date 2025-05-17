@@ -20,7 +20,7 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     /**
      * @var mysqli Database connection
      */
-    private $connection;
+    //private $connection;
 
     protected function setUp(): void
     {
