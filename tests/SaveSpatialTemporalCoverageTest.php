@@ -17,11 +17,6 @@ require_once __DIR__ . '/TestDatabaseSetup.php';
  */
 class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 {
-    /**
-     * @var mysqli Database connection
-     */
-    //private $connection;
-
     protected function setUp(): void
     {
         global $connection;
