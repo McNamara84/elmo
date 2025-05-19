@@ -9,7 +9,7 @@ use Exception;
 /**
  * Test class for the API endpoints
  */
-class ApiTest extends TestCase
+class ApiTest extends DatabaseTestCase
 {
     /**
      * @var Client HTTP client instance
@@ -26,60 +26,7 @@ class ApiTest extends TestCase
      */
     private $projectPath;
 
-    /**
-     * @var \mysqli Database connection
-     */
-    private $connection;
     private const API_KEY = '1234-1234-1234-1234';
-
-    /**
-     * Set up test environment
-     * - Ensures test database exists and is properly initialized
-     * - Configures HTTP client
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        global $connection;
-        if (!$connection) {
-            $connection = connectDb();
-        }
-        $this->connection = $connection;
-
-        $dbname = 'mde2-msl-test';
-        if ($this->connection->select_db($dbname) === false) {
-            $connection->query("CREATE DATABASE " . $dbname);
-            $connection->select_db($dbname);
-
-            require_once __DIR__ . '/../install.php';
-            dropTables($connection);
-            createDatabaseStructure($connection);
-            insertLookupData($connection);
-        }
-
-        $this->projectPath = basename(dirname(__DIR__));
-        $this->baseUri = getenv('API_BASE_URL') ?: 'http://localhost:8000';
-        echo "\nUsing base URI: " . $this->baseUri;
-
-        $this->client = new Client([
-            'base_uri' => $this->baseUri,
-            'timeout' => 5.0,
-            'verify' => false,
-            'http_errors' => false,
-            'headers' => [
-                'X-API-Key' => self::API_KEY
-            ]
-        ]);
-    }
-
-    /**
-     * Clean up after test execution
-     */
-    protected function tearDown(): void
-    {
-        // No cleanup needed as licenses are part of master data
-    }
 
     /**
      * Constructs the full API URL for a given endpoint
