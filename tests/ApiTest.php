@@ -29,6 +29,34 @@ class ApiTest extends DatabaseTestCase
     private const API_KEY = '1234-1234-1234-1234';
 
     /**
+     * {@inheritdoc}
+     *
+     * Initializes the database (via DatabaseTestCase) and the HTTP client
+     * for testing the API endpoints.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        // Database setup from DatabaseTestCase first
+        parent::setUp();
+
+        $this->baseUri = rtrim((string) getenv('API_BASE_URL'), '/');
+
+        $this->projectPath = '';
+
+        $this->client = new Client([
+            'base_uri' => $this->baseUri ?: '',
+            'http_errors' => false,
+            'headers' => [
+                'Accept' => 'application/json',
+                'X-API-KEY' => self::API_KEY,
+            ],
+        ]);
+    }
+
+
+    /**
      * Constructs the full API URL for a given endpoint
      *
      * @param string $endpoint The API endpoint path
