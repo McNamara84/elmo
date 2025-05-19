@@ -1,63 +1,5 @@
 $(document).ready(function () {
   /**
-   * Event handler for the "Send Feedback" button click.
-   * Collects feedback data and sends it via AJAX to the server.
-   */
-  $("#button-feedback-send").click(function (event) {
-    event.preventDefault();
-    var feedbackForm = $("#form-feedback");
-    var feedbackData = feedbackForm.serialize();
-
-
-    // Disable the button and show a loading spinner
-    $("#button-feedback-send")
-      .prop("disabled", true)
-      .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
-
-
-    $.ajax({
-      url: "send_feedback_mail.php",
-      type: "POST",
-      data: feedbackData,
-      success: function (response) {
-
-        // Formular ausblenden
-        feedbackForm.hide();
-
-        // Erfolgsmeldung und Danke-Nachricht anzeigen
-        $("#panel-feedback-message").show();
-        $("#panel-feedback-status").html('<div class="alert alert-success">Feedback sent successfully!</div>');
-
-        // Modal schließen nach 3 Sekunden
-        setTimeout(function () {
-          $("#modal-feedback").modal("hide");
-        }, 3000);
-
-
-      },
-      error: function (xhr, status, error) {
-        // Display error message
-        $("#panel-feedback-status").html(
-          '<div class="alert alert-danger">Error when sending feedback: ' + error + "</div>"
-        );
-        // Enable the send button
-        $("#button-feedback-send").prop("disabled", false).html("Send");
-      },
-      complete: function () {
-        // Modal zurücksetzen, wenn es geschlossen wird
-        $("#modal-feedback").on("hidden.bs.modal", function () {
-          feedbackForm[0].reset();
-          feedbackForm.show();
-          $("#panel-feedback-message").hide();
-          $("#panel-feedback-status").html("");
-          $("#button-feedback-send").prop("disabled", false).html("Senden");
-        });
-      }
-    });
-  });
-
-
-  /**
 * Event listener for the clear button that resets all input fields
 * @requires jQuery
 * @requires Bootstrap
@@ -112,7 +54,5 @@ $(document).ready(function () {
       });
     });
   });
-
-  /////////////////////////////// HELP BUTTONS /////////////////////////////////////////////////////////////////
 
 });
