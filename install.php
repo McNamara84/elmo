@@ -737,7 +737,7 @@ function insertTestResourceData($connection)
             ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "1234-1234-1234-1234", "email" => "Kwiatek.Grzegorz@gfz.de", "website" => "gfz.de"],
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "5678-5678-5678-5678", "email" => "Thomas.Goebel@tu-berlin.de", "website" => "www.tu.berlin"],
             ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "9012-9012-9012-9012", "email" => "Christian.Wille@fh-potsdam.de", "website" => "fh-potsdam.de"],
-            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "https://orcid.org/0000-0002-4733-9242", "email" = "grace@gfz-potsdam.de", "website"=>null],
+            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "https://orcid.org/0000-0002-4733-9242", "email" => "grace@gfz-potsdam.de", "website"=>null],
             ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "https://orcid.org/0000-0003-1463-412X", "email" => "oleh.abrykosov@gfz-potsdam.de", "website"=>null]
         ],
         "Originating_Laboratory" => [
@@ -856,7 +856,7 @@ function insertTestResourceData($connection)
             ["funder" => "Ford Foundation", "funderid" => "100000016", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.11", "grantname" => "Grants database"],
             ["funder" => "U.S. Department of Defense", "funderid" => "100000005", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.22", "grantname" => "Grantmaking at a glance"]
         ],
-        "GGMproperties" => [
+        "GGM_Properties" => [
             ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 60, "Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide"],
             ["Model_Name" => "GRACE-FO RL06", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 3660, "Errors" => "no", "Error_Handling_Approach" => null , "Tide_System" => "unknown"],
     ];
@@ -896,7 +896,7 @@ function insertTestResourceData($connection)
         "Author_has_Affiliation" => [
             ["Author_author_id" => 1, "Affiliation_affiliation_id" => 2],
             ["Author_author_id" => 2, "Affiliation_affiliation_id" => 1],
-            ["Author_author_id" => 3, "Affiliation_affiliation_id" => 3]
+            ["Author_author_id" => 3, "Affiliation_affiliation_id" => 3],
             ["Author_author_id" => 4, "Affiliation_affiliation_id" => 1],
             ["Author_author_id" => 5, "Affiliation_affiliation_id" => 1],
             ["Author_author_id" => 6, "Affiliation_affiliation_id" => 1],
