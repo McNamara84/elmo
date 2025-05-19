@@ -6,8 +6,8 @@ namespace Tests;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Abstract base test case that sets up the database connection
- * and provides cleanup for test data.
+ * Abstract base test case that sets up the database connection,
+ * initializes the test database, and provides common helpers.
  */
 abstract class DatabaseTestCase extends TestCase
 {
@@ -24,6 +24,11 @@ abstract class DatabaseTestCase extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Load global settings and test database setup
+        require_once __DIR__ . '/../settings.php';
+        require_once __DIR__ . '/TestDatabaseSetup.php';
+
         global $connection;
         if (!$connection) {
             $connection = connectDb();
@@ -57,7 +62,7 @@ abstract class DatabaseTestCase extends TestCase
      */
     protected function cleanupTestData(): void
     {
-        $this->connection->query("SET FOREIGN_KEY_CHECKS=0");
+        $this->connection->query('SET FOREIGN_KEY_CHECKS=0');
 
         $tables = [
             'Resource_has_Spatial_Temporal_Coverage',
@@ -95,6 +100,32 @@ abstract class DatabaseTestCase extends TestCase
             $this->connection->query("DELETE FROM `{$table}`");
         }
 
-        $this->connection->query("SET FOREIGN_KEY_CHECKS=1");
+        $this->connection->query('SET FOREIGN_KEY_CHECKS=1');
+    }
+
+    /**
+     * Helper to create a test resource with default properties.
+     *
+     * @param string $doiSuffix Unique suffix to append to the DOI.
+     * @param string $title     Title of the test resource.
+     * @return int Inserted resource ID.
+     */
+    protected function createResource(string $doiSuffix, string $title): int
+    {
+        $resourceData = [
+            'doi' => "10.5880/{$doiSuffix}",
+            'year' => 2023,
+            'dateCreated' => '2023-06-01',
+            'resourcetype' => 1,
+            'language' => 1,
+            'Rights' => 1,
+            'title' => [$title],
+            'titleType' => [1],
+        ];
+
+        return saveResourceInformationAndRights(
+            $this->connection,
+            $resourceData
+        );
     }
 }

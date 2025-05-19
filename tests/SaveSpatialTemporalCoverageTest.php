@@ -4,9 +4,7 @@ use PHPUnit\Framework\TestCase;
 use mysqli_sql_exception;
 use Tests\DatabaseTestCase;
 
-require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../save/formgroups/save_spatialtemporalcoverage.php';
-require_once __DIR__ . '/TestDatabaseSetup.php';
 
 /**
  * Test class for Spatial Temporal Coverage saving functionality.
@@ -17,41 +15,6 @@ require_once __DIR__ . '/TestDatabaseSetup.php';
  */
 class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 {
-    protected function setUp(): void
-    {
-        global $connection;
-        if (!$connection) {
-            $connection = connectDb();
-        }
-        $this->connection = $connection;
-
-        // Überprüfen, ob die Testdatenbank verfügbar ist
-        $dbname = 'mde2-msl-test';
-        try {
-            if ($this->connection->select_db($dbname) === false) {
-                // Testdatenbank erstellen
-                $connection->query("CREATE DATABASE " . $dbname);
-                $connection->select_db($dbname);
-            }
-
-            // Datenbank für Tests aufsetzen
-            setupTestDatabase($connection);
-
-        } catch (\Exception $e) {
-            $this->fail("Fehler beim Setup der Testdatenbank: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Clean up after each test.
-     *
-     * @return void
-     */
-    protected function tearDown(): void
-    {
-        $this->cleanupTestData();
-    }
-
     /**
      * Tests saving a complete STC record with all fields filled.
      * 

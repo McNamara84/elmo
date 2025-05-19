@@ -5,9 +5,7 @@ namespace Tests;
 use PHPUnit\Framework\TestCase;
 use mysqli_sql_exception;
 
-require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../save/formgroups/save_contactperson.php';
-require_once __DIR__ . '/TestDatabaseSetup.php';
 
 /**
  * Test class for contact person saving functionality
@@ -17,44 +15,6 @@ require_once __DIR__ . '/TestDatabaseSetup.php';
  */
 class SaveContactpersonsTest extends DatabaseTestCase
 {
-    /**
-     * Set up test environment
-     * Creates test database if it doesn't exist and initializes database structure
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        global $connection;
-        if (!$connection) {
-            $connection = connectDb();
-        }
-        $this->connection = $connection;
-
-        $dbname = 'mde2-msl-test';
-        try {
-            if ($this->connection->select_db($dbname) === false) {
-                $connection->query("CREATE DATABASE " . $dbname);
-                $connection->select_db($dbname);
-            }
-
-            setupTestDatabase($connection);
-
-        } catch (\Exception $e) {
-            $this->fail("Fehler beim Setup der Testdatenbank: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Clean up test environment after each test
-     *
-     * @return void
-     */
-    protected function tearDown(): void
-    {
-        $this->cleanupTestData();
-    }
-
     /**
      * Test saving a single contact person with all fields populated
      *

@@ -3,10 +3,8 @@ namespace Tests;
 use PHPUnit\Framework\TestCase;
 use mysqli_sql_exception;
 
-require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_authors.php';
-require_once __DIR__ . '/TestDatabaseSetup.php';
 
 /**
  * Test class for the author saving functionality.
@@ -18,42 +16,6 @@ require_once __DIR__ . '/TestDatabaseSetup.php';
  */
 class SaveAuthorsTest extends DatabaseTestCase
 {
-    /**
-     * Set up the test environment.
-     * Creates test database if it doesn't exist and initializes database structure.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        global $connection;
-        if (!$connection) {
-            $connection = connectDb();
-        }
-        $this->connection = $connection;
-        $dbname = 'mde2-msl-test';
-        try {
-            if ($this->connection->select_db($dbname) === false) {
-                $connection->query("CREATE DATABASE " . $dbname);
-                $connection->select_db($dbname);
-            }
-            setupTestDatabase($connection);
-
-        } catch (\Exception $e) {
-            $this->fail("Fehler beim Setup der Testdatenbank: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Clean up test data after each test.
-     *
-     * @return void
-     */
-    protected function tearDown(): void
-    {
-        $this->cleanupTestData();
-    }
-
     /**
      * Tests saving a single author with all fields populated.
      *
