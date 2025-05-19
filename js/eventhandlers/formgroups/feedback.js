@@ -57,4 +57,12 @@ $(document).ready(function () {
       }
     });
   });
+  // Optional: Reset form when the modal is opened
+  $('#modal-feedback').on('show.bs.modal', function () {
+    $("#form-feedback")[0].reset();
+    $("#form-feedback").show();
+    $("#panel-feedback-message").hide();
+    $("#panel-feedback-status").html("");
+    $("#button-feedback-send").prop("disabled", false).html("Senden");
+  });
 });

@@ -77,4 +77,39 @@ $(document).ready(function () {
     clearTimeout(timer);
     timer = setTimeout(resetHoverCount, 1000);
   });
+
+  // ─── Additional Global UI Handlers ─────────────────────────────────────────
+
+  /**
+   * Reset all input fields when clicking the reset button.
+   * Requires a global clearInputFields() function.
+   */
+  $('#button-form-reset').on('click', function () {
+    clearInputFields();
+  });
+
+  /**
+   * Show XML upload modal when clicking the load button.
+   */
+  $('#button-form-load').on('click', function () {
+    $('#modal-uploadxml').modal('show');
+  });
+
+  /**
+   * Show changelog modal and load its content.
+   */
+  $('#button-changelog-show').click(function (event) {
+    event.preventDefault(); // Prevents the default behavior of the link.
+
+    // Loads the content from 'doc/changelog.html' into the modal's content area.
+    $('#panel-changelog-content').load('doc/changelog.html', function () {
+      // Displays the modal after the content has been successfully loaded.
+      $('#modal-changelog').modal('show');
+    });
+  });
+
+  /**
+   * Initialize all tooltips on the page.
+   */
+  $('[data-bs-toggle="tooltip"]').tooltip();
 });
