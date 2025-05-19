@@ -27,196 +27,225 @@ function lookupForeignKeyId(mysqli $connection, string $table, string $idColumn,
 }
 
 /**
- * Handles saving of GGM Properties data for a resource and updates Resource foreign keys.
+ * Validates the form data for GGM Properties before any database action.
  *
- * On first save:
- *   - Inserts a new GGM_Properties row
- *   - Links it via Resource_has_GGM_Properties
- *   - Updates Resource.Model_type_id, Resource.Mathematical_Representation, Resource.File_format_id
+ * @param array $data       Posted form data
+ * @param int   $resourceId Resource ID
  *
- * On subsequent saves:
- *   - Updates the existing GGM_Properties row
- *   - Updates Resource foreign-key columns
- *
- * @param mysqli  $connection    Database connection
- * @param array   $postData      Posted form data
- * @param int     $resource_id   Resource ID to associate with the GGM Properties
- *
- * @return bool  True on success, false on validation failure
- * @throws Exception On lookup or database errors
+ * @return array           Cleaned data array
+ * @throws Exception       On validation failure
  */
-function saveGGMsProperties(mysqli $connection, array $postData, int $resource_id): bool
+function validateGGMData(array $data, int $resourceId): array
 {
-    // Basic validation: resource_id must be positive
-    if ($resource_id <= 0) {
-        return false;
+    if ($resourceId <= 0) {
+        throw new Exception('Invalid resource ID');
     }
 
-    // Required dropdown and text fields
-    $required = ['model_name', 'model_type', 'math_representation', 'file_format'];
-    foreach ($required as $field) {
-        if (empty($postData[$field]) || !is_string($postData[$field])) {
-            return false;
+    // Required fields and trimming
+    $fields = ['model_name', 'model_type', 'math_representation', 'file_format'];
+    foreach ($fields as $f) {
+        if (empty($data[$f]) || !is_string($data[$f])) {
+            throw new Exception("Field {$f} is required and must be a string");
+        }
+        $data[$f] = trim($data[$f]);
+    }
+
+    // Optional fields
+    $optional = ['celestial_body', 'product_type', 'degree', 'errors', 'error_handling_approach', 'tide_system'];
+    foreach ($optional as $f) {
+        if (isset($data[$f])) {
+            $data[$f] = is_string($data[$f]) ? trim($data[$f]) : $data[$f];
         }
     }
 
-    // Extract form values
-    $modelName = trim($postData['model_name']);
-    $modelTypeName = trim($postData['model_type']);
-    $mathRepName = trim($postData['math_representation']);
-    $fileFormatName = trim($postData['file_format']);
-    $celestialBody = isset($postData['celestial_body']) ? trim($postData['celestial_body']) : null;
-    $productType = isset($postData['product_type']) ? trim($postData['product_type']) : null;
-    $degree = (isset($postData['degree']) && $postData['degree'] !== '') ? $postData['degree'] : null;
-    $errors = isset($postData['errors']) ? trim($postData['errors']) : null;
-    $errorHandlingApproach = isset($postData['error_handling_approach']) ? trim($postData['error_handling_approach']) : null;
-    $tideSystem = isset($postData['tide_system']) ? trim($postData['tide_system']) : null;
-
-    // Pattern/value validations
-    if (!preg_match('/^[A-Za-z0-9_\-]+$/', $modelName)) {
-        // modelName must be alphanumeric, underscore or hyphen only
-        return false;
+    // model_name pattern
+    if (!preg_match('/^[A-Za-z0-9_\-]+$/', $data['model_name'])) {
+        throw new Exception('Model name must be alphanumeric, underscore or hyphen only');
     }
-    if ($degree !== null) {
-        if (!filter_var($degree, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
-            return false;
+
+    // degree validation
+    if (isset($data['degree']) && $data['degree'] !== '') {
+        if (!filter_var($data['degree'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
+            throw new Exception('Degree must be an integer >= 0');
         }
-        $degree = (int) $degree;
-    }
-    if ($errors !== null && mb_strlen($errors) > 100) {
-        return false;
-    }
-    if ($errorHandlingApproach !== null && mb_strlen($errorHandlingApproach) > 5000) {
-        return false;
-    }
-    if ($tideSystem !== null && mb_strlen($tideSystem) > 100) {
-        return false;
-    }
-
-    // Enumerated dropdown options
-    $allowedModelTypes = ['Static', 'Temporal', 'Topographic'];
-    $allowedMathReps = ['Spherical Harmonics', 'Ellipsoidal Harmonics', 'Other', 'MASCONs'];
-    $allowedCelestials = ['Earth', 'Moon of the Earth', 'Mars', 'Ceres', 'Venus', 'Other'];
-    $allowedProducts = ['Gravity Field', 'Topographic Gravity Field', 'Geoid'];
-    $allowedFormats = ['icgem1.0', 'icgem2.0'];
-
-    if (
-        !in_array($modelTypeName, $allowedModelTypes, true)
-        || !in_array($mathRepName, $allowedMathReps, true)
-        || !in_array($fileFormatName, $allowedFormats, true)
-    ) {
-        return false;
-    }
-    if ($celestialBody !== null && !in_array($celestialBody, $allowedCelestials, true)) {
-        return false;
-    }
-    if ($productType !== null && !in_array($productType, $allowedProducts, true)) {
-        return false;
-    }
-
-    // Determine existing GGM linkage
-    $stmtSel = $connection->prepare(
-        "SELECT GGM_Properties_GGM_Properties_id
-           FROM `Resource_has_GGM_Properties`
-          WHERE Resource_resource_id = ?"
-    );
-    $stmtSel->bind_param("i", $resource_id);
-    $stmtSel->execute();
-    $stmtSel->bind_result($existingGgmId);
-    $hasExisting = (bool) $stmtSel->fetch();
-    $stmtSel->close();
-
-    if ($hasExisting) {
-        // Update existing GGM_Properties
-        $stmtUpd = $connection->prepare(
-            "UPDATE `GGM_Properties` SET
-                 `Model_Name`              = ?,
-                 `Celestial_Body`          = ?,
-                 `Product_Type`            = ?,
-                 `Degree`                  = ?,
-                 `Errors`                  = ?,
-                 `Error_Handling_Approach` = ?,
-                 `Tide_System`             = ?
-             WHERE `GGM_Properties_id`     = ?"
-        );
-        $stmtUpd->bind_param(
-            "sssisssi",
-            $modelName,
-            $celestialBody,
-            $productType,
-            $degree,
-            $errors,
-            $errorHandlingApproach,
-            $tideSystem,
-            $existingGgmId
-        );
-        $stmtUpd->execute();
-        if ($stmtUpd->errno) {
-            throw new Exception("Failed to update GGM_Properties: " . $stmtUpd->error);
-        }
-        $stmtUpd->close();
-        $ggmId = $existingGgmId;
+        $data['degree'] = (int) $data['degree'];
     } else {
-        // Insert new GGM_Properties
-        $stmtIns = $connection->prepare(
-            "INSERT INTO `GGM_Properties`
-                 (`Model_Name`, `Celestial_Body`, `Product_Type`,
-                  `Degree`, `Errors`, `Error_Handling_Approach`, `Tide_System`)
-             VALUES (?, ?, ?, ?, ?, ?, ?)"
-        );
-        $stmtIns->bind_param(
-            "sssisss",
-            $modelName,
-            $celestialBody,
-            $productType,
-            $degree,
-            $errors,
-            $errorHandlingApproach,
-            $tideSystem
-        );
-        $stmtIns->execute();
-        if ($stmtIns->errno) {
-            throw new Exception("Failed to insert GGM_Properties: " . $stmtIns->error);
+        $data['degree'] = null;
+    }
+
+    // length validations
+    if (isset($data['errors']) && mb_strlen($data['errors']) > 100) {
+        throw new Exception('Errors text is too long');
+    }
+    if (isset($data['error_handling_approach']) && mb_strlen($data['error_handling_approach']) > 5000) {
+        throw new Exception('Error handling approach is too long');
+    }
+    if (isset($data['tide_system']) && mb_strlen($data['tide_system']) > 100) {
+        throw new Exception('Tide system is too long');
+    }
+
+    // Enumerated options
+    $allowed = [
+        'model_type' => ['Static', 'Temporal', 'Topographic'],
+        'math_representation' => ['Spherical Harmonics', 'Ellipsoidal Harmonics', 'Other', 'MASCONs'],
+        'file_format' => ['icgem1.0', 'icgem2.0'],
+        'celestial_body' => ['Earth', 'Moon of the Earth', 'Mars', 'Ceres', 'Venus', 'Other'],
+        'product_type' => ['Gravity Field', 'Topographic Gravity Field', 'Geoid'],
+    ];
+    foreach ($allowed as $key => $vals) {
+        if (isset($data[$key]) && !in_array($data[$key], $vals, true)) {
+            throw new Exception("Invalid value for {$key}");
         }
-        $ggmId = $stmtIns->insert_id;
-        $stmtIns->close();
+    }
 
-        // Link resource to GGM_Properties
-        $stmtLink = $connection->prepare(
-            "INSERT INTO `Resource_has_GGM_Properties`
-                 (`Resource_resource_id`, `GGM_Properties_GGM_Properties_id`)
-             VALUES (?, ?)"
+    return $data;
+}
+
+/**
+ * Inserts or updates the GGM_Properties record linked to a resource.
+ *
+ * @param mysqli $connection  Database connection
+ * @param array  $data        Validated GGM data
+ * @param int    $resourceId  Resource ID
+ *
+ * @return int  GGM_Properties_id of the inserted/updated record
+ * @throws Exception On database errors
+ */
+function upsertGGMProperties(mysqli $connection, array $data, int $resourceId): int
+{
+    // Check existing link
+    $sql = "SELECT GGM_Properties_GGM_Properties_id
+              FROM `Resource_has_GGM_Properties`
+             WHERE Resource_resource_id = ?";
+    $stmt = $connection->prepare($sql);
+    $stmt->bind_param('i', $resourceId);
+    $stmt->execute();
+    $stmt->bind_result($ggmId);
+    $exists = (bool) $stmt->fetch();
+    $stmt->close();
+
+    if ($exists) {
+        // Update
+        $sql = "UPDATE `GGM_Properties` SET
+                    `Model_Name`              = ?,
+                    `Celestial_Body`          = ?,
+                    `Product_Type`            = ?,
+                    `Degree`                  = ?,
+                    `Errors`                  = ?,
+                    `Error_Handling_Approach` = ?,
+                    `Tide_System`             = ?
+                 WHERE `GGM_Properties_id`    = ?";
+        $stmt = $connection->prepare($sql);
+        $stmt->bind_param(
+            'sssisssi',
+            $data['model_name'],
+            $data['celestial_body'],
+            $data['product_type'],
+            $data['degree'],
+            $data['errors'],
+            $data['error_handling_approach'],
+            $data['tide_system'],
+            $ggmId
         );
-        $stmtLink->bind_param("ii", $resource_id, $ggmId);
-        $stmtLink->execute();
-        if ($stmtLink->errno) {
-            throw new Exception("Failed to link Resource to GGM_Properties: " . $stmtLink->error);
+        $stmt->execute();
+        if ($stmt->errno) {
+            throw new Exception('Error updating GGM_Properties: ' . $stmt->error);
         }
-        $stmtLink->close();
+        $stmt->close();
+    } else {
+        // Insert new
+        $sql = "INSERT INTO `GGM_Properties`
+                    (`Model_Name`,`Celestial_Body`,`Product_Type`,
+                     `Degree`,`Errors`,`Error_Handling_Approach`,`Tide_System`)
+                 VALUES (?,?,?,?,?,?,?)";
+        $stmt = $connection->prepare($sql);
+        $stmt->bind_param(
+            'sssisss',
+            $data['model_name'],
+            $data['celestial_body'],
+            $data['product_type'],
+            $data['degree'],
+            $data['errors'],
+            $data['error_handling_approach'],
+            $data['tide_system']
+        );
+        $stmt->execute();
+        if ($stmt->errno) {
+            throw new Exception('Error inserting GGM_Properties: ' . $stmt->error);
+        }
+        $ggmId = $stmt->insert_id;
+        $stmt->close();
+
+        // Create link
+        $sql = "INSERT INTO `Resource_has_GGM_Properties`
+                    (`Resource_resource_id`,`GGM_Properties_GGM_Properties_id`)
+                 VALUES (?,?)";
+        $stmt = $connection->prepare($sql);
+        $stmt->bind_param('ii', $resourceId, $ggmId);
+        $stmt->execute();
+        if ($stmt->errno) {
+            throw new Exception('Error linking GGM_Properties: ' . $stmt->error);
+        }
+        $stmt->close();
     }
 
-    // Lookup FK IDs for Resource
-    $modelTypeId = lookupForeignKeyId($connection, 'Model_Type', 'Model_type_id', 'name', $modelTypeName);
-    $mathRepId = lookupForeignKeyId($connection, 'Mathematical_Representation', 'Mathematical_representation_id', 'name', $mathRepName);
-    $fileFormatId = lookupForeignKeyId($connection, 'File_Format', 'File_format_id', 'name', $fileFormatName);
-    if (!$modelTypeId || !$mathRepId || !$fileFormatId) {
-        throw new Exception("Failed to resolve foreign key IDs for Resource");
+    return $ggmId;
+}
+
+/**
+ * Updates the Resource table foreign keys based on lookup names.
+ *
+ * @param mysqli $connection  Database connection
+ * @param array  $data        Validated GGM data
+ * @param int    $resourceId  Resource ID
+ *
+ * @return void
+ * @throws Exception On lookup or update errors
+ */
+function updateResourceForeignKeys(mysqli $connection, array $data, int $resourceId): void
+{
+    $modelTypeId = lookupForeignKeyId($connection, 'Model_Type', 'Model_type_id', 'name', $data['model_type']);
+    $mathRepId = lookupForeignKeyId($connection, 'Mathematical_Representation', 'Mathematical_representation_id', 'name', $data['math_representation']);
+    $fileFmtId = lookupForeignKeyId($connection, 'File_Format', 'File_format_id', 'name', $data['file_format']);
+
+    if (!$modelTypeId || !$mathRepId || !$fileFmtId) {
+        throw new Exception('Failed to resolve Resource foreign keys');
     }
 
-    // Update Resource FK columns
-    $stmtRes = $connection->prepare(
-        "UPDATE `Resource` SET
-             `Model_type_id`            = ?,
-             `Mathematical_Representation` = ?,
-             `File_format_id`           = ?
-         WHERE `resource_id`            = ?"
-    );
-    $stmtRes->bind_param("iiii", $modelTypeId, $mathRepId, $fileFormatId, $resource_id);
-    $stmtRes->execute();
-    if ($stmtRes->errno) {
-        throw new Exception("Failed to update Resource FKs: " . $stmtRes->error);
+    $sql = "UPDATE `Resource` SET
+                `Model_type_id`              = ?,
+                `Mathematical_Representation` = ?,
+                `File_format_id`             = ?
+             WHERE `resource_id`              = ?";
+    $stmt = $connection->prepare($sql);
+    $stmt->bind_param('iiii', $modelTypeId, $mathRepId, $fileFmtId, $resourceId);
+    $stmt->execute();
+    if ($stmt->errno) {
+        throw new Exception('Error updating Resource FKs: ' . $stmt->error);
     }
-    $stmtRes->close();
+    $stmt->close();
+}
+
+/**
+ * Orchestrates validation, upsert of GGM_Properties, and Resource FK update.
+ *
+ * @param mysqli $connection  Database connection
+ * @param array  $postData    Posted form data
+ * @param int    $resourceId  Resource ID
+ *
+ * @return bool  True on success
+ * @throws Exception On any validation or database error
+ */
+function saveGGMsProperties(mysqli $connection, array $postData, int $resourceId): bool
+{
+    // 1) Validate
+    $data = validateGGMData($postData, $resourceId);
+
+    // 2) Insert/update GGM_Properties
+    $ggmId = upsertGGMProperties($connection, $data, $resourceId);
+
+    // 3) Update Resource FKs
+    updateResourceForeignKeys($connection, $data, $resourceId);
 
     return true;
 }
