@@ -695,11 +695,11 @@ function insertTestResourceData($connection)
 {
     $mainTableData = [
         "Resource" => [
-            ["doi" => "10.1029/2023JB028411", "version" => null, "year" => 2024, "dateCreated" => "2024-06-05", "dateEmbargoUntil" => "2024-06-15", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1],
-            ["doi" => "10.5880/GFZ.2.4.2024.001", "version" => 2.1, "year" => 2024, "dateCreated" => "1999-04-07", "dateEmbargoUntil" => "2000-12-31", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1],
-            ["doi" => "10.21384/test-dataset", "version" => 1.23, "year" => 2024, "dateCreated" => "2023-07-02", "dateEmbargoUntil" => "2023-07-10", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1],
-            ["doi" => "https://doi.org/10.5880/GFZ.GRACEFO_06_GSM","version" => null, "year" => 2024, "dateCreated" => "2024-06-15", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id"=> 2, "Mathematical_Representation" => 1, "File_format_id" => 1],
-            ["doi" => "https://doi.org/10.5880/ICGEM.2019.011","version" => null, "year" => 2019, "dateCreated" =>null, "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id"=> 3, "Mathematical_Representation" => 1, "File_format_id" => 1]
+            ["doi" => "10.1029/2023JB028411", "version" => null, "year" => 2024, "dateCreated" => "2024-06-05", "dateEmbargoUntil" => "2024-06-15", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id"=> null, "Mathematical_Representation_id" => null, "File_format_id" => null],
+            ["doi" => "10.5880/GFZ.2.4.2024.001", "version" => 2.1, "year" => 2024, "dateCreated" => "1999-04-07", "dateEmbargoUntil" => "2000-12-31", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id"=> null, "Mathematical_Representation_id" => null, "File_format_id" => null],
+            ["doi" => "10.21384/test-dataset", "version" => 1.23, "year" => 2024, "dateCreated" => "2023-07-02", "dateEmbargoUntil" => "2023-07-10", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id"=> null, "Mathematical_Representation_id" => null, "File_format_id" => null],
+            ["doi" => "https://doi.org/10.5880/GFZ.GRACEFO_06_GSM","version" => null, "year" => 2024, "dateCreated" => "2024-06-15", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id"=> 2, "Mathematical_Representation_id" => 1, "File_format_id" => 1],
+            ["doi" => "https://doi.org/10.5880/ICGEM.2019.011","version" => null, "year" => 2019, "dateCreated" => "2020-04-17", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id"=> 3, "Mathematical_Representation_id" => 1, "File_format_id" => 1]
 
         ],
         "Author" => [
@@ -858,7 +858,8 @@ function insertTestResourceData($connection)
         ],
         "GGM_Properties" => [
             ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 60, "Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide"],
-            ["Model_Name" => "GRACE-FO RL06", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 3660, "Errors" => "no", "Error_Handling_Approach" => null , "Tide_System" => "unknown"],
+            ["Model_Name" => "GRACE-FO RL06", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 3660, "Errors" => "no", "Error_Handling_Approach" => null , "Tide_System" => "unknown"]
+        ]    
     ];
 
     foreach ($mainTableData as $tableName => $data) {
