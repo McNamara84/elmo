@@ -706,18 +706,18 @@ function insertTestResourceData($connection)
             ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "0000-0003-1076-615X"],
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "0000-0003-1552-0861"],
             ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "0000-0003-0930-6527"],
-            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "https://orcid.org/0000-0002-4733-9242"],
+            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242"],
         //5
-            ["familyName" => "Flechtner", "givenname" => "Frank", "orcid" => "https://orcid.org/0000-0002-3093-5558"],
-            ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "https://orcid.org/0000-0002-4108-578X"],
-            ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "https://orcid.org/0000-0003-1463-412X"],
-            ["familyName" => "Ince", "givenname" => "E. Sinem", "orcid" => "https://orcid.org/0000-0002-3393-1392"],
-            ["familyName" => "Foerste", "givenname" => "Christoph", "orcid" => "https://orcid.org/0000-0002-4476-9183"],
-            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "https://orcid.org/0000-0002-4733-9242"],
-            ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "https://orcid.org/0000-0002-4108-578X"],
-            ["familyName" => "Michalak", "givenname" => "Grzegorz", "orcid" => "https://orcid.org/0000-0002-1925-8824"],
+            ["familyName" => "Flechtner", "givenname" => "Frank", "orcid" => "0000-0002-3093-5558"],
+            ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "0000-0002-4108-578X"],
+            ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "0000-0003-1463-412X"],
+            ["familyName" => "Ince", "givenname" => "E. Sinem", "orcid" => "0000-0002-3393-1392"],
+            ["familyName" => "Foerste", "givenname" => "Christoph", "orcid" => "0000-0002-4476-9183"],
+            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242"],
+            ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "0000-0002-4108-578X"],
+            ["familyName" => "Michalak", "givenname" => "Grzegorz", "orcid" => "0000-0002-1925-8824"],
             ["familyName" => "Anton", "givenname" => "Reinhold", "orcid" => null],
-            ["familyName" => "König", "givenname" => "Rolf", "orcid" => "https://orcid.org/0000-0002-7155-6976"],
+            ["familyName" => "König", "givenname" => "Rolf", "orcid" => "0000-0002-7155-6976"],
             ["familyName" => "Neumayer", "givenname" => "Karl Hans", "orcid" => null]
         ],
         "Affiliation" => [
@@ -858,7 +858,7 @@ function insertTestResourceData($connection)
         ],
         "GGM_Properties" => [
             ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 60, "Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide"],
-            ["Model_Name" => "GRACE-FO RL06", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 3660, "Errors" => "no", "Error_Handling_Approach" => null , "Tide_System" => "unknown"]
+            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 3660, "Errors" => "no", "Error_Handling_Approach" => null , "Tide_System" => "unknown"]
         ]    
     ];
 
@@ -1022,7 +1022,7 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 2, "originating_laboratory_originating_laboratory_id" => 3],
             ["Resource_resource_id" => 1, "originating_laboratory_originating_laboratory_id" => 2]
         ],
-        "Resource_has_GGMProperties" => [
+        "Resource_has_GGM_Properties" => [
             ["Resource_resource_id" => 4, "GGM_Properties_GGM_Properties_id" => 1],
             ["Resource_resource_id" => 5, "GGM_Properties_GGM_Properties_id" => 2]
         ]
@@ -1037,7 +1037,10 @@ function insertTestResourceData($connection)
         foreach ($data as $row) {
             $values = array_values($row);
             $stmt->bind_param(str_repeat("i", count($values)), ...$values);
-            $stmt->execute();
+            if (!$stmt->execute()) {
+            echo "Error inserting into $tableName: " . $stmt->error . "\n";
+            // Log or handle the error appropriately
+            }
         }
     }
 }
