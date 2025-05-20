@@ -716,9 +716,9 @@ function insertTestResourceData($connection)
             ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242"],
             ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "0000-0002-4108-578X"],
             ["familyName" => "Michalak", "givenname" => "Grzegorz", "orcid" => "0000-0002-1925-8824"],
-            ["familyName" => "Anton", "givenname" => "Reinhold", "orcid" => null],
-            ["familyName" => "König", "givenname" => "Rolf", "orcid" => "0000-0002-7155-6976"],
-            ["familyName" => "Neumayer", "givenname" => "Karl Hans", "orcid" => null]
+            ["familyName" => "König", "givenname" => "Rolf", "orcid" => "0000-0002-7155-6976"] // comma 
+        //    ["familyName" => "Anton", "givenname" => "Reinhold", "orcid" => null],
+        //    ["familyName" => "Neumayer", "givenname" => "Karl Hans", "orcid" => null]
         ],
         "Affiliation" => [
             ["name" => "GFZ German Research Centre for Geosciences", "rorId" => "04z8jg394"],
@@ -737,8 +737,8 @@ function insertTestResourceData($connection)
             ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "1234-1234-1234-1234", "email" => "Kwiatek.Grzegorz@gfz.de", "website" => "gfz.de"],
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "5678-5678-5678-5678", "email" => "Thomas.Goebel@tu-berlin.de", "website" => "www.tu.berlin"],
             ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "9012-9012-9012-9012", "email" => "Christian.Wille@fh-potsdam.de", "website" => "fh-potsdam.de"],
-            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "https://orcid.org/0000-0002-4733-9242", "email" => "grace@gfz-potsdam.de", "website"=>null],
-            ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "https://orcid.org/0000-0003-1463-412X", "email" => "oleh.abrykosov@gfz-potsdam.de", "website"=>null]
+            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242", "email" => "grace@gfz-potsdam.de", "website"=>null],
+            ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "0000-0003-1463-412X", "email" => "oleh.abrykosov@gfz-potsdam.de", "website"=>null]
         ],
         "Originating_Laboratory" => [
             ["laboratoryname" => "Lab 1", "labId" => "123456789c7caa2d763b647d476b2910"],
@@ -749,8 +749,8 @@ function insertTestResourceData($connection)
             ["familyName" => "Müller", "givenname" => "Anna", "orcid" => "4100-4503-1076-415X"],
             ["familyName" => "Schmidt", "givenname" => "Johann", "orcid" => "4500-8523-8552-0861"],
             ["familyName" => "Fischer", "givenname" => "Lena", "orcid" => "7854-3000-5930-6527"],
-            ["familyName" => "Reißland", "givenname" => "Sven", "orcid" => "https://orcid.org/000-0001-6293-5336"], //ICGEM main contributors
-            ["familyName" => "Ince", "givenname" => "E. Sinem", "orcid" => "https://orcid.org/0000-0002-3393-1392"] //ICGEM main contributors
+            ["familyName" => "Reißland", "givenname" => "Sven", "orcid" => "0000-0001-6293-5336"], //ICGEM main contributors
+            ["familyName" => "Ince", "givenname" => "E. Sinem", "orcid" => "0000-0002-3393-1392"] //ICGEM main contributors
         ],
         "Contributor_Institution" => [
             ["name" => "GFZ German Research Centre for Geosciences"],
@@ -890,9 +890,9 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 4, "Author_author_id" => 10],
             ["Resource_resource_id" => 4, "Author_author_id" => 11],
             ["Resource_resource_id" => 4, "Author_author_id" => 12],
-            ["Resource_resource_id" => 4, "Author_author_id" => 13],
-            ["Resource_resource_id" => 4, "Author_author_id" => 14],
-            ["Resource_resource_id" => 4, "Author_author_id" => 15]
+            ["Resource_resource_id" => 4, "Author_author_id" => 13]     // comma nicht vergessen <3
+        //    ["Resource_resource_id" => 4, "Author_author_id" => 14],
+        //    ["Resource_resource_id" => 4, "Author_author_id" => 15]
         ],
         "Author_has_Affiliation" => [
             ["Author_author_id" => 1, "Affiliation_affiliation_id" => 2],
