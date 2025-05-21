@@ -45,9 +45,7 @@ $(document).ready(function () {
     newTitleRow.find("input").val("");
 
     // Rebind help button functionality for cloned rows
-    newTitleRow.find(".bi-question-circle-fill").each(function () {
-      $(this).data("help-section-id");
-    });
+    replaceHelpButtonInClonedRows(newTitleRow);
 
     // Adjust Title Input field width
     newTitleRow.find(".col-10.col-sm-11.col-md-11.col-lg-11")
