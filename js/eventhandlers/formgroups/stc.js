@@ -78,7 +78,7 @@ $(document).ready(function () {
    * Removes the TSC row and its associated map overlays.
    */
   $(document).on("click", ".removeButton", function () {
-    const row = $(this).closest("[tsc-row]");
+    const row = $(this).closest("[tsc-row-id]");
     const rowId = row.attr("tsc-row-id");
 
    // Remove the map overlays for this row 
