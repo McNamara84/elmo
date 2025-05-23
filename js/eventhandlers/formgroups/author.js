@@ -93,7 +93,7 @@ $(document).ready(function () {
     autocompleteAffiliations(
       `input-author-affiliation-${uniqueSuffix}`,
       `input-author-rorid-${uniqueSuffix}`,
-      affiliationsData
+      window.affiliationsData
     );
 
     // Enable row removal
