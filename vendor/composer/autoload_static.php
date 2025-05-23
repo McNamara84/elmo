@@ -993,6 +993,7 @@ class ComposerStaticInitefe149a1afac895f65c61fc673b16ea7
         'PHPUnit\\Framework\\MockObject\\Generator\\SoapExtensionNotAvailableException' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/MockObject/Generator/Exception/SoapExtensionNotAvailableException.php',
         'PHPUnit\\Framework\\MockObject\\Generator\\TemplateLoader' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/MockObject/Generator/TemplateLoader.php',
         'PHPUnit\\Framework\\MockObject\\Generator\\UnknownClassException' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/MockObject/Generator/Exception/UnknownClassException.php',
+        'PHPUnit\\Framework\\MockObject\\Generator\\UnknownInterfaceException' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/MockObject/Generator/Exception/UnknownInterfaceException.php',
         'PHPUnit\\Framework\\MockObject\\Generator\\UnknownTraitException' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/MockObject/Generator/Exception/UnknownTraitException.php',
         'PHPUnit\\Framework\\MockObject\\Generator\\UnknownTypeException' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/MockObject/Generator/Exception/UnknownTypeException.php',
         'PHPUnit\\Framework\\MockObject\\GetMockForAbstractClassTest' => __DIR__ . '/..' . '/phpunit/phpunit/tests/unit/Framework/MockObject/Creation/GetMockForAbstractClassTest.php',
