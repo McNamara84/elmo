@@ -1,5 +1,4 @@
 /**
- * @file functions.js
  * @description Shared utility functions used by multiple form group modules
  * such as cloning rows, managing layout consistency, and updating overlay labels.
  * 

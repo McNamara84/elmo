@@ -1,5 +1,4 @@
 /**
- * @file buttons.js
  * @description Main entry point for initializing modular form group logic.
  * Loads all independent modules and sets up global UI interactions such as help toggles and Easter egg.
  * 

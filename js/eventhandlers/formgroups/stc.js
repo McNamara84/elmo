@@ -1,5 +1,4 @@
 /**
- * @file stc.js
  * @description Handles dynamic addition and removal of TSC (Temporal Spatial Coverage) rows.
  * 
  * @module stc

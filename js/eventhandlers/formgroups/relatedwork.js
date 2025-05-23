@@ -1,5 +1,4 @@
 /**
- * @file relatedwork.js
  * @description Handles dynamic addition and removal of related work entries in the form.
  * 
  * @module relatedwork

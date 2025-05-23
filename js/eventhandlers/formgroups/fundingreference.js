@@ -1,5 +1,4 @@
 /**
- * @file fundingreference.js
  * @description Handles dynamic addition and removal of funding reference entries in the form.
  * 
  * @module fundingreference

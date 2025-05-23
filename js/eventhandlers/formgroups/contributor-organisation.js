@@ -1,5 +1,4 @@
 /**
- * @file contributor-organisation.js
  * @description Handles dynamic addition and removal of contributor organisation rows in the form.
  * 
  * @module contributorOrganisation

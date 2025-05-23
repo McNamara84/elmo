@@ -1,5 +1,4 @@
 /**
- * @file contributor-person.js
  * @description Handles dynamic addition and removal of contributor person rows in the form.
  * 
  * @module contributorPerson

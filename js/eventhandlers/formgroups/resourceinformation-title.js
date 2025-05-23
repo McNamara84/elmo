@@ -1,5 +1,4 @@
 /**
- * @file resourceinformation-title.js
  * @description Handles dynamic addition and removal of title rows in the resource information form group.
  * 
  * @module resourceInformationTitle

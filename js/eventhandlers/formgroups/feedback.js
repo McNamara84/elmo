@@ -1,5 +1,4 @@
 /**
- * @file feedback.js
  * @description Handles feedback form submission with AJAX.
  *
  * @module feedback

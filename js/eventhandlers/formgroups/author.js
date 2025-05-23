@@ -1,5 +1,4 @@
 /**
- * @file author.js
  * @description Handles dynamic addition, removal, and interaction of author rows in the form.
  * 
  * @module author
