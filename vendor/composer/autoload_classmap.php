@@ -903,6 +903,7 @@ return array(
     'PHPUnit\\Framework\\MockObject\\Generator\\SoapExtensionNotAvailableException' => $vendorDir . '/phpunit/phpunit/src/Framework/MockObject/Generator/Exception/SoapExtensionNotAvailableException.php',
     'PHPUnit\\Framework\\MockObject\\Generator\\TemplateLoader' => $vendorDir . '/phpunit/phpunit/src/Framework/MockObject/Generator/TemplateLoader.php',
     'PHPUnit\\Framework\\MockObject\\Generator\\UnknownClassException' => $vendorDir . '/phpunit/phpunit/src/Framework/MockObject/Generator/Exception/UnknownClassException.php',
+    'PHPUnit\\Framework\\MockObject\\Generator\\UnknownInterfaceException' => $vendorDir . '/phpunit/phpunit/src/Framework/MockObject/Generator/Exception/UnknownInterfaceException.php',
     'PHPUnit\\Framework\\MockObject\\Generator\\UnknownTraitException' => $vendorDir . '/phpunit/phpunit/src/Framework/MockObject/Generator/Exception/UnknownTraitException.php',
     'PHPUnit\\Framework\\MockObject\\Generator\\UnknownTypeException' => $vendorDir . '/phpunit/phpunit/src/Framework/MockObject/Generator/Exception/UnknownTypeException.php',
     'PHPUnit\\Framework\\MockObject\\GetMockForAbstractClassTest' => $vendorDir . '/phpunit/phpunit/tests/unit/Framework/MockObject/Creation/GetMockForAbstractClassTest.php',
