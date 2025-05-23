@@ -19,7 +19,10 @@ $(document).ready(function () {
     // Disable the button and show a loading spinner
     $("#button-feedback-send")
       .prop("disabled", true)
-      .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
+      .html(
+        '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ' +
+        getNestedValue(translations, 'modals.feedback.sending') // localized "sending..."
+      );
 
     // Send AJAX POST request
     $.ajax({
@@ -30,7 +33,11 @@ $(document).ready(function () {
         // Hide the form and show success message
         feedbackForm.hide();
         $("#panel-feedback-message").show();
-        $("#panel-feedback-status").html('<div class="alert alert-success">Feedback sent successfully!</div>');
+        $("#panel-feedback-status").html(
+          '<div class="alert alert-success">' +
+          getNestedValue(translations, 'modals.feedback.success') +
+          '</div>'
+        );
 
         // Auto-close modal after 3 seconds
         setTimeout(function () {
@@ -40,9 +47,12 @@ $(document).ready(function () {
       error: function (xhr, status, error) {
         // Show error message and re-enable send button
         $("#panel-feedback-status").html(
-          '<div class="alert alert-danger">Error when sending feedback: ' + error + '</div>'
+          '<div class="alert alert-danger">' +
+          getNestedValue(translations, 'modals.feedback.error') + error +
+          '</div>'
         );
-        $("#button-feedback-send").prop("disabled", false).html("Send");
+        $("#button-feedback-send").prop("disabled", false)
+          .html(getNestedValue(translations, 'modals.feedback.sendButton'));
       },
       complete: function () {
       }
@@ -54,6 +64,7 @@ $(document).ready(function () {
     $("#form-feedback").show();
     $("#panel-feedback-message").hide();
     $("#panel-feedback-status").html("");
-    $("#button-feedback-send").prop("disabled", false).html("Senden");
+    $("#button-feedback-send").prop("disabled", false)
+      .html(getNestedValue(translations, 'modals.feedback.sendButton'));
   });
 });
