@@ -45,14 +45,7 @@ $(document).ready(function () {
         $("#button-feedback-send").prop("disabled", false).html("Send");
       },
       complete: function () {
-        // Reset modal when it's closed
-        $("#modal-feedback").on("hidden.bs.modal", function () {
-          feedbackForm[0].reset();
-          feedbackForm.show();
-          $("#panel-feedback-message").hide();
-          $("#panel-feedback-status").html("");
-          $("#button-feedback-send").prop("disabled", false).html("Senden");
-        });
+        // No longer binding the 'hidden.bs.modal' event here
       }
     });
   });
