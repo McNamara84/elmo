@@ -86,11 +86,11 @@ function validateGGMData(array $data, int $resourceId): array
 
     // Enumerated options
     $allowed = [
-        'model_type' => ['Static', 'Temporal', 'Topographic'],
+        'model_type' => ['Static', 'Temporal', 'Topographic', 'Simulated'],
         'math_representation' => ['Spherical Harmonics', 'Ellipsoidal Harmonics', 'Other', 'MASCONs'],
-        'file_format' => ['icgem1.0', 'icgem2.0'],
+        'file_format' => ['icgem1.0', 'icgem2.0', 'ASCII'],
         'celestial_body' => ['Earth', 'Moon of the Earth', 'Mars', 'Ceres', 'Venus', 'Other'],
-        'product_type' => ['Gravity Field', 'Topographic Gravity Field', 'Geoid'],
+        'product_type' => ['Gravity Field', 'Topographic Gravity Field'],
     ];
     foreach ($allowed as $key => $vals) {
         if (isset($data[$key]) && !in_array($data[$key], $vals, true)) {
@@ -214,7 +214,7 @@ function updateResourceForeignKeys(mysqli $connection, array $data, int $resourc
 
     $sql = "UPDATE `Resource` SET
                 `Model_type_id`              = ?,
-                `Mathematical_Representation` = ?,
+                `Mathematical_Representation_id` = ?,
                 `File_format_id`             = ?
              WHERE `resource_id`              = ?";
     $stmt = $connection->prepare($sql);
