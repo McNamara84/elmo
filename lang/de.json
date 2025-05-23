@@ -165,6 +165,10 @@
     },
     "modals": {
         "feedback": {
+            "sending": "Wird gesendet...",
+            "send": "Senden",
+            "success": "Danke für dein Feedback!",
+            "error": "Fehler beim Senden des Feedbacks: ",
             "button": "Feedback",
             "buttonTooltip": "Feedback an die Entwickler senden",
             "label": "Nutzer-Feedback",

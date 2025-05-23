@@ -165,6 +165,10 @@
     },
     "modals": {
         "feedback": {
+            "sending": "Envoi...",
+            "send": "Envoyer",
+            "success": "Merci pour votre retour !",
+            "error": "Erreur lors de l'envoi du retour : ",
             "button": "Retour",
             "buttonTooltip": "Envoyer un retour aux développeurs",
             "label": "Retour utilisateur",
