@@ -45,7 +45,6 @@ $(document).ready(function () {
         $("#button-feedback-send").prop("disabled", false).html("Send");
       },
       complete: function () {
-        // No longer binding the 'hidden.bs.modal' event here
       }
     });
   });
