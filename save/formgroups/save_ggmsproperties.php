@@ -27,7 +27,7 @@ function lookupForeignKeyId(mysqli $connection, string $table, string $idColumn,
 }
 
 /**
- * Validates the form data for GGM Properties before any database action.
+ * Validates the form data for GGM Essential Properties formgroup before any database action.
  *
  * @param array $data       Posted form data
  * @param int   $resourceId Resource ID
@@ -42,7 +42,7 @@ function validateGGMData(array $data, int $resourceId): array
     }
 
     // Required fields and trimming
-    $fields = ['model_name', 'model_type', 'math_representation', 'file_format'];
+    $fields = ['model_name', 'model_type', 'math_representation', 'file_format', 'tide_system'];
     foreach ($fields as $f) {
         if (empty($data[$f]) || !is_string($data[$f])) {
             throw new Exception("Field {$f} is required and must be a string");
@@ -51,7 +51,7 @@ function validateGGMData(array $data, int $resourceId): array
     }
 
     // Optional fields
-    $optional = ['celestial_body', 'product_type', 'degree', 'errors', 'error_handling_approach', 'tide_system'];
+    $optional = ['celestial_body', 'product_type'];
     foreach ($optional as $f) {
         if (isset($data[$f])) {
             $data[$f] = is_string($data[$f]) ? trim($data[$f]) : $data[$f];
@@ -63,31 +63,10 @@ function validateGGMData(array $data, int $resourceId): array
         throw new Exception('Model name must be alphanumeric, underscore or hyphen only');
     }
 
-    // degree validation
-    if (isset($data['degree']) && $data['degree'] !== '') {
-        if (!filter_var($data['degree'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
-            throw new Exception('Degree must be an integer >= 0');
-        }
-        $data['degree'] = (int) $data['degree'];
-    } else {
-        $data['degree'] = null;
-    }
-
-    // length validations
-    if (isset($data['errors']) && mb_strlen($data['errors']) > 100) {
-        throw new Exception('Errors text is too long');
-    }
-    if (isset($data['error_handling_approach']) && mb_strlen($data['error_handling_approach']) > 5000) {
-        throw new Exception('Error handling approach is too long');
-    }
-    if (isset($data['tide_system']) && mb_strlen($data['tide_system']) > 100) {
-        throw new Exception('Tide system is too long');
-    }
-
     // Enumerated options
     $allowed = [
         'model_type' => ['Static', 'Temporal', 'Topographic', 'Simulated'],
-        'math_representation' => ['Spherical Harmonics', 'Ellipsoidal Harmonics', 'Other', 'MASCONs'],
+        'math_representation' => ['Spherical Harmonics', 'Ellipsoidal Harmonics', 'MASCONs', 'MASCON'],
         'file_format' => ['icgem1.0', 'icgem2.0', 'ASCII'],
         'celestial_body' => ['Earth', 'Moon of the Earth', 'Mars', 'Ceres', 'Venus', 'Other'],
         'product_type' => ['Gravity Field', 'Topographic Gravity Field'],
@@ -129,22 +108,14 @@ function upsertGGMProperties(mysqli $connection, array $data, int $resourceId): 
         $sql = "UPDATE `GGM_Properties` SET
                     `Model_Name`              = ?,
                     `Celestial_Body`          = ?,
-                    `Product_Type`            = ?,
-                    `Degree`                  = ?,
-                    `Errors`                  = ?,
-                    `Error_Handling_Approach` = ?,
-                    `Tide_System`             = ?
-                 WHERE `GGM_Properties_id`    = ?";
+                    `Product_Type`            = ?
+                WHERE `GGM_Properties_id`    = ?";
         $stmt = $connection->prepare($sql);
         $stmt->bind_param(
-            'sssisssi',
+            'sssi',
             $data['model_name'],
             $data['celestial_body'],
             $data['product_type'],
-            $data['degree'],
-            $data['errors'],
-            $data['error_handling_approach'],
-            $data['tide_system'],
             $ggmId
         );
         $stmt->execute();
@@ -155,19 +126,14 @@ function upsertGGMProperties(mysqli $connection, array $data, int $resourceId): 
     } else {
         // Insert new
         $sql = "INSERT INTO `GGM_Properties`
-                    (`Model_Name`,`Celestial_Body`,`Product_Type`,
-                     `Degree`,`Errors`,`Error_Handling_Approach`,`Tide_System`)
-                 VALUES (?,?,?,?,?,?,?)";
+                    (`Model_Name`,`Celestial_Body`,`Product_Type`)
+                 VALUES (?,?,?)";
         $stmt = $connection->prepare($sql);
         $stmt->bind_param(
-            'sssisss',
+            'sss',
             $data['model_name'],
             $data['celestial_body'],
-            $data['product_type'],
-            $data['degree'],
-            $data['errors'],
-            $data['error_handling_approach'],
-            $data['tide_system']
+            $data['product_type']
         );
         $stmt->execute();
         if ($stmt->errno) {
