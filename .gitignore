@@ -1,3 +1,4 @@
 settings.php
 .vscode/
 .phpunit.result.cache
+.env
