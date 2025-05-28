@@ -27,6 +27,9 @@ require_once 'save/formgroups/save_thesauruskeywords.php';
 require_once 'save/formgroups/save_spatialtemporalcoverage.php';
 require_once 'save/formgroups/save_relatedwork.php';
 require_once 'save/formgroups/save_fundingreferences.php';
+if showGGMsProperties {
+    require_once 'save/formgroups/save_ggmsproperties.php';
+}
 
 // Include PHPMailer classes
 use PHPMailer\PHPMailer\PHPMailer;
