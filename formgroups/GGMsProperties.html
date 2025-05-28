@@ -1,5 +1,7 @@
 
-      <div class="card mb-2">
+  <!-- defer ensures that the script loads AFTER other dependencies (bzw. JQuery) in footer-->
+<script defer src="../js/eventhandlers/formgroups/ggmproperties-essential.js"></script>
+<div class="card mb-2">
         <div class="card-header">
           <b>Characteristics of the model</b>
           <i class="bi bi-question-circle-fill" data-help-section-id="help-model-characteristics"></i>
@@ -12,12 +14,8 @@
                 <div class="form-floating">
                   <select class="form-select input-with-help input-right-no-round-corners" 
                           id="input-model-type" 
-                          name="model_type" 
+                          name="rModelType[]" 
                           required>
-                    <option disabled selected hidden value="">Choose...</option>
-                    <option value="Static">Static</option>
-                    <option value="Temporal">Temporal</option>
-                    <option value="Topographic">Topographic</option>
                   </select>
                 
                 <!-- Label with translation -->
@@ -43,11 +41,8 @@
                 <div class="form-floating">
                   <select class="form-select input-with-help input-right-no-round-corners" 
                     id="input-mathematical-representation" 
-                    name="math_representation" 
+                    name="rMathematicalRepresentation[]" 
                     required>
-                    <option disabled selected hidden value="">Choose...</option>
-                    <option value="Spherical Harmonics">Spherical Harmonics</option>
-                    <option value="Ellipsoidal Harmonics">Ellipsoidal Harmonics</option>
                   </select>
                   <label 
                   <span for="input-mathematical-representation">Mathematical representation</span>
@@ -78,10 +73,7 @@
             <!-- File Format (Dropdown) -->
             <div class="col-12 col-md-3 col-lg-3 p-1">
               <div class="form-floating">
-                <select class="form-select" id="input-file-format" name="file_format">
-                  <option value="icgem1.0" selected>icgem1.0</option>
-                  <option value="icgem2.0">icgem2.0</option>
-                  <option value="ASCII">icgem2.0</option>
+                <select class="form-select" id="input-file-format" name="rFileFormat[]">
                 </select>
                 <label for="input-file-format">File format</label>
               </div>
