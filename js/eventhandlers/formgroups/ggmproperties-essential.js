@@ -33,9 +33,7 @@ function setupICGEMFileFormats() {
             
             // The response is directly an array of format objects
             if (response && response.length > 0) {
-                // Sort formats by name if needed
-                response//.sort((a, b) => a.name.localeCompare(b.name))
-                    .forEach(function (format) {
+                response.forEach(function (format) {
                         selectElement.append(
                             $("<option>", {
                                 value: format.id,
@@ -173,9 +171,7 @@ function setupMathReps() {
             
             // The response is directly an array of format objects
             if (response && response.length > 0) {
-                // Sort formats by name if needed
-                response//.sort((a, b) => a.name.localeCompare(b.name))
-                    .forEach(function (format) {
+                response.forEach(function (format) {
                         selectElement.append(
                             $("<option>", {
                                 value: format.id,
@@ -215,4 +211,46 @@ $(document).ready(function() {
     setupICGEMFileFormats();
     setupModelTypes();
     setupMathReps();
+});
+
+function checkGGMsPropertiesEssential() {
+    const container = $('#group-ggmspropertiesessential');
+    
+    // Define all the essential fields
+    const fields = {
+        modelType: container.find('#input-model-type'),
+        mathRepresentation: container.find('#input-mathematical-representation'),
+        modelName: container.find('#input-model-name'),
+        fileFormat: container.find('#input-file-format')
+    };
+    
+    // Check if any field is filled (or selected for dropdowns)
+    const isAnyFieldFilled = Object.values(fields).some(field => {
+        const value = field.val();
+        return value && value.trim() !== '';
+    });
+    
+    // If any field is filled, all required fields must be filled
+    if (isAnyFieldFilled) {
+        // These fields should always be required
+        fields.modelType.attr('required', 'required');
+        fields.mathRepresentation.attr('required', 'required');
+        fields.modelName.attr('required', 'required');
+        fields.fileFormat.attr('required', 'required');
+    }    
+}
+
+// Attach event listeners to relevant fields
+$(document).ready(function() {
+    const fieldsToWatch = [
+        '#input-model-type',
+        '#input-mathematical-representation',
+        '#input-model-name',
+        '#input-file-format'
+    ];
+    
+    // Watch for changes on all relevant fields
+    $(document).on('change blur', fieldsToWatch.join(', '), function() {
+        checkGGMsPropertiesEssential();
+    });
 });
