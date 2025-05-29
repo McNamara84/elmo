@@ -108,3 +108,10 @@ h5 {
     font-weight: 600; 
     /* Semi-Fett */
 }
+
+/* Style for small inline logos next to headings (e.g., ORCID, ROR) */
+.logo-icon {
+  height: 1em;
+  vertical-align: middle;
+  margin-left: 0.2em;
+}
