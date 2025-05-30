@@ -62,6 +62,13 @@ Following conditions are required for installation:
 2. Clone the repository.
 3. Run `docker compose build` in the cloned project folder via bash.
 4. Run `docker compose up -d` to start the container.
+5. This directory contains .env_sample that you will need to rename to .env. Please feel free to change the credentials in it.
+	Please mind that: 
+	🔁 Environment variables for database setup only apply on first container startup. If volumes persist, old configs stay alive.
+	✅ Use `docker-compose down -v` to reset the database when updating credentials.
+6. In this project, dependencies are being commited alongside the project. to update them open the terminal and just use:
+	1. Composer update
+	2. Composer upgrade
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
 
