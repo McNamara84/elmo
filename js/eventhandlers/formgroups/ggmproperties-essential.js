@@ -1,4 +1,14 @@
+/**
+ * @description Poplates the dropdowns with ICGEM file formats 
+ * 
+ * @module ggmspropertiesessential
+ */
 function setupICGEMFileFormats() {
+    /**
+     * accesses the select element for the ICGEM file formats
+     * populates this with id name and description accessible at the dedicated endpoint 
+     * if the error occurs, the message is added to the select element
+    */
     const selectId = "#input-file-format";
     var selectElement = $(selectId).closest(".row").find('select[name="rFileFormat[]"]');
     const endpoint = "/vocabs/icgemformats";
@@ -68,7 +78,18 @@ function setupICGEMFileFormats() {
     });
 }
 
+/**
+ * @description Poplates the dropdowns with ICGEM model types
+ * 
+ * @module ggmspropertiesessential
+ */
+
 function setupModelTypes() {
+  /**
+   * accesses the select element for the ICGEM file formats 
+   * populates this with id name and description accessible at the dedicated endpoint
+   * if the error occurs, the message is added to the select element
+   */
     const selectId = "#input-model-type" ;
     var selectElement = $(selectId).closest(".row").find('select[name="rModelType[]"]');
     const endpoint = "/vocabs/modeltypes";
@@ -136,8 +157,18 @@ function setupModelTypes() {
         }
     });
 }
+/**
+ * @description Poplates the dropdowns with ICGEM mathematical representations
+ * 
+ * @module ggmspropertiesessential
+ */
 
 function setupMathReps() {
+    /**
+   * accesses the select element for the ICGEM file formats 
+   * populates this with id name and description accessible at the dedicated endpoint
+   * if the error occurs, the message is added to the select element
+   */
     const selectId = "#input-mathematical-representation" ;
     var selectElement = $(selectId).closest(".row").find('select[name="rMathematicalRepresentation[]"]');
     const endpoint = "/vocabs/mathreps";
@@ -181,6 +212,7 @@ function setupMathReps() {
                         );
                     });
             } else {
+                // otherwise, an error message is added to the select element
                 selectElement.append(
                     $("<option>", {
                         value: "",
@@ -213,9 +245,19 @@ $(document).ready(function() {
     setupMathReps();
 });
 
+/**
+ * @description real-time frontend validation 
+ * 
+ * @module ggmspropertiesessential
+ */
 function checkGGMsPropertiesEssential() {
+    /**
+    * finds all the required fields in the formgroup
+    * - Scans all essential fields (modelType, mathRepresentation, modelName, fileFormat)
+    * - If any field contains a non-empty value, marks ALL fields as required
+    * - Called automatically on 'change' and 'blur' events for monitored fields to actualise the result
+   */
     const container = $('#group-ggmspropertiesessential');
-    
     // Define all the essential fields
     const fields = {
         modelType: container.find('#input-model-type'),
