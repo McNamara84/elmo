@@ -1,4 +1,10 @@
 /**
+ * @fileOverview This script handles the setup of dropdowns for ICGEM file formats, model types, and mathematical representations,
+ * as well as real-time validation for essential properties in the GGMs form group.
+ * This isolates JavaScript functions for the ICGEM implementation from the rest of the application.
+ */
+
+/**
  * @description Poplates the dropdowns with ICGEM file formats 
  * 
  * @module ggmspropertiesessential
