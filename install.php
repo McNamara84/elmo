@@ -40,6 +40,7 @@ function dropTables($connection)
         'Resource',
         'Resource_has_Author',
         'Author',
+        'Author_institution',
         'Resource_Type',
         'Rights',
         'Language',
@@ -136,6 +137,11 @@ function createDatabaseStructure($connection)
     `givenname` TEXT(746) NOT NULL,
     `orcid` VARCHAR(19) NOT NULL,
     PRIMARY KEY (`author_id`));",
+
+        "Author_institution" => "CREATE TABLE IF NOT EXISTS `Author_institution` (
+    `author_institution_id` INT NOT NULL AUTO_INCREMENT,
+    `institutionname` TEXT(666) NOT NULL,
+    PRIMARY KEY (`author_institution_id`));",
 
         "Role" => "CREATE TABLE IF NOT EXISTS `Role` (
     `role_id` INT NOT NULL AUTO_INCREMENT,
@@ -628,6 +634,11 @@ function insertTestResourceData($connection)
             ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "0000-0003-1076-615X"],
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "0000-0003-1552-0861"],
             ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "0000-0003-0930-6527"]
+        ],
+        "Author_institution" => [
+            ["institutionname" => "Institut für Bauforschung und Bauerhaltung (IBB)"],
+            ["institutionname" => "Institut für Maschinenkonstruktion und Systemtechnik"],
+            ["institutionname" => "Institut für Luft- und Raumfahrt"]
         ],
         "Affiliation" => [
             ["name" => "GFZ German Research Centre for Geosciences", "rorId" => "04z8jg394"],
