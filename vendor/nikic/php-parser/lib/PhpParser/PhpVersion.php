@@ -161,11 +161,4 @@ class PhpVersion {
     public function supportsUnicodeEscapes(): bool {
         return $this->id >= 70000;
     }
-
-    /*
-     * Whether this version supports attributes.
-     */
-    public function supportsAttributes(): bool {
-        return $this->id >= 80000;
-    }
 }
