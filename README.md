@@ -204,6 +204,8 @@ The following third-party dependencies are included in header.html and footer.ht
   - `$showSpatialTemporalCoverage`: Specifies whether the form group Spatial and Temporal Coverages should be displayed (true/false).
   - `$showRelatedWork`: Specifies whether the form group Related Work should be displayed (true/false).
   - `$showFundingReference`: Specifies whether the form group Funding Reference should be displayed (true/false).
+  - `$showGGMsProperties`: specific for implementation for the ICGEM platform. Specifies whether the form group GGMs Properties (essential) should be displayed (true/false).
+
 </details>
 
 ## API
@@ -915,6 +917,70 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
 
+### GGMs Properties (Essential)
+
+Viable for the implementation for the ICGEM platform. This form group collects the essential characteristics of a Global Geopotential Model (GGM). If any field in this group is filled, all essential fields become required.
+
+- **Model Type**
+
+  The type of gravity field model being described.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database is called: `model_type` in the `GGM_Properties` table
+  - Restrictions: Must be selected from a controlled list
+  - Example values: `Static`, `Temporal`
+  - Mapping: mapped to `<modelType>` in the XML export
+
+- **Mathematical Representation**
+
+  The mathematical framework used to represent the gravity field.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database is called: `math_representation` in the dedicated math representation table
+  - Restrictions: Must be selected from a controlled list 
+  - Example values: `Spherical Harmonics`
+  - Mapping: mapped to `<mathematicalRepresentation>` in the XML export
+
+- **Celestial Body**
+
+  The planetary body for which the gravity field model is computed.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is called: `celestial_body` in the `GGM_Properties` table
+  - Restrictions: Must be selected from a controlled list
+  - Example values: `Earth`, `Moon of the Earth`, `Mars`, `Ceres`, `Venus`, `Other`
+  - Mapping: mapped to `<celestialBody>` in the XML export
+
+- **File Format**
+
+  The file format used for the model data, typically following ICGEM standards.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is called: `file_format` in the dedicated file format table
+  - Restrictions: Must be selected from a controlled list (populated from the ICGEM format database)
+  - Example values: `icgem1.0`, `icgem2.0`, `ASCII`
+  - Mapping: mapped to `<fileFormat>` in the XML export
+
+- **Model Name**
+
+  The unique identifier for the gravity field model.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database is called: `model_name` in the `GGM_Properties` table
+  - Restrictions: No spaces allowed; must be unique and descriptive
+  - Example values: `EIGEN-6C4`, `GOCO06s`, `GGM05G`
+  - Mapping: mapped to `<modelName>` in the XML export
+
+- **Product Type**
+
+  Specifies the type of gravity field product.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is called: `product_type` in the `GGM_Properties` table
+  - Restrictions: Must be selected from a controlled list
+  - Example values: `Gravity Field`, `Topographic Gravity Field`
+  - Mapping: mapped to `<productType>` in the XML export
+
 </details>
 
 <details>
@@ -1012,6 +1078,14 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | *schemeURI*                               |                   0-1                   |                  0-1                  | `<funderIdentifier schemeURI>`                                                                                                                                              |
 |                            | **Grant Number**                          |                   0-1                   |                  0-1                  | `<awardNumber>`                                                                                                                                                             |
 |                            | **Grant Name**                            |                   0-1                   |                  0-1                  | `<awardTitle>`                                                                                                                                                              |
+| GGMs Properties (Essential)|                                           |        1                                |                  0                    |           0                                                                                                                                                                 |
+|                            | **Model Type**                            |        1                                |                  0                    |           0                                                                                                                                                                 |
+|                            | **Mathematical Representation**           |        1                                |                  0                    |           0                                                                                                                                                                 |
+|                            | **Celestial Body**                        |       0-1                               |                  0                    |           0                                                                                                                                                                 |
+|                            | **File Format**                           |       0-1                               |                  0                    |           0                                                                                                                                                                 |
+|                            | **Model Name**                            |        1                                |                  0                    |           0                                                                                                                                                                 |
+|                            | **Product Type**                          |       0-1                               |                  0                    |           0                                                                                                                                                                 |
+
 
 </details>
 
