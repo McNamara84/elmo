@@ -8,6 +8,7 @@
 // ─── Import form group modules ────────────────────────────────────────────────
 import './formgroups/feedback.js';
 import './formgroups/author.js';
+import './formgroups/authorInstitution.js';
 import './formgroups/contributor-person.js';
 import './formgroups/contributor-organisation.js';
 import './formgroups/resourceinformation-title.js';
