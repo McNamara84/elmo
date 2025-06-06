@@ -64,6 +64,10 @@
         "title": "Author(s)",
         "affiliationInvalid": "Please provide an affiliation."
     },
+    "authorsInstitutions": {
+        "title": "Author Institution",
+        "name": "Author Institution name"
+    },
     "contactPersons": {
         "contactPersonError": "Please choose at least one contact person.",
         "email": "Email address",
