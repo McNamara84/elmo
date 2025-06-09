@@ -13,6 +13,7 @@ import './formgroups/contributor-organisation.js';
 import './formgroups/resourceinformation-title.js';
 import './formgroups/stc.js';
 import './formgroups/relatedwork.js';
+import './formgroups/ggmproperties-essential.js';
 import './formgroups/fundingreference.js';
 import { replaceHelpButtonInClonedRows, createRemoveButton, updateOverlayLabels } from './functions.js';
 
