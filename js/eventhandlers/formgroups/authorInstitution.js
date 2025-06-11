@@ -31,7 +31,7 @@ $(document).ready(function () {
     const affFieldHtml = `
       <div class="input-group has-validation">
         <input type="text" class="form-control input-with-help input-right-no-round-corners"
-          id="input-authorinstitution-affiliation-${uniqueSuffix}" name="affiliation[]"
+          id="input-authorinstitution-affiliation-${uniqueSuffix}" name="institutionAffiliation[]"
           data-translate-placeholder="general.affiliation" />
         <span class="input-group-text"><i class="bi bi-question-circle-fill"
             data-help-section-id="help-authorinstitution-affiliation"></i></span>
