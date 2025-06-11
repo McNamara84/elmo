@@ -147,8 +147,8 @@ function createDatabaseStructure($connection)
 
         "Author" => "CREATE TABLE IF NOT EXISTS `Author` (
     `author_id` INT NOT NULL AUTO_INCREMENT,
-    `Author_Person_author_person_id` INT NOT NULL,
-    `Author_Institution_author_institution_id` INT NOT NULL,
+    `Author_Person_author_person_id` INT NULL,
+    `Author_Institution_author_institution_id` INT NULL,
     PRIMARY KEY (`author_id`),
     FOREIGN KEY (`Author_Person_author_person_id`)
     REFERENCES `Author_person` (`author_person_id`),
@@ -651,6 +651,11 @@ function insertTestResourceData($connection)
             ["institutionname" => "Institut für Bauforschung und Bauerhaltung (IBB)"],
             ["institutionname" => "Institut für Maschinenkonstruktion und Systemtechnik"],
             ["institutionname" => "Institut für Luft- und Raumfahrt"]
+        ],
+        "Author" => [
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 1, "Author_Institution_author_institution_id" => 3]
         ],
         "Affiliation" => [
             ["name" => "GFZ German Research Centre for Geosciences", "rorId" => "04z8jg394"],
