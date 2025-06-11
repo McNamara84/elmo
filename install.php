@@ -42,6 +42,7 @@ function dropTables($connection)
         'Resource',
         'Resource_has_Author',
         'Author',
+        'Author_person',
         'Author_institution',
         'Resource_Type',
         'Rights',
@@ -127,17 +128,28 @@ function createDatabaseStructure($connection)
     `name` VARCHAR(20) NOT NULL,
     PRIMARY KEY (`language_id`));",
 
-        "Author" => "CREATE TABLE IF NOT EXISTS `Author` (
-    `author_id` INT NOT NULL AUTO_INCREMENT,
+
+        "Author_person" => "CREATE TABLE IF NOT EXISTS `Author_person` (
+    `author_person_id` INT NOT NULL AUTO_INCREMENT,
     `familyname` TEXT(666) NOT NULL,
     `givenname` TEXT(746) NOT NULL,
     `orcid` VARCHAR(19) NOT NULL,
-    PRIMARY KEY (`author_id`));",
+    PRIMARY KEY (`author_person_id`));",
 
         "Author_institution" => "CREATE TABLE IF NOT EXISTS `Author_institution` (
     `author_institution_id` INT NOT NULL AUTO_INCREMENT,
     `institutionname` TEXT(666) NOT NULL,
     PRIMARY KEY (`author_institution_id`));",
+
+        "Author" => "CREATE TABLE IF NOT EXISTS `Author` (
+    `author_id` INT NOT NULL AUTO_INCREMENT,
+    `Author_Person_author_person_id` INT NOT NULL,
+    `Author_Institution_author_institution_id` INT NOT NULL,
+    PRIMARY KEY (`author_id`),
+    FOREIGN KEY (`Author_Person_author_person_id`)
+    REFERENCES `Author_person` (`author_person_id`),
+    FOREIGN KEY (`Author_Institution_author_institution_id`)
+    REFERENCES `Author_institution` (`author_institution_id`));",
 
         "Role" => "CREATE TABLE IF NOT EXISTS `Role` (
     `role_id` INT NOT NULL AUTO_INCREMENT,
@@ -710,7 +722,7 @@ function insertTestResourceData($connection)
             ["doi" => "https://doi.org/10.5880/ICGEM.2019.011", "version" => null, "year" => 2019, "dateCreated" => "2020-04-17", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id" => 3, "Mathematical_Representation_id" => 1, "File_format_id" => 1]
 
         ],
-        "Author" => [
+        "Author_person" => [
             ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "0000-0003-1076-615X"],
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "0000-0003-1552-0861"],
             ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "0000-0003-0930-6527"],
