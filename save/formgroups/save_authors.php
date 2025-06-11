@@ -29,38 +29,61 @@ function saveAuthors($connection, $postData, $resource_id)
         return false;
     }
 
+    // Person
     $familynames = $postData['familynames'] ?? [];
     $givennames = $postData['givennames'] ?? [];
     $orcids = $postData['orcids'] ?? [];
-    $affiliations = $postData['affiliation'] ?? [];
-    $rorIds = $postData['authorRorIds'] ?? [];
+    $personAffiliations = $postData['personAffiliation'] ?? [];
+    $personRorIds = $postData['authorPersonRorIds'] ?? [];
 
-    $len = count($familynames);
+    // Institution
+    $institutionnames = $postData['authorinstitutionName'] ?? [];
+    $institutionAffiliations = $postData['institutionAffiliation'] ?? [];
+    $institutionRorIds = $postData['authorInstitutionRorIds'] ?? [];
 
-    for ($i = 0; $i < $len; $i++) {
-        $familyname = trim($familynames[$i]);
-        $givenname = trim($givennames[$i]);
-        $orcid = trim($orcids[$i]);
-        $affiliation_data = isset($affiliations[$i]) ? $affiliations[$i] : '';
-        $rorId_data = isset($rorIds[$i]) ? $rorIds[$i] : '';
+    // Processing of personal authors
+    $personCount = count($familynames);
+    for ($i = 0; $i < $personCount; $i++) {
+        $familyname = trim($familynames[$i] ?? '');
+        $givenname = trim($givennames[$i] ?? '');
+        $orcid = trim($orcids[$i] ?? '');
+        $affiliation_data = trim($personAffiliations[$i] ?? '');
+        $rorId_data = trim($personRorIds[$i] ?? '');
 
-        // Skip invalid authors
-        if (empty($familyname)) {
-            continue;
-        }
+        if (empty($familyname)) continue;
 
-        // Check if there is a ROR ID without an affiliation
         $rorIdArray = parseRorIds($rorId_data);
         $affiliationArray = parseAffiliationData($affiliation_data);
-        if (!empty($rorIdArray) && empty($affiliationArray)) {
-            continue;
-        }
+        if (!empty($rorIdArray) && empty($affiliationArray)) continue;
 
-        // Process individual author
         processAuthor($connection, $resource_id, [
             'familyname' => $familyname,
             'givenname' => $givenname,
             'orcid' => $orcid,
+            'institutionname' => null,
+            'affiliation_data' => $affiliation_data,
+            'rorId_data' => $rorId_data
+        ]);
+    }
+
+    // Processing of institutional authors
+    $institutionCount = count($institutionnames);
+    for ($i = 0; $i < $institutionCount; $i++) {
+        $institutionname = trim($institutionnames[$i] ?? '');
+        $affiliation_data = trim($institutionAffiliations[$i] ?? '');
+        $rorId_data = trim($institutionRorIds[$i] ?? '');
+
+        if (empty($institutionname)) continue;
+
+        $rorIdArray = parseRorIds($rorId_data);
+        $affiliationArray = parseAffiliationData($affiliation_data);
+        if (!empty($rorIdArray) && empty($affiliationArray)) continue;
+
+        processAuthor($connection, $resource_id, [
+            'familyname' => null,
+            'givenname' => null,
+            'orcid' => null,
+            'institutionname' => $institutionname,
             'affiliation_data' => $affiliation_data,
             'rorId_data' => $rorId_data
         ]);
@@ -83,38 +106,53 @@ function saveAuthors($connection, $postData, $resource_id)
  */
 function processAuthor($connection, $resource_id, $authorData)
 {
-    $author_id = null;
+    $author_person_id = null;
+    $author_institution_id = null;
 
-    // Check if the author already exists (only if ORCID is provided)
-    if (!empty($authorData['orcid'])) {
-        $stmt = $connection->prepare("SELECT author_id FROM Author WHERE orcid = ?");
-        $stmt->bind_param("s", $authorData['orcid']);
+    if (!empty($authorData['familyname']) && !empty($authorData['givenname'])) {
+        // 1. Save or find PERSON
+        $stmt = $connection->prepare("SELECT author_person_id FROM Author_person WHERE familyname = ? AND givenname = ? AND orcid = ?");
+        $stmt->bind_param("sss", $authorData['familyname'], $authorData['givenname'], $authorData['orcid']);
         $stmt->execute();
         $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            // Author already exists, get the ID
-            $row = $result->fetch_assoc();
-            $author_id = $row['author_id'];
-
-            // Update the author's data
-            $stmt = $connection->prepare("UPDATE Author SET familyname = ?, givenname = ? WHERE author_id = ?");
-            $stmt->bind_param("ssi", $authorData['familyname'], $authorData['givenname'], $author_id);
-            $stmt->execute();
+        if ($row = $result->fetch_assoc()) {
+            $author_person_id = $row['author_person_id'];
+        } else {
+            $stmtInsert = $connection->prepare("INSERT INTO Author_person (familyname, givenname, orcid) VALUES (?, ?, ?)");
+            $stmtInsert->bind_param("sss", $authorData['familyname'], $authorData['givenname'], $authorData['orcid']);
+            $stmtInsert->execute();
+            $author_person_id = $stmtInsert->insert_id;
+            $stmtInsert->close();
         }
         $stmt->close();
     }
 
-    // Insert new author if not found
-    if (!$author_id) {
-        $stmt = $connection->prepare("INSERT INTO Author (familyname, givenname, orcid) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $authorData['familyname'], $authorData['givenname'], $authorData['orcid']);
+    if (!empty($authorData['institutionname'])) {
+        // 2. Save or find INSTITUTION
+        $stmt = $connection->prepare("SELECT author_institution_id FROM Author_institution WHERE institutionname = ?");
+        $stmt->bind_param("s", $authorData['institutionname']);
         $stmt->execute();
-        $author_id = $stmt->insert_id;
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $author_institution_id = $row['author_institution_id'];
+        } else {
+            $stmtInsert = $connection->prepare("INSERT INTO Author_institution (institutionname) VALUES (?)");
+            $stmtInsert->bind_param("s", $authorData['institutionname']);
+            $stmtInsert->execute();
+            $author_institution_id = $stmtInsert->insert_id;
+            $stmtInsert->close();
+        }
         $stmt->close();
     }
 
-    // Insert into Resource_has_Author
+    // 3. Insert Author Table (linkage)
+    $stmt = $connection->prepare("INSERT INTO Author (Author_Person_author_person_id, Author_Institution_author_institution_id) VALUES (?, ?)");
+    $stmt->bind_param("ii", $author_person_id, $author_institution_id);
+    $stmt->execute();
+    $author_id = $stmt->insert_id;
+    $stmt->close();
+
+    // 4. Resource_has_Author link
     $stmt = $connection->prepare("INSERT IGNORE INTO Resource_has_Author (Resource_resource_id, Author_author_id) VALUES (?, ?)");
     $stmt->bind_param("ii", $resource_id, $author_id);
     $stmt->execute();
