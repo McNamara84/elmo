@@ -100,12 +100,12 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Tests saving a single author with all fields populated.
+     * Tests saving a single person author with all fields populated.
      *
      * @return void
      * @throws \Exception
      */
-    public function testSaveSingleAuthorWithAllFields()
+    public function testSaveSinglePersonAuthorWithAllFields()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.SINGLE.AUTHOR",
@@ -123,30 +123,38 @@ class SaveAuthorsTest extends TestCase
             "familynames" => ["Doe"],
             "givennames" => ["John"],
             "orcids" => ["0000-0001-2345-6789"],
-            "affiliation" => ['[{"value":"Test University"}]'],
-            "authorRorIds" => ['https://ror.org/047w75g40']
+            "personAffiliation" => ['[{"value":"Test University"}]'],
+            "authorPersonRorIds" => ['https://ror.org/047w75g40']
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ?");
-        $stmt->bind_param("s", $authorData["familynames"][0]);
+        // Check: Person is in Author_person
+        $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
+        $stmt->bind_param("ss", $authorData["familynames"][0], $authorData["givennames"][0]);
         $stmt->execute();
-        $authorResult = $stmt->get_result()->fetch_assoc();
+        $personResult = $stmt->get_result()->fetch_assoc();
+        $this->assertNotEmpty($personResult, "Der Autor wurde nicht in Author_person gespeichert.");
 
-        $this->assertEquals(
-            $authorData["givennames"][0],
-            $authorResult["givenname"],
-            "Der Vorname des Autors wurde nicht korrekt gespeichert."
-        );
         $this->assertEquals(
             $authorData["orcids"][0],
-            $authorResult["orcid"],
-            "Die ORCID des Autors wurde nicht korrekt gespeichert."
+            $personResult["orcid"],
+            "Die ORCID des Autors wurde nicht korrekt in Author_person gespeichert."
         );
 
+        $author_person_id = $personResult["author_person_id"];
+
+        // Check: Link entry in Author
+        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Person_author_person_id = ?");
+        $stmt->bind_param("i", $author_person_id);
+        $stmt->execute();
+        $authorLinkResult = $stmt->get_result()->fetch_assoc();
+        $this->assertNotEmpty($authorLinkResult, "Der Autor wurde nicht korrekt mit der Author-Tabelle verknüpft.");
+        $author_id = $authorLinkResult["author_id"];
+
+        // Check: Link to resource
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
-        $stmt->bind_param("ii", $resource_id, $authorResult["author_id"]);
+        $stmt->bind_param("ii", $resource_id, $author_id);
         $stmt->execute();
         $this->assertEquals(
             1,
@@ -154,10 +162,11 @@ class SaveAuthorsTest extends TestCase
             "Die Verknüpfung zwischen Autor und Resource wurde nicht korrekt gespeichert."
         );
 
+        // Check: Affiliation saved and linked
         $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
-                                            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
-                                            WHERE aha.Author_author_id = ?");
-        $stmt->bind_param("i", $authorResult["author_id"]);
+                                        JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
+                                        WHERE aha.Author_author_id = ?");
+        $stmt->bind_param("i", $author_id);
         $stmt->execute();
         $affiliationResult = $stmt->get_result()->fetch_assoc();
 
