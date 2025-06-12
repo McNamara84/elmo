@@ -150,12 +150,12 @@ class SaveAuthorsTest extends DatabaseTestCase
     }
 
     /**
-     * Tests saving three authors with all fields populated.
+     * Tests saving three personal authors with all fields populated.
      *
      * @return void
      * @throws \Exception
      */
-    public function testSaveThreeAuthorsWithAllFields()
+    public function testSaveThreePersonAuthorsWithAllFields()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.THREE.AUTHORS",
@@ -173,52 +173,73 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["Doe", "Smith", "Johnson"],
             "givennames" => ["John", "Jane", "Bob"],
             "orcids" => ["0000-0001-2345-6789", "0000-0002-3456-7890", "0000-0003-4567-8901"],
-            "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
-            "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
+            "personAffiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
+            "authorPersonRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
         for ($i = 0; $i < 3; $i++) {
-            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
+            // Retrieve Author_person entry
+            $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
             $stmt->bind_param("ss", $authorData["familynames"][$i], $authorData["givennames"][$i]);
             $stmt->execute();
-            $authorResult = $stmt->get_result()->fetch_assoc();
-
+            $personResult = $stmt->get_result()->fetch_assoc();
+            $this->assertNotEmpty($personResult, "Author_person nicht gefunden für Autor " . ($i + 1));
             $this->assertEquals(
                 $authorData["orcids"][$i],
-                $authorResult["orcid"],
+                $personResult["orcid"],
                 "Die ORCID des Autors " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
+            $stmt->close();
 
+            // Get link to author
+            $author_person_id = $personResult["author_person_id"];
+            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Person_author_person_id = ?");
+            $stmt->bind_param("i", $author_person_id);
+            $stmt->execute();
+            $authorLinkResult = $stmt->get_result()->fetch_assoc();
+            $this->assertNotEmpty($authorLinkResult, "Der Autor wurde nicht korrekt mit der Author-Tabelle verknüpft.");
+            $author_id = $authorLinkResult["author_id"];
+            $stmt->close();
+
+            // Check Resource_has_Author link
             $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
-            $stmt->bind_param("ii", $resource_id, $authorResult["author_id"]);
+            $stmt->bind_param("ii", $resource_id, $author_id);
             $stmt->execute();
             $this->assertEquals(
                 1,
                 $stmt->get_result()->num_rows,
                 "Die Verknüpfung zwischen Autor " . ($i + 1) . " und Resource wurde nicht korrekt gespeichert."
             );
+            $stmt->close();
 
-            $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
-                                                JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
-                                                WHERE aha.Author_author_id = ?");
-            $stmt->bind_param("i", $authorResult["author_id"]);
+            // Check Affiliation
+            $stmt = $this->connection->prepare("SELECT a.name, a.rorId 
+                                            FROM Affiliation a 
+                                            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
+                                            WHERE aha.Author_author_id = ?");
+            $stmt->bind_param("i", $author_id);
             $stmt->execute();
             $affiliationResult = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            $expectedName = json_decode($authorData["personAffiliation"][$i], true)[0]["value"];
+            $expectedRor = str_replace("https://ror.org/", "", $authorData["authorPersonRorIds"][$i]);
 
             $this->assertEquals(
-                json_decode($authorData["affiliation"][$i], true)[0]["value"],
+                $expectedName,
                 $affiliationResult["name"],
                 "Der Name der Affiliation für Autor " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
             $this->assertEquals(
-                str_replace("https://ror.org/", "", $authorData["authorRorIds"][$i]),
+                $expectedRor,
                 $affiliationResult["rorId"],
                 "Die ROR-ID der Affiliation für Autor " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
         }
     }
+
 
     /**
      * Tests saving a single author with only required fields.
