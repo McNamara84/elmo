@@ -150,15 +150,14 @@ include_once "../settings.php";
                 </div>
                 <div>
                     <ul class="list-unstyled">
-                        <ul>
-                            <li>If that date cannot be determined, use the date of registration.
-                            </li>
-                            <li>If an embargo period is in effect, use the date when the embargo
-                                period ends.</li>
-                            <li>If there is no standard publication year value, use the date
-                                that would be preferred
-                                from a citation perspective.</li>
-                        </ul>
+                        <li>If that date cannot be determined, use the date of registration.
+                        </li>
+                        <li>If an embargo period is in effect, use the date when the embargo
+                            period ends.</li>
+                        <li>If there is no standard publication year value, use the date
+                            that would be preferred
+                            from a citation perspective.</li>
+                    </ul>
                 </div>
                 <div id="help-resourceinformation-resourcetype">
                     <h4>Resource Type</h4>
@@ -213,7 +212,7 @@ include_once "../settings.php";
                 <p>Rights information for the data set. Following the Guidelines for the Handling of Research Data
                     of the GFZ German Research Centre for Geosciences for open science, we recommend a Creative
                     Commons Attribution 4.0 (CC-BY) license whenever possible.</p>
-                <p>Please choose between:
+                <p>Please choose between:</p>
                 <ul>
                     <li><a href="https://creativecommons.org/licenses/by/4.0/ " target="_blank">Creative
                             Commons Attribution 4.0 International</a>: Authorises the free use, distribution and
@@ -249,7 +248,6 @@ include_once "../settings.php";
                             usage with us in advance.</strong>
                     </li>
                 </ul>
-                </p>
             </div>
             <div class="section-divider"></div>
             <hr>
@@ -282,19 +280,19 @@ include_once "../settings.php";
                         among the available options, it can be entered manually.</p>
                 </div>
                 <div>
-                    <h4>Contact Person(s)</h3>
-                        <p>Person with knowledge of how to access, troubleshoot, or otherwise field issues related
-                            to
-                            the resource. May also be "Point of Contact" in organisation that controls access to the
-                            resource. Please enter at least one contact person.</p>
-                        <p>After filling in the list of authors, the Contact Person can be selected by simply
-                            clicking the button on the left. The email address of the author, who is labelled as the
-                            contact person, must also be provided. The specification of a website is optional.</p>
-                        <h5>Website</h5>
-                        <p>Professional or specialized website, excluding any private websites. The specification of
-                            a
-                            website, such as that of your institution, offers further contact options in case of
-                            questions.</p>
+                    <h4>Contact Person(s)</h4>
+                    <p>Person with knowledge of how to access, troubleshoot, or otherwise field issues related
+                        to
+                        the resource. May also be "Point of Contact" in organisation that controls access to the
+                        resource. Please enter at least one contact person.</p>
+                    <p>After filling in the list of authors, the Contact Person can be selected by simply
+                        clicking the button on the left. The email address of the author, who is labelled as the
+                        contact person, must also be provided. The specification of a website is optional.</p>
+                    <h5>Website</h5>
+                    <p>Professional or specialized website, excluding any private websites. The specification of
+                        a
+                        website, such as that of your institution, offers further contact options in case of
+                        questions.</p>
                 </div>
             </div>
             <div class="section-divider"></div>
@@ -349,13 +347,13 @@ include_once "../settings.php";
                         information provided in the ORCID profile.</p>
                     <p><strong>Optional field.</strong></p>
                 </div>
-                <div id="help-contributorpersons-role"></div>
+                <div id="help-contributorpersons-role">
                     <h4>Roles</h4>
                     <p>The role of the contributing person(s) in the creation of the resource. Please choose one or
                         more roles from the controlled list provided by DataCite.</p>
                     <ul>
                         <li>
-                            <strong>Data Collector: </strong>Person responsible for fi</div>nding or gathering/collecting
+                            <strong>Data Collector: </strong>Person responsible for finding or gathering/collecting
                             data under the guidelines of the author(s) or Principal Investigator (PI).
                         </li>
                         <li>
@@ -569,6 +567,7 @@ include_once "../settings.php";
                             be
                             the abstract of a corresponding article.</strong><br>
                         When writing the abstract, please keep in mind:
+                    </p>
                     <ul>
                         <li>The audience is the broader scientific community, not only your own subdomain.</li>
                         <li>Although your abstract must be focused on the data, we recommend beginning with the
@@ -591,7 +590,6 @@ include_once "../settings.php";
                             files”
                             (e.g. http://doi.org/10.5880/GFZ.4.1.2019.005)</li>
                     </ul>
-                    </p>
                 </div>
                 <div id="help-description-methods">
                     <h4>Methods</h4>
@@ -775,8 +773,8 @@ include_once "../settings.php";
                             the range from -90.00 to +90.00 are allowed.</li>
                         <li><strong>Longitude Min:</strong> Geographic longitude of a single coordinate or the
                             smaller geographic longitude of a rectangle as a floating point number with a dot as the
-                            separator. Only positive and negative numbers in the range from -180.00 to +180.00
-                            are allowed.</li>
+                            separator. Only positive and negative numbers in
+                            the range from -180.00 to +180.00 are allowed.</li>
                         <li><strong>Longitude Max:</strong> Geographic longitude of a rectangle as a floating
                             point number with a dot as the separator. Optional field. Only positive and negative
                             numbers in the range from -180.00 to +180.00 are allowed.</li>
@@ -974,12 +972,118 @@ include_once "../settings.php";
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
                     <p>
-                        This section defines the essential characteristics of Global Geopotential Models (GGMs). 
-                        These properties describe the mathematical and technical specifications of your gravity field model, 
-                        improving the findability and reusability of your model.
+                        This section defines the essential characteristics of Global Gravitational Models (GGMs) and describes GGMs published via the ICGEM (International Center for Global Earth Models) service.
                     </p>
                     <p>
-                        <strong>Validation Logic:</strong> These fields are required: Model Type, Mathematical Representation, 
+                        ICGEM provides the opportunity to publish a Global Gravitational model.
+                    </p>
+                    <p>
+                        Model publication is a unique effort of scientific work, so ICGEM provides long-term support for the model developers.
+                    </p>
+                    <p>
+                        The model is published on the ICGEM website and is available for download, calculation, and visualization.
+                    </p>
+                    <p>
+                        The data file of the model is provided with metadata and published with a DOI via GFZ Data Services. Rich and structured metadata is essential for the model findability and reusability.
+                    </p>
+                    <p>
+                        This editor is a tool to provide metadata for GGM model publications. It is adapted from GFZ Data Services metadata editor, which connects ICGEM to the data publication workflow in the GFZ.
+                    </p>
+                    <p>
+                        ICGEM database is an archive and information hub, centered around gravity field models. It collects properties that describe the mathematical and technical specifications of your gravity field model.
+                    </p>
+                    <p>
+                        <strong>Validation Logic:</strong> In order to upload the model, we ask you to provide the following information: Model Type, Mathematical Representation, Model Name, and File Format. Please make sure to provide them.
+                    </p>
+                </div>
+                <div id="help-model-type">
+                    <h4>Model Type</h4>
+                    <p>
+                        A higher level classification of the Global Gravitational Models (GGM). The types are represented on the ICGEM website and include:
+                    </p>
+                    <ul>
+                        <li><strong>static</strong> – models of the gravity field potential computed from satellite-based gravity measurements. The spatial details of the gravity field (short wavelengths or high frequencies) are collected via terrestrial, airborne, and shipborne gravity measurements as well as radar altimetry.</li>
+                        <li><strong>temporal</strong> – models derived from input data covering specific time periods, enabling monitoring of temporal changes in the gravity field.</li>
+                        <li><strong>topographic</strong> – models representing the gravitational potential generated by Earth's topographic masses. Gravity is computed based on very high resolution digital elevation models describing the Earth's shape and mass densities within the topography. These models are not based on actual gravity measurements.</li>
+                        <li><strong>simulated</strong> – models based on simulated data and not on measurements.</li>
+                    </ul>
+                    <p>
+                        Based on Ince et al. (2019): ICGEM – 15 years of successful collection and distribution of global gravitational models, associated services, and future plans. Earth System Science Data, 11, pp. 647–674. DOI: <a href="http://doi.org/10.5194/essd-11-647-2019" target="_blank">10.5194/essd-11-647-2019</a>
+                    </p>
+                </div>
+                <div id="help-math-representation">
+                    <h4>Mathematical Representation</h4>
+                    <p>
+                        The mathematical representation of a gravity field model refers to the set of functions used to express the gravitational potential, which are solutions of Laplace’s equation in a given coordinate system. The coordinate system determines the type of harmonics — spherical or ellipsoidal — and thus defines the mathematical form of the model.
+                    </p>
+                    <p>
+                        Based on STR by Barthelmes (2013): <a href="https://doi.org/10.2312/GFZ.b103-0902-26" target="_blank">https://doi.org/10.2312/GFZ.b103-0902-26</a>
+                    </p>
+                    <p><strong>Note:</strong> This field is mandatory because it is not possible to use the model without this information.</p>
+                </div>
+                <div id="help-celestial-body">
+                    <h4>Celestial Body</h4>
+                    <p>
+                        Specify the celestial body for which the gravity field model was computed. The default selection is Earth, but models for other planetary bodies are also supported.
+                    </p>
+                </div>
+                <div id="help-file-format">
+                    <h4>File Format</h4>
+                    <p>
+                        All models on the ICGEM are published in the ICGEM file format. See description at <a href="https://icgem.gfz-potsdam.de/docs/ICGEM-Format-2023.pdf" target="_blank">ICGEM-Format-2023.pdf</a>
+                    </p>
+                    <p>
+                        This field is mandatory. To support time-limited validity periods for time-varying coefficients, a new parameter has been introduced: <code>format=icgem2.0</code>.
+                    </p>
+                    <p>
+                        <strong>Note:</strong> You cannot mix coefficients formatted as icgem1.0 and icgem2.0. Please ensure all model files use the same format version.
+                    </p>
+                </div>
+                <div id="help-model-name">
+                    <h4>Model Name</h4>
+                    <p>
+                        The unique identifier name for your gravity field model to be represented on the ICGEM website. This should be a concise and descriptive name that follows standard conventions in the gravity field community. No spaces are allowed.
+                    </p>
+                    <p>
+                        As a title, this name will be displayed on the GFZ Data Services landing page. It will also be the main title from the first formgroup.
+                    </p>
+                    <p><strong>Requirements:</strong></p>
+                    <ul>
+                        <li>No spaces allowed in the model name</li>
+                        <li>Use underscores or hyphens to separate words if needed</li>
+                        <li>Should be unique and descriptive</li>
+                        <li>Examples: GO_CONS_GCF_2_SPW_R5, Tongji-Grace02s, LUH-GRACE-FO-2020</li>
+                    </ul>
+                </div>
+                <div id="help-product-type">
+                    <h4>Product Type</h4>
+                    <p>
+                        Static and temporal models produced based on direct gravity observations (for instance, from satellite gravity missions) have the product type <code>gravity field</code>.
+                    </p>
+                    <p>
+                        If the model is topographic and was produced using forward modelling, then the product type is <code>topographic gravity field</code>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- formgroup GGMs Properties -->
+            <div id="help-model-characteristics" class="section-content">
+                <div id="help-model-characteristics-fg">
+                    <h3>Characteristics of the model</h3>
+                    <p>
+                        This section defines the essential characteristics of Global Gravitational Models (GGMs). Amd describes GGM published via the ICGEM (International Center for Global Earth Models) service.
+                        ICGEM provides opportunity to publish a Global Gravitational model. 
+                        
+                        Model publication is a unique effort of scientific work, so ICGEM provides a long term support for the model developers.
+                        The model is published on the ICGEM website and is available for download, calculation visualisation. The data file of the model is provided with metadata and published with a DOI via GFZ Data Services. Rich and structured metadata is essential for the model findability and reusability.
+
+                        This editor is a tool to provide metadata for GGM model publications. It is adapted from GFZ Data Services metadata editor, which connects ICGEM to the data publication workflow in the GFZ.
+
+                        ICGEM database is an archive and information hub, centered around gravity field models. It collects properties that describe the mathematical and technical specifications of your gravity field model. 
+                    
+                    </p>
+                    <p>
+                        <strong>Validation Logic:</strong> In order to upload the model, we ask you to provide the following information: Model Type, Mathematical Representation, 
                         Model Name, and File Format. Please make sure to provide them.
                     </p>
                 </div>
