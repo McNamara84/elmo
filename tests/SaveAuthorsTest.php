@@ -379,12 +379,12 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Tests saving three authors where one has a missing last name.
+     * Tests saving three personal authors where one has a missing last name.
      *
      * @return void
      * @throws \Exception
      */
-    public function testSaveThreeAuthorsWithOneMissingLastName()
+    public function testSaveThreePersonAuthorsWithOneMissingLastName()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.THREE.AUTHORS.ONE.MISSING",
@@ -402,13 +402,13 @@ class SaveAuthorsTest extends TestCase
             "familynames" => ["Doe", "", "Johnson"],
             "givennames" => ["John", "Jane", "Bob"],
             "orcids" => ["0000-0001-2345-6789", "0000-0002-3456-7890", "0000-0003-4567-8901"],
-            "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
-            "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
+            "personAffiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
+            "authorPersonRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author");
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_person");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
@@ -417,7 +417,7 @@ class SaveAuthorsTest extends TestCase
             "Es sollten nur zwei Autoren gespeichert worden sein, da einer einen fehlenden Nachnamen hatte."
         );
 
-        $stmt = $this->connection->prepare("SELECT familyname FROM Author ORDER BY familyname");
+        $stmt = $this->connection->prepare("SELECT familyname FROM Author_person ORDER BY familyname");
         $stmt->execute();
         $result = $stmt->get_result();
         $savedFamilynames = [];
