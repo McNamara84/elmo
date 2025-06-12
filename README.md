@@ -919,7 +919,8 @@ This element is optional in the DataCite scheme. However, it is a best practice 
 
 ### GGMs Properties (Essential)
 
-Viable for the implementation for the ICGEM platform. This form group collects the essential characteristics of a Global Geopotential Model (GGM). If any field in this group is filled, all essential fields become required.
+Viable for the implementation for the ICGEM platform. This form group collects the essential characteristics of a Global Geopotential Model (GGM). 
+Essential are understood as one formgroup containing the most general information about a model being published. This formgroup is the first of multiple groups. These formgroups are developed as an adaptation of ELMO for publications of the Global Gravitational Models. Hence, if any field in this group is filled, all the fields become required.
 
 - **Model Type**
 
@@ -938,7 +939,7 @@ Viable for the implementation for the ICGEM platform. This form group collects t
   - Occurrence: 1
   - The corresponding field in the database is called: `math_representation` in the dedicated math representation table
   - Restrictions: Must be selected from a controlled list 
-  - Example values: `Spherical Harmonics`
+  - Example values: `Spherical harmonics`, `Ellipsoidal harmonics`
   - Mapping: mapped to `<mathematicalRepresentation>` in the XML export
 
 - **Celestial Body**
