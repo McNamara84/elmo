@@ -339,12 +339,12 @@ class SaveAuthorsTest extends TestCase
     }
 
     /**
-     * Tests behavior when attempting to save an author with empty fields.
+     * Tests behavior when attempting to save an personal author with empty fields.
      *
      * @return void
      * @throws \Exception
      */
-    public function testSaveAuthorWithEmptyFields()
+    public function testSavePersonAuthorWithEmptyFields()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.EMPTY.AUTHOR",
@@ -362,13 +362,13 @@ class SaveAuthorsTest extends TestCase
             "familynames" => [],
             "givennames" => [],
             "orcids" => [],
-            "affiliation" => [],
-            "authorRorIds" => []
+            "personAffiliation" => [],
+            "authorPersonRorIds" => []
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author");
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_person");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
