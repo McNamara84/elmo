@@ -17,12 +17,62 @@ require_once __DIR__ . '/../save/formgroups/save_authors.php';
 class SaveAuthorsTest extends DatabaseTestCase
 {
     /**
-     * Tests saving a single author with all fields populated.
+     * Clean up test data after each test.
+     *
+     * @return void
+     */
+    protected function tearDown(): void
+    {
+        $this->cleanupTestData();
+    }
+
+    /**
+     * Removes all test data from the database.
+     *
+     * @return void
+     */
+    private function cleanupTestData()
+    {
+        $this->connection->query("SET FOREIGN_KEY_CHECKS=0");
+        $this->connection->query("DELETE FROM Resource_has_Spatial_Temporal_Coverage");
+        $this->connection->query("DELETE FROM Resource_has_Thesaurus_Keywords");
+        $this->connection->query("DELETE FROM Resource_has_Related_Work");
+        $this->connection->query("DELETE FROM Resource_has_Originating_Laboratory");
+        $this->connection->query("DELETE FROM Resource_has_Funding_Reference");
+        $this->connection->query("DELETE FROM Resource_has_Contact_Person");
+        $this->connection->query("DELETE FROM Resource_has_Contributor_Person");
+        $this->connection->query("DELETE FROM Resource_has_Contributor_Institution");
+        $this->connection->query("DELETE FROM Resource_has_Author");
+        $this->connection->query("DELETE FROM Resource_has_Free_Keywords");
+        $this->connection->query("DELETE FROM Author_has_Affiliation");
+        $this->connection->query("DELETE FROM Contact_Person_has_Affiliation");
+        $this->connection->query("DELETE FROM Contributor_Person_has_Affiliation");
+        $this->connection->query("DELETE FROM Contributor_Institution_has_Affiliation");
+        $this->connection->query("DELETE FROM Originating_Laboratory_has_Affiliation");
+        $this->connection->query("DELETE FROM Free_Keywords");
+        $this->connection->query("DELETE FROM Affiliation");
+        $this->connection->query("DELETE FROM Title");
+        $this->connection->query("DELETE FROM Description");
+        $this->connection->query("DELETE FROM Spatial_Temporal_Coverage");
+        $this->connection->query("DELETE FROM Thesaurus_Keywords");
+        $this->connection->query("DELETE FROM Related_Work");
+        $this->connection->query("DELETE FROM Originating_Laboratory");
+        $this->connection->query("DELETE FROM Funding_Reference");
+        $this->connection->query("DELETE FROM Contact_Person");
+        $this->connection->query("DELETE FROM Contributor_Person");
+        $this->connection->query("DELETE FROM Contributor_Institution");
+        $this->connection->query("DELETE FROM Author");
+        $this->connection->query("DELETE FROM Resource");
+        $this->connection->query("SET FOREIGN_KEY_CHECKS=1");
+    }
+
+    /**
+     * Tests saving a single person author with all fields populated.
      *
      * @return void
      * @throws \Exception
      */
-    public function testSaveSingleAuthorWithAllFields()
+    public function testSaveSinglePersonAuthorWithAllFields()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.SINGLE.AUTHOR",
@@ -40,30 +90,38 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["Doe"],
             "givennames" => ["John"],
             "orcids" => ["0000-0001-2345-6789"],
-            "affiliation" => ['[{"value":"Test University"}]'],
-            "authorRorIds" => ['https://ror.org/047w75g40']
+            "personAffiliation" => ['[{"value":"Test University"}]'],
+            "authorPersonRorIds" => ['https://ror.org/047w75g40']
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ?");
-        $stmt->bind_param("s", $authorData["familynames"][0]);
+        // Check: Person is in Author_person
+        $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
+        $stmt->bind_param("ss", $authorData["familynames"][0], $authorData["givennames"][0]);
         $stmt->execute();
-        $authorResult = $stmt->get_result()->fetch_assoc();
+        $personResult = $stmt->get_result()->fetch_assoc();
+        $this->assertNotEmpty($personResult, "Der Autor wurde nicht in Author_person gespeichert.");
 
-        $this->assertEquals(
-            $authorData["givennames"][0],
-            $authorResult["givenname"],
-            "Der Vorname des Autors wurde nicht korrekt gespeichert."
-        );
         $this->assertEquals(
             $authorData["orcids"][0],
-            $authorResult["orcid"],
-            "Die ORCID des Autors wurde nicht korrekt gespeichert."
+            $personResult["orcid"],
+            "Die ORCID des Autors wurde nicht korrekt in Author_person gespeichert."
         );
 
+        $author_person_id = $personResult["author_person_id"];
+
+        // Check: Link entry in Author
+        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Person_author_person_id = ?");
+        $stmt->bind_param("i", $author_person_id);
+        $stmt->execute();
+        $authorLinkResult = $stmt->get_result()->fetch_assoc();
+        $this->assertNotEmpty($authorLinkResult, "Der Autor wurde nicht korrekt mit der Author-Tabelle verknüpft.");
+        $author_id = $authorLinkResult["author_id"];
+
+        // Check: Link to resource
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
-        $stmt->bind_param("ii", $resource_id, $authorResult["author_id"]);
+        $stmt->bind_param("ii", $resource_id, $author_id);
         $stmt->execute();
         $this->assertEquals(
             1,
@@ -71,10 +129,11 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Die Verknüpfung zwischen Autor und Resource wurde nicht korrekt gespeichert."
         );
 
+        // Check: Affiliation saved and linked
         $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
-                                            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
-                                            WHERE aha.Author_author_id = ?");
-        $stmt->bind_param("i", $authorResult["author_id"]);
+                                        JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
+                                        WHERE aha.Author_author_id = ?");
+        $stmt->bind_param("i", $author_id);
         $stmt->execute();
         $affiliationResult = $stmt->get_result()->fetch_assoc();
 
