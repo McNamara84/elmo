@@ -38,16 +38,20 @@ jobs:
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
         coverage: xdebug
 
+    - name: Install PHP dependencies
+      run: |
+        composer install --prefer-dist --no-progress --no-suggest
+        composer dump-autoload -o
+
     - name: Update Composer dependencies
       run: composer update --no-interaction --no-progress
 
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
 
-    - name: Install dependencies
+    - name: Install JS dependencies
       run: |
-        composer install --prefer-dist --no-progress --no-suggest
-        composer dump-autoload -o
+        npm install
 
     - name: Wait for MySQL to be ready
       run: |
