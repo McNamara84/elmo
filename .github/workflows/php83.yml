@@ -44,6 +44,10 @@ jobs:
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
 
+    - name: Install JS dependencies
+      run: |
+        npm install
+
     - name: Install dependencies
       run: |
         composer install --prefer-dist --no-progress --no-suggest
