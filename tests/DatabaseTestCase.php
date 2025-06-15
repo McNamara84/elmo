@@ -94,6 +94,12 @@ abstract class DatabaseTestCase extends TestCase
             'Contributor_Institution',
             'Author',
             'Resource',
+             // ICGEM-specific variables to describe beautiful GGMs 
+            'GGM_Properties',
+            'Resource_has_GGM_Properties',
+            'Model_Type',
+            'Mathematical_Representation',
+            'File_Format',
         ];
 
         foreach ($tables as $table) {
