@@ -7,49 +7,46 @@
 import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
 
 $(document).ready(function () {
+  // Clone original line
+  const originalAuthorInstitutionRow = $("#group-authorinstitution").children().first().clone();
 
+  // Click handler for adding
   $("#button-authorinstitution-add").click(function () {
     const authorInstitutionGroup = $("#group-authorinstitution");
-    const firstauthorInstitutionLine = authorInstitutionGroup.children().first();
+    const newRow = originalAuthorInstitutionRow.clone();
+
+    // Clear fields & reset validation
+    newRow.find("input").val("").removeClass("is-invalid is-valid");
+    newRow.find(".invalid-feedback, .valid-feedback").css("display", "");
+
+    // Generate unique IDs (using timestamps)
     const uniqueSuffix = new Date().getTime();
 
-    // Clone the first row as a template for the new row
-    const newauthorInstitutionRow = firstauthorInstitutionLine.clone();
+    const fieldsToUpdate = [
+      "input-authorinstitution-name",
+      "input-authorinstitution-affiliation",
+      "input-author-institutionrorid"
+    ];
 
-    // Reset all input fields and remove validation classes
-    newauthorInstitutionRow.find("input").val("").removeClass("is-invalid is-valid");
-    newauthorInstitutionRow.find("input, select").removeAttr("required");
+    fieldsToUpdate.forEach(fieldId => {
+      newRow.find(`#${fieldId}`).attr("id", `${fieldId}-${uniqueSuffix}`);
+    });
 
-    // Update IDs and names to ensure uniqueness for accessibility and plugin compatibility
-    newauthorInstitutionRow.find("#input-authorinstitution-name")
-      .attr("id", `input-authorinstitution-name-${uniqueSuffix}`)
-      .attr("name", "authorinstitutionName[]");
-    newauthorInstitutionRow.find("label[for='input-authorinstitution-name']")
-      .attr("for", `input-authorinstitution-name-${uniqueSuffix}`);
+    // Link label to new ID
+    newRow.find("label[for='input-authorinstitution-name']").attr("for", `input-authorinstitution-name-${uniqueSuffix}`);
 
-    // Replace the affiliation field with a new input group containing unique IDs
-    const affFieldHtml = `
-      <div class="input-group has-validation">
-        <input type="text" class="form-control input-with-help input-right-no-round-corners"
-          id="input-authorinstitution-affiliation-${uniqueSuffix}" name="institutionAffiliation[]"
-          data-translate-placeholder="general.affiliation" />
-        <span class="input-group-text"><i class="bi bi-question-circle-fill"
-            data-help-section-id="help-authorinstitution-affiliation"></i></span>
-        <input type="hidden" id="input-author-institutionrorid-${uniqueSuffix}" name="authorinstitutionRorIds[]" />
-      </div>
-    `;
-    newauthorInstitutionRow.find("#input-authorinstitution-affiliation").closest(".input-group").replaceWith(affFieldHtml);
+    // Remove Tagify
+    newRow.find(".tagify").remove();
 
-    // Replace help buttons in the cloned row, if necessary
-    replaceHelpButtonInClonedRows(newauthorInstitutionRow);
+    // Add-Button → Remove-Button
+    newRow.find("#button-authorinstitution-add").replaceWith(createRemoveButton());
 
-    // Replace the add button with a remove button in the new row
-    newauthorInstitutionRow.find("#button-authorinstitution-add").replaceWith(createRemoveButton());
+    replaceHelpButtonInClonedRows(newRow);
 
-    // Append the new row to the group
-    authorInstitutionGroup.append(newauthorInstitutionRow);
+    // Add new line
+    authorInstitutionGroup.append(newRow);
 
-    // Initialize autocomplete for the new affiliation input, if data is available
+    // Initialize autocomplete
     if (window.affiliationsData && Array.isArray(window.affiliationsData)) {
       autocompleteAffiliations(
         `input-authorinstitution-affiliation-${uniqueSuffix}`,
@@ -61,7 +58,7 @@ $(document).ready(function () {
     /**
      * Attach click handler to the remove button of this newly added row.
      */
-    newauthorInstitutionRow.on("click", ".removeButton", function () {
+    newRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
     });
   });
