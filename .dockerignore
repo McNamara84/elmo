@@ -10,7 +10,7 @@
 *.swo
 
 # Ignore build and dependency directories
-node_modules/
+#node_modules/
 
 # Ignore temporary and log files
 *.log
