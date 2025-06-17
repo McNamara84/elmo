@@ -596,6 +596,70 @@ class DatasetController
         }
         return $affiliations;
     }
+        private function getGGMData(mysqli $connection, int $resource_id): ?array
+    {
+        $ggmData = [];
+
+        // Get Model_Type, Mathematical_Representation, File_Format names by joining with Resource
+        $stmtResourceFKs = $connection->prepare("
+            SELECT 
+                mt.name as model_type_name, 
+                mr.name as mathematical_representation_name, 
+                ff.name as file_format_name
+            FROM Resource r
+            LEFT JOIN Model_Type mt ON r.Model_type_id = mt.Model_type_id
+            LEFT JOIN Mathematical_Representation mr ON r.Mathematical_Representation_id = mr.Mathematical_representation_id
+            LEFT JOIN File_Format ff ON r.File_format_id = ff.File_format_id
+            WHERE r.resource_id = ?
+        ");
+        if (!$stmtResourceFKs) {
+            $this->logger && $this->logger->error("Prepare failed for Resource FKs in getGGMData: " . $connection->error);
+            // Depending on strictness, you might throw an exception or return null
+            return null;
+        }
+        $stmtResourceFKs->bind_param('i', $resource_id);
+        $stmtResourceFKs->execute();
+        $resourceFksResult = $stmtResourceFKs->get_result()->fetch_assoc();
+        $stmtResourceFKs->close();
+
+        if ($resourceFksResult) {
+            foreach ($resourceFksResult as $key => $value) {
+                if ($value !== null) { // Only add if value is not null
+                    $ggmData[$key] = $value;
+                }
+            }
+        }
+
+        // Get Model_Name, Celestial_Body, Product_Type from GGM_Properties table
+        $stmtGGMProps = $connection->prepare("
+            SELECT 
+                ggm.Model_Name as model_name, 
+                ggm.Product_Type as product_type 
+            FROM GGM_Properties ggm
+            JOIN Resource_has_GGM_Properties rhg ON ggm.GGM_Properties_id = rhg.GGM_Properties_GGM_Properties_id
+            WHERE rhg.Resource_resource_id = ?
+        ");
+        if (!$stmtGGMProps) {
+            $this->logger && $this->logger->error("Prepare failed for GGM_Properties in getGGMData: " . $connection->error);
+            // If essential GGM props fail, but we have FKs, decide on return.
+            // For now, return what we have or null if nothing.
+            return !empty($ggmData) ? $ggmData : null;
+        }
+        $stmtGGMProps->bind_param('i', $resource_id);
+        $stmtGGMProps->execute();
+        $ggmSpecificResult = $stmtGGMProps->get_result()->fetch_assoc();
+        $stmtGGMProps->close();
+
+        if ($ggmSpecificResult) {
+            foreach ($ggmSpecificResult as $key => $value) {
+                if ($value !== null) { // Only add if value is not null
+                    $ggmData[$key] = $value;
+                }
+            }
+        }
+        
+        return !empty($ggmData) ? $ggmData : null;
+    }
 
     /**
      * Generates an XML representation of a resource and saves it to a xml file without any scheme.
@@ -969,7 +1033,27 @@ class DatasetController
                 }
             }
         }
-
+        // Add GGM Properties to the base XML
+        $ggmDataForXml = $this->getGGMData($connection, $id);
+        if ($ggmDataForXml) {
+            $ggmPropertiesXml = $xml->addChild('ggm_properties');
+            if (!empty($ggmDataForXml['model_name'])) {
+                $ggmPropertiesXml->addChild('model_name', htmlspecialchars($ggmDataForXml['model_name']));
+            }
+            if (!empty($ggmDataForXml['model_type_name'])) {
+                $ggmPropertiesXml->addChild('model_type', htmlspecialchars($ggmDataForXml['model_type_name']));
+            }
+            if (!empty($ggmDataForXml['mathematical_representation_name'])) {
+                $ggmPropertiesXml->addChild('mathematical_representation', htmlspecialchars($ggmDataForXml['mathematical_representation_name']));
+            }
+            if (!empty($ggmDataForXml['file_format_name'])) {
+                $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmDataForXml['file_format_name']));
+            }
+            if (!empty($ggmDataForXml['product_type'])) {
+                $ggmPropertiesXml->addChild('product_type', htmlspecialchars($ggmDataForXml['product_type']));
+            }
+            // Add any other GGM fields as needed
+        }
 
 
 
@@ -1234,5 +1318,62 @@ XML;
             echo json_encode(['error' => $e->getMessage()]);
         }
         exit();
+    }
+
+    public function exportBaseXml($vars)
+    {
+        return $this->handleExportBaseXml($vars, false);
+    }
+
+    public function handleExportBaseXml(array $vars)
+    {
+        $id = intval($vars['id']);
+
+        try {
+            // First, check if GGM data actually exists for this resource
+            $ggmData = $this->getGGMData($this->connection, $id);
+            if (empty($ggmData)) {
+                http_response_code(404);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['error' => "No GGM properties found for resource ID: $id"]);
+                exit();
+            }
+
+            // Get the base XML, which includes GGM properties if they exist
+            $xmlString = $this->getResourceAsXml($this->connection, $id);
+
+            if ($xmlString === false || empty($xmlString)) {
+                // getResourceAsXml might throw an exception, or return false/empty on error
+                // This check is a fallback.
+                http_response_code(500);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['error' => "Failed to generate XML for resource ID: $id"]);
+                exit();
+            }
+
+            // Ensure no output has been sent before headers
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            $filename = "ggm_resource_{$id}.xml";
+            header('Content-Type: application/xml; charset=utf-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Content-Length: ' . strlen($xmlString));
+            // Optional: Caching prevention headers
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            echo $xmlString;
+            exit();
+
+        } catch (Exception $e) {
+            // Log the exception $e->getMessage()
+            http_response_code(500);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['error' => "An error occurred: " . $e->getMessage()]);
+            exit();
+        }
     }
 }
