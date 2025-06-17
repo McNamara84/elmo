@@ -40,9 +40,8 @@ function validateGGMData(array $data, int $resourceId): array
     if ($resourceId <= 0) {
         throw new Exception('Invalid resource ID');
     }
-
     // Required fields and trimming
-    $fields = ['model_name', 'model_type', 'math_representation', 'file_format', 'tide_system'];
+    $fields = ['model_name', 'model_type', 'mathematical_representation', 'file_format'];
     foreach ($fields as $f) {
         if (empty($data[$f]) || !is_string($data[$f])) {
             throw new Exception("Field {$f} is required and must be a string");
@@ -66,7 +65,7 @@ function validateGGMData(array $data, int $resourceId): array
     // Enumerated options
     $allowed = [
         'model_type' => ['Static', 'Temporal', 'Topographic', 'Simulated'],
-        'math_representation' => ['Spherical Harmonics', 'Ellipsoidal Harmonics', 'MASCONs', 'MASCON'],
+        'mathematical_representation' => ['Spherical harmonics', 'Ellipsoidal harmonics', 'MASCONs', 'MASCON','Grids'],
         'file_format' => ['icgem1.0', 'icgem2.0', 'ASCII'],
         'celestial_body' => ['Earth', 'Moon of the Earth', 'Mars', 'Ceres', 'Venus', 'Other'],
         'product_type' => ['Gravity Field', 'Topographic Gravity Field'],
@@ -171,7 +170,7 @@ function upsertGGMProperties(mysqli $connection, array $data, int $resourceId): 
 function updateResourceForeignKeys(mysqli $connection, array $data, int $resourceId): void
 {
     $modelTypeId = lookupForeignKeyId($connection, 'Model_Type', 'Model_type_id', 'name', $data['model_type']);
-    $mathRepId = lookupForeignKeyId($connection, 'Mathematical_Representation', 'Mathematical_representation_id', 'name', $data['math_representation']);
+    $mathRepId = lookupForeignKeyId($connection, 'Mathematical_Representation', 'Mathematical_representation_id', 'name', $data['mathematical_representation']);
     $fileFmtId = lookupForeignKeyId($connection, 'File_Format', 'File_format_id', 'name', $data['file_format']);
 
     if (!$modelTypeId || !$mathRepId || !$fileFmtId) {
