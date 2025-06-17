@@ -16,7 +16,7 @@ function setupICGEMFileFormats() {
      * if the error occurs, the message is added to the select element
     */
     const selectId = "#input-file-format";
-    var selectElement = $(selectId).closest(".row").find('select[name="rFileFormat[]"]');
+    var selectElement = $(selectId).closest(".row").find('select[name="file_format"]');
     const endpoint = "/vocabs/icgemformats";
     
     // Use a single AJAX call
@@ -52,7 +52,7 @@ function setupICGEMFileFormats() {
                 response.forEach(function (format) {
                         selectElement.append(
                             $("<option>", {
-                                value: format.id,
+                                value: format.name,
                                 text: format.name,
                                 title: format.description
                             })
@@ -97,7 +97,7 @@ function setupModelTypes() {
    * if the error occurs, the message is added to the select element
    */
     const selectId = "#input-model-type" ;
-    var selectElement = $(selectId).closest(".row").find('select[name="rModelType[]"]');
+    var selectElement = $(selectId).closest(".row").find('select[name="model_type"]');
     const endpoint = "/vocabs/modeltypes";
     
     $.ajax({
@@ -132,7 +132,7 @@ function setupModelTypes() {
                 response.forEach(function (format) {
                         selectElement.append(
                             $("<option>", {
-                                value: format.id,
+                                value: format.name,
                                 text: format.name,
                                 title: format.description
                             })
@@ -176,7 +176,7 @@ function setupMathReps() {
    * if the error occurs, the message is added to the select element
    */
     const selectId = "#input-mathematical-representation" ;
-    var selectElement = $(selectId).closest(".row").find('select[name="rMathematicalRepresentation[]"]');
+    var selectElement = $(selectId).closest(".row").find('select[name="mathematical_representation"]');
     const endpoint = "/vocabs/mathreps";
     
     $.ajax({
@@ -211,7 +211,7 @@ function setupMathReps() {
                 response.forEach(function (format) {
                         selectElement.append(
                             $("<option>", {
-                                value: format.id,
+                                value: format.name,
                                 text: format.name,
                                 title: format.description
                             })
