@@ -2424,6 +2424,195 @@
             "install-path": "../staabm/side-effects-detector"
         },
         {
+            "name": "sweetrdf/easyrdf",
+            "version": "1.16.1",
+            "version_normalized": "1.16.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sweetrdf/easyrdf.git",
+                "reference": "f42130dc7188f89f5fc9539e3be0dc854145dd77"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sweetrdf/easyrdf/zipball/f42130dc7188f89f5fc9539e3be0dc854145dd77",
+                "reference": "f42130dc7188f89f5fc9539e3be0dc854145dd77",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-mbstring": "*",
+                "ext-pcre": "*",
+                "ext-xmlreader": "*",
+                "lib-libxml": "*",
+                "php": "^8.0",
+                "sweetrdf/rdf-helpers": "^2.0"
+            },
+            "replace": {
+                "easyrdf/easyrdf": "1.1.*"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "laminas/laminas-http": "^2",
+                "ml/json-ld": "^1.0",
+                "phpstan/phpstan": "^1.0",
+                "phpstan/phpstan-phpunit": "^1.0",
+                "phpunit/phpunit": "^9.5.0|^10.0.0",
+                "semsol/arc2": "^3",
+                "zendframework/zend-http": "^2"
+            },
+            "suggest": {
+                "ml/json-ld": "^1.0",
+                "semsol/arc2": "^3"
+            },
+            "time": "2025-01-28T18:31:07+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "EasyRdf\\": "lib"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Nicholas Humfrey",
+                    "email": "njh@aelius.com",
+                    "homepage": "http://www.aelius.com/njh/",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Alexey Zakhlestin",
+                    "email": "indeyets@gmail.com",
+                    "homepage": "http://indeyets.ru/",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Konrad Abicht",
+                    "email": "hi@inspirito.de",
+                    "homepage": "http://inspirito.de/",
+                    "role": "Maintainer, Developer"
+                }
+            ],
+            "description": "EasyRdf is a PHP library designed to make it easy to consume and produce RDF.",
+            "keywords": [
+                "Linked Data",
+                "RDF",
+                "Semantic Web",
+                "Turtle",
+                "rdfa",
+                "sparql"
+            ],
+            "support": {
+                "issues": "https://github.com/sweetrdf/easyrdf/issues",
+                "source": "https://github.com/sweetrdf/easyrdf/tree/1.16.1"
+            },
+            "install-path": "../sweetrdf/easyrdf"
+        },
+        {
+            "name": "sweetrdf/rdf-helpers",
+            "version": "2.1.1",
+            "version_normalized": "2.1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sweetrdf/rdfHelpers.git",
+                "reference": "0c6b599cc8e28997cc4336b1d893c16d89ed2508"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sweetrdf/rdfHelpers/zipball/0c6b599cc8e28997cc4336b1d893c16d89ed2508",
+                "reference": "0c6b599cc8e28997cc4336b1d893c16d89ed2508",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "sweetrdf/rdf-interface": "^2 | ^3",
+                "zozlak/rdf-constants": "^1.1"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^1",
+                "phpunit/phpunit": "^10"
+            },
+            "time": "2025-04-22T13:42:35+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "rdfHelpers\\": "src/rdfHelpers"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mateusz Żółtak",
+                    "email": "zozlak@zozlak.org",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Set of low level helpers for implementing rdfInterface",
+            "homepage": "https://github.com/sweetrdf/rdfHelpers",
+            "support": {
+                "issues": "https://github.com/sweetrdf/rdfHelpers/issues",
+                "source": "https://github.com/sweetrdf/rdfHelpers/tree/2.1.1"
+            },
+            "install-path": "../sweetrdf/rdf-helpers"
+        },
+        {
+            "name": "sweetrdf/rdf-interface",
+            "version": "3.2.0",
+            "version_normalized": "3.2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sweetrdf/rdfInterface.git",
+                "reference": "82b565c724b8ce30ea918bfff2232832c66a912f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sweetrdf/rdfInterface/zipball/82b565c724b8ce30ea918bfff2232832c66a912f",
+                "reference": "82b565c724b8ce30ea918bfff2232832c66a912f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "psr/http-message": "^1.0 || ^2.0",
+                "zozlak/rdf-constants": "*"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "*"
+            },
+            "time": "2025-04-28T12:22:37+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "rdfInterface\\": "src/rdfInterface"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mateusz Żółtak",
+                    "email": "zozlak@zozlak.org",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A common RDF interface for PHP RDF libraries.",
+            "homepage": "https://github.com/sweetrdf/rdfInterface",
+            "support": {
+                "issues": "https://github.com/sweetrdf/rdfInterface/issues",
+                "source": "https://github.com/sweetrdf/rdfInterface/tree/3.2.0"
+            },
+            "install-path": "../sweetrdf/rdf-interface"
+        },
+        {
             "name": "symfony/deprecation-contracts",
             "version": "v3.6.0",
             "version_normalized": "3.6.0.0",
@@ -2545,6 +2734,47 @@
                 }
             ],
             "install-path": "../theseer/tokenizer"
+        },
+        {
+            "name": "zozlak/rdf-constants",
+            "version": "1.2.1",
+            "version_normalized": "1.2.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zozlak/RdfConstants.git",
+                "reference": "a8de0b50d23b213a68784ec2cec22b4ad838012b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zozlak/RdfConstants/zipball/a8de0b50d23b213a68784ec2cec22b4ad838012b",
+                "reference": "a8de0b50d23b213a68784ec2cec22b4ad838012b",
+                "shasum": ""
+            },
+            "time": "2022-08-05T12:50:50+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "zozlak\\": "src/zozlak"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mateusz Żółtak",
+                    "email": "zozlak@zozlak.org"
+                }
+            ],
+            "description": "A set of commonly used RDF and XSD constants",
+            "homepage": "https://github.com/zozlak/RdfConstants",
+            "support": {
+                "issues": "https://github.com/zozlak/RdfConstants/issues",
+                "source": "https://github.com/zozlak/RdfConstants/tree/1.2.1"
+            },
+            "install-path": "../zozlak/rdf-constants"
         }
     ],
     "dev": true,
@@ -2564,7 +2794,6 @@
         "phpunit/phpunit",
         "psr/http-client",
         "psr/http-factory",
-        "psr/http-message",
         "ralouphie/getallheaders",
         "sebastian/cli-parser",
         "sebastian/code-unit",

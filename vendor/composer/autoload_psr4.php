@@ -6,6 +6,9 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'zozlak\\' => array($vendorDir . '/zozlak/rdf-constants/src/zozlak'),
+    'rdfInterface\\' => array($vendorDir . '/sweetrdf/rdf-interface/src/rdfInterface'),
+    'rdfHelpers\\' => array($vendorDir . '/sweetrdf/rdf-helpers/src/rdfHelpers'),
     'Tests\\' => array($baseDir . '/tests'),
     'Psr\\Http\\Message\\' => array($vendorDir . '/psr/http-factory/src', $vendorDir . '/psr/http-message/src'),
     'Psr\\Http\\Client\\' => array($vendorDir . '/psr/http-client/src'),
@@ -15,5 +18,6 @@ return array(
     'GuzzleHttp\\Promise\\' => array($vendorDir . '/guzzlehttp/promises/src'),
     'GuzzleHttp\\' => array($vendorDir . '/guzzlehttp/guzzle/src'),
     'FastRoute\\' => array($vendorDir . '/nikic/fast-route/src'),
+    'EasyRdf\\' => array($vendorDir . '/sweetrdf/easyrdf/lib'),
     'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
 );
