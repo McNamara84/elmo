@@ -87,28 +87,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Prepare and run the query
         $stmt = $connection->prepare("
-            SELECT (Model_type_id IS NOT NULL AND File_format_id IS NOT NULL) AS is_ggm
-            FROM Resource
-            WHERE resource_id = ?
-        ");
-        $stmt->bind_param('i', $resource_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
+                SELECT Model_type_id, File_format_id
+                FROM Resource
+                WHERE resource_id = ?
+            ");
+            $stmt->bind_param('i', $resource_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
 
-        $is_ggm = 0; // default fallback
+       $is_ggm = false;
 
         if ($row = $result->fetch_assoc()) {
-            $is_ggm = (int)$row['is_ggm'];
+            $is_ggm = !empty($row['Model_type_id']) && !empty($row['File_format_id']);
         }
 
-        // Choose endpoint based on DB result
-        if ($is_ggm) {
-            $url = $base_url . $project_path . "/api/v2/dataset/basexport/" . $resource_id;
-        } else {
-            $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
-        }
+        $url = $base_url . $project_path . "/api/v2/dataset/" . ($is_ggm ? "basexport" : "export/$resource_id/all");
 
-        // Read and output the file
         readfile($url);
         exit();
     }
