@@ -1,3 +1,5 @@
 settings.php
 .vscode/
 .phpunit.result.cache
+node_modules/
+vendor/
