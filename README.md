@@ -927,17 +927,17 @@ Essential are understood as one formgroup containing the most general informatio
   The type of gravity field model being described.
   - Data type: String
   - Occurrence: 1
-  - The corresponding field in the database is called: `model_type` in the `GGM_Properties` table
+  - The corresponding field in the database is described in the dedicated `Model_Type` table with id, name and description
   - Restrictions: Must be selected from a controlled list
   - Example values: `Static`, `Temporal`
   - Mapping: mapped to `<modelType>` in the XML export
 
 - **Mathematical Representation**
 
-  The mathematical framework used to represent the gravity field.
+  The set of functions used to express the gravitational potential, which are solutions of Laplace’s equation in a given coordinate system. The coordi-nate system determines the type of harmonics — spherical or ellipsoidal — and thus defines the mathematical form of the model. 
   - Data type: String
   - Occurrence: 1
-  - The corresponding field in the database is called: `math_representation` in the dedicated math representation table
+  - The corresponding field in the database is described in the dedicated `Mathematical_Representation` table with id, name and description
   - Restrictions: Must be selected from a controlled list 
   - Example values: `Spherical harmonics`, `Ellipsoidal harmonics`
   - Mapping: mapped to `<mathematicalRepresentation>` in the XML export
@@ -947,19 +947,19 @@ Essential are understood as one formgroup containing the most general informatio
   The planetary body for which the gravity field model is computed.
   - Data type: String
   - Occurrence: 0-1
-  - The corresponding field in the database is called: `celestial_body` in the `GGM_Properties` table
+  - The corresponding field in the database is called: `Celestial_Body` in the `GGM_Properties` table
   - Restrictions: Must be selected from a controlled list
   - Example values: `Earth`, `Moon of the Earth`, `Mars`, `Ceres`, `Venus`, `Other`
   - Mapping: mapped to `<celestialBody>` in the XML export
 
 - **File Format**
 
-  The file format used for the model data, typically following ICGEM standards.
+  The file format following ICGEM standards, that is used for the model data.
   - Data type: String
   - Occurrence: 0-1
-  - The corresponding field in the database is called: `file_format` in the dedicated file format table
+  - The corresponding field in the database is described in the dedicated `File_Format` table with id, name and description
   - Restrictions: Must be selected from a controlled list (populated from the ICGEM format database)
-  - Example values: `icgem1.0`, `icgem2.0`, `ASCII`
+  - Example values: `icgem1.0`, `icgem2.0`
   - Mapping: mapped to `<fileFormat>` in the XML export
 
 - **Model Name**
@@ -967,8 +967,8 @@ Essential are understood as one formgroup containing the most general informatio
   The unique identifier for the gravity field model.
   - Data type: String
   - Occurrence: 1
-  - The corresponding field in the database is called: `model_name` in the `GGM_Properties` table
-  - Restrictions: No spaces allowed; must be unique and descriptive
+  - The corresponding field in the database is called: `Model_Name` in the `GGM_Properties` table
+  - Restrictions: No spaces allowed; must be unique
   - Example values: `EIGEN-6C4`, `GOCO06s`, `GGM05G`
   - Mapping: mapped to `<modelName>` in the XML export
 
@@ -977,7 +977,7 @@ Essential are understood as one formgroup containing the most general informatio
   Specifies the type of gravity field product.
   - Data type: String
   - Occurrence: 0-1
-  - The corresponding field in the database is called: `product_type` in the `GGM_Properties` table
+  - The corresponding field in the database is called: `Product_Type` in the `GGM_Properties` table
   - Restrictions: Must be selected from a controlled list
   - Example values: `Gravity Field`, `Topographic Gravity Field`
   - Mapping: mapped to `<productType>` in the XML export
@@ -1079,13 +1079,13 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | *schemeURI*                               |                   0-1                   |                  0-1                  | `<funderIdentifier schemeURI>`                                                                                                                                              |
 |                            | **Grant Number**                          |                   0-1                   |                  0-1                  | `<awardNumber>`                                                                                                                                                             |
 |                            | **Grant Name**                            |                   0-1                   |                  0-1                  | `<awardTitle>`                                                                                                                                                              |
-| GGMs Properties (Essential)|                                           |        1                                |                  0                    |           0                                                                                                                                                                 |
-|                            | **Model Type**                            |        1                                |                  0                    |           0                                                                                                                                                                 |
-|                            | **Mathematical Representation**           |        1                                |                  0                    |           0                                                                                                                                                                 |
-|                            | **Celestial Body**                        |       0-1                               |                  0                    |           0                                                                                                                                                                 |
-|                            | **File Format**                           |       0-1                               |                  0                    |           0                                                                                                                                                                 |
-|                            | **Model Name**                            |        1                                |                  0                    |           0                                                                                                                                                                 |
-|                            | **Product Type**                          |       0-1                               |                  0                    |           0                                                                                                                                                                 |
+| GGMs Properties (Essential)|                                           |        1                                |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Model Type**                            |        1                                |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Mathematical Representation**           |        1                                |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Celestial Body**                        |       0-1                               |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **File Format**                           |       0-1                               |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Model Name**                            |        1                                |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Product Type**                          |       0-1                               |                  0                    |           not mapped                                                                                                                                                        |
 
 
 </details>
@@ -1121,6 +1121,13 @@ Formgroup Related works:
   Formgroup Funding Reference:
   - **Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
 
+As for the ICGEM implementation, more required variables are added to ensure a full description of a Global Gravitational Model:
+- **Model Type**, **Mathematical Representation**, **Model Name**
+
+Meanwhile these variables from required list are not required to publish a GGM:
+- **Resource Type** *(can be mapped to Model)*, **Spatio-temporal Coverage** *(can be mapped to global coverage)* 
+
+
 </details>
 
 <details>
@@ -1134,6 +1141,7 @@ Formgroup Related works:
   The following ER diagram shows the relationships and structures of the tables in the database.
 
   ![ER-Diagramm](doc/ER-Diagram.jpg)
+  
 </details>
 
 ## Contributing
