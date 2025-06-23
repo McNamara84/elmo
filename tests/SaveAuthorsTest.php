@@ -405,7 +405,7 @@ class SaveAuthorsTest extends DatabaseTestCase
      * @return void
      * @throws \Exception
      */
-    public function testSaveAuthorsWithMultipleAffiliations()
+    public function testSavePersonAuthorsWithMultipleAffiliations()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.MULTIPLE.AFFILIATIONS",
@@ -423,13 +423,13 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["Doe", "Smith", "Johnson"],
             "givennames" => ["John", "Jane", "Bob"],
             "orcids" => ["0000-0001-2345-6789", "0000-0002-3456-7890", "0000-0003-4567-8901"],
-            "affiliation" => [
+            "personAffiliation" => [
                 '[{"value":"University A"}]',
                 '[{"value":"University B"},{"value":"Institute C"},{"value":"Lab D"}]',
                 '[{"value":"University E"},{"value":"Institute F"}]'
             ],
-            "authorRorIds" => [
-                'https://ror.org/03yrm5c26]',
+            "authorPersonRorIds" => [
+                'https://ror.org/03yrm5c26',
                 'https://ror.org/02nr0ka47,https://ror.org/0168r3w48,https://ror.org/04m7fg108',
                 'https://ror.org/05dxps055,https://ror.org/00hx57361'
             ]
@@ -438,43 +438,51 @@ class SaveAuthorsTest extends DatabaseTestCase
         saveAuthors($this->connection, $authorData, $resource_id);
 
         for ($i = 0; $i < 3; $i++) {
-            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
+            $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
             $stmt->bind_param("ss", $authorData["familynames"][$i], $authorData["givennames"][$i]);
             $stmt->execute();
-            $authorResult = $stmt->get_result()->fetch_assoc();
+            $person = $stmt->get_result()->fetch_assoc();
 
             $this->assertEquals(
                 $authorData["orcids"][$i],
-                $authorResult["orcid"],
+                $person["orcid"],
                 "Die ORCID des Autors " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
 
-            $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
-                                            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
-                                            WHERE aha.Author_author_id = ?");
-            $stmt->bind_param("i", $authorResult["author_id"]);
+            // Zu Author mappen
+            $stmt = $this->connection->prepare("SELECT author_id FROM Author WHERE Author_Person_author_person_id = ?");
+            $stmt->bind_param("i", $person["author_person_id"]);
             $stmt->execute();
-            $affiliationResults = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $author = $stmt->get_result()->fetch_assoc();
+            $author_id = $author["author_id"];
 
-            $expectedAffiliations = json_decode($authorData["affiliation"][$i], true);
-            $expectedRorIds = explode(',', $authorData["authorRorIds"][$i]);
+            // Affiliations prüfen
+            $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
+            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id 
+            WHERE aha.Author_author_id = ?");
+            $stmt->bind_param("i", $author_id);
+            $stmt->execute();
+            $affiliations = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            $expectedNames = json_decode($authorData["personAffiliation"][$i], true);
+            $expectedRorIds = explode(',', $authorData["authorPersonRorIds"][$i]);
 
             $this->assertCount(
-                count($expectedAffiliations),
-                $affiliationResults,
-                "Die Anzahl der gespeicherten Affiliationen für Autor " . ($i + 1) . " stimmt nicht mit der erwarteten Anzahl überein."
+                count($expectedNames),
+                $affiliations,
+                " stimmt nicht mit der erwarteten Anzahl überein " . ($i + 1)
             );
 
-            foreach ($affiliationResults as $index => $affiliation) {
+            foreach ($affiliations as $index => $affiliation) {
                 $this->assertEquals(
-                    $expectedAffiliations[$index]["value"],
+                    $expectedNames[$index]["value"],
                     $affiliation["name"],
-                    "Der Name der Affiliation " . ($index + 1) . " für Autor " . ($i + 1) . " wurde nicht korrekt gespeichert."
+                    "wurde nicht korrekt gespeichert. " . ($index + 1) . " für Autor " . ($i + 1)
                 );
                 $this->assertEquals(
                     str_replace("https://ror.org/", "", $expectedRorIds[$index]),
                     $affiliation["rorId"],
-                    "Die ROR-ID der Affiliation " . ($index + 1) . " für Autor " . ($i + 1) . " wurde nicht korrekt gespeichert."
+                    "wurde nicht korrekt gespeichert. " . ($index + 1) . " bei Autor " . ($i + 1)
                 );
             }
         }
@@ -488,7 +496,7 @@ class SaveAuthorsTest extends DatabaseTestCase
      * @return void
      * @throws \Exception
      */
-    public function testSaveAuthorsWithMixedAffiliationsAndRorIds()
+    public function testSavePersonAuthorsWithMixedAffiliationsAndRorIds()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.MIXED.AFFILIATIONS",
@@ -506,12 +514,12 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["Doe", "Smith", "Johnson"],
             "givennames" => ["John", "Jane", "Bob"],
             "orcids" => ["0000-0001-2345-6789", "0000-0002-3456-7890", "0000-0003-4567-8901"],
-            "affiliation" => [
+            "personAffiliation" => [
                 '[]',
                 '[{"value":"University B"}]',
                 '[]'
             ],
-            "authorRorIds" => [
+            "authorPersonRorIds" => [
                 '',
                 '',
                 'https://ror.org/03yrm5c26'
@@ -520,7 +528,7 @@ class SaveAuthorsTest extends DatabaseTestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author");
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_person");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
@@ -530,18 +538,20 @@ class SaveAuthorsTest extends DatabaseTestCase
         );
 
         for ($i = 0; $i < 2; $i++) {
-            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
+            $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
             $stmt->bind_param("ss", $authorData["familynames"][$i], $authorData["givennames"][$i]);
             $stmt->execute();
-            $authorResult = $stmt->get_result()->fetch_assoc();
+            $personResult = $stmt->get_result()->fetch_assoc();
+            $this->assertNotNull($personResult, "Autor {$authorData["familynames"][$i]} sollte gespeichert worden sein.");
 
-            $this->assertNotNull(
-                $authorResult,
-                "Autor {$authorData["familynames"][$i]} sollte gespeichert worden sein."
-            );
+            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Person_author_person_id = ?");
+            $stmt->bind_param("i", $personResult["author_person_id"]);
+            $stmt->execute();
+            $authorLink = $stmt->get_result()->fetch_assoc();
+            $author_id = $authorLink["author_id"];
 
             $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_has_Affiliation WHERE Author_author_id = ?");
-            $stmt->bind_param("i", $authorResult["author_id"]);
+            $stmt->bind_param("i", $author_id);
             $stmt->execute();
             $affiliationCount = $stmt->get_result()->fetch_assoc()['count'];
 
@@ -560,7 +570,7 @@ class SaveAuthorsTest extends DatabaseTestCase
             }
         }
 
-        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
+        $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
         $stmt->bind_param("ss", $authorData["familynames"][2], $authorData["givennames"][2]);
         $stmt->execute();
         $result = $stmt->get_result();
