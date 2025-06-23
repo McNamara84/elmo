@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../../phpunit.xsd">
+    <source baseline=".phpunit/baseline.xml" ignoreSelfDeprecations="true" ignoreDirectDeprecations="true" ignoreIndirectDeprecations="true">
+        <include>
+            <directory suffix=".php">/path/to/files</directory>
+            <file>/path/to/file</file>
+            <file>
+                /path/to/file
+            </file>
+        </include>
+
+        <exclude>
+            <directory suffix=".php">/path/to/files</directory>
+            <file>/path/to/file</file>
+        </exclude>
+
+        <deprecationTrigger>
+            <function>PHPUnit\TestFixture\DeprecationTrigger\trigger_deprecation</function>
+            <method>PHPUnit\TestFixture\DeprecationTrigger\DeprecationTrigger::triggerDeprecation</method>
+        </deprecationTrigger>
+    </source>
+
+    <coverage pathCoverage="true"
+              ignoreDeprecatedCodeUnits="true"
+              disableCodeCoverageIgnore="true">
+        <report>
+            <clover outputFile="clover.xml"/>
+            <cobertura outputFile="cobertura.xml"/>
+            <crap4j outputFile="crap4j.xml" threshold="30"/>
+            <html outputDirectory="coverage" lowUpperBound="50" highLowerBound="90"/>
+            <php outputFile="coverage.php"/>
+            <text outputFile="coverage.txt" showUncoveredFiles="false" showOnlySummary="true"/>
+            <xml outputDirectory="coverage"/>
+        </report>
+    </coverage>
+</phpunit>
