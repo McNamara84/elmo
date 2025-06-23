@@ -241,6 +241,30 @@ function checkFunder() {
     });
 };
 
+/**
+ * Validates the Author-Institution section of the form.
+ * Ensures that the “Author Institution Name” field must be filled in if the “Author Institution Affiliation” field is filled in.
+ */
+function checkAuthorInstitut() {
+    $('#group-authorinstitution').children('.row').each(function () {
+        var row = $(this);
+        // Defines the relevant fields for the Author-Institution section
+        var fields = {
+            authorinstitutionName: row.find('[id^="input-authorinstitution-name"]'),
+            authorinstitutionAffiliation: row.find('[id^="input-authorinstitution-affiliation"]')
+        };
+
+        // Check that the “Author-Institution-Affiliation” field is filled in.
+        var isauthorinstitutionAffiliationFilled = (fields.authorinstitutionAffiliation.val() && fields.authorinstitutionAffiliation.val().trim() !== '')
+
+        // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
+        if (isauthorinstitutionAffiliationFilled) {
+            fields.authorinstitutionName.attr('required', 'required');
+        } else {
+            fields.authorinstitutionName.removeAttr('required');
+        }
+    });
+};
 
 /**
  * Checks and dynamically sets the 'required' attribute for input fields across various formgroups.
@@ -265,6 +289,9 @@ function checkMandatoryFields() {
 
     // Formgroup Funding Reference
     checkFunder();
+
+    // Formgroup Autor Institution
+    checkAuthorInstitut();
 
 };
 
@@ -315,7 +342,8 @@ $(document).on('change',
     'select[name="relation[]"], ' +
     'select[name="rIdentifierType[]"], ' +
     'select[name="timezone[]"], ' +
-    'input[name="funder[]"]',
+    'input[name="funder[]"], ' +
+    'input[name="institutionAffiliation[]"]',
     function () {
         // Check mandatory fields when any of these fields' values change
         checkMandatoryFields();
