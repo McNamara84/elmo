@@ -1,8 +1,0 @@
-{
-    "require": {
-        "seld/phar-utils": "^1.2"
-    },
-    "config": {
-        "optimize-autoloader": true
-    }
-}
