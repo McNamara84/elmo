@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $is_ggm = !empty($row['Model_type_id']) && !empty($row['File_format_id']);
         }
 
-        $url = $base_url . $project_path . "/api/v2/dataset/" . ($is_ggm ? "basexport" : "export/$resource_id/all");
+        $url = $base_url . $project_path . "/api/v2/dataset/" . ($is_ggm ? "basexport/$resource_id" : "export/$resource_id/all");
 
         readfile($url);
         exit();

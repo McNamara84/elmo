@@ -660,6 +660,33 @@ class DatasetController
         
         return !empty($ggmData) ? $ggmData : null;
     }
+        /**
+     * Generates a uniform path for the base XML file of a resource.
+     *
+     * @param int $id The identifier of the resource.
+     * @return string The absolute path to the XML file.
+     * @throws Exception If the XML directory cannot be created.
+     */
+    private function generate_xml_path($id, $prefix = null)
+    {
+        $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
+        $outputDir = $baseDir . '/xml';
+
+        // Generate folder if it doesn't exist
+        if (!file_exists($outputDir)) {
+            if (!mkdir($outputDir, 0777, true)) {
+                throw new Exception("Could not create XML directory.");
+            }
+            chmod($outputDir, 0777);
+        }
+        // Especially for saving xml transformed in different schemas
+        $filename = "resource_$id.xml";
+        if ($prefix) {
+            $filename = $outputDir . "/" . $prefix . "_" . $filename;
+        }
+
+        return $outputDir . "/" . $filename;
+    }
 
     /**
      * Generates an XML representation of a resource and saves it to a xml file without any scheme.
@@ -669,7 +696,7 @@ class DatasetController
      * @return string The XML representation of the resource as a string.
      * @throws Exception If the resource is not found.
      */
-    function getResourceAsXml($connection, $id)
+    function getResourceAsXml($connection, $id, $includeGGMData = true)
     {
         $stmt = $connection->prepare('SELECT * FROM Resource WHERE resource_id = ?');
         $stmt->bind_param('i', $id);
@@ -1034,50 +1061,34 @@ class DatasetController
             }
         }
         // Add GGM Properties to the base XML
-        $ggmDataForXml = $this->getGGMData($connection, $id);
-        if ($ggmDataForXml) {
-            $ggmPropertiesXml = $xml->addChild('ggm_properties');
-            if (!empty($ggmDataForXml['model_name'])) {
-                $ggmPropertiesXml->addChild('model_name', htmlspecialchars($ggmDataForXml['model_name']));
+        if ($includeGGMData) {
+            $ggmDataForXml = $this->getGGMData($connection, $id);
+            if ($ggmDataForXml) {
+                $ggmPropertiesXml = $xml->addChild('ggm_properties');
+                if (!empty($ggmDataForXml['model_name'])) {
+                    $ggmPropertiesXml->addChild('model_name', htmlspecialchars($ggmDataForXml['model_name']));
+                }
+                if (!empty($ggmDataForXml['model_type_name'])) {
+                    $ggmPropertiesXml->addChild('model_type', htmlspecialchars($ggmDataForXml['model_type_name']));
+                }
+                if (!empty($ggmDataForXml['mathematical_representation_name'])) {
+                    $ggmPropertiesXml->addChild('mathematical_representation', htmlspecialchars($ggmDataForXml['mathematical_representation_name']));
+                }
+                if (!empty($ggmDataForXml['file_format_name'])) {
+                    $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmDataForXml['file_format_name']));
+                }
+                if (!empty($ggmDataForXml['product_type'])) {
+                    $ggmPropertiesXml->addChild('product_type', htmlspecialchars($ggmDataForXml['product_type']));
+                }
+                // Add any other GGM fields as needed
             }
-            if (!empty($ggmDataForXml['model_type_name'])) {
-                $ggmPropertiesXml->addChild('model_type', htmlspecialchars($ggmDataForXml['model_type_name']));
-            }
-            if (!empty($ggmDataForXml['mathematical_representation_name'])) {
-                $ggmPropertiesXml->addChild('mathematical_representation', htmlspecialchars($ggmDataForXml['mathematical_representation_name']));
-            }
-            if (!empty($ggmDataForXml['file_format_name'])) {
-                $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmDataForXml['file_format_name']));
-            }
-            if (!empty($ggmDataForXml['product_type'])) {
-                $ggmPropertiesXml->addChild('product_type', htmlspecialchars($ggmDataForXml['product_type']));
-            }
-            // Add any other GGM fields as needed
         }
-
-
-
-
         // XML formating
         $dom = dom_import_simplexml($xml)->ownerDocument;
         $dom->formatOutput = true;
 
-        // Generate path
-        $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
-        $outputDir = $baseDir . '/xml';
 
-        // Generate folder if not exists
-        if (!file_exists($outputDir)) {
-            if (!mkdir($outputDir, 0777, true)) {
-                throw new Exception("Konnte XML-Verzeichnis nicht erstellen");
-            }
-        }
-
-        // Set permissions
-        chmod($outputDir, 0777);
-
-        // Save XML to file
-        $outputFile = $outputDir . "/resource_$id.xml";
+        $outputFile = $this->generate_xml_path($id);
 
         if (!@$dom->save($outputFile)) {
             throw new Exception("Konnte XML-Datei nicht speichern: " . error_get_last()['message']);
@@ -1122,17 +1133,17 @@ class DatasetController
         if (!isset($formatInfo[$format])) {
             throw new Exception("Invalid format.");
         }
-
-        $inputXmlPath = $baseDir . "/xml/resource_$id.xml";
-        $xsltPath = $baseDir . "/schemas/XSLT/" . $formatInfo[$format]['xsltFile'];
-        $outputXmlPath = $baseDir . "/xml/" . $formatInfo[$format]['outputPrefix'] . "_resource_$id.xml";
-
+        
         // Temporarily create FreestyleXML
-        $this->getResourceAsXml($GLOBALS['connection'], $id);
+        $this->getResourceAsXml($GLOBALS['connection'], $id, false);
+        $inputXmlPath = $this->generate_xml_path($id);
+        $xsltPath = $baseDir . "/schemas/XSLT/" . $formatInfo[$format]['xsltFile'];
+        $outputXmlPath = $this->generate_xml_path($id, $formatInfo[$format]['outputPrefix']);
+        //$baseDir . "/xml/" . $formatInfo[$format]['outputPrefix'] . "_resource_$id.xml";
 
         // Check if the input XML and XSLT files exist
         if (!file_exists($inputXmlPath) || !file_exists($xsltPath)) {
-            throw new Exception("Required files are missing.");
+            throw new Exception("Required files are missing. xmlpath is {$inputXmlPath}, xsltpath is {$xsltPath}");
         }
 
         // Load XML document and XSLT stylesheet
@@ -1330,15 +1341,6 @@ XML;
         $id = intval($vars['id']);
 
         try {
-            // First, check if GGM data actually exists for this resource
-            $ggmData = $this->getGGMData($this->connection, $id);
-            if (empty($ggmData)) {
-                http_response_code(404);
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['error' => "No GGM properties found for resource ID: $id"]);
-                exit();
-            }
-
             // Get the base XML, which includes GGM properties if they exist
             $xmlString = $this->getResourceAsXml($this->connection, $id);
 
@@ -1356,7 +1358,7 @@ XML;
                 ob_end_clean();
             }
 
-            $filename = "ggm_resource_{$id}.xml";
+            $filename = "resource_{$id}.xml";
             header('Content-Type: application/xml; charset=utf-8');
             header('Content-Disposition: attachment; filename="' . $filename . '"');
             header('Content-Length: ' . strlen($xmlString));
