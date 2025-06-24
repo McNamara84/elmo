@@ -1489,6 +1489,7 @@ return array(
     'PHPUnit\\TestFixture\\DeprecationTrigger\\DeprecationTrigger' => $vendorDir . '/phpunit/phpunit/tests/_files/deprecation-trigger/DeprecationTrigger.php',
     'PHPUnit\\TestFixture\\DeprecationTrigger\\Test' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/deprecation-trigger/_files/details/tests/Test.php',
     'PHPUnit\\TestFixture\\DoNoAssertionTestCase' => $vendorDir . '/phpunit/phpunit/tests/_files/DoNoAssertionTestCase.php',
+    'PHPUnit\\TestFixture\\DoNotFailOn\\IssueTest' => $vendorDir . '/phpunit/phpunit/tests/end-to-end/_files/do-not-fail-on/tests/IssueTest.php',
     'PHPUnit\\TestFixture\\DoesNotPerformAssertionsButPerformingAssertionsTest' => $vendorDir . '/phpunit/phpunit/tests/_files/DoesNotPerformAssertionsButPerformingAssertionsTest.php',
     'PHPUnit\\TestFixture\\DummyBarTest' => $vendorDir . '/phpunit/phpunit/tests/_files/DummyBarTest.php',
     'PHPUnit\\TestFixture\\DummyEvent' => $vendorDir . '/phpunit/phpunit/tests/_files/DummyEvent.php',

@@ -1579,6 +1579,7 @@ class ComposerStaticInitefe149a1afac895f65c61fc673b16ea7
         'PHPUnit\\TestFixture\\DeprecationTrigger\\DeprecationTrigger' => __DIR__ . '/..' . '/phpunit/phpunit/tests/_files/deprecation-trigger/DeprecationTrigger.php',
         'PHPUnit\\TestFixture\\DeprecationTrigger\\Test' => __DIR__ . '/..' . '/phpunit/phpunit/tests/end-to-end/deprecation-trigger/_files/details/tests/Test.php',
         'PHPUnit\\TestFixture\\DoNoAssertionTestCase' => __DIR__ . '/..' . '/phpunit/phpunit/tests/_files/DoNoAssertionTestCase.php',
+        'PHPUnit\\TestFixture\\DoNotFailOn\\IssueTest' => __DIR__ . '/..' . '/phpunit/phpunit/tests/end-to-end/_files/do-not-fail-on/tests/IssueTest.php',
         'PHPUnit\\TestFixture\\DoesNotPerformAssertionsButPerformingAssertionsTest' => __DIR__ . '/..' . '/phpunit/phpunit/tests/_files/DoesNotPerformAssertionsButPerformingAssertionsTest.php',
         'PHPUnit\\TestFixture\\DummyBarTest' => __DIR__ . '/..' . '/phpunit/phpunit/tests/_files/DummyBarTest.php',
         'PHPUnit\\TestFixture\\DummyEvent' => __DIR__ . '/..' . '/phpunit/phpunit/tests/_files/DummyEvent.php',

@@ -119,6 +119,12 @@ final readonly class Merger
             $failOnPhpunitDeprecation = $xmlConfiguration->phpunit()->failOnPhpunitDeprecation();
         }
 
+        if ($cliConfiguration->hasFailOnPhpunitWarning()) {
+            $failOnPhpunitWarning = $cliConfiguration->failOnPhpunitWarning();
+        } else {
+            $failOnPhpunitWarning = $xmlConfiguration->phpunit()->failOnPhpunitWarning();
+        }
+
         if ($cliConfiguration->hasFailOnEmptyTestSuite()) {
             $failOnEmptyTestSuite = $cliConfiguration->failOnEmptyTestSuite();
         } else {
@@ -153,6 +159,60 @@ final readonly class Merger
             $failOnWarning = $cliConfiguration->failOnWarning();
         } else {
             $failOnWarning = $xmlConfiguration->phpunit()->failOnWarning();
+        }
+
+        $doNotFailOnDeprecation = false;
+
+        if ($cliConfiguration->hasDoNotFailOnDeprecation()) {
+            $doNotFailOnDeprecation = $cliConfiguration->doNotFailOnDeprecation();
+        }
+
+        $doNotFailOnPhpunitDeprecation = false;
+
+        if ($cliConfiguration->hasDoNotFailOnPhpunitDeprecation()) {
+            $doNotFailOnPhpunitDeprecation = $cliConfiguration->doNotFailOnPhpunitDeprecation();
+        }
+
+        $doNotFailOnPhpunitWarning = false;
+
+        if ($cliConfiguration->hasDoNotFailOnPhpunitWarning()) {
+            $doNotFailOnPhpunitWarning = $cliConfiguration->doNotFailOnPhpunitWarning();
+        }
+
+        $doNotFailOnEmptyTestSuite = false;
+
+        if ($cliConfiguration->hasDoNotFailOnEmptyTestSuite()) {
+            $doNotFailOnEmptyTestSuite = $cliConfiguration->doNotFailOnEmptyTestSuite();
+        }
+
+        $doNotFailOnIncomplete = false;
+
+        if ($cliConfiguration->hasDoNotFailOnIncomplete()) {
+            $doNotFailOnIncomplete = $cliConfiguration->doNotFailOnIncomplete();
+        }
+
+        $doNotFailOnNotice = false;
+
+        if ($cliConfiguration->hasDoNotFailOnNotice()) {
+            $doNotFailOnNotice = $cliConfiguration->doNotFailOnNotice();
+        }
+
+        $doNotFailOnRisky = false;
+
+        if ($cliConfiguration->hasDoNotFailOnRisky()) {
+            $doNotFailOnRisky = $cliConfiguration->doNotFailOnRisky();
+        }
+
+        $doNotFailOnSkipped = false;
+
+        if ($cliConfiguration->hasDoNotFailOnSkipped()) {
+            $doNotFailOnSkipped = $cliConfiguration->doNotFailOnSkipped();
+        }
+
+        $doNotFailOnWarning = false;
+
+        if ($cliConfiguration->hasDoNotFailOnWarning()) {
+            $doNotFailOnWarning = $cliConfiguration->doNotFailOnWarning();
         }
 
         if ($cliConfiguration->hasStopOnDefect()) {
@@ -843,12 +903,22 @@ final readonly class Merger
             $failOnAllIssues,
             $failOnDeprecation,
             $failOnPhpunitDeprecation,
+            $failOnPhpunitWarning,
             $failOnEmptyTestSuite,
             $failOnIncomplete,
             $failOnNotice,
             $failOnRisky,
             $failOnSkipped,
             $failOnWarning,
+            $doNotFailOnDeprecation,
+            $doNotFailOnPhpunitDeprecation,
+            $doNotFailOnPhpunitWarning,
+            $doNotFailOnEmptyTestSuite,
+            $doNotFailOnIncomplete,
+            $doNotFailOnNotice,
+            $doNotFailOnRisky,
+            $doNotFailOnSkipped,
+            $doNotFailOnWarning,
             $stopOnDefect,
             $stopOnDeprecation,
             $specificDeprecationToStopOn,
