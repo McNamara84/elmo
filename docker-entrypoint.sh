@@ -15,11 +15,13 @@ wait_for_db() {
   ' || exit 1
 }
 
-if [ ! -f "$FLAG_FILE" ]; then
+if [ true ]; then #! -f "$FLAG_FILE" TEMPORARILY REMOVING FLAG FILE 
   wait_for_db
   echo "🚀  Running initial database setup …"
-  php /var/www/html/install.php "${INSTALL_ACTION:-basic}"
+  php /var/www/html/install.php "${INSTALL_ACTION:-complete}" # can be set to complete or basic
   touch "$FLAG_FILE"
+  echo "🔄  Generating XML files for all datasets..."
+  php /var/www/html/generate_xml_files.php
   echo "🏁  Database setup finished."
 fi
 
