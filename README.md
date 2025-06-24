@@ -64,11 +64,46 @@ Following conditions are required for installation:
 4. Run `docker compose up -d` to start the container.
 5. This directory contains .env_sample that you will need to rename to .env. Please feel free to change the credentials in it.
 	Please mind that: 
-	🔁 Environment variables for database setup only apply on first container startup. If volumes persist, old configs stay alive.
-	✅ Use `docker-compose down -v` to reset the database when updating credentials.
-6. In this project, dependencies are being commited alongside the project. to update them open the terminal and just use:
-	1. Composer update
-	2. Composer upgrade
+	- Environment variables for database setup only apply on first container startup. If volumes persist, old configs stay alive.
+	- Use `docker-compose down -v` to reset the database when updating credentials.
+6. Docker Environment Setup 🐳
+
+This section outlines the automatic processes handled by the Docker environment for ELMO. While not strictly necessary for basic usage, understanding these steps is crucial for modifying behavior or troubleshooting.
+
+**1. `docker-compose.yaml`**
+- Configures and orchestrates two primary services:
+  - `db`: Built from a MariaDB image.
+  - `web`: Built from the `Dockerfile`.
+
+**2. `Dockerfile`** 
+- **Base Image:** Installs `php 8.4-apache` and essential dependencies, including the database client.
+- **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html`), setting appropriate ownership for the standard Apache user (`www-data`). I fyou don't want something to be copied into container, include it into .dockerignore (performance might be affected)
+- **Entrypoint:** Executes the `docker-entrypoint.sh` script.
+
+**3. `docker-entrypoint.sh`** 
+- **Database Setup:** Responsible for initializing the database structure by running `install.php`.
+- **Idempotency:** Utilizes a `FLAG_FILE` to ensure the database setup runs only once. If this file exists, the installation process is skipped.
+- **Installation Options for `install.php`:**
+  - `basic` (default): Creates only the database structure and inserts lookup data.
+  - `complete`: Creates the database structure, inserts lookup data, *and* populates the database with exemplar (test) data. This is controlled by the `INSTALL_ACTION` environment variable (e.g., `INSTALL_ACTION=complete`).
+
+---
+
+**Important Notes for Developers:**
+
+* **Full Reset for Dockerfile/Entrypoint Changes:**
+    To apply changes made to `Dockerfile` or `docker-entrypoint.sh`, a full reset of the Docker containers is required:
+    ```bash
+    docker-compose down -v
+    docker-compose build --no-cache
+    ```
+* **Applying Other Changes:**
+    For changes to project files (which are copied, not mounted as volumes), you need to rebuild the service:
+    ```bash
+    docker-compose up --build
+    ```
+    This rebuilds the `web` service (and any other services specified in `docker-compose.yaml` that depend on the build context), ensuring your updated project files are included in the new container image.
+
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
 
@@ -153,6 +188,10 @@ If you encounter problems with the installation, feel free to leave an entry in 
 
   ## Dependencies
   </summary>
+PHP Dependencies can be installed using the following terminal commands:
+	1. Composer update
+	2. Composer upgrade
+Prequisite for that is composer. If you don't have it consider brew install composer or other options
 
 The following third-party dependencies are included in header.html and footer.html:
 
@@ -170,6 +209,8 @@ The following third-party dependencies are included in header.html and footer.ht
   Is used to display the thesauri as a hierarchical tree structure.
 - [Swagger UI 5.18.2](https://github.com/swagger-api/swagger-ui/releases)<br>
   For displaying the dynamic and interactive API documentation in accordance with OpenAPI standard 3.1.
+
+To install them: npm install
 </details>
 
 <details>
