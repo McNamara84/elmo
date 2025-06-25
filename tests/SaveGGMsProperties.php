@@ -6,12 +6,12 @@ use mysqli_sql_exception;
 
 require_once __DIR__ . '/../save/formgroups/save_ggmsproperties.php';
 
-class SaveGGMProperties extends DatabaseTestCase
+class SaveGGMsProperties extends DatabaseTestCase
 {
      /**
      * Test saving a GGM Properties entry with all fields populated.
      */
-    public function testSaveFullGGMProperties()
+    public function testSaveFullGGMsProperties()
     {
         $resource_id = $this->createResource('GGM.FULL', 'Test GGM Full');
 
@@ -24,7 +24,7 @@ class SaveGGMProperties extends DatabaseTestCase
             "product_type" => "gravity_field"
         ];
 
-        saveGGMProperties($this->connection, $postData, $resource_id);
+        saveGGMsProperties($this->connection, $postData, $resource_id);
 
         // Fetch from DB and assert
         $stmt = $this->connection->prepare("SELECT * FROM GGM_Properties WHERE Model_Name = ?");
@@ -41,7 +41,7 @@ class SaveGGMProperties extends DatabaseTestCase
     /**
      * Test saving GGM Properties with only required fields.
      */
-    public function testSaveRequiredGGMProperties()
+    public function testSaveRequiredGGMsProperties()
     {
         $resource_id = $this->createResource('GGM.REQUIRED', 'Test GGM Required');
 
@@ -51,7 +51,7 @@ class SaveGGMProperties extends DatabaseTestCase
             "model_name" => "REQUIRED_ONLY_GGM"
         ];
 
-        saveGGMProperties($this->connection, $postData, $resource_id);
+        saveGGMsProperties($this->connection, $postData, $resource_id);
 
         $stmt = $this->connection->prepare("SELECT * FROM GGM_Properties WHERE Model_Name = ?");
         $stmt->bind_param("s", $postData["model_name"]);
@@ -65,7 +65,7 @@ class SaveGGMProperties extends DatabaseTestCase
     /**
      * Test saving GGM Properties with missing required fields (should not save).
      */
-    public function testSaveGGMPropertiesMissingRequired()
+    public function testSaveGGMsPropertiesMissingRequired()
     {
         $resource_id = $this->createResource('GGM.MISSING', 'Test GGM Missing');
 
@@ -74,7 +74,7 @@ class SaveGGMProperties extends DatabaseTestCase
             "rModelType" => [1]
         ];
 
-        $result = saveGGMProperties($this->connection, $postData, $resource_id);
+        $result = saveGGMsProperties($this->connection, $postData, $resource_id);
 
         $this->assertFalse($result, "Saving GGM Properties with missing required fields should fail.");
 
