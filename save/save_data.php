@@ -72,38 +72,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         saveGGMsProperties($connection, $_POST, $resource_id);
     }
 
-// Handle file download if requested
-    if (isset($_POST['filename'])) {
-        $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
 
-        // Set headers for file download
-        header('Content-Type: application/xml');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
+require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+$datasetController = new DatasetController();
+$xmlString = $datasetController->getResourceAsXml($connection, $resource_id);
 
-        // Build base URL
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
-        $base_url = $protocol . $_SERVER['HTTP_HOST'];
-        $project_path = dirname(dirname($_SERVER['PHP_SELF']));
+ // Handle file download if requested
+if (isset($_POST['filename'])) {
+    $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
 
-        // Prepare and run the query
-        $stmt = $connection->prepare("
-                SELECT Model_type_id, File_format_id
-                FROM Resource
-                WHERE resource_id = ?
-            ");
-            $stmt->bind_param('i', $resource_id);
-            $stmt->execute();
-            $result = $stmt->get_result();
+    header('Content-Type: application/xml');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
 
-       $is_ggm = false;
+    // Build API URL and local file path
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+    $base_url = $protocol . $_SERVER['HTTP_HOST'];
+    $project_path = dirname(dirname($_SERVER['PHP_SELF']));
+    $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
+    $localpath = "/var/www/html/xml/resource_" . $resource_id . ".xml";
 
-        if ($row = $result->fetch_assoc()) {
-            $is_ggm = !empty($row['Model_type_id']) && !empty($row['File_format_id']);
-        }
-
-        $url = $base_url . $project_path . "/api/v2/dataset/" . ($is_ggm ? "basexport/$resource_id" : "export/$resource_id/all");
-
-        readfile($url);
-        exit();
+    // Try to fetch via HTTP first
+    $data = @file_get_contents($url);
+    if ($data !== false) {
+        echo $data;
+    } elseif (file_exists($localpath)) {
+        readfile($localpath);
+    } else {
+        http_response_code(404);
+        echo "File not found (neither remote nor local).";
+    }
+    exit();
     }
 }
