@@ -1117,7 +1117,7 @@ class DatasetController
 
         $formatInfo = [
             'dif' => [
-                'xsltFile' => 'MappingMapToDif.xslt',
+                'xsltFile' => 'MappingMapToDIF.xslt',
                 'outputPrefix' => 'dif'
             ],
             'iso' => [
