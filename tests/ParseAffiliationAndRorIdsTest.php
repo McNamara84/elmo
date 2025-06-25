@@ -35,4 +35,11 @@ class ParseAffiliationAndRorIdsTest extends TestCase
         $expected = ['03yrm5c26', '02nr0ka47', '0168r3w48'];
         $this->assertEquals($expected, parseRorIds($input));
     }
+
+    public function testParseRorIdsWithTrailingCommaAndSpaces(): void
+    {
+        $input = '03yrm5c26, ';
+        $expected = ['03yrm5c26', null];
+        $this->assertEquals($expected, parseRorIds($input));
+    }
 }
