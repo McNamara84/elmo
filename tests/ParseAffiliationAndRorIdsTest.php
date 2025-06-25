@@ -42,4 +42,9 @@ class ParseAffiliationAndRorIdsTest extends TestCase
         $expected = ['03yrm5c26', null];
         $this->assertEquals($expected, parseRorIds($input));
     }
+
+    public function testParseRorIdsWithEmptyString(): void
+    {
+        $this->assertEquals([], parseRorIds(''));
+    }
 }
