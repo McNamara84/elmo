@@ -47,4 +47,9 @@ class ParseAffiliationAndRorIdsTest extends TestCase
     {
         $this->assertEquals([], parseRorIds(''));
     }
+
+    public function testParseRorIdsWithNull(): void
+    {
+        $this->assertEquals([], parseRorIds(null));
+    }
 }
