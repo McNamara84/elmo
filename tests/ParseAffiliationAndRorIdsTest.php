@@ -13,4 +13,9 @@ class ParseAffiliationAndRorIdsTest extends TestCase
         $expected = ['University of Applied Sciences Potsdam', 'GFZ Helmholtz Centre for Geosciences'];
         $this->assertEquals($expected, parseAffiliationData($input));
     }
+
+    public function testParseAffiliationDataWithInvalidJson(): void
+    {
+        $this->assertEquals([], parseAffiliationData('invalid-json'));
+    }
 }
