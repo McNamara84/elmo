@@ -18,4 +18,9 @@ class ParseAffiliationAndRorIdsTest extends TestCase
     {
         $this->assertEquals([], parseAffiliationData('invalid-json'));
     }
+
+    public function testParseAffiliationDataWithEmptyString(): void
+    {
+        $this->assertEquals([], parseAffiliationData(''));
+    }
 }
