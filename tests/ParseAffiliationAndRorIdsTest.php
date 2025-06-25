@@ -28,4 +28,11 @@ class ParseAffiliationAndRorIdsTest extends TestCase
     {
         $this->assertEquals([], parseAffiliationData(null));
     }
+
+    public function testParseRorIdsWithUrlsAndIds(): void
+    {
+        $input = 'https://ror.org/03yrm5c26,02nr0ka47, https://ror.org/0168r3w48';
+        $expected = ['03yrm5c26', '02nr0ka47', '0168r3w48'];
+        $this->assertEquals($expected, parseRorIds($input));
+    }
 }
