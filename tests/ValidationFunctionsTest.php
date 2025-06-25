@@ -12,4 +12,10 @@ class ValidationFunctionsTest extends TestCase
         $data = ['a' => 'x', 'b' => 'y'];
         $this->assertTrue(validateRequiredFields($data, ['a', 'b']));
     }
+
+    public function testValidateRequiredFieldsMissing(): void
+    {
+        $data = ['a' => 'x'];
+        $this->assertFalse(validateRequiredFields($data, ['a', 'b']));
+    }
 }
