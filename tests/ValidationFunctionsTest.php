@@ -30,4 +30,11 @@ class ValidationFunctionsTest extends TestCase
         $data = ['list' => []];
         $this->assertFalse(validateRequiredFields($data, [], ['list']));
     }
+
+    public function testValidateArrayDependenciesSuccess(): void
+    {
+        $data = ['a' => ['x', 'y'], 'b' => ['1', '2']];
+        $deps = [['primary' => 'a', 'dependent' => 'b']];
+        $this->assertTrue(validateArrayDependencies($data, $deps));
+    }
 }
