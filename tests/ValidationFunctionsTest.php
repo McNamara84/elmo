@@ -18,4 +18,10 @@ class ValidationFunctionsTest extends TestCase
         $data = ['a' => 'x'];
         $this->assertFalse(validateRequiredFields($data, ['a', 'b']));
     }
+
+    public function testValidateRequiredFieldsArraySuccess(): void
+    {
+        $data = ['list' => [1, 2]];
+        $this->assertTrue(validateRequiredFields($data, [], ['list']));
+    }
 }
