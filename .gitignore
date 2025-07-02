@@ -2,3 +2,4 @@ settings.php
 .vscode/
 .phpunit.result.cache
 .env
+.DS_Store # macOS specific file
