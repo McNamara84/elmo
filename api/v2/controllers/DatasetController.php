@@ -596,6 +596,13 @@ class DatasetController
         }
         return $affiliations;
     }
+    /**
+     * Retrieves GGM essential variables for a given resource id
+     *
+     * @param mysqli $connection The database connection.
+     * @param int $resource_id The ID of the resource in question.
+     * @return array An array of affiliations for the originating laboratory.
+     */
         private function getGGMData(mysqli $connection, int $resource_id): ?array
     {
         $ggmData = [];
@@ -1139,7 +1146,7 @@ class DatasetController
         $inputXmlPath = $this->generate_xml_path($id);
         $xsltPath = $baseDir . "/schemas/XSLT/" . $formatInfo[$format]['xsltFile'];
         $outputXmlPath = $this->generate_xml_path($id, $formatInfo[$format]['outputPrefix']);
-        //$baseDir . "/xml/" . $formatInfo[$format]['outputPrefix'] . "_resource_$id.xml";
+        //REPLACES $baseDir . "/xml/" . $formatInfo[$format]['outputPrefix'] . "_resource_$id.xml";
 
         // Check if the input XML and XSLT files exist
         if (!file_exists($inputXmlPath) || !file_exists($xsltPath)) {
@@ -1330,12 +1337,30 @@ XML;
         }
         exit();
     }
-
+    /**
+         * Exports the base XML for a resource as a file download.
+         *
+         * This method serves as a public endpoint to trigger the export of the base XML
+         * (including GGM properties if present) for a given resource. It delegates the actual
+         * export logic to handleExportBaseXml().
+         *
+         * @param array $vars An associative array containing at least the key 'id' (resource ID).
+         * @return void
+         */
     public function exportBaseXml($vars)
     {
         return $this->handleExportBaseXml($vars, false);
     }
-
+    /**
+     * Handles the export of the base XML for a resource and outputs it as a file download.
+     *
+     * This method generates the base XML for the specified resource (including GGM properties if present),
+     * sets appropriate headers for file download, and outputs the XML content. If XML generation fails,
+     * it returns a JSON error response with HTTP 500.
+     *
+     * @param array $vars An associative array containing at least the key 'id' (resource ID).
+     * @return void
+     */
     public function handleExportBaseXml(array $vars)
     {
         $id = intval($vars['id']);

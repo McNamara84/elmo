@@ -1,6 +1,6 @@
 <?php
 /**
- * Script to save dataset metadata and send it as XML via email
+ * Script to save  metadata and send it as XML via email
  * 
  * This script saves all form data to the database and sends the resulting
  * XML file as an email attachment along with a PDF description and additional
@@ -94,7 +94,7 @@ try {
     // Get XML content from API
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
     $base_url = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
-    $url = $base_url . "/api/v2/dataset/export/" . $resource_id . "/all";
+    $url = $base_url . "/api/v2//export/" . $resource_id . "/all";
 
     // Get XML content with error handling
     $xml_content = file_get_contents($url);
@@ -160,7 +160,7 @@ try {
     }
 
     // Add XML attachment
-    $mail->addStringAttachment($xml_content, "dataset_" . $resource_id . ".xml");
+    $mail->addStringAttachment($xml_content, "_" . $resource_id . ".xml");
 
     // Prepare email content
     $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
@@ -168,10 +168,10 @@ try {
     $dataUrlText = $dataUrl ? $dataUrl : "not provided";
 
     $htmlBody = "
-    <h2>New Dataset from ELMO</h2>
-    <p>Hi! I'm ELMO and a new dataset has been submitted with the following details:</p>
+    <h2>New  from ELMO</h2>
+    <p>Hi! I'm ELMO and a new  has been submitted with the following details:</p>
     <ul>
-        <li><strong>Dataset ID in ELMO database:</strong> {$resource_id}</li>
+        <li><strong> ID in ELMO database:</strong> {$resource_id}</li>
         <li><strong>Priority:</strong> {$urgencyText}</li>
         <li><strong>URL to data:</strong> " . ($dataUrl ? "<a href='{$dataUrl}'>{$dataUrl}</a>" : "not provided") . "</li>
     </ul>
@@ -182,11 +182,11 @@ try {
 ";
 
     $plainBody = "
-    New Dataset from ELMO
+    New  from ELMO
     
-    Hi! I'm ELMO and a new dataset has been submitted with the following details:
+    Hi! I'm ELMO and a new  has been submitted with the following details:
     
-    Dataset ID in ELMO database: {$resource_id}
+     ID in ELMO database: {$resource_id}
     Priority: {$urgencyText}
     URL to data: {$dataUrlText}
     
@@ -198,7 +198,7 @@ try {
 
     // Set email content
     $mail->isHTML(true);
-    $mail->Subject = "New Dataset from ELMO (ELMO ID: {$resource_id})";
+    $mail->Subject = "New  from ELMO (ELMO ID: {$resource_id})";
     $mail->Body = $htmlBody;
     $mail->AltBody = $plainBody;
 
@@ -214,7 +214,7 @@ try {
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
-        'message' => 'Dataset saved and email sent successfully'
+        'message' => ' saved and email sent successfully'
     ]);
 
 } catch (Exception $e) {
