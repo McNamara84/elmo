@@ -1,4 +1,3 @@
-// generate_xml.php
 <?php
 /**
  * XML File Generation Script callable via AJAX
