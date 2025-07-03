@@ -22,6 +22,8 @@ services:
       DB_NAME: ${DB_NAME}
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
+#    volumes:                     # uncomment to mount the volume to rewrite the copying in Dockerfile
+#      - . :/var/www/html
     depends_on:
       - db
     restart: unless-stopped

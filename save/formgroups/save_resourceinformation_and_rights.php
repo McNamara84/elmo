@@ -5,7 +5,7 @@ require_once dirname(__FILE__) . '/../validation.php';
  * Saves or updates resource information and rights in the database.
  *
  * If a record with the same DOI exists, it updates the existing record.
- * For records without DOI, it creates a new entry.
+ * For records without DOI, it creates a new entry with a NEW Resource ID.
  * Duplicate titles are only saved once.
  *
  * @param mysqli $connection The database connection
@@ -26,6 +26,8 @@ require_once dirname(__FILE__) . '/../validation.php';
  */
 function saveResourceInformationAndRights($connection, $postData)
 {
+    // Iterates over $requiredFields to check if each field is present and not empty in $postData.
+    // Iterates over $requiredArrayFields to check if each array field is present and not empty in $postData.
     try {
         // Validate required fields
         $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language', 'Rights'];

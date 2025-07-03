@@ -33,6 +33,11 @@ return [
     ['GET', '/vocabs/freekeywords/curated', [new VocabController(), 'getCuratedFreeKeywords']],
     ['GET', '/vocabs/freekeywords/uncurated', [new VocabController(), 'getUncuratedFreeKeywords']],
 
+    // Vocabulary retrieval for ICGEM implementation
+    ['GET', '/vocabs/icgemformats', [new VocabController(), 'getICGEMFileFormats']],
+    ['GET', '/vocabs/modeltypes', [new VocabController(), 'getICGEMModelTypes']],
+    ['GET', '/vocabs/mathreps', [new VocabController(), 'getMathRepresentations']],
+
     // Validation endpoints
     ['GET', '/validation/patterns[/{type}]', [new ValidationController(), 'getPattern']],
     ['GET', '/validation/identifiertypes', [new ValidationController(), 'getIdentifierTypes']],
@@ -42,4 +47,7 @@ return [
     ['GET', '/dataset/export/{id}/all', [new DatasetController(), 'exportAll']],
     ['GET', '/dataset/export/{id}/{scheme}/download', [new DatasetController(), 'exportResourceDownload']],
     ['GET', '/dataset/export/{id}/{scheme}', [new DatasetController(), 'exportResource']],
+
+    // Export base xml for data mapping to the ICGEM metadatabase
+    ['GET', '/dataset/basexport/{id}', [new DatasetController(), 'exportBaseXml']]
 ];

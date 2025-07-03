@@ -90,4 +90,13 @@ function clearInputFields() {
     // Clear Funding References
     $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
     $('#group-fundingreference .row[funding-reference-row]:first input').val('');
+
+    // === GGMsProperties fields ===
+    $('#input-model-type').prop('selectedIndex', 0).val('');
+    $('#input-mathematical-representation').prop('selectedIndex', 0).val('');
+    $('#input-celestial-body').prop('selectedIndex', 0).val('Earth');
+    $('#input-file-format').prop('selectedIndex', 0).val('');
+    $('#input-model-name').val('');
+    $('#input-product-type').prop('selectedIndex', 0).val('Gravity Field');
+
 }

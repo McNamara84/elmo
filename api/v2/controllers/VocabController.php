@@ -1197,4 +1197,107 @@ class VocabController
             echo json_encode(['error' => $e->getMessage()]);
         }
     }
+
+    /**
+     * Retrieves all file formats from the database
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getICGEMFileFormats(): void
+    {
+        try {
+            global $connection;
+            $stmt = $connection->prepare('SELECT File_format_id as id, name, description FROM File_Format ORDER BY name');
+            
+            if (!$stmt) {
+                throw new Exception("Failed to prepare statement: " . connection->error);
+            }
+            
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $formats = [];
+            while ($row = $result->fetch_assoc()) {
+                $formats[] = $row;
+            }
+            
+            header('Content-Type: application/json');
+            echo json_encode($formats);
+            
+        } catch (Exception $e) {
+            error_log("API Error in getFileFormats: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Retrieves all model types from the database
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getICGEMModelTypes(): void
+    {
+        try {
+            global $connection;
+            $stmt = $connection->prepare('SELECT Model_type_id as id, name, description FROM Model_Type ORDER BY name');
+            
+            if (!$stmt) {
+                throw new Exception("Failed to prepare statement: " . connection->error);
+            }
+            
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $types = [];
+            while ($row = $result->fetch_assoc()) {
+                $types[] = $row;
+            }
+            
+            header('Content-Type: application/json');
+            echo json_encode($types);
+            
+        } catch (Exception $e) {
+            error_log("API Error in getModelTypes: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Retrieves all mathematical representations from the database
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getMathRepresentations(): void
+    {
+        try {
+            global $connection;
+            $stmt = $connection->prepare('SELECT Mathematical_representation_id as id, name, description FROM Mathematical_Representation ORDER BY name');
+            
+            if (!$stmt) {
+                throw new Exception("Failed to prepare statement: " . connection->error);
+            }
+            
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $representations = [];
+            while ($row = $result->fetch_assoc()) {
+                $representations[] = $row;
+            }
+            
+            header('Content-Type: application/json');
+            echo json_encode($representations);
+            
+        } catch (Exception $e) {
+            error_log("API Error in getMathRepresentations: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
 }
+

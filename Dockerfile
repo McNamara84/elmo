@@ -20,11 +20,13 @@ RUN sed -i 's|/var/www/html|${APACHE_DOCUMENT_ROOT}|g' /etc/apache2/sites-availa
 
 # Copy application files
 COPY . /var/www/html/
+# Ensure that the standard user www-data has ownership of the application files
+RUN chown -R www-data:www-data /var/www/html
 
 # Install database schema and set entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN dos2unix /usr/local/bin/docker-entrypoint.sh \
-    && chmod +x /usr/local/bin/docker-entrypoint.sh
-
+    && chmod +x /usr/local/bin/docker-entrypoint.sh 
+    
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
