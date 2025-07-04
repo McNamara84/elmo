@@ -136,4 +136,18 @@ class ValidationFunctionsTest extends TestCase
         $entry = [];
         $this->assertFalse(validateSTCDependencies($entry));
     }
+
+    public function testValidateSTCDependenciesMissingTimeEnd(): void
+    {
+        $entry = [
+            'latitudeMin' => 1,
+            'longitudeMin' => 1,
+            'description' => 'd',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-02',
+            'timezone' => 'UTC',
+            'timeStart' => '10:00'
+        ];
+        $this->assertFalse(validateSTCDependencies($entry));
+    }
 }
