@@ -100,4 +100,10 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['name' => 'Inst'];
         $this->assertFalse(validateContributorInstitutionDependencies($entry));
     }
+
+    public function testValidateKeywordEntriesValid(): void
+    {
+        $entry = [['value' => 'A', 'id' => '1', 'scheme' => 's', 'schemeURI' => 'u', 'language' => 'en']];
+        $this->assertTrue(validateKeywordEntries($entry));
+    }
 }
