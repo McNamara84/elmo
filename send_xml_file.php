@@ -91,10 +91,26 @@ try {
         }
     }
 
-    // Get XML content from API
+    // Get XML content from API    
+    // // Build API URL and local file path
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
-    $base_url = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
-    $url = $base_url . "/api/v2//export/" . $resource_id . "/all";
+    $base_url = $protocol . $_SERVER['HTTP_HOST'];
+    $project_path = dirname(dirname($_SERVER['PHP_SELF']));
+    $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
+    $localpath = "/var/www/html/xml/resource_" . $resource_id . ".xml";
+        // Try to fetch via HTTP first
+    $data = @file_get_contents($url);
+    if ($data !== false) {
+        elmo_log("Fetched XML via API: $url");
+        echo $data;
+    } elseif (file_exists($localpath)) {
+        elmo_log("Fetched XML from local file: $localpath");
+        readfile($localpath);
+    } else {
+        elmo_log("File not found (neither remote nor local). URL tried: $url, local path: $localpath");
+        http_response_code(404);
+        echo "File not found (neither remote nor local).";
+    }
 
     // Get XML content with error handling
     $xml_content = file_get_contents($url);
