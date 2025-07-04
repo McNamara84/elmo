@@ -117,4 +117,17 @@ class ValidationFunctionsTest extends TestCase
     {
         $this->assertFalse(validateKeywordEntries('not-array'));
     }
+
+    public function testValidateSTCDependenciesValid(): void
+    {
+        $entry = [
+            'latitudeMin' => 1,
+            'longitudeMin' => 1,
+            'description' => 'd',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-02',
+            'timezone' => 'UTC'
+        ];
+        $this->assertTrue(validateSTCDependencies($entry));
+    }
 }
