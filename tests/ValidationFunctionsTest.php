@@ -106,4 +106,10 @@ class ValidationFunctionsTest extends TestCase
         $entry = [['value' => 'A', 'id' => '1', 'scheme' => 's', 'schemeURI' => 'u', 'language' => 'en']];
         $this->assertTrue(validateKeywordEntries($entry));
     }
+
+    public function testValidateKeywordEntriesMissingField(): void
+    {
+        $entry = [['value' => 'A', 'id' => '1']];
+        $this->assertFalse(validateKeywordEntries($entry));
+    }
 }
