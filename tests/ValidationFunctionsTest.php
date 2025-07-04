@@ -112,4 +112,9 @@ class ValidationFunctionsTest extends TestCase
         $entry = [['value' => 'A', 'id' => '1']];
         $this->assertFalse(validateKeywordEntries($entry));
     }
+
+    public function testValidateKeywordEntriesNotArray(): void
+    {
+        $this->assertFalse(validateKeywordEntries('not-array'));
+    }
 }
