@@ -150,4 +150,18 @@ class ValidationFunctionsTest extends TestCase
         ];
         $this->assertFalse(validateSTCDependencies($entry));
     }
+
+    public function testValidateSTCDependenciesMissingLatitudeMax(): void
+    {
+        $entry = [
+            'latitudeMin' => 1,
+            'longitudeMin' => 1,
+            'description' => 'd',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-02',
+            'timezone' => 'UTC',
+            'longitudeMax' => 2
+        ];
+        $this->assertFalse(validateSTCDependencies($entry));
+    }
 }
