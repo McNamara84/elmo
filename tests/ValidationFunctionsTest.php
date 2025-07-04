@@ -52,4 +52,9 @@ class ValidationFunctionsTest extends TestCase
         $deps = [['primary' => 'a', 'dependent' => 'b']];
         $this->assertTrue(validateArrayDependencies($data, $deps));
     }
+
+    public function testValidateContributorPersonDependenciesEmpty(): void
+    {
+        $this->assertTrue(validateContributorPersonDependencies([]));
+    }
 }
