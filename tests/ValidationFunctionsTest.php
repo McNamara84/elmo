@@ -130,4 +130,10 @@ class ValidationFunctionsTest extends TestCase
         ];
         $this->assertTrue(validateSTCDependencies($entry));
     }
+
+    public function testValidateSTCDependenciesMissingBase(): void
+    {
+        $entry = [];
+        $this->assertFalse(validateSTCDependencies($entry));
+    }
 }
