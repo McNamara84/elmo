@@ -73,4 +73,14 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['firstname' => 'A', 'roles' => ['Editor']];
         $this->assertFalse(validateContributorPersonDependencies($entry));
     }
+
+    public function testValidateContributorPersonDependenciesRolesJson(): void
+    {
+        $entry = [
+            'firstname' => 'A',
+            'lastname' => 'B',
+            'roles' => json_encode(['Editor'])
+        ];
+        $this->assertTrue(validateContributorPersonDependencies($entry));
+    }
 }
