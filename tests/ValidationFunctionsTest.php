@@ -44,4 +44,12 @@ class ValidationFunctionsTest extends TestCase
         $deps = [['primary' => 'a', 'dependent' => 'b']];
         $this->assertFalse(validateArrayDependencies($data, $deps));
     }
+
+    public function testValidateArrayDependenciesJsonPrimary(): void
+    {
+        $primary = json_encode([["value" => "foo"]]);
+        $data = ['a' => [$primary], 'b' => ['bar']];
+        $deps = [['primary' => 'a', 'dependent' => 'b']];
+        $this->assertTrue(validateArrayDependencies($data, $deps));
+    }
 }
