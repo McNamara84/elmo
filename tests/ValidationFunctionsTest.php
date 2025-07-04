@@ -57,4 +57,14 @@ class ValidationFunctionsTest extends TestCase
     {
         $this->assertTrue(validateContributorPersonDependencies([]));
     }
+
+    public function testValidateContributorPersonDependenciesValid(): void
+    {
+        $entry = [
+            'firstname' => 'A',
+            'lastname' => 'B',
+            'roles' => ['Editor']
+        ];
+        $this->assertTrue(validateContributorPersonDependencies($entry));
+    }
 }
