@@ -94,4 +94,10 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['name' => 'Inst', 'roles' => ['Editor']];
         $this->assertTrue(validateContributorInstitutionDependencies($entry));
     }
+
+    public function testValidateContributorInstitutionDependenciesInvalid(): void
+    {
+        $entry = ['name' => 'Inst'];
+        $this->assertFalse(validateContributorInstitutionDependencies($entry));
+    }
 }
