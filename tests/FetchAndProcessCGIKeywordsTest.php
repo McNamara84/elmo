@@ -7,10 +7,23 @@ use EasyRdf\Http\Response;
 
 require_once __DIR__ . '/../api_functions.php';
 
+/**
+ * Tests for the fetchAndProcessCGIKeywords function.
+ *
+ * These tests verify that CGI keywords are fetched and processed into the
+ * expected hierarchical structure.
+ */
 class FetchAndProcessCGIKeywordsTest extends TestCase
 {
     private $originalClient;
 
+    /**
+     *
+     * Sets up a mocked HTTP client returning a small RDF dataset so that the
+     * tests do not rely on external network requests.
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
         // Backup the original HTTP client
@@ -29,12 +42,25 @@ class FetchAndProcessCGIKeywordsTest extends TestCase
         Http::setDefaultHttpClient($mock);
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * Restores the original HTTP client after the test run.
+     *
+     * @return void
+     */
     protected function tearDown(): void
     {
         // Restore original HTTP client
         Http::setDefaultHttpClient($this->originalClient);
     }
 
+    /**
+     * Ensures that the keywords are returned in a hierarchical structure with
+     * the expected root and child elements.
+     *
+     * @return void
+     */
     public function testFetchAndProcessCGIKeywordsReturnsHierarchy(): void
     {
         $keywords = fetchAndProcessCGIKeywords();
