@@ -112,12 +112,6 @@ try {
         echo "File not found (neither remote nor local).";
     }
 
-    // Get XML content with error handling
-    $xml_content = file_get_contents($url);
-
-    if ($xml_content === FALSE) {
-        throw new Exception("Failed to retrieve XML content from API");
-    }
 
     // Send email with XML attachment
     $mail = new PHPMailer(true);
