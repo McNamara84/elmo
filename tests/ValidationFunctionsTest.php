@@ -164,4 +164,9 @@ class ValidationFunctionsTest extends TestCase
         ];
         $this->assertFalse(validateSTCDependencies($entry));
     }
+
+    public function testValidateRelatedWorkDependenciesEmpty(): void
+    {
+        $this->assertTrue(validateRelatedWorkDependencies([]));
+    }
 }
