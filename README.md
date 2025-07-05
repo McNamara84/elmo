@@ -1,4 +1,5 @@
 ![PHP 8.4](https://img.shields.io/badge/php-8.4-blue?logo=php)
+![MySQL 8.4](https://img.shields.io/badge/mysql-8.4-orange?logo=mysql&logoColor=white)
 
 # ELMO - Enhanced Laboratory Metadata Organizer
 
