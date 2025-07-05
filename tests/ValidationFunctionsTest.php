@@ -202,4 +202,10 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['grantName' => 'grant'];
         $this->assertFalse(validateFundingReferenceDependencies($entry));
     }
+
+    public function testValidateFundingReferenceDependenciesWithFunder(): void
+    {
+        $entry = ['grantNumber' => '123', 'funder' => 'name'];
+        $this->assertTrue(validateFundingReferenceDependencies($entry));
+    }
 }
