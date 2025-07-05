@@ -185,4 +185,9 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['identifier' => 'id'];
         $this->assertFalse(validateRelatedWorkDependencies($entry));
     }
+
+    public function testValidateFundingReferenceDependenciesEmpty(): void
+    {
+        $this->assertTrue(validateFundingReferenceDependencies([]));
+    }
 }
