@@ -179,4 +179,10 @@ class ValidationFunctionsTest extends TestCase
         ];
         $this->assertTrue(validateRelatedWorkDependencies($entry));
     }
+
+    public function testValidateRelatedWorkDependenciesInvalid(): void
+    {
+        $entry = ['identifier' => 'id'];
+        $this->assertFalse(validateRelatedWorkDependencies($entry));
+    }
 }
