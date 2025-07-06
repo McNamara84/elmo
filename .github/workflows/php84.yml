@@ -141,7 +141,7 @@ jobs:
         vendor/bin/phpunit --configuration phpunit.xml --list-tests || echo "Cannot list tests"
         
         echo "\nRunning PHPUnit with coverage:"
-        vendor/bin/phpunit --configuration phpunit.xml --coverage-clover clover.xml --debug --verbose
+        vendor/bin/phpunit --configuration phpunit.xml --coverage-clover clover.xml --debug
         
         echo "\nPHPUnit exit code: $?"
         
