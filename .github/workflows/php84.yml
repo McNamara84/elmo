@@ -148,6 +148,12 @@ jobs:
         echo "\nFinal Server Log:"
         cat server.log
 
+    - name: Prepare output directory
+      if: always()
+      run: |
+        mkdir -p output
+        touch output/.keep
+
     - name: Generate coverage badge
       if: always()
       continue-on-error: true
