@@ -32,7 +32,7 @@ jobs:
         php-version: '8.4'
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
         tools: phpdbg
-        coverage: none
+        coverage: xdebug
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
     - name: Install JS dependencies
@@ -122,7 +122,7 @@ jobs:
       env:
         API_BASE_URL: http://localhost:8000
       run: |
-        phpdbg -qrr vendor/bin/phpunit --configuration phpunit.xml --coverage-clover coverage.xml --debug
+        vendor/bin/phpunit --configuration phpunit.xml --coverage-clover clover.xml --debug
         
         echo "\nFinal Server Log:"
         cat server.log
@@ -132,12 +132,12 @@ jobs:
       if: always()
       run: |
         echo "Checking for coverage files..."
-        ls -la coverage.xml || echo "coverage.xml not found"
-        if [ -f coverage.xml ]; then
+        ls -la clover.xml || echo "clover.xml not found"
+        if [ -f clover.xml ]; then
           echo "Coverage file size:"
-          wc -l coverage.xml
-          echo "First 20 lines of coverage.xml:"
-          head -20 coverage.xml
+          wc -l clover.xml
+          echo "First 20 lines of clover.xml:"
+          head -20 clover.xml
         fi
     
     - name: Prepare output directory
