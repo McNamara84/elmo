@@ -1,18 +1,14 @@
 name: PHP 8.4 Tests
-
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     services:
       mysql:
         image: mysql:8.0
@@ -28,10 +24,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 3
-
     steps:
     - uses: actions/checkout@v4
-
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
@@ -39,19 +33,15 @@ jobs:
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
         tools: phpdbg
         coverage: none
-
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
-
     - name: Install JS dependencies
       run: |
         npm install
-
     - name: Install dependencies
       run: |
         composer install --prefer-dist --no-progress --no-suggest
         composer dump-autoload -o
-
     - name: Wait for MySQL to be ready
       run: |
         for i in {30..0}; do
@@ -65,7 +55,6 @@ jobs:
           echo >&2 'MySQL did not start in time.'
           exit 1
         fi
-
     - name: Grant privileges to test_user
       run: |
         mysql -h127.0.0.1 -uroot -proot_password -e "
@@ -73,7 +62,6 @@ jobs:
           GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
           FLUSH PRIVILEGES;
         "
-
     - name: Create settings.php
       run: |
         cat << EOF > settings.php
@@ -86,26 +74,20 @@ jobs:
             \$conn = new mysqli(\$host, \$username, \$password, \$database);
             return \$conn;
         }
-
         function getApiKey() {
             \$apiKeyGoogleMaps = 'test_api_key';
             echo json_encode(['apiKey' => \$apiKeyGoogleMaps]);
         }
-
         if (basename(__FILE__) == basename(\$_SERVER['PHP_SELF'])) {
             if (\$_SERVER['REQUEST_METHOD'] === 'GET') {
                 getApiKey();
             }
         }
-
         \$connection = connectDb();
-
         \$apiKeyElmo = '1234-1234-1234-1234';
-
         \$apiKeyTimezone = 'test_timezone_api_key';
         \$maxTitles = 2;
         \$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/labnames.json';
-
         \$showFeedbackLink = true;
         \$smtpHost = 'smtp.test.de';
         \$smtpPort = 465;
@@ -114,10 +96,8 @@ jobs:
         \$smtpSender = 'test_sender@test.com';
         \$feedbackAddress = 'feedback@test.com';
         EOF
-
     - name: Initialize database structure and lookup data
       run: php -r "require 'install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
-
     - name: Start PHP built-in web server
       run: |
         php -S localhost:8000 -t . tests/server.php 2>&1 > server.log &
@@ -135,10 +115,8 @@ jobs:
         if [ -f /var/log/php_errors.log ]; then
           cat /var/log/php_errors.log
         fi
-
     - name: Set PHPUnit permissions
       run: chmod +x vendor/bin/phpunit
-
     - name: Run PHPUnit tests
       continue-on-error: true
       env:
@@ -148,24 +126,51 @@ jobs:
         
         echo "\nFinal Server Log:"
         cat server.log
-
+    
+    # Debug: Check if coverage file was created
+    - name: Debug coverage file
+      if: always()
+      run: |
+        echo "Checking for coverage files..."
+        ls -la coverage.xml || echo "coverage.xml not found"
+        if [ -f coverage.xml ]; then
+          echo "Coverage file size:"
+          wc -l coverage.xml
+          echo "First 20 lines of coverage.xml:"
+          head -20 coverage.xml
+        fi
+    
     - name: Prepare output directory
       if: always()
       run: |
         mkdir -p output
         touch output/.keep
-
-    - name: Generate coverage badge
+    
+    # Generate coverage badge (simplified according to documentation)
+    - name: Make code coverage badge
       if: always()
       continue-on-error: true
       uses: timkrase/phpunit-coverage-badge@v1.2.1
       with:
-        report: coverage.xml
         coverage_badge_path: output/coverage.svg
-        report_type: clover
         push_badge: false
-
-    - name: Publish badge to image-data branch
+    
+    # Debug: Check if badge was created
+    - name: Debug badge creation
+      if: always()
+      run: |
+        echo "Checking output directory contents:"
+        ls -la output/
+        if [ -f output/coverage.svg ]; then
+          echo "Coverage badge created successfully!"
+          echo "Badge file size:"
+          wc -c output/coverage.svg
+        else
+          echo "Coverage badge NOT created!"
+        fi
+    
+    # Publish badge to image-data branch
+    - name: Git push to image-data branch
       if: always()
       continue-on-error: true
       uses: peaceiris/actions-gh-pages@v3
@@ -175,7 +180,9 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         user_name: 'github-actions[bot]'
         user_email: 'github-actions[bot]@users.noreply.github.com'
-
+        keep_files: false
+        force_orphan: true
+    
     - name: Stop PHP server
       if: always()
       run: kill $(cat server.pid)
