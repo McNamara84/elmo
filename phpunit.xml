@@ -12,6 +12,7 @@
     <!-- Add Coverage configs -->
     <source>
         <include>
+            <directory suffix=".php">.</directory>
             <directory suffix=".php">./save</directory>
             <directory suffix=".php">./api</directory>
         </include>
