@@ -117,12 +117,36 @@ jobs:
         fi
     - name: Set PHPUnit permissions
       run: chmod +x vendor/bin/phpunit
+    # Debug Xdebug installation
+    - name: Debug PHP and Xdebug setup
+      run: |
+        echo "PHP version:"
+        php -v
+        echo "\nXdebug status:"
+        php -m | grep -i xdebug || echo "Xdebug not found"
+        echo "\nPHP extensions:"
+        php -m
+        echo "\nXdebug configuration:"
+        php -i | grep -i xdebug || echo "No Xdebug configuration found"
+    
     - name: Run PHPUnit tests
       continue-on-error: true
       env:
         API_BASE_URL: http://localhost:8000
       run: |
-        vendor/bin/phpunit --configuration phpunit.xml --coverage-clover clover.xml --debug
+        echo "PHPUnit version:"
+        vendor/bin/phpunit --version
+        
+        echo "\nPHPUnit configuration check:"
+        vendor/bin/phpunit --configuration phpunit.xml --list-tests || echo "Cannot list tests"
+        
+        echo "\nRunning PHPUnit with coverage:"
+        vendor/bin/phpunit --configuration phpunit.xml --coverage-clover clover.xml --debug --verbose
+        
+        echo "\nPHPUnit exit code: $?"
+        
+        echo "\nChecking for any XML files:"
+        find . -name "*.xml" -type f | head -10
         
         echo "\nFinal Server Log:"
         cat server.log
@@ -154,6 +178,41 @@ jobs:
       with:
         coverage_badge_path: output/coverage.svg
         push_badge: false
+    
+    # Fallback: Create manual badge if coverage fails
+    - name: Create fallback badge
+      if: always()
+      run: |
+        if [ ! -f output/coverage.svg ]; then
+          echo "Creating fallback coverage badge..."
+          mkdir -p output
+          cat > output/coverage.svg << 'EOF'
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="104" height="20" role="img" aria-label="coverage: unknown">
+          <title>coverage: unknown</title>
+          <linearGradient id="s" x2="0" y2="100%">
+            <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+            <stop offset="1" stop-opacity=".1"/>
+          </linearGradient>
+          <clipPath id="r">
+            <rect width="104" height="20" rx="3" fill="#fff"/>
+          </clipPath>
+          <g clip-path="url(#r)">
+            <rect width="61" height="20" fill="#555"/>
+            <rect x="61" width="43" height="20" fill="#9f9f9f"/>
+            <rect width="104" height="20" fill="url(#s)"/>
+          </g>
+          <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110">
+            <text aria-hidden="true" x="315" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="510">coverage</text>
+            <text x="315" y="140" transform="scale(.1)" fill="#fff" textLength="510">coverage</text>
+            <text aria-hidden="true" x="815" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="330">unknown</text>
+            <text x="815" y="140" transform="scale(.1)" fill="#fff" textLength="330">unknown</text>
+          </g>
+        </svg>
+        EOF
+          echo "Fallback badge created"
+        else
+          echo "Coverage badge already exists"
+        fi
     
     # Debug: Check if badge was created
     - name: Debug badge creation
