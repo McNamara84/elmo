@@ -15,14 +15,17 @@
             <directory suffix=".php">.</directory>
         </include>
         <exclude>
-            <directory>./vendor</directory>
-            <directory>./tests</directory>
+            <directory>./.github</directory>
+            <directory>./.vscode</directory>
             <directory>./assets</directory>
             <directory>./css</directory>
+            <directory>./formgroups</directory>
             <directory>./js</directory>
             <directory>./json</directory>
             <directory>./lang</directory>
             <directory>./schemas</directory>
+            <directory>./tests</directory>
+            <directory>./vendor</directory>
             <directory>./xml</directory>
         </exclude>
     </source>
