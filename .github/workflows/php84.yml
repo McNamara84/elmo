@@ -165,14 +165,14 @@ jobs:
         fi
     
     - name: Prepare output directory
-      if: always()
+      if: github.event_name == 'push'
       run: |
         mkdir -p output
         touch output/.keep
     
     # Generate coverage badge (simplified according to documentation)
     - name: Make code coverage badge
-      if: always()
+      if: github.event_name == 'push'
       continue-on-error: true
       uses: timkrase/phpunit-coverage-badge@v1.2.1
       with:
@@ -181,7 +181,7 @@ jobs:
     
     # Fallback: Create manual badge only if no clover.xml was generated
     - name: Create fallback badge
-      if: always()
+      if: github.event_name == 'push'
       run: |
         if [ ! -f clover.xml ]; then
           echo "No coverage data found - this indicates a configuration issue."
@@ -220,7 +220,7 @@ jobs:
     
     # Debug: Check if badge was created
     - name: Debug badge creation
-      if: always()
+      if: github.event_name == 'push'
       run: |
         echo "Checking output directory contents:"
         ls -la output/
@@ -234,7 +234,7 @@ jobs:
     
     # Publish badge to image-data branch
     - name: Git push to image-data branch
-      if: always()
+      if: github.event_name == 'push'
       continue-on-error: true
       uses: peaceiris/actions-gh-pages@v3
       with:
