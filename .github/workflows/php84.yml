@@ -179,39 +179,43 @@ jobs:
         coverage_badge_path: output/coverage.svg
         push_badge: false
     
-    # Fallback: Create manual badge if coverage fails
+    # Fallback: Create manual badge only if no clover.xml was generated
     - name: Create fallback badge
       if: always()
       run: |
-        if [ ! -f output/coverage.svg ]; then
-          echo "Creating fallback coverage badge..."
-          mkdir -p output
-          cat > output/coverage.svg << 'EOF'
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="104" height="20" role="img" aria-label="coverage: unknown">
-          <title>coverage: unknown</title>
+        if [ ! -f clover.xml ]; then
+          echo "No coverage data found - this indicates a configuration issue."
+          echo "Please check your phpunit.xml for proper <source> configuration."
+          if [ ! -f output/coverage.svg ]; then
+            echo "Creating fallback coverage badge..."
+            mkdir -p output
+            cat > output/coverage.svg << 'EOF'
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="20" role="img" aria-label="coverage: no-data">
+          <title>coverage: no-data</title>
           <linearGradient id="s" x2="0" y2="100%">
             <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
             <stop offset="1" stop-opacity=".1"/>
           </linearGradient>
           <clipPath id="r">
-            <rect width="104" height="20" rx="3" fill="#fff"/>
+            <rect width="140" height="20" rx="3" fill="#fff"/>
           </clipPath>
           <g clip-path="url(#r)">
             <rect width="61" height="20" fill="#555"/>
-            <rect x="61" width="43" height="20" fill="#9f9f9f"/>
-            <rect width="104" height="20" fill="url(#s)"/>
+            <rect x="61" width="79" height="20" fill="#e05d44"/>
+            <rect width="140" height="20" fill="url(#s)"/>
           </g>
           <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110">
             <text aria-hidden="true" x="315" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="510">coverage</text>
             <text x="315" y="140" transform="scale(.1)" fill="#fff" textLength="510">coverage</text>
-            <text aria-hidden="true" x="815" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="330">unknown</text>
-            <text x="815" y="140" transform="scale(.1)" fill="#fff" textLength="330">unknown</text>
+            <text aria-hidden="true" x="995" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="690">no-data</text>
+            <text x="995" y="140" transform="scale(.1)" fill="#fff" textLength="690">no-data</text>
           </g>
         </svg>
         EOF
-          echo "Fallback badge created"
+            echo "Fallback badge created (indicates configuration issue)"
+          fi
         else
-          echo "Coverage badge already exists"
+          echo "Coverage data found, badge should have been created successfully"
         fi
     
     # Debug: Check if badge was created
