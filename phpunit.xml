@@ -8,4 +8,23 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+    
+    <!-- Add Coverage configs -->
+    <source>
+        <include>
+            <directory suffix=".php">./save</directory>
+            <directory suffix=".php">./api</directory>
+        </include>
+        <exclude>
+            <directory>./vendor</directory>
+            <directory>./tests</directory>
+            <directory>./assets</directory>
+            <directory>./css</directory>
+            <directory>./js</directory>
+            <directory>./json</directory>
+            <directory>./lang</directory>
+            <directory>./schemas</directory>
+            <directory>./xml</directory>
+        </exclude>
+    </source>
 </phpunit>
