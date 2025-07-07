@@ -111,3 +111,8 @@ if (isset($_GET['setting'])) {
     getSettings($_GET['setting']);
     exit;
 }
+
+// Initialize logging    
+function elmo_log($msg) {
+    error_log('[ELMO save_data] ' . $msg);
+}

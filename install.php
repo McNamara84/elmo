@@ -10,14 +10,16 @@
 
 // Include database connection
 if (!defined('INCLUDED_FROM_TEST')) {
-    // Include database connection nur wenn nicht von Tests aufgerufen
-    if (!file_exists("settings.php")) {
+    // Include database connection only when not called from tests
+    if (!file_exists('settings.php')) {
+        $msg = 'Error: settings.php not found. ' .
+            'Please copy sample_settings.php to settings.php and update your database credentials.';
         die(json_encode([
             'status' => 'error',
-            'message' => 'Error: settings.php not found.'
+            'message' => $msg,
         ]));
     }
-    require_once("settings.php");
+    require_once 'settings.php';
 }
 
 // Check database connection
@@ -694,11 +696,11 @@ function insertTestResourceData($connection)
 {
     $mainTableData = [
         "Resource" => [
-            ["doi" => "10.1029/2023JB028411", "version" => null, "year" => 2024, "dateCreated" => "2024-06-05", "dateEmbargoUntil" => "2024-06-15", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id"=> null, "Mathematical_Representation_id" => null, "File_format_id" => null],
-            ["doi" => "10.5880/GFZ.2.4.2024.001", "version" => 2.1, "year" => 2024, "dateCreated" => "1999-04-07", "dateEmbargoUntil" => "2000-12-31", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id"=> null, "Mathematical_Representation_id" => null, "File_format_id" => null],
-            ["doi" => "10.21384/test-dataset", "version" => 1.23, "year" => 2024, "dateCreated" => "2023-07-02", "dateEmbargoUntil" => "2023-07-10", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id"=> null, "Mathematical_Representation_id" => null, "File_format_id" => null],
-            ["doi" => "https://doi.org/10.5880/GFZ.GRACEFO_06_GSM","version" => null, "year" => 2024, "dateCreated" => "2024-06-15", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id"=> 2, "Mathematical_Representation_id" => 1, "File_format_id" => 1],
-            ["doi" => "https://doi.org/10.5880/ICGEM.2019.011","version" => null, "year" => 2019, "dateCreated" => "2020-04-17", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id"=> 3, "Mathematical_Representation_id" => 1, "File_format_id" => 1]
+            ["doi" => "10.1029/2023JB028411", "version" => null, "year" => 2024, "dateCreated" => "2024-06-05", "dateEmbargoUntil" => "2024-06-15", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id" => null, "Mathematical_Representation_id" => null, "File_format_id" => null],
+            ["doi" => "10.5880/GFZ.2.4.2024.001", "version" => 2.1, "year" => 2024, "dateCreated" => "1999-04-07", "dateEmbargoUntil" => "2000-12-31", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id" => null, "Mathematical_Representation_id" => null, "File_format_id" => null],
+            ["doi" => "10.21384/test-dataset", "version" => 1.23, "year" => 2024, "dateCreated" => "2023-07-02", "dateEmbargoUntil" => "2023-07-10", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id" => null, "Mathematical_Representation_id" => null, "File_format_id" => null],
+            ["doi" => "https://doi.org/10.5880/GFZ.GRACEFO_06_GSM", "version" => null, "year" => 2024, "dateCreated" => "2024-06-15", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id" => 2, "Mathematical_Representation_id" => 1, "File_format_id" => 1],
+            ["doi" => "https://doi.org/10.5880/ICGEM.2019.011", "version" => null, "year" => 2019, "dateCreated" => "2020-04-17", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id" => 3, "Mathematical_Representation_id" => 1, "File_format_id" => 1]
 
         ],
         "Author" => [
@@ -706,7 +708,7 @@ function insertTestResourceData($connection)
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "0000-0003-1552-0861"],
             ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "0000-0003-0930-6527"],
             ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242"],
-        //5
+            //5
             ["familyName" => "Flechtner", "givenname" => "Frank", "orcid" => "0000-0002-3093-5558"],
             ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "0000-0002-4108-578X"],
             ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "0000-0003-1463-412X"],
@@ -716,8 +718,8 @@ function insertTestResourceData($connection)
             ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "0000-0002-4108-578X"],
             ["familyName" => "Michalak", "givenname" => "Grzegorz", "orcid" => "0000-0002-1925-8824"],
             ["familyName" => "König", "givenname" => "Rolf", "orcid" => "0000-0002-7155-6976"] // comma 
-        //    ["familyName" => "Anton", "givenname" => "Reinhold", "orcid" => null],
-        //    ["familyName" => "Neumayer", "givenname" => "Karl Hans", "orcid" => null]
+            //    ["familyName" => "Anton", "givenname" => "Reinhold", "orcid" => null],
+            //    ["familyName" => "Neumayer", "givenname" => "Karl Hans", "orcid" => null]
         ],
         "Affiliation" => [
             ["name" => "GFZ German Research Centre for Geosciences", "rorId" => "04z8jg394"],
@@ -736,8 +738,8 @@ function insertTestResourceData($connection)
             ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "1234-1234-1234-1234", "email" => "Kwiatek.Grzegorz@gfz.de", "website" => "gfz.de"],
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "5678-5678-5678-5678", "email" => "Thomas.Goebel@tu-berlin.de", "website" => "www.tu.berlin"],
             ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "9012-9012-9012-9012", "email" => "Christian.Wille@fh-potsdam.de", "website" => "fh-potsdam.de"],
-            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242", "email" => "grace@gfz-potsdam.de", "website"=>null],
-            ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "0000-0003-1463-412X", "email" => "oleh.abrykosov@gfz-potsdam.de", "website"=>null]
+            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242", "email" => "grace@gfz-potsdam.de", "website" => null],
+            ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "0000-0003-1463-412X", "email" => "oleh.abrykosov@gfz-potsdam.de", "website" => null]
         ],
         "Originating_Laboratory" => [
             ["laboratoryname" => "Lab 1", "labId" => "123456789c7caa2d763b647d476b2910"],
@@ -771,8 +773,8 @@ function insertTestResourceData($connection)
             ],
             ["type" => "Abstract", "description" => "Global database of  >20, 000 geochemical analyses of Neogene-Quaternary intraplate volcanic rocks. The database collates major, trace element and Sr-Nd-Pb isotopic data for whole-rock samples <20 Ma old that were published between 1990 and 2020. Database as published in Ball et al. (2021).", "resource_id" => 3],
             ["type" => "Other", "description" => "The DIGIS geochemical data repository is a research data repository in the Earth Sciences domain with a specific focus on geochemical data. It is hosted at GFZ Data Services through a collaboration between the Digital Geochemical Data Infrastructure (DIGIS) for GEOROC 2.0 (https://digis.geo.uni-goettingen.de) and the GFZ German Research Centre for Geosciences. The repository archives, publishes and makes accessible user-contributed, peer-reviewed research data that fall within the scope of the GEOROC database. Compilations of previously published data are also made available on the GEOROC website (https://georoc.eu) as Expert Datasets.", "resource_id" => 3]
-            
-            ],
+
+        ],
         "Thesaurus_Keywords" => [
             ["keyword" => "Science Keywords > EARTH SCIENCE > OCEANS > SEA ICE > SEA ICE VOLUME", "scheme" => "NASA/GCMD Earth Science Keywords", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords", "valueURI" => "https://gcmd.earthdata.nasa.gov/kms/concept/32929f40-ee7f-411d-8d2d-1d2cd9b78b09", "language" => "en"],
             ["keyword" => "Instruments > Solar/Space Observing Instruments > Particle Detectors > HYDRA", "scheme" => "NASA/GCMD Instruments", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments", "valueURI" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments", "language" => "en"],
@@ -781,11 +783,11 @@ function insertTestResourceData($connection)
             ["keyword" => "compound material > breccia", "scheme" => "CGI Simple Lithology", "schemeUri" => "https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology", "valueUri" => "http://resource.geosciml.org/classifier/cgi/lithology/breccia", "language" => "en"],
             ["keyword" => "GEMET Concepts > hydrosphere > water (geographic) > surface water > freshwater > ice", "scheme" => "GEMET - Concepts, version 4.2.3", "schemeUri" => "http://www.eionet.europa.eu/gemet/gemetThesaurus", "valueUri" => "http://www.eionet.europa.eu/gemet/concept/4131", "language" => "en"],
             //ICGEM-related
-            ["keyword" => "PLATFORMS > SPACE-BASED PLATFORMS > EARTH OBSERVATION SATELLITES > GRACE-FO", "scheme" => "GCMD Platform/Sources Keywords", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms", "valueUri"=>"https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" , "language" => "en"],
+            ["keyword" => "PLATFORMS > SPACE-BASED PLATFORMS > EARTH OBSERVATION SATELLITES > GRACE-FO", "scheme" => "GCMD Platform/Sources Keywords", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms", "valueUri" => "https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632", "language" => "en"],
             ["keyword" => "EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD", "scheme" => "GCMD Earth Sciences Keywords ", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords", "valueUri" => "https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa", "language" => "en"],
             ["keyword" => "EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD > GRAVITY", "scheme" => "GCMD Earth Sciences Keywords ", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords", "valueUri" => "https://gcmd.earthdata.nasa.gov/kms/concept/69af3046-08e0-4c24-981d-803c0412ce58", "language" => "en"],
-            ["keyword" => "EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD > GRAVITATIONAL FIELD", "scheme" => "GCMD Earth Sciences Keywords ", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords", "valueUri" =>"https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa" ,"language" => "en"],
-            ["keyword" => "EARTH SCIENCE > LAND SURFACE > TOPOGRAPHY > TOPOGRAPHIC EFFECTS", "scheme" => "GCMD Earth Sciences Keywords ", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms", "valueUri" =>"https://gcmd.earthdata.nasa.gov/kms/concept/05bef198-cfff-48be-b0cb-14e296d38dbc" ,"language" => "en"]
+            ["keyword" => "EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD > GRAVITATIONAL FIELD", "scheme" => "GCMD Earth Sciences Keywords ", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords", "valueUri" => "https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa", "language" => "en"],
+            ["keyword" => "EARTH SCIENCE > LAND SURFACE > TOPOGRAPHY > TOPOGRAPHIC EFFECTS", "scheme" => "GCMD Earth Sciences Keywords ", "schemeUri" => "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms", "valueUri" => "https://gcmd.earthdata.nasa.gov/kms/concept/05bef198-cfff-48be-b0cb-14e296d38dbc", "language" => "en"]
 
         ],
         "Free_Keywords" => [
@@ -841,14 +843,14 @@ function insertTestResourceData($connection)
         "Related_Work" => [
             ["Identifier" => "10.1016/j.epsl.2011.11.037", "relation_fk" => 6, "identifier_type_fk" => 1],
             ["Identifier" => "IECUR0097", "relation_fk" => 3, "identifier_type_fk" => 5],
-            ["Identifier" => "978-3-905673-82-1", "relation_fk" => 4, "identifier_type_fk" => 2],       
+            ["Identifier" => "978-3-905673-82-1", "relation_fk" => 4, "identifier_type_fk" => 2],
             // Entries for GRACE-FO documentation
             ["Identifier" => "ftp://isdcftp.gfz-potsdam.de/grace-fo/DOCUMENTS/Level-2/GRACE-FO_L2_Gravity_Field_Product_User_Handbook_v1.0.pdf", "relation_fk" => 19, "identifier_type_fk" => 17],
             ["Identifier" => "10.2312/GFZ.b103-19098", "relation_fk" => 19, "identifier_type_fk" => 4],
             ["Identifier" => "ftp://isdcftp.gfz-potsdam.de/grace-fo/DOCUMENTS/RELEASE_NOTES/GRACE-FO_GFZ_L2_Release_Notes_for_RL06.3.pdf", "relation_fk" => 19, "identifier_type_fk" => 17],
             //
             ["Identifier" => "10.1016/j.jag.2015.03.001", "relation_fk" => 19, "identifier_type_fk" => 4],
-            ["Identifier" => "10.1007/s10712-020-09590-9", "relation_fk" => 19, "identifier_type_fk" => 4]          
+            ["Identifier" => "10.1007/s10712-020-09590-9", "relation_fk" => 19, "identifier_type_fk" => 4]
         ],
         "Funding_Reference" => [
             ["funder" => "Gordon and Betty Moore Foundation", "funderid" => "100000936", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.01", "grantname" => "Socioenvironmental Monitoring of the Amazon Basin and Xingu"],
@@ -857,8 +859,8 @@ function insertTestResourceData($connection)
         ],
         "GGM_Properties" => [
             ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 60, "Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide"],
-            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 3660, "Errors" => "no", "Error_Handling_Approach" => null , "Tide_System" => "unknown"]
-        ]    
+            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 3660, "Errors" => "no", "Error_Handling_Approach" => null, "Tide_System" => "unknown"]
+        ]
     ];
 
     foreach ($mainTableData as $tableName => $data) {
@@ -880,7 +882,7 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 2, "Author_author_id" => 3],
             ["Resource_resource_id" => 1, "Author_author_id" => 2],
             ["Resource_resource_id" => 4, "Author_author_id" => 4],
-            ["Resource_resource_id" => 4, "Author_author_id" => 5],   
+            ["Resource_resource_id" => 4, "Author_author_id" => 5],
             ["Resource_resource_id" => 4, "Author_author_id" => 6],
             ["Resource_resource_id" => 5, "Author_author_id" => 7],
             ["Resource_resource_id" => 5, "Author_author_id" => 8],
@@ -890,8 +892,8 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 4, "Author_author_id" => 11],
             ["Resource_resource_id" => 4, "Author_author_id" => 12],
             ["Resource_resource_id" => 4, "Author_author_id" => 13]     // comma nicht vergessen <3
-        //    ["Resource_resource_id" => 4, "Author_author_id" => 14],
-        //    ["Resource_resource_id" => 4, "Author_author_id" => 15]
+            //    ["Resource_resource_id" => 4, "Author_author_id" => 14],
+            //    ["Resource_resource_id" => 4, "Author_author_id" => 15]
         ],
         "Author_has_Affiliation" => [
             ["Author_author_id" => 1, "Affiliation_affiliation_id" => 2],
@@ -918,7 +920,7 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 1, "Contact_Person_contact_person_id" => 2],
             ["Resource_resource_id" => 4, "Contact_Person_contact_person_id" => 4],
             ["Resource_resource_id" => 5, "Contact_Person_contact_person_id" => 5]
-            
+
         ],
         "Contributor_Person_has_Role" => [
             ["Role_role_id" => 3, "Contributor_Person_contributor_person_id" => 1],
@@ -981,11 +983,11 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 1, "Thesaurus_Keywords_thesaurus_keywords_id" => 4],
             ["Resource_resource_id" => 1, "Thesaurus_Keywords_thesaurus_keywords_id" => 5],
             ["Resource_resource_id" => 1, "Thesaurus_Keywords_thesaurus_keywords_id" => 6],
-            ["Resource_resource_id" => 4, "Thesaurus_Keywords_thesaurus_keywords_id" => 9], 
+            ["Resource_resource_id" => 4, "Thesaurus_Keywords_thesaurus_keywords_id" => 9],
             ["Resource_resource_id" => 4, "Thesaurus_Keywords_thesaurus_keywords_id" => 10],
-            ["Resource_resource_id" => 5, "Thesaurus_Keywords_thesaurus_keywords_id" => 10], 
+            ["Resource_resource_id" => 5, "Thesaurus_Keywords_thesaurus_keywords_id" => 10],
             ["Resource_resource_id" => 5, "Thesaurus_Keywords_thesaurus_keywords_id" => 11]
-        
+
         ],
         "Resource_has_Free_Keywords" => [
             ["Resource_resource_id" => 3, "Free_Keywords_free_keywords_id" => 1],
@@ -1037,8 +1039,8 @@ function insertTestResourceData($connection)
             $values = array_values($row);
             $stmt->bind_param(str_repeat("i", count($values)), ...$values);
             if (!$stmt->execute()) {
-            echo "Error inserting into $tableName: " . $stmt->error . "\n";
-            // Log or handle the error appropriately
+                echo "Error inserting into $tableName: " . $stmt->error . "\n";
+                // Log or handle the error appropriately
             }
         }
     }
