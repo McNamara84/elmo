@@ -94,10 +94,13 @@ if (isset($_POST['filename'])) {
     // Try to fetch via HTTP first
     $data = @file_get_contents($url);
     if ($data !== false) {
+        elmo_log("Fetched XML via API: $url");
         echo $data;
     } elseif (file_exists($localpath)) {
+        elmo_log("Fetched XML from local file: $localpath");
         readfile($localpath);
     } else {
+        elmo_log("File not found (neither remote nor local). URL tried: $url, local path: $localpath");
         http_response_code(404);
         echo "File not found (neither remote nor local).";
     }

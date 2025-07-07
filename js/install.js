@@ -20,8 +20,8 @@ document.querySelectorAll('.install-btn').forEach(button => {
             // If action is 'populate-and-xml', we force 'complete' for the database part
             const dbAction = (action === 'populate-and-xml') ? 'complete' : action;
 
-            // Corrected path for install.php (it's in the parent directory relative to js/)
-            let response = await fetch('../install.php', { 
+            // Relative path so install.html works from subdirectories
+            let response = await fetch('install.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -69,8 +69,8 @@ document.querySelectorAll('.install-btn').forEach(button => {
             if (action === 'populate-and-xml' && installationSuccess) {
                 statusMessage.innerHTML = `<div class="mb-2">Database populated. Now generating XML files...</div><div class="progress"><div class="progress-bar bg-primary" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div></div>`;
 
-                // Corrected path for generate_xml_files.php (it's in the parent directory relative to js/)
-                let xmlResponse = await fetch('../generate_xml_files.php', { 
+                // Use relative path for XML generation script
+                let xmlResponse = await fetch('generate_xml_files.php', { 
                     method: 'POST', 
                     headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',               
