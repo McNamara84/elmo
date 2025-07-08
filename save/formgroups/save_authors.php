@@ -146,10 +146,21 @@ function processAuthor($connection, $resource_id, $authorData)
     }
 
     // 3. Insert Author Table (linkage)
-    $stmt = $connection->prepare("INSERT INTO Author (Author_Person_author_person_id, Author_Institution_author_institution_id) VALUES (?, ?)");
+    $stmt = $connection->prepare("SELECT author_id FROM Author WHERE Author_Person_author_person_id <=> ? AND Author_Institution_author_institution_id <=> ?");
+    // Using <=> (NULL-safe equal) to correctly compare NULL values in MySQL
     $stmt->bind_param("ii", $author_person_id, $author_institution_id);
     $stmt->execute();
-    $author_id = $stmt->insert_id;
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $author_id = $row['author_id'];
+    } else {
+        // Insert new Author linkage
+        $stmtInsert = $connection->prepare("INSERT INTO Author (Author_Person_author_person_id, Author_Institution_author_institution_id) VALUES (?, ?)");
+        $stmtInsert->bind_param("ii", $author_person_id, $author_institution_id);
+        $stmtInsert->execute();
+        $author_id = $stmtInsert->insert_id;
+        $stmtInsert->close();
+    }
     $stmt->close();
 
     // 4. Resource_has_Author link
