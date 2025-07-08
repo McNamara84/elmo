@@ -627,8 +627,8 @@ class SaveAuthorsTest extends TestCase
             "familynames" => ["Existing"],
             "givennames" => ["Author"],
             "orcids" => ["0000-0001-2345-6789"],
-            "affiliation" => ['[{"value":"Existing University"}]'],
-            "authorRorIds" => ['https://ror.org/03yrm5c26']
+            "personAffiliation" => ['[{"value":"Existing University"}]'],
+            "authorPersonRorIds" => ['https://ror.org/03yrm5c26']
         ];
         saveAuthors($this->connection, $initialAuthorData, $initial_resource_id);
 
@@ -666,14 +666,14 @@ class SaveAuthorsTest extends TestCase
                 "",                        // Empty ORCID
                 "0000-0001-2345-6789"      // Existing ORCID
             ],
-            "affiliation" => [
+            "personAffiliation" => [
                 '[{"value":"University A"}]',
                 '[{"value":"University B"},{"value":"Institute C"}]',
                 '[{"value":"Universität D"}]',  // Non-ASCII character
                 '[{"value":"' . str_repeat("X", 256) . '"}]',  // Very long affiliation
                 '[{"value":"Existing University"},{"value":"New University"}]'  // Existing and new affiliation
             ],
-            "authorRorIds" => [
+            "authorPersonRorIds" => [
                 'https://ror.org/04m7fg108',
                 'https://ror.org/02nr0ka47,https://ror.org/0168r3w48',
                 '',
@@ -695,8 +695,17 @@ class SaveAuthorsTest extends TestCase
             "Es sollten insgesamt 5 Autoren gespeichert worden sein, einschließlich des bestehenden Autors."
         );
 
-        $stmt = $this->connection->prepare("SELECT a.*, GROUP_CONCAT(DISTINCT rha.Resource_resource_id) as resource_ids, COUNT(DISTINCT aha.Affiliation_affiliation_id) as affiliation_count FROM Author a JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id LEFT JOIN Author_has_Affiliation aha ON a.author_id = aha.Author_author_id WHERE a.orcid = ? GROUP BY a.author_id");
         $existingOrcid = "0000-0001-2345-6789";
+        $stmt = $this->connection->prepare("
+        SELECT a.author_id, GROUP_CONCAT(DISTINCT rha.Resource_resource_id) as resource_ids,
+               COUNT(DISTINCT aha.Affiliation_affiliation_id) as affiliation_count
+        FROM Author a
+        JOIN Author_person ap ON a.Author_Person_author_person_id = ap.author_person_id
+        JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
+        LEFT JOIN Author_has_Affiliation aha ON a.author_id = aha.Author_author_id
+        WHERE ap.orcid = ?
+        GROUP BY a.author_id
+    ");
         $stmt->bind_param("s", $existingOrcid);
         $stmt->execute();
         $existingAuthor = $stmt->get_result()->fetch_assoc();
