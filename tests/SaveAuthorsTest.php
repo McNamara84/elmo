@@ -247,7 +247,13 @@ class SaveAuthorsTest extends DatabaseTestCase
      * @return void
      * @throws \Exception
      */
-    public function testSaveSingleAuthorWithOnlyRequiredFields()
+    /**
+     * Tests saving a single author with only required fields.
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function testSaveSinglePersonAuthorWithMissingGivenname()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.SINGLE.REQUIRED",
@@ -271,37 +277,13 @@ class SaveAuthorsTest extends DatabaseTestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ?");
-        $stmt->bind_param("s", $authorData["familynames"][0]);
-        $stmt->execute();
-        $authorResult = $stmt->get_result()->fetch_assoc();
-
-        $this->assertEmpty(
-            $authorResult["givenname"],
-            "Der Vorname des Autors sollte leer sein."
-        );
-        $this->assertEmpty(
-            $authorResult["orcid"],
-            "Die ORCID des Autors sollte leer sein."
-        );
-
-        $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
-        $stmt->bind_param("ii", $resource_id, $authorResult["author_id"]);
-        $stmt->execute();
-        $this->assertEquals(
-            1,
-            $stmt->get_result()->num_rows,
-            "Die Verknüpfung zwischen Autor und Resource wurde nicht korrekt gespeichert."
-        );
-
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_has_Affiliation WHERE Author_author_id = ?");
-        $stmt->bind_param("i", $authorResult["author_id"]);
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_person");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
             0,
             $count,
-            "Es sollten keine Affiliationen für diesen Autor gespeichert worden sein."
+            "Es sollte kein Autor gespeichert werden, wenn kein Vorname angegeben wurde."
         );
     }
 
