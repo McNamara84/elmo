@@ -297,6 +297,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /vocabs/cgi:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get CGI Simple Lithology keywords
+      description: Retrieve the CGI Simple Lithology vocabulary already prepared for use with jsTree
+      operationId: getCGIKeywords
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /vocabs/freekeywords/all:
     get:
       tags:
