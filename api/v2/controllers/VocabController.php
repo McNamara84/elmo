@@ -356,6 +356,30 @@ class VocabController
     }
 
     /**
+     * Retrieves CGI Simple Lithology keywords from a local JSON file and returns them as JSON.
+     *
+     * @return void
+     */
+    public function getCGIKeywords()
+    {
+        try {
+            $jsonPath = __DIR__ . '/../../../json/thesauri/cgi.json';
+            if (!file_exists($jsonPath)) {
+                throw new Exception('CGI keywords file not found');
+            }
+            $json = file_get_contents($jsonPath);
+            if ($json === false) {
+                throw new Exception('Error reading CGI keywords file');
+            }
+            header('Content-Type: application/json');
+            echo $json;
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Updates the MSL Labs vocabulary by fetching and processing data, then saving it as JSON.
      *
      * @return void
