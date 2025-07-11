@@ -1205,4 +1205,3 @@ The flollowing unit tests are available:
 - `vendor/bin/phpunit tests/SaveResourceInformationAndRightsTest.php`
 - `vendor/bin/phpunit tests/SaveSpatialTemporalCoverageTest.php`
 - `vendor/bin/phpunit tests/SaveKeywordsTest.php`
-The user interface is also tested with Selenium. All tests are executed automatically during a pull.
