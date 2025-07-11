@@ -1192,16 +1192,5 @@ Meanwhile these variables from required list are not required to publish a GGM:
 We appreciate every contribution to this project! You can use the feedback back form on the test server [link], create an issue on github or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template (only available in german right now!), so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.
 
 ## Testing
-The flollowing unit tests are available:
-- `vendor/bin/phpunit tests/ApiTest.php`
-- `vendor/bin/phpunit tests/SaveAuthorsTest.php`
-- `vendor/bin/phpunit tests/SaveContactpersonsTest.php`
-- `vendor/bin/phpunit tests/SaveContributorsTest.php`
-- `vendor/bin/phpunit tests/SaveDescriptionsTest.php`
-- `vendor/bin/phpunit tests/SaveFreekeywordsTest.php`
-- `vendor/bin/phpunit tests/SaveFundingreferencesTest.php`
-- `vendor/bin/phpunit tests/SaveOriginatingLaboratoryTest.php`
-- `vendor/bin/phpunit tests/SaveRelatedworkTest.php`
-- `vendor/bin/phpunit tests/SaveResourceInformationAndRightsTest.php`
-- `vendor/bin/phpunit tests/SaveSpatialTemporalCoverageTest.php`
-- `vendor/bin/phpunit tests/SaveKeywordsTest.php`
+- `composer run test` runs the tests in `tests/`
+- `npm test` runs the JavaScript tests in `tests/js/`
