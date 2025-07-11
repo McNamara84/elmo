@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "@yaireo/tagify": "^4.33.2"
+  },
+  "devDependencies": {
+    "jest": "^30.0.4"
   }
 }
