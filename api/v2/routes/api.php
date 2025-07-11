@@ -25,6 +25,7 @@ return [
 
     // Vocabulary retrieval endpoints
     ['GET', '/vocabs/sciencekeywords', [new VocabController(), 'getGcmdScienceKeywords']],
+    ['GET', '/vocabs/cgi', [new VocabController(), 'getCGIKeywords']],
     ['GET', '/vocabs/roles[/{type}]', [new VocabController(), 'getRoles']],
     ['GET', '/vocabs/relations', [new VocabController(), 'getRelations']],
     ['GET', '/vocabs/licenses/all', [new VocabController(), 'getAllLicenses']],
