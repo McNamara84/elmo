@@ -198,6 +198,43 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /update/vocabs/cgi:
+    get:
+      tags:
+        - update
+      summary: Update CGI Simple Lithology keywords
+      description: Fetches the latest CGI Simple Lithology vocabulary and stores it as JSON.
+      operationId: updateCGIKeywords
+      responses:
+        "200":
+          description: CGI keywords successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "CGI keywords successfully updated"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-19T08:45:22Z"
+                required:
+                  - message
+                  - timestamp
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /update/crossref:
     get:
       tags:
