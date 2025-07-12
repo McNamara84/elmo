@@ -62,7 +62,7 @@ $optiontitle_type = generateOptions(
 );
 
 // Include HTML components
-include("header.html");
+include("header.php");
 include("formgroups/resourceInformation.html");
 include("formgroups/rights.html");
 include("formgroups/authors.html");
