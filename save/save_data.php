@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
     // Logic in these lines is to enable XML save
     // After the resource information is written to the db,
-    // nothing transfers the information to xml format.
+    // Currently, nothing transfers the information to xml format.
     // in the meanwhile, if this lines do work,
     // the xml file will be generated on the run
     require_once '../api/v2/controllers/DatasetController.php';
@@ -92,20 +92,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
         $base_url = $protocol . $_SERVER['HTTP_HOST'];
-        $project_path = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\'); // More robust path trimming
+        $project_path = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\'); // Ensure no trailing slashes
         $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
 
         // readfile() returns the number of bytes read, or false on failure.
         $bytesRead = @readfile($url);
 
         if ($bytesRead === false) {
-            error_log("save_data.php: readfile from URL failed. Falling back to direct generation for resource ID: $resource_id");
+            error_log("save_data.php: readfile from URL failed. URL: $url . Falling back to direct generation for resource ID: $resource_id");
 
             try {
                 // The controller is already included, so we can use it.
                 $datasetController = new DatasetController();
                 // Generate XML directly in-memory
-                $xmlString = $datasetController->getResourceAsXml($connection, $resource_id);
+                $xmlString = $datasetController->envelopeXmlAsString($connection, $resource_id);
 
                 if ($xmlString) {
                     echo $xmlString;
