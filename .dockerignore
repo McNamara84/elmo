@@ -34,7 +34,7 @@ Dockerfile*
 docker-compose*
 
 # Ignore test and debug files
-tests/
+#tests/ 
 *_test.go
 debug/
 
