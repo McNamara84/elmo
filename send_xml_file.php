@@ -90,6 +90,12 @@ try {
             throw new Exception("Invalid data URL provided");
         }
     }
+    // include the dataset controller to generate the file
+    try {require_once '../api/v2/controllers/DatasetController.php';
+    $datasetController = new DatasetController();
+    } catch (Exception $e) {
+        error_log("Error accessing DatasetController: function getResourceAsXml is not available. Exception: " . $e->getMessage());
+    }
 
     // Get XML content from API    
     // // Build API URL and local file path
@@ -97,21 +103,23 @@ try {
     $base_url = $protocol . $_SERVER['HTTP_HOST'];
     $project_path = dirname(dirname($_SERVER['PHP_SELF']));
     $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
-    $localpath = "/var/www/html/xml/resource_" . $resource_id . ".xml";
-        // Try to fetch via HTTP first
-    $data = @file_get_contents($url);
-    if ($data !== false) {
-        elmo_log("Fetched XML via API: $url");
-        echo $data;
-    } elseif (file_exists($localpath)) {
-        elmo_log("Fetched XML from local file: $localpath");
-        readfile($localpath);
+    // Try to fetch via HTTP first
+    $xml_content = @file_get_contents($url);
+    if ($xml_content !== false) {
+        error_log("Submit: Fetched XML via API: $url");
     } else {
-        elmo_log("File not found (neither remote nor local). URL tried: $url, local path: $localpath");
-        http_response_code(404);
-        echo "File not found (neither remote nor local).";
+        error_log("Submit: File not found via the API. URL tried: $url. Turninig to fallback logic -- generating the file on-the-fly");
+        // The controller is already included, so we can use it.
+        $datasetController = new DatasetController();
+        // Generate XML directly in-memory
+        $xml_content = $datasetController->envelopeXmlAsString($connection, $resource_id);
+        // check for errors
+        if ($xml_content === FALSE) {
+        error_log("Submit: Failed to retrieve XML content from API and in-memory. Endpoint: $url");     
+        } else {
+        error_log("Submit: Successfully generated XML file in-memory for resource_id $resource_id.");
+        }
     }
-
 
     // Send email with XML attachment
     $mail = new PHPMailer(true);
