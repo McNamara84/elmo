@@ -1,0 +1,256 @@
+{
+  "id": "navbar-dropdown-test-suite",
+  "version": "2.0",
+  "name": "ELMO Navbar Dropdown Tests",
+  "url": "http://localhost",
+  "tests": [{
+    "id": "test-navbar-dropdowns",
+    "name": "Test Navbar Dropdown Functionality",
+    "commands": [{
+      "id": "1",
+      "comment": "Open the ELMO application",
+      "command": "open",
+      "target": "/",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "2",
+      "comment": "Wait for page to load completely",
+      "command": "waitForElementVisible",
+      "target": "css=.navbar",
+      "targets": [
+        ["css=.navbar", "css:finder"]
+      ],
+      "value": "5000"
+    }, {
+      "id": "3",
+      "comment": "Test Help Dropdown - Click to open",
+      "command": "click",
+      "target": "id=bd-help",
+      "targets": [
+        ["id=bd-help", "id"],
+        ["css=#bd-help", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "4",
+      "comment": "Verify Help dropdown menu is visible",
+      "command": "waitForElementVisible",
+      "target": "css=#bd-help + ul.dropdown-menu",
+      "targets": [
+        ["css=#bd-help + ul.dropdown-menu", "css:finder"]
+      ],
+      "value": "2000"
+    }, {
+      "id": "5",
+      "comment": "Assert Help dropdown is displayed",
+      "command": "assertElementPresent",
+      "target": "css=#bd-help + ul.dropdown-menu.show",
+      "targets": [
+        ["css=#bd-help + ul.dropdown-menu.show", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "6",
+      "comment": "Verify Privacy Policy link is present in Help dropdown",
+      "command": "assertElementPresent",
+      "target": "id=buttonPrivacy",
+      "targets": [
+        ["id=buttonPrivacy", "id"]
+      ],
+      "value": ""
+    }, {
+      "id": "7",
+      "comment": "Close Help dropdown by clicking elsewhere",
+      "command": "click",
+      "target": "css=.navbar-brand",
+      "targets": [
+        ["css=.navbar-brand", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "8",
+      "comment": "Wait for Help dropdown to close",
+      "command": "waitForElementNotVisible",
+      "target": "css=#bd-help + ul.dropdown-menu.show",
+      "targets": [
+        ["css=#bd-help + ul.dropdown-menu.show", "css:finder"]
+      ],
+      "value": "2000"
+    }, {
+      "id": "9",
+      "comment": "Test Mode Dropdown - Click to open",
+      "command": "click",
+      "target": "id=bd-theme",
+      "targets": [
+        ["id=bd-theme", "id"],
+        ["css=#bd-theme", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "10",
+      "comment": "Verify Mode dropdown menu is visible",
+      "command": "waitForElementVisible",
+      "target": "css=#bd-theme + ul.dropdown-menu",
+      "targets": [
+        ["css=#bd-theme + ul.dropdown-menu", "css:finder"]
+      ],
+      "value": "2000"
+    }, {
+      "id": "11",
+      "comment": "Assert Mode dropdown is displayed",
+      "command": "assertElementPresent",
+      "target": "css=#bd-theme + ul.dropdown-menu.show",
+      "targets": [
+        ["css=#bd-theme + ul.dropdown-menu.show", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "12",
+      "comment": "Verify Auto mode option is present",
+      "command": "assertElementPresent",
+      "target": "css=[data-bs-theme-value='auto']",
+      "targets": [
+        ["css=[data-bs-theme-value='auto']", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "13",
+      "comment": "Verify Light mode option is present",
+      "command": "assertElementPresent",
+      "target": "css=[data-bs-theme-value='light']",
+      "targets": [
+        ["css=[data-bs-theme-value='light']", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "14",
+      "comment": "Verify Dark mode option is present",
+      "command": "assertElementPresent",
+      "target": "css=[data-bs-theme-value='dark']",
+      "targets": [
+        ["css=[data-bs-theme-value='dark']", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "15",
+      "comment": "Close Mode dropdown by clicking elsewhere",
+      "command": "click",
+      "target": "css=.navbar-brand",
+      "targets": [
+        ["css=.navbar-brand", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "16",
+      "comment": "Wait for Mode dropdown to close",
+      "command": "waitForElementNotVisible",
+      "target": "css=#bd-theme + ul.dropdown-menu.show",
+      "targets": [
+        ["css=#bd-theme + ul.dropdown-menu.show", "css:finder"]
+      ],
+      "value": "2000"
+    }, {
+      "id": "17",
+      "comment": "Test Language Dropdown - Click to open",
+      "command": "click",
+      "target": "id=bd-lang",
+      "targets": [
+        ["id=bd-lang", "id"],
+        ["css=#bd-lang", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "18",
+      "comment": "Verify Language dropdown menu is visible",
+      "command": "waitForElementVisible",
+      "target": "css=#bd-lang + ul.dropdown-menu",
+      "targets": [
+        ["css=#bd-lang + ul.dropdown-menu", "css:finder"]
+      ],
+      "value": "2000"
+    }, {
+      "id": "19",
+      "comment": "Assert Language dropdown is displayed",
+      "command": "assertElementPresent",
+      "target": "css=#bd-lang + ul.dropdown-menu.show",
+      "targets": [
+        ["css=#bd-lang + ul.dropdown-menu.show", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "20",
+      "comment": "Verify Auto language option is present",
+      "command": "assertElementPresent",
+      "target": "css=[data-bs-language-value='auto']",
+      "targets": [
+        ["css=[data-bs-language-value='auto']", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "21",
+      "comment": "Verify English language option is present",
+      "command": "assertElementPresent",
+      "target": "css=[data-bs-language-value='en']",
+      "targets": [
+        ["css=[data-bs-language-value='en']", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "22",
+      "comment": "Verify German language option is present",
+      "command": "assertElementPresent",
+      "target": "css=[data-bs-language-value='de']",
+      "targets": [
+        ["css=[data-bs-language-value='de']", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "23",
+      "comment": "Verify French language option is present",
+      "command": "assertElementPresent",
+      "target": "css=[data-bs-language-value='fr']",
+      "targets": [
+        ["css=[data-bs-language-value='fr']", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "24",
+      "comment": "Close Language dropdown by clicking elsewhere",
+      "command": "click",
+      "target": "css=.navbar-brand",
+      "targets": [
+        ["css=.navbar-brand", "css:finder"]
+      ],
+      "value": ""
+    }, {
+      "id": "25",
+      "comment": "Wait for Language dropdown to close",
+      "command": "waitForElementNotVisible",
+      "target": "css=#bd-lang + ul.dropdown-menu.show",
+      "targets": [
+        ["css=#bd-lang + ul.dropdown-menu.show", "css:finder"]
+      ],
+      "value": "2000"
+    }, {
+      "id": "26",
+      "comment": "Final verification - all dropdowns are closed",
+      "command": "assertElementNotPresent",
+      "target": "css=ul.dropdown-menu.show",
+      "targets": [
+        ["css=ul.dropdown-menu.show", "css:finder"]
+      ],
+      "value": ""
+    }]
+  }],
+  "suites": [{
+    "id": "navbar-test-suite",
+    "name": "Navbar Functionality Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["test-navbar-dropdowns"]
+  }],
+  "urls": ["http://localhost"],
+  "plugins": []
+}
