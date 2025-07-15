@@ -431,7 +431,9 @@ $(document).ready(function () {
     })
     .then((data) => {
       if (data.apiKey) {
-        loadGoogleMapsApi(data.apiKey);
+        if (!google.maps.importLibrary) {
+          loadGoogleMapsApi(data.apiKey);
+        }
 
         google.maps.importLibrary("maps").then(initMap);
       } else {
