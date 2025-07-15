@@ -85,7 +85,7 @@ async function createLicenseMapping() {
       "CC-BY-4.0": "1",
       "CC0-1.0": "2",
       "GPL-3.0-or-later": "3",
-      MIT: "4",
+      "MIT": "4",
       "Apache-2.0": "5",
       "EUPL-1.2": "6",
     };
