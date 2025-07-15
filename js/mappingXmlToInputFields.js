@@ -860,8 +860,13 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
     $lastRow.find('input[name="tscLongitudeMin[]"]').val(longitudeMin);
     $lastRow.find('input[name="tscLongitudeMax[]"]').val(longitudeMax);
 
-    // Set date and time if available
+    // Update map overlay if function available
+    const rowId = $lastRow.attr('tsc-row-id');
+    if (typeof window.updateMapOverlay === 'function') {
+      window.updateMapOverlay(rowId, latitudeMax, longitudeMax, latitudeMin, longitudeMin);
+    }
 
+    // Set date and time if available
     const dateNode = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(i);
     const temporalData = parseTemporalData(dateNode);
 

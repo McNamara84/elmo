@@ -221,7 +221,7 @@ $(document).ready(function () {
    */
   $("#group-stc").on(
     "input",
-    "[tsc-row] [id^=tscLatitude], [tsc-row] [id^=tscLongitude]",
+    "[tsc-row] input[name^='tscLatitude'], [tsc-row] input[name^='tscLongitude']",
     function () {
       var $row = $(this).closest("[tsc-row]");
       var currentRowId = $row.attr("tsc-row-id");
@@ -447,5 +447,6 @@ $(document).ready(function () {
   window.deleteDrawnOverlaysForRow = deleteDrawnOverlaysForRow;
   window.fitMapBounds = fitMapBounds;
   window.updateOverlayLabels = updateOverlayLabels;
+  window.updateMapOverlay = updateMapOverlay;
   $("#modal-stc-map").one("shown.bs.modal", onStcMapModalShown);
 });
