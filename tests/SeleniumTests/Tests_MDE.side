@@ -2,7 +2,7 @@
   "id": "navbar-dropdown-test-suite",
   "version": "2.0",
   "name": "ELMO Navbar Dropdown Tests",
-  "url": "http://localhost",
+  "url": "http://php-app:8000",
   "tests": [{
     "id": "test-navbar-dropdowns",
     "name": "Test Navbar Dropdown Functionality",
