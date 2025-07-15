@@ -1,3 +1,10 @@
+![PHP 8.4](https://img.shields.io/badge/php-8.4-blue?logo=php)
+![MySQL 8.4](https://img.shields.io/badge/mysql-8.4-orange?logo=mysql&logoColor=white)
+![jQuery 3.7](https://img.shields.io/badge/jquery-3.7-0769ad?logo=jquery)
+![Bootstrap 5.3](https://img.shields.io/badge/bootstrap-5.3-563d7c?logo=bootstrap)
+![OpenAPI 3.1](https://img.shields.io/badge/openapi-3.1-6BA539?logo=openapiinitiative)
+![Coverage](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Optimizer/blob/image-data/coverage.svg?raw=true)
+
 # ELMO - Enhanced Laboratory Metadata Organizer
 
 The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GeoForschungsZentrum Potsdam](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
