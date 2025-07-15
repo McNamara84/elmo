@@ -1,3 +1,10 @@
+![PHP 8.4](https://img.shields.io/badge/php-8.4-blue?logo=php)
+![MySQL 8.4](https://img.shields.io/badge/mysql-8.4-orange?logo=mysql&logoColor=white)
+![jQuery 3.7](https://img.shields.io/badge/jquery-3.7-0769ad?logo=jquery)
+![Bootstrap 5.3](https://img.shields.io/badge/bootstrap-5.3-563d7c?logo=bootstrap)
+![OpenAPI 3.1](https://img.shields.io/badge/openapi-3.1-6BA539?logo=openapiinitiative)
+![Coverage](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Optimizer/blob/image-data/coverage.svg?raw=true)
+
 # ELMO - Enhanced Laboratory Metadata Organizer
 
 The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GeoForschungsZentrum Potsdam](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite, ISO and DIF schema.
@@ -1192,17 +1199,9 @@ Meanwhile these variables from required list are not required to publish a GGM:
 We appreciate every contribution to this project! You can use the feedback back form on the test server [link], create an issue on github or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template (only available in german right now!), so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.
 
 ## Testing
-The flollowing unit tests are available:
-- `vendor/bin/phpunit tests/ApiTest.php`
-- `vendor/bin/phpunit tests/SaveAuthorsTest.php`
-- `vendor/bin/phpunit tests/SaveContactpersonsTest.php`
-- `vendor/bin/phpunit tests/SaveContributorsTest.php`
-- `vendor/bin/phpunit tests/SaveDescriptionsTest.php`
-- `vendor/bin/phpunit tests/SaveFreekeywordsTest.php`
-- `vendor/bin/phpunit tests/SaveFundingreferencesTest.php`
-- `vendor/bin/phpunit tests/SaveOriginatingLaboratoryTest.php`
-- `vendor/bin/phpunit tests/SaveRelatedworkTest.php`
-- `vendor/bin/phpunit tests/SaveResourceInformationAndRightsTest.php`
-- `vendor/bin/phpunit tests/SaveSpatialTemporalCoverageTest.php`
-- `vendor/bin/phpunit tests/SaveKeywordsTest.php`
-The user interface is also tested with Selenium. All tests are executed automatically during a pull.
+
+> [!NOTE]
+> In order to run the tests, the dependencies must first be loaded via `composer install` and `npm install`.
+
+- `composer run test` runs the tests in `tests/`
+- `npm test` runs the JavaScript tests in `tests/js/`
