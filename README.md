@@ -30,7 +30,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 ## Main Features
 - Simple mapping of entered data using XSLT.
 - Modular, customizable front end.
-- Multilingualism through the use of language files.
+- Multilingualism through the use of language files. Add your own language file and ELMO will detect it automatically.
 - Always up-to-date controlled vocabularies through regular automatic updates.
 - Easy input of authors and contributors using ORCID preload.
 - Submitting of metadata directly to data curators.
