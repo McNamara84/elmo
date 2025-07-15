@@ -10,22 +10,6 @@ jobs:
   selenium:
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root_password
-          MYSQL_DATABASE: mde2-msl-test
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: test_password
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping --silent"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 3
-
     steps:
     - uses: actions/checkout@v4
 
@@ -43,6 +27,20 @@ jobs:
 
     - name: Create test network
       run: docker network create test-network
+
+    - name: Start MySQL container
+      run: |
+        docker run -d --network test-network --name mysql -e MYSQL_ROOT_PASSWORD=root_password -e MYSQL_DATABASE=mde2-msl-test -e MYSQL_USER=test_user -e MYSQL_PASSWORD=test_password -p 3306:3306 mysql:8.0 --health-cmd "mysqladmin ping --silent" --health-interval 10s --health-timeout 5s --health-retries 3
+    - name: Wait for MySQL to be ready
+      run: |
+        for i in {1..30}; do
+          if mysqladmin ping -h127.0.0.1 -uroot -proot_password --silent; then
+            echo "MySQL is ready";
+            break;
+          fi;
+          echo "Waiting for MySQL...";
+          sleep 2;
+        done
 
     - name: Start Selenium container
       run: |
@@ -248,6 +246,6 @@ jobs:
     - name: Cleanup
       if: always()
       run: |
-        docker stop php-app selenium || true
-        docker rm php-app selenium || true
+        docker stop php-app selenium mysql || true
+        docker rm php-app selenium mysql || true
         docker network rm test-network || true
