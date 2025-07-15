@@ -334,10 +334,9 @@ $(document).ready(function () {
             const jsTreeInstance = $(config.jsTreeId).jstree(true);
             if (!jsTreeInstance) return;
 
-            // 3. Explicitly trigger the search.
+            // 3. Explicitly trigger the search. optional
             jsTreeInstance.search(searchInput.val());
 
-            // 4. Immediately return focus to the search input. This is the key
             searchInput.focus();
         }
     });
