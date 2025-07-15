@@ -174,6 +174,71 @@ class VocabController
     }
 
     /**
+     * Fetches the CGI Simple Lithology vocabulary from the official RDF source
+     * and returns a hierarchical array formatted for jsTree.
+     *
+     * @return array Parsed CGI keywords tree
+     * @throws Exception If fetching or parsing the RDF data fails
+     */
+    public function fetchAndProcessCGIKeywords()
+    {
+        // Source URL of the CGI Simple Lithology vocabulary
+        $url = 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology.rdf';
+
+        // Register RDF namespaces
+        RdfNamespace::set('skos', 'http://www.w3.org/2004/02/skos/core#');
+        RdfNamespace::set('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#');
+
+        // Load RDF data
+        $graph = new Graph($url);
+        $graph->load();
+
+        $keywordMap = [];
+
+        // Iterate through all SKOS concepts
+        foreach ($graph->allOfType('skos:Concept') as $concept) {
+            $id = $concept->getUri();
+            $prefLabel = (string) $concept->get('skos:prefLabel');
+            $definition = (string) $concept->get('skos:definition');
+
+            $keywordMap[$id] = [
+                'id' => $id,
+                'text' => $prefLabel,
+                'language' => 'en',
+                'scheme' => 'CGI Simple Lithology',
+                'schemeURI' => 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology',
+                'description' => $definition,
+                'children' => []
+            ];
+        }
+
+        // Build hierarchy with compound_material as the root node
+        $rootId = 'http://resource.geosciml.org/classifier/cgi/lithology/compound_material';
+        foreach ($graph->allOfType('skos:Concept') as $concept) {
+            $id = $concept->getUri();
+            if ($id === $rootId) {
+                continue; // Skip the root element
+            }
+            $broader = $concept->all('skos:broader');
+            if (empty($broader)) {
+                // Concepts without a broader term become children of the root
+                $keywordMap[$rootId]['children'][] = &$keywordMap[$id];
+            } else {
+                foreach ($broader as $parent) {
+                    $parentId = $parent->getUri();
+                    if (isset($keywordMap[$parentId])) {
+                        $keywordMap[$parentId]['children'][] = &$keywordMap[$id];
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Return only the root element
+        return [$keywordMap[$rootId]];
+    }
+
+    /**
      * Gets the latest version number for the combined vocabulary file.
      *
      * @param string $baseUrl The base URL for vocabularies.
@@ -349,6 +414,72 @@ class VocabController
             }
             header('Content-Type: application/json');
             echo $json;
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Retrieves CGI Simple Lithology keywords from a local JSON file and returns them as JSON.
+     *
+     * @return void
+     */
+    public function getCGIKeywords()
+    {
+        try {
+            $jsonPath = __DIR__ . '/../../../json/thesauri/cgi.json';
+            if (!file_exists($jsonPath)) {
+                throw new Exception('CGI keywords file not found');
+            }
+            $json = file_get_contents($jsonPath);
+            if ($json === false) {
+                throw new Exception('Error reading CGI keywords file');
+            }
+            header('Content-Type: application/json');
+            echo $json;
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Updates the CGI Simple Lithology keywords by fetching the latest RDF and
+     * storing it as JSON for use by the frontend.
+     *
+     * @return void
+     */
+    public function updateCGIKeywords()
+    {
+        // Validate API key before processing request
+        if (!$this->validateApiKey()) {
+            return;
+        }
+
+        try {
+            $keywords = $this->fetchAndProcessCGIKeywords();
+
+            $jsonDir = __DIR__ . '/../../../json/thesauri/';
+            if (!file_exists($jsonDir)) {
+                mkdir($jsonDir, 0755, true);
+            }
+
+            $result = file_put_contents(
+                $jsonDir . 'cgi.json',
+                json_encode($keywords, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+
+            if ($result === false) {
+                throw new Exception('Error saving JSON file: ' . error_get_last()['message']);
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'message' => 'CGI keywords successfully updated',
+                'timestamp' => date('c')
+            ]);
+
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);
