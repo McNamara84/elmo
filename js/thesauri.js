@@ -18,7 +18,7 @@ $(document).ready(function () {
             inputId: '#input-sciencekeyword',
             jsonFile: 'json/thesauri/gcmdScienceKeywords.json',
             jsTreeId: '#jstree-sciencekeyword',
-            searchInputId: '#input-sciencekeyword-search',
+            searchInputId: '#input-sciencekeyword-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-gcmd'
         },
         {
@@ -212,10 +212,8 @@ $(document).ready(function () {
                     }
                 }
             });
-
-            $(config.searchInputId).on("input", function () {
-                $(config.jsTreeId).jstree(true).search($(this).val());
-            });
+            
+            // Event listener for search input is delegated to the document            
 
             function updateSelectedKeywordsList() {
                 let selectedKeywordsList = document.getElementById(config.selectedKeywordsListId);
@@ -312,5 +310,37 @@ $(document).ready(function () {
             loadKeywords(data);
         });
     }
+    // the search event is delegated to the highest level. the input will be propagated, and we can formulate the event handler at this place.
+    $(document).on('input', '[id$="-thesaurussearch"]', function() {
+            const searchInputId = `#${this.id}`;
+            // Find the corresponding config
+            const config = keywordConfigurations.find(c => c.searchInputId === searchInputId);
+            if (config && $(config.jsTreeId).jstree(true)) {
+                $(config.jsTreeId).jstree(true).search($(this).val());
+            }
+        });
+
+    // Handle Enter in modal search. We don't want it to remove any elements
+    $(document).on('keydown', '[id$="-thesaurussearch"]', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const searchInput = $(this);
+            const config = keywordConfigurations.find(c => c.searchInputId === `#${this.id}`);
+
+            if (!config) return;
+
+            const jsTreeInstance = $(config.jsTreeId).jstree(true);
+            if (!jsTreeInstance) return;
+
+            // 3. Explicitly trigger the search.
+            jsTreeInstance.search(searchInput.val());
+
+            // 4. Immediately return focus to the search input. This is the key
+            searchInput.focus();
+        }
+    });
+
     document.addEventListener('translationsLoaded', refreshThesaurusTagifyInstances);
 });
