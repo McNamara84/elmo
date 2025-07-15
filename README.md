@@ -30,7 +30,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 ## Main Features
 - Simple mapping of entered data using XSLT.
 - Modular, customizable front end.
-- Multilingualism through the use of language files.
+- Multilingualism through the use of language files. Add your own language file and ELMO will detect it automatically.
 - Always up-to-date controlled vocabularies through regular automatic updates.
 - Easy input of authors and contributors using ORCID preload.
 - Submitting of metadata directly to data curators.
@@ -202,7 +202,7 @@ PHP Dependencies can be installed using the following terminal commands:
 	2. Composer upgrade
 Prequisite for that is composer. If you don't have it consider brew install composer or other options
 
-The following third-party dependencies are included in header.html and footer.html:
+The following third-party dependencies are included in header.php and footer.html:
 
 - [Bootstrap 5.3.3](https://github.com/twbs/bootstrap/releases)<br>
   For the design, responsiveness and dark mode.

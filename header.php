@@ -1,3 +1,9 @@
+<?php
+// Automatically detect available language files
+$langFiles = glob(__DIR__ . '/lang/*.json');
+$langCodes = array_map(fn($file) => basename($file, '.json'), $langFiles);
+sort($langCodes);
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -45,8 +51,8 @@
     <div class="ms-auto d-flex align-items-center me-3 p-1">
 
       <!-- Link to legal notice -->
-      <a href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank" class="text-white me-3 settings-menu-link"
-        data-translate="header.legalNotice">Legal Notice</a>
+      <a href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
+        class="text-white me-3 settings-menu-link" data-translate="header.legalNotice">Legal Notice</a>
       <!-- Dropdown menu for help -->
       <div class="dropdown ms-auto me-3 p-1">
         <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
@@ -95,12 +101,11 @@
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-lang">
           <li><a class="dropdown-item" data-bs-language-value="auto" data-translate="buttons.langAuto">
               <i class="bi bi-gear-fill"></i> Auto</a></li>
-          <li><a class="dropdown-item" data-bs-language-value="en" data-translate="buttons.langEN">
-              <i class="bi bi-globe"></i> EN</a></li>
-          <li><a class="dropdown-item" data-bs-language-value="de" data-translate="buttons.langDE">
-              <i class="bi bi-globe"></i> DE</a></li>
-          <li><a class="dropdown-item" data-bs-language-value="fr" data-translate="buttons.langFR">
-              <i class="bi bi-globe"></i> FR</a></li>
+          <?php foreach ($langCodes as $code): ?>
+            <li><a class="dropdown-item" data-bs-language-value="<?php echo $code; ?>"
+                data-translate="<?php echo 'buttons.lang' . strtoupper($code); ?>">
+                <i class="bi bi-globe"></i> <?php echo strtoupper($code); ?></a></li>
+          <?php endforeach; ?>
         </ul>
       </div>
     </div>
