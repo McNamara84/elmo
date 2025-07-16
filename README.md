@@ -52,10 +52,60 @@ Following conditions are required for installation:
 6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `settings.php`.
 7. Create a Google Maps JS API key and paste it into the `settings.php` file as well.
 8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
-9. Access `install.html` via the browser and choose to install with or without test datasets. The database tables will be created in your database, as well as 3 test datasets, if you chose that first option.
-10. Delete `install.php` and `install.html` after successfully creating the database.
-11. The metadata editor is now accessible in the browser via `localhost/directoryname`.
-12. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
+9. In this folder run `npm install` via bash.
+10. There you run `composer install`. 
+11. Access `install.html` via the browser and choose to install with or without test datasets. The database tables will be created in your database, as well as 3 test datasets, if you chose that first option.
+12. Delete `install.php` and `install.html` after successfully creating the database.
+13. The metadata editor is now accessible in the browser via `localhost/directoryname`.
+14. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
+
+### Installation via Docker
+1. Install [Docker](https://docs.docker.com/engine/install/).
+2. Clone the repository.
+3. Run `docker compose build` in the cloned project folder via bash.
+4. Run `docker compose up -d` to start the container.
+5. This directory contains .env_sample that you will need to rename to .env. Please feel free to change the credentials in it.
+	Please mind that: 
+	- Environment variables for database setup only apply on first container startup. If volumes persist, old configs stay alive.
+	- Use `docker-compose down -v` to reset the database when updating credentials.
+6. Docker Environment Setup 🐳
+
+This section outlines the automatic processes handled by the Docker environment for ELMO. While not strictly necessary for basic usage, understanding these steps is crucial for modifying behavior or troubleshooting.
+
+**1. `docker-compose.yaml`**
+- Configures and orchestrates two primary services:
+  - `db`: Built from a MariaDB image.
+  - `web`: Built from the `Dockerfile`.
+
+**2. `Dockerfile`** 
+- **Base Image:** Installs `php 8.4-apache` and essential dependencies, including the database client.
+- **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html`), setting appropriate ownership for the standard Apache user (`www-data`). I fyou don't want something to be copied into container, include it into .dockerignore (performance might be affected)
+- **Entrypoint:** Executes the `docker-entrypoint.sh` script.
+
+**3. `docker-entrypoint.sh`** 
+- **Database Setup:** Responsible for initializing the database structure by running `install.php`.
+- **Idempotency:** Utilizes a `FLAG_FILE` to ensure the database setup runs only once. If this file exists, the installation process is skipped.
+- **Installation Options for `install.php`:**
+  - `basic` (default): Creates only the database structure and inserts lookup data.
+  - `complete`: Creates the database structure, inserts lookup data, *and* populates the database with exemplar (test) data. This is controlled by the `INSTALL_ACTION` environment variable (e.g., `INSTALL_ACTION=complete`).
+
+---
+
+**Important Notes for Developers:**
+
+* **Full Reset for Dockerfile/Entrypoint Changes:**
+    To apply changes made to `Dockerfile` or `docker-entrypoint.sh`, a full reset of the Docker containers is required:
+    ```bash
+    docker-compose down -v
+    docker-compose build --no-cache
+    ```
+* **Applying Other Changes:**
+    For changes to project files (which are copied, not mounted as volumes), you need to rebuild the service:
+    ```bash
+    docker-compose up --build
+    ```
+    This rebuilds the `web` service (and any other services specified in `docker-compose.yaml` that depend on the build context), ensuring your updated project files are included in the new container image.
+
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
 
@@ -140,6 +190,10 @@ If you encounter problems with the installation, feel free to leave an entry in 
 
   ## Dependencies
   </summary>
+PHP Dependencies can be installed using the following terminal commands:
+	1. Composer update
+	2. Composer upgrade
+Prequisite for that is composer. If you don't have it consider brew install composer or other options
 
 The following third-party dependencies are included in header.html and footer.html:
 
@@ -157,6 +211,8 @@ The following third-party dependencies are included in header.html and footer.ht
   Is used to display the thesauri as a hierarchical tree structure.
 - [Swagger UI 5.18.2](https://github.com/swagger-api/swagger-ui/releases)<br>
   For displaying the dynamic and interactive API documentation in accordance with OpenAPI standard 3.1.
+
+To install them: npm install
 </details>
 
 <details>
@@ -191,6 +247,8 @@ The following third-party dependencies are included in header.html and footer.ht
   - `$showSpatialTemporalCoverage`: Specifies whether the form group Spatial and Temporal Coverages should be displayed (true/false).
   - `$showRelatedWork`: Specifies whether the form group Related Work should be displayed (true/false).
   - `$showFundingReference`: Specifies whether the form group Funding Reference should be displayed (true/false).
+  - `$showGGMsProperties`: specific for implementation for the ICGEM platform. Specifies whether the form group GGMs Properties (essential) should be displayed (true/false).
+
 </details>
 
 ## API
@@ -902,6 +960,71 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
 
+### GGMs Properties (Essential)
+
+Viable for the implementation for the ICGEM platform. This form group collects the essential characteristics of a Global Geopotential Model (GGM). 
+Essential are understood as one formgroup containing the most general information about a model being published. This formgroup is the first of multiple groups. These formgroups are developed as an adaptation of ELMO for publications of the Global Gravitational Models. Hence, if any field in this group is filled, all the fields become required.
+
+- **Model Type**
+
+  The type of gravity field model being described.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database is described in the dedicated `Model_Type` table with id, name and description
+  - Restrictions: Must be selected from a controlled list
+  - Example values: `Static`, `Temporal`
+  - Mapping: mapped to `<modelType>` in the XML export
+
+- **Mathematical Representation**
+
+  The set of functions used to express the gravitational potential, which are solutions of Laplace’s equation in a given coordinate system. The coordi-nate system determines the type of harmonics — spherical or ellipsoidal — and thus defines the mathematical form of the model. 
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database is described in the dedicated `Mathematical_Representation` table with id, name and description
+  - Restrictions: Must be selected from a controlled list 
+  - Example values: `Spherical harmonics`, `Ellipsoidal harmonics`
+  - Mapping: mapped to `<mathematicalRepresentation>` in the XML export
+
+- **Celestial Body**
+
+  The planetary body for which the gravity field model is computed.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is called: `Celestial_Body` in the `GGM_Properties` table
+  - Restrictions: Must be selected from a controlled list
+  - Example values: `Earth`, `Moon of the Earth`, `Mars`, `Ceres`, `Venus`, `Other`
+  - Mapping: mapped to `<celestialBody>` in the XML export
+
+- **File Format**
+
+  The file format following ICGEM standards, that is used for the model data.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is described in the dedicated `File_Format` table with id, name and description
+  - Restrictions: Must be selected from a controlled list (populated from the ICGEM format database)
+  - Example values: `icgem1.0`, `icgem2.0`
+  - Mapping: mapped to `<fileFormat>` in the XML export
+
+- **Model Name**
+
+  The unique identifier for the gravity field model.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database is called: `Model_Name` in the `GGM_Properties` table
+  - Restrictions: No spaces allowed; must be unique
+  - Example values: `EIGEN-6C4`, `GOCO06s`, `GGM05G`
+  - Mapping: mapped to `<modelName>` in the XML export
+
+- **Product Type**
+
+  Specifies the type of gravity field product.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is called: `Product_Type` in the `GGM_Properties` table
+  - Restrictions: Must be selected from a controlled list
+  - Example values: `Gravity Field`, `Topographic Gravity Field`
+  - Mapping: mapped to `<productType>` in the XML export
+
 </details>
 
 <details>
@@ -999,6 +1122,14 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | *schemeURI*                               |                   0-1                   |                  0-1                  | `<funderIdentifier schemeURI>`                                                                                                                                              |
 |                            | **Grant Number**                          |                   0-1                   |                  0-1                  | `<awardNumber>`                                                                                                                                                             |
 |                            | **Grant Name**                            |                   0-1                   |                  0-1                  | `<awardTitle>`                                                                                                                                                              |
+| GGMs Properties (Essential)|                                           |        1                                |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Model Type**                            |        1                                |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Mathematical Representation**           |        1                                |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Celestial Body**                        |       0-1                               |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **File Format**                           |       0-1                               |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Model Name**                            |        1                                |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Product Type**                          |       0-1                               |                  0                    |           not mapped                                                                                                                                                        |
+
 
 </details>
 
@@ -1033,6 +1164,13 @@ Formgroup Related works:
   Formgroup Funding Reference:
   - **Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
 
+As for the ICGEM implementation, more required variables are added to ensure a full description of a Global Gravitational Model:
+- **Model Type**, **Mathematical Representation**, **Model Name**
+
+Meanwhile these variables from required list are not required to publish a GGM:
+- **Resource Type** *(can be mapped to Model)*, **Spatio-temporal Coverage** *(can be mapped to global coverage)* 
+
+
 </details>
 
 <details>
@@ -1046,6 +1184,7 @@ Formgroup Related works:
   The following ER diagram shows the relationships and structures of the tables in the database.
 
   ![ER-Diagramm](doc/ER-Diagram.jpg)
+  
 </details>
 
 ## Contributing

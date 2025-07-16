@@ -39,36 +39,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Full save operation
+    // Saving all mandatory fields & optional fields if needed
     $resource_id = saveResourceInformationAndRights($connection, $_POST);
     saveAuthors($connection, $_POST, $resource_id);
     saveContactPerson($connection, $_POST, $resource_id);
-    saveOriginatingLaboratories($connection, $_POST, $resource_id);
-    saveContributorPersons($connection, $_POST, $resource_id);
-    saveContributorInstitutions($connection, $_POST, $resource_id);
+    if ($showMslLabs) {
+        saveOriginatingLaboratories($connection, $_POST, $resource_id);
+    }
+    if ($showContributorPersons) {
+        saveContributorPersons($connection, $_POST, $resource_id);
+    }
+    if ($showContributorInstitutions) {
+        saveContributorInstitutions($connection, $_POST, $resource_id);
+    }
     saveDescriptions($connection, $_POST, $resource_id);
-    saveKeywords($connection, $_POST, $resource_id);
-    saveFreeKeywords($connection, $_POST, $resource_id);
-    saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
-    saveRelatedWork($connection, $_POST, $resource_id);
-    saveFundingReferences($connection, $_POST, $resource_id);
-    saveGGMsProperties($connection, $_POST, $resource_id);
+    if ($showGcmdThesauri) {
+        saveKeywords($connection, $_POST, $resource_id);
+    }
+    if ($showFreeKeywords) {
+        saveFreeKeywords($connection, $_POST, $resource_id);
+    }
+    if ($showSpatialTemporalCoverage) {
+        saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
+    }
+    if ($showRelatedWork) {
+        saveRelatedWork($connection, $_POST, $resource_id);
+    }
+    if ($showFundingReference) {
+        saveFundingReferences($connection, $_POST, $resource_id);
+    }
+    if ($showGGMsProperties) {
+        saveGGMsProperties($connection, $_POST, $resource_id);
+    }
 
-    // Handle file download if requested
-    if (isset($_POST['filename'])) {
-        $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
 
-        // Set headers for file download
-        header('Content-Type: application/xml');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
+require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+$datasetController = new DatasetController();
+$xmlString = $datasetController->getResourceAsXml($connection, $resource_id);
 
-        // Build API URL and fetch XML content
-        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
-        $base_url = $protocol . $_SERVER['HTTP_HOST'];
-        $project_path = dirname(dirname($_SERVER['PHP_SELF']));
-        $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
+ // Handle file download if requested
+if (isset($_POST['filename'])) {
+    $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
 
-        readfile($url);
-        exit();
+    header('Content-Type: application/xml');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+    // Build API URL and local file path
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+    $base_url = $protocol . $_SERVER['HTTP_HOST'];
+    $project_path = dirname(dirname($_SERVER['PHP_SELF']));
+    $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
+    $localpath = "/var/www/html/xml/resource_" . $resource_id . ".xml";
+
+    // Try to fetch via HTTP first
+    $data = @file_get_contents($url);
+    if ($data !== false) {
+        elmo_log("Fetched XML via API: $url");
+        echo $data;
+    } elseif (file_exists($localpath)) {
+        elmo_log("Fetched XML from local file: $localpath");
+        readfile($localpath);
+    } else {
+        elmo_log("File not found (neither remote nor local). URL tried: $url, local path: $localpath");
+        http_response_code(404);
+        echo "File not found (neither remote nor local).";
+    }
+    exit();
     }
 }

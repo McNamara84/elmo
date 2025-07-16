@@ -3,79 +3,10 @@ namespace Tests;
 use PHPUnit\Framework\TestCase;
 use mysqli_sql_exception;
 
-require_once __DIR__ . '/../settings.php';
 require_once __DIR__ . '/../save/formgroups/save_originatinglaboratory.php';
-require_once __DIR__ . '/TestDatabaseSetup.php';
 
-class SaveOriginatingLaboratoryTest extends TestCase
+class SaveOriginatingLaboratoryTest extends DatabaseTestCase
 {
-    private $connection;
-
-    protected function setUp(): void
-    {
-        global $connection;
-        if (!$connection) {
-            $connection = connectDb();
-        }
-        $this->connection = $connection;
-
-        // Überprüfen, ob die Testdatenbank verfügbar ist
-        $dbname = 'mde2-msl-test';
-        try {
-            if ($this->connection->select_db($dbname) === false) {
-                // Testdatenbank erstellen
-                $connection->query("CREATE DATABASE " . $dbname);
-                $connection->select_db($dbname);
-            }
-
-            // Datenbank für Tests aufsetzen
-            setupTestDatabase($connection);
-
-        } catch (\Exception $e) {
-            $this->fail("Fehler beim Setup der Testdatenbank: " . $e->getMessage());
-        }
-    }
-
-    protected function tearDown(): void
-    {
-        $this->cleanupTestData();
-    }
-
-    private function cleanupTestData()
-    {
-        $this->connection->query("SET FOREIGN_KEY_CHECKS=0");
-        $this->connection->query("DELETE FROM Resource_has_Spatial_Temporal_Coverage");
-        $this->connection->query("DELETE FROM Resource_has_Thesaurus_Keywords");
-        $this->connection->query("DELETE FROM Resource_has_Related_Work");
-        $this->connection->query("DELETE FROM Resource_has_Originating_Laboratory");
-        $this->connection->query("DELETE FROM Resource_has_Funding_Reference");
-        $this->connection->query("DELETE FROM Resource_has_Contact_Person");
-        $this->connection->query("DELETE FROM Resource_has_Contributor_Person");
-        $this->connection->query("DELETE FROM Resource_has_Contributor_Institution");
-        $this->connection->query("DELETE FROM Resource_has_Author");
-        $this->connection->query("DELETE FROM Resource_has_Free_Keywords");
-        $this->connection->query("DELETE FROM Author_has_Affiliation");
-        $this->connection->query("DELETE FROM Contact_Person_has_Affiliation");
-        $this->connection->query("DELETE FROM Contributor_Person_has_Affiliation");
-        $this->connection->query("DELETE FROM Contributor_Institution_has_Affiliation");
-        $this->connection->query("DELETE FROM Originating_Laboratory_has_Affiliation");
-        $this->connection->query("DELETE FROM Free_Keywords");
-        $this->connection->query("DELETE FROM Affiliation");
-        $this->connection->query("DELETE FROM Title");
-        $this->connection->query("DELETE FROM Description");
-        $this->connection->query("DELETE FROM Spatial_Temporal_Coverage");
-        $this->connection->query("DELETE FROM Thesaurus_Keywords");
-        $this->connection->query("DELETE FROM Related_Work");
-        $this->connection->query("DELETE FROM Originating_Laboratory");
-        $this->connection->query("DELETE FROM Funding_Reference");
-        $this->connection->query("DELETE FROM Contact_Person");
-        $this->connection->query("DELETE FROM Contributor_Person");
-        $this->connection->query("DELETE FROM Contributor_Institution");
-        $this->connection->query("DELETE FROM Author");
-        $this->connection->query("DELETE FROM Resource");
-        $this->connection->query("SET FOREIGN_KEY_CHECKS=1");
-    }
-
     /**
      * Test saving of a single Originating Laboratory.
      */
@@ -94,17 +25,18 @@ class SaveOriginatingLaboratoryTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "laboratoryName" => ['[{"value":"Test Lab"}]'],
+            "laboratoryName" => ['Test Lab'],
             "LabId" => ["1b9abbf97c7caa2d763b647d476b2910"],
-            "laboratoryAffiliation" => ['[{"value":"California Digital Library"}]'],
-            "laboratoryRorIds" => ['[{"value":"https://ror.org/03yrm5c26"}]']
+            "laboratoryAffiliation" => ['California Digital Library'],
+            "laboratoryRorIds" => ['https://ror.org/03yrm5c26']
         ];
 
-        saveOriginatingLaboratories($this->connection, $postData, $resource_id);
+        $resultSave = saveOriginatingLaboratories($this->connection, $postData, $resource_id);
+        $this->assertTrue($resultSave, "Speichern der Originating Laboratories fehlgeschlagen.");
 
         // Check if Originating Laboratory was saved correctly
         $stmt = $this->connection->prepare("SELECT * FROM Originating_Laboratory WHERE laboratoryname = ?");
-        $labName = json_decode($postData["laboratoryName"][0], true)[0]["value"];
+        $labName = $postData["laboratoryName"][0];
         $stmt->bind_param("s", $labName);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
@@ -127,8 +59,8 @@ class SaveOriginatingLaboratoryTest extends TestCase
         $stmt->execute();
         $affiliationResult = $stmt->get_result()->fetch_assoc();
 
-        $this->assertEquals(json_decode($postData["laboratoryAffiliation"][0], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation wurde nicht korrekt gespeichert.");
-        $this->assertEquals(str_replace("https://ror.org/", "", json_decode($postData["laboratoryRorIds"][0], true)[0]["value"]), $affiliationResult["rorId"], "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert.");
+        $this->assertEquals($postData["laboratoryAffiliation"][0], $affiliationResult["name"], "Der Name der Affiliation wurde nicht korrekt gespeichert.");
+        $this->assertEquals(str_replace("https://ror.org/", "", $postData["laboratoryRorIds"][0]), $affiliationResult["rorId"], "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert.");
     }
 
     /**
@@ -149,18 +81,31 @@ class SaveOriginatingLaboratoryTest extends TestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
-            "laboratoryName" => ['[{"value":"Lab A"}]', '[{"value":"Lab B"}]', '[{"value":"Lab C"}]'],
-            "LabId" => ["1b9abbf97c7caa2d763b647d476b2910", "9cd562c216daa82792972a074a222c52", "09e434194091574963c80f83d586875d"],
-            "laboratoryAffiliation" => ['[{"value":"California Digital Library"}]', '[{"value":"OurResearch"}]', '[{"value":"University of California, San Diego"}]'],
-            "laboratoryRorIds" => ['[{"value":"https://ror.org/03yrm5c26"}]', '[{"value":"https://ror.org/02nr0ka47"}]', '[{"value":"https://ror.org/0168r3w48"}]']
+            "laboratoryName" => ['Lab A', 'Lab B', 'Lab C'],
+            "LabId" => [
+                "1b9abbf97c7caa2d763b647d476b2910",
+                "9cd562c216daa82792972a074a222c52",
+                "09e434194091574963c80f83d586875d"
+            ],
+            "laboratoryAffiliation" => [
+                'California Digital Library',
+                'OurResearch',
+                'University of California, San Diego'
+            ],
+            "laboratoryRorIds" => [
+                'https://ror.org/03yrm5c26',
+                'https://ror.org/02nr0ka47',
+                'https://ror.org/0168r3w48'
+            ]
         ];
 
-        saveOriginatingLaboratories($this->connection, $postData, $resource_id);
+        $resultSave = saveOriginatingLaboratories($this->connection, $postData, $resource_id);
+        $this->assertTrue($resultSave, "Speichern der Originating Laboratories fehlgeschlagen.");
 
         // Check if Originating Laboratories were saved correctly
         for ($i = 0; $i < 3; $i++) {
             $stmt = $this->connection->prepare("SELECT * FROM Originating_Laboratory WHERE laboratoryname = ?");
-            $labName = json_decode($postData["laboratoryName"][$i], true)[0]["value"];
+            $labName = $postData["laboratoryName"][$i];
             $stmt->bind_param("s", $labName);
             $stmt->execute();
             $result = $stmt->get_result()->fetch_assoc();
@@ -183,8 +128,8 @@ class SaveOriginatingLaboratoryTest extends TestCase
             $stmt->execute();
             $affiliationResult = $stmt->get_result()->fetch_assoc();
 
-            $this->assertEquals(json_decode($postData["laboratoryAffiliation"][$i], true)[0]["value"], $affiliationResult["name"], "Der Name der Affiliation für Labor " . ($i + 1) . " wurde nicht korrekt gespeichert.");
-            $this->assertEquals(str_replace("https://ror.org/", "", json_decode($postData["laboratoryRorIds"][$i], true)[0]["value"]), $affiliationResult["rorId"], "Die ROR-ID der Affiliation für Labor " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals($postData["laboratoryAffiliation"][$i], $affiliationResult["name"], "Der Name der Affiliation für Labor " . ($i + 1) . " wurde nicht korrekt gespeichert.");
+            $this->assertEquals(str_replace("https://ror.org/", "", $postData["laboratoryRorIds"][$i]), $affiliationResult["rorId"], "Die ROR-ID der Affiliation für Labor " . ($i + 1) . " wurde nicht korrekt gespeichert.");
         }
     }
 }

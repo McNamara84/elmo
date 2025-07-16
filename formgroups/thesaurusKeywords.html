@@ -19,6 +19,7 @@
           <div class="accordion-body">
             <!-- Input field -->
             <div class="input-group has-validation input-margin-top-bottom">
+              <label for="input-sciencekeyword" class="visually-hidden">sciencekeyword</label>
               <div class="form-floating">
                 <div class="input-group has-validation">
                   <input type="text" class="form-control input-with-help input-right-no-round-corners"
@@ -31,7 +32,8 @@
               <div class="col-auto p-2">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                   data-bs-target="#modal-sciencekeyword" id="button-sciencekeyword-open">
-                  <i class="bi bi-diagram-3"></i>
+                  <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                  <span class="visually-hidden">Thesaurus öffnen</span>
                 </button>
               </div>
             </div>
@@ -51,6 +53,7 @@
           <div class="accordion-body">
             <!-- Input field -->
             <div class="input-group has-validation input-margin-top-bottom">
+              <label for="input-Platforms" class="visually-hidden">Platforms</label>
               <div class="form-floating">
                 <div class="input-group has-validation">
                   <input type="text" class="form-control input-with-help input-right-no-round-corners"
@@ -63,7 +66,8 @@
               <div class="col-auto p-2">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-Platforms"
                   id="platformKeywordsThesaurus">
-                  <i class="bi bi-diagram-3"></i>
+                  <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                  <span class="visually-hidden">Thesaurus öffnen</span>
                 </button>
               </div>
             </div>
@@ -84,6 +88,7 @@
           <div class="accordion-body">
             <!-- Input field -->
             <div class="input-group has-validation input-margin-top-bottom">
+              <label for="input-Instruments" class="visually-hidden">Instruments</label>
               <div class="form-floating">
                 <div class="input-group has-validation">
                   <input type="text" class="form-control input-with-help input-right-no-round-corners"
@@ -96,7 +101,8 @@
               <div class="col-auto p-2">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-instruments"
                   id="openInstrumentsThesaurus">
-                  <i class="bi bi-diagram-3"></i>
+                  <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                  <span class="visually-hidden">Thesaurus öffnen</span>
                 </button>
               </div>
             </div>
@@ -128,8 +134,9 @@
       <div class="modal-body d-flex">
         <!-- Left Side: Keyword Selection Tree -->
         <div id="panel-sciencekeyword-thesaurus" class="w-50 pe-3 border-end">
+          <label for="input-sciencekeyword-thesaurussearch" class="visually-hidden">Search for keywords</label>
           <input type="text" class="form-control mb-3" id="input-sciencekeyword-thesaurussearch"
-            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder" aria-label="Search for keywords">
           <div id="jstree-sciencekeyword"></div>
         </div>
 
@@ -166,8 +173,9 @@
       <div class="modal-body d-flex">
         <!-- Left Side: Keyword Selection Tree -->
         <div id="panel-Platforms-thesaurus" class="w-50 pe-3 border-end">
+          <label for="input-Platforms-thesaurussearch" class="visually-hidden">Search for keywords</label>
           <input type="text" class="form-control mb-3" id="input-Platforms-thesaurussearch"
-            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder" aria-label="Search for keywords">
           <div id="jstree-Platforms"></div>
         </div>
 
@@ -204,8 +212,9 @@
       <div class="modal-body d-flex">
         <!-- Left Side: Keyword Selection Tree -->
         <div id="panel-instruments-thesaurus" class="w-50 pe-3 border-end">
+          <label for="input-instruments-thesaurussearch" class="visually-hidden">Search for keywords</label>
           <input type="text" class="form-control mb-3" id="input-instruments-thesaurussearch"
-            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder">
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder" aria-label="Search for keywords">
           <div id="jstree-instruments"></div>
         </div>
 

@@ -1,0 +1,59 @@
+# Ignore version control directories
+.git/
+.hg/
+.svn/
+
+# Ignore IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Ignore build and dependency directories
+#node_modules/
+
+# Ignore temporary and log files
+*.log
+*.tmp
+tmp/
+temp/
+
+# Ignore environment and secret files
+.env*
+*.pem
+*.key
+*.crt
+
+# Ignore documentation and markdown files
+docs/
+*.md
+README*
+
+# Ignore Docker-related files
+Dockerfile*
+docker-compose*
+
+# Ignore test and debug files
+tests/
+*_test.go
+debug/
+
+# Ignore language-specific patterns
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+
+# Ignore project-specific patterns
+config.local.*
+*.local.yml
+
+# Ignore other unnecessary files
+*.xsd
+*.xml
+*.mfd
+
+# Ensure essential files are not ignored
+!api/
+!save/

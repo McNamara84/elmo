@@ -1,5 +1,5 @@
 {
-    "lastUpdated": "2025-02-17 20:17:51",
+    "lastUpdated": "2025-05-09 04:20:54",
     "data": [
         {
             "id": "https://gcmd.earthdata.nasa.gov/kms/concept/1eb0ea0a-312c-4d74-8d42-6f1ad758f999",
@@ -15579,6 +15579,15 @@
                                             "children": []
                                         },
                                         {
+                                            "id": "https://gcmd.earthdata.nasa.gov/kms/concept/f03cac2e-6ee5-4734-9ab7-eb8521ba2654",
+                                            "text": "GREENHOUSE GASES",
+                                            "language": "en",
+                                            "scheme": "NASA/GCMD Earth Science Keywords",
+                                            "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                            "description": "Greenhouse gases, including carbon dioxide, methane, and water vapor, absorb and re-emit thermal infrared radiation, thereby regulating Earth\u2019s temperature and climate. While they are essential for maintaining habitable conditions by preventing heat loss into space, excessive emissions from human activities amplify this effect, contributing to climate change.",
+                                            "children": []
+                                        },
+                                        {
                                             "id": "https://gcmd.earthdata.nasa.gov/kms/concept/0c4ffc6a-694d-4f33-bc18-06fefb68acdd",
                                             "text": "HEAVY METALS CONCENTRATION",
                                             "language": "en",
@@ -23981,6 +23990,61 @@
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
                                             "description": "Describes the gravitational properties of the geoid, which is defined as a surface on which the earth's attractive (i.e. gravitational) forces are everywhere equal, i.e. a gravimetric equipotential surface. The geoid is of fundamental importance in determining positions on the earth's surface as most measurements are made with reference to this surface.",
                                             "children": []
+                                        },
+                                        {
+                                            "id": "https://gcmd.earthdata.nasa.gov/kms/concept/abaf0bfd-4acf-4ac0-a570-85cccb78032e",
+                                            "text": "TECHNIQUES",
+                                            "language": "en",
+                                            "scheme": "NASA/GCMD Earth Science Keywords",
+                                            "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                            "description": "Geodesy is the science of the Earth\u2019s shape, gravity, and rotation, including their evolution in time. Several techniques are used to observe the geodetic properties of the Earth, including Global Navigation Satellite Systems (GNSS), Satellite Laser Ranging (SLR), Very Long Baseline Interferometry (VLBI), and the Doppler Orbitography and Radio-Positioning by Integrated Satellite (DORIS) system. These space-geodetic observations also provide the basis for the reference frame that is needed in order to assign coordinates to points and objects and thereby determine how those points and objects move over time.",
+                                            "children": [
+                                                {
+                                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/846a5d37-085b-4ae0-9d4d-23b88b6fc304",
+                                                    "text": "DORIS (DOPPLER ORBITOGRAPHY AND RADIOPOSITIONING BY INTEGRATED SATELLITE)",
+                                                    "language": "en",
+                                                    "scheme": "NASA/GCMD Earth Science Keywords",
+                                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                                    "description": "Doppler Orbitography and Radiopositioning by Integrated Satellite (DORIS) is a dual-frequency Doppler system consisting of a receiver flying aboard a satellite and a globally distributed network of ground beacons. The DORIS receiver on-board the orbiting satellite tracks the dual-frequency radio signals transmitted by the network of ground beacons and generates the DORIS data. A measurement is made of either the Doppler shift or absolute phase as the satellite\u2019s orbit moves over the ground-based beacon.\n\nDORIS has been included as a host experiment on various space missions. Platforms with on-board DORIS receivers are CryoSat-2, HY-2A, OSTM/Jason-2, Jason-3, Sentinel-6 Michael Freilich, SARAL, and SPOT-4 and -5.\n\nUnlike many other navigation systems, DORIS is based on an uplink device. The receivers are on board the satellite while the transmitters are on the ground. This creates a centralized system in which the complete set of observations is downloaded by the satellite to the ground center, from where they are distributed after editing and processing.",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/93b2fed5-883f-4d82-9d62-19654d0765ea",
+                                                    "text": "GNSS (GLOBAL NAVIGATION SATELLITE SYSTEMS)",
+                                                    "language": "en",
+                                                    "scheme": "NASA/GCMD Earth Science Keywords",
+                                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                                    "description": "A Global Navigation Satellite System (GNSS) is a space geodesy technique that provides autonomous geospatial positioning with global coverage. The U.S. Global Positioning System (GPS) is one type of GNSS.\n\nThe current GPS constellation includes 24 satellites, each traveling in a 12-hour, circular orbit, 20,200 kilometers above the Earth. The satellites are positioned so that six are observable nearly 100 percent of the time from any point on Earth. The current GLObal NAvigation Satellite System (GLONASS) constellation includes 24 satellites, each traveling in a circular orbit 19,140 kilometers above the Earth. The satellites are positioned so that four are observable nearly 100 percent of the time from any point on Earth.\n\nGNSS receivers detect, decode, and process signals from the GNSS satellites. The satellites transmit the ranging codes on two radio-frequency carriers, allowing the locations of GNSS receivers to be determined with varying degrees of accuracy, depending on the receiver and post-processing of the data.\n\nA global network of several hundred permanent GNSS (GPS and GPS+GLONASS) receivers provide data. High-accuracy measurements of the change in receiver locations over time allow researchers to study the motions of tectonic plates, displacements associated with earthquakes, and Earth orientation.",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/de965e45-2275-44d6-9193-9387881b538c",
+                                                    "text": "GNSS-R (RONGOWAI GLOBAL NAVIGATION SATELLITE SYSTEM REFLECTOMETRY)",
+                                                    "language": "en",
+                                                    "scheme": "NASA/GCMD Earth Science Keywords",
+                                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                                    "description": "Global Navigation Satellite System (GNSS) is the general name given to navigation systems that make use of satellites for providing the positioning, navigating and time-keeping services that we use every day. GNSS signals are truly global - they can be picked up anywhere on the surface of the planet as well as in the air and even in the highest layers of the atmosphere. The US-developed GPS system is the world\u2019s most utilized GNSS system, but others include EU\u2019s Galileo, and GLONASS (GLObal NAvigation Satellite System). Rongowai will test a new version of the sensors used on the CyGNSS satellites, which include additional signal frequencies and will incorporate Galileo (E.U.) GNSS satellites in addition to GPS. By taking the novel approach of mounting this next-generation GNSS-R receiver on a commercial Air New Zealand aircraft, Rongowai allows for an unprecedented collection of climate data over and around the islands of New Zealand. This data will include inundation and coastal dynamics, and soil moisture content and variability.",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/22f57987-7a8d-46d8-9b3d-37761755f8b2",
+                                                    "text": "SLR (SATELLITE LASER RANGING)",
+                                                    "language": "en",
+                                                    "scheme": "NASA/GCMD Earth Science Keywords",
+                                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                                    "description": "Satellite Laser Ranging (SLR) targets are satellites equipped with corner cubes or retroreflectors. Currently, the global SLR network tracks over forty such satellites. The observable is the round-trip laser pulse time-of-flight to the satellite.\n\nSLR and Lunar Laser Ranging (LLR) use short-pulse lasers and state-of-the-art optical receivers and timing electronics to measure the two-way time of flight (and hence distance) from ground stations to retroreflector arrays on Earth orbiting satellites and the Moon.\n\nSLR and Lunar Laser Ranging (LLR) use short-pulse lasers and state-of-the-art optical receivers and timing electronics to measure the two-way time of flight (and hence distance) from ground stations to retroreflector arrays on Earth orbiting satellites and the moon. The laser stations are also used to measure one-way distance from the ground stations to remote optical receivers on space and for very accurate time-transfer. Laser ranging activities are organized under the ILRS.\n\nSLR is an accurate technique for determining the geocentric position of an Earth satellite, allowing for the precise calibration of radar altimeters and separation of long-term instrumentation drift from secular changes in ocean topography. SLR\u2019s ability to measure the temporal variations in the Earth\u2019s gravity field and to monitor motion of a global network of stations with respect to the geocenter, together with the capability to monitor vertical motion in an absolute system, makes it unique for modeling and evaluating long-term climate change.",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/06382d35-5885-4d34-a586-8b44868250a8",
+                                                    "text": "VLBI (VERY LONG BASELINE INTERFEROMETRY)",
+                                                    "language": "en",
+                                                    "scheme": "NASA/GCMD Earth Science Keywords",
+                                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+                                                    "description": "Very Long Baseline Interferometry (VLBI) is a geometric technique: it measures the time difference between the arrival at two Earth-based antennas of a radio wavefront emitted by a distant quasar. Using large numbers of time difference measurements from many quasars observed with a global network of antennas, VLBI determines the inertial reference frame defined by the quasars and simultaneously the precise positions of the antennas. Because the time difference measurements are precise to a few picoseconds, VLBI determines the relative positions of the antennas to a few millimeters and the quasar positions to fractions of a milliarcsecond. Since the antennas are fixed to the Earth, their locations track the instantaneous orientation of the Earth in the inertial reference frame.\n\nThe celestial reference frame is defined by VLBI. The International Astronomical Union has adopted over 3,400 extragalactic radio sources (mostly quasars) used by VLBI as the defining objects of the celestial reference frame. Extragalactic objects form a true inertial reference frame because they are at such great distances that their motions across the sky are undetectable. Positions of stars in our galaxy are now tied to this reference frame, and this is the same reference frame used for measuring Earth orientation. VLBI is unique in its ability to make rapid, accurate measurements of the orientation of the terrestrial reference frame with respect to the celestial reference frame.\n\nVLBI observations are sponsored by over 40 organizations located in 19 countries. VLBI determines with unequaled accuracy the terrestrial reference frame (antenna locations on the Earth), the celestial reference frame (quasar positions on the sky), and Earth's orientation in space.",
+                                                    "children": []
+                                                }
+                                            ]
                                         }
                                     ]
                                 },

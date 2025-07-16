@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Database Installation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
-        integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
+        xintegrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"
-        integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ=="
+        xintegrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="css/gfz-cd.css">
 </head>
@@ -19,7 +19,7 @@
     <div class="container py-5">
         <h1 class="text-center mb-5">Database Installation</h1>
 
-        <div class="row row-cols-1 row-cols-md-2 g-4 mb-4 justify-content-center">
+        <div class="row row-cols-1 row-cols-md-3 g-4 mb-4 justify-content-center">
             <!-- Basic Installation Option -->
             <div class="col">
                 <div class="card h-100 installation-option">
@@ -51,6 +51,22 @@
                     </div>
                 </div>
             </div>
+
+            <!-- New: Populate and Generate XML Option -->
+            <div class="col">
+                <div class="card h-100 installation-option">
+                    <div class="card-body text-center">
+                        <div class="status-icon text-primary">
+                            <i class="bi bi-file-earmark-code"></i>
+                        </div>
+                        <h5 class="card-title">Populate & Generate XML</h5>
+                        <p class="card-text">Install database with test data AND generate XML files for all resources.</p>
+                        <button class="btn btn-outline-primary install-btn" data-action="populate-and-xml">
+                            Populate & Generate XML
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Status Messages -->
@@ -58,7 +74,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.min.js"
-        integrity="sha512-ykZ1QQr0Jy/4ZkvKuqWn4iF3lqPZyij9iRv6sGqLRdTPkY69YX6+7wvVGmsdBbiIfN/8OdsI7HABjvEok6ZopQ=="
+        xintegrity="sha512-ykZ1QQr0Jy/4ZkvKuqWn4iF3lqPZyij9iRv6sGqLRdTPkY69YX6+7wvVGmsdBbiIfN/8OdsI7HABjvEok6ZopQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="js/install.js"></script>
 </body>

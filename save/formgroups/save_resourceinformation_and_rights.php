@@ -5,7 +5,7 @@ require_once dirname(__FILE__) . '/../validation.php';
  * Saves or updates resource information and rights in the database.
  *
  * If a record with the same DOI exists, it updates the existing record.
- * For records without DOI, it creates a new entry.
+ * For records without DOI, it creates a new entry with a NEW Resource ID.
  * Duplicate titles are only saved once.
  *
  * @param mysqli $connection The database connection

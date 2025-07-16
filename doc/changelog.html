@@ -1,23 +1,82 @@
 <!-- Changelog Content -->
 <div class="accordion" id="accordion-changelog">
+        <!-- Version 2.0.2 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-changelog-version7">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse-changelog-version7" aria-expanded="true"
+                aria-controls="collapse-changelog-version7">
+                Version 2.0.2 - 2025/07/07
+            </button>
+        </h2>
+        <div id="collapse-changelog-version7" class="accordion-collapse collapse show"
+            aria-labelledby="heading-changelog-version7" data-bs-parent="#accordion-changelog">
+            <div class="accordion-body">
+                <ul>
+                    <li><strong>New Features:</strong>
+                        <ul>
+                            <li>Created new formgroup for gravity field models: Characteristics of the model</li>
+                            <li>Created HTML to represent the new input fields</li>
+                            <li>JavaScript to validate the new input fields</li>
+                            <li>New API endpoint to retrieve selection options for the new fields</li>
+                            <li>Update of database schema and addition of new exemplar data</li>
+                            <li>Backend: Updated the save in the database for the new inpit fields</li>
+                            <li>Frontend: Updated save and submit model workflows</li>
+                            <li>Added the new fields to the XML export</li>
+                            <li>Enabled a new opportunity for the XML export: base export -- export in freestyle schema</li>
+                            <li>Covered the new code with unit tests</li>
+                            <li>Updated the user guide to include the new formgroup</li>
+                            <li>Enabled an installation option: populate database with test data and generate XML files from it</li>
+                            <li>Updated the documentation</li>
+                            <li>Added search box in map modal for coverage data</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
     <!-- Version 2.0.1 -->
     <div class="accordion-item">
         <h2 class="accordion-header" id="heading-changelog-version6">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse-changelog-version6" aria-expanded="true"
+                data-bs-target="#collapse-changelog-version6" aria-expanded="false"
                 aria-controls="collapse-changelog-version6">
-                Version 2.0.1 - 2025/xx/xx
+                Version 2.0.1 - 2025/05/09
             </button>
         </h2>
-        <div id="collapse-changelog-version6" class="accordion-collapse collapse show"
+        <div id="collapse-changelog-version6" class="accordion-collapse collapse"
             aria-labelledby="heading-changelog-version6" data-bs-parent="#accordion-changelog">
             <div class="accordion-body">
                 <ul>
+                    <li><strong>New Features:</strong>
+                        <ul>
+                            <li>Added easy installation with docker-compose file</li>
+                            <li>Event handlers are outsourced to separate JavaScript files for better maintainability.</li>
+                        </ul>
+                    </li>
                     <li><strong>Fixed Bugs:</strong>
                         <ul>
                             <li>Early loading of Tagify for affiliations</li>
-                            <li>Ebedded correct favicon of GFZ</li>
+                            <li>Embedded correct favicon of GFZ</li>
+                            <li>Error source Tagify removed from Originating Laboratories</li>
+                            <li>Strange menu design of ELMOs User Guide</li>
+                            <li>Language menu doesn't show active language setting</li>
+                            <li>Saving Contributor Person(s)</li>
+                            <li>Submitting xml files</li>
+                            <li>GCMD Platform and Instrument Keywords are saved with thesaurus information in ISO scheme</li>
+                            <li>Updated link to EPOS MSL vocabularies</li>
                             <li>Tagify installed locally instead of via CDN to improve loading time</li>
+                            <li>Corrected re-initialization of Tagify fields after removing contact persons, preventing duplicate entries in role, affiliation, and free keyword fields</li>
+                            <li>Changed square corners of the timezone input field to rounded corners</li>
+                            <li>Fixed loading issue for geographic coverage data</li>
+                            <li>Addressed accessibility issues:
+                                <ul>
+                                    <li>Enhanced contrast for better readability</li>
+                                    <li>Added labels to empty buttons</li>
+                                    <li>Included missing form labels</li>
+                                </ul>
+                            </li>
+                            <li>Tagify has been removed from the Originating Laboratories section.</li>
                         </ul>
                     </li>
                 </ul>

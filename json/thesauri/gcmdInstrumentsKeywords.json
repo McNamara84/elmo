@@ -1,5 +1,5 @@
 {
-    "lastUpdated": "2025-02-17 20:17:41",
+    "lastUpdated": "2025-05-09 04:20:28",
     "data": [
         {
             "id": "https://gcmd.earthdata.nasa.gov/kms/concept/b2140059-b3ca-415c-b0a7-3e142783ffe8",
@@ -1125,7 +1125,7 @@
                                                     "language": "en",
                                                     "scheme": "NASA/GCMD Instruments",
                                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                                    "description": "",
+                                                    "description": "The Raman lidar (RL) is an active, ground-based, laser remote-sensing instrument that provides height- and time-resolved measurements of water-vapor mixing ratio, temperature, aerosol, and cloud optical properties. The RL operates in the ultraviolet (UV) and is sensitive to both molecular and aerosol backscatter. The RL works by transmitting short pulses of UV laser light into the atmosphere. As the light propagates, a small fraction of the light energy is scattered back to the lidar transceiver where it is collected and recorded as a time-resolved signal. From the delay between the outgoing pulse and the backscattered signal, the instrument infers the distance to the scattering volume.",
                                                     "children": []
                                                 },
                                                 {
@@ -1189,7 +1189,7 @@
                                                     "language": "en",
                                                     "scheme": "NASA/GCMD Instruments",
                                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                                    "description": "",
+                                                    "description": "The Center for Remote Sensing of Ice Sheets (CReSIS) has developed radars (ACoRDS) that operate over the frequency range from 140 to 230 MHz with multiple receivers developed for airborne sounding and imaging of ice sheets. MCoRDS radars have an adjustable radar bandwidth of 20 MHz to 60 MHz. Multiple receivers permit digital beamsteering for suppressing cross-track surface clutter that can mask weak ice-bed echoes and strip-map synthetic aperture radar (SAR) images of the ice-bed interface. With 200 W of peak transmit power, a loop sensitivity > 190 dB is achieved. These radars are flown on twin engine and long-range aircraft including NASA P-3 and DC-8.",
                                                     "children": []
                                                 },
                                                 {
@@ -1441,7 +1441,7 @@
                                                     "language": "en",
                                                     "scheme": "NASA/GCMD Instruments",
                                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                                    "description": "",
+                                                    "description": "The millimeter wavelength cloud radar (MMCR) systems probe the extent and composition of clouds at millimeter wavelengths. The MMCR is a zenith-pointing radar that operates at a frequency of 35 GHz. The main purpose of this radar is to determine cloud boundaries (e.g., bottoms and tops). This radar will also report radar reflectivity (dBZ) of the atmosphere up to 20 km. The radar has a Doppler capability that allows measurement of cloud constituent vertical velocities.",
                                                     "children": []
                                                 },
                                                 {
@@ -2003,7 +2003,7 @@
                                                     "language": "en",
                                                     "scheme": "NASA/GCMD Instruments",
                                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                                    "description": "",
+                                                    "description": "Particulate contamination on smooth surfaces such as polished silicon wafers can be detected by observing scattered light with an optical microscope or by using a scanning laser microscope which integrates all the scattered light. Laser scattering is a sensitive technique and is capable of detecting particles as small as 0.2\u20130.15 \u03bcm in diameter with a probability of 90\u201350% respectively. Using angle-resolved light scattering it is possible to obtain compositional and morphological data on the particle. Scanning interferometry can also be used to detect particles on smooth surfaces. Ultraviolet luminescence can be used to detect some types of particles. Particles on surfaces can be observed using scanning electron microscopy (SEM) and in special cases transmission electron microscopy (TEM). Compositional analysis of inorganic particles can be done using the SEM in the EDAX mode (SEM/EDAX) and by small area electron diffraction in the TEM.",
                                                     "children": []
                                                 },
                                                 {
@@ -4024,7 +4024,7 @@
                                                     "language": "en",
                                                     "scheme": "NASA/GCMD Instruments",
                                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                                    "description": "",
+                                                    "description": "The payload consists of of a \"Radio Navigation Satellite Service (RNSS)\" payload which includes an atomic clock, an L-band transmitter, signal processor, antenna array for transmitting navigation signals, an L-band uplink receiver, and a laser corner-cube reflector for orbit determination.",
                                                     "children": []
                                                 },
                                                 {
@@ -4261,7 +4261,7 @@
                                                     "language": "en",
                                                     "scheme": "NASA/GCMD Instruments",
                                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                                    "description": "",
+                                                    "description": "A device that combines the capabilities of both a GNSS receiver and an IMU. These systems provide highly accurate and reliable navigation and positioning data, and are widely used in a variety of applications, such as aviation, maritime navigation, and autonomous vehicles. A GNSS receiver is a device that receives signals from satellites orbiting the Earth and uses the information contained in these signals to determine the user\u2019s position and velocity. An IMU, on the other hand, is a device that measures the user\u2019s acceleration and angular velocity. When a GNSS IMU system is in operation, it receives signals from multiple GNSS satellites and uses this information to determine the user\u2019s position and velocity. At the same time, it also measures the user\u2019s acceleration and angular velocity using an IMU. This data is then combined to provide a highly accurate and reliable estimate of the user\u2019s position, velocity, and orientation.",
                                                     "children": []
                                                 },
                                                 {
@@ -4917,7 +4917,7 @@
                                             "language": "en",
                                             "scheme": "NASA/GCMD Instruments",
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                            "description": "",
+                                            "description": "A system designed to monitor and measure the aerodynamic drag experienced by a satellite in orbit, typically by analyzing its orbital changes over time, which can be used to infer information about atmospheric conditions at the satellite's altitude, especially in low Earth orbit (LEO).",
                                             "children": []
                                         },
                                         {
@@ -5389,7 +5389,7 @@
                                             "language": "en",
                                             "scheme": "NASA/GCMD Instruments",
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                            "description": "",
+                                            "description": "A Fourier Transform Infrared (FTIR) spectrometer that can analyze a variety of materials. It is designed for use in laboratories and remote testing environments.",
                                             "children": []
                                         },
                                         {
@@ -5542,7 +5542,7 @@
                                             "language": "en",
                                             "scheme": "NASA/GCMD Instruments",
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                            "description": "",
+                                            "description": "A device used to measure upper air wind data. It is launched from a ship and uses Omega signals to determine vertical wind profiles.",
                                             "children": []
                                         },
                                         {
@@ -5786,7 +5786,7 @@
                                             "language": "en",
                                             "scheme": "NASA/GCMD Instruments",
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                            "description": "",
+                                            "description": "The TIROS Operational Vertical Sounder (TOVS) consisted of three instruments: the high-resolution infrared radiation sounder modification 2 (HIRS/2), the stratospheric sounding unit (SSU), and the microwave sounding unit (MSU). All three instruments were designed to determine radiances needed to calculate temperature and humidity profiles of the atmosphere from the surface to the stratosphere (approximately 1 mb).",
                                             "children": []
                                         },
                                         {
@@ -5886,7 +5886,7 @@
                                             "language": "en",
                                             "scheme": "NASA/GCMD Instruments",
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                            "description": "",
+                                            "description": "An infrared thermometer, sometimes called an infrared pyrometer or radiation thermometer, is a device used for non-contact temperature measurement. Infrared thermometers are most often applied to measure the surface temperature of an opaque object. They are also used to measure a semi-transparent target such as high temperature combustion gas or molten glass that acquires the measurement into a depth of the target. Non-contact temperature measurement can be made over a wide range of distances, provided the sight path is free and clear of potential sources of error such as steam, dust, mechanical obstructions, dirty windows etc.",
                                             "children": [
                                                 {
                                                     "id": "https://gcmd.earthdata.nasa.gov/kms/concept/47aef999-3e01-4a9f-815b-8c7b853c6e8c",
@@ -8321,7 +8321,7 @@
                                                     "language": "en",
                                                     "scheme": "NASA/GCMD Instruments",
                                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                                    "description": "",
+                                                    "description": "A device that measures the naturally emitted microwave radiation from the Earth's surface and atmosphere at a ground-based location, allowing scientists to retrieve information about atmospheric conditions like temperature, humidity, and cloud liquid water content, primarily used in meteorology for weather forecasting and validation of satellite data; essentially, it passively listens to the microwave signals coming from the environment without actively emitting any radiation itself.",
                                                     "children": []
                                                 },
                                                 {
@@ -9627,7 +9627,7 @@
                                                     "language": "en",
                                                     "scheme": "NASA/GCMD Instruments",
                                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                                    "description": "The TEMPO instrument is a grating spectrometer, sensitive to visible and ultraviolet wavelengths of light, which will be attached to the Earth-facing side of a commercial telecommunications satellite (to be selected) in geostationary orbit. This allows TEMPO to maintain a constant view of North America so that the instrument's light-collecting mirror can make a complete East to West scan of the \"Field of Regard\" each and every hour of the day. By measuring sunlight reflected and scattered from the Earth's surface and atmosphere back to the instrument's detectors, TEMPO's ultraviolet and visible light sensors will provide spectra of ozone, nitrogen dioxide, and other elements of daily atmospheric chemistry cycles.",
+                                                    "description": "The TEMPO instrument is a grating spectrometer sensitive to ultraviolet and visible wavelengths of light and is attached to the Earth-facing side of the commercial telecommunications satellite Intelsat 40e (IS-40e) in geostationary orbit. This vantage point allows TEMPO to maintain a constant view of North America so that the instrument's light-collecting mirror can make a complete East-to-West scan of the field of regard each and every hour during daytime. By measuring sunlight reflected and scattered from the Earth's surface and atmosphere back to the instrument's detectors, TEMPO's light sensors provide spectra that are used to derive measurements of ozone, nitrogen dioxide, formaldehyde, aerosols, and other constituents involved in atmospheric chemistry and air quality.",
                                                     "children": []
                                                 },
                                                 {
@@ -10091,6 +10091,15 @@
                                     "children": []
                                 },
                                 {
+                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/7624902c-55ff-4149-826e-403dfa0d3ef7",
+                                    "text": "2D-Gray",
+                                    "language": "en",
+                                    "scheme": "NASA/GCMD Instruments",
+                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
+                                    "description": "Fast 2D-Gray Probe . Compared with 2D-Mono (Black and White) optical array probes, the additional two gray levels provide enhanced detail of ice crystals, the ability to better re-size out-of-focus water drops and delete out-of-focus that break up at the edge of the depth of field (DOF).",
+                                    "children": []
+                                },
+                                {
                                     "id": "https://gcmd.earthdata.nasa.gov/kms/concept/307def51-758d-4e3e-90a6-27d1603deb5b",
                                     "text": "2DS",
                                     "language": "en",
@@ -10123,7 +10132,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "A specialized microscope system used in fields like glaciology to automatically measure the orientation of crystal \"c-axes\" within a thin section of a material, typically ice, by analyzing polarized light images under a computer-controlled rotation, providing detailed information about the crystal fabric structure within the sample; essentially, it automates the process of determining the dominant crystal alignment in a material by capturing and analyzing images at various angles under polarized light.",
                                     "children": []
                                 },
                                 {
@@ -10285,7 +10294,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "The LI-6252 is a differential, non-dispersive, infrared (NDIR) gas analyzer.",
                                     "children": []
                                 },
                                 {
@@ -10600,7 +10609,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "Fast repetition rate fluorometry (FRRF) is a non-invasive technique that measures chlorophyll fluorescence to assess the health of phytoplankton. It can be used to estimate the rate of photosynthesis in phytoplankton, as well as the effects of environmental stress on them.",
                                     "children": []
                                 },
                                 {
@@ -10942,7 +10951,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "An optical particle counter (OPC) detects and sizes particles by measuring the amount of light scattered by individual particles as they pass through a beam of light.",
                                     "children": []
                                 },
                                 {
@@ -11284,7 +11293,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "Measure and monitor contamination levels in a clean and controlled environment.",
                                     "children": []
                                 },
                                 {
@@ -11338,7 +11347,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "A piece of equipment that analyzes the organic and mineral carbon content of rocks and soils. It's used to evaluate the potential of rocks to produce oil and gas.",
                                     "children": []
                                 },
                                 {
@@ -11383,7 +11392,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "An instrument that measures the fluorescence signature of an analyte in a sample based on its specific excitation and emission wavelengths. The fluorescence signature can be correlated to the concentration level of the analyte in the sample.",
                                     "children": []
                                 },
                                 {
@@ -11446,7 +11455,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "The SSIES is an improved version of the Special Sensor for Ions and Electrons (SSIE). The SSIE instruments measured the ambient electron density and temperatures, the ambient ion density, and the average ion temperature and molecular weight at the DMSP orbital altitude.",
                                     "children": []
                                 },
                                 {
@@ -11455,7 +11464,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "Stripping voltammetry is a technique used to quantify ions in a solution by analyzing the current generated when an analyte is oxidized or reduced on an electrode. It's a type of electrochemical analysis that's often used to detect trace metals.",
                                     "children": []
                                 },
                                 {
@@ -11693,6 +11702,15 @@
                                     "children": []
                                 },
                                 {
+                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/9465fa95-2698-4d95-bee6-6af447b27f7b",
+                                    "text": "TSI CPC-3772",
+                                    "language": "en",
+                                    "scheme": "NASA/GCMD Instruments",
+                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
+                                    "description": "The successor to our Model 3010, this value-priced CPC offers features found on our top-of-the-line CPCs. Like a front-panel display, anti-spill design, water-removal capability, built-in data logging and storage with removable memory card, and USB and Ethernet ports. Plus, the 3772 has built-in Scanning Mobility Particle Sizer\u2122 (SMPS\u2122) spectrometer compatibility, and it includes our Aerosol Instrument Manager\u2122 software. It requires an external vacuum pump, available separately.",
+                                    "children": []
+                                },
+                                {
                                     "id": "https://gcmd.earthdata.nasa.gov/kms/concept/2c5970fb-69a7-4701-a271-b4b211ed476b",
                                     "text": "TSI DustTrak",
                                     "language": "en",
@@ -11716,7 +11734,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "The Ultrafine Condensation Particle Counter is a types of condensation particle counter (CPC) is designed primarily for researchers interested in airborne particles smaller than 20 nm. It is a continuous-flow instrument that detects particles down to 2.5 nm. It uses a special sheath-air flow design that improves response to changes in particle concentration and increases counting efficiency for ultrafine particles.",
                                     "children": []
                                 },
                                 {
@@ -11725,7 +11743,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "An optical-scattering, laser-based aerosol particle spectrometer for sizing particles in the 0.06 \u2013 1 \u03bcm range. The instrument counts particles in up to 100 user-specified sizing bins, with a resolution as fine as 1 nm/bin. This high sensitivity makes the UHSAS ideal for aerosol research and filter testing. A laser illuminates\u2019 particles, which scatter light that is then collected by two pairs of Mangin optics. One pair of optics images onto a highly sensitive avalanche photodiode (APD) for detecting the smallest particles. The other pair images onto a low-gain PIN photodiode for detecting particles in the larger size range of the instrument. Each detector is amplified in a current-to-voltage stage that feeds into the analog electronics system. The amplification allows the system to detect particles as small as 60 nm.",
                                     "children": []
                                 },
                                 {
@@ -12990,7 +13008,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "A device used to measure radiation exposure by detecting and counting individual photons emitted from a thermoluminescent dosimeter (TLD) when it is heated.",
                                     "children": []
                                 },
                                 {
@@ -13856,7 +13874,7 @@
                                             "language": "en",
                                             "scheme": "NASA/GCMD Instruments",
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                            "description": "",
+                                            "description": "A multibeam mapping system uses sonar to map the ocean floor and detect objects in the water. It can create detailed maps of the seafloor, including the depth, type, and characteristics of the seabed.",
                                             "children": []
                                         },
                                         {
@@ -14074,7 +14092,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "A device used to precisely measure the acceleration due to gravity by tracking the free fall of a small object (often a retroreflector) using laser beams and optical interferometry, allowing for highly accurate measurements of the gravitational field at a specific location.",
                                     "children": []
                                 },
                                 {
@@ -14657,6 +14675,15 @@
                                     "children": []
                                 },
                                 {
+                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/8e63f495-844d-4e31-b6a3-5918c2bda66c",
+                                    "text": "UNS-1Fw",
+                                    "language": "en",
+                                    "scheme": "NASA/GCMD Instruments",
+                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
+                                    "description": "The UNS-1Fw is comprised of an FPCDU and a remotely mounted Navigation Computer Unit (NCU). Three FPCDUs are available: a compact FPCDU with 4-inch color display, the standard FPCDU with 5-inch color display and an airlinetype Multi-Function CDU (MCDU). The NCU is housed in a 2-MCU sized LRU which includes the integral GPS/SBAS receiver.\nThe UNS-1Fw is comprised of an FPCDU and a remotely mounted Navigation Computer Unit (NCU). Three FPCDUs are available: a compact FPCDU with 4-inch color display, the standard FPCDU with 5-inch color display and an airlinetype Multi-Function CDU (MCDU). The NCU is housed in a 2-MCU sized LRU which includes the integral GPS/SBAS receiver.",
+                                    "children": []
+                                },
+                                {
                                     "id": "https://gcmd.earthdata.nasa.gov/kms/concept/9ed30338-eced-4102-b6e8-4a3b2affd490",
                                     "text": "VOPC",
                                     "language": "en",
@@ -14951,7 +14978,7 @@
                                             "language": "en",
                                             "scheme": "NASA/GCMD Instruments",
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                            "description": "",
+                                            "description": "Devices that capture wet precipitation like rain, sleet, snow, or fog. These devices can be used to monitor air quality and pollution levels.",
                                             "children": []
                                         }
                                     ]
@@ -15213,7 +15240,7 @@
                                             "language": "en",
                                             "scheme": "NASA/GCMD Instruments",
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                            "description": "",
+                                            "description": "A length of open-meshed material made of twine, cord, rope, or something similar, used typically for catching fish or other animals.",
                                             "children": []
                                         },
                                         {
@@ -15258,7 +15285,7 @@
                                             "language": "en",
                                             "scheme": "NASA/GCMD Instruments",
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                            "description": "",
+                                            "description": "A net that consists of a single, double, or triple hoop, allowing one, two or three samples to be obtained in each tow. The net is designed for vertical tows.",
                                             "children": []
                                         },
                                         {
@@ -15535,6 +15562,15 @@
                                     "children": []
                                 },
                                 {
+                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/b4286b92-417b-4f83-98c9-c86d44509d81",
+                                    "text": "GVR",
+                                    "language": "en",
+                                    "scheme": "NASA/GCMD Instruments",
+                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
+                                    "description": "The G-Band Vapor Radiometer (GVR) provides time-series measurements of brightness temperatures\nfrom four double sideband channels centered at \u00b1 1, \u00b1 3, \u00b1 7, and \u00b1 14 GHz around the 183.31-GHz water\nvapor line. Atmospheric emission in this spectral region is primarily due to water vapor, with some\ninfluence from liquid water. The 183.31 \u00b1 14-GHz channel is particularly sensitive to the presence of\nliquid water. The sensitivity to water vapor of the 183.31-GHz line is approximately 30 times higher than\nat the frequencies of the two-channel microwave radiometer (MWR) for a precipitable water vapor\n(PWV) amount of less than 2.5 mm. Measurements from this instrument are therefore especially useful\nduring low-humidity conditions (PWV < 5 mm).",
+                                    "children": []
+                                },
+                                {
                                     "id": "https://gcmd.earthdata.nasa.gov/kms/concept/d3a60685-20f2-4258-80ff-e5de153f2da7",
                                     "text": "HAMSTRAD",
                                     "language": "en",
@@ -15623,6 +15659,15 @@
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
                                     "description": "The Laser ablation inductively coupled plasma mass spectrometry\nis a technique used for the in situ analysis of trace elements\nin solid samples. It can determine many elements in the periodic\ntable to high degrees of accuracy and precision. The technique\ncomplements electron microprobe analysis, typically measuring\ntrace elements at a lower concentration range (1 ppb - 100 ppm).\n\nSolid particles are physically ablated due to the interaction of\na high power (> 1 x 1010 Wcm-2) laser beam with the surface of\nthe sample. The particles are carried in a stream of inert gas\n(helium or argon) into an argon plasma where they are ionized\nbefore measurement in a quadruple mass spectrometer. Isotopes\nare measured to determine elemental concentrations.\n\nAdditional information available at\n\"http://www.geo.uu.nl/Research/Petrology/what.htm\"\n\n[Summary provided by Universiteit Utrecht]",
+                                    "children": []
+                                },
+                                {
+                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/0da2873b-8614-4de9-90b4-b4e5e44b0139",
+                                    "text": "MARLi",
+                                    "language": "en",
+                                    "scheme": "NASA/GCMD Instruments",
+                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
+                                    "description": "MARLi was an NSF-MRI funded new instrument development to provide water vapor, temperature, aerosol, and cloud profiles within the planetary boundary layer (PBL). MARLi was successfully flight-tested on the UWKA and the NSF/NCAR C-130 for over sixty-hours in the summer of 2016.  \nMARLi transforms our capability to observe the atmosphere at horizontal resolutions ranging from ~100 m to ~1 km and can revolutionize a range of atmospheric processes studies. These include: advancing our understanding of small-scale interactions between clouds and their environment, investigating air-sea and air-land interactions; documenting boundary layer structure over heterogeneous surfaces and under cloudy conditions; examining the mesoscale atmospheric environments and dynamics.",
                                     "children": []
                                 },
                                 {
@@ -15743,6 +15788,15 @@
                                     "children": []
                                 },
                                 {
+                                    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/a13ed6f0-715b-497a-8c87-9ea62d4d4930",
+                                    "text": "PUTLS",
+                                    "language": "en",
+                                    "scheme": "NASA/GCMD Instruments",
+                                    "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
+                                    "description": "The PUTLS comprises three individual instruments for the measurement of aerosol number size distribution in the upper troposphere and lower stratosphere: a Nucleation Mode Aerosol Size Spectrometer (NMASS), an Ultra-High Sensitivity Aerosol Spectrometer (UHSAS), and a Portable Optical Particle Spectrometer (POPS). These instruments, along with a Passive, Near-Isokinetic Inlet for sampling atmospheric particles from a fast-moving aircraft, provide a measurement of the UT/LS particle size distribution from 4 to 3000 nm diameter. Aerosol microphysical measurements in the UT/LS are integral to understanding the chemical and radiative processes that control the Earth\u2019s climate, and PUTLS provides data for investigation of topics ranging from new particle formation to long range transport of dust and fine volcanic ash.",
+                                    "children": []
+                                },
+                                {
                                     "id": "https://gcmd.earthdata.nasa.gov/kms/concept/2ef83cb4-6573-4e56-9f80-aadbac6137e2",
                                     "text": "SAOZ",
                                     "language": "en",
@@ -15838,7 +15892,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "The Water Isotope System for Precipitation and Entrainment Research (WISPER) is a counterflow virtual impactor on the NASA P-3 aircraft. WISPER uses a modified commercial Picarro L2120-i \u03b4D/\u03b418O ultra-High-Precision Isotopic Water Analyzer to make in-situ measurements of condensed water contents and water vapor in clouds, along with water vapor isotopic abundances (Henze et al., 2020; Henze and Noone, 2017). The measurement technique is cavity ring-down (CRD) spectroscopy (O'Keefe and Deacon, 1988; Berden et al., 2000; Gupta et al., 2009). WISPER has been deployed to the NASA ORACLES (ObseRvations of Aerosols above CLouds and their intEractionS) and IMPACTS (Investigation of Microphysics and Precipitation for Atlantic Coast-Threatening Snowstorms) field campaigns.",
                                     "children": []
                                 },
                                 {
@@ -16398,7 +16452,7 @@
                                     "language": "en",
                                     "scheme": "NASA/GCMD Instruments",
                                     "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                    "description": "",
+                                    "description": "A worldwide network of six identical telescopes, designed to have 24/7 observations of the Sun. The network serves multiple purposes, including the provision of operation data for use in space weather prediction, and the study of solar internal structure and dynamics using helioseismology.",
                                     "children": []
                                 },
                                 {
@@ -17751,7 +17805,7 @@
                                             "language": "en",
                                             "scheme": "NASA/GCMD Instruments",
                                             "schemeURI": "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments",
-                                            "description": "",
+                                            "description": "Hinode\u2019s Solar Optical Telescope is the first spaceborne instrument to measure the strength and direction of the Sun\u2019s magnetic field on the Sun\u2019s surface, the photosphere. Combined with two other Hinode instruments, the EUV imaging spectrometer, or EIS, and the X-ray/EUV telescope, or XRT, the mission is designed to understand the causes of eruptions in the solar atmosphere and relate those eruptions to the intense heating of the corona and the mechanisms that drive the constant out ow of solar radiation, the solar wind. Hinode lies in a Sun-synchronous orbit around Earth at an altitude of nearly 400 miles (a little under 650 km). Its orbit allows Hinode to observe the Sun continuously for nine months at a time. During the summer (in the northern hemisphere) Hinode experiences an \u201ceclipse season\u201d during which the Sun is eclipsed by Earth for a maximum of ten minutes in each 98-minute orbit.",
                                             "children": []
                                         },
                                         {
