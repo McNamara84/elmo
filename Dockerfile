@@ -18,18 +18,8 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html
 RUN sed -i 's|/var/www/html|${APACHE_DOCUMENT_ROOT}|g' /etc/apache2/sites-available/000-default.conf \
     && a2enmod rewrite
 
-# Install Composer globally. 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-# Set a working directory
-WORKDIR /var/www/html
-
-# Copy composer files and install dependencies
-# This is done separately to leverage Docker cache
-COPY composer.json composer.lock ./
-RUN composer install --no-interaction --no-plugins --no-scripts --prefer-dist
-
-# Copy the application files
-COPY . .
+# Copy application files
+COPY . /var/www/html/
 # Ensure that the standard user www-data has ownership of the application files
 RUN chown -R www-data:www-data /var/www/html
 
