@@ -1,25 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Simple jQuery stub used in the tests
-function createJQuery() {
-  const $ = (selector) => {
-    if (selector === document) {
-      return { ready: (fn) => fn() };
-    }
-    const element = document.querySelector(selector);
-    return {
-      length: element ? 1 : 0,
-      0: element,
-      val: (v) => {
-        if (v === undefined) return element.value;
-        element.value = v;
-      }
-    };
-  };
-  $.getJSON = jest.fn((file, cb) => cb([]));
-  return $;
-}
+let $;
 
 class MockTagify {
   constructor(el, options) {
@@ -74,7 +56,12 @@ describe('affiliations.js', () => {
       <input id="contact-person-field" />
     `;
 
-    global.$ = createJQuery();
+    $ = require('jquery');
+    $.getJSON = jest.fn((file, cb) => cb([]));
+    global.$ = $;
+    global.jQuery = $;
+    window.$ = $;
+    window.jQuery = $;
     global.Tagify = MockTagify;
     global.translations = { general: { affiliation: 'affiliation' } };
 
