@@ -21,7 +21,7 @@ sort($langCodes);
     integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- Local Tagify CSS -->
-  <link href="node_modules\@yaireo\tagify\dist\tagify.css" rel="stylesheet" type="text/css" />
+  <link href="node_modules/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
   <!-- CDN for jsTree CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.17/themes/default/style.min.css"
     integrity="sha512-A5OJVuNqxRragmJeYTW19bnw9M2WyxoshScX/rGTgZYj5hRXuqwZ+1AVn2d6wYTZPzPXxDeAGlae0XwTQdXjQA=="
