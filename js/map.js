@@ -431,11 +431,11 @@ $(document).ready(function () {
     })
     .then((data) => {
       if (data.apiKey) {
-        if (!google.maps.importLibrary) {
+        if (!window.google || !window.google.maps || !window.google.maps.importLibrary) {
           loadGoogleMapsApi(data.apiKey);
         }
 
-        google.maps.importLibrary("maps").then(initMap);
+        window.google.maps.importLibrary("maps").then(initMap);
       } else {
         console.error("API key not found in the response");
       }
