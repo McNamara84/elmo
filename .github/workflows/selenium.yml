@@ -1,251 +1,276 @@
 name: Selenium Tests
-
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
 jobs:
   selenium:
     runs-on: ubuntu-latest
-
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: mde2-msl-test
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=30s
     steps:
     - uses: actions/checkout@v4
-
+    
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.2'
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, zip
         coverage: xdebug
-
+        
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
-
-    - name: Create test network
-      run: docker network create test-network
-
-    - name: Start MySQL container
-      run: |
-        docker run -d --network test-network --name mysql -e MYSQL_ROOT_PASSWORD=root_password -e MYSQL_DATABASE=mde2-msl-test -e MYSQL_USER=test_user -e MYSQL_PASSWORD=test_password -p 3306:3306 mysql:8.0 --health-cmd "mysqladmin ping --silent" --health-interval 10s --health-timeout 5s --health-retries 3
-    - name: Wait for MySQL to be ready
-      run: |
-        for i in {1..30}; do
-          if mysqladmin ping -h127.0.0.1 -uroot -proot_password --silent; then
-            echo "MySQL is ready";
-            break;
-          fi;
-          echo "Waiting for MySQL...";
-          sleep 2;
-        done
-
-    - name: Start Selenium container
-      run: |
-        docker run -d \
-          --network test-network \
-          --name selenium \
-          -e SE_NODE_MAX_SESSIONS=1 \
-          -e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
-          -e SE_VNC_NO_PASSWORD=1 \
-          -p 4444:4444 \
-          -p 7900:7900 \
-          --shm-size="2g" \
-          selenium/standalone-chrome:latest
-
-    - name: Install Selenium Dependencies
-      run: |
-        npm install -g selenium-side-runner@3.17.0
-        npm install -g selenium-webdriver@4.1.0
-
-    - name: Update Composer dependencies
-      run: composer update --no-interaction --no-progress
-
-    - name: Install dependencies
+        node-version: '18'
+        
+    - name: Install Composer dependencies
       run: |
         composer install --prefer-dist --no-progress --no-suggest
         composer dump-autoload -o
-
+        
+    - name: Wait for MySQL to be ready
+      run: |
+        echo "Waiting for MySQL to be ready..."
+        for i in {1..60}; do
+          if mysqladmin ping -h127.0.0.1 -P3306 -uroot -proot_password --silent; then
+            echo "MySQL is ready!";
+            break;
+          fi;
+          echo "Attempt $i: Waiting for MySQL...";
+          sleep 3;
+        done
+        # Test connection
+        mysql -h127.0.0.1 -P3306 -uroot -proot_password -e "SELECT 1;" || exit 1
+        
     - name: Set up database
       run: |
-        mysql -h127.0.0.1 -uroot -proot_password -e "
+        echo "Setting up database users and permissions..."
+        mysql -h127.0.0.1 -P3306 -uroot -proot_password -e "
+          SELECT 'Database connection successful' as status;
           CREATE USER IF NOT EXISTS 'test_user'@'%' IDENTIFIED BY 'test_password';
           GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
           FLUSH PRIVILEGES;
+          SHOW DATABASES;
         "
-
+        
     - name: Create settings.php and install
       run: |
-        cat << EOF > settings.php
+        echo "Creating settings.php..."
+        cat << 'EOF' > settings.php
         <?php
         error_reporting(E_ALL);
         ini_set('display_errors', 1);
-
+        
         function connectDb() {
-            \$host = '127.0.0.1';
-            \$username = 'test_user';
-            \$password = 'test_password';
-            \$database = 'mde2-msl-test';
-            \$conn = new mysqli(\$host, \$username, \$password, \$database);
-            return \$conn;
+            $host = '127.0.0.1';
+            $port = '3306';
+            $username = 'test_user';
+            $password = 'test_password';
+            $database = 'mde2-msl-test';
+            
+            $conn = new mysqli($host, $username, $password, $database, $port);
+            
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+            }
+            
+            return $conn;
         }
-
+        
         function getApiKey() {
-            \$apiKeyGoogleMaps = 'test_api_key';
-            echo json_encode(['apiKey' => \$apiKeyGoogleMaps]);
+            $apiKeyGoogleMaps = 'test_api_key';
+            echo json_encode(['apiKey' => $apiKeyGoogleMaps]);
         }
-
-        if (basename(__FILE__) == basename(\$_SERVER['PHP_SELF'])) {
-            if (\$_SERVER['REQUEST_METHOD'] === 'GET') {
+        
+        if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 getApiKey();
             }
         }
-
-        \$connection = connectDb();
-
-        \$apiKeyTimezone = 'test_timezone_api_key';
-        \$maxTitles = 2;
-        \$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/labnames.json';
-
-        \$showFeedbackLink = true;
-        \$smtpHost = 'smtp.test.de';
-        \$smtpPort = 465;
-        \$smtpUser = 'test_user';
-        \$smtpPassword = 'test_password';
-        \$smtpSender = 'test_sender@test.com';
-        \$feedbackAddress = 'feedback@test.com';
+        
+        $connection = connectDb();
+        $apiKeyTimezone = 'test_timezone_api_key';
+        $maxTitles = 2;
+        $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/labnames.json';
+        $showFeedbackLink = true;
+        $smtpHost = 'smtp.test.de';
+        $smtpPort = 465;
+        $smtpUser = 'test_user';
+        $smtpPassword = 'test_password';
+        $smtpSender = 'test_sender@test.com';
+        $feedbackAddress = 'feedback@test.com';
+        ?>
         EOF
-
-        # Führe install.php aus und erfasse die Ausgabe
+        
+        echo "Running install.php..."
         php install.php > install_output.log 2>&1 || true
-
-        # Zeige die Ausgabe von install.php an
-        echo "Installationsausgabe:"
+        
+        echo "Installation output:"
         cat install_output.log
-
-    - name: Start PHP container
+        
+    - name: Verify database setup
       run: |
-        docker run -d \
-          --network test-network \
-          --name php-app \
-          -v ${{ github.workspace }}:/var/www/html \
-          -p 8000:8000 \
-          -e PHP_INI_SCAN_DIR=/var/www/html \
-          php:8.2-cli \
-          php -S 0.0.0.0:8000 -t /var/www/html -d display_errors=1 -d error_reporting=E_ALL
-
-    - name: Create PHP info page
+        echo "Verifying database tables..."
+        mysql -h127.0.0.1 -P3306 -utest_user -ptest_password mde2-msl-test -e "SHOW TABLES;"
+        
+    - name: Start PHP development server
       run: |
-        echo "<?php phpinfo(); ?>" > info.php
-        echo "<?php error_log('Debug: Loading application...'); ?>" > debug.php
-
-    - name: Wait for PHP application to be ready
-      run: |
+        echo "Starting PHP development server..."
+        php -S 127.0.0.1:8000 -t . > php_server.log 2>&1 &
+        echo $! > php_server.pid
+        
+        # Wait for PHP server to start
         for i in {1..30}; do
-          if curl -s http://localhost:8000/ > /dev/null; then
-            echo "PHP application is ready."
-            break
-          fi
-          echo "Waiting for PHP application..."
-          sleep 2
+          if curl -s http://127.0.0.1:8000/ > /dev/null 2>&1; then
+            echo "PHP server is ready!";
+            break;
+          fi;
+          echo "Waiting for PHP server... ($i/30)";
+          sleep 2;
         done
-
-    - name: Wait for services and verify
+        
+    - name: Start Selenium standalone
       run: |
-        # Erstelle Verzeichnis für Testergebnisse
-        mkdir -p test-output
-
-        # Teste PHP-Server
-        echo "Teste PHP-Server..."
-        curl -v http://localhost:8000/info.php > test-output/php-info.html
-        curl -v http://localhost:8000/debug.php
-        curl -v http://localhost:8000/ > test-output/index.html
-
-        # Teste Selenium
-        echo "Teste Selenium..."
-        curl -v http://localhost:4444/wd/hub/status > test-output/selenium-status.json
-
-        # Zeige Netzwerkinfo
-        echo "Docker Netzwerkinfo:"
-        docker network inspect test-network
-
-        # Zeige laufende Container
-        echo "Laufende Container:"
-        docker ps
-
-        # Zeige PHP-Logs
-        echo "PHP-Container-Logs:"
-        docker logs php-app
-
-    - name: Display application index.html
+        echo "Starting Selenium standalone server..."
+        # Download Selenium standalone
+        wget -q https://github.com/SeleniumHQ/selenium/releases/download/selenium-4.15.0/selenium-server-4.15.0.jar -O selenium-server.jar
+        
+        # Start Selenium server in background
+        java -jar selenium-server.jar standalone --port 4444 > selenium.log 2>&1 &
+        echo $! > selenium.pid
+        
+        # Wait for Selenium to be ready
+        for i in {1..60}; do
+          if curl -s http://127.0.0.1:4444/wd/hub/status > /dev/null 2>&1; then
+            echo "Selenium server is ready!";
+            break;
+          fi;
+          echo "Waiting for Selenium server... ($i/60)";
+          sleep 2;
+        done
+        
+    - name: Install Chrome browser
       run: |
-        echo "Inhalt von test-output/index.html:"
-        cat test-output/index.html
-
-    - name: Fetch page content from Selenium container
+        # Update package list
+        sudo apt-get update
+        
+        # Install Chrome
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        
+        # Install ChromeDriver
+        CHROME_VERSION=$(google-chrome --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+        echo "Chrome version: $CHROME_VERSION"
+        
+        # Download matching ChromeDriver
+        wget -q "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*}" -O chrome_version.txt
+        CHROMEDRIVER_VERSION=$(cat chrome_version.txt)
+        echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
+        
+        wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
+        unzip chromedriver_linux64.zip
+        sudo mv chromedriver /usr/local/bin/
+        sudo chmod +x /usr/local/bin/chromedriver
+        
+    - name: Install Selenium Dependencies
       run: |
-        echo "Rufe Seiteninhalt aus dem Selenium-Container ab..."
-        docker exec selenium sh -c 'curl -s http://php-app:8000/ > /tmp/page.html'
-        docker exec selenium sh -c 'cat /tmp/page.html'
-        docker cp selenium:/tmp/page.html test-output/page-from-selenium.html
-
-    - name: Display PHP application logs
+        npm install -g selenium-side-runner@3.17.0
+        
+    - name: Test connectivity
       run: |
-        echo "PHP-Anwendungs-Logs:"
-        docker logs php-app
-
-    - name: Verify database tables
+        echo "Testing PHP application..."
+        curl -v http://127.0.0.1:8000/ | head -20
+        
+        echo "Testing Selenium server..."
+        curl -s http://127.0.0.1:4444/wd/hub/status | jq '.' || echo "Selenium status check failed"
+        
+        echo "Testing database connection..."
+        mysql -h127.0.0.1 -P3306 -utest_user -ptest_password mde2-msl-test -e "SELECT 'Database OK' as status;"
+        
+    - name: Update Selenium test base URL
       run: |
-        mysql -h127.0.0.1 -utest_user -ptest_password -e "SHOW TABLES FROM \`mde2-msl-test\`;"
-
-    - name: Test connectivity from Selenium container
-      run: |
-        echo "Teste Konnektivität vom Selenium-Container zur PHP-Anwendung..."
-        docker exec selenium curl -v http://php-app:8000/ -o /dev/null
-
+        # Update the test file to use correct base URL
+        sed -i 's|"url": "http://php-app:8000"|"url": "http://127.0.0.1:8000"|g' tests/SeleniumTests/Tests_MDE.side
+        echo "Updated test base URL"
+        
     - name: Run Selenium tests
       run: |
+        echo "Running Selenium tests..."
         selenium-side-runner \
           --debug \
           --browser chrome \
-          --server http://localhost:4444/wd/hub \
-          --base-url http://php-app:8000 \
+          --server http://127.0.0.1:4444/wd/hub \
+          --base-url http://127.0.0.1:8000 \
           --timeout 60000 \
           tests/SeleniumTests/Tests_MDE.side
-
+          
     - name: Show debug info on failure
       if: failure()
       run: |
-        echo "PHP-Container-Logs:"
-        docker logs php-app
-        echo "Selenium-Container-Logs:"
-        docker logs selenium
-        echo "Netzwerkstatus:"
-        docker network inspect test-network
-        echo "Container-Status:"
-        docker ps -a
-        echo "Verzeichnisinhalte:"
-        ls -la
-        echo "Inhalt von test-output:"
-        ls -la test-output/
-        cat test-output/* || true
-
+        echo "=== PHP Server Logs ==="
+        cat php_server.log || echo "No PHP server log found"
+        
+        echo "=== Selenium Server Logs ==="
+        cat selenium.log || echo "No Selenium log found"
+        
+        echo "=== Installation Logs ==="
+        cat install_output.log || echo "No install log found"
+        
+        echo "=== Process Status ==="
+        ps aux | grep -E "(php|java|selenium)" || true
+        
+        echo "=== Network Status ==="
+        netstat -tlnp | grep -E "(3306|4444|8000)" || true
+        
+        echo "=== Chrome Version ==="
+        google-chrome --version || echo "Chrome not found"
+        chromedriver --version || echo "ChromeDriver not found"
+        
+        echo "=== PHP Version ==="
+        php --version
+        
+        echo "=== Database Status ==="
+        mysql -h127.0.0.1 -P3306 -uroot -proot_password -e "SHOW PROCESSLIST;" || echo "Cannot connect to MySQL"
+        
     - name: Upload artifacts
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: logs-and-results
         path: |
-          test-output/
           *.log
           *.php
-          install_output.log
-
+          tests/
+          
     - name: Cleanup
       if: always()
       run: |
-        docker stop php-app selenium mysql || true
-        docker rm php-app selenium mysql || true
-        docker network rm test-network || true
+        # Kill PHP server
+        if [ -f php_server.pid ]; then
+          kill $(cat php_server.pid) || true
+        fi
+        
+        # Kill Selenium server
+        if [ -f selenium.pid ]; then
+          kill $(cat selenium.pid) || true
+        fi
+        
+        # Clean up downloads
+        rm -f selenium-server.jar chromedriver_linux64.zip chrome_version.txt
