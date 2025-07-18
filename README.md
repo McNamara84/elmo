@@ -208,7 +208,7 @@ The following third-party dependencies are included in header.php and footer.htm
   For the design, responsiveness and dark mode.
 - [Bootstrap Icons 1.11.3](https://github.com/twbs/icons/releases)<br>
   For the icons used.
-- [jQuery 3.7.1](https://github.com/jquery/jquery/releases)<br>
+- [jQuery 3](https://github.com/jquery/jquery/releases)<br>
   For the event handlers in JavaScript and to simplify the JavaScript code.
 - [jQuery UI 1.14.1](https://github.com/jquery/jquery-ui/releases)<br>
   Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
