@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "@yaireo/tagify": "^4.33.2"
+    "@yaireo/tagify": "^4.33.2",
+    "jquery": "^3.7.1"
   },
   "devDependencies": {
     "jest": "^30.0.4",
