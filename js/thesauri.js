@@ -41,6 +41,14 @@ $(document).ready(function () {
             jsTreeId: '#jstree-mslkeyword',
             searchInputId: '#input-mslkeyword-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-msl'
+        },
+        {
+            // Configuration for the Data Sources GCMD Platform input
+            inputId: '#input-datasources-Platforms',
+            jsonFile: 'json/thesauri/gcmdPlatformsKeywords.json',
+            jsTreeId: '#jstree-platforms-datasource',
+            searchInputId: '#input-platforms-thesaurussearch-ds',
+            selectedKeywordsListId: 'selected-keywords-platforms-ds'
         }
     ];
 
