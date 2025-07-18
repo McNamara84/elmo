@@ -210,7 +210,7 @@ The following third-party dependencies are included in header.php and footer.htm
   For the icons used.
 - [jQuery 3](https://github.com/jquery/jquery/releases)<br>
   For the event handlers in JavaScript and to simplify the JavaScript code.
-- [jQuery UI 1.14.1](https://github.com/jquery/jquery-ui/releases)<br>
+- [jQuery UI 1](https://github.com/jquery/jquery-ui/releases)<br>
   Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
 - [Tagify 4](https://github.com/yairEO/tagify/releases)<br>
   Is used for the Thesaurus Keywords field, the entry of multiple affiliations and free keywords.
