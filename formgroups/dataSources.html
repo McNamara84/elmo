@@ -1,81 +1,94 @@
 <div class="card mb-2">
-    <div class="card-header"><b data-translate="dataSources.title">Data Sources</b> <i class="bi bi-question-circle-fill" 
-        data-help-section-id="help-datasources-fg"></i></div>
-    <div class="card-body">
-      <div id="group-datasources">
-        <div class="row" data-source-row>
-          <!-- Data Source Type (Dropdown) -->
-          <div class="col-12 col-sm-12 col-md-4 col-lg-3 p-1">
-            <div class="input-group has-validation">
-              <div class="form-floating">
-                <select class="form-select input-with-help input-right-no-round-corners"
-                  aria-label="Default select example" id="input-datasource-type" name="datasource_type[]"
-                  onchange="updateDetailsOptions(this)" required>
-                  <option disabled selected hidden value="">Choose...</option>
-                  <option value="S">Satellite</option>
-                  <option value="G">Ground data</option>
-                  <option value="A">Altimetry</option>
-                  <option value="M">Model</option>
-                  <option value="T">Topography</option>
-                </select>
-                <label for="input-datasource-type" data-translate="dataSources.type">Type<span class="text-danger">*</span></label>
-                <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
-              </div>
-              <div class="input-group-append">
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-datasource-type"></i></span>
-              </div>
+  <div class="card-header"><b data-translate="dataSources.title">Data Sources</b> <i class="bi bi-question-circle-fill"
+      data-help-section-id="help-datasources-fg"></i></div>
+  <div class="card-body">
+    <!-- Main container for data sources -->
+    <div id="group-datasources">
+      <div class="row" data-source-row>
+        <!-- Data Source Type (Dropdown) -->
+        <div class="col-12 col-sm-12 col-md-4 col-lg-3 p-1 visibility-datasources-basic">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <select class="form-select input-with-help input-right-no-round-corners"
+                aria-label="Default select example" id="input-datasource-type" name="datasource_type[]" required>
+                <option disabled selected hidden value="">Choose...</option>
+                <option value="S">Satellite</option>
+                <option value="G">Ground data</option>
+                <option value="A">Altimetry</option>
+                <option value="M">Model</option>
+                <option value="T">Topography</option>
+              </select>
+              <label for="input-datasource-type" data-translate="dataSources.type">Type<span
+                  class="text-danger">*</span></label>
+              <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+            </div>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-datasource-type"></i></span>
             </div>
           </div>
-          
-          <!-- Details (Dropdown) -->
-          <div class="col-12 col-sm-12 col-md-4 col-lg-3 p-1">
-            <div class="input-group has-validation">
-              <div class="form-floating">
-                <select class="form-select input-with-help input-right-no-round-corners"
-                  aria-label="Default select example" id="input-datasource-details" name="datasource_details[]" required>
-                  <option disabled selected hidden value="">Select type first</option>
-                </select>
-                <label for="input-datasource-details" data-translate="dataSources.details">Details<span class="text-danger">*</span></label>
-                <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
-              </div>
-              <div class="input-group-append">
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-datasource-details"></i></span>
-              </div>
+        </div>
+        <!-- Description (free text) -->
+        <div class="col-12 col-sm-12 col-md-5 col-lg-4 p-1 visibility-datasources-basic">
+          <div class="input-group">
+            <div class="form-floating">
+              <textarea class="form-control input-with-help input-right-no-round-corners"
+                id="input-datasource-description" name="datasource_description[]" rows="1"></textarea>
+              <label for="input-datasource-description" data-translate="dataSources.description">Description</label>
+            </div>
+            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-datasource-description"></i></span>
+          </div>
+        </div>
+        <!-- Details (Dropdown) -->
+        <div class="col-12 col-sm-12 col-md-4 col-lg-3 p-1 visibility-datasources-details">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <select class="form-select input-with-help input-right-no-round-corners"
+                aria-label="Default select example" id="input-datasource-details" name="datasource_details[]" required>
+                <option disabled selected hidden value="">Select type first</option>
+              </select>
+              <label for="input-datasource-details" data-translate="dataSources.details">Details<span
+                  class="text-danger">*</span></label>
+              <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+            </div>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-datasource-details"></i></span>
             </div>
           </div>
-          
+        </div>
         <!-- Satellite-specific Section -->
-          <div class="col-12 satellite-controls d-none">
-            <div class="input-group has-validation input-margin-top-bottom">
-              <div class="form-floating">
-                <div class="input-group has-validation">
-                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                    id="input-satellite-platform" name="satellite_platform[]" />
-                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                      data-help-section-id="help-gcmd-platforms-keyword"></i></span>
-                </div>
-              </div>
-              <div class="col-auto p-2">
-                <button type="button" class="btn btn-primary platform-thesaurus"
-                  data-bs-toggle="modal" data-bs-target="#modal-Platforms">
-                  <i class="bi bi-diagram-3"></i>
-                </button>
+        <div class="col-12 visibility-datasources-satellite">
+          <div class="input-group has-validation input-margin-top-bottom">
+            <div class="form-floating">
+              <div class="input-group has-validation">
+                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                  id="input-datasources-Platforms" name="satellite_platform[]" />
+                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-gcmd-platforms-keyword"></i></span>
               </div>
             </div>
+            <div class="col-auto p-2">
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                data-bs-target="#modal-platforms-datasource" id="button-datasource-platforms">
+                <i class="bi bi-diagram-3"></i>
+              </button>
+            </div>
           </div>
-
-            <!-- Model-specific Section (existing identifier fields) -->
-          <div class="model-controls d-none">
+        </div>
+        <!-- Model-specific Section -->
+        <div class="col-12 visibility-datasources-identifier">
+          <div class="row">
             <!-- Identifier (Text Input) -->
-            <div class="col-12 col-sm-12 col-md-3 col-lg-3 p-1">
+            <div class="col-12 col-sm-12 col-md-7 col-lg-7 p-1">
               <div class="input-group has-validation">
                 <div class="form-floating">
                   <input type="text" class="form-control input-with-help input-right-no-round-corners"
                     id="input-datasource-identifier" name="dIdentifier[]" />
                   <label for="input-datasource-identifier" data-translate="dataSources.identifier">Identifier</label>
-                  <div class="invalid-feedback" data-translate="dataSources.identifierInvalid">Please enter a valid identifier.</div>
+                  <div class="invalid-feedback" data-translate="dataSources.identifierInvalid">Please enter a valid
+                    identifier.</div>
                 </div>
                 <div class="input-group-append">
                   <span class="input-group-text"><i class="bi bi-question-circle-fill"
@@ -83,15 +96,15 @@
                 </div>
               </div>
             </div>
-          
             <!-- Identifier Type (Dropdown) -->
-            <div class="col-10 col-sm-10 col-md-2 col-lg-2 p-1">
+            <div class="col-12 col-sm-12 col-md-5 col-lg-5 p-1">
               <div class="input-group has-validation">
                 <div class="form-floating">
                   <select class="form-select input-with-help input-right-no-round-corners"
                     aria-label="Default select example" id="input-datasource-identifiertype" name="dIdentifierType[]">
                   </select>
-                  <label for="input-datasource-identifiertype" data-translate="dataSources.identifierType">Identifier type</label>
+                  <label for="input-datasource-identifiertype"
+                    data-translate="dataSources.identifierType">Identifier type</label>
                   <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
                 </div>
                 <div class="input-group-append">
@@ -100,128 +113,52 @@
                 </div>
               </div>
             </div>
-          </div>  
-          <!-- Add Button -->
-          <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
-            <button type="button" class="btn btn-primary addDataSource" id="button-datasource-add" data-translate="general.add">
-              +
-            </button>
-          </div>  
-            <!-- Add this at the end of the file, outside the card -->
-            <div class="modal fade" id="modal-Platforms" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title">Select Satellite Platform</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                  </div>
-                  <div class="modal-body">
-                    <div id="platforms-hierarchy">
-                      <!-- This will be populated with platform data -->
-                    </div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="select-platform">Select</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          
+          </div>
+        </div>
+        <!-- Add Button -->
+        <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center visibility-datasources-basic">
+          <button type="button" class="btn btn-primary addDataSource" id="button-datasource-add"
+            data-translate="general.add">
+            +
+          </button>
         </div>
       </div>
     </div>
   </div>
-  
-  <script>
-    // Data structure for hierarchical details options
-    const detailsOptions = {
-      'S': ['GRACE', 'GOCE', 'CHAMP', 'LAGEOS', 'Other'], // to be replaced with keywords from GCMD
-      'G': ['Terrestrial', 'Shipborne', 'Airborne', 'Ground data computed from GGM', 'Other'],
-      'A': ['Altimetry radar dataset', 'Altimetry dataset', 'Gravity data determined from Altimetry grid data', 'Data produced from radar altimeters'], // to be replaced with keywords from GCMD
-      'T': ['Bathymetry', 'Isostasy', 'Digital Elevation Model (DEM/DTM)', 'Density Model'],
-      'M': ['Topographic model', 'Global Gravitational Model (GGM)']
-    };
-  
-      // Function to fetch satellite platforms from GCMD
-    function fetchSatellitePlatforms(callback) {
-      $.ajax({
-        url: "./api/v2/gcmd/category/platforms",
-        data: {
-          subcategory: "Space-based Platforms",
-          term: "Earth Observation Satellites"
-        },
-        success: callback,
-        error: function(xhr, status, error) {
-          console.error("Error fetching satellite platforms:", error);
-          // Fallback to the static list if GCMD API fails
-          callback(detailsOptions['S'].map(name => ({ name: name })));
-        }
-      });
-    }
-    function handlePlatformSelection() {
-      $('#select-platform').on('click', function() {
-        const selectedPlatform = $('#platforms-hierarchy').find('.selected-platform').data('platform');
-        if (selectedPlatform) {
-          $('#input-satellite-platform').val(selectedPlatform.name);
-          $('#modal-Platforms').modal('hide');
-        }
-      });
-    }
-    // Function to update details dropdown based on selected type
-    function updateDetailsOptions(typeSelect) {
-      const row = typeSelect.closest('.row');
-      const detailsSelect = row.querySelector('[name="datasource_details[]"]');
-      const selectedType = typeSelect.value;
-      
-          // Get all the type-specific sections
-      const satelliteControls = row.querySelector('.satellite-controls');
-      const modelControls = row.querySelector('.model-controls');
-      
-      // Hide all sections first
-      satelliteControls.classList.add('d-none');
-      modelControls.classList.add('d-none');
-      
-      // Show the appropriate section based on type
-      if (selectedType === 'S') {
-        satelliteControls.classList.remove('d-none');
-      } else if (selectedType === 'M') {
-        modelControls.classList.remove('d-none');
-      }
-      // Clear current options
-      detailsSelect.innerHTML = '';
-      
-      // Add default option
-      const defaultOption = document.createElement('option');
-      defaultOption.disabled = true;
-      defaultOption.selected = true;
-      defaultOption.hidden = true;
-      defaultOption.value = '';
-      defaultOption.textContent = 'Choose...';
-      detailsSelect.appendChild(defaultOption);
-      
-      // If Satellite is selected, fetch GCMD platforms
-      if (selectedType === "S") {
-        fetchSatellitePlatforms(function(satellites) {
-          satellites.forEach(sat => {
-            const option = document.createElement('option');
-            option.value = sat.uuid || sat.name;
-            option.textContent = sat.name;
-            detailsSelect.appendChild(option);
-          });
-        });
-      } else if (selectedType && detailsOptions[selectedType]) {
-        // Existing code for other types
-        detailsOptions[selectedType].forEach(detail => {
-          const option = document.createElement('option');
-          option.value = detail;
-          option.textContent = detail;
-          detailsSelect.appendChild(option);
-        });
-      }
-    }
-  
-    // Add new data source entry
-    let dataSourceEntryCount = 1; // Start at 1 because we already have entry #0
+</div>
 
-  </script>
+<!-- Modal for GCMD PLATFORMS (specific to Data Sources) -->
+<div class="modal fade" id="modal-platforms-datasource" tabindex="-1" aria-labelledby="label-platforms-datasource-modal"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="label-platforms-datasource-modal" data-translate="keywords.Platforms">
+          GCMD Platforms
+        </h5>
+        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+            data-help-section-id="help-keywords-keywordviewer"></i></span>
+      </div>
+      <div class="modal-body d-flex">
+        <!-- Left Side: Keyword Selection Tree -->
+        <div class="w-50 pe-3 border-end">
+          <label for="input-platforms-thesaurussearch-ds" class="visually-hidden">Search for keywords</label>
+          <input type="text" class="form-control mb-3" id="input-platforms-thesaurussearch-ds"
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder"
+            aria-label="Search for keywords">
+          <div id="jstree-platforms-datasource"></div>
+        </div>
+        <!-- Right Side: Selected Keywords -->
+        <div class="w-50 ps-3">
+          <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+          <ul id="selected-keywords-platforms-ds" class="list-group">
+            <!-- Selected keywords will appear here dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
