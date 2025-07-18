@@ -9,8 +9,6 @@ services:
       TZ: Europe/Berlin
     volumes:
       - db_data:/var/lib/mysql
-      # setting up db users
-      - ./init-user.sql:/docker-entrypoint-initdb.d/init-user.sql
     restart: unless-stopped
 
   web:
