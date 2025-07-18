@@ -4,11 +4,9 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
 jobs:
   selenium:
     runs-on: ubuntu-latest
-    
     services:
       mysql:
         image: mysql:8.0
@@ -25,32 +23,26 @@ jobs:
           --health-timeout=5s
           --health-retries=10
           --health-start-period=30s
-
     steps:
     - uses: actions/checkout@v4
-
+    
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.2'
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, zip
-
+        coverage: xdebug
+        
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-
-    - name: Install Chrome and ChromeDriver
-      uses: browser-actions/setup-chrome@v1
-      with:
-        chrome-version: stable
-        install-chromedriver: true
-
+        
     - name: Install Composer dependencies
       run: |
         composer install --prefer-dist --no-progress --no-suggest
         composer dump-autoload -o
-
+        
     - name: Wait for MySQL to be ready
       run: |
         echo "Waiting for MySQL to be ready..."
@@ -62,7 +54,9 @@ jobs:
           echo "Attempt $i: Waiting for MySQL...";
           sleep 3;
         done
-
+        # Test connection
+        mysql -h127.0.0.1 -P3306 -uroot -proot_password -e "SELECT 1;" || exit 1
+        
     - name: Set up database
       run: |
         echo "Setting up database users and permissions..."
@@ -71,8 +65,9 @@ jobs:
           CREATE USER IF NOT EXISTS 'test_user'@'%' IDENTIFIED BY 'test_password';
           GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
           FLUSH PRIVILEGES;
+          SHOW DATABASES;
         "
-
+        
     - name: Create settings.php and install
       run: |
         echo "Creating settings.php..."
@@ -124,9 +119,15 @@ jobs:
         
         echo "Running install.php..."
         php install.php > install_output.log 2>&1 || true
+        
         echo "Installation output:"
         cat install_output.log
-
+        
+    - name: Verify database setup
+      run: |
+        echo "Verifying database tables..."
+        mysql -h127.0.0.1 -P3306 -utest_user -ptest_password mde2-msl-test -e "SHOW TABLES;"
+        
     - name: Start PHP development server
       run: |
         echo "Starting PHP development server..."
@@ -142,50 +143,142 @@ jobs:
           echo "Waiting for PHP server... ($i/30)";
           sleep 2;
         done
-
-    - name: Install Selenium WebDriver
-      run: |
-        npm install -g selenium-webdriver@4.15.0
-        npm install -g selenium-side-runner@3.17.0
-
-    - name: Run Selenium tests with direct WebDriver
-      run: |
-        echo "Updating test base URL..."
-        sed -i 's|"url": "http://php-app:8000"|"url": "http://127.0.0.1:8000"|g' tests/SeleniumTests/Tests_MDE.side
         
+    - name: Start Selenium standalone
+      run: |
+        echo "Starting Selenium standalone server..."
+        # Download Selenium standalone
+        wget -q https://github.com/SeleniumHQ/selenium/releases/download/selenium-4.15.0/selenium-server-4.15.0.jar -O selenium-server.jar
+        
+        # Start Selenium server in background
+        java -jar selenium-server.jar standalone --port 4444 > selenium.log 2>&1 &
+        echo $! > selenium.pid
+        
+        # Wait for Selenium to be ready
+        for i in {1..60}; do
+          if curl -s http://127.0.0.1:4444/wd/hub/status > /dev/null 2>&1; then
+            echo "Selenium server is ready!";
+            break;
+          fi;
+          echo "Waiting for Selenium server... ($i/60)";
+          sleep 2;
+        done
+        
+    - name: Install Chrome browser and ChromeDriver
+      run: |
+        # Install Chrome using the setup from GitHub Actions
+        sudo apt-get update
+        sudo apt-get install -y wget gnupg
+        
+        # Add Google's signing key
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg
+        
+        # Add Google Chrome repository
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+        
+        # Update and install Chrome
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        
+        # Get Chrome version
+        CHROME_VERSION=$(google-chrome --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+        echo "Chrome version: $CHROME_VERSION"
+        
+        # Install ChromeDriver using the new Chrome for Testing API
+        # For Chrome 115+, we use the new JSON API
+        MAJOR_VERSION=$(echo $CHROME_VERSION | cut -d. -f1)
+        echo "Chrome major version: $MAJOR_VERSION"
+        
+        if [ "$MAJOR_VERSION" -ge 115 ]; then
+          echo "Using Chrome for Testing API for Chrome $MAJOR_VERSION"
+          # Get the latest ChromeDriver version for this Chrome version
+          CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_${MAJOR_VERSION}" || echo "$CHROME_VERSION")
+          echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
+          
+          # Download ChromeDriver
+          wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip" -O chromedriver.zip
+          unzip chromedriver.zip
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+          rm -rf chromedriver.zip chromedriver-linux64
+        else
+          # Fallback for older Chrome versions
+          echo "Using legacy ChromeDriver API for Chrome $MAJOR_VERSION"
+          wget -q "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${MAJOR_VERSION}" -O chrome_version.txt
+          CHROMEDRIVER_VERSION=$(cat chrome_version.txt)
+          echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
+          
+          wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+          rm -rf chromedriver_linux64.zip chrome_version.txt
+        fi
+        
+        # Verify installation
+        chromedriver --version
+        google-chrome --version
+        
+    - name: Install Selenium Dependencies
+      run: |
+        npm install -g selenium-side-runner@3.17.0
+        
+    - name: Test connectivity
+      run: |
+        echo "Testing PHP application..."
+        curl -v http://127.0.0.1:8000/ | head -20
+        
+        echo "Testing Selenium server..."
+        curl -s http://127.0.0.1:4444/wd/hub/status | jq '.' || echo "Selenium status check failed"
+        
+        echo "Testing database connection..."
+        mysql -h127.0.0.1 -P3306 -utest_user -ptest_password mde2-msl-test -e "SELECT 'Database OK' as status;"
+        
+    - name: Update Selenium test base URL
+      run: |
+        # Update the test file to use correct base URL
+        sed -i 's|"url": "http://php-app:8000"|"url": "http://127.0.0.1:8000"|g' tests/SeleniumTests/Tests_MDE.side
+        echo "Updated test base URL"
+        
+    - name: Run Selenium tests
+      run: |
         echo "Running Selenium tests..."
         selenium-side-runner \
           --debug \
           --browser chrome \
+          --server http://127.0.0.1:4444/wd/hub \
           --base-url http://127.0.0.1:8000 \
           --timeout 60000 \
           tests/SeleniumTests/Tests_MDE.side
-
+          
     - name: Show debug info on failure
       if: failure()
       run: |
-        echo "=== Chrome/ChromeDriver Versions ==="
-        google-chrome --version || echo "Chrome not found"
-        chromedriver --version || echo "ChromeDriver not found"
-        
         echo "=== PHP Server Logs ==="
         cat php_server.log || echo "No PHP server log found"
+        
+        echo "=== Selenium Server Logs ==="
+        cat selenium.log || echo "No Selenium log found"
         
         echo "=== Installation Logs ==="
         cat install_output.log || echo "No install log found"
         
         echo "=== Process Status ==="
-        ps aux | grep -E "(php|chrome)" || true
+        ps aux | grep -E "(php|java|selenium)" || true
         
         echo "=== Network Status ==="
-        netstat -tlnp | grep -E "(3306|8000)" || true
+        netstat -tlnp | grep -E "(3306|4444|8000)" || true
+        
+        echo "=== Chrome Version ==="
+        google-chrome --version || echo "Chrome not found"
+        chromedriver --version || echo "ChromeDriver not found"
+        
+        echo "=== PHP Version ==="
+        php --version
         
         echo "=== Database Status ==="
         mysql -h127.0.0.1 -P3306 -uroot -proot_password -e "SHOW PROCESSLIST;" || echo "Cannot connect to MySQL"
         
-        echo "=== Test Directory ==="
-        ls -la tests/SeleniumTests/ || echo "Test directory not found"
-
     - name: Upload artifacts
       if: always()
       uses: actions/upload-artifact@v4
@@ -195,7 +288,7 @@ jobs:
           *.log
           *.php
           tests/
-
+          
     - name: Cleanup
       if: always()
       run: |
@@ -203,3 +296,11 @@ jobs:
         if [ -f php_server.pid ]; then
           kill $(cat php_server.pid) || true
         fi
+        
+        # Kill Selenium server
+        if [ -f selenium.pid ]; then
+          kill $(cat selenium.pid) || true
+        fi
+        
+        # Clean up downloads
+        rm -f selenium-server.jar chromedriver_linux64.zip chrome_version.txt
