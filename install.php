@@ -114,91 +114,6 @@ function dropTables($connection)
 function createDatabaseStructure($connection)
 {
     $tables = [
-        "Topographic_Models_Properties" => "CREATE TABLE IF NOT EXISTS `Topographic_Models_Properties` (
-    `topographic_model_property_id` INT NOT NULL AUTO_INCREMENT,
-    `layer_approach` VARCHAR(100),
-    `forward_modelling_domain` VARCHAR(100),
-    `density_information` VARCHAR(100),
-    `density_information_details` VARCHAR(100),
-    `approximation` VARCHAR(100),
-    `description` TEXT NULL,
-    PRIMARY KEY (`topographic_model_property_id`)
-        );",
-
-        "Resource_has_Topographic_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_Topographic_Model_Properties` (
-    `resource_has_topographic_model_properties_id` INT NOT NULL AUTO_INCREMENT,
-    `resource_id` INT NOT NULL,
-    `topographic_model_property_id` INT NOT NULL,
-    PRIMARY KEY (`resource_has_topographic_model_properties_id`),
-    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`),
-    FOREIGN KEY (`topographic_model_property_id`) REFERENCES `Topographic_Models_Properties`(`topographic_model_property_id`) ON DELETE RESTRICT ON UPDATE CASCADE
-        );",
-
-        "Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Temporal_Model_Properties` (
-    `temporal_model_property_id` INT NOT NULL AUTO_INCREMENT,
-    `science_data_system_participation` BOOLEAN NULL,
-    `temporal_resolution_days` INT NULL,
-    `start_date` DATE NULL,
-    `end_date` DATE NULL,
-    PRIMARY KEY (`temporal_model_property_id`)
-        );",
-
-        "Resource_has_Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_Temporal_Model_Properties` (
-    `resource_has_temporal_model_properties_id` INT NOT NULL AUTO_INCREMENT,
-    `resource_id` INT NOT NULL,
-    `temporal_model_property_id` INT NOT NULL,
-    PRIMARY KEY (`resource_has_temporal_model_properties_id`),
-    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
-    FOREIGN KEY (`temporal_model_property_id`) REFERENCES `Temporal_Model_Properties`(`temporal_model_property_id`) ON DELETE CASCADE
-        );",
-
-        "Ellipsoidal_Parameters" => "CREATE TABLE IF NOT EXISTS `Ellipsoidal_Parameters` (
-    `ellipsoidal_parameter_id` INT NOT NULL AUTO_INCREMENT,
-    `semimajor_axis_a` FLOAT (7,2) NOT NULL,
-    `semiminor_axis_b` FLOAT (7,2) NULL,
-    `flattening` FLOAT (1,13) NULL,
-    `reciprocal_flattening` FLOAT (4,13) NULL,
-    `description` TEXT NULL,
-    PRIMARY KEY (`ellipsoidal_parameter_id`)
-        );",
-
-        "Resource_has_Ellipsoidal_Parameters" => "CREATE TABLE IF NOT EXISTS `Resource_has_Ellipsoidal_Parameters` (
-    `resource_has_ellipsoidal_parameters_id` INT NOT NULL AUTO_INCREMENT,
-    `resource_id` INT NOT NULL,
-    `ellipsoidal_parameter_id` INT NOT NULL,
-    PRIMARY KEY (`resource_has_ellipsoidal_parameters_id`),
-    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
-    FOREIGN KEY (`ellipsoidal_parameter_id`) REFERENCES `Ellipsoidal_Parameters`(`ellipsoidal_parameter_id`) ON DELETE CASCADE
-        );",
-
-        "Data_Sources" => "CREATE TABLE IF NOT EXISTS `Data_Sources` (
-    `data_source_id` INT NOT NULL AUTO_INCREMENT,
-    `type` VARCHAR(100) NOT NULL,
-    `description` TEXT NULL,
-    `S_value_name` VARCHAR(500) NULL,
-    `S_value_uri` VARCHAR(100) NULL,
-    `S_scheme_name` VARCHAR(100) NULL,
-    `S_scheme_uri` VARCHAR(100) NULL,
-    `G_details` VARCHAR(1000) NULL,
-    `A_details` VARCHAR(1000) NULL,
-    `T_details` VARCHAR(1000) NULL,
-    `T_identifier` VARCHAR(1000) NULL,
-    `T_identifier_type` VARCHAR(1000) NULL,
-    `M_details` VARCHAR(1000) NULL,
-    `M_identifier` VARCHAR(1000) NULL,
-    `M_identifier_type` VARCHAR(1000) NULL,
-    PRIMARY KEY (`data_source_id`)
-        );",
-
-        "Resource_has_Data_Sources" => "CREATE TABLE IF NOT EXISTS `Resource_has_Data_Sources` (
-    `Resource_has_Data_Sources_id` INT NOT NULL AUTO_INCREMENT,
-    `resource_id` INT NOT NULL,
-    `data_source_id` INT NOT NULL,
-    PRIMARY KEY (`Resource_has_Data_Sources_id`),
-    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
-    FOREIGN KEY (`data_source_id`) REFERENCES `Data_Sources`(`data_source_id`) ON DELETE CASCADE
-        );",
-
         "Resource_Type" => "CREATE TABLE IF NOT EXISTS `Resource_Type` (
     `resource_name_id` INT NOT NULL AUTO_INCREMENT,
     `resource_type_general` VARCHAR(30) NULL,
@@ -432,14 +347,13 @@ function createDatabaseStructure($connection)
     `Model_Name` VARCHAR(100) NOT NULL,
     `Celestial_Body` VARCHAR(100) NULL,
     `Product_Type` VARCHAR(100) NULL,
-    `Degree` INT NULL,
     `Errors` VARCHAR(100) NULL,
     `Error_Handling_Approach` TEXT NULL,
     `Tide_System` VARCHAR(100) NULL,
     `generating_institution` VARCHAR(200) NULL,
     `degree` INT NULL,
     `is_normalised` BOOLEAN NULL,
-    `radius` FLOAT(7,5) NULL,
+    `radius` FLOAT(9,2) NULL,
     `earth_gravity_constant` FLOAT NULL,
     PRIMARY KEY (`GGM_Properties_id`));",
 
@@ -597,6 +511,91 @@ function createDatabaseStructure($connection)
     REFERENCES `Resource` (`resource_id`),
     FOREIGN KEY (`GGM_Properties_GGM_Properties_id`)
     REFERENCES `GGM_Properties` (`GGM_Properties_id`));",
+    
+            "Topographic_Models_Properties" => "CREATE TABLE IF NOT EXISTS `Topographic_Models_Properties` (
+    `topographic_model_property_id` INT NOT NULL AUTO_INCREMENT,
+    `layer_approach` VARCHAR(100),
+    `forward_modelling_domain` VARCHAR(100),
+    `density_information` VARCHAR(100),
+    `density_information_details` VARCHAR(100),
+    `approximation` VARCHAR(100),
+    `description` TEXT NULL,
+    PRIMARY KEY (`topographic_model_property_id`)
+        );",
+
+        "Resource_has_Topographic_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_Topographic_Model_Properties` (
+    `resource_has_topographic_model_properties_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `topographic_model_property_id` INT NOT NULL,
+    PRIMARY KEY (`resource_has_topographic_model_properties_id`),
+    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`),
+    FOREIGN KEY (`topographic_model_property_id`) REFERENCES `Topographic_Models_Properties`(`topographic_model_property_id`) ON DELETE RESTRICT ON UPDATE CASCADE
+        );",
+
+        "Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Temporal_Model_Properties` (
+    `temporal_model_property_id` INT NOT NULL AUTO_INCREMENT,
+    `science_data_system_participation` BOOLEAN NULL,
+    `temporal_resolution_days` INT NULL,
+    `start_date` DATE NULL,
+    `end_date` DATE NULL,
+    PRIMARY KEY (`temporal_model_property_id`)
+        );",
+
+        "Resource_has_Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_Temporal_Model_Properties` (
+    `resource_has_temporal_model_properties_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `temporal_model_property_id` INT NOT NULL,
+    PRIMARY KEY (`resource_has_temporal_model_properties_id`),
+    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`temporal_model_property_id`) REFERENCES `Temporal_Model_Properties`(`temporal_model_property_id`) ON DELETE CASCADE
+        );",
+
+        "Ellipsoidal_Parameters" => "CREATE TABLE IF NOT EXISTS `Ellipsoidal_Parameters` (
+    `ellipsoidal_parameter_id` INT NOT NULL AUTO_INCREMENT,
+    `semimajor_axis_a` FLOAT (9,2) NOT NULL,
+    `semiminor_axis_b` FLOAT (9,2) NULL,
+    `flattening` FLOAT NULL,
+    `reciprocal_flattening` FLOAT NULL,
+    `description` TEXT NULL,
+    PRIMARY KEY (`ellipsoidal_parameter_id`)
+        );",
+
+        "Resource_has_Ellipsoidal_Parameters" => "CREATE TABLE IF NOT EXISTS `Resource_has_Ellipsoidal_Parameters` (
+    `resource_has_ellipsoidal_parameters_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `ellipsoidal_parameter_id` INT NOT NULL,
+    PRIMARY KEY (`resource_has_ellipsoidal_parameters_id`),
+    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`ellipsoidal_parameter_id`) REFERENCES `Ellipsoidal_Parameters`(`ellipsoidal_parameter_id`) ON DELETE CASCADE
+        );",
+
+        "Data_Sources" => "CREATE TABLE IF NOT EXISTS `Data_Sources` (
+    `data_source_id` INT NOT NULL AUTO_INCREMENT,
+    `type` VARCHAR(100) NOT NULL,
+    `description` TEXT NULL,
+    `S_value_name` VARCHAR(500) NULL,
+    `S_value_uri` VARCHAR(100) NULL,
+    `S_scheme_name` VARCHAR(100) NULL,
+    `S_scheme_uri` VARCHAR(100) NULL,
+    `G_details` VARCHAR(1000) NULL,
+    `A_details` VARCHAR(1000) NULL,
+    `T_details` VARCHAR(1000) NULL,
+    `T_identifier` VARCHAR(1000) NULL,
+    `T_identifier_type` VARCHAR(1000) NULL,
+    `M_details` VARCHAR(1000) NULL,
+    `M_identifier` VARCHAR(1000) NULL,
+    `M_identifier_type` VARCHAR(1000) NULL,
+    PRIMARY KEY (`data_source_id`)
+        );",
+
+        "Resource_has_Data_Sources" => "CREATE TABLE IF NOT EXISTS `Resource_has_Data_Sources` (
+    `Resource_has_Data_Sources_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `data_source_id` INT NOT NULL,
+    PRIMARY KEY (`Resource_has_Data_Sources_id`),
+    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`data_source_id`) REFERENCES `Data_Sources`(`data_source_id`) ON DELETE CASCADE
+        );",
     ];
 
     $created = 0;
