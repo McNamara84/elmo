@@ -117,13 +117,16 @@ jobs:
         echo $! > server.pid
         sleep 10
         
-        echo "Testing initial API endpoints:"
+        echo "Testing direct file access:"
+        curl -v http://localhost:8000/index.php || echo "index.php test failed"
+        
+        echo "\nTesting initial API endpoints:"
         curl -v http://localhost:8000/api/v2/general/alive || echo "API endpoint test failed"
         echo "\nTesting licenses endpoint:"
         curl -v http://localhost:8000/api/v2/vocabs/licenses/all || echo "Licenses endpoint test failed"
         
-        echo "\nTesting main page:"
-        curl -v http://localhost:8000/ || echo "Main page test failed"
+        echo "\nListing files in root directory:"
+        ls -la | head -10
         
         echo "\nInitial server log contents:"
         cat server.log
@@ -138,8 +141,11 @@ jobs:
         
         echo "Testing server connectivity..."
         for i in {1..10}; do
-          if curl -s http://localhost:8000/ > /dev/null; then
-            echo "Server is responding on attempt $i"
+          if curl -s http://localhost:8000/index.php > /dev/null; then
+            echo "Server is responding to index.php on attempt $i"
+            break
+          elif curl -s http://localhost:8000/ > /dev/null; then
+            echo "Server is responding to root on attempt $i"
             break
           else
             echo "Server not responding on attempt $i, waiting..."
@@ -148,7 +154,8 @@ jobs:
         done
         
         echo "Final connectivity test:"
-        curl -v http://localhost:8000/ || echo "Server still not reachable"
+        curl -v http://localhost:8000/index.php || echo "index.php still not reachable"
+        curl -v http://localhost:8000/ || echo "Root still not reachable"
 
     - name: Create playwright.config.ts for CI
       run: |
