@@ -25,4 +25,34 @@ test.describe("Resource Information Form Tests", () => {
     // Check card body
     await expect(resourceInfoCard.locator(".card-body")).toBeVisible();
   });
+
+  test("Test all input fields functionality", async ({ page }) => {
+    // Test DOI input field
+    const doiInput = page.locator("#input-resourceinformation-doi");
+    await expect(doiInput).toBeVisible();
+    await doiInput.fill("10.1234/example.doi");
+    await expect(doiInput).toHaveValue("10.1234/example.doi");
+    await doiInput.clear();
+
+    // Test Publication Year input field (required)
+    const yearInput = page.locator("#input-resourceinformation-publicationyear");
+    await expect(yearInput).toBeVisible();
+    await expect(yearInput).toHaveAttribute("required");
+    await yearInput.fill("2024");
+    await expect(yearInput).toHaveValue("2024");
+
+    // Test Version input field
+    const versionInput = page.locator("#input-resourceinformation-version");
+    await expect(versionInput).toBeVisible();
+    await versionInput.fill("1.0");
+    await expect(versionInput).toHaveValue("1.0");
+    await versionInput.clear();
+
+    // Test Title input field (required)
+    const titleInput = page.locator("#input-resourceinformation-title");
+    await expect(titleInput).toBeVisible();
+    await expect(titleInput).toHaveAttribute("required");
+    await titleInput.fill("Test Dataset Title");
+    await expect(titleInput).toHaveValue("Test Dataset Title");
+  });
 });
