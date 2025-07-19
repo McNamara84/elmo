@@ -12,3 +12,4 @@ vendor/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+debug-page.png
