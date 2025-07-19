@@ -134,4 +134,18 @@ test.describe('Navbar Dropdown Tests', () => {
     await expect(page.locator('#bd-theme + ul.dropdown-menu.show')).not.toBeVisible();
     await expect(page.locator('#bd-lang + ul.dropdown-menu.show')).toBeVisible();
   });
+
+  test('Test dropdown accessibility', async ({ page }) => {
+    await page.goto('');
+    await expect(page.locator('.navbar')).toBeVisible({ timeout: 10000 });
+    
+    // Test keyboard navigation
+    await page.locator('#bd-help').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#bd-help + ul.dropdown-menu.show')).toBeVisible();
+    
+    // Test escape key closes dropdown
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#bd-help + ul.dropdown-menu.show')).not.toBeVisible();
+  });
 });
