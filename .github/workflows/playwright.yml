@@ -118,12 +118,12 @@ jobs:
         sleep 10
         
         echo "Testing initial API endpoints:"
-        curl -v http://localhost:8000/elmo/api/v2/general/alive || echo "API endpoint test failed"
+        curl -v http://localhost:8000/api/v2/general/alive || echo "API endpoint test failed"
         echo "\nTesting licenses endpoint:"
-        curl -v http://localhost:8000/elmo/api/v2/vocabs/licenses/all || echo "Licenses endpoint test failed"
+        curl -v http://localhost:8000/api/v2/vocabs/licenses/all || echo "Licenses endpoint test failed"
         
         echo "\nTesting main page:"
-        curl -v http://localhost:8000/elmo/ || echo "Main page test failed"
+        curl -v http://localhost:8000/ || echo "Main page test failed"
         
         echo "\nInitial server log contents:"
         cat server.log
@@ -138,7 +138,7 @@ jobs:
         
         echo "Testing server connectivity..."
         for i in {1..10}; do
-          if curl -s http://localhost:8000/elmo/ > /dev/null; then
+          if curl -s http://localhost:8000/ > /dev/null; then
             echo "Server is responding on attempt $i"
             break
           else
@@ -148,7 +148,7 @@ jobs:
         done
         
         echo "Final connectivity test:"
-        curl -v http://localhost:8000/elmo/ || echo "Server still not reachable"
+        curl -v http://localhost:8000/ || echo "Server still not reachable"
 
     - name: Create playwright.config.ts for CI
       run: |
@@ -163,7 +163,7 @@ jobs:
           workers: process.env.CI ? 1 : undefined,
           reporter: [['html', { outputFolder: 'playwright-report' }], ['json', { outputFile: 'test-results.json' }]],
           use: {
-            baseURL: 'http://localhost:8000/elmo/',
+            baseURL: 'http://localhost:8000/',
             trace: 'on-first-retry',
             video: 'retain-on-failure',
             screenshot: 'only-on-failure',
