@@ -55,4 +55,40 @@ test.describe("Resource Information Form Tests", () => {
     await titleInput.fill("Test Dataset Title");
     await expect(titleInput).toHaveValue("Test Dataset Title");
   });
+
+  test("Test dropdown fields functionality", async ({ page }) => {
+    // Test Resource Type dropdown (required)
+    const resourceTypeSelect = page.locator("#input-resourceinformation-resourcetype");
+    await expect(resourceTypeSelect).toBeVisible();
+    await expect(resourceTypeSelect).toHaveAttribute("required");
+
+    // Click to open dropdown and select an option
+    await resourceTypeSelect.click();
+    await resourceTypeSelect.selectOption("5"); // Dataset
+    await expect(resourceTypeSelect).toHaveValue("5");
+
+    // Verify multiple options are available
+    const resourceTypeOptions = resourceTypeSelect.locator("option");
+    const optionCount = await resourceTypeOptions.count();
+    expect(optionCount).toBeGreaterThan(5); // Should have many resource type options
+
+    // Test Language dropdown (required)
+    const languageSelect = page.locator("#input-resourceinformation-language");
+    await expect(languageSelect).toBeVisible();
+    await expect(languageSelect).toHaveAttribute("required");
+
+    // Verify English option is available and can be selected
+    await languageSelect.selectOption("1"); // English
+    await expect(languageSelect).toHaveValue("1");
+
+    // Verify multiple language options exist
+    const languageOptions = languageSelect.locator("option");
+    const langCount = await languageOptions.count();
+    expect(langCount).toBeGreaterThanOrEqual(3); // English, German, French
+
+    // Verify specific language options
+    await expect(languageSelect.locator('option[value="1"]')).toHaveText("English");
+    await expect(languageSelect.locator('option[value="2"]')).toHaveText("German");
+    await expect(languageSelect.locator('option[value="3"]')).toHaveText("French");
+  });
 });
