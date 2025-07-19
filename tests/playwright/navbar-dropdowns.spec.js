@@ -111,4 +111,27 @@ test.describe('Navbar Dropdown Tests', () => {
     
     console.log('All dropdown tests completed successfully!');
   });
+
+  test('Test individual dropdown interactions', async ({ page }) => {
+    // Additional test for more detailed dropdown behavior
+    await page.goto('/');
+    await expect(page.locator('.navbar')).toBeVisible({ timeout: 10000 });
+    
+    // Test that clicking outside closes dropdowns
+    await page.locator('#bd-help').click();
+    await expect(page.locator('#bd-help + ul.dropdown-menu.show')).toBeVisible();
+    
+    // Click outside dropdown area
+    await page.locator('body').click({ position: { x: 100, y: 100 } });
+    await expect(page.locator('#bd-help + ul.dropdown-menu.show')).not.toBeVisible();
+    
+    // Test that dropdowns don't interfere with each other
+    await page.locator('#bd-theme').click();
+    await expect(page.locator('#bd-theme + ul.dropdown-menu.show')).toBeVisible();
+    
+    // Click another dropdown - first should close, second should open
+    await page.locator('#bd-lang').click();
+    await expect(page.locator('#bd-theme + ul.dropdown-menu.show')).not.toBeVisible();
+    await expect(page.locator('#bd-lang + ul.dropdown-menu.show')).toBeVisible();
+  });
 });
