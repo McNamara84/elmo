@@ -4,7 +4,7 @@ test.describe('Navbar Dropdown Tests', () => {
   test('Test Navbar Dropdown Functionality', async ({ page }) => {
     // Debug: Log what we're trying to access
     console.log('Navigating to base URL...');
-    await page.goto('/');
+    await page.goto('');
 
     // Debug: Check what page we actually got
     const title = await page.title();
@@ -114,7 +114,7 @@ test.describe('Navbar Dropdown Tests', () => {
 
   test('Test individual dropdown interactions', async ({ page }) => {
     // Additional test for more detailed dropdown behavior
-    await page.goto('/');
+    await page.goto('');
     await expect(page.locator('.navbar')).toBeVisible({ timeout: 10000 });
     
     // Test that clicking outside closes dropdowns
