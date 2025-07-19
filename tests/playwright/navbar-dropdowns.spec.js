@@ -1,10 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost/elmo/';
-
 test.describe('Navbar Dropdown Tests', () => {
   test('Test Navbar Dropdown Functionality', async ({ page }) => {
-    // Open the ELMO application
     await page.goto(BASE_URL);
     
     // Wait for page to load completely - wait for navbar
