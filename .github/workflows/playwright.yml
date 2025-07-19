@@ -113,7 +113,8 @@ jobs:
 
     - name: Start PHP built-in web server
       run: |
-        php -S localhost:8000 -t . tests/server.php 2>&1 > server.log &
+        echo "Starting PHP server without router script..."
+        php -S localhost:8000 -t . 2>&1 > server.log &
         echo $! > server.pid
         sleep 10
         
@@ -125,31 +126,19 @@ jobs:
         ls -la main.* || echo "No main files found"
         ls -la app.* || echo "No app files found"
         
+        echo "\nTesting server connectivity:"
+        curl -v http://localhost:8000/ || echo "Root test failed"
+        
         echo "\nTesting direct file access:"
         curl -v http://localhost:8000/index.php || echo "index.php test failed"
-        
-        echo "\nChecking what the server actually returns:"
-        curl -v http://localhost:8000/ 2>&1 | head -20
         
         echo "\nServer log contents:"
         cat server.log
         
         echo "\nTesting if server serves static files:"
-        echo "Test HTML" > test.html
+        echo "<html><body><h1>Test</h1></body></html>" > test.html
         curl -v http://localhost:8000/test.html || echo "Static file test failed"
         rm test.html
-        
-        echo "\nTrying alternative server setup without router script:"
-        kill $(cat server.pid) || true
-        sleep 2
-        php -S localhost:8001 -t . 2>&1 > server2.log &
-        echo $! > server2.pid
-        sleep 5
-        echo "\nTesting alternative server:"
-        curl -v http://localhost:8001/ || echo "Alternative server test failed"
-        curl -v http://localhost:8001/index.php || echo "Alternative index.php test failed"
-        echo "\nAlternative server log:"
-        cat server2.log
 
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
@@ -176,6 +165,41 @@ jobs:
         echo "Final connectivity test:"
         curl -v http://localhost:8000/index.php || echo "index.php still not reachable"
         curl -v http://localhost:8000/ || echo "Root still not reachable"
+
+    - name: Create debugging test
+      run: |
+        cat << 'EOF' > tests/playwright/debug.spec.js
+        import { test, expect } from '@playwright/test';
+        
+        test('Debug server response', async ({ page }) => {
+          console.log('Testing direct server access...');
+          
+          // Test different URLs
+          const urls = ['/', '/index.php', '/index.html'];
+          
+          for (const url of urls) {
+            try {
+              console.log(`\nTrying URL: ${url}`);
+              const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 5000 });
+              console.log(`Status: ${response.status()}`);
+              console.log(`URL after navigation: ${page.url()}`);
+              
+              const title = await page.title();
+              console.log(`Page title: ${title}`);
+              
+              const bodyText = await page.locator('body').textContent().catch(() => 'No body found');
+              console.log(`Body text (first 100 chars): ${bodyText.substring(0, 100)}`);
+              
+              if (response.ok()) {
+                console.log(`✅ Success with ${url}`);
+                break;
+              }
+            } catch (error) {
+              console.log(`❌ Error with ${url}: ${error.message}`);
+            }
+          }
+        });
+        EOF
 
     - name: Create playwright.config.ts for CI
       run: |
@@ -213,7 +237,7 @@ jobs:
         EOF
 
     - name: Run Playwright tests
-      run: npx playwright test --config=playwright.config.ci.ts --debug-logger
+      run: npx playwright test --config=playwright.config.ci.ts
       env:
         CI: true
 
@@ -256,7 +280,4 @@ jobs:
       run: |
         if [ -f server.pid ]; then
           kill $(cat server.pid) || true
-        fi
-        if [ -f server2.pid ]; then
-          kill $(cat server2.pid) || true
         fi
