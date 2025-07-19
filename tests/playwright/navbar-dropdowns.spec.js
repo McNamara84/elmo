@@ -2,7 +2,28 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Navbar Dropdown Tests', () => {
   test('Test Navbar Dropdown Functionality', async ({ page }) => {
+    // Debug: Log what we're trying to access
+    console.log('Navigating to base URL...');
     await page.goto('/');
+
+    // Debug: Check what page we actually got
+    const title = await page.title();
+    console.log('Page title:', title);
+    
+    const url = page.url();
+    console.log('Current URL:', url);
+    
+    // Debug: Check page content
+    const body = await page.locator('body').textContent();
+    console.log('Page body (first 200 chars):', body?.substring(0, 200));
+    
+    // Debug: Check if any HTML structure exists
+    const htmlContent = await page.content();
+    console.log('HTML contains navbar:', htmlContent.includes('navbar'));
+    console.log('HTML contains body:', htmlContent.includes('<body'));
+    
+    // Take a screenshot for debugging
+    await page.screenshot({ path: 'debug-page.png', fullPage: true });
     
     // Wait for page to load completely - wait for navbar
     await expect(page.locator('.navbar')).toBeVisible({ timeout: 10000 });
