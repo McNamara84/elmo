@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Navbar Dropdown Tests', () => {
   test('Test Navbar Dropdown Functionality', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto('/');
     
     // Wait for page to load completely - wait for navbar
     await expect(page.locator('.navbar')).toBeVisible({ timeout: 10000 });
