@@ -198,4 +198,23 @@ test.describe("Resource Information Form Tests", () => {
     // Verify we're back to English
     await expect(titleLabel.locator('[data-translate="resourceInfo.resourceTitle"]')).toBeVisible();
   });
+
+  test("Test form validation for required fields", async ({ page }) => {
+    // Try to submit the form with empty required fields
+    const submitButton = page.locator("#button-form-submit");
+
+    // Fill form partially to test validation
+    await page.locator("#input-resourceinformation-title").fill("Test Title");
+
+    // Leave required fields empty and check validation
+    const yearInput = page.locator("#input-resourceinformation-publicationyear");
+    const resourceTypeSelect = page.locator("#input-resourceinformation-resourcetype");
+    const languageSelect = page.locator("#input-resourceinformation-language");
+
+    // These fields should have required attribute
+    await expect(yearInput).toHaveAttribute("required");
+    await expect(resourceTypeSelect).toHaveAttribute("required");
+    await expect(languageSelect).toHaveAttribute("required");
+    await expect(page.locator("#input-resourceinformation-title")).toHaveAttribute("required");
+  });
 });
