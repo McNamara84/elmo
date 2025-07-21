@@ -277,10 +277,11 @@ test.describe("Resource Information Form Tests", () => {
     await page.waitForTimeout(500);
 
     // If title type becomes available, select it
-    const titleTypeSelect = page.locator("#input-resourceinformation-titletype");
-    if (await titleTypeSelect.isVisible()) {
-      await titleTypeSelect.selectOption("2"); // Alternative Title
-    }
+    const titleTypeSelect = page
+      .locator("#input-resourceinformation-titletype")
+      .nth(1);
+    await expect(titleTypeSelect).toBeVisible();
+    await titleTypeSelect.selectOption("2"); // Alternative Title
 
     // Verify all values are set correctly
     await expect(page.locator("#input-resourceinformation-doi")).toHaveValue("10.1234/test.dataset.2024");
