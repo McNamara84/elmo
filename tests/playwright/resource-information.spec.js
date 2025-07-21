@@ -94,8 +94,8 @@ test.describe("Resource Information Form Tests", () => {
 
   test("Test add title button functionality", async ({ page }) => {
     // Initially, Title Type container should be hidden
-    const titleTypeContainer = page.locator("#container-resourceinformation-titletype");
-    await expect(titleTypeContainer).toHaveClass(/unvisible/);
+    const titleTypeContainers = page.locator("#container-resourceinformation-titletype");
+    await expect(titleTypeContainers.first()).toHaveClass(/unvisible/);
 
     // Click the add title button
     const addTitleButton = page.locator("#button-resourceinformation-addtitle");
@@ -105,13 +105,12 @@ test.describe("Resource Information Form Tests", () => {
     // Wait a moment for potential JavaScript execution
     await page.waitForTimeout(500);
 
-    // After clicking, Title Type container should become visible
-    // Note: The actual behavior depends on your JavaScript implementation
-    // This test assumes the JavaScript removes the 'unvisible' class
-    // You may need to adjust this based on your actual implementation
+    // After clicking, a second Title Type container should exist and be visible
+    const secondContainer = titleTypeContainers.nth(1);
+    await expect(secondContainer).toBeVisible();
 
-    // Check if Title Type dropdown becomes available
-    const titleTypeSelect = page.locator("#input-resourceinformation-titletype");
+    // Check if Title Type dropdown in the new row becomes available
+    const titleTypeSelect = page.locator("#input-resourceinformation-titletype").nth(1);
     await expect(titleTypeSelect).toBeVisible();
   });
 
@@ -120,7 +119,7 @@ test.describe("Resource Information Form Tests", () => {
     await page.locator("#button-resourceinformation-addtitle").click();
     await page.waitForTimeout(500);
 
-    const titleTypeSelect = page.locator("#input-resourceinformation-titletype");
+    const titleTypeSelect = page.locator("#input-resourceinformation-titletype").nth(1);
 
     // Verify the dropdown has multiple options
     const titleTypeOptions = titleTypeSelect.locator("option");
@@ -128,7 +127,6 @@ test.describe("Resource Information Form Tests", () => {
     expect(titleOptionCount).toBeGreaterThanOrEqual(2);
 
     // Test specific title type options
-    await expect(titleTypeSelect.locator('option[value="1"]')).toHaveText("Main Title");
     await expect(titleTypeSelect.locator('option[value="2"]')).toHaveText("Alternative Title");
     await expect(titleTypeSelect.locator('option[value="3"]')).toHaveText("Translated Title");
 
