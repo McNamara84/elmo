@@ -312,4 +312,18 @@ test.describe("Resource Information Form Tests", () => {
     // Button should be enabled again after removal
     await expect(addTitleButton).toBeEnabled();
   });
+
+  test("Test title input pattern validation", async ({ page }) => {
+    const titleInput = page.locator("#input-resourceinformation-title");
+
+    // Invalid title should fail validity check
+    await titleInput.fill("Invalid@Title!");
+    const isValid = await titleInput.evaluate((el) => el.checkValidity());
+    expect(isValid).toBe(false);
+
+    // Valid title should pass
+    await titleInput.fill("Valid Title 1");
+    const isValidAfter = await titleInput.evaluate((el) => el.checkValidity());
+    expect(isValidAfter).toBe(true);
+  });
 });
