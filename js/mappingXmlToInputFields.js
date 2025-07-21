@@ -785,19 +785,34 @@ function getGeoLocationData(node) {
   const boxNode = node.querySelector("geoLocationBox");
   const pointNode = node.querySelector("geoLocationPoint");
 
-  const westBoundLongitude = boxNode?.querySelector("westBoundLongitude")?.textContent || "";
-  const eastBoundLongitude = boxNode?.querySelector("eastBoundLongitude")?.textContent || "";
-  const southBoundLatitude = boxNode?.querySelector("southBoundLatitude")?.textContent || "";
-  const northBoundLatitude = boxNode?.querySelector("northBoundLatitude")?.textContent || "";
-  const pointLongitude = pointNode?.querySelector("pointLongitude")?.textContent || "";
-  const pointLatitude = pointNode?.querySelector("pointLatitude")?.textContent || "";
+  if (boxNode) {
+    return {
+      place,
+      latitudeMin: boxNode.querySelector("southBoundLatitude")?.textContent || "",
+      latitudeMax: boxNode.querySelector("northBoundLatitude")?.textContent || "",
+      longitudeMin: boxNode.querySelector("westBoundLongitude")?.textContent || "",
+      longitudeMax: boxNode.querySelector("eastBoundLongitude")?.textContent || "",
+    };
+  }
+
+  if (pointNode) {
+    const lat = pointNode.querySelector("pointLatitude")?.textContent || "";
+    const lon = pointNode.querySelector("pointLongitude")?.textContent || "";
+    return {
+      place,
+      latitudeMin: lat,
+      latitudeMax: lat,
+      longitudeMin: lon,
+      longitudeMax: lon,
+    };
+  }
 
   return {
     place,
-    latitudeMin: southBoundLatitude || pointLatitude,
-    latitudeMax: northBoundLatitude || pointLatitude,
-    longitudeMin: westBoundLongitude || pointLongitude,
-    longitudeMax: eastBoundLongitude || pointLongitude,
+    latitudeMin: "",
+    latitudeMax: "",
+    longitudeMin: "",
+    longitudeMax: "",
   };
 }
 
