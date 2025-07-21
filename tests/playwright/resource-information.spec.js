@@ -262,4 +262,32 @@ test.describe("Resource Information Form Tests", () => {
     await expect(page.locator("#input-resourceinformation-doi")).toBeVisible();
     await expect(page.locator("#input-resourceinformation-title")).toBeVisible();
   });
+
+  test("Test complete form filling workflow", async ({ page }) => {
+    // Fill out the complete Resource Information form
+    await page.locator("#input-resourceinformation-doi").fill("10.1234/test.dataset.2024");
+    await page.locator("#input-resourceinformation-publicationyear").fill("2024");
+    await page.locator("#input-resourceinformation-resourcetype").selectOption("5"); // Dataset
+    await page.locator("#input-resourceinformation-version").fill("1.0");
+    await page.locator("#input-resourceinformation-language").selectOption("1"); // English
+    await page.locator("#input-resourceinformation-title").fill("Comprehensive Test Dataset");
+
+    // Add a second title
+    await page.locator("#button-resourceinformation-addtitle").click();
+    await page.waitForTimeout(500);
+
+    // If title type becomes available, select it
+    const titleTypeSelect = page.locator("#input-resourceinformation-titletype");
+    if (await titleTypeSelect.isVisible()) {
+      await titleTypeSelect.selectOption("2"); // Alternative Title
+    }
+
+    // Verify all values are set correctly
+    await expect(page.locator("#input-resourceinformation-doi")).toHaveValue("10.1234/test.dataset.2024");
+    await expect(page.locator("#input-resourceinformation-publicationyear")).toHaveValue("2024");
+    await expect(page.locator("#input-resourceinformation-resourcetype")).toHaveValue("5");
+    await expect(page.locator("#input-resourceinformation-version")).toHaveValue("1.0");
+    await expect(page.locator("#input-resourceinformation-language")).toHaveValue("1");
+    await expect(page.locator("#input-resourceinformation-title")).toHaveValue("Comprehensive Test Dataset");
+  });
 });
