@@ -856,7 +856,7 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
     const geoData = getGeoLocationData(geoLocationNodes.snapshotItem(i));
     const temporalData = parseTemporalData(dateNodes.snapshotItem(i));
 
-    const $lastRow = $('textarea[name="tscDescription[]"]').last().closest(".row");
+    const $lastRow = $('textarea[name="tscDescription[]"]').last().closest("[tsc-row]");
     fillSpatialFields($lastRow, geoData);
     fillTemporalFields($lastRow, temporalData);
 
