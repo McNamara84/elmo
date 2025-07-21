@@ -91,4 +91,27 @@ test.describe("Resource Information Form Tests", () => {
     await expect(languageSelect.locator('option[value="2"]')).toHaveText("German");
     await expect(languageSelect.locator('option[value="3"]')).toHaveText("French");
   });
+
+  test("Test add title button functionality", async ({ page }) => {
+    // Initially, Title Type container should be hidden
+    const titleTypeContainer = page.locator("#container-resourceinformation-titletype");
+    await expect(titleTypeContainer).toHaveClass(/unvisible/);
+
+    // Click the add title button
+    const addTitleButton = page.locator("#button-resourceinformation-addtitle");
+    await expect(addTitleButton).toBeVisible();
+    await addTitleButton.click();
+
+    // Wait a moment for potential JavaScript execution
+    await page.waitForTimeout(500);
+
+    // After clicking, Title Type container should become visible
+    // Note: The actual behavior depends on your JavaScript implementation
+    // This test assumes the JavaScript removes the 'unvisible' class
+    // You may need to adjust this based on your actual implementation
+
+    // Check if Title Type dropdown becomes available
+    const titleTypeSelect = page.locator("#input-resourceinformation-titletype");
+    await expect(titleTypeSelect).toBeVisible();
+  });
 });
