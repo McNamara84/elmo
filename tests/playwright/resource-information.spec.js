@@ -217,4 +217,29 @@ test.describe("Resource Information Form Tests", () => {
     await expect(languageSelect).toHaveAttribute("required");
     await expect(page.locator("#input-resourceinformation-title")).toHaveAttribute("required");
   });
+
+  test("Test input field patterns and validation", async ({ page }) => {
+    // Test DOI pattern validation
+    const doiInput = page.locator("#input-resourceinformation-doi");
+    await doiInput.fill("invalid-doi");
+
+    // Test valid DOI
+    await doiInput.clear();
+    await doiInput.fill("10.1234/valid.doi");
+    await expect(doiInput).toHaveValue("10.1234/valid.doi");
+
+    // Test Publication Year pattern
+    const yearInput = page.locator("#input-resourceinformation-publicationyear");
+    await yearInput.fill("2024");
+    await expect(yearInput).toHaveValue("2024");
+
+    // Test invalid year (too early)
+    await yearInput.clear();
+    await yearInput.fill("1800");
+
+    // Test Version pattern (numbers and dots)
+    const versionInput = page.locator("#input-resourceinformation-version");
+    await versionInput.fill("1.2.3");
+    await expect(versionInput).toHaveValue("1.2.3");
+  });
 });
