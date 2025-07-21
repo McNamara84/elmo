@@ -204,4 +204,33 @@ describe("mappingXmlToInputFields helpers", () => {
       longitudeMax: "56.78",
     });
   });
+
+  test("getGeoLocationData handles a single box", () => {
+    const ctx = loadMappingModule();
+    const xml =
+      `<resource xmlns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <geoLocations>\n` +
+      `    <geoLocation>\n` +
+      `      <geoLocationBox>\n` +
+      `        <westBoundLongitude>-10</westBoundLongitude>\n` +
+      `        <eastBoundLongitude>10</eastBoundLongitude>\n` +
+      `        <southBoundLatitude>-20</southBoundLatitude>\n` +
+      `        <northBoundLatitude>20</northBoundLatitude>\n` +
+      `      </geoLocationBox>\n` +
+      `    </geoLocation>\n` +
+      `  </geoLocations>\n` +
+      `</resource>`;
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const node = xmlDoc.querySelector("geoLocation");
+    const data = ctx.getGeoLocationData(node);
+
+    expect(data).toEqual({
+      place: "",
+      latitudeMin: "-20",
+      latitudeMax: "20",
+      longitudeMin: "-10",
+      longitudeMax: "10",
+    });
+  });
 });
