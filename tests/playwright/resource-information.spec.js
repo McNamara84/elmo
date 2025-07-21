@@ -242,4 +242,24 @@ test.describe("Resource Information Form Tests", () => {
     await versionInput.fill("1.2.3");
     await expect(versionInput).toHaveValue("1.2.3");
   });
+
+  test("Test responsiveness and layout", async ({ page }) => {
+    // Test that all form elements are visible in different viewport sizes
+
+    // Desktop view
+    await page.setViewportSize({ width: 1200, height: 800 });
+    await expect(page.locator("#input-resourceinformation-doi")).toBeVisible();
+    await expect(page.locator("#input-resourceinformation-publicationyear")).toBeVisible();
+    await expect(page.locator("#input-resourceinformation-resourcetype")).toBeVisible();
+
+    // Tablet view
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await expect(page.locator("#input-resourceinformation-doi")).toBeVisible();
+    await expect(page.locator("#input-resourceinformation-publicationyear")).toBeVisible();
+
+    // Mobile view
+    await page.setViewportSize({ width: 375, height: 667 });
+    await expect(page.locator("#input-resourceinformation-doi")).toBeVisible();
+    await expect(page.locator("#input-resourceinformation-title")).toBeVisible();
+  });
 });
