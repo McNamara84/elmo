@@ -177,4 +177,31 @@ describe("mappingXmlToInputFields helpers", () => {
       longitudeMax: "-101.1207",
     });
   });
+
+  test("getGeoLocationData handles a single point", () => {
+    const ctx = loadMappingModule();
+    const xml =
+      `<resource xmlns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <geoLocations>\n` +
+      `    <geoLocation>\n` +
+      `      <geoLocationPoint>\n` +
+      `        <pointLatitude>12.34</pointLatitude>\n` +
+      `        <pointLongitude>56.78</pointLongitude>\n` +
+      `      </geoLocationPoint>\n` +
+      `    </geoLocation>\n` +
+      `  </geoLocations>\n` +
+      `</resource>`;
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const node = xmlDoc.querySelector("geoLocation");
+    const data = ctx.getGeoLocationData(node);
+
+    expect(data).toEqual({
+      place: "",
+      latitudeMin: "12.34",
+      latitudeMax: "12.34",
+      longitudeMin: "56.78",
+      longitudeMax: "56.78",
+    });
+  });
 });
