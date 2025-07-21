@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <skos:Concept rdf:about="http://resource.geosciml.org/classifier/cgi/lithology/compound_material">
+    <skos:prefLabel>Compound Material</skos:prefLabel>
+    <skos:definition>Root concept of lithology.</skos:definition>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://resource.geosciml.org/classifier/cgi/lithology/granite">
+    <skos:prefLabel>Granite</skos:prefLabel>
+    <skos:definition>A type of rock.</skos:definition>
+    <skos:broader rdf:resource="http://resource.geosciml.org/classifier/cgi/lithology/compound_material" />
+  </skos:Concept>
+</rdf:RDF>
