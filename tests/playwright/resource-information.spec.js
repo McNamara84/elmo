@@ -137,4 +137,33 @@ test.describe("Resource Information Form Tests", () => {
     await titleTypeSelect.selectOption("3"); // Translated Title
     await expect(titleTypeSelect).toHaveValue("3");
   });
+
+  test("Test help icons visibility toggle", async ({ page }) => {
+    // Check that help icons are initially visible
+    const helpIcons = page.locator(".card").first().locator("i.bi-question-circle-fill");
+    const iconCount = await helpIcons.count();
+    expect(iconCount).toBeGreaterThan(0);
+
+    // Verify specific help icons are visible
+    await expect(page.locator('[data-help-section-id="help-resourceinformation-doi"]')).toBeVisible();
+    await expect(page.locator('[data-help-section-id="help-resourceinformation-publicationyear"]')).toBeVisible();
+    await expect(page.locator('[data-help-section-id="help-resourceinformation-resourcetype"]')).toBeVisible();
+
+    // Turn help OFF
+    await page.locator("#bd-help").click();
+    await page.locator("#buttonHelpOff").click();
+
+    // Wait for help toggle to take effect
+    await page.waitForTimeout(1000);
+
+    // Turn help back ON
+    await page.locator("#bd-help").click();
+    await page.locator("#buttonHelpOn").click();
+
+    // Wait for help toggle to take effect
+    await page.waitForTimeout(1000);
+
+    // Help icons should be visible again
+    await expect(page.locator('[data-help-section-id="help-resourceinformation-doi"]')).toBeVisible();
+  });
 });
