@@ -290,4 +290,26 @@ test.describe("Resource Information Form Tests", () => {
     await expect(page.locator("#input-resourceinformation-language")).toHaveValue("1");
     await expect(page.locator("#input-resourceinformation-title")).toHaveValue("Comprehensive Test Dataset");
   });
+
+  test("Test add title limit and removal", async ({ page }) => {
+    const addTitleButton = page.locator("#button-resourceinformation-addtitle");
+
+    // Add a second title (maxTitles is 2 via settings)
+    await addTitleButton.click();
+    await page.waitForTimeout(500);
+
+    // Button should now be disabled
+    await expect(addTitleButton).toBeDisabled();
+
+    // A remove button for the new title should exist
+    const removeButton = page.locator("button.removeTitle, button.removeButton");
+    await expect(removeButton).toBeVisible();
+
+    // Remove the second title
+    await removeButton.click();
+    await page.waitForTimeout(500);
+
+    // Button should be enabled again after removal
+    await expect(addTitleButton).toBeEnabled();
+  });
 });
