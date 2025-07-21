@@ -289,7 +289,9 @@ test.describe("Resource Information Form Tests", () => {
     await expect(page.locator("#input-resourceinformation-resourcetype")).toHaveValue("5");
     await expect(page.locator("#input-resourceinformation-version")).toHaveValue("1.0");
     await expect(page.locator("#input-resourceinformation-language")).toHaveValue("1");
-    await expect(page.locator("#input-resourceinformation-title")).toHaveValue("Comprehensive Test Dataset");
+    await expect(
+      page.locator("#input-resourceinformation-title").first()
+    ).toHaveValue("Comprehensive Test Dataset");
   });
 
   test("Test add title limit and removal", async ({ page }) => {
