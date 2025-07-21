@@ -2,7 +2,7 @@ settings.php
 .vscode/
 .phpunit.result.cache
 .env
-
-
+node_modules/
+vendor/
 
 .DS_Store # macOS specific file
