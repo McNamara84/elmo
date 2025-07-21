@@ -114,4 +114,29 @@ test.describe("Resource Information Form Tests", () => {
     const titleTypeSelect = page.locator("#input-resourceinformation-titletype");
     await expect(titleTypeSelect).toBeVisible();
   });
+
+  test("Test title type dropdown options", async ({ page }) => {
+    // First click add title to make title type visible
+    await page.locator("#button-resourceinformation-addtitle").click();
+    await page.waitForTimeout(500);
+
+    const titleTypeSelect = page.locator("#input-resourceinformation-titletype");
+
+    // Verify the dropdown has multiple options
+    const titleTypeOptions = titleTypeSelect.locator("option");
+    const titleOptionCount = await titleTypeOptions.count();
+    expect(titleOptionCount).toBeGreaterThanOrEqual(2);
+
+    // Test specific title type options
+    await expect(titleTypeSelect.locator('option[value="1"]')).toHaveText("Main Title");
+    await expect(titleTypeSelect.locator('option[value="2"]')).toHaveText("Alternative Title");
+    await expect(titleTypeSelect.locator('option[value="3"]')).toHaveText("Translated Title");
+
+    // Test selecting different title types
+    await titleTypeSelect.selectOption("2"); // Alternative Title
+    await expect(titleTypeSelect).toHaveValue("2");
+
+    await titleTypeSelect.selectOption("3"); // Translated Title
+    await expect(titleTypeSelect).toHaveValue("3");
+  });
 });
