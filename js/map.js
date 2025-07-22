@@ -221,7 +221,7 @@ $(document).ready(function () {
    */
   $("#group-stc").on(
     "input",
-    "[tsc-row] [id^=tscLatitude], [tsc-row] [id^=tscLongitude]",
+    "[tsc-row] input[name^='tscLatitude'], [tsc-row] input[name^='tscLongitude']",
     function () {
       var $row = $(this).closest("[tsc-row]");
       var currentRowId = $row.attr("tsc-row-id");
@@ -431,9 +431,11 @@ $(document).ready(function () {
     })
     .then((data) => {
       if (data.apiKey) {
-        loadGoogleMapsApi(data.apiKey);
+        if (!window.google || !window.google.maps || !window.google.maps.importLibrary) {
+          loadGoogleMapsApi(data.apiKey);
+        }
 
-        google.maps.importLibrary("maps").then(initMap);
+        window.google.maps.importLibrary("maps").then(initMap);
       } else {
         console.error("API key not found in the response");
       }
@@ -447,5 +449,6 @@ $(document).ready(function () {
   window.deleteDrawnOverlaysForRow = deleteDrawnOverlaysForRow;
   window.fitMapBounds = fitMapBounds;
   window.updateOverlayLabels = updateOverlayLabels;
+  window.updateMapOverlay = updateMapOverlay;
   $("#modal-stc-map").one("shown.bs.modal", onStcMapModalShown);
 });
