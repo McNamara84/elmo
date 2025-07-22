@@ -79,4 +79,14 @@ describe('select.js', () => {
     await window.updateIdentifierType(input[0]);
     expect(select.val()).toBe('');
   });
+
+  test('updateIdentifierType handles invalid regex', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(()=>{});
+    $.ajax.mockImplementationOnce(opts => { opts.success({identifierTypes:[{name:'BAD', pattern:'(/'}]}); return { fail: jest.fn() }; });
+    const input = $('#group-relatedwork .row:first-child input');
+    input.val('bad');
+    await window.updateIdentifierType(input[0]);
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
 });
