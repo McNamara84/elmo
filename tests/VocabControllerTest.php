@@ -74,4 +74,28 @@ class VocabControllerTest extends TestCase
 
         $this->assertEquals($expected, $processed);
     }
+
+    public function testSortChildrenRecursively(): void
+    {
+        $controller = $this->getController();
+        $nodes = [
+            ['text' => 'B', 'children' => [
+                ['text' => 'd', 'children' => []],
+                ['text' => 'c', 'children' => []],
+            ]],
+            ['text' => 'A', 'children' => [
+                ['text' => 'b', 'children' => []],
+                ['text' => 'a', 'children' => []],
+            ]],
+        ];
+
+        $this->invoke($controller, 'sortChildrenRecursively', [&$nodes]);
+
+        $this->assertSame('A', $nodes[0]['text']);
+        $this->assertSame('a', $nodes[0]['children'][0]['text']);
+        $this->assertSame('b', $nodes[0]['children'][1]['text']);
+        $this->assertSame('B', $nodes[1]['text']);
+        $this->assertSame('c', $nodes[1]['children'][0]['text']);
+        $this->assertSame('d', $nodes[1]['children'][1]['text']);
+    }
 }
