@@ -108,4 +108,10 @@ describe('select.js', () => {
     jest.advanceTimersByTime(100);
     expect(fn).toHaveBeenCalled();
   });
+
+  test('updateIdsAndNames assigns sequential ids', () => {
+    window.updateIdsAndNames();
+    const ids = $('#group-relatedwork select[name^="relation"]').map((i,el)=>$(el).attr('id')).get();
+    expect(ids).toEqual(['input-relatedwork-relation0','input-relatedwork-relation1']);
+  });
 });
