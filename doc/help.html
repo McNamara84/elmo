@@ -30,7 +30,10 @@ include_once "../settings.php";
                 </button>
                 <a class="navbar-brand ms-3" href="#">ELMO User Guide</a>
             </div>
-            <a class="nav-link text-white" href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
+            <form class="d-flex ms-3" role="search">
+                <input type="search" id="help-search" class="form-control form-control-sm" placeholder="Search help...">
+            </form>
+            <a class="nav-link text-white ms-3" href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
                 rel="noopener">Legal notice</a>
             <div class="offcanvas offcanvas-start navbar-help-header text-white" tabindex="-1" id="offcanvasNavbar"
                 aria-labelledby="offcanvasNavbarLabel">
@@ -40,7 +43,6 @@ include_once "../settings.php";
                         aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">
-                    <input type="search" id="help-search" class="form-control mb-3" placeholder="Search help...">
                     <ul class="navbar-nav">
                         <li class="nav-item">
                             <a class="nav-link active" aria-current="page" href="#help-introduction"
