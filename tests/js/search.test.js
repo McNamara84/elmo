@@ -3,10 +3,17 @@ const path = require('path');
 
 describe('search.js', () => {
   let markInstance;
+  let createdMark;
   beforeEach(() => {
+    createdMark = undefined;
     markInstance = {
       unmark: jest.fn(({ done }) => { if (done) done(); }),
-      mark: jest.fn(),
+      mark: jest.fn((term, opts) => {
+        createdMark = document.createElement('mark');
+        createdMark.scrollIntoView = jest.fn();
+        document.body.appendChild(createdMark);
+        if (opts && opts.done) opts.done();
+      }),
     };
     global.Mark = jest.fn(() => markInstance);
   });
@@ -34,7 +41,12 @@ describe('search.js', () => {
     input.dispatchEvent(new Event('input'));
 
     expect(markInstance.unmark).toHaveBeenCalled();
-    expect(markInstance.mark).toHaveBeenCalledWith('term', { separateWordSearch: false });
+    expect(markInstance.mark).toHaveBeenCalledWith('term', expect.objectContaining({
+      separateWordSearch: false,
+      done: expect.any(Function),
+    }));
+    const markEl = document.querySelector('mark');
+    expect(markEl.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
   });
 
   test('does not mark when input is empty', () => {
@@ -55,6 +67,11 @@ describe('search.js', () => {
     button.click();
 
     expect(markInstance.unmark).toHaveBeenCalled();
-    expect(markInstance.mark).toHaveBeenCalledWith('button', { separateWordSearch: false });
+    expect(markInstance.mark).toHaveBeenCalledWith('button', expect.objectContaining({
+      separateWordSearch: false,
+      done: expect.any(Function),
+    }));
+    const markEl2 = document.querySelector('mark');
+    expect(markEl2.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
   });
 });

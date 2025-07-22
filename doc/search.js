@@ -8,7 +8,15 @@ document.addEventListener('DOMContentLoaded', function () {
         markInstance.unmark({
             done: function () {
                 if (term !== '') {
-                    markInstance.mark(term, { separateWordSearch: false });
+                    markInstance.mark(term, {
+                        separateWordSearch: false,
+                        done: function () {
+                            const firstMark = document.querySelector('mark');
+                            if (firstMark && typeof firstMark.scrollIntoView === 'function') {
+                                firstMark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }
+                    });
                 }
             }
         });
