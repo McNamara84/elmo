@@ -70,4 +70,13 @@ describe('select.js', () => {
     await window.updateIdentifierType(input[0]);
     expect(select.val()).toBe('DOI');
   });
+
+  test('updateIdentifierType clears when no match', async () => {
+    $.ajax.mockImplementationOnce(opts => { opts.success({identifierTypes:[{name:'DOI', pattern:'^10\\..+'}]}); return { fail: jest.fn() }; });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('xyz');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('');
+  });
 });
