@@ -53,4 +53,12 @@ describe('select.js', () => {
     const options = $('#test-select option').map((i,el)=>$(el).text()).get();
     expect(options).toEqual(['Choose...','DOI','HANDLE']);
   });
+
+  test('setupIdentifierTypesDropdown warns when no types', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    $.getJSON.mockImplementationOnce((u,cb)=>{cb({}); return { fail: jest.fn() };});
+    window.setupIdentifierTypesDropdown('#test-select');
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
 });
