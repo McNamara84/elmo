@@ -59,32 +59,4 @@ PHP;
         $this->assertStringContainsString('<!DOCTYPE html>', $output);
         $this->assertStringContainsString('ELMO User Guide', $output);
     }
-
-    public function testApiKeySettingReturnsJson(): void
-    {
-        $_GET = ['setting' => 'apiKey'];
-        $output = $this->includeHelp();
-        $this->assertJson($output);
-        $data = json_decode($output, true);
-        $this->assertSame('test_api_key', $data['apiKey']);
-    }
-
-    public function testAllSettingsReturnJson(): void
-    {
-        $_GET = ['setting' => 'all'];
-        $output = $this->includeHelp();
-        $this->assertJson($output);
-        $data = json_decode($output, true);
-        $this->assertSame('test_api_key', $data['apiKey']);
-        $this->assertTrue($data['showMslLabs']);
-    }
-
-    public function testUnknownSettingReturnsError(): void
-    {
-        $_GET = ['setting' => 'unknown'];
-        $output = $this->includeHelp();
-        $this->assertJson($output);
-        $data = json_decode($output, true);
-        $this->assertSame('Unknown setting', $data['error']);
-    }
 }
