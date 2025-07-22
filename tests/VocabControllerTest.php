@@ -36,4 +36,42 @@ class VocabControllerTest extends TestCase
         $this->assertEquals([1, 2, 3], $result['data']);
         $this->assertMatchesRegularExpression('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $result['lastUpdated']);
     }
+
+    public function testProcessItemTransformsStructure(): void
+    {
+        $controller = $this->getController();
+        $item = [
+            'text' => 'Parent',
+            'extra' => ['uri' => 'uri:parent', 'vocab_uri' => 'scheme'],
+            'synonyms' => ['Syn1', 'Syn2'],
+            'children' => [
+                [
+                    'text' => 'Child',
+                    'extra' => ['uri' => 'uri:child', 'vocab_uri' => 'scheme'],
+                ]
+            ]
+        ];
+
+        $processed = $this->invoke($controller, 'processItem', [$item]);
+
+        $expected = [
+            'id' => 'uri:parent',
+            'text' => 'Parent',
+            'language' => 'en',
+            'scheme' => 'scheme',
+            'schemeURI' => 'scheme',
+            'description' => 'Syn1, Syn2',
+            'children' => [[
+                'id' => 'uri:child',
+                'text' => 'Child',
+                'language' => 'en',
+                'scheme' => 'scheme',
+                'schemeURI' => 'scheme',
+                'description' => '',
+                'children' => []
+            ]]
+        ];
+
+        $this->assertEquals($expected, $processed);
+    }
 }
