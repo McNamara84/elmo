@@ -114,4 +114,16 @@ describe('select.js', () => {
     const ids = $('#group-relatedwork select[name^="relation"]').map((i,el)=>$(el).attr('id')).get();
     expect(ids).toEqual(['input-relatedwork-relation0','input-relatedwork-relation1']);
   });
+
+  test('initializeTimezoneDropdown fetches and selects timezone', async () => {
+    const tzData = [{label:'UTC+00:00 (Europe/Berlin)'}];
+    global.fetch = jest.fn(() => Promise.resolve({json: () => Promise.resolve(tzData)}));
+    const originalIntl = Intl.DateTimeFormat;
+    Intl.DateTimeFormat = jest.fn(() => ({resolvedOptions: ()=>({timeZone:'Europe/Berlin'})}));
+    const select = $('<select id="tz"></select>').appendTo(document.body);
+    await window.initializeTimezoneDropdown('#tz', '/fake.json');
+    expect(fetch).toHaveBeenCalledWith('/fake.json');
+    expect(select.val()).toBe('+00:00');
+    Intl.DateTimeFormat = originalIntl;
+  });
 });
