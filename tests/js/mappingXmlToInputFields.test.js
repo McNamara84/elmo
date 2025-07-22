@@ -277,4 +277,50 @@ describe("mappingXmlToInputFields helpers", () => {
       longitudeMax: "5",
     });
   });
+
+  test("getGeoLocationData includes geoLocationPlace values", () => {
+    const ctx = loadMappingModule();
+    const xml =
+      `<resource xmlns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <geoLocations>\n` +
+      `    <geoLocation>\n` +
+      `      <geoLocationPlace>Pacific Ocean</geoLocationPlace>\n` +
+      `      <geoLocationPoint>\n` +
+      `        <pointLatitude>-33</pointLatitude>\n` +
+      `        <pointLongitude>151</pointLongitude>\n` +
+      `      </geoLocationPoint>\n` +
+      `    </geoLocation>\n` +
+      `    <geoLocation>\n` +
+      `      <geoLocationPlace>Area 51</geoLocationPlace>\n` +
+      `      <geoLocationBox>\n` +
+      `        <westBoundLongitude>-115.9</westBoundLongitude>\n` +
+      `        <eastBoundLongitude>-115.7</eastBoundLongitude>\n` +
+      `        <southBoundLatitude>37.2</southBoundLatitude>\n` +
+      `        <northBoundLatitude>37.3</northBoundLatitude>\n` +
+      `      </geoLocationBox>\n` +
+      `    </geoLocation>\n` +
+      `  </geoLocations>\n` +
+      `</resource>`;
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const nodes = xmlDoc.querySelectorAll("geoLocation");
+    const first = ctx.getGeoLocationData(nodes[0]);
+    const second = ctx.getGeoLocationData(nodes[1]);
+
+    expect(first).toEqual({
+      place: "Pacific Ocean",
+      latitudeMin: "-33",
+      latitudeMax: "-33",
+      longitudeMin: "151",
+      longitudeMax: "151",
+    });
+
+    expect(second).toEqual({
+      place: "Area 51",
+      latitudeMin: "37.2",
+      latitudeMax: "37.3",
+      longitudeMin: "-115.9",
+      longitudeMax: "-115.7",
+    });
+  });
 });
