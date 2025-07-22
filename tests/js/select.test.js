@@ -89,4 +89,13 @@ describe('select.js', () => {
     expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
   });
+
+  test('updateIdentifierType ajax error resets select', async () => {
+    $.ajax.mockImplementationOnce(opts => { if(opts.error) opts.error(); return { fail: jest.fn() }; });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('10.1');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('');
+  });
 });
