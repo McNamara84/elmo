@@ -1,0 +1,56 @@
+const fs = require('fs');
+const path = require('path');
+
+const flushPromises = () => new Promise(res => setTimeout(res, 0));
+
+describe('select.js', () => {
+  let $;
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <select id="input-relatedwork-identifiertype"></select>
+      <select id="test-select"></select>
+      <div id="group-relatedwork">
+        <div class="row">
+          <select name="relation"></select>
+          <input name="rIdentifier[]" />
+          <select name="rIdentifierType[]">
+            <option value=""></option>
+            <option value="DOI">DOI</option>
+            <option value="HANDLE">HANDLE</option>
+          </select>
+        </div>
+        <div class="row">
+          <select name="relation"></select>
+          <input name="rIdentifier[]" />
+          <select name="rIdentifierType[]">
+            <option value=""></option>
+            <option value="DOI">DOI</option>
+            <option value="HANDLE">HANDLE</option>
+          </select>
+        </div>
+      </div>
+    `;
+
+    $ = require('jquery');
+    global.$ = $;
+    global.jQuery = $;
+
+    $.getJSON = jest.fn((url, cb) => { cb({identifierTypes: []}); return { fail: jest.fn() }; });
+    $.ajax = jest.fn((opts) => { if(opts.success) opts.success({}); return { fail: jest.fn() }; });
+
+    const script = fs.readFileSync(path.resolve(__dirname, '../../js/select.js'), 'utf8');
+    window.eval(script);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.resetAllMocks();
+  });
+
+  test('setupIdentifierTypesDropdown populates options', () => {
+    $.getJSON.mockImplementationOnce((url, cb) => { cb({identifierTypes:[{name:'DOI', description:'d1'},{name:'HANDLE', description:'d2'}]}); return { fail: jest.fn() }; });
+    window.setupIdentifierTypesDropdown('#test-select');
+    const options = $('#test-select option').map((i,el)=>$(el).text()).get();
+    expect(options).toEqual(['Choose...','DOI','HANDLE']);
+  });
+});
