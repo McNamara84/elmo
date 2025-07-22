@@ -61,4 +61,13 @@ describe('select.js', () => {
     expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
   });
+
+  test('updateIdentifierType sets value based on regex', async () => {
+    $.ajax.mockImplementationOnce(opts => { opts.success({identifierTypes:[{name:'DOI', pattern:'^10\\..+'}]}); return { fail: jest.fn() }; });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('10.1234/abcd');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('DOI');
+  });
 });
