@@ -98,4 +98,14 @@ describe('select.js', () => {
     await window.updateIdentifierType(input[0]);
     expect(select.val()).toBe('');
   });
+
+  test('debounce delays function call', () => {
+    jest.useFakeTimers();
+    const fn = jest.fn();
+    const debounced = window.debounce(fn, 100);
+    debounced();
+    expect(fn).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(100);
+    expect(fn).toHaveBeenCalled();
+  });
 });
