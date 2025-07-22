@@ -233,4 +233,48 @@ describe("mappingXmlToInputFields helpers", () => {
       longitudeMax: "10",
     });
   });
+
+  test("getGeoLocationData handles point then box order", () => {
+    const ctx = loadMappingModule();
+    const xml =
+      `<resource xmlns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <geoLocations>\n` +
+      `    <geoLocation>\n` +
+      `      <geoLocationPoint>\n` +
+      `        <pointLatitude>1</pointLatitude>\n` +
+      `        <pointLongitude>2</pointLongitude>\n` +
+      `      </geoLocationPoint>\n` +
+      `    </geoLocation>\n` +
+      `    <geoLocation>\n` +
+      `      <geoLocationBox>\n` +
+      `        <westBoundLongitude>-5</westBoundLongitude>\n` +
+      `        <eastBoundLongitude>5</eastBoundLongitude>\n` +
+      `        <southBoundLatitude>-6</southBoundLatitude>\n` +
+      `        <northBoundLatitude>6</northBoundLatitude>\n` +
+      `      </geoLocationBox>\n` +
+      `    </geoLocation>\n` +
+      `  </geoLocations>\n` +
+      `</resource>`;
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const nodes = xmlDoc.querySelectorAll("geoLocation");
+    const first = ctx.getGeoLocationData(nodes[0]);
+    const second = ctx.getGeoLocationData(nodes[1]);
+
+    expect(first).toEqual({
+      place: "",
+      latitudeMin: "1",
+      latitudeMax: "1",
+      longitudeMin: "2",
+      longitudeMax: "2",
+    });
+
+    expect(second).toEqual({
+      place: "",
+      latitudeMin: "-6",
+      latitudeMax: "6",
+      longitudeMin: "-5",
+      longitudeMax: "5",
+    });
+  });
 });
