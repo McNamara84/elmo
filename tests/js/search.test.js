@@ -15,7 +15,7 @@ describe('search.js', () => {
     delete global.Mark;
   });
 
-  function loadScript(html = '<input id="help-search" />') {
+  function loadScript(html = '<input id="help-search" /><button id="help-search-btn"></button>') {
     document.body.innerHTML = html;
     const script = fs.readFileSync(path.resolve(__dirname, '../../doc/search.js'), 'utf8');
     window.eval(script);
@@ -45,5 +45,16 @@ describe('search.js', () => {
 
     expect(markInstance.unmark).toHaveBeenCalled();
     expect(markInstance.mark).not.toHaveBeenCalled();
+  });
+
+  test('marks term when search button is clicked', () => {
+    loadScript();
+    const input = document.getElementById('help-search');
+    const button = document.getElementById('help-search-btn');
+    input.value = 'button';
+    button.click();
+
+    expect(markInstance.unmark).toHaveBeenCalled();
+    expect(markInstance.mark).toHaveBeenCalledWith('button', { separateWordSearch: false });
   });
 });

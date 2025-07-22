@@ -3,14 +3,21 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!input) return;
     const markInstance = new Mark(document.querySelector('body'));
 
-    input.addEventListener('input', function () {
-        const term = this.value.trim();
+    function performSearch() {
+        const term = input.value.trim();
         markInstance.unmark({
             done: function () {
                 if (term !== '') {
-                    markInstance.mark(term, { 'separateWordSearch': false });
+                    markInstance.mark(term, { separateWordSearch: false });
                 }
             }
         });
-    });
+    }
+
+    input.addEventListener('input', performSearch);
+
+    const searchButton = document.getElementById('help-search-btn');
+    if (searchButton) {
+        searchButton.addEventListener('click', performSearch);
+    }
 });

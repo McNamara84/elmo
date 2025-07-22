@@ -99,12 +99,29 @@ h4 {
 
 /* h5 Formatierung*/
 h5 {
-    color:#020202;   
+    color:#020202;
     /* Farbe */
-    font-size:11pt;  
+    font-size:11pt;
     /* Größe */
     margin-left: 10px;
     /* Rückt die Überschrift nach rechts ein */
-    font-weight: 600; 
+    font-weight: 600;
     /* Semi-Fett */
+}
+
+/* Search field */
+.help-search-group {
+    width: 250px;
+}
+
+@media (min-width: 768px) {
+    .help-search-group {
+        width: 300px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .help-search-group {
+        width: 400px;
+    }
 }
