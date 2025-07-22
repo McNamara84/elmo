@@ -126,4 +126,15 @@ describe('select.js', () => {
     expect(select.val()).toBe('+00:00');
     Intl.DateTimeFormat = originalIntl;
   });
+
+  test('initializeTimezoneDropdown uses existing options without fetch', async () => {
+    global.fetch = jest.fn();
+    const originalIntl = Intl.DateTimeFormat;
+    Intl.DateTimeFormat = jest.fn(() => ({resolvedOptions: ()=>({timeZone:'Europe/Berlin'})}));
+    const select = $('<select id="tz2"><option value="+00:00">UTC+00:00 (Europe/Berlin)</option></select>').appendTo(document.body);
+    await window.initializeTimezoneDropdown('#tz2', '/fake.json');
+    expect(fetch).not.toHaveBeenCalled();
+    expect(select.val()).toBe('+00:00');
+    Intl.DateTimeFormat = originalIntl;
+  });
 });
