@@ -1,3 +1,9 @@
+<?php
+// Automatically detect available language files
+$langFiles = glob(__DIR__ . '/lang/*.json');
+$langCodes = array_map(fn($file) => basename($file, '.json'), $langFiles);
+sort($langCodes);
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,17 +13,15 @@
   <!-- CDN for Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <!-- CDN for jQuery UI CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css"
-    integrity="sha512-TFee0335YRJoyiqz8hA8KV3P0tXa5CpRBSoM0Wnkn7JoJx1kaq1yXL/rb8YFpWXkMOjRcv5txv+C6UluttluCQ=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Local jQuery UI CSS -->
+  <link rel="stylesheet" href="node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css" />
   <!-- CDN for Bootstrap Icons CSS -->
   <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"
     integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <!-- CDN for Tagify CSS -->
-  <link href="node_modules\@yaireo\tagify\dist\tagify.css" rel="stylesheet" type="text/css" />
+  <!-- Local Tagify CSS -->
+  <link href="node_modules/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
   <!-- CDN for jsTree CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.17/themes/default/style.min.css"
     integrity="sha512-A5OJVuNqxRragmJeYTW19bnw9M2WyxoshScX/rGTgZYj5hRXuqwZ+1AVn2d6wYTZPzPXxDeAGlae0XwTQdXjQA=="
@@ -45,8 +49,8 @@
     <div class="ms-auto d-flex align-items-center me-3 p-1">
 
       <!-- Link to legal notice -->
-      <a href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank" class="text-white me-3 settings-menu-link"
-        data-translate="header.legalNotice">Legal Notice</a>
+      <a href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
+        class="text-white me-3 settings-menu-link" data-translate="header.legalNotice">Legal Notice</a>
       <!-- Dropdown menu for help -->
       <div class="dropdown ms-auto me-3 p-1">
         <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
@@ -95,12 +99,11 @@
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-lang">
           <li><a class="dropdown-item" data-bs-language-value="auto" data-translate="buttons.langAuto">
               <i class="bi bi-gear-fill"></i> Auto</a></li>
-          <li><a class="dropdown-item" data-bs-language-value="en" data-translate="buttons.langEN">
-              <i class="bi bi-globe"></i> EN</a></li>
-          <li><a class="dropdown-item" data-bs-language-value="de" data-translate="buttons.langDE">
-              <i class="bi bi-globe"></i> DE</a></li>
-          <li><a class="dropdown-item" data-bs-language-value="fr" data-translate="buttons.langFR">
-              <i class="bi bi-globe"></i> FR</a></li>
+          <?php foreach ($langCodes as $code): ?>
+            <li><a class="dropdown-item" data-bs-language-value="<?php echo $code; ?>"
+                data-translate="<?php echo 'buttons.lang' . strtoupper($code); ?>">
+                <i class="bi bi-globe"></i> <?php echo strtoupper($code); ?></a></li>
+          <?php endforeach; ?>
         </ul>
       </div>
     </div>

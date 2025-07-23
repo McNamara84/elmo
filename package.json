@@ -1,5 +1,14 @@
 {
   "dependencies": {
-    "@yaireo/tagify": "^4.33.2"
+    "@yaireo/tagify": "^4.33.2",
+    "jquery": "^3.7.1",
+    "jquery-ui": "^1.14.1"
+  },
+  "devDependencies": {
+    "jest": "^30.0.4",
+    "jest-environment-jsdom": "^30.0.4"
+  },
+  "scripts": {
+    "test": "jest"
   }
 }

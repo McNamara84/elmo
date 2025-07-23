@@ -1096,14 +1096,14 @@ class DatasetController
 
 
         $outputFile = $this->generate_xml_path($id);
-
+        // It saves the in-memory XML to a file on the disk.
         if (!@$dom->save($outputFile)) {
             throw new Exception("Konnte XML-Datei nicht speichern: " . error_get_last()['message']);
         }
 
         // DB-Verbindung schließen
         $stmt->close();
-
+        // Return the XML as a string (additionally to saving it)
         return $xml->asXML();
     }
 
@@ -1337,6 +1337,20 @@ XML;
         }
         exit();
     }
+    /**
+     * this public function is used as an endpoint to get the XML in all formats. So called envelope.
+     * Generates a transformed XML string for a given format without downloading it.
+     *
+     * @param mysqli $connection The database connection.
+     * @param int $id The ID of the resource.
+     */
+    public function envelopeXmlAsString($connection, $id)
+    {
+        // Use the existing private function, but tell it NOT to download.
+        // The 'false' at the end is the key.
+        $vars = ['id' => $id];
+        return $this->handleExportAll($vars, false);
+    }    
     /**
          * Exports the base XML for a resource as a file download.
          *

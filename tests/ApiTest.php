@@ -264,4 +264,63 @@ class ApiTest extends DatabaseTestCase
             throw $e;
         }
     }
+
+    /**
+     * Tests the CGI keywords update endpoint.
+     *
+     * This test accepts either a successful update (status code 200)
+     * or an error response (status code 500) depending on the
+     * availability of the external vocabulary source.
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testUpdateCgiKeywordsEndpoint(): void
+    {
+        $endpointUrl = $this->getApiUrl('update/vocabs/cgi');
+        echo "\nTesting endpoint: " . $this->baseUri . $endpointUrl;
+
+        try {
+            $response = $this->client->get($endpointUrl);
+            echo "\nResponse Status: " . $response->getStatusCode();
+            echo "\nResponse Body: " . $response->getBody();
+
+            $data = json_decode($response->getBody(), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->fail('Failed to parse JSON response: ' . json_last_error_msg());
+            }
+
+            if ($response->getStatusCode() === 200) {
+                $this->assertArrayHasKey('message', $data, 'Response should contain a message');
+                $this->assertArrayHasKey('timestamp', $data, 'Response should contain a timestamp');
+
+                $this->assertStringContainsString(
+                    'CGI keywords successfully updated',
+                    $data['message'],
+                    'Message should indicate successful update'
+                );
+
+                $this->assertMatchesRegularExpression(
+                    '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/',
+                    $data['timestamp'],
+                    'Timestamp should be ISO 8601 format'
+                );
+            } elseif ($response->getStatusCode() === 500) {
+                $this->assertArrayHasKey('error', $data, 'Error response should contain an error message');
+                $this->assertNotEmpty($data['error'], 'Error message should not be empty');
+            } else {
+                $this->fail('Unexpected response status code: ' . $response->getStatusCode());
+            }
+
+        } catch (Exception $e) {
+            echo "\nException: " . get_class($e);
+            echo "\nMessage: " . $e->getMessage();
+            if ($e instanceof \GuzzleHttp\Exception\RequestException && $e->hasResponse()) {
+                $response = $e->getResponse();
+                echo "\nResponse Status: " . $response->getStatusCode();
+                echo "\nResponse Body: " . $response->getBody();
+            }
+            throw $e;
+        }
+    }
 }
