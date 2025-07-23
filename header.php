@@ -30,6 +30,7 @@ sort($langCodes);
   <link rel="stylesheet" href="css/gfz-cd.css">
   <link rel="stylesheet" href="./css/tagify-adj.css">
   <link rel="stylesheet" href="./css/darkmode.css">
+  <link rel="stylesheet" href="css/help.css">
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
