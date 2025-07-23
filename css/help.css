@@ -109,6 +109,16 @@ h5 {
     /* Semi-Fett */
 }
 
+/* Style for small inline logos next to headings (e.g., ORCID, ROR) */
+.logo-icon {
+  height: 1em;
+  width: auto;
+  max-height: 1em;
+  vertical-align: text-bottom;
+  margin-left: 0.3em;
+  display: inline-block;
+}
+
 /* Search field */
 .help-search-group {
     width: 250px;
