@@ -114,6 +114,12 @@ h5 {
     width: 250px;
 }
 
+.help-search-nav-btn {
+    color: #6c757d65;
+    border-color: #6c757d59;
+    background-color: #a2bee4;
+}
+
 @media (min-width: 768px) {
     .help-search-group {
         width: 300px;

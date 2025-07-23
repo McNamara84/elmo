@@ -36,7 +36,13 @@ include_once "../settings.php";
             <form class="d-flex ms-3" role="search">
                 <div class="input-group help-search-group">
                     <input type="search" id="help-search" class="form-control" placeholder="Search help...">
-                    <button type="button" class="btn btn-outline-light" id="help-search-btn">
+                    <button type="button" class="btn btn-outline-secondary btn-sm help-search-nav-btn d-none" id="help-search-prev" title="Previous result">
+                        <i class="bi bi-arrow-up"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm help-search-nav-btn d-none" id="help-search-next" title="Next result">
+                        <i class="bi bi-arrow-down"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-light" id="help-search-btn" title="Search">
                         <i class="bi bi-search"></i>
                     </button>
                 </div>
