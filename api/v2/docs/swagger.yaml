@@ -560,6 +560,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /vocabs/resourcetypes:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get resource types
+      description: Retrieve all available DataCite resource types
+      operationId: getResourceTypes
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResourceType"
+        "404":
+          description: No resource types found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /validation/patterns/{type}:
     get:
       tags:
@@ -1119,3 +1148,21 @@ components:
         - name
         - pattern
         - description
+    ResourceType:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier of the resource type
+          example: 5
+        resource_type_general:
+          type: string
+          description: General name of the resource type
+          example: Dataset
+        description:
+          type: string
+          description: Description of the resource type
+          example: Data encoded in a defined structure.
+      required:
+        - id
+        - resource_type_general

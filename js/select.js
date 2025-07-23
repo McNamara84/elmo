@@ -142,6 +142,58 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
 
 $(document).ready(function () {
   initializeTimezoneDropdown();
+  setupResourceTypeDropdown();
+
+  function setupResourceTypeDropdown() {
+    const select = $("#input-resourceinformation-resourcetype");
+    if (select.length === 0) return;
+
+    select.prop('disabled', true).empty().append(
+      $("<option>", {
+        value: "",
+        text: "Loading...",
+      })
+    );
+
+    $.ajax({
+      url: "api/v2/vocabs/resourcetypes",
+      method: "GET",
+      dataType: "json",
+      success: function (data) {
+        select.empty().append(
+          $("<option>", {
+            value: "",
+            text: "Choose...",
+            "data-translate": "general.choose",
+          })
+        );
+
+        if (Array.isArray(data)) {
+          data.forEach(function (type) {
+            select.append(
+              $("<option>", {
+                value: type.id,
+                text: type.resource_type_general,
+                title: type.description,
+              })
+            );
+          });
+        }
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error("Error loading resource types:", textStatus, errorThrown);
+        select.empty().append(
+          $("<option>", {
+            value: "",
+            text: "Error loading data",
+          })
+        );
+      },
+      complete: function () {
+        select.prop('disabled', false).trigger("change");
+      },
+    });
+  }
 
   /**
   * Populates the select field with ID input-rights-license with options created via an API call.
