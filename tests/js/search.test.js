@@ -34,11 +34,12 @@ describe('search.js', () => {
     expect(global.Mark).not.toHaveBeenCalled();
   });
 
-  test('marks term when input is provided', () => {
+  test('marks term when Enter is pressed', () => {
     loadScript();
     const input = document.getElementById('help-search');
     input.value = 'term';
-    input.dispatchEvent(new Event('input'));
+    const event = new KeyboardEvent('keydown', { key: 'Enter' });
+    input.dispatchEvent(event);
 
     expect(markInstance.unmark).toHaveBeenCalled();
     expect(markInstance.mark).toHaveBeenCalledWith('term', expect.objectContaining({
@@ -53,7 +54,8 @@ describe('search.js', () => {
     loadScript();
     const input = document.getElementById('help-search');
     input.value = '   ';
-    input.dispatchEvent(new Event('input'));
+    const event = new KeyboardEvent('keydown', { key: 'Enter' });
+    input.dispatchEvent(event);
 
     expect(markInstance.unmark).toHaveBeenCalled();
     expect(markInstance.mark).not.toHaveBeenCalled();
