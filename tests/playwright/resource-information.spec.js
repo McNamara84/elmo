@@ -154,7 +154,7 @@ test.describe("Resource Information Form Tests", () => {
     await page.locator("#buttonHelpOff").click();
 
     // Wait for help toggle to take effect
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(1500);
 
     // Turn help back ON
     await page.locator("#bd-help").click();
