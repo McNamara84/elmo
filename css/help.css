@@ -147,14 +147,3 @@ mark {
     background-color: #ffc107;
     padding: 0 2px;
 }
-
-
-/* Style for small inline logos next to headings (e.g., ORCID, ROR) */
-.logo-icon {
-  height: 1em;
-  width: auto;
-  max-height: 1em;
-  vertical-align: text-bottom;
-  margin-left: 0.3em;
-  display: inline-block;
-}
