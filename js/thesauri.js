@@ -213,8 +213,6 @@ $(document).ready(function () {
                 }
             });
             
-            // Event listener for search input is delegated to the document            
-
             function updateSelectedKeywordsList() {
                 let selectedKeywordsList = document.getElementById(config.selectedKeywordsListId);
                 if (!selectedKeywordsList) return;
@@ -310,6 +308,8 @@ $(document).ready(function () {
             loadKeywords(data);
         });
     }
+
+    // Event listener for search input           
     // the search event is delegated to the highest level. the input will be propagated, and we can formulate the event handler at this place.
     $(document).on('input', '[id$="-thesaurussearch"]', function() {
             const searchInputId = `#${this.id}`;
@@ -319,7 +319,7 @@ $(document).ready(function () {
                 $(config.jsTreeId).jstree(true).search($(this).val());
             }
         });
-
+    // Event listener for Enter key in the modal           
     // Handle Enter in modal search. We don't want it to remove any elements
     $(document).on('keydown', '[id$="-thesaurussearch"]', function(e) {
         if (e.key === 'Enter') {
@@ -334,7 +334,7 @@ $(document).ready(function () {
             const jsTreeInstance = $(config.jsTreeId).jstree(true);
             if (!jsTreeInstance) return;
 
-            // 3. Explicitly trigger the search. optional
+            // Explicitly trigger the search. OPTIONAL
             jsTreeInstance.search(searchInput.val());
 
             searchInput.focus();
