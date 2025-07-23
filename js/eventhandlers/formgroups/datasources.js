@@ -8,6 +8,7 @@ $(document).ready(function () {
     const datasourceGroup = $("#group-datasources");
     if (datasourceGroup.length === 0) return; // Do nothing if the form group is not on the page
 
+    // Clone the first row to use as a template for new rows.
     const originalDataSourceRow = datasourceGroup.children(".row").first().clone();
 
     const detailsOptions = {
@@ -17,43 +18,18 @@ $(document).ready(function () {
     };
 
     const visibilityConfig = {
-        'S': { // Satellite
-            'visibility-datasources-basic': true,
-            'visibility-datasources-details': false,
-            'visibility-datasources-satellite': true,
-            'visibility-datasources-identifier': false
-        },
-        'G': { // Ground data
-            'visibility-datasources-basic': true,
-            'visibility-datasources-details': true,
-            'visibility-datasources-satellite': false,
-            'visibility-datasources-identifier': false
-        },
-        'A': { // Altimetry
-            'visibility-datasources-basic': true,
-            'visibility-datasources-details': true,
-            'visibility-datasources-satellite': false,
-            'visibility-datasources-identifier': false
-        },
-        'T': { // Topography
-            'visibility-datasources-basic': true,
-            'visibility-datasources-details': true,
-            'visibility-datasources-satellite': false,
-            'visibility-datasources-identifier': false
-        },
-        'M': { // Model
-            'visibility-datasources-basic': true,
-            'visibility-datasources-details': false,
-            'visibility-datasources-satellite': false,
-            'visibility-datasources-identifier': true
-        }
+        'S': { 'visibility-datasources-basic': true, 'visibility-datasources-details': false, 'visibility-datasources-satellite': true, 'visibility-datasources-identifier': false },
+        'G': { 'visibility-datasources-basic': true, 'visibility-datasources-details': true, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': false },
+        'A': { 'visibility-datasources-basic': true, 'visibility-datasources-details': true, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': false },
+        'T': { 'visibility-datasources-basic': true, 'visibility-datasources-details': true, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': false },
+        'M': { 'visibility-datasources-basic': true, 'visibility-datasources-details': false, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': true }
     };
 
     /**
      * Updates the visibility of fields and populates dropdowns for a given data source row.
      * @param {jQuery} row - The jQuery object for the data source row.
      */
-    function updateRowState(row) {
+  function updateRowState(row) {
         const typeSelect = row.find('select[name="datasource_type[]"]');
         const selectedType = typeSelect.val();
         const config = visibilityConfig[selectedType];
@@ -61,15 +37,12 @@ $(document).ready(function () {
         if (!config) return;
 
         for (const fieldClass in config) {
-            const shouldBeVisible = config[fieldClass];
-            row.find(`.${fieldClass}`).toggle(shouldBeVisible);
+            row.find(`.${fieldClass}`).toggle(config[fieldClass]);
         }
 
-        // If the details dropdown should be visible, populate it.
         if (config['visibility-datasources-details']) {
             const detailsSelect = row.find('select[name="datasource_details[]"]');
-            detailsSelect.empty(); // Clear existing options
-
+            detailsSelect.empty();
             const options = detailsOptions[selectedType] || [];
             detailsSelect.append($('<option>', { value: '', text: 'Choose...', disabled: true, selected: true, hidden: true }));
             options.forEach(detail => {
@@ -78,7 +51,9 @@ $(document).ready(function () {
         }
     }
 
-    // Add new data source entry
+    // --- EVENT HANDLERS (Delegated from the static parent 'datasourceGroup') ---
+
+    // Add new data source entry.
     datasourceGroup.on("click", ".addDataSource", function () {
         const newRow = originalDataSourceRow.clone();
 
@@ -88,22 +63,29 @@ $(document).ready(function () {
 
         replaceHelpButtonInClonedRows(newRow);
         newRow.find(".addDataSource").replaceWith(createRemoveButton());
+        
+        // Set the default value to Satellite for the new row.
+        newRow.find('select[name="datasource_type[]"]').val('S');
 
         datasourceGroup.append(newRow);
-        updateRowState(newRow); // Set initial visibility for the new row
+        updateRowState(newRow); // Immediately set the correct visibility.
     });
 
-    // Event handler for the remove button
+    // Remove a data source entry.
     datasourceGroup.on("click", ".removeButton", function () {
         $(this).closest(".row").remove();
     });
 
-    // Update fields when the data source type changes
+    // Update fields when the data source type changes.
     datasourceGroup.on('change', 'select[name="datasource_type[]"]', function () {
         const row = $(this).closest('.row');
         updateRowState(row);
     });
 
-    // Set initial state for the first row on page load
-    updateRowState(datasourceGroup.children(".row").first());
+    // --- INITIALIZATION ---
+
+    // Set the correct visibility for the first row when the page loads.
+    if (datasourceGroup.children(".row").length > 0) {
+        updateRowState(datasourceGroup.children(".row").first());
+    }
 });
