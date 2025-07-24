@@ -474,4 +474,15 @@ class ValidationFunctionsTest extends TestCase
         ];
         $this->assertFalse(validateSTCDependencies($entry));
     }
+
+    /**
+     * Ensures funding reference validation fails when a funder ID is provided without a funder name.
+     *
+     * @return void
+     */
+    public function testValidateFundingReferenceDependenciesFunderIdNoFunder(): void
+    {
+        $entry = ['funderId' => '123', 'funder' => null];
+        $this->assertFalse(validateFundingReferenceDependencies($entry));
+    }
 }
