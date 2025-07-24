@@ -485,4 +485,15 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['funderId' => '123', 'funder' => null];
         $this->assertFalse(validateFundingReferenceDependencies($entry));
     }
+
+    /**
+     * Tests funding reference validation when funder name and funder ID are provided.
+     *
+     * @return void
+     */
+    public function testValidateFundingReferenceDependenciesFunderId(): void
+    {
+        $entry = ['funderId' => '123', 'funder' => 'name'];
+        $this->assertTrue(validateFundingReferenceDependencies($entry));
+    }
 }
