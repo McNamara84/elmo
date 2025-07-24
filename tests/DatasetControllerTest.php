@@ -2,6 +2,7 @@
 namespace Tests;
 
 require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 
 class DatasetControllerTest extends DatabaseTestCase
 {
@@ -29,7 +30,7 @@ class DatasetControllerTest extends DatabaseTestCase
         $output = shell_exec($cmd);
 
         $this->assertStringContainsString('<envelope>', $output);
-        $this->assertStringContainsString('<Resource>', $output);
+        $this->assertStringContainsString('<resource', $output);
     }
 
     public function testHandleExportBaseXmlInvalidIdReturnsError(): void
