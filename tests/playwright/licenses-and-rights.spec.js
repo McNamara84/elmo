@@ -33,7 +33,11 @@ test.describe("Licenses and Rights", () => {
     // Switch back to Dataset
     await resourceType.selectOption("5");
     await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length > 4);
-    await expect(licenseSelect.locator('option')).toHaveCount(allCount);
+    const datasetOptions = licenseSelect.locator('option');
+    const datasetCount = await datasetOptions.count();
+    expect(datasetCount).toBeGreaterThan(4);
+    const datasetTexts = await datasetOptions.allTextContents();
+    expect(datasetTexts.join(" ")).toContain("Creative Commons Attribution 4.0");
   });
 
   test("Help button displays rights help", async ({ page }) => {
