@@ -111,12 +111,14 @@ h5 {
 
 /* Style for small inline logos next to headings (e.g., ORCID, ROR) */
 .logo-icon {
-  height: 1em;
+  height: 0.8em;
   width: auto;
-  max-height: 1em;
-  vertical-align: text-bottom;
-  margin-left: 0.3em;
+  max-height: 0.8em;
+  vertical-align: middle;
+  margin-left: 0.1em;
   display: inline-block;
+  position: relative;
+  top: -0.45em;
 }
 
 /* Search field */
