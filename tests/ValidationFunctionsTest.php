@@ -401,4 +401,15 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['firstname' => 'A', 'roles' => []];
         $this->assertFalse(validateContributorPersonDependencies($entry));
     }
+
+    /**
+     * Ensures roles provided as a non-JSON string are rejected.
+     *
+     * @return void
+     */
+    public function testValidateContributorPersonRolesInvalidString(): void
+    {
+        $entry = ['firstname' => 'A', 'lastname' => 'B', 'roles' => 'Editor'];
+        $this->assertFalse(validateContributorPersonDependencies($entry));
+    }
 }
