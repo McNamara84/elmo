@@ -423,4 +423,15 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['roles' => ['Editor'], 'name' => null];
         $this->assertFalse(validateContributorInstitutionDependencies($entry));
     }
+
+    /**
+     * Validates keyword entries with an empty value field.
+     *
+     * @return void
+     */
+    public function testValidateKeywordEntriesEmptyValue(): void
+    {
+        $entry = [['value' => '', 'id' => '1', 'scheme' => 's', 'schemeURI' => 'u', 'language' => 'en']];
+        $this->assertFalse(validateKeywordEntries($entry));
+    }
 }
