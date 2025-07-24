@@ -21,4 +21,14 @@ class DatasetControllerTest extends DatabaseTestCase
         $this->assertStringContainsString('<Resource>', $xml);
         $this->assertStringContainsString('<year>', $xml);
     }
+
+    public function testEnvelopeXmlAsStringWrapsBaseXml(): void
+    {
+        $id = $this->createResource('TEST.ENVELOPE', 'Envelope Test');
+        $cmd = PHP_BINARY.' '.escapeshellarg(__DIR__.'/scripts/envelope.php').' '.intval($id);
+        $output = shell_exec($cmd);
+
+        $this->assertStringContainsString('<envelope>', $output);
+        $this->assertStringContainsString('<Resource>', $output);
+    }
 }
