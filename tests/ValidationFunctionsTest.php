@@ -366,4 +366,16 @@ class ValidationFunctionsTest extends TestCase
         $deps = [['primary' => 'a', 'dependent' => 'b']];
         $this->assertFalse(validateArrayDependencies($data, $deps));
     }
+
+    /**
+     * Validates array dependencies when the primary value is empty and should be skipped.
+     *
+     * @return void
+     */
+    public function testValidateArrayDependenciesSkipEmpty(): void
+    {
+        $data = ['a' => [''], 'b' => []];
+        $deps = [['primary' => 'a', 'dependent' => 'b']];
+        $this->assertTrue(validateArrayDependencies($data, $deps));
+    }
 }
