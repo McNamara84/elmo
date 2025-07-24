@@ -434,4 +434,24 @@ class ValidationFunctionsTest extends TestCase
         $entry = [['value' => '', 'id' => '1', 'scheme' => 's', 'schemeURI' => 'u', 'language' => 'en']];
         $this->assertFalse(validateKeywordEntries($entry));
     }
+
+    /**
+     * Ensures STC validation succeeds when optional time values are provided.
+     *
+     * @return void
+     */
+    public function testValidateSTCDependenciesWithTimes(): void
+    {
+        $entry = [
+            'latitudeMin' => 1,
+            'longitudeMin' => 1,
+            'description' => 'd',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-02',
+            'timezone' => 'UTC',
+            'timeStart' => '10:00',
+            'timeEnd' => '11:00'
+        ];
+        $this->assertTrue(validateSTCDependencies($entry));
+    }
 }
