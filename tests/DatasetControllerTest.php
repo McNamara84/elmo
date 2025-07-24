@@ -31,4 +31,12 @@ class DatasetControllerTest extends DatabaseTestCase
         $this->assertStringContainsString('<envelope>', $output);
         $this->assertStringContainsString('<Resource>', $output);
     }
+
+    public function testHandleExportBaseXmlInvalidIdReturnsError(): void
+    {
+        $cmd = PHP_BINARY.' '.escapeshellarg(__DIR__.'/scripts/handle_base_xml.php').' 999999';
+        $output = shell_exec($cmd);
+
+        $this->assertStringContainsString('error', $output);
+    }
 }
