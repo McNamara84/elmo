@@ -454,4 +454,24 @@ class ValidationFunctionsTest extends TestCase
         ];
         $this->assertTrue(validateSTCDependencies($entry));
     }
+
+    /**
+     * Verifies STC validation fails when latitude max is set without longitude max.
+     *
+     * @return void
+     */
+    public function testValidateSTCDependenciesMissingLongitudeMax(): void
+    {
+        $entry = [
+            'latitudeMin' => 1,
+            'longitudeMin' => 1,
+            'description' => 'd',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-02',
+            'timezone' => 'UTC',
+            'latitudeMax' => 2,
+            'longitudeMax' => null
+        ];
+        $this->assertFalse(validateSTCDependencies($entry));
+    }
 }
