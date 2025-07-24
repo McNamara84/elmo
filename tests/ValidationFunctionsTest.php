@@ -390,4 +390,15 @@ class ValidationFunctionsTest extends TestCase
         $deps = [['primary' => 'a', 'dependent' => 'b']];
         $this->assertFalse(validateArrayDependencies($data, $deps));
     }
+
+    /**
+     * Checks contributor person validation when only the firstname is provided.
+     *
+     * @return void
+     */
+    public function testValidateContributorPersonOnlyFirstname(): void
+    {
+        $entry = ['firstname' => 'A', 'roles' => []];
+        $this->assertFalse(validateContributorPersonDependencies($entry));
+    }
 }
