@@ -354,4 +354,16 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['grantNumber' => '123', 'funder' => 'name'];
         $this->assertTrue(validateFundingReferenceDependencies($entry));
     }
+
+    /**
+     * Validates array dependencies when the primary field is missing.
+     *
+     * @return void
+     */
+    public function testValidateArrayDependenciesMissingPrimary(): void
+    {
+        $data = ['b' => ['1']];
+        $deps = [['primary' => 'a', 'dependent' => 'b']];
+        $this->assertFalse(validateArrayDependencies($data, $deps));
+    }
 }
