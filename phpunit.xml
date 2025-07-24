@@ -13,6 +13,8 @@
     <source>
         <include>
             <directory suffix=".php">./api</directory>
+            <directory suffix=".php">./doc</directory>
+            <directory suffix=".php">./save</directory>
         </include>
         <exclude>
             <directory>./.github</directory>
