@@ -412,4 +412,15 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['firstname' => 'A', 'lastname' => 'B', 'roles' => 'Editor'];
         $this->assertFalse(validateContributorPersonDependencies($entry));
     }
+
+    /**
+     * Tests contributor institution validation when only roles are supplied.
+     *
+     * @return void
+     */
+    public function testValidateContributorInstitutionOnlyRoles(): void
+    {
+        $entry = ['roles' => ['Editor'], 'name' => null];
+        $this->assertFalse(validateContributorInstitutionDependencies($entry));
+    }
 }
