@@ -378,4 +378,16 @@ class ValidationFunctionsTest extends TestCase
         $deps = [['primary' => 'a', 'dependent' => 'b']];
         $this->assertTrue(validateArrayDependencies($data, $deps));
     }
+
+    /**
+     * Ensures invalid JSON in the primary array causes a failure when dependent is missing.
+     *
+     * @return void
+     */
+    public function testValidateArrayDependenciesInvalidJson(): void
+    {
+        $data = ['a' => ['{invalid json}'], 'b' => []];
+        $deps = [['primary' => 'a', 'dependent' => 'b']];
+        $this->assertFalse(validateArrayDependencies($data, $deps));
+    }
 }
