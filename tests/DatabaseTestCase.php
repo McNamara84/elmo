@@ -26,11 +26,7 @@ abstract class DatabaseTestCase extends TestCase
         parent::setUp();
 
         // Load global settings and test database setup
-        $settingsPath = __DIR__ . '/../settings.php';
-        if (!file_exists($settingsPath)) {
-            $settingsPath = __DIR__ . '/../sample_settings.php';
-        }
-        require_once $settingsPath;
+        require_once __DIR__ . '/../settings.php';
         require_once __DIR__ . '/TestDatabaseSetup.php';
 
         global $connection;
