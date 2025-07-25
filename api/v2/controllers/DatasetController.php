@@ -705,6 +705,13 @@ class DatasetController
      */
     function getResourceAsXml($connection, $id, $includeGGMData = true)
     {
+        if ($connection === null) {
+            $connection = $this->connection ?? null;
+        }
+
+        if ($connection === null) {
+            throw new Exception('No database connection available.');
+        }
         $stmt = $connection->prepare('SELECT * FROM Resource WHERE resource_id = ?');
         $stmt->bind_param('i', $id);
         $stmt->execute();
@@ -1142,7 +1149,7 @@ class DatasetController
         }
         
         // Temporarily create FreestyleXML
-        $this->getResourceAsXml($GLOBALS['connection'], $id, false);
+        $this->getResourceAsXml($this->connection, $id, false);
         $inputXmlPath = $this->generate_xml_path($id);
         $xsltPath = $baseDir . "/schemas/XSLT/" . $formatInfo[$format]['xsltFile'];
         $outputXmlPath = $this->generate_xml_path($id, $formatInfo[$format]['outputPrefix']);
