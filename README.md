@@ -270,7 +270,7 @@ To install them: npm install
 
 ### Resource Information
 
-- DOI
+- DOI <a href="https://www.doi.org/" target="_blank" rel="noopener"><img src="logos/doi.logo.svg" alt="DOI Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the DOI (Digital Object Identifier) that identifies the resource.
   - Data type: String
@@ -400,7 +400,7 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
   - Example values: `Lisa`, `Elisa`
 
-- Author ORCID
+- Author ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the author's ORCID (Open Researcher and Contributor ID).
   - Data type: String
@@ -410,7 +410,7 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
   - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
 
-- Affiliation
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
  
   This field contains the author's affiliation.
   - Data type: String
@@ -507,7 +507,7 @@ The controlled list is provided and maintained by Utrecht University ([MSL Labor
 #### _Person_
 Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="ROLE">` with `<contributorName nameType="Personal">` in the DataCite scheme.
 
-- ORCID
+- ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the ORCID of the contributor (Open Researcher and Contributor ID).
   - Data type: String
@@ -547,7 +547,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
   - Example values: `Data Manager`, `Project Manager`
 
-- Affiliation
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the affiliation of the contributor(s).
   - Data type: String
@@ -581,7 +581,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
   - Example values: `Data Collector`, `Data Curator`.
   
-- Affiliation
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the affiliation of the contributing institution.
   - Data type: String
