@@ -855,7 +855,7 @@ function insertTestResourceData($connection)
         ],
         "Funding_Reference" => [
             ["funder" => "Gordon and Betty Moore Foundation", "funderid" => "100000936", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.01", "grantname" => "Socioenvironmental Monitoring of the Amazon Basin and Xingu", "awarduri" => null],
-            ["funder" => "Ford Foundation", "funderid" => "100000016", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.11", "grantname" => "Grants database", "awarduri" => https://www.moore.org/grants/list/GBMF3859.01],
+            ["funder" => "Ford Foundation", "funderid" => "100000016", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.11", "grantname" => "Grants database", "awarduri" => "https://www.moore.org/grants/list/GBMF3859.01"],
             ["funder" => "U.S. Department of Defense", "funderid" => "100000005", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.22", "grantname" => "Grantmaking at a glance", "awarduri" => "10.3030/892034"]
         ],
         "GGM_Properties" => [
