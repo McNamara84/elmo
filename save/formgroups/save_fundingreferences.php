@@ -38,7 +38,8 @@ function saveFundingReferences($connection, $postData, $resource_id)
             'funder' => $postData['funder'][$i] ?? '',
             'funderId' => $postData['funderId'][$i] ?? '',
             'grantNumber' => $postData['grantNummer'][$i] ?? '',
-            'grantName' => $postData['grantName'][$i] ?? ''
+            'grantName' => $postData['grantName'][$i] ?? '',
+            'awardUri' => $postData['awardUri'][$i] ?? ''
         ];
 
         // Validate dependencies for this entry
@@ -64,14 +65,18 @@ function saveFundingReferences($connection, $postData, $resource_id)
             $funderIdType = null;
         }
 
+        $awardUri = !empty($entry['awardUri']) ? $entry['awardUri'] : null;
+
         $funding_reference_id = insertFundingReference(
             $connection,
             $entry['funder'],
             $funderIdString,
             $funderIdType,
             $entry['grantNumber'],
-            $entry['grantName']
+            $entry['grantName'],
+            $awardUri
         );
+
 
         if ($funding_reference_id) {
             $linkResult = linkResourceToFundingReference($connection, $resource_id, $funding_reference_id);
@@ -97,20 +102,22 @@ function saveFundingReferences($connection, $postData, $resource_id)
  * @param string|null $funderIdType  The type of the funder's ID.
  * @param string|null $grantNumber   The grant number.
  * @param string|null $grantName     The grant name.
+ * @param string|null $awardUri      The award URI.
  *
  * @return int|null Returns the funding reference ID if successful, otherwise null.
  */
-function insertFundingReference($connection, $funder, $funderId, $funderIdType, $grantNumber, $grantName)
+function insertFundingReference($connection, $funder, $funderId, $funderIdType, $grantNumber, $grantName, $awardUri)
 {
     // Check if the funding reference already exists
     $checkQuery = "
-        SELECT funding_reference_id 
-        FROM Funding_Reference 
-        WHERE funder = ? 
-          AND (funderid = ?) 
-          AND (funderidtyp = ?) 
-          AND (grantnumber = ?) 
-          AND (grantname = ?)";
+        SELECT funding_reference_id
+        FROM Funding_Reference
+        WHERE funder = ?
+          AND (funderid = ?)
+          AND (funderidtyp = ?)
+          AND (grantnumber = ?)
+          AND (grantname = ?)
+          AND (awarduri = ?)";
     $checkStmt = $connection->prepare($checkQuery);
     if (!$checkStmt) {
         error_log("Prepare failed for existence check: " . $connection->error);
@@ -118,12 +125,13 @@ function insertFundingReference($connection, $funder, $funderId, $funderIdType, 
     }
 
     $checkStmt->bind_param(
-        "sssss",
+        "ssssss",
         $funder,
         $funderId,
         $funderIdType,
         $grantNumber,
-        $grantName
+        $grantName,
+        $awardUri
     );
     $checkStmt->execute();
 
@@ -139,15 +147,15 @@ function insertFundingReference($connection, $funder, $funderId, $funderIdType, 
 
     // Insert a new funding reference if no match is found
     $insertQuery = "
-        INSERT INTO Funding_Reference (`funder`, `funderid`, `funderidtyp`, `grantnumber`, `grantname`) 
-        VALUES (?, ?, ?, ?, ?)";
+        INSERT INTO Funding_Reference (`funder`, `funderid`, `funderidtyp`, `grantnumber`, `grantname`, `awarduri`)
+        VALUES (?, ?, ?, ?, ?, ?)";
     $insertStmt = $connection->prepare($insertQuery);
     if (!$insertStmt) {
         error_log("Prepare failed for insert: " . $connection->error);
         return null;
     }
 
-    $insertStmt->bind_param("sssss", $funder, $funderId, $funderIdType, $grantNumber, $grantName);
+    $insertStmt->bind_param("ssssss", $funder, $funderId, $funderIdType, $grantNumber, $grantName, $awardUri);
 
     if ($insertStmt->execute()) {
         $funding_reference_id = $insertStmt->insert_id;
