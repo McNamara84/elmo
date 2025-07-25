@@ -22,10 +22,12 @@ function saveFundingReferences($connection, $postData, $resource_id)
         $postData['funder'],
         $postData['funderId'],
         $postData['grantNummer'],
-        $postData['grantName']
+        $postData['grantName'],
+        $postData['awardUri']
     ) ||
         !is_array($postData['funder']) || !is_array($postData['funderId']) ||
-        !is_array($postData['grantNummer']) || !is_array($postData['grantName'])
+        !is_array($postData['grantNummer']) || !is_array($postData['grantName']) ||
+        !is_array($postData['awardUri'])
     ) {
         return true; // No data provided is valid
     }
