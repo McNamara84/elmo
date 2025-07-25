@@ -19,15 +19,18 @@ class ValidationControllerTest extends TestCase
             2 => ['pipe', 'w'],
         ];
 
-        // merge provided environment with the current one so that PATH and
-        // other variables remain available
+        // run php with explicit environment to work across operating systems
+        $cmd = [PHP_BINARY, $this->script];
         $process = proc_open(
-            PHP_BINARY . ' ' . escapeshellarg($this->script),
+            $cmd,
             $descriptor,
             $pipes,
             null,
             array_merge($_ENV, $env)
         );
+        if (!is_resource($process)) {
+            return [0, ['error' => 'Failed to start PHP process']];
+        }
 
         $output = stream_get_contents($pipes[1]);
         $error  = stream_get_contents($pipes[2]);
