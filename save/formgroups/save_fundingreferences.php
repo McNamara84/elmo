@@ -23,11 +23,11 @@ function saveFundingReferences($connection, $postData, $resource_id)
         $postData['funderId'],
         $postData['grantNummer'],
         $postData['grantName'],
-        $postData['awardUri']
+        $postData['awardURI']
     ) ||
         !is_array($postData['funder']) || !is_array($postData['funderId']) ||
         !is_array($postData['grantNummer']) || !is_array($postData['grantName']) ||
-        !is_array($postData['awardUri'])
+        !is_array($postData['awardURI'])
     ) {
         return true; // No data provided is valid
     }
@@ -41,7 +41,7 @@ function saveFundingReferences($connection, $postData, $resource_id)
             'funderId' => $postData['funderId'][$i] ?? '',
             'grantNumber' => $postData['grantNummer'][$i] ?? '',
             'grantName' => $postData['grantName'][$i] ?? '',
-            'awardUri' => $postData['awardUri'][$i] ?? ''
+            'awardUri' => $postData['awardURI'][$i] ?? ''
         ];
 
         // Validate dependencies for this entry
