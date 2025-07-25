@@ -113,7 +113,8 @@ class SaveFundingreferencesTest extends DatabaseTestCase
             "funder" => ["Ford Foundation"],
             "funderId" => [""],
             "grantNummer" => ["FORD123"],
-            "grantName" => ["Grantmaking at a glance"]
+            "grantName" => ["Grantmaking at a glance"],
+            "awardURI" => [""]
         ];
 
         saveFundingReferences($this->connection, $postData, $resource_id);
@@ -160,7 +161,8 @@ class SaveFundingreferencesTest extends DatabaseTestCase
             "funder" => [""],
             "funderId" => [""],
             "grantNummer" => ["INCOMPLETE123"],
-            "grantName" => ["Incomplete Grant"]
+            "grantName" => ["Incomplete Grant"],
+            "awardURI" => [""]
         ];
 
         $result = saveFundingReferences($this->connection, $postData, $resource_id);
@@ -196,7 +198,8 @@ class SaveFundingreferencesTest extends DatabaseTestCase
             "funder" => ["Gordon and Betty Moore Foundation", "", "Ford Foundation"],
             "funderId" => ["https://doi.org/10.13039/100000936", "", ""],
             "grantNummer" => ["GBMF3859.01", "INCOMPLETE123", "FORD123"],
-            "grantName" => ["Socioenvironmental Monitoring", "Incomplete Grant", "Grantmaking at a glance"]
+            "grantName" => ["Socioenvironmental Monitoring", "Incomplete Grant", "Grantmaking at a glance"],
+            "awardURI" => ["https://example.com/award1", "", ""]
         ];
 
         saveFundingReferences($this->connection, $postData, $resource_id);
