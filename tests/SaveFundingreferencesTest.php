@@ -48,7 +48,8 @@ class SaveFundingreferencesTest extends DatabaseTestCase
             "funder" => ["Gordon and Betty Moore Foundation"],
             "funderId" => ["100000936"],
             "grantNummer" => ["GBMF3859.01"],
-            "grantName" => ["Socioenvironmental Monitoring of the Amazon Basin and Xingu"]
+            "grantName" => ["Socioenvironmental Monitoring of the Amazon Basin and Xingu"],
+            "awardURI" => ["https://example.com/award"]
         ];
 
         // 3. Funding Reference speichern
@@ -87,6 +88,7 @@ class SaveFundingreferencesTest extends DatabaseTestCase
         $this->assertEquals("Crossref Funder ID", $fundingReference["funderidtyp"], "Der Funder ID Type sollte 'Crossref Funder ID' sein.");
         $this->assertEquals($postData["grantNummer"][0], $fundingReference["grantnumber"]);
         $this->assertEquals($postData["grantName"][0], $fundingReference["grantname"]);
+        $this->assertEquals($postData["awardURI"][0], $fundingReference["awarduri"]);
         $this->assertNotNull($relation, "Die Verknüpfung zwischen Resource und Funding Reference sollte existieren.");
     }
 
