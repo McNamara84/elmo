@@ -5,6 +5,9 @@ function setupTestDatabase($connection)
 {
     try {
         // Bestehende Tabellen löschen
+        if (!defined('INCLUDED_FROM_TEST')) {
+            define('INCLUDED_FROM_TEST', true);
+        }
         require_once __DIR__ . '/../install.php';
 
         dropTables($connection);

@@ -6,7 +6,11 @@
  */
 
 // Include settings.php so that variables are available
-require_once __DIR__ . '/../../../settings.php';
+$settingsPath = __DIR__ . '/../../../settings.php';
+if (!file_exists($settingsPath)) {
+    $settingsPath = __DIR__ . '/../../../sample_settings.php';
+}
+require_once $settingsPath;
 
 /**
  * Class ValidationController
