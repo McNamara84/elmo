@@ -151,7 +151,8 @@
         "funder": "Organisme de financement",
         "funderInvalid": "Veuillez saisir le nom de l'organisme de financement.",
         "grantNumber": "Numéro de subvention",
-        "grantName": "Nom de la subvention"
+        "grantName": "Nom de la subvention",
+        "awardURI": "URI de la subvention"
     },
     "buttons": {
         "clear": "Effacer",
