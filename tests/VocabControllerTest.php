@@ -5,10 +5,19 @@ use PHPUnit\Framework\TestCase;
 use EasyRdf\Graph;
 use EasyRdf\RdfNamespace;
 
+file_put_contents(__DIR__ . '/../settings.php', "<?php\n");
 require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
 
 class VocabControllerTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        if (file_exists(__DIR__ . '/../settings.php')) {
+            unlink(__DIR__ . '/../settings.php');
+        }
+        parent::tearDown();
+    }
+
     private function getController(): \VocabController
     {
         global $mslLabsUrl, $mslVocabsUrl;
