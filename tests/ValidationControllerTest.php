@@ -14,12 +14,31 @@ class ValidationControllerTest extends TestCase
 
     private function executeScript(array $env): array
     {
-        $cmd = '';
-        foreach ($env as $key => $val) {
-            $cmd .= "$key=" . escapeshellarg($val) . ' ';
+        $descriptor = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        // merge provided environment with the current one so that PATH and
+        // other variables remain available
+        $process = proc_open(
+            PHP_BINARY . ' ' . escapeshellarg($this->script),
+            $descriptor,
+            $pipes,
+            null,
+            array_merge($_ENV, $env)
+        );
+
+        $output = stream_get_contents($pipes[1]);
+        $error  = stream_get_contents($pipes[2]);
+        foreach ($pipes as $pipe) {
+            fclose($pipe);
         }
-        $cmd .= PHP_BINARY . ' ' . escapeshellarg($this->script);
-        $output = shell_exec($cmd);
+        proc_close($process);
+
+        // concat stderr so that potential warnings don't break the regex below
+        $output .= $error;
+
         preg_match('/OUTPUT:(.*)\nSTATUS:(\d*)/s', $output, $m);
         $body = json_decode($m[1], true);
         $status = $m[2] === '' ? 0 : (int)$m[2];
