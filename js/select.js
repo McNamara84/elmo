@@ -143,6 +143,7 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
 $(document).ready(function () {
   initializeTimezoneDropdown();
   setupResourceTypeDropdown();
+  setupLanguageDropdown();
 
   function setupResourceTypeDropdown() {
     const select = $("#input-resourceinformation-resourcetype");
@@ -191,6 +192,57 @@ $(document).ready(function () {
       },
       complete: function () {
         select.prop('disabled', false).trigger("change");
+      },
+    });
+  }
+
+  function setupLanguageDropdown() {
+    const select = $("#input-resourceinformation-language");
+    if (select.length === 0) return;
+
+    select.prop('disabled', true).empty().append(
+      $("<option>", {
+        value: "",
+        text: "Loading...",
+      })
+    );
+
+    $.ajax({
+      url: "api/v2/vocabs/languages",
+      method: "GET",
+      dataType: "json",
+      success: function (data) {
+        select.empty().append(
+          $("<option>", {
+            value: "",
+            text: "Choose...",
+            "data-translate": "general.choose",
+          })
+        );
+
+        if (Array.isArray(data)) {
+          data.forEach(function (lang) {
+            select.append(
+              $("<option>", {
+                value: lang.id,
+                text: lang.name,
+                title: lang.code,
+              })
+            );
+          });
+        }
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error("Error loading languages:", textStatus, errorThrown);
+        select.empty().append(
+          $("<option>", {
+            value: "",
+            text: "Error loading data",
+          })
+        );
+      },
+      complete: function () {
+        select.prop('disabled', false);
       },
     });
   }
