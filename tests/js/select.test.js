@@ -137,4 +137,33 @@ describe('select.js', () => {
     expect(select.val()).toBe('+00:00');
     Intl.DateTimeFormat = originalIntl;
   });
+
+  test('setupLanguageDropdown populates options from API', async () => {
+    const select = $('<select id="input-resourceinformation-language"></select>').appendTo(document.body);
+    $.ajax.mockImplementation(opts => {
+      opts.success([
+        { id: 1, code: 'en', name: 'English' },
+        { id: 2, code: 'de', name: 'German' },
+      ]);
+      if (opts.complete) opts.complete();
+      return { fail: jest.fn() };
+    });
+
+    await flushPromises();
+    window.setupLanguageDropdown();
+    const options = select.find('option').map((i,el)=>$(el).text()).get();
+    expect(options).toEqual(['Choose...','English','German']);
+    expect(select.prop('disabled')).toBe(false);
+  });
+
+  test('setupLanguageDropdown shows error on ajax failure', async () => {
+    const select = $('<select id="input-resourceinformation-language"></select>').appendTo(document.body);
+    $.ajax.mockImplementation(opts => { if(opts.error) opts.error(); if(opts.complete) opts.complete(); return { fail: jest.fn() }; });
+
+    await flushPromises();
+    window.setupLanguageDropdown();
+    const options = select.find('option').map((i,el)=>$(el).text()).get();
+    expect(options).toEqual(['Error loading data']);
+    expect(select.prop('disabled')).toBe(false);
+  });
 });
