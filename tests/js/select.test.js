@@ -6,6 +6,7 @@ const flushPromises = () => new Promise(res => setTimeout(res, 0));
 describe('select.js', () => {
   let $;
   beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     document.body.innerHTML = `
       <select id="input-relatedwork-identifiertype"></select>
       <select id="test-select"></select>
@@ -44,6 +45,7 @@ describe('select.js', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    console.error.mockRestore();
     jest.resetAllMocks();
   });
 
