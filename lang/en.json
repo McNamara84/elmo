@@ -152,7 +152,8 @@
         "funderInvalid": "Please enter the name of the funder.",
         "grantNumber": "Grant Number",
         "grantName": "Grant Name",
-        "awardURI": "Award URI"
+        "awardURI": "Award URI",
+        "awardURIInvalid": "Please provide a valid URL."
     },
     "buttons": {
         "clear": "Clear",
