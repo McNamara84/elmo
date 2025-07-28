@@ -112,6 +112,24 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(fallback["Apache-2.0"]).toBe("5");
   });
 
+  test("createLanguageMapping resolves API data and handles errors", async () => {
+    const getJSON = jest.fn(() => Promise.resolve([
+      { id: 1, code: "en", name: "English" },
+      { id: 2, code: "de", name: "German" },
+    ]));
+    const ctx = loadMappingModule({ $: { getJSON } });
+    const result = await ctx.createLanguageMapping();
+    expect(getJSON).toHaveBeenCalled();
+    expect(result).toEqual({ en: "1", de: "2" });
+
+    const failingGetJSON = jest.fn(() => Promise.reject(new Error("fail")));
+    const ctxFail = loadMappingModule({ $: { getJSON: failingGetJSON }, console: { ...console, error: jest.fn() } });
+    const fallback = await ctxFail.createLanguageMapping();
+    expect(failingGetJSON).toHaveBeenCalled();
+    expect(fallback.en).toBe("1");
+    expect(fallback.de).toBe("2");
+  });
+
   test("setLabDataInRow populates fields and triggers change", () => {
     document.body.innerHTML = `
       <div id="row">

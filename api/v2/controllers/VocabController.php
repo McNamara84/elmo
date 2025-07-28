@@ -1464,5 +1464,38 @@ class VocabController
             echo json_encode(['error' => $e->getMessage()]);
         }
     }
-}
 
+    /**
+     * Retrieves all languages from the database
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getLanguages(): void
+    {
+        try {
+            global $connection;
+            $stmt = $connection->prepare('SELECT language_id as id, code, name FROM Language ORDER BY name');
+
+            if (!$stmt) {
+                throw new Exception("Failed to prepare statement: " . $connection->error);
+            }
+
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            $languages = [];
+            while ($row = $result->fetch_assoc()) {
+                $languages[] = $row;
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode($languages);
+
+        } catch (Exception $e) {
+            error_log("API Error in getLanguages: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+}

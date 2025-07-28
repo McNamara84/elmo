@@ -35,6 +35,7 @@ return [
     ['GET', '/vocabs/freekeywords/curated', [new VocabController(), 'getCuratedFreeKeywords']],
     ['GET', '/vocabs/freekeywords/uncurated', [new VocabController(), 'getUncuratedFreeKeywords']],
     ['GET', '/vocabs/resourcetypes', [new VocabController(), 'getResourceTypes']],
+    ['GET', '/vocabs/languages', [new VocabController(), 'getLanguages']],
 
     // Vocabulary retrieval for ICGEM implementation
     ['GET', '/vocabs/icgemformats', [new VocabController(), 'getICGEMFileFormats']],
