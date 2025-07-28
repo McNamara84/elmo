@@ -14,11 +14,8 @@ sort($langCodes);
   <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Local jQuery UI CSS -->
   <link rel="stylesheet" href="node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css" />
-  <!-- CDN for Bootstrap Icons CSS -->
-  <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"
-    integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Local Bootstrap Icons CSS -->
+  <link rel="stylesheet" href="node_modules/bootstrap-icons/font/bootstrap-icons.min.css" />
   <!-- Local Tagify CSS -->
   <link href="node_modules/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
   <!-- CDN for jsTree CSS -->
