@@ -1069,7 +1069,9 @@ function processFunders(xmlDoc, resolver) {
     const funderId = getNodeText(funderNode, "ns:funderIdentifier", xmlDoc, resolver);
     const funderIdTyp = funderNode.querySelector("funderIdentifier")?.getAttribute("funderIdentifierType") || "";
     const awardTitle = getNodeText(funderNode, "ns:awardTitle", xmlDoc, resolver);
-    const awardNumber = getNodeText(funderNode, "ns:awardNumber", xmlDoc, resolver);
+    const awardNumberNode = xmlDoc.evaluate("ns:awardNumber", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const awardNumber = awardNumberNode ? awardNumberNode.textContent.trim() : "";
+    const awardUri = awardNumberNode?.getAttribute("awardURI") || "";
 
     // Find the last row in the form
     const $lastRow = $('input[name="funder[]"]').last().closest(".row");
@@ -1081,6 +1083,7 @@ function processFunders(xmlDoc, resolver) {
 
     $lastRow.find('input[name="grantNummer[]"]').val(awardNumber);
     $lastRow.find('input[name="grantName[]"]').val(awardTitle);
+    $lastRow.find('input[name="awardURI[]"]').val(awardUri);
 
     // Clone a new row if more funding references need to be added
     if (i < funderNodes.snapshotLength - 1) {
