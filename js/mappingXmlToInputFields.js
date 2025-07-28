@@ -93,6 +93,30 @@ async function createLicenseMapping() {
 }
 
 /**
+ * Creates a language mapping from API data
+ * @returns {Promise<Object>} A promise that resolves to a code->id mapping
+ */
+async function createLanguageMapping() {
+  try {
+    const response = await $.getJSON("./api/v2/vocabs/languages");
+    const mapping = {};
+
+    response.forEach((lang) => {
+      mapping[lang.code.toLowerCase()] = lang.id.toString();
+    });
+
+    return mapping;
+  } catch (error) {
+    console.error("Error creating language mapping:", error);
+    return {
+      en: "1",
+      de: "2",
+      fr: "3",
+    };
+  }
+}
+
+/**
  * Maps title type to select option value
  * @param {string} titleType - The type of the title from XML
  * @returns {string} The corresponding select option value
@@ -1124,8 +1148,10 @@ async function loadXmlToForm(xmlDoc) {
       labData = [];
     }
   }
-  // Erstelle das License-Mapping zuerst
+
+  // Erstelle das License- und Language-Mapping zuerst
   const licenseMapping = await createLicenseMapping();
+  const languageMapping = await createLanguageMapping();
 
   // Definiere das komplette XML_MAPPING mit dem erstellten licenseMapping
   const XML_MAPPING = {
@@ -1148,13 +1174,7 @@ async function loadXmlToForm(xmlDoc) {
       selector: "#input-resourceinformation-language",
       attribute: "textContent",
       transform: (value) => {
-        // Map language codes to database IDs
-        const languageMap = {
-          en: "1", // Assuming English has ID 1
-          de: "2", // Assuming German has ID 2
-          fr: "3", // Assuming French has ID 3
-        };
-        return languageMap[value.toLowerCase()] || "1"; // Default to English if not found
+        return languageMapping[value.toLowerCase()] || "1";
       },
     },
     // Rights

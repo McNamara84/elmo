@@ -140,60 +140,118 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
  * This script handles the setup and initialization of various dropdowns, event listeners, and autocomplete functions for the metadata editor.
  */
 
+// Dropdown helper functions exposed globally so tests can invoke them
+function setupResourceTypeDropdown() {
+  const select = $("#input-resourceinformation-resourcetype");
+  if (select.length === 0) return;
+
+  select.prop('disabled', true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+    })
+  );
+
+  $.ajax({
+    url: "api/v2/vocabs/resourcetypes",
+    method: "GET",
+    dataType: "json",
+    success: function (data) {
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Choose...",
+          "data-translate": "general.choose",
+        })
+      );
+
+      if (Array.isArray(data)) {
+        data.forEach(function (type) {
+          select.append(
+            $("<option>", {
+              value: type.id,
+              text: type.resource_type_general,
+              title: type.description,
+            })
+          );
+        });
+      }
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      console.error("Error loading resource types:", textStatus, errorThrown);
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Error loading data",
+        })
+      );
+    },
+    complete: function () {
+      select.prop('disabled', false).trigger("change");
+    },
+  });
+}
+
+function setupLanguageDropdown() {
+  const select = $("#input-resourceinformation-language");
+  if (select.length === 0) return;
+
+  select.prop('disabled', true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+    })
+  );
+
+  $.ajax({
+    url: "api/v2/vocabs/languages",
+    method: "GET",
+    dataType: "json",
+    success: function (data) {
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Choose...",
+          "data-translate": "general.choose",
+        })
+      );
+
+      if (Array.isArray(data)) {
+        data.forEach(function (lang) {
+          select.append(
+            $("<option>", {
+              value: lang.id,
+              text: lang.name,
+              title: lang.code,
+            })
+          );
+        });
+      }
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      console.error("Error loading languages:", textStatus, errorThrown);
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Error loading data",
+        })
+      );
+    },
+    complete: function () {
+      select.prop('disabled', false);
+    },
+  });
+}
+
+// Make functions available globally (important for tests)
+window.setupLanguageDropdown = setupLanguageDropdown;
+window.setupResourceTypeDropdown = setupResourceTypeDropdown;
+
 $(document).ready(function () {
   initializeTimezoneDropdown();
   setupResourceTypeDropdown();
+  setupLanguageDropdown();
 
-  function setupResourceTypeDropdown() {
-    const select = $("#input-resourceinformation-resourcetype");
-    if (select.length === 0) return;
-
-    select.prop('disabled', true).empty().append(
-      $("<option>", {
-        value: "",
-        text: "Loading...",
-      })
-    );
-
-    $.ajax({
-      url: "api/v2/vocabs/resourcetypes",
-      method: "GET",
-      dataType: "json",
-      success: function (data) {
-        select.empty().append(
-          $("<option>", {
-            value: "",
-            text: "Choose...",
-            "data-translate": "general.choose",
-          })
-        );
-
-        if (Array.isArray(data)) {
-          data.forEach(function (type) {
-            select.append(
-              $("<option>", {
-                value: type.id,
-                text: type.resource_type_general,
-                title: type.description,
-              })
-            );
-          });
-        }
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        console.error("Error loading resource types:", textStatus, errorThrown);
-        select.empty().append(
-          $("<option>", {
-            value: "",
-            text: "Error loading data",
-          })
-        );
-      },
-      complete: function () {
-        select.prop('disabled', false).trigger("change");
-      },
-    });
-  }
 
   /**
   * Populates the select field with ID input-rights-license with options created via an API call.
