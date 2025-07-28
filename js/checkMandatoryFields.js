@@ -223,12 +223,14 @@ function checkFunder() {
         var fields = {
             funder: row.find('[id^="input-funder"]'),
             grantNumber: row.find('[id^="input-grantnumber"]'),
-            grantName: row.find('[id^="input-grantname"]')
+            grantName: row.find('[id^="input-grantname"]'),
+            awardUri: row.find('[id^="input-awarduri"]')
         };
 
-        // Checks if either the Grant Number or Grant Name field is filled
+        // Checks if either the Grant Number, Grant Name or Award URI field is filled
         var isAnyGrantFieldFilled = (fields.grantNumber.val() && fields.grantNumber.val().trim() !== '') ||
-            (fields.grantName.val() && fields.grantName.val().trim() !== '');
+            (fields.grantName.val() && fields.grantName.val().trim() !== '') ||
+            (fields.awardUri.val() && fields.awardUri.val().trim() !== '');
 
         // Sets or removes the 'required' attribute for the Funder field based on the Grant fields' fill status
         if (isAnyGrantFieldFilled) {
@@ -292,7 +294,8 @@ $(document).on('blur',
     'input[name="tscDateEnd[]"],' +
     'input[name="tscTimeStart[]"],' +
     'input[name="tscTimeEnd[]"],' +
-    'input[name="rIdentifier[]"]',
+    'input[name="rIdentifier[]"],' +
+    'input[name="awardURI[]"]',
     function () {
         // Check mandatory fields when user leaves any of these input fields
         checkMandatoryFields();
