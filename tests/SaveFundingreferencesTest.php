@@ -178,6 +178,32 @@ class SaveFundingreferencesTest extends DatabaseTestCase
     }
 
     /**
+     * Versuch, eine Funding Reference nur mit Award URI zu speichern
+     */
+    public function testSaveAwardUriWithoutFunder()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.AWARD.NO.FUNDER', 'Test Award URI Without Funder');
+
+        $postData = [
+            'funder' => [''],
+            'funderId' => [''],
+            'grantNummer' => [''],
+            'grantName' => [''],
+            'awardURI' => ['https://example.com/award']
+        ];
+
+        $result = saveFundingReferences($this->connection, $postData, $resource_id);
+
+        $this->assertFalse($result, 'Die Funktion sollte false zurückgeben.');
+
+        $stmt = $this->connection->prepare('SELECT COUNT(*) as count FROM Funding_Reference');
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(0, $count, 'Es sollten keine Funding References gespeichert worden sein.');
+    }
+
+    /**
      * Speicherung von zwei vollständigen und einer unvollständigen Funding Reference
      */
     public function testSaveMixedFundingReferences()
