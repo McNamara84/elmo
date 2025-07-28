@@ -48,7 +48,8 @@ class SaveFundingreferencesTest extends DatabaseTestCase
             "funder" => ["Gordon and Betty Moore Foundation"],
             "funderId" => ["100000936"],
             "grantNummer" => ["GBMF3859.01"],
-            "grantName" => ["Socioenvironmental Monitoring of the Amazon Basin and Xingu"]
+            "grantName" => ["Socioenvironmental Monitoring of the Amazon Basin and Xingu"],
+            "awardURI" => ["https://example.com/award"]
         ];
 
         // 3. Funding Reference speichern
@@ -87,6 +88,7 @@ class SaveFundingreferencesTest extends DatabaseTestCase
         $this->assertEquals("Crossref Funder ID", $fundingReference["funderidtyp"], "Der Funder ID Type sollte 'Crossref Funder ID' sein.");
         $this->assertEquals($postData["grantNummer"][0], $fundingReference["grantnumber"]);
         $this->assertEquals($postData["grantName"][0], $fundingReference["grantname"]);
+        $this->assertEquals($postData["awardURI"][0], $fundingReference["awarduri"]);
         $this->assertNotNull($relation, "Die Verknüpfung zwischen Resource und Funding Reference sollte existieren.");
     }
 
@@ -111,7 +113,8 @@ class SaveFundingreferencesTest extends DatabaseTestCase
             "funder" => ["Ford Foundation"],
             "funderId" => [""],
             "grantNummer" => ["FORD123"],
-            "grantName" => ["Grantmaking at a glance"]
+            "grantName" => ["Grantmaking at a glance"],
+            "awardURI" => [""]
         ];
 
         saveFundingReferences($this->connection, $postData, $resource_id);
@@ -158,7 +161,8 @@ class SaveFundingreferencesTest extends DatabaseTestCase
             "funder" => [""],
             "funderId" => [""],
             "grantNummer" => ["INCOMPLETE123"],
-            "grantName" => ["Incomplete Grant"]
+            "grantName" => ["Incomplete Grant"],
+            "awardURI" => [""]
         ];
 
         $result = saveFundingReferences($this->connection, $postData, $resource_id);
@@ -171,6 +175,32 @@ class SaveFundingreferencesTest extends DatabaseTestCase
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
         $this->assertEquals(0, $count, "Es sollten keine Funding References gespeichert worden sein.");
+    }
+
+    /**
+     * Versuch, eine Funding Reference nur mit Award URI zu speichern
+     */
+    public function testSaveAwardUriWithoutFunder()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.AWARD.NO.FUNDER', 'Test Award URI Without Funder');
+
+        $postData = [
+            'funder' => [''],
+            'funderId' => [''],
+            'grantNummer' => [''],
+            'grantName' => [''],
+            'awardURI' => ['https://example.com/award']
+        ];
+
+        $result = saveFundingReferences($this->connection, $postData, $resource_id);
+
+        $this->assertFalse($result, 'Die Funktion sollte false zurückgeben.');
+
+        $stmt = $this->connection->prepare('SELECT COUNT(*) as count FROM Funding_Reference');
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(0, $count, 'Es sollten keine Funding References gespeichert worden sein.');
     }
 
     /**
@@ -194,7 +224,8 @@ class SaveFundingreferencesTest extends DatabaseTestCase
             "funder" => ["Gordon and Betty Moore Foundation", "", "Ford Foundation"],
             "funderId" => ["https://doi.org/10.13039/100000936", "", ""],
             "grantNummer" => ["GBMF3859.01", "INCOMPLETE123", "FORD123"],
-            "grantName" => ["Socioenvironmental Monitoring", "Incomplete Grant", "Grantmaking at a glance"]
+            "grantName" => ["Socioenvironmental Monitoring", "Incomplete Grant", "Grantmaking at a glance"],
+            "awardURI" => ["https://example.com/award1", "", ""]
         ];
 
         saveFundingReferences($this->connection, $postData, $resource_id);
@@ -226,5 +257,69 @@ class SaveFundingreferencesTest extends DatabaseTestCase
         $this->assertContains("Gordon and Betty Moore Foundation", $savedFunders, "Die erste vollständige Funding Reference sollte gespeichert worden sein.");
         $this->assertContains("Ford Foundation", $savedFunders, "Die dritte vollständige Funding Reference sollte gespeichert worden sein.");
         $this->assertNotContains("", $savedFunders, "Die unvollständige Funding Reference sollte nicht gespeichert worden sein.");
+    }
+
+    public function testSaveNoFundingReferenceData()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.NO.FUNDING', 'Test No Funding');
+
+        $result = saveFundingReferences($this->connection, [], $resource_id);
+
+        $this->assertTrue($result, 'Die Funktion sollte true zurückgeben, wenn keine Daten vorhanden sind.');
+
+        $stmt = $this->connection->prepare('SELECT COUNT(*) as count FROM Funding_Reference');
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(0, $count, 'Es sollten keine Funding References gespeichert worden sein.');
+    }
+
+    public function testSaveFundingReferenceInvalidResourceId()
+    {
+        $postData = [
+            'funder' => ['Invalid Foundation'],
+            'funderId' => ['1234567890'],
+            'grantNummer' => ['INV-1'],
+            'grantName' => ['Invalid Case'],
+            'awardURI' => ['https://example.com/invalid']
+        ];
+
+        $result = saveFundingReferences($this->connection, $postData, 0);
+
+        $this->assertFalse($result, 'Die Funktion sollte false bei ungültiger Resource ID zurückgeben.');
+
+        $stmt = $this->connection->prepare('SELECT COUNT(*) as count FROM Funding_Reference');
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(0, $count, 'Es sollten keine Funding References gespeichert werden.');
+    }
+
+    public function testSaveDuplicateFundingReference()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.DUPLICATE.FUNDING', 'Test Duplicate Funding');
+
+        $postData = [
+            'funder' => ['Dup Foundation', 'Dup Foundation'],
+            'funderId' => ['https://doi.org/10.13039/100000936', 'https://doi.org/10.13039/100000936'],
+            'grantNummer' => ['DUP-1', 'DUP-1'],
+            'grantName' => ['Duplicate Grant', 'Duplicate Grant'],
+            'awardURI' => ['https://example.com/dup', 'https://example.com/dup']
+        ];
+
+        saveFundingReferences($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare('SELECT COUNT(*) as count FROM Funding_Reference');
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(1, $count, 'Es sollte nur eine Funding Reference gespeichert werden.');
+
+        $stmt = $this->connection->prepare('SELECT COUNT(*) as count FROM Resource_has_Funding_Reference WHERE Resource_resource_id = ?');
+        $stmt->bind_param('i', $resource_id);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(1, $count, 'Es sollte nur eine Verknüpfung zwischen Resource und Funding Reference existieren.');
     }
 }

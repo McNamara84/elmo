@@ -340,7 +340,7 @@ class ValidationFunctionsTest extends TestCase
      */
     public function testValidateFundingReferenceDependenciesMissingFunder(): void
     {
-        $entry = ['grantName' => 'grant'];
+        $entry = ['awardUri' => 'https://example.com'];
         $this->assertFalse(validateFundingReferenceDependencies($entry));
     }
 

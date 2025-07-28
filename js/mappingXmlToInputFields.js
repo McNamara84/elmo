@@ -93,6 +93,30 @@ async function createLicenseMapping() {
 }
 
 /**
+ * Creates a language mapping from API data
+ * @returns {Promise<Object>} A promise that resolves to a code->id mapping
+ */
+async function createLanguageMapping() {
+  try {
+    const response = await $.getJSON("./api/v2/vocabs/languages");
+    const mapping = {};
+
+    response.forEach((lang) => {
+      mapping[lang.code.toLowerCase()] = lang.id.toString();
+    });
+
+    return mapping;
+  } catch (error) {
+    console.error("Error creating language mapping:", error);
+    return {
+      en: "1",
+      de: "2",
+      fr: "3",
+    };
+  }
+}
+
+/**
  * Maps title type to select option value
  * @param {string} titleType - The type of the title from XML
  * @returns {string} The corresponding select option value
@@ -1069,7 +1093,9 @@ function processFunders(xmlDoc, resolver) {
     const funderId = getNodeText(funderNode, "ns:funderIdentifier", xmlDoc, resolver);
     const funderIdTyp = funderNode.querySelector("funderIdentifier")?.getAttribute("funderIdentifierType") || "";
     const awardTitle = getNodeText(funderNode, "ns:awardTitle", xmlDoc, resolver);
-    const awardNumber = getNodeText(funderNode, "ns:awardNumber", xmlDoc, resolver);
+    const awardNumberNode = xmlDoc.evaluate("ns:awardNumber", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const awardNumber = awardNumberNode ? awardNumberNode.textContent.trim() : "";
+    const awardUri = awardNumberNode?.getAttribute("awardURI") || "";
 
     // Find the last row in the form
     const $lastRow = $('input[name="funder[]"]').last().closest(".row");
@@ -1081,6 +1107,7 @@ function processFunders(xmlDoc, resolver) {
 
     $lastRow.find('input[name="grantNummer[]"]').val(awardNumber);
     $lastRow.find('input[name="grantName[]"]').val(awardTitle);
+    $lastRow.find('input[name="awardURI[]"]').val(awardUri);
 
     // Clone a new row if more funding references need to be added
     if (i < funderNodes.snapshotLength - 1) {
@@ -1121,8 +1148,10 @@ async function loadXmlToForm(xmlDoc) {
       labData = [];
     }
   }
-  // Erstelle das License-Mapping zuerst
+
+  // Erstelle das License- und Language-Mapping zuerst
   const licenseMapping = await createLicenseMapping();
+  const languageMapping = await createLanguageMapping();
 
   // Definiere das komplette XML_MAPPING mit dem erstellten licenseMapping
   const XML_MAPPING = {
@@ -1145,13 +1174,7 @@ async function loadXmlToForm(xmlDoc) {
       selector: "#input-resourceinformation-language",
       attribute: "textContent",
       transform: (value) => {
-        // Map language codes to database IDs
-        const languageMap = {
-          en: "1", // Assuming English has ID 1
-          de: "2", // Assuming German has ID 2
-          fr: "3", // Assuming French has ID 3
-        };
-        return languageMap[value.toLowerCase()] || "1"; // Default to English if not found
+        return languageMapping[value.toLowerCase()] || "1";
       },
     },
     // Rights
