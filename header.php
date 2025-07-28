@@ -18,10 +18,8 @@ sort($langCodes);
   <link rel="stylesheet" href="node_modules/bootstrap-icons/font/bootstrap-icons.min.css" />
   <!-- Local Tagify CSS -->
   <link href="node_modules/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
-  <!-- CDN for jsTree CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.17/themes/default/style.min.css"
-    integrity="sha512-A5OJVuNqxRragmJeYTW19bnw9M2WyxoshScX/rGTgZYj5hRXuqwZ+1AVn2d6wYTZPzPXxDeAGlae0XwTQdXjQA=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Local jsTree CSS -->
+  <link rel="stylesheet" href="node_modules/jstree/dist/themes/default/style.min.css" />
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/gfz-cd.css">
   <link rel="stylesheet" href="./css/tagify-adj.css">
