@@ -215,7 +215,8 @@ function validateFundingReferenceDependencies($entry)
     // If all fields are empty, the entry is valid (no data provided)
     if (
         empty($entry['funder']) && empty($entry['funderId']) &&
-        empty($entry['grantNumber']) && empty($entry['grantName'])
+        empty($entry['grantNumber']) && empty($entry['grantName']) &&
+        empty($entry['awardUri'])
     ) {
         return true;
     }
@@ -223,7 +224,7 @@ function validateFundingReferenceDependencies($entry)
     // If any dependent field is filled, funder must be filled
     if (
         !empty($entry['funderId']) || !empty($entry['grantNumber']) ||
-        !empty($entry['grantName'])
+        !empty($entry['grantName']) || !empty($entry['awardUri'])
     ) {
         return !empty($entry['funder']);
     }

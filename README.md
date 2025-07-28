@@ -967,6 +967,16 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
 
+- Award URI
+
+  A resolvable link to information about the award or grant.
+  - Data type: String
+  - Occurence: 0-1
+  - The corresponding field in the database where the value is stored is called: `awarduri` in the `Funding_Reference` table
+  - Restrictions: None
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#a-awarduri)
+  - Example values: `https://www.moore.org/grants/list/GBMF3859.01`, `[Grantmaking at a glance](https://doi.org/10.35802/221400)`
+
 ### GGMs Properties (Essential)
 
 Viable for the implementation for the ICGEM platform. This form group collects the essential characteristics of a Global Geopotential Model (GGM). 
@@ -1129,6 +1139,7 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | *schemeURI*                               |                   0-1                   |                  0-1                  | `<funderIdentifier schemeURI>`                                                                                                                                              |
 |                            | **Grant Number**                          |                   0-1                   |                  0-1                  | `<awardNumber>`                                                                                                                                                             |
 |                            | **Grant Name**                            |                   0-1                   |                  0-1                  | `<awardTitle>`                                                                                                                                                              |
+|                            | **Award URI**                             |             0-1                   |                  0-1                  | `<awardNumber awardURI="...">` |
 | GGMs Properties (Essential)|                                           |        1                                |                  0                    |           not mapped                                                                                                                                                        |
 |                            | **Model Type**                            |        1                                |                  0                    |           not mapped                                                                                                                                                        |
 |                            | **Mathematical Representation**           |        1                                |                  0                    |           not mapped                                                                                                                                                        |

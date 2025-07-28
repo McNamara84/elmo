@@ -151,7 +151,9 @@
         "funder": "Förderer",
         "funderInvalid": "Bitte geben Sie den Namen des Förderers ein.",
         "grantNumber": "Fördernummer",
-        "grantName": "Förderbezeichnung"
+        "grantName": "Förderbezeichnung",
+        "awardURI": "Förder-URI",
+        "awardURIInvalid": "Bitte geben Sie eine gültige URL an."
     },
     "buttons": {
         "clear": "Löschen",

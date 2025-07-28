@@ -13,7 +13,7 @@ http://www.altova.com/mapforce
 	<xsl:template match="/">
 		<xsl:variable name="var1_initial" select="."/>
 		<resource xmlns="http://datacite.org/schema/kernel-4">
-			<xsl:attribute name="xsi:schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance">http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/msl-mde/schemas/DataCite/DataCiteSchema45.xsd</xsl:attribute>
+			<xsl:attribute name="xsi:schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance">http://datacite.org/schema/kernel-4 file:///C:/xampp_lite_8_4/www/elmo/schemas/DataCite/DataCiteSchema45.xsd</xsl:attribute>
 			<xsl:for-each select="*[local-name()='Resource' and namespace-uri()='']">
 				<xsl:variable name="var2_cur" select="."/>
 				<identifier>
@@ -535,6 +535,12 @@ http://www.altova.com/mapforce
 								</xsl:if>
 								<xsl:if test="((string-length(string(*[local-name()='grantnumber' and namespace-uri()=''])) &gt; 0) and true())">
 									<awardNumber>
+										<xsl:for-each select="*[local-name()='awarduri' and namespace-uri()='']">
+											<xsl:variable name="var57_cur" select="."/>
+											<xsl:attribute name="awardURI" namespace="">
+												<xsl:value-of select="."/>
+											</xsl:attribute>
+										</xsl:for-each>
 										<xsl:value-of select="*[local-name()='grantnumber' and namespace-uri()='']"/>
 									</awardNumber>
 								</xsl:if>
