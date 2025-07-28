@@ -6,6 +6,7 @@ const flushPromises = () => new Promise(res => setTimeout(res, 0));
 describe('select.js', () => {
   let $;
   beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     document.body.innerHTML = `
       <select id="input-relatedwork-identifiertype"></select>
       <select id="test-select"></select>
@@ -44,6 +45,7 @@ describe('select.js', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    console.error.mockRestore();
     jest.resetAllMocks();
   });
 
@@ -136,5 +138,34 @@ describe('select.js', () => {
     expect(fetch).not.toHaveBeenCalled();
     expect(select.val()).toBe('+00:00');
     Intl.DateTimeFormat = originalIntl;
+  });
+
+  test('setupLanguageDropdown populates options from API', async () => {
+    const select = $('<select id="input-resourceinformation-language"></select>').appendTo(document.body);
+    $.ajax.mockImplementation(opts => {
+      opts.success([
+        { id: 1, code: 'en', name: 'English' },
+        { id: 2, code: 'de', name: 'German' },
+      ]);
+      if (opts.complete) opts.complete();
+      return { fail: jest.fn() };
+    });
+
+    await flushPromises();
+    window.setupLanguageDropdown();
+    const options = select.find('option').map((i,el)=>$(el).text()).get();
+    expect(options).toEqual(['Choose...','English','German']);
+    expect(select.prop('disabled')).toBe(false);
+  });
+
+  test('setupLanguageDropdown shows error on ajax failure', async () => {
+    const select = $('<select id="input-resourceinformation-language"></select>').appendTo(document.body);
+    $.ajax.mockImplementation(opts => { if(opts.error) opts.error(); if(opts.complete) opts.complete(); return { fail: jest.fn() }; });
+
+    await flushPromises();
+    window.setupLanguageDropdown();
+    const options = select.find('option').map((i,el)=>$(el).text()).get();
+    expect(options).toEqual(['Error loading data']);
+    expect(select.prop('disabled')).toBe(false);
   });
 });
