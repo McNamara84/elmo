@@ -54,12 +54,12 @@ include("formgroups/resourceInformation.html");
 include("formgroups/rights.html");
 include("formgroups/authors.html");
 
-if ($showGGMsProperties) {
-    include("formgroups/GGMsProperties.html");
-}
 
 if ($showAuthorInstitution) {
     include("formgroups/authorInstitution.html");
+}
+if ($showGGMsProperties) {
+    include("formgroups/GGMsProperties.html");
 }
 if ($showContributorPersons) {
     include("formgroups/contributorPersons.html");
