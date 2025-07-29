@@ -115,7 +115,8 @@ function processAuthor($connection, $resource_id, $authorData)
         $stmt->bind_param("sss", $authorData['familyname'], $authorData['givenname'], $authorData['orcid']);
         $stmt->execute();
         $result = $stmt->get_result();
-        if ($row = $result->fetch_assoc()) {
+        $row = $result->fetch_assoc();
+        if ($row) {
             $author_person_id = $row['author_person_id'];
         } else {
             $stmtInsert = $connection->prepare("INSERT INTO Author_person (familyname, givenname, orcid) VALUES (?, ?, ?)");
@@ -133,9 +134,11 @@ function processAuthor($connection, $resource_id, $authorData)
         $stmt->bind_param("s", $authorData['institutionname']);
         $stmt->execute();
         $result = $stmt->get_result();
-        if ($row = $result->fetch_assoc()) {
-            $author_institution_id = $row['author_institution_id'];
-        } else {
+        $row = $result->fetch_assoc();
+        if ($row) {
+        $author_institution_id = $row['author_institution_id'];
+        }
+        else {
             $stmtInsert = $connection->prepare("INSERT INTO Author_institution (institutionname) VALUES (?)");
             $stmtInsert->bind_param("s", $authorData['institutionname']);
             $stmtInsert->execute();
@@ -151,9 +154,11 @@ function processAuthor($connection, $resource_id, $authorData)
     $stmt->bind_param("ii", $author_person_id, $author_institution_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) {
-        $author_id = $row['author_id'];
-    } else {
+    $row = $result->fetch_assoc();
+    if ($row) {
+    $author_id = $row['author_id'];
+    }
+    else {
         // Insert new Author linkage
         $stmtInsert = $connection->prepare("INSERT INTO Author (Author_Person_author_person_id, Author_Institution_author_institution_id) VALUES (?, ?)");
         $stmtInsert->bind_param("ii", $author_person_id, $author_institution_id);
