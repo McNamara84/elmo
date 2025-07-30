@@ -62,4 +62,22 @@ describe('roles.js', () => {
     expect(fetch).not.toHaveBeenCalled();
     spy.mockRestore();
   });
+
+  test('setupRolesDropdown fetches roles and caches them', async () => {
+    const input = document.getElementById('input-contributor-personrole');
+    const resp1 = { ok: true, json: () => Promise.resolve(['A']) };
+    const resp2 = { ok: true, json: () => Promise.resolve(['B']) };
+    fetch.mockResolvedValueOnce(resp1).mockResolvedValueOnce(resp2);
+
+    const spy = jest.spyOn(window, 'initializeTagifyWithRoles').mockImplementation(() => {});
+    window.setupRolesDropdown(['person', 'institution'], '#input-contributor-personrole');
+    await flushPromises();
+
+    expect(fetch).toHaveBeenCalledWith('./api/v2/vocabs/roles?type=person');
+    expect(fetch).toHaveBeenCalledWith('./api/v2/vocabs/roles?type=institution');
+    expect(window.personRoles).toEqual(['A']);
+    expect(window.organizationRoles).toEqual(['B']);
+    expect(spy).toHaveBeenCalledWith('#input-contributor-personrole', ['A', 'B']);
+    spy.mockRestore();
+  });
 });
