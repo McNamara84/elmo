@@ -55,4 +55,19 @@ describe('freekeywordTags.js', () => {
     expect(input._tagify.settings.placeholder).toBe('Placeholder');
     expect(input._tagify.settings.whitelist).toEqual(['A', 'B']);
   });
+
+  test('refreshes Tagify on translationsLoaded', () => {
+    loadScript(() => ({
+      done(cb) { cb([{ free_keyword: 'One' }]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+    const input = document.getElementById('input-freekeyword');
+    input._tagify.addTags('One');
+    global.translations = { keywords: { free: { placeholder: 'New' } } };
+    document.dispatchEvent(new Event('translationsLoaded'));
+    expect(input._tagify.settings.placeholder).toBe('New');
+    expect(input._tagify.settings.whitelist).toEqual(['One']);
+    expect(input._tagify.value[0].value).toBe('One');
+    expect(input.style.display).toBe('block');
+  });
 });
