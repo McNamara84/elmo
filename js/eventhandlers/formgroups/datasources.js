@@ -37,17 +37,24 @@ $(document).ready(function () {
         if (!config) return;
 
         for (const fieldClass in config) {
-            row.find(`.${fieldClass}`).toggle(config[fieldClass]);
+            const shouldBeVisible = config[fieldClass];
+            // Use a selector that finds the direct child columns of the row
+            row.children(`.${fieldClass}`).toggle(shouldBeVisible);
         }
 
-        if (config['visibility-datasources-details']) {
-            const detailsSelect = row.find('select[name="datasource_details[]"]');
+        const detailsContainer = row.children('.visibility-datasources-details');
+        if (detailsContainer.is(':visible')) {
+            const detailsSelect = detailsContainer.find('select[name="datasource_details[]"]');
             detailsSelect.empty();
             const options = detailsOptions[selectedType] || [];
-            detailsSelect.append($('<option>', { value: '', text: 'Choose...', disabled: true, selected: true, hidden: true }));
+            
             options.forEach(detail => {
                 detailsSelect.append($('<option>', { value: detail, text: detail }));
             });
+            // If there are options, select the first one by default
+            if(options.length > 0) {
+                detailsSelect.val(options[0]);
+            }
         }
     }
 
