@@ -19,7 +19,7 @@ function refreshRoleTagifyInstances() {
     if (!inputElement || !inputElement._tagify) return;
 
     // Determine placeholder value
-    const placeholderValue = window.translations?.general?.roleLabel || "Select roles";
+    const placeholderValue = translations?.general?.roleLabel || "Select roles";
 
     // Update Tagify settings
     inputElement._tagify.settings.placeholder = placeholderValue;
@@ -124,7 +124,7 @@ function initializeTagifyWithRoles(inputSelector, roles) {
       closeOnSelect: false
     },
     editTags: false,
-    placeholder: window.translations?.general?.roleLabel || "Select roles"
+    placeholder: translations?.general?.roleLabel || "Select roles"
   };
 
   try {
