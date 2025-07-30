@@ -76,7 +76,7 @@ $(document).ready(function () {
      * @param {jQuery.Event} event - The click event object.
      * @returns {void}
      */
-    $(document).on("click", ".bi-question-circle-fill", function () {
+    $(document).on('click', '[data-help-section-id]', function() {
         var sectionId = $(this).data("help-section-id");
         loadHelpContent(sectionId);
     });
