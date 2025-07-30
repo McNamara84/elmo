@@ -48,4 +48,18 @@ describe('roles.js', () => {
     expect(input._tagify.settings.placeholder).toBe('Role');
     expect(input._tagify.on).toHaveBeenCalledWith('invalid', expect.any(Function));
   });
+
+  test('setupRolesDropdown uses cached roles and destroys existing Tagify', () => {
+    const input = document.getElementById('input-contributor-personrole');
+    input._tagify = new MockTagify(input, {});
+    window.personRoles = ['Cached'];
+
+    const spy = jest.spyOn(window, 'initializeTagifyWithRoles').mockImplementation(() => {});
+    window.setupRolesDropdown(['person'], '#input-contributor-personrole');
+
+    expect(input._tagify.destroy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith('#input-contributor-personrole', ['Cached']);
+    expect(fetch).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
 });
