@@ -80,4 +80,22 @@ describe('roles.js', () => {
     expect(spy).toHaveBeenCalledWith('#input-contributor-personrole', ['A', 'B']);
     spy.mockRestore();
   });
+
+  test('refreshRoleTagifyInstances updates placeholders', () => {
+    const personInput = document.getElementById('input-contributor-personrole');
+    const orgInput = document.getElementById('input-contributor-organisationrole');
+    personInput._tagify = new MockTagify(personInput, { placeholder: '' });
+    orgInput._tagify = new MockTagify(orgInput, { placeholder: '' });
+    const placeholder1 = personInput.parentElement.querySelector('.tagify__input');
+    const placeholder2 = orgInput.parentElement.querySelector('.tagify__input');
+    placeholder1.setAttribute('data-placeholder', 'old');
+    placeholder2.setAttribute('data-placeholder', 'old');
+
+    window.refreshRoleTagifyInstances();
+
+    expect(personInput._tagify.settings.placeholder).toBe('Role');
+    expect(orgInput._tagify.settings.placeholder).toBe('Role');
+    expect(placeholder1.getAttribute('data-placeholder')).toBe('Role');
+    expect(placeholder2.getAttribute('data-placeholder')).toBe('Role');
+  });
 });
