@@ -20,18 +20,21 @@ function createJQuery() {
   const map = new WeakMap();
   const $ = (sel) => {
     const el = typeof sel === "string" ? document.querySelector(sel) : sel;
-    if (!el) return { length: 0, find: () => $(null), val: () => {}, trigger: jest.fn() };
+    if (!el) return { length: 0, find: () => $(null), val: () => {}, trigger: jest.fn(), click: jest.fn() };
     if (map.has(el)) return map.get(el);
     const obj = {
       length: 1,
       element: el,
       find: (s) => $(el.querySelector(s)),
+      closest: (s) => $(el.closest(s)),
+      last() { return this; },
       val(v) {
         if (v === undefined) return this.element.value;
         this.element.value = v;
         return this;
       },
       trigger: jest.fn(),
+      click: jest.fn(),
     };
     map.set(el, obj);
     return obj;
@@ -110,6 +113,46 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(failingGetJSON).toHaveBeenCalled();
     expect(fallback["CC-BY-4.0"]).toBe("1");
     expect(fallback["Apache-2.0"]).toBe("5");
+  });
+
+  test("processFunders populates fields including award URI", () => {
+    document.body.innerHTML = `
+      <div id="group-fundingreference">
+        <div class="row">
+          <input name="funder[]" />
+          <input name="funderId[]" />
+          <input name="funderidtyp[]" />
+          <input name="grantNummer[]" />
+          <input name="grantName[]" />
+          <input name="awardURI[]" />
+        </div>
+      </div>
+      <button id="button-fundingreference-add"></button>`;
+
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
+
+    const xml = `
+      <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+        <ns:fundingReferences>
+          <ns:fundingReference>
+            <ns:funderName>Test Fund</ns:funderName>
+            <funderIdentifier funderIdentifierType="Crossref Funder ID">12345</funderIdentifier>
+            <ns:awardNumber awardURI="https://example.com/award">AB123</ns:awardNumber>
+            <ns:awardTitle>Award Title</ns:awardTitle>
+          </ns:fundingReference>
+        </ns:fundingReferences>
+      </ns:resource>`;
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const resolver = (prefix) => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
+
+    ctx.processFunders(xmlDoc, resolver);
+
+    const row = $(document.querySelector("#group-fundingreference .row"));
+    expect(row.find('input[name="funder[]"]').val()).toBe("Test Fund");
+    expect(row.find('input[name="grantNummer[]"]').val()).toBe("AB123");
+    expect(row.find('input[name="grantName[]"]').val()).toBe("Award Title");
+    expect(row.find('input[name="awardURI[]"]').val()).toBe("https://example.com/award");
   });
 
   test("createLanguageMapping resolves API data and handles errors", async () => {

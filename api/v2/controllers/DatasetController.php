@@ -1063,6 +1063,9 @@ class DatasetController
                     if ($key === 'grantname' && (empty($value) || $value === null)) {
                         continue;
                     }
+                    if ($key === 'awarduri' && (empty($value) || $value === null)) {
+                        continue;
+                    }
                     $referenceXml->addChild($key, htmlspecialchars($value ?? ''));
                 }
             }
