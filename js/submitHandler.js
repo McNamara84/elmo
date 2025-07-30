@@ -220,7 +220,9 @@ class SubmitHandler {
             const $firstInvalid = this.$form.find(':invalid').first();
             $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
             $firstInvalid.focus();
-            this.showNotification('danger', 'Validation Error', 'Please check your inputs');
+            this.showNotification('danger',
+                translations.alerts.validationErrorheading,
+                translations.alerts.validationError);
             return;
         }
 
@@ -259,10 +261,14 @@ class SubmitHandler {
             dataType: 'json',
             success: (response) => {
                 if (response.success) {
-                    this.showNotification('success', 'Success!', response.message);
+                    this.showNotification('success',
+                        translations.alerts.successHeading,
+                        response.message);
                     this.clearFileInput(); // Clear file input after successful submission
                 } else {
-                    this.showNotification('danger', 'Error!', response.message);
+                    this.showNotification('danger',
+                        translations.alerts.errorHeading,
+                        response.message);
                     console.error('Error details:', response.debug);
                 }
             },
@@ -278,7 +284,7 @@ class SubmitHandler {
      * @param {string} error - Error message
      */
     handleAjaxError(xhr, error) {
-        let errorMessage = 'Failed to submit dataset';
+        let errorMessage = translations.alerts.submitError;
         try {
             const response = JSON.parse(xhr.responseText);
             errorMessage = response.message || errorMessage;
@@ -287,7 +293,9 @@ class SubmitHandler {
             errorMessage += ': ' + error;
             console.error('Response:', xhr.responseText);
         }
-        this.showNotification('danger', 'Error!', errorMessage);
+        this.showNotification('danger',
+            translations.alerts.errorHeading,
+            errorMessage);
     }
 
     /**
