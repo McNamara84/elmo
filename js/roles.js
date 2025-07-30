@@ -18,12 +18,17 @@ function refreshRoleTagifyInstances() {
     // Skip if element doesn't exist or doesn't have a Tagify instance
     if (!inputElement || !inputElement._tagify) return;
 
-    // Update only the placeholder
+    // Determine placeholder value
     const placeholderValue = window.translations?.general?.roleLabel || "Select roles";
 
-    // Assign directly
+    // Update Tagify settings
     inputElement._tagify.settings.placeholder = placeholderValue;
 
+    // Update DOM placeholder for accessibility
+    const placeholderElem = inputElement.parentElement.querySelector('.tagify__input');
+    if (placeholderElem) {
+      placeholderElem.setAttribute('data-placeholder', placeholderValue);
+    }
 
   });
 }

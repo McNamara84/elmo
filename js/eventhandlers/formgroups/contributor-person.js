@@ -65,7 +65,7 @@ $(document).ready(function () {
     newContributorRow.find("#input-contributor-firstname").attr("id", "input-contributor-firstname" + uniqueSuffix);
 
     // Update label references
-    const labelMappings = ["orcid", "lastname", "firstname"];
+    const labelMappings = ["orcid", "lastname", "firstname", "personrole"];
     labelMappings.forEach(label => {
       newContributorRow
         .find(`label[for='input-contributor-${label}']`)
