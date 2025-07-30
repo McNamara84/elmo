@@ -94,4 +94,19 @@ describe('freekeywordTags.js', () => {
     expect(input._tagify.settings.whitelist).toEqual([]);
     logSpy.mockRestore();
   });
+
+  test('warns when API request fails', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    loadScript(() => ({
+      done() { return { fail: cb => cb({ status: 404, statusText: 'Not Found', responseText: 'err' }, 'error', 'err') }; },
+      fail: jest.fn()
+    }));
+    expect(warnSpy).toHaveBeenCalledWith('Failed to fetch keywords:', {
+      status: 404,
+      statusText: 'Not Found',
+      responseText: 'err',
+      error: 'err'
+    });
+    warnSpy.mockRestore();
+  });
 });
