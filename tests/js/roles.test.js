@@ -98,4 +98,22 @@ describe('roles.js', () => {
     expect(placeholder1.getAttribute('data-placeholder')).toBe('Role');
     expect(placeholder2.getAttribute('data-placeholder')).toBe('Role');
   });
+
+  test('DOM initialization creates Tagify and reacts to translationsLoaded', () => {
+    window.personRoles = ['p'];
+    window.organizationRoles = ['o'];
+
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    const personInput = document.getElementById('input-contributor-personrole');
+    const orgInput = document.getElementById('input-contributor-organisationrole');
+
+    expect(personInput._tagify).toBeInstanceOf(MockTagify);
+    expect(orgInput._tagify).toBeInstanceOf(MockTagify);
+
+    translations.general.roleLabel = 'Updated';
+    document.dispatchEvent(new Event('translationsLoaded'));
+
+    expect(personInput._tagify.settings.placeholder).toBe('Updated');
+    expect(orgInput._tagify.settings.placeholder).toBe('Updated');
+  });
 });
