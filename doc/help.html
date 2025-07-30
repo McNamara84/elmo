@@ -1198,6 +1198,30 @@ include_once "../settings.php";
                         then the product type is "topographic gravity field".
                     </p>
                 </div>
+                <div id="help-datasources" class="section-content">
+                    <div id="help-datasources-fg">
+                        <h3>Data Sources</h3>
+                        <p>
+                            This section allows you to specify the various data sources that were used in the creation of your GGM.
+                            This is crucial for traceability and understanding the context of your work. You can add multiple data sources as needed.
+                        </p>
+                    </div>
+                    <div id="help-datasource-type">
+                        <h4>Type</h4>
+                        <p>Select the general category of the data source from the following options:</p>
+                        <ul>
+                            <li><strong>S = Satellite:</strong> Satellite gravity-related observations including SLR.</li>
+                            <li><strong>G = Ground data:</strong> Data measured by gravimeters or ground data derived from gravity models.</li>
+                            <li><strong>A = Altimetry:</strong> Gravity data determined from Altimetry grid data or data produced from radar altimeters.</li>
+                            <li><strong>T = Topography:</strong> Gravity modelled from topography data.</li>
+                            <li><strong>M = Model:</strong> Physical Earth models taken “as is”. For temporal models, it is recommended to include Gravitational background models.</li>
+                        </ul>
+                    </div>
+                    <div id="help-datasource-details">
+                        <h4>Details</h4>
+                        <p>This field allows you to enter the sub-category of the data source you selected.</p>
+                    </div>
+                </div>             
             </div>
             <hr>
         </div>

@@ -13,7 +13,7 @@ $(document).ready(function () {
 
     const detailsOptions = {
         'G': ['Terrestrial', 'Shipborne', 'Airborne', 'Ground data computed from GGM', 'Other'],
-        'A': ['Altimetry radar dataset', 'Altimetry dataset', 'Gravity data determined from Altimetry grid data', 'Data produced from radar altimeters'],
+        'A': ['Direct observations from altimetry satellites', 'Altimetric gridded datasets'],
         'T': ['Bathymetry', 'Isostasy', 'Digital Elevation Model (DEM/DTM)', 'Density Model']
     };
 
