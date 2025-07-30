@@ -70,4 +70,16 @@ describe('freekeywordTags.js', () => {
     expect(input._tagify.value[0].value).toBe('One');
     expect(input.style.display).toBe('block');
   });
+
+  test('handles invalid API response', () => {
+    const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    loadScript(() => ({
+      done(cb) { cb({}); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+    expect(errSpy).toHaveBeenCalled();
+    const input = document.getElementById('input-freekeyword');
+    expect(input._tagify.settings.whitelist).toEqual([]);
+    errSpy.mockRestore();
+  });
 });
