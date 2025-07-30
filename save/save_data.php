@@ -72,38 +72,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         saveGGMsProperties($connection, $_POST, $resource_id);
     }
 
-
-require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
-$datasetController = new DatasetController();
-$xmlString = $datasetController->getResourceAsXml($connection, $resource_id);
-
- // Handle file download if requested
-if (isset($_POST['filename'])) {
-    $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
-
-    header('Content-Type: application/xml');
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
-
-    // Build API URL and local file path
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
-    $base_url = $protocol . $_SERVER['HTTP_HOST'];
-    $project_path = dirname(dirname($_SERVER['PHP_SELF']));
-    $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
-    $localpath = "/var/www/html/xml/resource_" . $resource_id . ".xml";
-
-    // Try to fetch via HTTP first
-    $data = @file_get_contents($url);
-    if ($data !== false) {
-        elmo_log("Fetched XML via API: $url");
-        echo $data;
-    } elseif (file_exists($localpath)) {
-        elmo_log("Fetched XML from local file: $localpath");
-        readfile($localpath);
-    } else {
-        elmo_log("File not found (neither remote nor local). URL tried: $url, local path: $localpath");
-        http_response_code(404);
-        echo "File not found (neither remote nor local).";
+    try {
+    // Logic in these lines is to enable XML save
+    // After the resource information is written to the db,
+    // Currently, nothing transfers the information to xml format.
+    // in the meanwhile, if this lines do work,
+    // the xml file will be generated on the run
+    require_once '../api/v2/controllers/DatasetController.php';
+    $datasetController = new DatasetController();
+    } catch (Exception $e) {
+        error_log("Error accessing DatasetController: function getResourceAsXml is not available. Exception: " . $e->getMessage());
     }
-    exit();
-    }
+    // Handle file download if requested
+    if (isset($_POST['filename'])) {
+        $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
+
+        header('Content-Type: application/xml');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $base_url = $protocol . $_SERVER['HTTP_HOST'];
+        $project_path = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\'); // Ensure no trailing slashes
+        $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
+
+        // readfile() returns the number of bytes read, or false on failure.
+        $bytesRead = @readfile($url);
+
+        if ($bytesRead === false) {
+            error_log("save_data.php: readfile from URL failed. URL: $url . Falling back to direct generation for resource ID: $resource_id");
+
+            try {
+                // The controller is already included, so we can use it.
+                $datasetController = new DatasetController();
+                // Generate XML directly in-memory
+                $xmlString = $datasetController->envelopeXmlAsString($connection, $resource_id);
+
+                if ($xmlString) {
+                    echo $xmlString;
+                } else {
+                    // This part of the code will only be reached if both methods fail.
+                    http_response_code(500);
+                    echo "Error: Could not retrieve or generate XML file.";
+                }
+            } catch (Exception $e) {
+                error_log("Error in save_data.php fallback: " . $e->getMessage());
+                http_response_code(500);
+                echo "Error: XML generation inside save_data failed";
+            }
+        }
+        exit();
+    }    
 }

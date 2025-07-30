@@ -198,6 +198,43 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /update/vocabs/cgi:
+    get:
+      tags:
+        - update
+      summary: Update CGI Simple Lithology keywords
+      description: Fetches the latest CGI Simple Lithology vocabulary and stores it as JSON.
+      operationId: updateCGIKeywords
+      responses:
+        "200":
+          description: CGI keywords successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "CGI keywords successfully updated"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-19T08:45:22Z"
+                required:
+                  - message
+                  - timestamp
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /update/crossref:
     get:
       tags:
@@ -284,6 +321,27 @@ paths:
       summary: Get GCMD Science Keywords (for third party use)
       description: Retrieve the controlled vocabulary of GCMD Science Keywords from NASA (already prepared for use with jsTree)
       operationId: getGcmdScienceKeywords
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/cgi:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get CGI Simple Lithology keywords
+      description: Retrieve the CGI Simple Lithology vocabulary already prepared for use with jsTree
+      operationId: getCGIKeywords
       responses:
         "200":
           description: Successful response
@@ -492,6 +550,35 @@ paths:
                   $ref: "#/components/schemas/SoftwareLicense"
         "404":
           description: No software licenses found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/resourcetypes:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get resource types
+      description: Retrieve all available DataCite resource types
+      operationId: getResourceTypes
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResourceType"
+        "404":
+          description: No resource types found
           content:
             application/json:
               schema:
@@ -1061,3 +1148,21 @@ components:
         - name
         - pattern
         - description
+    ResourceType:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier of the resource type
+          example: 5
+        resource_type_general:
+          type: string
+          description: General name of the resource type
+          example: Dataset
+        description:
+          type: string
+          description: Description of the resource type
+          example: Data encoded in a defined structure.
+      required:
+        - id
+        - resource_type_general

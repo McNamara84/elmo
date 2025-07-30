@@ -41,12 +41,6 @@ function generateOptions($conn, $query, $idField, $nameField)
 }
 
 // Generate dropdown options
-$optionresourcentype = generateOptions(
-    $connection,
-    "SELECT resource_name_id, resource_type_general FROM Resource_Type",
-    "resource_name_id",
-    "resource_type_general"
-);
 $optionlanguage = generateOptions(
     $connection,
     "SELECT language_id, name FROM Language",
@@ -62,7 +56,7 @@ $optiontitle_type = generateOptions(
 );
 
 // Include HTML components
-include("header.html");
+include("header.php");
 include("formgroups/resourceInformation.html");
 include("formgroups/rights.html");
 include("formgroups/authors.html");

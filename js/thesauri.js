@@ -53,11 +53,13 @@ $(document).ready(function () {
     ];
 
     // Initialisiere nur die Konfigurationen, deren Eingabefelder existieren
-    keywordConfigurations.forEach(function (config) {
-        if ($(config.inputId).length) {
-            initializeKeywordInput(config);
-        }
-    });
+    document.addEventListener('translationsLoaded', function() {
+        keywordConfigurations.forEach(function (config) {
+            if ($(config.inputId).length) {
+                initializeKeywordInput(config);
+            }
+        });
+    }, { once: true });
 
     /**
      * Refreshes all Tagify instances for thesaurus inputs when translations are changed.

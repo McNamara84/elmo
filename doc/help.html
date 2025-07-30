@@ -10,6 +10,9 @@ include_once "../settings.php";
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.13.1/font/bootstrap-icons.min.css"
+        integrity="sha512-t7Few9xlddEmgd3oKZQahkNI4dS6l80+eGEzFQiqtyVYdvcSG2D3Iub77R20BdotfRPA9caaRkg1tyaJiPmO0g==" crossorigin="anonymous"
+        referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="../css/help.css">
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="../favicon-96x96.png" sizes="96x96" />
@@ -30,7 +33,21 @@ include_once "../settings.php";
                 </button>
                 <a class="navbar-brand ms-3" href="#">ELMO User Guide</a>
             </div>
-            <a class="nav-link text-white" href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
+            <form class="d-flex ms-3" role="search">
+                <div class="input-group help-search-group">
+                    <input type="search" id="help-search" class="form-control" placeholder="Search help...">
+                    <button type="button" class="btn btn-outline-secondary btn-sm help-search-nav-btn d-none" id="help-search-prev" title="Previous result">
+                        <i class="bi bi-arrow-up"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm help-search-nav-btn d-none" id="help-search-next" title="Next result">
+                        <i class="bi bi-arrow-down"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-light" id="help-search-btn" title="Search">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+            <a class="nav-link text-white ms-3" href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
                 rel="noopener">Legal notice</a>
             <div class="offcanvas offcanvas-start navbar-help-header text-white" tabindex="-1" id="offcanvasNavbar"
                 aria-labelledby="offcanvasNavbarLabel">
@@ -1188,13 +1205,12 @@ include_once "../settings.php";
     <!-- Bootstrap 5 -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-    <!-- jQuery -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            crossorigin="anonymous"></script>
+    <script src="../node_modules/mark.js/dist/mark.min.js"></script>
+    <script src="../node_modules/jquery/dist/jquery.min.js"></script>
     <!-- Custom jQuery Script -->
     <script src="helpMenu.js"></script>
+    <script src="search.js"></script>
 </body>
 
 </html>
