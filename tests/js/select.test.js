@@ -106,6 +106,20 @@ describe('select.js', () => {
     expect(select.val()).toBe('DOI');
   });
 
+  test('updateIdentifierType prefers DOI over URL when both match', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[
+        {name:'URL', pattern:'https?://.+\\..+'},
+        {name:'DOI', pattern:'^(?:https?:\\/\\/doi\\.org/)?10\\.\\d{4,9}\/[-._;()/:A-Z0-9]+$'}]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('http://doi.org/10.2777/061652');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('DOI');
+  });
+
   test('updateIdentifierType ajax error resets select', async () => {
     $.ajax.mockImplementationOnce(opts => { if(opts.error) opts.error(); return { fail: jest.fn() }; });
     const input = $('#group-relatedwork .row:first-child input');
