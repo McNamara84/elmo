@@ -16,11 +16,11 @@ describe('roles.js', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <div id="wrapper1">
-        <input id="input-contributor-personrole" />
+        <input id="input-contributor-personrole" name="cbPersonRoles[]" />
         <div class="tagify__input"></div>
       </div>
       <div id="wrapper2">
-        <input id="input-contributor-organisationrole" />
+        <input id="input-contributor-organisationrole" name="cbOrganisationRoles[]" />
         <div class="tagify__input"></div>
       </div>
     `;
@@ -81,22 +81,33 @@ describe('roles.js', () => {
     spy.mockRestore();
   });
 
-  test('refreshRoleTagifyInstances updates placeholders', () => {
+  test('refreshRoleTagifyInstances updates placeholders for all rows', () => {
     const personInput = document.getElementById('input-contributor-personrole');
     const orgInput = document.getElementById('input-contributor-organisationrole');
+    const clonedInput = document.createElement('input');
+    clonedInput.name = 'cbPersonRoles[]';
+    clonedInput.id = 'input-contributor-personrole2';
+    personInput.parentElement.appendChild(clonedInput);
+
     personInput._tagify = new MockTagify(personInput, { placeholder: '' });
     orgInput._tagify = new MockTagify(orgInput, { placeholder: '' });
+    clonedInput._tagify = new MockTagify(clonedInput, { placeholder: '' });
+
     const placeholder1 = personInput.parentElement.querySelector('.tagify__input');
     const placeholder2 = orgInput.parentElement.querySelector('.tagify__input');
+    const placeholder3 = clonedInput.parentElement.querySelector('.tagify__input');
     placeholder1.setAttribute('data-placeholder', 'old');
     placeholder2.setAttribute('data-placeholder', 'old');
+    placeholder3.setAttribute('data-placeholder', 'old');
 
     window.refreshRoleTagifyInstances();
 
     expect(personInput._tagify.settings.placeholder).toBe('Role');
     expect(orgInput._tagify.settings.placeholder).toBe('Role');
+    expect(clonedInput._tagify.settings.placeholder).toBe('Role');
     expect(placeholder1.getAttribute('data-placeholder')).toBe('Role');
     expect(placeholder2.getAttribute('data-placeholder')).toBe('Role');
+    expect(placeholder3.getAttribute('data-placeholder')).toBe('Role');
   });
 
   test('DOM initialization creates Tagify and reacts to translationsLoaded', () => {
