@@ -92,6 +92,34 @@ describe('select.js', () => {
     warnSpy.mockRestore();
   });
 
+  test('updateIdentifierType chooses most specific match', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[
+        {name:'URL', pattern:'^10\\..+'},
+        {name:'DOI', pattern:'^10\\.\\d{4,9}\/[-._;()/:A-Z0-9]+$/i'}]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('10.1234/ABCD');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('DOI');
+  });
+
+  test('updateIdentifierType prefers DOI over URL when both match', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[
+        {name:'URL', pattern:'https?://.+\\..+'},
+        {name:'DOI', pattern:'^(?:https?:\\/\\/doi\\.org/)?10\\.\\d{4,9}\/[-._;()/:A-Z0-9]+$'}]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('http://doi.org/10.2777/061652');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('DOI');
+  });
+
   test('updateIdentifierType ajax error resets select', async () => {
     $.ajax.mockImplementationOnce(opts => { if(opts.error) opts.error(); return { fail: jest.fn() }; });
     const input = $('#group-relatedwork .row:first-child input');
@@ -99,6 +127,20 @@ describe('select.js', () => {
     input.val('10.1');
     await window.updateIdentifierType(input[0]);
     expect(select.val()).toBe('');
+  });
+
+  test('updateIdentifierType matches DOI regardless of case', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[
+        {name:'URL', pattern:'https?://.+\\..+'},
+        {name:'DOI', pattern:'^(?:https?:\\/\\/doi\\.org/)?10\\.\\d{4,9}\/[-._;()/:A-Z0-9]+$'}]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('https://doi.org/10.1002/asi.24037');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('DOI');
   });
 
   test('debounce delays function call', () => {
