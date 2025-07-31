@@ -56,7 +56,7 @@ $(document).ready(function () {
         <input type="hidden" name="cbOrganisationRorIds[]" id="input-contributor-organisationrorid${uniqueSuffix}" />
         <span class="input-group-text"><i class="bi bi-question-circle-fill"
           data-help-section-id="help-contributor-organisation-affiliation"></i></span>
-        <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+        <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
       </div>
     `;
     newContributorRow.find("#input-contributor-organisationaffiliation").closest(".input-group").replaceWith(affFieldHtml);

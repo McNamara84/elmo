@@ -41,7 +41,7 @@ $(document).ready(function () {
           class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
           data-translate-placeholder="general.roleLabel" />
         <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-contributor-role"></i></span>
-        <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+        <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
       </div>
     `;
     newContributorRow.find("#input-contributor-personrole").closest(".input-group").replaceWith(roleFieldHtml);
@@ -54,7 +54,7 @@ $(document).ready(function () {
           data-translate-placeholder="general.affiliation" />
         <input type="hidden" name="cbPersonRorIds[]" id="input-contributor-personrorid${uniqueSuffix}" />
         <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-contributor-affiliation"></i></span>
-        <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+        <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
       </div>
     `;
     newContributorRow.find("#input-contributorpersons-affiliation").closest(".input-group").replaceWith(affFieldHtml);

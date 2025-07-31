@@ -38,7 +38,13 @@
         "submitSuccess": "Dataset successfully transmitted.",
         "savingHeading": "Saving...",
         "savingInfo": "Dataset is being saved.",
-        "savingSuccess": "Dataset saved successfully. The XML file download will start automatically."
+        "savingSuccess": "Dataset saved successfully. The XML file download will start automatically.",
+        "preparingDownload": "Preparing file for download.",
+        "filenameGenerationError": "Failed to generate filename.",
+        "saveError": "Failed to save dataset.",
+        "submitError": "Failed to submit dataset.",
+        "errorHeading": "Error",
+        "successHeading": "Success!"
     },
     "resourceInfo": {
         "title": "Resource Information",
