@@ -8,12 +8,10 @@ include_once "../settings.php";
     <title>Guide</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.13.1/font/bootstrap-icons.min.css"
-        integrity="sha512-t7Few9xlddEmgd3oKZQahkNI4dS6l80+eGEzFQiqtyVYdvcSG2D3Iub77R20BdotfRPA9caaRkg1tyaJiPmO0g==" crossorigin="anonymous"
-        referrerpolicy="no-referrer" />
+    <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../node_modules/bootstrap-icons/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="../css/help.css">
+    <link rel="stylesheet" href="../css/gfz-cd.css">
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="../favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
@@ -152,7 +150,7 @@ include_once "../settings.php";
                     </p>
                 </div>
                 <div id="help-resourceinformation-doi">
-                    <h4>DOI</h4>
+                    <h4>DOI<a href="https://www.doi.org/" target="_blank" rel="noopener"><img id="doi-logo" src="../logos/doi.logo.svg" class="logo-icon" alt="DOI Logo" onerror="this.onerror=null; this.src='logos/doi.logo.svg';" class="logo-icon" alt="DOI Logo"></a></h4>
                     <p>The DOI is a unique string that identifies a resource. Format should be 10.ORGANISATION/ID.
                         GFZ DataServices will register a DOI for your Dataset after submission and curation.
                     </p>
@@ -280,7 +278,7 @@ include_once "../settings.php";
                         how to access, troubleshoot, or otherwise field issues related to the resource.)</p>
                 </div>
                 <div id="help-author-orcid">
-                    <h4>ORCID</h4>
+                    <h4>ORCID<a href="https://orcid.org/" target="_blank" rel="noopener"><img id="orcid-logo" src="../logos/orcid.logo.png" class="logo-icon" alt="ORCID Logo" onerror="this.onerror=null; this.src='logos/orcid.logo.png';"></a></h4>
                     <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
                         a valid ORCID in the format XXXX-XXXX-XXXX-XXXX (i.e. 0000-0001-5727-2427). If you do not
                         have an ORCID iD yet, you can learn about it and register
@@ -293,8 +291,14 @@ include_once "../settings.php";
                 <div id="help-author-affiliation">
                     <h4>Affiliation</h4>
                     <p>The organisational or institutional affiliation of the creator.</p>
-                    <p>It is recommended to select the affiliation from the list, if the required affiliation is not
+                    <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                         among the available options, it can be entered manually.</p>
+                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='logos/ror-logo.svg';"></a></h4>
+                    <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
+                            Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
+                        and consistent attribution.
+                        For more information about ROR, visit <a href="https://ror.org"
+                            target="_blank">https://ror.org</a>.</p>
                 </div>
                 <div>
                     <h4>Contact Person(s)</h4>
@@ -355,7 +359,7 @@ include_once "../settings.php";
                     <p><strong>Optional field.</strong></p>
                 </div>
                 <div id="help-contributorpersons-orcid">
-                    <h4>ORCID</h4>
+                    <h4>ORCID<a href="https://orcid.org/" target="_blank" rel="noopener"><img id="orcid-logo" src="../logos/orcid.logo.png" class="logo-icon" alt="ORCID Logo" onerror="this.onerror=null; this.src='logos/orcid.logo.png';"></a></h4>
                     <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
                         a valid ORCID in form of XXXX-XXXX-XXXX-XXX(X) (i.e. 0000-0001-5727-2427). You can find your
                         colleagues' ORCID on the <a href="https://orcid.org/orcid-search/search" target="_blank">ORCID
@@ -457,6 +461,12 @@ include_once "../settings.php";
                     <p>The organisational or institutional affiliation of the person/s.</p>
                     <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                         among the available options, it can be entered manually.</p>
+                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='logos/ror-logo.svg';"></a></h4>
+                    <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
+                            Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
+                        and consistent attribution.
+                    For more information about ROR, visit <a href="https://ror.org"
+                            target="_blank">https://ror.org</a>.</p>
                 </div>
             </div>
             <div class="section-divider"></div>
@@ -557,6 +567,12 @@ include_once "../settings.php";
                     <p>The organisational or institutional affiliation of the Institution.</p>
                     <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                         among the available options, it can be entered manually.</p>
+                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='logos/ror-logo.svg';"></a></h4>
+                    <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
+                            Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
+                        and consistent attribution.
+                    For more information about ROR, visit <a href="https://ror.org"
+                            target="_blank">https://ror.org</a>.</p>
                 </div>
             </div>
             <div class="section-divider"></div>
@@ -983,6 +999,10 @@ include_once "../settings.php";
                     <h4>Grant Name</h4>
                     <p>Free text field for entering the title or name of the grant.</p>
                 </div>
+                <div id="help-fundingreference-awarduri">
+                    <h4>Award URI</h4>
+                    <p>Optional link or identifier to detailed information about the award. This can be a URL pointing to the grant on the funder's website or a DOI.</p>
+                </div>
             </div>
             <!-- formgroup GGMs Properties -->
             <div id="help-model-characteristics" class="section-content">
@@ -1203,9 +1223,7 @@ include_once "../settings.php";
         </div>
     </div>
     <!-- Bootstrap 5 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-            crossorigin="anonymous"></script>
+    <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../node_modules/mark.js/dist/mark.min.js"></script>
     <script src="../node_modules/jquery/dist/jquery.min.js"></script>
     <!-- Custom jQuery Script -->

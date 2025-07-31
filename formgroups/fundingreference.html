@@ -4,12 +4,12 @@
         <div id="group-fundingreference">
             <div class="row" funding-reference-row>
                 <!-- Input field Funder -->
-                <div class="col-sm-6 col-md-4 col-lg-3 p-1">
+                <div class="col-sm-6 col-md-6 col-lg-3 p-1">
                     <div class="input-group has-validation">
                         <div class="form-floating ">
                             <input type="text"
                                 class="form-control input-with-help input-right-with-round-corners inputFunder"
-                                 name="funder[]" autocomplete="off" id="input-funder">
+                                name="funder[]" autocomplete="off" id="input-funder">
                             <label for="input-funder" data-translate="funding.funder">Funder</label>
                             <div class="invalid-feedback" data-translate="funding.funderInvalid">Please enter the name of the funder.</div>
                             <!-- Hidden input fields Funder ID and Funder ID Typ -->
@@ -23,7 +23,7 @@
                     </div>
                 </div>
                 <!-- Input field Grant Number -->
-                <div class="col p-1">
+                <div class="col-sm-6 col-md-6 col-lg-2 p-1">
                     <div class="input-group has-validation">
                         <div class="form-floating">
                             <input type="text" class="form-control input-with-help input-right-no-round-corners"
@@ -35,7 +35,7 @@
                     </div>
                 </div>
                 <!-- Input field Grant Name -->
-                <div class="col p-1">
+                <div class="col-sm-6 col-md-6 col-lg-3 p-1">
                     <div class="input-group has-validation">
                         <div class="form-floating">
                             <input type="text" class="form-control input-with-help input-right-no-round-corners"
@@ -46,8 +46,18 @@
                                 data-help-section-id="help-fundingreference-grantname"></i></span>
                     </div>
                 </div>
+                <div class="col-sm-6 col-md-6 col-lg-3 p-1">
+                    <div class="input-group has-validation">
+                        <div class="form-floating">
+                            <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-awarduri" name="awardURI[]" pattern="^(http(s)?:\/\/)?(www\.)?[a-zA-Z0-9\-\.]+(\.[a-zA-Z]{2,})+(\/[^\s]*)?$" />
+                            <label for="input-awarduri" data-translate="funding.awardURI">Award URI</label>
+                            <div class="invalid-feedback" data-translate="funding.awardURIInvalid">Please provide a valid URL.</div>
+                        </div>
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-fundingreference-awarduri"></i></span>
+                    </div>
+                </div>
                 <!-- Button "add Funding Reference" -->
-                <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
+                <div class="col-12 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
                     <button type="button" class="btn btn-primary addFundingReference" id="button-fundingreference-add"
                         class="add-button" data-translate="general.add">
                         +

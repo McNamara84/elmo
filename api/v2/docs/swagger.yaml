@@ -589,6 +589,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /vocabs/languages:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get languages
+      description: Retrieve all available languages
+      operationId: getLanguages
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Language"
+        "404":
+          description: No languages found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /validation/patterns/{type}:
     get:
       tags:
@@ -1166,3 +1195,22 @@ components:
       required:
         - id
         - resource_type_general
+    Language:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier of the language
+          example: 1
+        code:
+          type: string
+          description: ISO 639-1 code of the language
+          example: en
+        name:
+          type: string
+          description: Name of the language
+          example: English
+      required:
+        - id
+        - code
+        - name

@@ -197,16 +197,16 @@ If you encounter problems with the installation, feel free to leave an entry in 
 
   ## Dependencies
   </summary>
-PHP Dependencies can be installed using the following terminal commands:
-	1. Composer update
-	2. Composer upgrade
+Dependencies can be installed using the following terminal commands:
+	1. `composer install`
+	2. `npm install`
 Prequisite for that is composer. If you don't have it consider brew install composer or other options
 
 The following third-party dependencies are included in header.php and footer.html:
 
-- [Bootstrap 5.3.3](https://github.com/twbs/bootstrap/releases)<br>
+- [Bootstrap 5](https://github.com/twbs/bootstrap/releases)<br>
   For the design, responsiveness and dark mode.
-- [Bootstrap Icons 1.11.3](https://github.com/twbs/icons/releases)<br>
+- [Bootstrap Icons 1](https://github.com/twbs/icons/releases)<br>
   For the icons used.
 - [jQuery 3](https://github.com/jquery/jquery/releases)<br>
   For the event handlers in JavaScript and to simplify the JavaScript code.
@@ -214,9 +214,9 @@ The following third-party dependencies are included in header.php and footer.htm
   Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
 - [Tagify 4](https://github.com/yairEO/tagify/releases)<br>
   Is used for the Thesaurus Keywords field, the entry of multiple affiliations and free keywords.
-- [jsTree 3.3.17](https://github.com/vakata/jstree/releases)<br>
+- [jsTree 3](https://github.com/vakata/jstree/releases)<br>
   Is used to display the thesauri as a hierarchical tree structure.
-- [Swagger UI 5.18.2](https://github.com/swagger-api/swagger-ui/releases)<br>
+- [Swagger UI 5](https://github.com/swagger-api/swagger-ui/releases)<br>
   For displaying the dynamic and interactive API documentation in accordance with OpenAPI standard 3.1.
 
 To install them: npm install
@@ -270,7 +270,7 @@ To install them: npm install
 
 ### Resource Information
 
-- DOI
+- DOI <a href="https://www.doi.org/" target="_blank" rel="noopener"><img src="logos/doi.logo.svg" alt="DOI Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the DOI (Digital Object Identifier) that identifies the resource.
   - Data type: String
@@ -400,7 +400,7 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
   - Example values: `Lisa`, `Elisa`
 
-- Author ORCID
+- Author ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the author's ORCID (Open Researcher and Contributor ID).
   - Data type: String
@@ -410,7 +410,7 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
   - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
 
-- Affiliation
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
  
   This field contains the author's affiliation.
   - Data type: String
@@ -507,7 +507,7 @@ The controlled list is provided and maintained by Utrecht University ([MSL Labor
 #### _Person_
 Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="ROLE">` with `<contributorName nameType="Personal">` in the DataCite scheme.
 
-- ORCID
+- ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the ORCID of the contributor (Open Researcher and Contributor ID).
   - Data type: String
@@ -547,7 +547,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
   - Example values: `Data Manager`, `Project Manager`
 
-- Affiliation
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the affiliation of the contributor(s).
   - Data type: String
@@ -581,7 +581,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
   - Example values: `Data Collector`, `Data Curator`.
   
-- Affiliation
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the affiliation of the contributing institution.
   - Data type: String
@@ -967,6 +967,16 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
 
+- Award URI
+
+  A resolvable link to information about the award or grant.
+  - Data type: String
+  - Occurence: 0-1
+  - The corresponding field in the database where the value is stored is called: `awarduri` in the `Funding_Reference` table
+  - Restrictions: None
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#a-awarduri)
+  - Example values: `https://www.moore.org/grants/list/GBMF3859.01`, `[Grantmaking at a glance](https://doi.org/10.35802/221400)`
+
 ### GGMs Properties (Essential)
 
 Viable for the implementation for the ICGEM platform. This form group collects the essential characteristics of a Global Geopotential Model (GGM). 
@@ -1129,6 +1139,7 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | *schemeURI*                               |                   0-1                   |                  0-1                  | `<funderIdentifier schemeURI>`                                                                                                                                              |
 |                            | **Grant Number**                          |                   0-1                   |                  0-1                  | `<awardNumber>`                                                                                                                                                             |
 |                            | **Grant Name**                            |                   0-1                   |                  0-1                  | `<awardTitle>`                                                                                                                                                              |
+|                            | **Award URI**                             |             0-1                   |                  0-1                  | `<awardNumber awardURI="...">` |
 | GGMs Properties (Essential)|                                           |        1                                |                  0                    |           not mapped                                                                                                                                                        |
 |                            | **Model Type**                            |        1                                |                  0                    |           not mapped                                                                                                                                                        |
 |                            | **Mathematical Representation**           |        1                                |                  0                    |           not mapped                                                                                                                                                        |

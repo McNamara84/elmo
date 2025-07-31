@@ -1,6 +1,98 @@
 <?php
 require_once __DIR__ . '/../validation.php';
 /**
+ * Validates that all required funding reference arrays are present.
+ *
+ * @param array $postData The POST data from the form.
+ *
+ * @return bool True if all arrays exist, false otherwise.
+ */
+function fundingReferenceArraysExist($postData)
+{
+    return isset(
+        $postData['funder'],
+        $postData['funderId'],
+        $postData['grantNummer'],
+        $postData['grantName'],
+        $postData['awardURI']
+    ) &&
+        is_array($postData['funder']) &&
+        is_array($postData['funderId']) &&
+        is_array($postData['grantNummer']) &&
+        is_array($postData['grantName']) &&
+        is_array($postData['awardURI']);
+}
+
+/**
+ * Prepares funder ID string and type.
+ *
+ * @param string $funderId Raw funder ID.
+ *
+ * @return array Array with the processed funder ID and the ID type.
+ */
+function prepareFunderIdDetails($funderId)
+{
+    if (!empty($funderId)) {
+        $funderIdString = extractLastTenDigits($funderId);
+        $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
+    } else {
+        $funderIdString = null;
+        $funderIdType = null;
+    }
+
+    return [$funderIdString, $funderIdType];
+}
+
+/**
+ * Handles storage of a single funding reference entry.
+ *
+ * @param mysqli $connection  The database connection.
+ * @param array  $entry       Funding reference data for one row.
+ * @param int    $resource_id Associated resource ID.
+ *
+ * @return bool True on success, false otherwise.
+ */
+function saveFundingReferenceEntry($connection, $entry, $resource_id)
+{
+    if (!validateFundingReferenceDependencies($entry)) {
+        return false;
+    }
+
+    if (
+        empty($entry['funder']) &&
+        empty($entry['funderId']) &&
+        empty($entry['grantNumber']) &&
+        empty($entry['grantName'])
+    ) {
+        return true;
+    }
+
+    [$funderIdString, $funderIdType] = prepareFunderIdDetails($entry['funderId']);
+    $awardUri = !empty($entry['awardUri']) ? $entry['awardUri'] : null;
+
+    $funding_reference_id = insertFundingReference(
+        $connection,
+        $entry['funder'],
+        $funderIdString,
+        $funderIdType,
+        $entry['grantNumber'],
+        $entry['grantName'],
+        $awardUri
+    );
+
+    if (!$funding_reference_id) {
+        error_log('Failed to insert Funding Reference');
+        return false;
+    }
+
+    if (!linkResourceToFundingReference($connection, $resource_id, $funding_reference_id)) {
+        error_log('Failed to link resource to funding reference');
+        return false;
+    }
+
+    return true;
+}
+/**
  * Saves the funding reference information into the database.
  *
  * @param mysqli $connection  The database connection.
@@ -12,21 +104,11 @@ require_once __DIR__ . '/../validation.php';
 function saveFundingReferences($connection, $postData, $resource_id)
 {
     if (!$resource_id) {
-        error_log("Invalid resource_id provided");
+        error_log('Invalid resource_id provided');
         return false;
     }
 
-    // Check if the required arrays exist
-    if (
-        !isset(
-        $postData['funder'],
-        $postData['funderId'],
-        $postData['grantNummer'],
-        $postData['grantName']
-    ) ||
-        !is_array($postData['funder']) || !is_array($postData['funderId']) ||
-        !is_array($postData['grantNummer']) || !is_array($postData['grantName'])
-    ) {
+    if (!fundingReferenceArraysExist($postData)) {
         return true; // No data provided is valid
     }
 
@@ -38,49 +120,11 @@ function saveFundingReferences($connection, $postData, $resource_id)
             'funder' => $postData['funder'][$i] ?? '',
             'funderId' => $postData['funderId'][$i] ?? '',
             'grantNumber' => $postData['grantNummer'][$i] ?? '',
-            'grantName' => $postData['grantName'][$i] ?? ''
+            'grantName' => $postData['grantName'][$i] ?? '',
+            'awardUri' => $postData['awardURI'][$i] ?? ''
         ];
 
-        // Validate dependencies for this entry
-        if (!validateFundingReferenceDependencies($entry)) {
-            $allSuccessful = false;
-            continue;
-        }
-
-        // Skip if no data provided for this entry
-        if (
-            empty($entry['funder']) && empty($entry['funderId']) &&
-            empty($entry['grantNumber']) && empty($entry['grantName'])
-        ) {
-            continue;
-        }
-
-        // Process funder ID if it exists
-        if (!empty($entry['funderId'])) {
-            $funderIdString = extractLastTenDigits($entry['funderId']);
-            $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
-        } else {
-            $funderIdString = null;
-            $funderIdType = null;
-        }
-
-        $funding_reference_id = insertFundingReference(
-            $connection,
-            $entry['funder'],
-            $funderIdString,
-            $funderIdType,
-            $entry['grantNumber'],
-            $entry['grantName']
-        );
-
-        if ($funding_reference_id) {
-            $linkResult = linkResourceToFundingReference($connection, $resource_id, $funding_reference_id);
-            if (!$linkResult) {
-                error_log("Failed to link resource to funding reference");
-                $allSuccessful = false;
-            }
-        } else {
-            error_log("Failed to insert Funding Reference");
+        if (!saveFundingReferenceEntry($connection, $entry, $resource_id)) {
             $allSuccessful = false;
         }
     }
@@ -97,20 +141,22 @@ function saveFundingReferences($connection, $postData, $resource_id)
  * @param string|null $funderIdType  The type of the funder's ID.
  * @param string|null $grantNumber   The grant number.
  * @param string|null $grantName     The grant name.
+ * @param string|null $awardUri      The award URI.
  *
  * @return int|null Returns the funding reference ID if successful, otherwise null.
  */
-function insertFundingReference($connection, $funder, $funderId, $funderIdType, $grantNumber, $grantName)
+function insertFundingReference($connection, $funder, $funderId, $funderIdType, $grantNumber, $grantName, $awardUri)
 {
     // Check if the funding reference already exists
     $checkQuery = "
-        SELECT funding_reference_id 
-        FROM Funding_Reference 
-        WHERE funder = ? 
-          AND (funderid = ?) 
-          AND (funderidtyp = ?) 
-          AND (grantnumber = ?) 
-          AND (grantname = ?)";
+        SELECT funding_reference_id
+        FROM Funding_Reference
+        WHERE funder = ?
+          AND (funderid = ?)
+          AND (funderidtyp = ?)
+          AND (grantnumber = ?)
+          AND (grantname = ?)
+          AND (awarduri = ?)";
     $checkStmt = $connection->prepare($checkQuery);
     if (!$checkStmt) {
         error_log("Prepare failed for existence check: " . $connection->error);
@@ -118,12 +164,13 @@ function insertFundingReference($connection, $funder, $funderId, $funderIdType, 
     }
 
     $checkStmt->bind_param(
-        "sssss",
+        "ssssss",
         $funder,
         $funderId,
         $funderIdType,
         $grantNumber,
-        $grantName
+        $grantName,
+        $awardUri
     );
     $checkStmt->execute();
 
@@ -139,15 +186,15 @@ function insertFundingReference($connection, $funder, $funderId, $funderIdType, 
 
     // Insert a new funding reference if no match is found
     $insertQuery = "
-        INSERT INTO Funding_Reference (`funder`, `funderid`, `funderidtyp`, `grantnumber`, `grantname`) 
-        VALUES (?, ?, ?, ?, ?)";
+        INSERT INTO Funding_Reference (`funder`, `funderid`, `funderidtyp`, `grantnumber`, `grantname`, `awarduri`)
+        VALUES (?, ?, ?, ?, ?, ?)";
     $insertStmt = $connection->prepare($insertQuery);
     if (!$insertStmt) {
         error_log("Prepare failed for insert: " . $connection->error);
         return null;
     }
 
-    $insertStmt->bind_param("sssss", $funder, $funderId, $funderIdType, $grantNumber, $grantName);
+    $insertStmt->bind_param("ssssss", $funder, $funderId, $funderIdType, $grantNumber, $grantName, $awardUri);
 
     if ($insertStmt->execute()) {
         $funding_reference_id = $insertStmt->insert_id;
