@@ -92,6 +92,20 @@ describe('select.js', () => {
     warnSpy.mockRestore();
   });
 
+  test('updateIdentifierType chooses most specific match', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[
+        {name:'URL', pattern:'^10\\..+'},
+        {name:'DOI', pattern:'^10\\.\\d{4,9}\/[-._;()/:A-Z0-9]+$/i'}]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('10.1234/ABCD');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('DOI');
+  });
+
   test('updateIdentifierType ajax error resets select', async () => {
     $.ajax.mockImplementationOnce(opts => { if(opts.error) opts.error(); return { fail: jest.fn() }; });
     const input = $('#group-relatedwork .row:first-child input');
