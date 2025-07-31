@@ -509,8 +509,8 @@ function updateIdentifierType(inputElement) {
       dataType: "json",
       success: function (response) {
         if (response && response.identifierTypes) {
-          // Find the matching identifier type based on the pattern
-          const matchingType = response.identifierTypes.find((type) => {
+          // Collect all identifier types that match the identifier
+          const matchingTypes = response.identifierTypes.filter((type) => {
             try {
               // Clean up the pattern
               let pattern = type.pattern;
@@ -527,8 +527,11 @@ function updateIdentifierType(inputElement) {
             }
           });
 
-          if (matchingType) {
-            selectElement.val(matchingType.name);
+          if (matchingTypes.length > 0) {
+            // Choose the most specific match by pattern length
+            matchingTypes.sort((a, b) => b.pattern.length - a.pattern.length);
+            const bestMatch = matchingTypes[0];
+            selectElement.val(bestMatch.name);
             selectElement.trigger("change");
           } else {
             selectElement.val(""); // Reset to empty if no pattern matches
