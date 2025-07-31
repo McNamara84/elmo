@@ -531,7 +531,7 @@ function updateIdentifierType(inputElement) {
               // Remove redundant escapes
               pattern = pattern.replace(/\\{2}/g, "\\");
 
-              const regex = new RegExp(pattern);
+              const regex = new RegExp(pattern, "i");
               return regex.test(identifier);
             } catch (e) {
               console.warn(`Invalid pattern for ${type.name}:`, e);
