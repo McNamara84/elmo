@@ -177,11 +177,15 @@ class SaveHandler {
             const $firstInvalid = this.$form.find(':invalid').first();
             $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
             $firstInvalid.focus();
-            this.showNotification('danger', 'Validation Error', 'Please check your inputs');
+            this.showNotification('danger',
+                translations.alerts.validationErrorheading,
+                translations.alerts.validationError);
             return;
         }
 
-        this.showNotification('info', 'Processing...', 'Preparing file for download.');
+        this.showNotification('info',
+            translations.alerts.processingHeading,
+            translations.alerts.preparingDownload);
         const suggestedFilename = await this.generateFilename();
         if (suggestedFilename) {
             $('#input-saveas-filename').val(suggestedFilename);
@@ -202,7 +206,9 @@ class SaveHandler {
             return `dataset_${timestamp}`;
         } catch (error) {
             console.error('Error generating filename:', error);
-            this.showNotification('danger', 'Error', 'Failed to generate filename');
+            this.showNotification('danger',
+                translations.alerts.errorHeading,
+                translations.alerts.filenameGenerationError);
             return null;
         }
     }
@@ -213,7 +219,9 @@ class SaveHandler {
     async handleSaveConfirm() {
         const filename = $('#input-saveas-filename').val().trim();
         if (!filename) {
-            this.showNotification('danger', 'Error', 'Please enter a filename');
+            this.showNotification('danger',
+                translations.alerts.filenameErrorHeading,
+                translations.alerts.filenameError);
             return;
         }
 
@@ -226,7 +234,9 @@ class SaveHandler {
      * @param {string} filename - Chosen filename
      */
     async saveAndDownload(filename) {
-        this.showNotification('info', 'Processing...', 'Saving dataset and preparing download...');
+        this.showNotification('info',
+            translations.alerts.savingHeading,
+            translations.alerts.savingInfo);
 
         try {
             const formData = new FormData(this.$form[0]);
@@ -250,10 +260,14 @@ class SaveHandler {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
 
-            this.showNotification('success', 'Success!', 'Dataset saved successfully');
+            this.showNotification('success',
+                translations.alerts.successHeading,
+                translations.alerts.savingSuccess);
         } catch (error) {
             console.error('Error saving dataset:', error);
-            this.showNotification('danger', 'Error', 'Failed to save dataset');
+            this.showNotification('danger',
+                translations.alerts.errorHeading,
+                translations.alerts.saveError);
         }
     }
 

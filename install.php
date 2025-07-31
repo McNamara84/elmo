@@ -374,6 +374,7 @@ function createDatabaseStructure($connection)
    `funderidtyp` VARCHAR(25) NULL,
    `grantnumber` VARCHAR(45) NULL,
    `grantname` VARCHAR(75) NULL,
+   `awarduri` VARCHAR(255) NULL,
     PRIMARY KEY (`funding_reference_id`));",
 
         "Resource_has_Funding_Reference" => "CREATE TABLE IF NOT EXISTS `Resource_has_Funding_Reference` (
@@ -950,9 +951,9 @@ function insertTestResourceData($connection)
             ["Identifier" => "10.1007/s10712-020-09590-9", "relation_fk" => 19, "identifier_type_fk" => 4]
         ],
         "Funding_Reference" => [
-            ["funder" => "Gordon and Betty Moore Foundation", "funderid" => "100000936", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.01", "grantname" => "Socioenvironmental Monitoring of the Amazon Basin and Xingu"],
-            ["funder" => "Ford Foundation", "funderid" => "100000016", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.11", "grantname" => "Grants database"],
-            ["funder" => "U.S. Department of Defense", "funderid" => "100000005", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.22", "grantname" => "Grantmaking at a glance"]
+            ["funder" => "Gordon and Betty Moore Foundation", "funderid" => "100000936", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.01", "grantname" => "Socioenvironmental Monitoring of the Amazon Basin and Xingu", "awarduri" => null],
+            ["funder" => "Ford Foundation", "funderid" => "100000016", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.11", "grantname" => "Grants database", "awarduri" => "https://www.moore.org/grants/list/GBMF3859.01"],
+            ["funder" => "U.S. Department of Defense", "funderid" => "100000005", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.22", "grantname" => "Grantmaking at a glance", "awarduri" => "10.3030/892034"]
         ],
         "GGM_Properties" => [
             ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 60, "Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide"],

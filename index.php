@@ -41,13 +41,6 @@ function generateOptions($conn, $query, $idField, $nameField)
 }
 
 // Generate dropdown options
-$optionlanguage = generateOptions(
-    $connection,
-    "SELECT language_id, name FROM Language",
-    "language_id",
-    "name"
-);
-
 $optiontitle_type = generateOptions(
     $connection,
     "SELECT title_type_id, name FROM Title_Type",
