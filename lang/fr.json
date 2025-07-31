@@ -38,7 +38,13 @@
         "submitSuccess": "Ensemble de données transmis avec succès.",
         "savingHeading": "Enregistrement...",
         "savingInfo": "L'ensemble de données est en cours d'enregistrement.",
-        "savingSuccess": "Ensemble de données enregistré avec succès. Le téléchargement XML démarrera automatiquement."
+        "savingSuccess": "Ensemble de données enregistré avec succès. Le téléchargement XML démarrera automatiquement.",
+        "preparingDownload": "Préparation du fichier pour le téléchargement.",
+        "filenameGenerationError": "Échec de la génération du nom de fichier.",
+        "saveError": "Échec de l'enregistrement de l'ensemble de données.",
+        "submitError": "Échec de la soumission de l'ensemble de données.",
+        "errorHeading": "Erreur",
+        "successHeading": "Succès!"
     },
     "resourceInfo": {
         "title": "Informations sur la ressource",
