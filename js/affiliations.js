@@ -27,6 +27,15 @@ function refreshTagifyInstances() {
     // Update whitelist without destroying the instance
     inputElement.tagify.settings.whitelist = window.affiliationsData.map(item => item.name);
 
+    // Update placeholder if translations are available
+    if (translations?.general?.affiliation) {
+      inputElement.tagify.settings.placeholder = translations.general.affiliation;
+      const placeholderElement = inputElement.parentElement.querySelector('.tagify__input');
+      if (placeholderElement) {
+        placeholderElement.setAttribute('data-placeholder', translations.general.affiliation);
+      }
+    }
+
     // Restore previously selected values
     inputElement.tagify.removeAllTags();
     inputElement.tagify.addTags(currentValues);
@@ -68,10 +77,14 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
 
   const hiddenField = $("#" + hiddenFieldId);
 
+  const placeholderValue = (typeof translations !== 'undefined' && translations.general?.affiliation)
+    ? translations.general.affiliation
+    : 'Affiliation';
+
   const tagify = new Tagify(inputElement[0], {
     enforceWhitelist: false,
     duplicates: false,
-    placeholder: translations.general.affiliation,
+    placeholder: placeholderValue,
     whitelist: data.map(item => item.name),
     dropdown: {
       maxItems: 20,
