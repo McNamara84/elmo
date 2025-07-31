@@ -44,7 +44,7 @@ $(document).ready(function () {
         },
         {
             // Configuration for the Data Sources GCMD Platform input
-            inputId: '#input-datasources-Platforms',
+            inputId: '#input-datasource-platforms',
             jsonFile: 'json/thesauri/gcmdPlatformsKeywords.json',
             jsTreeId: '#jstree-platforms-datasource',
             searchInputId: '#input-platforms-thesaurussearch-ds',
