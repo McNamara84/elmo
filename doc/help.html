@@ -11,6 +11,7 @@ include_once "../settings.php";
     <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../node_modules/bootstrap-icons/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="../css/help.css">
+    <link rel="stylesheet" href="../css/gfz-cd.css">
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="../favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
@@ -149,7 +150,7 @@ include_once "../settings.php";
                     </p>
                 </div>
                 <div id="help-resourceinformation-doi">
-                    <h4>DOI</h4>
+                    <h4>DOI<a href="https://www.doi.org/" target="_blank" rel="noopener"><img id="doi-logo" src="../logos/doi.logo.svg" class="logo-icon" alt="DOI Logo" onerror="this.onerror=null; this.src='logos/doi.logo.svg';" class="logo-icon" alt="DOI Logo"></a></h4>
                     <p>The DOI is a unique string that identifies a resource. Format should be 10.ORGANISATION/ID.
                         GFZ DataServices will register a DOI for your Dataset after submission and curation.
                     </p>
@@ -277,7 +278,7 @@ include_once "../settings.php";
                         how to access, troubleshoot, or otherwise field issues related to the resource.)</p>
                 </div>
                 <div id="help-author-orcid">
-                    <h4>ORCID</h4>
+                    <h4>ORCID<a href="https://orcid.org/" target="_blank" rel="noopener"><img id="orcid-logo" src="../logos/orcid.logo.png" class="logo-icon" alt="ORCID Logo" onerror="this.onerror=null; this.src='logos/orcid.logo.png';"></a></h4>
                     <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
                         a valid ORCID in the format XXXX-XXXX-XXXX-XXXX (i.e. 0000-0001-5727-2427). If you do not
                         have an ORCID iD yet, you can learn about it and register
@@ -290,8 +291,14 @@ include_once "../settings.php";
                 <div id="help-author-affiliation">
                     <h4>Affiliation</h4>
                     <p>The organisational or institutional affiliation of the creator.</p>
-                    <p>It is recommended to select the affiliation from the list, if the required affiliation is not
+                    <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                         among the available options, it can be entered manually.</p>
+                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='logos/ror-logo.svg';"></a></h4>
+                    <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
+                            Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
+                        and consistent attribution.
+                        For more information about ROR, visit <a href="https://ror.org"
+                            target="_blank">https://ror.org</a>.</p>
                 </div>
                 <div>
                     <h4>Contact Person(s)</h4>
@@ -352,7 +359,7 @@ include_once "../settings.php";
                     <p><strong>Optional field.</strong></p>
                 </div>
                 <div id="help-contributorpersons-orcid">
-                    <h4>ORCID</h4>
+                    <h4>ORCID<a href="https://orcid.org/" target="_blank" rel="noopener"><img id="orcid-logo" src="../logos/orcid.logo.png" class="logo-icon" alt="ORCID Logo" onerror="this.onerror=null; this.src='logos/orcid.logo.png';"></a></h4>
                     <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
                         a valid ORCID in form of XXXX-XXXX-XXXX-XXX(X) (i.e. 0000-0001-5727-2427). You can find your
                         colleagues' ORCID on the <a href="https://orcid.org/orcid-search/search" target="_blank">ORCID
@@ -454,6 +461,12 @@ include_once "../settings.php";
                     <p>The organisational or institutional affiliation of the person/s.</p>
                     <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                         among the available options, it can be entered manually.</p>
+                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='logos/ror-logo.svg';"></a></h4>
+                    <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
+                            Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
+                        and consistent attribution.
+                    For more information about ROR, visit <a href="https://ror.org"
+                            target="_blank">https://ror.org</a>.</p>
                 </div>
             </div>
             <div class="section-divider"></div>
@@ -554,6 +567,12 @@ include_once "../settings.php";
                     <p>The organisational or institutional affiliation of the Institution.</p>
                     <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                         among the available options, it can be entered manually.</p>
+                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='logos/ror-logo.svg';"></a></h4>
+                    <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
+                            Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
+                        and consistent attribution.
+                    For more information about ROR, visit <a href="https://ror.org"
+                            target="_blank">https://ror.org</a>.</p>
                 </div>
             </div>
             <div class="section-divider"></div>
