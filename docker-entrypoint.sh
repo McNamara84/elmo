@@ -3,6 +3,9 @@ set -e
 
 FLAG_FILE="/var/www/html/.installed"
 
+# give www-data ownership of the xml folder every start
+chown -R www-data:www-data /var/www/html/xml
+
 wait_for_db() {
   php -r '
   $max = 30;
