@@ -498,6 +498,18 @@ function setupIdentifierTypesDropdown(id) {
  * Function to update the identifier type based on the entered identifier.
  * @param {HTMLElement} inputElement - The input element for the identifier.
  */
+// Priority map for identifier types when multiple patterns match
+const IDENTIFIER_TYPE_PRIORITY = {
+  DOI: 10,
+  URL: 0,
+};
+
+function getIdentifierPriority(name) {
+  return IDENTIFIER_TYPE_PRIORITY.hasOwnProperty(name)
+    ? IDENTIFIER_TYPE_PRIORITY[name]
+    : 5;
+}
+
 function updateIdentifierType(inputElement) {
   var identifier = $(inputElement).val();
   var selectElement = $(inputElement).closest(".row").find('select[name="rIdentifierType[]"]');
@@ -528,8 +540,13 @@ function updateIdentifierType(inputElement) {
           });
 
           if (matchingTypes.length > 0) {
-            // Choose the most specific match by pattern length
-            matchingTypes.sort((a, b) => b.pattern.length - a.pattern.length);
+            // Choose the best match by custom priority, then pattern length
+            matchingTypes.sort((a, b) => {
+              const prioDiff =
+                getIdentifierPriority(b.name) - getIdentifierPriority(a.name);
+              if (prioDiff !== 0) return prioDiff;
+              return b.pattern.length - a.pattern.length;
+            });
             const bestMatch = matchingTypes[0];
             selectElement.val(bestMatch.name);
             selectElement.trigger("change");
