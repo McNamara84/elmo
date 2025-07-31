@@ -18,8 +18,11 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html
 RUN sed -i 's|/var/www/html|${APACHE_DOCUMENT_ROOT}|g' /etc/apache2/sites-available/000-default.conf \
     && a2enmod rewrite
 
-# Copy application files
-COPY . /var/www/html/
+# Set the working directory for subsequent commands
+WORKDIR /var/www/html
+
+COPY . .
+
 # Ensure that the standard user www-data has ownership of the application files
 RUN chown -R www-data:www-data /var/www/html
 
