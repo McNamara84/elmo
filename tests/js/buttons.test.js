@@ -111,4 +111,13 @@ describe('buttons.js', () => {
     $('#button-form-load').trigger('click');
     expect($.fn.modal).toHaveBeenCalledWith('show');
   });
+
+  test('changelog button loads content and shows modal', () => {
+    loadScript();
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    document.getElementById('button-changelog-show').dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect($.fn.load).toHaveBeenCalledWith('doc/changelog.html', expect.any(Function));
+    expect($.fn.modal).toHaveBeenCalledWith('show');
+  });
 });
