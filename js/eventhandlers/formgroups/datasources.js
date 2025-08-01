@@ -164,13 +164,20 @@ $(document).ready(function () {
             const detailsSelect = detailsContainer.find('select[name="datasource_details[]"]');
             detailsSelect.empty();
             const options = detailsOptions[selectedType] || [];
-            
+
             options.forEach(detail => {
                 detailsSelect.append($('<option>', { value: detail, text: detail }));
             });
             // If there are options, select the first one by default
             if(options.length > 0) {
                 detailsSelect.val(options[0]);
+            }
+        }
+
+        if (selectedType === 'M') {
+            const idTypeSelect = row.find('select[name="dIdentifierType[]"]');
+            if (idTypeSelect.children().length === 0) {
+                window.setupIdentifierTypesDropdown(idTypeSelect);
             }
         }
     }
