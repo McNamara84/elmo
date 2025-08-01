@@ -55,6 +55,7 @@ include("formgroups/rights.html");
 include("formgroups/authors.html");
 if ($showGGMsProperties) {
     include("formgroups/GGMsProperties.html");
+    include("formgroups/GGMsTechnical.html");
 }
 if ($showContributorPersons) {
     include("formgroups/contributorPersons.html");
