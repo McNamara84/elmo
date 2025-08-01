@@ -76,6 +76,47 @@ $(document).ready(function () {
 
         datasourceGroup.append(newRow);
         updateRowState(newRow); // Immediately set the correct visibility.
+
+        const firstInput = document.querySelector('#input-datasource-platforms');
+        const newInputElem = newRow.find('#input-datasource-platforms')[0];
+        if (newInputElem && typeof Tagify !== 'undefined') {
+            const baseSettings =
+                firstInput && firstInput._tagify ? { ...firstInput._tagify.settings } : {};
+            const tagifyInstance = new Tagify(newInputElem, baseSettings);
+            newInputElem._tagify = tagifyInstance;
+
+            const jsTreeId = '#jstree-platforms-datasource';
+            $(jsTreeId).on('changed.jstree', function (e, data) {
+                const selectedNodes = $(jsTreeId).jstree('get_selected', true);
+                const selectedValues = selectedNodes.map(node =>
+                    data.instance.get_path(node, ' > ')
+                );
+                tagifyInstance.removeAllTags();
+                tagifyInstance.addTags(selectedValues);
+            });
+
+            tagifyInstance.on('add', function (e) {
+                const tagText = e.detail.data.value;
+                const jsTree = $(jsTreeId).jstree(true);
+                const node = jsTree
+                    .get_json('#', { flat: true })
+                    .find(n => jsTree.get_path(n, ' > ') === tagText);
+                if (node) {
+                    jsTree.select_node(node.id);
+                }
+            });
+
+            tagifyInstance.on('remove', function (e) {
+                const tagText = e.detail.data.value;
+                const jsTree = $(jsTreeId).jstree(true);
+                const node = jsTree
+                    .get_json('#', { flat: true })
+                    .find(n => jsTree.get_path(n, ' > ') === tagText);
+                if (node) {
+                    jsTree.deselect_node(node.id);
+                }
+            });
+        }
     });
 
     // Remove a data source entry.
