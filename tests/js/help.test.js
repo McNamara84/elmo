@@ -96,4 +96,13 @@ describe('help.js', () => {
     expect($('#helpModal .modal-body').html()).toBe('Content');
     expect($.fn.modal).toHaveBeenCalledWith('show');
   });
+
+  test('loadHelpContent logs error on failure', () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    loadScript();
+    $.get = jest.fn(() => ({ fail: cb => cb() }));
+    window.loadHelpContent('sec');
+    expect(errorSpy).toHaveBeenCalledWith('Error loading help content.');
+    errorSpy.mockRestore();
+  });
 });
