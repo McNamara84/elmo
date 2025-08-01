@@ -62,4 +62,20 @@ describe('eventhandlers/functions.js', () => {
     expect(input.hasClass('input-right-no-round-corners')).toBe(false);
     expect(input.hasClass('input-right-with-round-corners')).toBe(true);
   });
+
+  test('replaceHelpButtonInClonedRows handles missing help section id', () => {
+    document.body.innerHTML = `
+      <div class="input-group-text" style="display:block;width:10px;height:10px"></div>
+      <div id="row">
+        <span class="input-group-text"><i class="bi-question-circle-fill"></i></span>
+        <input class="input-with-help input-right-no-round-corners" />
+      </div>`;
+    const row = $('#row');
+
+    window.replaceHelpButtonInClonedRows(row);
+
+    const placeholder = row.find('div.help-placeholder');
+    expect(placeholder.length).toBe(1);
+    expect(placeholder.attr('data-help-section-id')).toBe('');
+  });
 });
