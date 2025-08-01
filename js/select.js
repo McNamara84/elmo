@@ -647,7 +647,8 @@ $(document).on(
   "input",
   'input[name="dIdentifier[]"]',
   debounce(function () {
-    updateDataSourceIdsAndNames(this);
+    updateDataSourceIdsAndNames();
+    updateIdentifierType(this);
   }, 300)
 );
 
