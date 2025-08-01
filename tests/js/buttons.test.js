@@ -105,4 +105,10 @@ describe('buttons.js', () => {
     $('#button-form-reset').trigger('click');
     expect(window.clearInputFields).toHaveBeenCalled();
   });
+
+  test('load button shows upload modal', () => {
+    loadScript();
+    $('#button-form-load').trigger('click');
+    expect($.fn.modal).toHaveBeenCalledWith('show');
+  });
 });
