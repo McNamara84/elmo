@@ -11,6 +11,9 @@ $(document).ready(function () {
     // Clone the first row to use as a template for new rows.
     const originalDataSourceRow = datasourceGroup.children(".row").first().clone();
 
+    const jsTreeId = '#jstree-platforms-datasource';
+    let activePlatformTagify = null;
+
     const detailsOptions = {
         'G': ['Terrestrial', 'Shipborne', 'Airborne', 'Ground data computed from GGM', 'Other'],
         'A': ['Direct observations from altimetry satellites', 'Altimetric gridded datasets'],
@@ -24,6 +27,104 @@ $(document).ready(function () {
         'T': { 'visibility-datasources-basic': true, 'visibility-datasources-details': true, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': false },
         'M': { 'visibility-datasources-basic': true, 'visibility-datasources-details': false, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': true }
     };
+
+    function bindTagifyEvents(tagifyInstance) {
+        tagifyInstance.on('add', function (e) {
+            if (activePlatformTagify !== tagifyInstance) return;
+            const tagText = e.detail.data.value;
+            const jsTree = $(jsTreeId).jstree(true);
+            const node = jsTree
+                .get_json('#', { flat: true })
+                .find(n => jsTree.get_path(n, ' > ') === tagText);
+            if (node) {
+                jsTree.select_node(node.id);
+            }
+        });
+
+        tagifyInstance.on('remove', function (e) {
+            if (activePlatformTagify !== tagifyInstance) return;
+            const tagText = e.detail.data.value;
+            const jsTree = $(jsTreeId).jstree(true);
+            const node = jsTree
+                .get_json('#', { flat: true })
+                .find(n => jsTree.get_path(n, ' > ') === tagText);
+            if (node) {
+                jsTree.deselect_node(node.id);
+            }
+        });
+    }
+
+    function updateSelectedKeywordsList() {
+        const selectedKeywordsList = document.getElementById('selected-keywords-platforms-ds');
+        if (!selectedKeywordsList) return;
+
+        selectedKeywordsList.innerHTML = "";
+        const selectedNodes = $(jsTreeId).jstree("get_selected", true);
+
+        selectedNodes.forEach(function (node) {
+            const fullPath = $(jsTreeId).jstree().get_path(node, " > ");
+            const listItem = document.createElement("li");
+            listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+            listItem.textContent = fullPath;
+
+            const removeButton = document.createElement("button");
+            removeButton.classList.add("btn", "btn-sm", "btn-danger");
+            removeButton.innerHTML = "&times;";
+            removeButton.onclick = function () {
+                $(jsTreeId).jstree("deselect_node", node.id);
+            };
+
+            listItem.appendChild(removeButton);
+            selectedKeywordsList.appendChild(listItem);
+        });
+    }
+
+    document.addEventListener('translationsLoaded', function () {
+        $(jsTreeId).off('changed.jstree');
+        $(jsTreeId).on('changed.jstree', function (e, data) {
+            updateSelectedKeywordsList();
+            if (!activePlatformTagify) return;
+            const selectedNodes = $(jsTreeId).jstree('get_selected', true);
+            const selectedValues = selectedNodes.map(node => data.instance.get_path(node, ' > '));
+            activePlatformTagify.removeAllTags();
+            activePlatformTagify.addTags(selectedValues);
+        });
+
+        const firstInput = document.querySelector('#input-datasource-platforms');
+        if (firstInput && firstInput._tagify) {
+            firstInput._tagify.off('add').off('remove');
+            bindTagifyEvents(firstInput._tagify);
+        }
+    }, { once: true });
+
+    $('#modal-platforms-datasource').on('show.bs.modal', function (e) {
+        const button = $(e.relatedTarget);
+        const row = button.closest('.row');
+        const inputElem = row.find('#input-datasource-platforms')[0];
+        if (!inputElem) return;
+        activePlatformTagify = inputElem._tagify;
+
+        const jsTree = $(jsTreeId).jstree(true);
+        jsTree.deselect_all();
+        if (activePlatformTagify) {
+            activePlatformTagify.value.forEach(tag => {
+                const node = jsTree
+                    .get_json('#', { flat: true })
+                    .find(n => jsTree.get_path(n, ' > ') === tag.value);
+                if (node) {
+                    jsTree.select_node(node.id);
+                }
+            });
+        }
+        updateSelectedKeywordsList();
+    });
+
+    $('#modal-platforms-datasource').on('hidden.bs.modal', function () {
+        activePlatformTagify = null;
+        const jsTree = $(jsTreeId).jstree(true);
+        jsTree.deselect_all();
+        updateSelectedKeywordsList();
+    });
 
     /**
      * Updates the visibility of fields and populates dropdowns for a given data source row.
@@ -84,38 +185,7 @@ $(document).ready(function () {
                 firstInput && firstInput._tagify ? { ...firstInput._tagify.settings } : {};
             const tagifyInstance = new Tagify(newInputElem, baseSettings);
             newInputElem._tagify = tagifyInstance;
-
-            const jsTreeId = '#jstree-platforms-datasource';
-            $(jsTreeId).on('changed.jstree', function (e, data) {
-                const selectedNodes = $(jsTreeId).jstree('get_selected', true);
-                const selectedValues = selectedNodes.map(node =>
-                    data.instance.get_path(node, ' > ')
-                );
-                tagifyInstance.removeAllTags();
-                tagifyInstance.addTags(selectedValues);
-            });
-
-            tagifyInstance.on('add', function (e) {
-                const tagText = e.detail.data.value;
-                const jsTree = $(jsTreeId).jstree(true);
-                const node = jsTree
-                    .get_json('#', { flat: true })
-                    .find(n => jsTree.get_path(n, ' > ') === tagText);
-                if (node) {
-                    jsTree.select_node(node.id);
-                }
-            });
-
-            tagifyInstance.on('remove', function (e) {
-                const tagText = e.detail.data.value;
-                const jsTree = $(jsTreeId).jstree(true);
-                const node = jsTree
-                    .get_json('#', { flat: true })
-                    .find(n => jsTree.get_path(n, ' > ') === tagText);
-                if (node) {
-                    jsTree.deselect_node(node.id);
-                }
-            });
+            bindTagifyEvents(tagifyInstance);
         }
     });
 
