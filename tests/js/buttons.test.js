@@ -60,4 +60,12 @@ describe('buttons.js', () => {
     loadScript();
     expect($('.input-group-text').first().css('display')).toBe('none');
   });
+
+  test('buttonHelpOn shows help icons and stores preference', () => {
+    localStorage.setItem('inputGroupTextVisible', 'false');
+    loadScript();
+    $('#buttonHelpOn').trigger('click');
+    expect($('.input-group-text').first().css('display')).not.toBe('none');
+    expect(localStorage.getItem('inputGroupTextVisible')).toBe('true');
+  });
 });
