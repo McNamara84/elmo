@@ -124,4 +124,20 @@ describe('datasources.js', () => {
     select.val('M').trigger('change');
     expect(global.setupIdentifierTypesDropdown).toHaveBeenCalledTimes(1);
   });
+
+  test('addDataSource clones row, resets values, and restores help button', () => {
+    $('.addDataSource').trigger('click');
+    const rows = $('#group-datasources .row');
+    expect(rows.length).toBe(2);
+    const newRow = rows.last();
+    expect(global.replaceHelpButtonInClonedRows).toHaveBeenCalled();
+    expect(newRow.find('select[name="datasource_type[]"]').val()).toBe('S');
+    expect(newRow.find('.removeButton').length).toBe(1);
+    expect(newRow.find('.help-placeholder').length).toBe(0);
+    expect(newRow.find('span.input-group-text i[data-help-section-id="ds"]').length).toBe(1);
+    const tagifyInstance = newRow.find('#input-datasource-platforms')[0]._tagify;
+    expect(tagifyInstance).toBeInstanceOf(MockTagify);
+    expect(tagifyInstance._callbacks.add).toBeDefined();
+    expect(tagifyInstance._callbacks.remove).toBeDefined();
+  });
 });
