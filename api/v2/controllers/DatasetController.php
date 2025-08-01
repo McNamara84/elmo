@@ -160,7 +160,7 @@ class DatasetController
     {
         $authors = [];
         $stmt = $connection->prepare("
-        SELECT a.*, rha.Resource_has_Author_id
+        SELECT a.*
         FROM Author a
         JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
         WHERE rha.Resource_resource_id = ?
@@ -169,14 +169,27 @@ class DatasetController
         $stmt->execute();
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) {
-            $author = [
-                'familyname' => $row['familyname'] ?? null,
-                'givenname' => $row['givenname'] ?? null,
-                'orcid' => $row['orcid'] ?? null,
-                'Affiliations' => $this->getAuthorAffiliations($connection, $row['author_id'])
-            ];
-            $authors[] = $author;
+            // Prüfen: Ist es ein Person-Author?
+            if (!empty($row['familyname']) || !empty($row['givenname'])) {
+                $authors[] = [
+                    'type' => 'person',
+                    'familyname' => $row['familyname'],
+                    'givenname' => $row['givenname'],
+                    'orcid' => $row['orcid'] ?? null,
+                    'Affiliations' => $this->getAuthorAffiliations($connection, $row['author_id'])
+                ];
+            }
+
+            // Prüfen: Ist es ein Institution-Author?
+            if (!empty($row['institutionname'])) {
+                $authors[] = [
+                    'type' => 'institution',
+                    'institutionname' => $row['institutionname'],
+                    'Affiliations' => $this->getAuthorAffiliations($connection, $row['author_id'])
+                ];
+            }
         }
+
         return $authors;
     }
 
@@ -766,13 +779,22 @@ class DatasetController
         // Authors
         $authors = $this->getAuthors($connection, $id);
         $authorsXml = $xml->addChild('Authors');
+
         foreach ($authors as $author) {
-            $authorXml = $authorsXml->addChild('Author');
-            $authorXml->addChild('familyname', htmlspecialchars($author['familyname'] ?? ''));
-            $authorXml->addChild('givenname', htmlspecialchars($author['givenname'] ?? ''));
-            if (isset($author['orcid']) && $author['orcid'] !== '') {
-                $authorXml->addChild('orcid', htmlspecialchars($author['orcid']));
+            if (!empty($author['familyname']) || !empty($author['givenname'])) {
+                // Person
+                $authorXml = $authorsXml->addChild('AuthorPerson');
+                $authorXml->addChild('familyname', htmlspecialchars($author['familyname'] ?? ''));
+                $authorXml->addChild('givenname', htmlspecialchars($author['givenname'] ?? ''));
+                if (!empty($author['orcid'])) {
+                    $authorXml->addChild('orcid', htmlspecialchars($author['orcid']));
+                }
+            } elseif (!empty($author['institutionname'])) {
+                // Institution
+                $authorXml = $authorsXml->addChild('AuthorInstitution');
+                $authorXml->addChild('institutionname', htmlspecialchars($author['institutionname']));
             }
+
             if (!empty($author['Affiliations'])) {
                 $affiliationsXml = $authorXml->addChild('Affiliations');
                 foreach ($author['Affiliations'] as $affiliation) {
@@ -787,6 +809,7 @@ class DatasetController
                 }
             }
         }
+
         // Contact Persons
         // Get contact persons
         $contactPersons = $this->getContactPersons($connection, $id);
