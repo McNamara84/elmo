@@ -4,7 +4,63 @@
         <i class="bi bi-question-circle-fill" data-help-section-id="help-model-characteristics"></i>
     </div>
     <div class="card-body">
-    <!-- degree, errors(API fetch), error_handling_approach, tide_system(API fetch), earth_radius (SHOULD BE RELACED BY SEMIAXIS.OR FLATTENING for ellipsoidal models, THINKING about reference surface as a separate table), --> 
+        <div class="row">
+            <div class="col-12 col-md-6 col-lg-2 p-1">
+                <div class="form-floating">
+                    <select class="form-select" id="input-tide-system" name="tide_system">
+                        <option value="zero tide">zero tide</option>
+                        <option value="mean tide">mean tide</option>
+                        <option value="tide free">tide free</option>
+                    </select>
+                    <label for="input-tide-system">Tide system</label>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-2 p-1">
+                <div class="form-floating">
+                    <select class="form-select" id="input-errors" name="errors">
+                        <option value="calibrated">calibrated</option>
+                        <option value="formal">formal</option>
+                        <option value="no">no</option>
+                    </select>
+                    <label for="input-errors">Errors</label>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-6 p-1">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="input-error-handling-approach" name="error_handling_approach">
+                    <label for="input-error-handling-approach">Error handling approach</label>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-2 p-1">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="input-degree" name="degree">
+                    <label for="input-degree">Degree</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 col-md-5 col-lg-4 p-1">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="input-semimajor-axis" name="semimajor_axis_a">
+                    <label for="input-semimajor-axis">Reference ellipsoid: semimajor axis a</label>
+                </div>
+            </div>
+            <div class="col-12 col-md-3 col-lg-3 p-1">
+                <div class="form-floating">
+                    <select class="form-select" id="input-second-variable" name="second_variable">
+                        <option value="axis b">axis b</option>
+                        <option value="flattening">flattening</option>
+                        <option value="reciprocal_flattening">reciprocal_flattening</option>
+                    </select>
+                    <label for="input-second-variable">Second variable</label>
+                </div>
+            </div>
+            <div class="col-12 col-md-4 col-lg-5 p-1">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="input-earth-gravity-constant" name="earth_gravity_constant">
+                    <label for="input-earth-gravity-constant">Earth gravity constant</label>
+                </div>
+            </div>
+        </div>
     </div>
-
 </div>
