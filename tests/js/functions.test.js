@@ -111,4 +111,22 @@ describe('eventhandlers/functions.js', () => {
     expect(input.hasClass('custom-class')).toBe(true);
     expect(input.hasClass('input-right-with-round-corners')).toBe(false);
   });
+
+  test('replaceHelpButtonInClonedRows updates classes even without help icon', () => {
+    document.body.innerHTML = `
+      <div class="input-group-text" style="display:block;width:10px;height:10px"></div>
+      <div id="row">
+        <span class="input-group-text"></span>
+        <input class="input-with-help input-right-no-round-corners" />
+      </div>`;
+    const row = $('#row');
+
+    window.replaceHelpButtonInClonedRows(row);
+
+    expect(row.find('div.help-placeholder').length).toBe(0);
+    expect(row.find('span.input-group-text').length).toBe(1);
+    const input = row.find('.input-with-help');
+    expect(input.hasClass('input-right-no-round-corners')).toBe(false);
+    expect(input.hasClass('input-right-with-round-corners')).toBe(true);
+  });
 });
