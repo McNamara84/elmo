@@ -46,4 +46,13 @@ describe('help.js', () => {
     expect($('#bd-help-icon').hasClass('bi-question-square-fill')).toBe(true);
     expect($('.input-with-help').hasClass('input-right-no-round-corners')).toBe(true);
   });
+
+  test('initializes to help-off when stored', () => {
+    localStorage.setItem('helpStatus', 'help-off');
+    loadScript();
+    expect($('#buttonHelpOn').hasClass('active')).toBe(false);
+    expect($('#buttonHelpOff').hasClass('active')).toBe(true);
+    expect($('#bd-help-icon').hasClass('bi-question-square')).toBe(true);
+    expect($('.input-with-help').hasClass('input-right-with-round-corners')).toBe(true);
+  });
 });
