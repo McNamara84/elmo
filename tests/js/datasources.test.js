@@ -99,4 +99,11 @@ describe('datasources.js', () => {
     expect(options).toEqual(['Terrestrial', 'Shipborne', 'Airborne', 'Ground data computed from GGM', 'Other']);
     expect(row.find('select[name="datasource_details[]"]').val()).toBe('Terrestrial');
   });
+
+  test('changing type to A populates altimetry options', () => {
+    const row = $('#group-datasources .row').first();
+    row.find('select[name="datasource_type[]"]').val('A').trigger('change');
+    const options = row.find('select[name="datasource_details[]"] option').map((i, el) => el.value).get();
+    expect(options).toEqual(['Direct observations from altimetry satellites', 'Altimetric gridded datasets']);
+  });
 });
