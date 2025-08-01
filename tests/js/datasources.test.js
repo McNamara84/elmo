@@ -88,4 +88,15 @@ describe('datasources.js', () => {
     expect(row.children('.visibility-datasources-satellite').css('display')).not.toBe('none');
     expect(row.children('.visibility-datasources-identifier').css('display')).toBe('none');
   });
+
+  test('changing type to G shows details and populates options', () => {
+    const row = $('#group-datasources .row').first();
+    row.find('select[name="datasource_type[]"]').val('G').trigger('change');
+    expect(row.children('.visibility-datasources-details').css('display')).not.toBe('none');
+    expect(row.children('.visibility-datasources-satellite').css('display')).toBe('none');
+    expect(row.children('.visibility-datasources-identifier').css('display')).toBe('none');
+    const options = row.find('select[name="datasource_details[]"] option').map((i, el) => el.value).get();
+    expect(options).toEqual(['Terrestrial', 'Shipborne', 'Airborne', 'Ground data computed from GGM', 'Other']);
+    expect(row.find('select[name="datasource_details[]"]').val()).toBe('Terrestrial');
+  });
 });
