@@ -146,4 +146,9 @@ describe('eventhandlers/functions.js', () => {
     window.updateOverlayLabelsWrapper();
     expect(spy).toHaveBeenCalled();
   });
+
+  test('updateOverlayLabelsWrapper does nothing when global function absent', () => {
+    window.updateOverlayLabels = undefined;
+    expect(() => window.updateOverlayLabelsWrapper()).not.toThrow();
+  });
 });
