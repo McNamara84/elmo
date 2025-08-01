@@ -105,4 +105,15 @@ describe('help.js', () => {
     expect(errorSpy).toHaveBeenCalledWith('Error loading help content.');
     errorSpy.mockRestore();
   });
+
+  test('Help button opens help page', () => {
+    const openSpy = jest.spyOn(window, 'open').mockImplementation(() => {});
+    loadScript();
+    const btn = document.getElementById('buttonHelp');
+    const evt = new MouseEvent('click', { bubbles: true, cancelable: true });
+    btn.dispatchEvent(evt);
+    expect(evt.defaultPrevented).toBe(true);
+    expect(openSpy).toHaveBeenCalledWith('doc/help.php', '_blank');
+    openSpy.mockRestore();
+  });
 });
