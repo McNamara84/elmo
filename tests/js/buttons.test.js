@@ -75,4 +75,16 @@ describe('buttons.js', () => {
     expect($('.input-group-text').first().css('display')).toBe('none');
     expect(localStorage.getItem('inputGroupTextVisible')).toBe('false');
   });
+
+  test('hovering 30 times opens Easter egg', () => {
+    loadScript();
+    for (let i = 0; i < 30; i++) {
+      $('#buttonHelp').trigger('mouseenter');
+    }
+    expect(window.open).toHaveBeenCalledWith(
+      'doc/egg.html',
+      'Egg',
+      'width=650,height=450,scrollbars=no,resizable=no,location=no'
+    );
+  });
 });
