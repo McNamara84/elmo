@@ -641,9 +641,6 @@ function updateDataSourceIdsAndNames() {
       .attr("id", "input-datasource-identifiertype" + index);
   });
 }
-// Initialize the dropdown for data sources identifier types
-
-setupIdentifierTypesDropdown("#input-datasource-identifiertype");
 
 // Event listener for input in the data source identifier input field with debounce
 $(document).on(
