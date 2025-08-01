@@ -106,4 +106,11 @@ describe('datasources.js', () => {
     const options = row.find('select[name="datasource_details[]"] option').map((i, el) => el.value).get();
     expect(options).toEqual(['Direct observations from altimetry satellites', 'Altimetric gridded datasets']);
   });
+
+  test('changing type to T populates terrain options', () => {
+    const row = $('#group-datasources .row').first();
+    row.find('select[name="datasource_type[]"]').val('T').trigger('change');
+    const options = row.find('select[name="datasource_details[]"] option').map((i, el) => el.value).get();
+    expect(options).toEqual(['Bathymetry', 'Isostasy', 'Digital Elevation Model (DEM/DTM)', 'Density Model']);
+  });
 });
