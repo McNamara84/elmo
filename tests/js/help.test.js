@@ -76,4 +76,12 @@ describe('help.js', () => {
     expect($('.input-with-help').hasClass('input-right-no-round-corners')).toBe(true);
     expect($('#bd-help-icon').hasClass('bi-question-square-fill')).toBe(true);
   });
+
+  test('clicking help icon triggers loadHelpContent with section id', () => {
+    loadScript();
+    const spy = jest.spyOn(window, 'loadHelpContent').mockImplementation(() => {});
+    $('#helpIcon').trigger('click');
+    expect(spy).toHaveBeenCalledWith('section1');
+    spy.mockRestore();
+  });
 });
