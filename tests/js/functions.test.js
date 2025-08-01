@@ -95,4 +95,20 @@ describe('eventhandlers/functions.js', () => {
     expect(input.hasClass('input-right-no-round-corners')).toBe(true);
     expect(input.hasClass('input-right-with-round-corners')).toBe(false);
   });
+
+  test('replaceHelpButtonInClonedRows uses custom roundCornersClass', () => {
+    document.body.innerHTML = `
+      <div class="input-group-text" style="display:block;width:10px;height:10px"></div>
+      <div id="row">
+        <span class="input-group-text"><i class="bi-question-circle-fill" data-help-section-id="abc"></i></span>
+        <input class="input-with-help input-right-no-round-corners" />
+      </div>`;
+    const row = $('#row');
+
+    window.replaceHelpButtonInClonedRows(row, 'custom-class');
+
+    const input = row.find('.input-with-help');
+    expect(input.hasClass('custom-class')).toBe(true);
+    expect(input.hasClass('input-right-with-round-corners')).toBe(false);
+  });
 });
