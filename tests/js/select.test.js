@@ -30,6 +30,15 @@ describe('select.js', () => {
           </select>
         </div>
       </div>
+      <div id="group-datasources">
+        <div class="row">
+          <input name="dIdentifier[]" />
+          <select name="dIdentifierType[]">
+            <option value=""></option>
+            <option value="DOI">DOI</option>
+          </select>
+        </div>
+      </div>
     `;
 
     $ = require('jquery');
@@ -157,6 +166,18 @@ describe('select.js', () => {
     window.updateIdsAndNames();
     const ids = $('#group-relatedwork select[name^="relation"]').map((i,el)=>$(el).attr('id')).get();
     expect(ids).toEqual(['input-relatedwork-relation0','input-relatedwork-relation1']);
+  });
+
+  test('updateIdentifierType detects type for data source fields', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[{name:'DOI', pattern:'^10\\..+'}]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-datasources input[name="dIdentifier[]"]');
+    const select = $('#group-datasources select[name="dIdentifierType[]"]');
+    input.val('10.1234/abcd');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('DOI');
   });
 
   test('initializeTimezoneDropdown fetches and selects timezone', async () => {
