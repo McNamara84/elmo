@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function getPlaceholderTranslation() {
         const translationKey = input.getAttribute('data-translate-placeholder');
-        return getNestedValue(window.translations, translationKey) ||
+        return getNestedValue(translations, translationKey) ||
             'Please enter keywords and separate them by a comma.';
     }
 
