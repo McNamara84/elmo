@@ -68,4 +68,11 @@ describe('buttons.js', () => {
     expect($('.input-group-text').first().css('display')).not.toBe('none');
     expect(localStorage.getItem('inputGroupTextVisible')).toBe('true');
   });
+
+  test('buttonHelpOff hides help icons and stores preference', () => {
+    loadScript();
+    $('#buttonHelpOff').trigger('click');
+    expect($('.input-group-text').first().css('display')).toBe('none');
+    expect(localStorage.getItem('inputGroupTextVisible')).toBe('false');
+  });
 });
