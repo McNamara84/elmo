@@ -87,4 +87,16 @@ describe('buttons.js', () => {
       'width=650,height=450,scrollbars=no,resizable=no,location=no'
     );
   });
+
+  test('hover counter resets after 1 second', () => {
+    loadScript();
+    for (let i = 0; i < 10; i++) {
+      $('#buttonHelp').trigger('mouseenter');
+    }
+    jest.advanceTimersByTime(1000);
+    for (let i = 0; i < 20; i++) {
+      $('#buttonHelp').trigger('mouseenter');
+    }
+    expect(window.open).not.toHaveBeenCalled();
+  });
 });
