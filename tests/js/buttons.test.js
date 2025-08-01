@@ -54,4 +54,10 @@ describe('buttons.js', () => {
     loadScript();
     expect($('.input-group-text').first().css('display')).not.toBe('none');
   });
+
+  test('initializes help icons based on localStorage', () => {
+    localStorage.setItem('inputGroupTextVisible', 'false');
+    loadScript();
+    expect($('.input-group-text').first().css('display')).toBe('none');
+  });
 });
