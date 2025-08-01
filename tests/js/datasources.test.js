@@ -140,4 +140,11 @@ describe('datasources.js', () => {
     expect(tagifyInstance._callbacks.add).toBeDefined();
     expect(tagifyInstance._callbacks.remove).toBeDefined();
   });
+
+  test('remove button deletes row', () => {
+    $('.addDataSource').trigger('click');
+    const newRow = $('#group-datasources .row').last();
+    newRow.find('.removeButton').trigger('click');
+    expect($('#group-datasources .row').length).toBe(1);
+  });
 });
