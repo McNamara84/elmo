@@ -154,4 +154,24 @@ describe('thesauri.js', () => {
     document.dispatchEvent(new Event('translationsLoaded'));
     expect(input._tagify.settings.placeholder).toBe('updated');
   });
+
+  test('syncs selections between jsTree and Tagify', () => {
+    const input = document.getElementById('input-sciencekeyword');
+    const tree = $('#jstree-sciencekeyword').jstree(true);
+
+    expect(input._tagify.value).toHaveLength(0);
+
+    tree.select_node('child');
+    expect(input._tagify.value[0].value).toBe('Root > Child');
+    expect($('#selected-keywords-gcmd li').text()).toContain('Root > Child');
+
+    tree.deselect_node('child');
+    expect(input._tagify.value).toHaveLength(0);
+
+    input._tagify.trigger('add', { data: { value: 'Root > Child' } });
+    expect(tree.get_selected().map(n => n.id)).toEqual(['child']);
+
+    input._tagify.trigger('remove', { data: { value: 'Root > Child' } });
+    expect(tree.get_selected()).toHaveLength(0);
+  });
 });
