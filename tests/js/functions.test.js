@@ -139,4 +139,11 @@ describe('eventhandlers/functions.js', () => {
     expect(btn.text()).toBe('-');
     expect(btn.attr('style')).toContain('width: 36px');
   });
+
+  test('updateOverlayLabelsWrapper calls global updateOverlayLabels if present', () => {
+    const spy = jest.fn();
+    window.updateOverlayLabels = spy;
+    window.updateOverlayLabelsWrapper();
+    expect(spy).toHaveBeenCalled();
+  });
 });
