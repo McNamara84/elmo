@@ -120,4 +120,9 @@ describe('buttons.js', () => {
     expect($.fn.load).toHaveBeenCalledWith('doc/changelog.html', expect.any(Function));
     expect($.fn.modal).toHaveBeenCalledWith('show');
   });
+
+  test('tooltips are initialized', () => {
+    loadScript();
+    expect($.fn.tooltip).toHaveBeenCalled();
+  });
 });
