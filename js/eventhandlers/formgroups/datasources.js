@@ -146,7 +146,7 @@ $(document).ready(function () {
      * Updates the visibility of fields and populates dropdowns for a given data source row.
      * @param {jQuery} row - The jQuery object for the data source row.
      */
-  function updateRowState(row) {
+    function updateRowState(row) {
         const typeSelect = row.find('select[name="datasource_type[]"]');
         const selectedType = typeSelect.val();
         const config = visibilityConfig[selectedType];
@@ -182,6 +182,30 @@ $(document).ready(function () {
         }
     }
 
+    /**
+     * Restores help buttons that were replaced with placeholders during cloning.
+     * Ensures the associated input field has the correct corner styling.
+     *
+     * @param {jQuery} row - The data source row to process.
+     */
+    function restoreHelpButtons(row) {
+        const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
+        row.find('div.help-placeholder').each(function () {
+            const placeholder = $(this);
+            const helpSectionId = placeholder.data('help-section-id') || '';
+
+            if (helpStatus === 'help-on') {
+                const inputGroup = placeholder.closest('.input-group');
+                placeholder.replaceWith(
+                    `<span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="${helpSectionId}"></i></span>`
+                );
+                inputGroup.find('.input-with-help')
+                    .addClass('input-right-no-round-corners')
+                    .removeClass('input-right-with-round-corners');
+            }
+        });
+    }
+
     // --- EVENT HANDLERS (Delegated from the static parent 'datasourceGroup') ---
 
     // Add new data source entry.
@@ -200,6 +224,7 @@ $(document).ready(function () {
 
         datasourceGroup.append(newRow);
         updateRowState(newRow); // Immediately set the correct visibility.
+        restoreHelpButtons(newRow);
 
         const firstInput = document.querySelector('#input-datasource-platforms');
         const newInputElem = newRow.find('#input-datasource-platforms')[0];
@@ -221,6 +246,7 @@ $(document).ready(function () {
     datasourceGroup.on('change', 'select[name="datasource_type[]"]', function () {
         const row = $(this).closest('.row');
         updateRowState(row);
+        restoreHelpButtons(row);
     });
 
     // --- INITIALIZATION ---
