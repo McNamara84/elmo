@@ -102,20 +102,36 @@ $(document).ready(function () {
         const row = button.closest('.row');
         const inputElem = row.find('#input-datasource-platforms')[0];
         if (!inputElem) return;
-        activePlatformTagify = inputElem._tagify;
 
+        const tagifyInstance = inputElem._tagify;
         const jsTree = $(jsTreeId).jstree(true);
+
+        // Preserve current tags before manipulating the tree
+        const existingTags = tagifyInstance ? tagifyInstance.value.slice() : [];
+        const jsTreeNodes = jsTree.get_json('#', { flat: true });
+        const tagsWithNode = existingTags.filter(tag =>
+            jsTreeNodes.find(n => jsTree.get_path(n, ' > ') === tag.value)
+        );
+        const manualTags = existingTags.filter(tag =>
+            !jsTreeNodes.find(n => jsTree.get_path(n, ' > ') === tag.value)
+        );
+
+        // Prevent Tagify from being cleared when deselecting nodes
+        activePlatformTagify = null;
         jsTree.deselect_all();
-        if (activePlatformTagify) {
-            activePlatformTagify.value.forEach(tag => {
-                const node = jsTree
-                    .get_json('#', { flat: true })
-                    .find(n => jsTree.get_path(n, ' > ') === tag.value);
-                if (node) {
-                    jsTree.select_node(node.id);
-                }
-            });
+
+        activePlatformTagify = tagifyInstance;
+        tagsWithNode.forEach(tag => {
+            const node = jsTreeNodes.find(n => jsTree.get_path(n, ' > ') === tag.value);
+            if (node) {
+                jsTree.select_node(node.id);
+            }
+        });
+
+        if (manualTags.length && activePlatformTagify) {
+            activePlatformTagify.addTags(manualTags);
         }
+
         updateSelectedKeywordsList();
     });
 
