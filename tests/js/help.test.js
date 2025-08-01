@@ -84,4 +84,16 @@ describe('help.js', () => {
     expect(spy).toHaveBeenCalledWith('section1');
     spy.mockRestore();
   });
+
+  test('loadHelpContent populates modal on success', () => {
+    loadScript();
+    $.get = jest.fn((url, success) => {
+      success('<div id="sec">Content</div>');
+      return { fail: jest.fn() };
+    });
+    window.loadHelpContent('sec');
+    expect($.get).toHaveBeenCalledWith('doc/help.php', expect.any(Function));
+    expect($('#helpModal .modal-body').html()).toBe('Content');
+    expect($.fn.modal).toHaveBeenCalledWith('show');
+  });
 });
