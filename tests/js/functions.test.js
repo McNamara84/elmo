@@ -78,4 +78,21 @@ describe('eventhandlers/functions.js', () => {
     expect(placeholder.length).toBe(1);
     expect(placeholder.attr('data-help-section-id')).toBe('');
   });
+
+  test('replaceHelpButtonInClonedRows does nothing when input-group-text hidden', () => {
+    document.body.innerHTML = `
+      <div id="row">
+        <span class="input-group-text" style="display:none"><i class="bi-question-circle-fill" data-help-section-id="abc"></i></span>
+        <input class="input-with-help input-right-no-round-corners" />
+      </div>`;
+    const row = $('#row');
+
+    window.replaceHelpButtonInClonedRows(row);
+
+    expect(row.find('div.help-placeholder').length).toBe(0);
+    expect(row.find('span.input-group-text').length).toBe(1);
+    const input = row.find('.input-with-help');
+    expect(input.hasClass('input-right-no-round-corners')).toBe(true);
+    expect(input.hasClass('input-right-with-round-corners')).toBe(false);
+  });
 });
