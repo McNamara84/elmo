@@ -99,4 +99,10 @@ describe('buttons.js', () => {
     }
     expect(window.open).not.toHaveBeenCalled();
   });
+
+  test('reset button clears inputs', () => {
+    loadScript();
+    $('#button-form-reset').trigger('click');
+    expect(window.clearInputFields).toHaveBeenCalled();
+  });
 });
