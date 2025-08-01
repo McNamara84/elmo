@@ -129,4 +129,14 @@ describe('eventhandlers/functions.js', () => {
     expect(input.hasClass('input-right-no-round-corners')).toBe(false);
     expect(input.hasClass('input-right-with-round-corners')).toBe(true);
   });
+
+  test('createRemoveButton returns correct button', () => {
+    const btn = window.createRemoveButton();
+    expect(btn.is('button')).toBe(true);
+    expect(btn.attr('type')).toBe('button');
+    expect(btn.hasClass('btn-danger')).toBe(true);
+    expect(btn.hasClass('removeButton')).toBe(true);
+    expect(btn.text()).toBe('-');
+    expect(btn.attr('style')).toContain('width: 36px');
+  });
 });
