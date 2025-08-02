@@ -142,6 +142,13 @@ $(document).ready(function () {
         updateSelectedKeywordsList();
     });
 
+    function handleIsostasyField(row) {
+        const typeSelect = row.find('select[name="datasource_type[]"]');
+        const detailsSelect = row.find('select[name="datasource_details[]"]');
+        const showField = typeSelect.val() === 'T' && detailsSelect.val() === 'Isostasy';
+        row.children('.visibility-datasources-compensation').toggle(showField);
+    }
+
     /**
      * Updates the visibility of fields and populates dropdowns for a given data source row.
      * @param {jQuery} row - The jQuery object for the data source row.
@@ -173,6 +180,8 @@ $(document).ready(function () {
                 detailsSelect.val(options[0]);
             }
         }
+
+        handleIsostasyField(row);
 
         if (selectedType === 'M') {
             const idTypeSelect = row.find('select[name="dIdentifierType[]"]');
@@ -247,6 +256,11 @@ $(document).ready(function () {
         const row = $(this).closest('.row');
         updateRowState(row);
         restoreHelpButtons(row);
+    });
+
+    datasourceGroup.on('change', 'select[name="datasource_details[]"]', function () {
+        const row = $(this).closest('.row');
+        handleIsostasyField(row);
     });
 
     // --- INITIALIZATION ---
