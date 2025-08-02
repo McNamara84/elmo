@@ -31,6 +31,7 @@ describe('datasources.js', () => {
           </div>
           <div class="visibility-datasources-details"><select name="datasource_details[]"></select></div>
           <div class="visibility-datasources-satellite">sat</div>
+          <div class="visibility-datasources-identifier"><input name="dName[]" /></div>
           <div class="visibility-datasources-identifier"><select name="dIdentifierType[]"></select></div>
           <div class="input-group">
             <input class="input-with-help" />

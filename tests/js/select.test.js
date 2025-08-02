@@ -32,6 +32,7 @@ describe('select.js', () => {
       </div>
       <div id="group-datasources">
         <div class="row">
+          <input name="dName[]" />
           <input name="dIdentifier[]" />
           <select name="dIdentifierType[]">
             <option value=""></option>
@@ -178,6 +179,13 @@ describe('select.js', () => {
     input.val('10.1234/abcd');
     await window.updateIdentifierType(input[0]);
     expect(select.val()).toBe('DOI');
+  });
+
+  test('updateDataSourceIdsAndNames assigns ids to model fields', () => {
+    window.updateDataSourceIdsAndNames();
+    expect($('#group-datasources input[name="dName[]"]').attr('id')).toBe('input-datasource-modelname0');
+    expect($('#group-datasources input[name="dIdentifier[]"]').attr('id')).toBe('input-datasource-identifier0');
+    expect($('#group-datasources select[name="dIdentifierType[]"]').attr('id')).toBe('input-datasource-identifiertype0');
   });
 
   test('initializeTimezoneDropdown fetches and selects timezone', async () => {
