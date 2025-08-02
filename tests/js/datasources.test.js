@@ -30,6 +30,7 @@ describe('datasources.js', () => {
             </select>
           </div>
           <div class="visibility-datasources-details"><select name="datasource_details[]"></select></div>
+          <div class="visibility-datasources-compensation"><input name="compensation_depth[]" /></div>
           <div class="visibility-datasources-satellite">sat</div>
           <div class="visibility-datasources-identifier"><input name="dName[]" /></div>
           <div class="visibility-datasources-identifier"><select name="dIdentifierType[]"></select></div>
@@ -113,6 +114,16 @@ describe('datasources.js', () => {
     row.find('select[name="datasource_type[]"]').val('T').trigger('change');
     const options = row.find('select[name="datasource_details[]"] option').map((i, el) => el.value).get();
     expect(options).toEqual(['Bathymetry', 'Isostasy', 'Digital Elevation Model (DEM/DTM)', 'Density Model']);
+  });
+
+  test('shows compensation depth when detail is Isostasy', () => {
+    const row = $('#group-datasources .row').first();
+    row.find('select[name="datasource_type[]"]').val('T').trigger('change');
+    const detailsSelect = row.find('select[name="datasource_details[]"]');
+    detailsSelect.val('Isostasy').trigger('change');
+    expect(row.children('.visibility-datasources-compensation').css('display')).not.toBe('none');
+    detailsSelect.val('Bathymetry').trigger('change');
+    expect(row.children('.visibility-datasources-compensation').css('display')).toBe('none');
   });
 
   test('changing type to M shows identifier field and only initializes dropdown once', () => {
