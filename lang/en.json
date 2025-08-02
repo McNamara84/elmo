@@ -169,7 +169,8 @@
         "identifier": "Identifier",
         "identifierType": "Identifier type",
         "identifierInvalid": "Please enter a valid identifier.",
-        "modelName": "Model name"
+        "modelName": "Model name",
+        "compensationDepth": "Compensation depth (in meters)"
     },
     "buttons": {
         "clear": "Clear",

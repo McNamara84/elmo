@@ -169,7 +169,8 @@
         "identifier": "Identifikator",
         "identifierType": "Identifikatortyp",
         "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
-        "modelName": "Modellname"
+        "modelName": "Modellname",
+        "compensationDepth": "Ausgleichstiefe (in Metern)"
     },
     "buttons": {
         "clear": "Löschen",

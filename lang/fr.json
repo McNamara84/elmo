@@ -169,7 +169,8 @@
         "identifier": "Identifiant",
         "identifierType": "Type d'identifiant",
         "identifierInvalid": "Veuillez saisir un identifiant valide.",
-        "modelName": "Nom du modèle"
+        "modelName": "Nom du modèle",
+        "compensationDepth": "Profondeur de compensation (en mètres)"
     },
     "buttons": {
         "clear": "Effacer",
