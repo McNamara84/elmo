@@ -64,6 +64,7 @@ $(document).ready(function () {
     // Update label and input field ID
     newContributorRow.find("#input-contributor-name").attr("id", `input-contributor-name${uniqueSuffix}`);
     newContributorRow.find("label[for='input-contributor-name']").attr("for", `input-contributor-name${uniqueSuffix}`);
+    newContributorRow.find("label[for='input-contributor-organisationrole']").attr("for", `input-contributor-organisationrole${uniqueSuffix}`);
 
     // Replace add button with remove button
     newContributorRow.find(".addContributor").replaceWith(createRemoveButton());
