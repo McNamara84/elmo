@@ -161,6 +161,16 @@
         "awardURI": "URI de la subvention",
         "awardURIInvalid": "Veuillez fournir une URL valide."
     },
+    "dataSources": {
+        "title": "Sources de données",
+        "type": "Type",
+        "description": "Description",
+        "details": "Détails",
+        "identifier": "Identifiant",
+        "identifierType": "Type d'identifiant",
+        "identifierInvalid": "Veuillez saisir un identifiant valide.",
+        "modelName": "Nom du modèle"
+    },
     "buttons": {
         "clear": "Effacer",
         "clearTooltip": "Supprimer toutes les entrées ou le contenu.",

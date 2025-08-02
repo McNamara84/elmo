@@ -161,6 +161,16 @@
         "awardURI": "Award URI",
         "awardURIInvalid": "Please provide a valid URL."
     },
+    "dataSources": {
+        "title": "Data Sources",
+        "type": "Type",
+        "description": "Description",
+        "details": "Details",
+        "identifier": "Identifier",
+        "identifierType": "Identifier type",
+        "identifierInvalid": "Please enter a valid identifier.",
+        "modelName": "Model name"
+    },
     "buttons": {
         "clear": "Clear",
         "clearTooltip": "Delete all entries or content.",
