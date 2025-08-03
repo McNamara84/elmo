@@ -5,6 +5,9 @@
  *
  */
 
+// Load environment configuration
+require_once __DIR__ . '/config/env_reading.php';
+
 /**
  * Establishes a connection to the database.
  *
