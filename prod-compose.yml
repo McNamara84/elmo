@@ -4,7 +4,7 @@ services:
     image: mariadb:11
 
     env_file:
-      - ../stack.env # env variables loaded in the portainer environment are accessible to the containers in the stack.env
+      - stack.env # env variables loaded in the portainer environment are accessible to the containers in the stack.env
     environment: 
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
@@ -20,7 +20,7 @@ services:
     ports:
       - "8080:80"
     env_file:
-      - ../stack.env
+      - stack.env
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
