@@ -44,19 +44,19 @@ function validatePersonAuthors(array $postData): bool
  */
 function validateInstitutionAuthors(array $postData): bool
 {
-    if (empty($postData['authorinstitutionName'])) {
+    if (empty($postData['authorinstitutionName']) || !is_array($postData['authorinstitutionName'])) {
         return false; // Field not present or empty
     }
 
     $institutionnames = $postData['authorinstitutionName'];
 
     foreach ($institutionnames as $name) {
-        if (trim($name) === '') {
-            return false; // Required field is empty
+        if (is_string($name) && trim($name) !== '') {
+            return true; // Required field is empty
         }
     }
 
-    return true;
+    return false; // No valid name found
 }
 
 /**
@@ -143,11 +143,13 @@ function saveAuthors($connection, $postData, $resource_id)
         $affiliation_data = trim($institutionAffiliations[$i] ?? '');
         $rorId_data = trim($institutionRorIds[$i] ?? '');
 
-        if (empty($institutionname)) continue;
+        if (empty($institutionname))
+            continue;
 
         $rorIdArray = parseRorIds($rorId_data);
         $affiliationArray = parseAffiliationData($affiliation_data);
-        if (!empty($rorIdArray) && empty($affiliationArray)) continue;
+        if (!empty($rorIdArray) && empty($affiliationArray))
+            continue;
 
         processAuthor($connection, $resource_id, [
             'familyname' => null,
@@ -206,9 +208,8 @@ function processAuthor($connection, $resource_id, $authorData)
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
         if ($row) {
-        $author_institution_id = $row['author_institution_id'];
-        }
-        else {
+            $author_institution_id = $row['author_institution_id'];
+        } else {
             $stmtInsert = $connection->prepare("INSERT INTO Author_institution (institutionname) VALUES (?)");
             $stmtInsert->bind_param("s", $authorData['institutionname']);
             $stmtInsert->execute();
@@ -226,9 +227,8 @@ function processAuthor($connection, $resource_id, $authorData)
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     if ($row) {
-    $author_id = $row['author_id'];
-    }
-    else {
+        $author_id = $row['author_id'];
+    } else {
         // Insert new Author linkage
         $stmtInsert = $connection->prepare("INSERT INTO Author (Author_Person_author_person_id, Author_Institution_author_institution_id) VALUES (?, ?)");
         $stmtInsert->bind_param("ii", $author_person_id, $author_institution_id);
