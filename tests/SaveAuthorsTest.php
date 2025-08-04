@@ -98,6 +98,71 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert."
         );
     }
+    public function testSaveSingleInstitutionAuthorWithAllFields()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.SINGLE.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Single Institution"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => ["Test Institution"],
+            "institutionAffiliation" => ['[{"value":"Test Institution University"}]'],
+            "authorInstitutionRorIds" => ['https://ror.org/012345678']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT * FROM Author_institution WHERE institutionname = ?");
+        $stmt->bind_param("s", $authorData["authorinstitutionName"][0]);
+        $stmt->execute();
+        $institutionResult = $stmt->get_result()->fetch_assoc();
+        $this->assertNotEmpty($institutionResult, "Die Institution wurde nicht in Author_institution gespeichert.");
+
+        $author_institution_id = $institutionResult["author_institution_id"];
+
+        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Institution_author_institution_id = ?");
+        $stmt->bind_param("i", $author_institution_id);
+        $stmt->execute();
+        $authorLinkResult = $stmt->get_result()->fetch_assoc();
+        $this->assertNotEmpty($authorLinkResult, "Die Institution wurde nicht korrekt mit der Author-Tabelle verknüpft.");
+        $author_id = $authorLinkResult["author_id"];
+
+        $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
+        $stmt->bind_param("ii", $resource_id, $author_id);
+        $stmt->execute();
+        $this->assertEquals(
+            1,
+            $stmt->get_result()->num_rows,
+            "Die Verknüpfung zwischen Institution und Resource wurde nicht korrekt gespeichert."
+        );
+
+        // Affiliations prüfen
+        $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
+            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
+            WHERE aha.Author_author_id = ?");
+        $stmt->bind_param("i", $author_id);
+        $stmt->execute();
+        $affiliationResult = $stmt->get_result()->fetch_assoc();
+
+        $this->assertEquals(
+            "Test Institution University",
+            $affiliationResult["name"],
+            "Der Name der Affiliation wurde nicht korrekt gespeichert."
+        );
+        $this->assertEquals(
+            "012345678",
+            $affiliationResult["rorId"],
+            "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert."
+        );
+    }
 
     /**
      * Tests saving three personal authors with all fields populated.
