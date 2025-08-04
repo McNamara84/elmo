@@ -621,6 +621,80 @@ class SaveAuthorsTest extends DatabaseTestCase
             }
         }
     }
+    public function testSaveInstitutionAuthorsWithMultipleAffiliations()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.MULTIPLE.AFFILIATIONS.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Multiple Affiliations Institution"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => ["Institution A", "Institution B", "Institution C"],
+            "institutionAffiliation" => [
+                '[{"value":"University A"}]',
+                '[{"value":"University B"},{"value":"Institute C"},{"value":"Lab D"}]',
+                '[{"value":"University E"},{"value":"Institute F"}]'
+            ],
+            "authorInstitutionRorIds" => [
+                'https://ror.org/03yrm5c26',
+                'https://ror.org/02nr0ka47,https://ror.org/0168r3w48,https://ror.org/04m7fg108',
+                'https://ror.org/05dxps055,https://ror.org/00hx57361'
+            ]
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        for ($i = 0; $i < 3; $i++) {
+            $stmt = $this->connection->prepare("SELECT * FROM Author_institution WHERE institutionname = ?");
+            $stmt->bind_param("s", $authorData["authorinstitutionName"][$i]);
+            $stmt->execute();
+            $institution = $stmt->get_result()->fetch_assoc();
+
+            $this->assertNotEmpty($institution, "Author_institution nicht gefunden für Institution " . ($i + 1));
+
+            $stmt = $this->connection->prepare("SELECT author_id FROM Author WHERE Author_Institution_author_institution_id = ?");
+            $stmt->bind_param("i", $institution["author_institution_id"]);
+            $stmt->execute();
+            $author = $stmt->get_result()->fetch_assoc();
+            $author_id = $author["author_id"];
+
+            $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
+                JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id 
+                WHERE aha.Author_author_id = ?");
+            $stmt->bind_param("i", $author_id);
+            $stmt->execute();
+            $affiliations = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            $expectedNames = json_decode($authorData["institutionAffiliation"][$i], true);
+            $expectedRorIds = explode(',', $authorData["authorInstitutionRorIds"][$i]);
+
+            $this->assertCount(
+                count($expectedNames),
+                $affiliations,
+                "Die Anzahl der Affiliations stimmt nicht mit der erwarteten Anzahl überein für Institution " . ($i + 1)
+            );
+
+            foreach ($affiliations as $index => $affiliation) {
+                $this->assertEquals(
+                    $expectedNames[$index]["value"],
+                    $affiliation["name"],
+                    "Affiliation Name wurde nicht korrekt gespeichert. Index " . ($index + 1) . " für Institution " . ($i + 1)
+                );
+                $this->assertEquals(
+                    str_replace("https://ror.org/", "", $expectedRorIds[$index]),
+                    $affiliation["rorId"],
+                    "ROR-ID wurde nicht korrekt gespeichert. Index " . ($index + 1) . " bei Institution " . ($i + 1)
+                );
+            }
+        }
+    }
 
     /**
      * Tests saving authors with mixed affiliations and ROR IDs.
