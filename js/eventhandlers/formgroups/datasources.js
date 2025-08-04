@@ -173,8 +173,9 @@ $(document).ready(function () {
     }
 
     /**
-     * Adjusts column widths so that all fields fit on one row when
-     * the "Model" type is selected.
+     * Adjusts column order and widths so that when the "Model" type is
+     * selected, identifier fields stay on the first row while the description
+     * and model name share the second row with the add button.
      *
      * @param {jQuery} row - The row to modify.
      * @param {boolean} isModel - Whether the selected type is "Model".
@@ -186,21 +187,44 @@ $(document).ready(function () {
         const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div[class*="col-"]');
         const identifierTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div[class*="col-"]');
         const addButtonCol = row.find('.addDataSource').closest('div[class*="col-"]');
+        const detailsCol = row.find('select[name="datasource_details[]"]').closest('div[class*="col-"]');
+        const compensationCol = row.find('input[name="compensation_depth[]"]').closest('div[class*="col-"]');
+        const satelliteCol = row.find('.visibility-datasources-satellite');
 
         if (isModel) {
+            // Reorder columns: Type | Identifier | IdentifierType | Description | ModelName | AddButton
+            identifierCol.insertAfter(typeCol);
+            identifierTypeCol.insertAfter(identifierCol);
+            descCol.insertAfter(identifierTypeCol);
+            modelNameCol.insertAfter(descCol);
+            addButtonCol.insertAfter(modelNameCol);
+
             typeCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
-            descCol.removeClass('col-md-5 col-lg-5').addClass('col-md-4 col-lg-4');
-            modelNameCol.removeClass('col-md-6 col-lg-6').addClass('col-md-4 col-lg-4');
             identifierCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
             identifierTypeCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
-            addButtonCol.removeClass('col-2 col-sm-2 col-md-1 col-lg-1').addClass('col-12 col-sm-12 col-md-4 col-lg-4');
+            modelNameCol.removeClass('col-md-6 col-lg-6').addClass('col-md-5 col-lg-5');
+            addButtonCol
+                .removeClass('col-2 col-sm-2 col-md-1 col-lg-1')
+                .addClass('col-2 col-sm-2 col-md-2 col-lg-2');
         } else {
+            // Restore original order
+            typeCol.after(descCol);
+            descCol.after(detailsCol);
+            detailsCol.after(compensationCol);
+            compensationCol.after(modelNameCol);
+            modelNameCol.after(identifierCol);
+            identifierCol.after(identifierTypeCol);
+            identifierTypeCol.after(satelliteCol);
+            satelliteCol.after(addButtonCol);
+
             typeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
-            descCol.removeClass('col-md-4 col-lg-4').addClass('col-md-5 col-lg-5');
-            modelNameCol.removeClass('col-md-4 col-lg-4').addClass('col-md-6 col-lg-6');
             identifierCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
             identifierTypeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
-            addButtonCol.removeClass('col-12 col-sm-12 col-md-4 col-lg-4').addClass('col-2 col-sm-2 col-md-1 col-lg-1');
+            // Description keeps its original width
+            modelNameCol.removeClass('col-md-5 col-lg-5').addClass('col-md-6 col-lg-6');
+            addButtonCol
+                .removeClass('col-2 col-sm-2 col-md-2 col-lg-2')
+                .addClass('col-2 col-sm-2 col-md-1 col-lg-1');
         }
     }
 

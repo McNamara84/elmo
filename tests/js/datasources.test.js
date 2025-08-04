@@ -165,15 +165,29 @@ describe('datasources.js', () => {
     const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div');
     const idTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div');
     const addBtnCol = row.find('.addDataSource').closest('div');
+    const satelliteCol = row.find('.visibility-datasources-satellite');
 
     row.find('select[name="datasource_type[]"]').val('M').trigger('change');
 
     expect(typeCol.hasClass('col-md-4')).toBe(true);
-    expect(descCol.hasClass('col-md-4')).toBe(true);
-    expect(modelNameCol.hasClass('col-md-4')).toBe(true);
     expect(identifierCol.hasClass('col-md-4')).toBe(true);
     expect(idTypeCol.hasClass('col-md-4')).toBe(true);
-    expect(addBtnCol.hasClass('col-md-4')).toBe(true);
+    expect(descCol.hasClass('col-md-5')).toBe(true);
+    expect(modelNameCol.hasClass('col-md-5')).toBe(true);
+    expect(addBtnCol.hasClass('col-md-2')).toBe(true);
+
+    const idxType = row.children().index(typeCol);
+    const idxIdentifier = row.children().index(identifierCol);
+    const idxIdType = row.children().index(idTypeCol);
+    const idxDesc = row.children().index(descCol);
+    const idxModelName = row.children().index(modelNameCol);
+    const idxAddBtn = row.children().index(addBtnCol);
+
+    expect(idxType).toBeLessThan(idxIdentifier);
+    expect(idxIdentifier).toBeLessThan(idxIdType);
+    expect(idxIdType).toBeLessThan(idxDesc);
+    expect(idxDesc).toBeLessThan(idxModelName);
+    expect(idxModelName).toBeLessThan(idxAddBtn);
 
     row.find('select[name="datasource_type[]"]').val('S').trigger('change');
 
@@ -183,6 +197,14 @@ describe('datasources.js', () => {
     expect(identifierCol.hasClass('col-md-3')).toBe(true);
     expect(idTypeCol.hasClass('col-md-3')).toBe(true);
     expect(addBtnCol.hasClass('col-md-1')).toBe(true);
+
+    const idxTypeAfter = row.children().index(typeCol);
+    const idxDescAfter = row.children().index(descCol);
+    const idxSatAfter = row.children().index(satelliteCol);
+    const idxAddAfter = row.children().index(addBtnCol);
+    expect(idxTypeAfter).toBeLessThan(idxDescAfter);
+    expect(idxDescAfter).toBeLessThan(idxSatAfter);
+    expect(idxSatAfter).toBeLessThan(idxAddAfter);
   });
 
   test('addDataSource clones row, resets values, and restores help button', () => {
