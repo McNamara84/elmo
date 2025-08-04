@@ -2,6 +2,64 @@
 require_once 'save_affiliations.php';
 
 /**
+ * Validates the author data array for individuals.
+ *
+ * Expects the following keys in $postData:
+ * - familynames (array)
+ * - givennames (array)
+ *
+ * @param array $postData
+ * @return bool true if valid, otherwise false
+ */
+function validatePersonAuthors(array $postData): bool
+{
+    if (empty($postData['familynames']) || empty($postData['givennames'])) {
+        return false; // Fields not present or empty
+    }
+
+    $familynames = $postData['familynames'];
+    $givennames = $postData['givennames'];
+
+    if (count($familynames) !== count($givennames)) {
+        return false; // Number of family names doesn't match given names
+    }
+
+    foreach ($familynames as $i => $family) {
+        if (trim($family) === '' || trim($givennames[$i]) === '') {
+            return false; // Required field is empty
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Validates the author data array for institutions.
+ *
+ * Expects the following key in $postData:
+ * - authorinstitutionName (array)
+ *
+ * @param array $postData
+ * @return bool true if valid, otherwise false
+ */
+function validateInstitutionAuthors(array $postData): bool
+{
+    if (empty($postData['authorinstitutionName'])) {
+        return false; // Field not present or empty
+    }
+
+    $institutionnames = $postData['authorinstitutionName'];
+
+    foreach ($institutionnames as $name) {
+        if (trim($name) === '') {
+            return false; // Required field is empty
+        }
+    }
+
+    return true;
+}
+
+/**
  * Saves author information in the database.
  *
  * This function processes input data for authors, saves it in the database,
@@ -12,8 +70,11 @@ require_once 'save_affiliations.php';
  *                           - familynames: array
  *                           - givennames: array
  *                           - orcids: array
- *                           - affiliation: array
- *                           - authorRorIds: array
+ *                           - personAffiliation: array
+ *                           - authorPersonRorIds: array
+ *                           - authorinstitutionName: array
+ *                           - institutionAffiliation: array
+ *                           - authorInstitutionRorIds: array
  * @param int    $resource_id The ID of the associated resource.
  *
  * @return void|false
@@ -22,10 +83,15 @@ require_once 'save_affiliations.php';
  */
 function saveAuthors($connection, $postData, $resource_id)
 {
-    // Validate required fields
-    $requiredArrayFields = ['familynames', 'givennames'];
+    $hasPersonData = !empty($postData['familynames']) || !empty($postData['givennames']);
+    $hasInstitutionData = !empty($postData['authorinstitutionName']);
 
-    if (!validateRequiredFields($postData, [], $requiredArrayFields)) {
+    // Validation: at least one group must be valid
+    $validPerson = $hasPersonData;
+    $validInstitution = $hasInstitutionData ? validateInstitutionAuthors($postData) : false;
+
+    if (!$validPerson && !$validInstitution) {
+        // No valid author data
         return false;
     }
 
@@ -50,11 +116,15 @@ function saveAuthors($connection, $postData, $resource_id)
         $affiliation_data = trim($personAffiliations[$i] ?? '');
         $rorId_data = trim($personRorIds[$i] ?? '');
 
-        if (empty($familyname)) continue;
+        // Check mandatory fields per entry (instead of roughly beforehand)
+        if (empty($familyname) || empty($givenname)) {
+            continue; // Invalid entry is skipped
+        }
 
         $rorIdArray = parseRorIds($rorId_data);
         $affiliationArray = parseAffiliationData($affiliation_data);
-        if (!empty($rorIdArray) && empty($affiliationArray)) continue;
+        if (!empty($rorIdArray) && empty($affiliationArray))
+            continue;
 
         processAuthor($connection, $resource_id, [
             'familyname' => $familyname,
