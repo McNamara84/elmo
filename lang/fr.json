@@ -161,6 +161,38 @@
         "awardURI": "URI de la subvention",
         "awardURIInvalid": "Veuillez fournir une URL valide."
     },
+    "technical": {
+        "title": "Informations techniques",
+        "tideSystem": "Système de marée",
+        "tideSystemInvalid": "Veuillez choisir un système de marée.",
+        "tideSystemOptions": {
+            "zeroTide": "zero tide",
+            "meanTide": "mean tide",
+            "tideFree": "tide free"
+        },
+        "errors": "Erreurs",
+        "errorsInvalid": "Veuillez choisir le type d'erreur.",
+        "errorOptions": {
+            "calibrated": "calibré",
+            "formal": "formel",
+            "no": "aucun"
+        },
+        "errorHandling": "Approche de gestion des erreurs",
+        "errorHandlingInvalid": "Seules les lettres, chiffres et . , ( ) - sont autorisés.",
+        "degree": "Degré",
+        "degreeInvalid": "Veuillez indiquer le degré.",
+        "referenceEllipsoid": "Ellipsoïde de référence : demi-grand axe a",
+        "referenceEllipsoidInvalid": "Veuillez indiquer le demi-grand axe.",
+        "secondVariable": "Deuxième variable",
+        "secondVariableInvalid": "Veuillez choisir la deuxième variable.",
+        "secondVariableOptions": {
+            "axisB": "axe b",
+            "flattening": "aplatissement",
+            "reciprocalFlattening": "aplatissement réciproque"
+        },
+        "earthGravityConstant": "Constante gravitationnelle terrestre",
+        "earthGravityConstantInvalid": "Veuillez indiquer la constante gravitationnelle terrestre."
+    },
     "buttons": {
         "clear": "Effacer",
         "clearTooltip": "Supprimer toutes les entrées ou le contenu.",
