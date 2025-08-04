@@ -788,6 +788,88 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Der dritte Autor sollte nicht gespeichert worden sein, da er eine ROR-ID ohne Affiliation hatte."
         );
     }
+    public function testSaveInstitutionAuthorsWithMixedAffiliationsAndRorIds()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.MIXED.AFFILIATIONS.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Mixed Affiliations and RorIds Institution"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => ["Institution A", "Institution B", "Institution C"],
+            "institutionAffiliation" => [
+                '[]',
+                '[{"value":"University B"}]',
+                '[]'
+            ],
+            "authorInstitutionRorIds" => [
+                '',
+                '',
+                'https://ror.org/03yrm5c26'
+            ]
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_institution");
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(
+            2,
+            $count,
+            "Es sollten nur zwei Institutionen gespeichert worden sein, da die dritte eine ROR-ID ohne Affiliation hatte."
+        );
+
+        for ($i = 0; $i < 2; $i++) {
+            $stmt = $this->connection->prepare("SELECT * FROM Author_institution WHERE institutionname = ?");
+            $stmt->bind_param("s", $authorData["authorinstitutionName"][$i]);
+            $stmt->execute();
+            $institutionResult = $stmt->get_result()->fetch_assoc();
+            $this->assertNotNull($institutionResult, "Institution {$authorData["authorinstitutionName"][$i]} sollte gespeichert worden sein.");
+
+            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Institution_author_institution_id = ?");
+            $stmt->bind_param("i", $institutionResult["author_institution_id"]);
+            $stmt->execute();
+            $authorLink = $stmt->get_result()->fetch_assoc();
+            $author_id = $authorLink["author_id"];
+
+            $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_has_Affiliation WHERE Author_author_id = ?");
+            $stmt->bind_param("i", $author_id);
+            $stmt->execute();
+            $affiliationCount = $stmt->get_result()->fetch_assoc()['count'];
+
+            if ($i == 0) {
+                $this->assertEquals(
+                    0,
+                    $affiliationCount,
+                    "Institution ohne Affiliation sollte keine Affiliations haben."
+                );
+            } else {
+                $this->assertEquals(
+                    1,
+                    $affiliationCount,
+                    "Institution mit Affiliation sollte eine Affiliation haben."
+                );
+            }
+        }
+
+        $stmt = $this->connection->prepare("SELECT * FROM Author_institution WHERE institutionname = ?");
+        $stmt->bind_param("s", $authorData["authorinstitutionName"][2]);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $this->assertEquals(
+            0,
+            $result->num_rows,
+            "Die dritte Institution sollte nicht gespeichert worden sein, da sie eine ROR-ID ohne Affiliation hatte."
+        );
+    }
 
     /**
      * Tests special cases and edge conditions when saving authors.
