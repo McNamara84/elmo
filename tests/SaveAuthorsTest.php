@@ -372,6 +372,37 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Es sollte kein Autor gespeichert worden sein, da alle Felder leer waren."
         );
     }
+    public function testSaveInstitutionAuthorsWithEmptyFields()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.EMPTY.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Empty Institution"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => [],
+            "institutionAffiliation" => [],
+            "authorInstitutionRorIds" => []
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_institution");
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(
+            0,
+            $count,
+            "Es sollte kein Autor gespeichert worden sein, da alle Felder leer waren."
+        );
+    }
 
     /**
      * Tests saving three personal authors where one has a missing last name.
