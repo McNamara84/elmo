@@ -301,6 +301,37 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Es sollte kein Autor gespeichert werden, wenn kein Vorname angegeben wurde."
         );
     }
+    public function testSaveSingleInstitutionAuthorWithMissingName()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.SINGLE.REQUIRED.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Single Institution Required"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => [""],
+            "institutionAffiliation" => [''],
+            "authorInstitutionRorIds" => ['']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_institution");
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(
+            0,
+            $count,
+            "Es sollte kein Autor gespeichert werden, wenn kein Institutionname angegeben wurde."
+        );
+    }
 
     /**
      * Tests behavior when attempting to save an personal author with empty fields.
