@@ -531,6 +531,60 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Nur die Autoren 'Doe' und 'Johnson' sollten gespeichert worden sein."
         );
     }
+    public function testSaveMultipleInstitutionAuthorsWithOneMissingName()
+{
+    $resourceData = [
+        "doi" => "10.5880/GFZ.TEST.MULTIPLE.INSTITUTIONS.ONE.MISSING",
+        "year" => 2023,
+        "dateCreated" => "2023-06-01",
+        "resourcetype" => 1,
+        "language" => 1,
+        "Rights" => 1,
+        "title" => ["Test Multiple Institutions One Missing"],
+        "titleType" => [1]
+    ];
+    $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+    $authorData = [
+        "authorinstitutionName" => ["Institution A", "", "Institution C"],
+        "institutionAffiliation" => [
+            '[{"value":"University A"}]',
+            '[{"value":"University B"}]',
+            '[{"value":"University C"}]'
+        ],
+        "authorInstitutionRorIds" => [
+            'https://ror.org/03yrm5c26',
+            'https://ror.org/02nr0ka47',
+            'https://ror.org/0168r3w48'
+        ]
+    ];
+
+    saveAuthors($this->connection, $authorData, $resource_id);
+
+    // Prüfe, dass nur die gültigen Institutionen gespeichert wurden
+    $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_institution");
+    $stmt->execute();
+    $count = $stmt->get_result()->fetch_assoc()['count'];
+    $this->assertEquals(
+        2,
+        $count,
+        "Es sollten nur zwei Institutionen gespeichert worden sein, da eine keinen Namen hatte."
+    );
+
+    $stmt = $this->connection->prepare("SELECT institutionname FROM Author_institution ORDER BY institutionname");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $savedInstitutionNames = [];
+    while ($row = $result->fetch_assoc()) {
+        $savedInstitutionNames[] = $row['institutionname'];
+    }
+    $this->assertEquals(
+        ["Institution A", "Institution C"],
+        $savedInstitutionNames,
+        "Nur die Institutionen 'Institution A' und 'Institution C' sollten gespeichert worden sein."
+    );
+}
+
 
     /**
      * Tests saving authors with multiple affiliations.
