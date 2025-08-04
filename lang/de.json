@@ -38,7 +38,13 @@
         "submitSuccess": "Datensatz wurde erfolgreich übermittelt.",
         "savingHeading": "Speichern...",
         "savingInfo": "Datensatz wird gespeichert.",
-        "savingSuccess": "Datensatz erfolgreich gespeichert. Der XML-Download startet automatisch."
+        "savingSuccess": "Datensatz erfolgreich gespeichert. Der XML-Download startet automatisch.",
+        "preparingDownload": "Datei wird für den Download vorbereitet.",
+        "filenameGenerationError": "Fehler beim Erzeugen des Dateinamens.",
+        "saveError": "Datensatz konnte nicht gespeichert werden.",
+        "submitError": "Datensatz konnte nicht übermittelt werden.",
+        "errorHeading": "Fehler",
+        "successHeading": "Erfolg!"
     },
     "resourceInfo": {
         "title": "Ressourceninformationen",
@@ -151,7 +157,9 @@
         "funder": "Förderer",
         "funderInvalid": "Bitte geben Sie den Namen des Förderers ein.",
         "grantNumber": "Fördernummer",
-        "grantName": "Förderbezeichnung"
+        "grantName": "Förderbezeichnung",
+        "awardURI": "Förder-URI",
+        "awardURIInvalid": "Bitte geben Sie eine gültige URL an."
     },
     "buttons": {
         "clear": "Löschen",

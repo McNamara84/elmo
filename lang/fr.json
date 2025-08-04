@@ -38,7 +38,13 @@
         "submitSuccess": "Ensemble de données transmis avec succès.",
         "savingHeading": "Enregistrement...",
         "savingInfo": "L'ensemble de données est en cours d'enregistrement.",
-        "savingSuccess": "Ensemble de données enregistré avec succès. Le téléchargement XML démarrera automatiquement."
+        "savingSuccess": "Ensemble de données enregistré avec succès. Le téléchargement XML démarrera automatiquement.",
+        "preparingDownload": "Préparation du fichier pour le téléchargement.",
+        "filenameGenerationError": "Échec de la génération du nom de fichier.",
+        "saveError": "Échec de l'enregistrement de l'ensemble de données.",
+        "submitError": "Échec de la soumission de l'ensemble de données.",
+        "errorHeading": "Erreur",
+        "successHeading": "Succès!"
     },
     "resourceInfo": {
         "title": "Informations sur la ressource",
@@ -151,7 +157,9 @@
         "funder": "Organisme de financement",
         "funderInvalid": "Veuillez saisir le nom de l'organisme de financement.",
         "grantNumber": "Numéro de subvention",
-        "grantName": "Nom de la subvention"
+        "grantName": "Nom de la subvention",
+        "awardURI": "URI de la subvention",
+        "awardURIInvalid": "Veuillez fournir une URL valide."
     },
     "buttons": {
         "clear": "Effacer",

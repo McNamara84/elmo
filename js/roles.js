@@ -7,24 +7,21 @@ var organizationRoles = [];
  * Updates only the placeholder, avoiding full reinitialization.
  */
 function refreshRoleTagifyInstances() {
-  const roleFields = [
-    { selector: "#input-contributor-personrole", types: ["person", "both"] },
-    { selector: "#input-contributor-organisationrole", types: ["institution", "both"] }
-  ];
+  const inputs = document.querySelectorAll(
+    'input[name="cbPersonRoles[]"], input[name="cbOrganisationRoles[]"]'
+  );
 
-  roleFields.forEach(field => {
-    const inputElement = document.querySelector(field.selector);
-
-    // Skip if element doesn't exist or doesn't have a Tagify instance
+  inputs.forEach(inputElement => {
     if (!inputElement || !inputElement._tagify) return;
 
-    // Update only the placeholder
-    const placeholderValue = window.translations?.general?.roleLabel || "Select roles";
+    const placeholderValue = translations?.general?.roleLabel || 'Select roles';
 
-    // Assign directly
     inputElement._tagify.settings.placeholder = placeholderValue;
 
-
+    const placeholderElem = inputElement.parentElement.querySelector('.tagify__input');
+    if (placeholderElem) {
+      placeholderElem.setAttribute('data-placeholder', placeholderValue);
+    }
   });
 }
 
@@ -119,7 +116,7 @@ function initializeTagifyWithRoles(inputSelector, roles) {
       closeOnSelect: false
     },
     editTags: false,
-    placeholder: window.translations?.general?.roleLabel || "Select roles"
+    placeholder: translations?.general?.roleLabel || "Select roles"
   };
 
   try {

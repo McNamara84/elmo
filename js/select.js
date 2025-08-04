@@ -140,8 +140,118 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
  * This script handles the setup and initialization of various dropdowns, event listeners, and autocomplete functions for the metadata editor.
  */
 
+// Dropdown helper functions exposed globally so tests can invoke them
+function setupResourceTypeDropdown() {
+  const select = $("#input-resourceinformation-resourcetype");
+  if (select.length === 0) return;
+
+  select.prop('disabled', true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+    })
+  );
+
+  $.ajax({
+    url: "api/v2/vocabs/resourcetypes",
+    method: "GET",
+    dataType: "json",
+    success: function (data) {
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Choose...",
+          "data-translate": "general.choose",
+        })
+      );
+
+      if (Array.isArray(data)) {
+        data.forEach(function (type) {
+          select.append(
+            $("<option>", {
+              value: type.id,
+              text: type.resource_type_general,
+              title: type.description,
+            })
+          );
+        });
+      }
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      console.error("Error loading resource types:", textStatus, errorThrown);
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Error loading data",
+        })
+      );
+    },
+    complete: function () {
+      select.prop('disabled', false).trigger("change");
+    },
+  });
+}
+
+function setupLanguageDropdown() {
+  const select = $("#input-resourceinformation-language");
+  if (select.length === 0) return;
+
+  select.prop('disabled', true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+    })
+  );
+
+  $.ajax({
+    url: "api/v2/vocabs/languages",
+    method: "GET",
+    dataType: "json",
+    success: function (data) {
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Choose...",
+          "data-translate": "general.choose",
+        })
+      );
+
+      if (Array.isArray(data)) {
+        data.forEach(function (lang) {
+          select.append(
+            $("<option>", {
+              value: lang.id,
+              text: lang.name,
+              title: lang.code,
+            })
+          );
+        });
+      }
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      console.error("Error loading languages:", textStatus, errorThrown);
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Error loading data",
+        })
+      );
+    },
+    complete: function () {
+      select.prop('disabled', false);
+    },
+  });
+}
+
+// Make functions available globally (important for tests)
+window.setupLanguageDropdown = setupLanguageDropdown;
+window.setupResourceTypeDropdown = setupResourceTypeDropdown;
+
 $(document).ready(function () {
   initializeTimezoneDropdown();
+  setupResourceTypeDropdown();
+  setupLanguageDropdown();
+
 
   /**
   * Populates the select field with ID input-rights-license with options created via an API call.
@@ -388,6 +498,18 @@ function setupIdentifierTypesDropdown(id) {
  * Function to update the identifier type based on the entered identifier.
  * @param {HTMLElement} inputElement - The input element for the identifier.
  */
+// Priority map for identifier types when multiple patterns match
+const IDENTIFIER_TYPE_PRIORITY = {
+  DOI: 10,
+  URL: 0,
+};
+
+function getIdentifierPriority(name) {
+  return IDENTIFIER_TYPE_PRIORITY.hasOwnProperty(name)
+    ? IDENTIFIER_TYPE_PRIORITY[name]
+    : 5;
+}
+
 function updateIdentifierType(inputElement) {
   var identifier = $(inputElement).val();
   var selectElement = $(inputElement).closest(".row").find('select[name="rIdentifierType[]"]');
@@ -399,8 +521,8 @@ function updateIdentifierType(inputElement) {
       dataType: "json",
       success: function (response) {
         if (response && response.identifierTypes) {
-          // Find the matching identifier type based on the pattern
-          const matchingType = response.identifierTypes.find((type) => {
+          // Collect all identifier types that match the identifier
+          const matchingTypes = response.identifierTypes.filter((type) => {
             try {
               // Clean up the pattern
               let pattern = type.pattern;
@@ -409,7 +531,7 @@ function updateIdentifierType(inputElement) {
               // Remove redundant escapes
               pattern = pattern.replace(/\\{2}/g, "\\");
 
-              const regex = new RegExp(pattern);
+              const regex = new RegExp(pattern, "i");
               return regex.test(identifier);
             } catch (e) {
               console.warn(`Invalid pattern for ${type.name}:`, e);
@@ -417,8 +539,16 @@ function updateIdentifierType(inputElement) {
             }
           });
 
-          if (matchingType) {
-            selectElement.val(matchingType.name);
+          if (matchingTypes.length > 0) {
+            // Choose the best match by custom priority, then pattern length
+            matchingTypes.sort((a, b) => {
+              const prioDiff =
+                getIdentifierPriority(b.name) - getIdentifierPriority(a.name);
+              if (prioDiff !== 0) return prioDiff;
+              return b.pattern.length - a.pattern.length;
+            });
+            const bestMatch = matchingTypes[0];
+            selectElement.val(bestMatch.name);
             selectElement.trigger("change");
           } else {
             selectElement.val(""); // Reset to empty if no pattern matches

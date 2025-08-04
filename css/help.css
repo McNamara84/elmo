@@ -99,12 +99,42 @@ h4 {
 
 /* h5 Formatierung*/
 h5 {
-    color:#020202;   
+    color:#020202;
     /* Farbe */
-    font-size:11pt;  
+    font-size:11pt;
     /* Größe */
     margin-left: 10px;
     /* Rückt die Überschrift nach rechts ein */
-    font-weight: 600; 
+    font-weight: 600;
     /* Semi-Fett */
+}
+
+
+/* Search field */
+.help-search-group {
+    width: 250px;
+}
+
+.help-search-nav-btn {
+    color: #6c757d65;
+    border-color: #6c757d59;
+    background-color: #a2bee4;
+}
+
+@media (min-width: 768px) {
+    .help-search-group {
+        width: 300px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .help-search-group {
+        width: 400px;
+    }
+}
+
+/* Highlight color for search results */
+mark {
+    background-color: #ffc107;
+    padding: 0 2px;
 }

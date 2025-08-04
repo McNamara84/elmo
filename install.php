@@ -362,6 +362,7 @@ function createDatabaseStructure($connection)
    `funderidtyp` VARCHAR(25) NULL,
    `grantnumber` VARCHAR(45) NULL,
    `grantname` VARCHAR(75) NULL,
+   `awarduri` VARCHAR(255) NULL,
     PRIMARY KEY (`funding_reference_id`));",
 
         "Resource_has_Funding_Reference" => "CREATE TABLE IF NOT EXISTS `Resource_has_Funding_Reference` (
@@ -638,7 +639,7 @@ function insertLookupData($connection)
             ["name" => "ARK", "description" => "A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements)", "pattern" => "^ark:\/\d{5}\/\w+$/"],
             ["name" => "arXiv", "description" => "arXiv.org is a repository of preprints of scientific papers in the fields of mathematics, physics, astronomy, computer science, quantitative biology, statistics, and quantitative finance.", "pattern" => "^(\d{4}\.\d{4,5}|[a-z\-]+(\.[A-Z]{2})?\/\d{7})v\d+$/"],
             ["name" => "bibcode", "description" => "A standardized 19-character identifier according to the syntax yyyyjjjjjvvvvmppppa. See http://info-uri.info/registry/OAIHandler?verb=GetRecord&metadataPrefix=reg&identifier=info:bibcode/.", "pattern" => "^\d{4}\w{5}[A-Z][0-9A-Za-z\.&]{14}$/"],
-            ["name" => "DOI", "description" => "A character string used to uniquely identify an object. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.", "pattern" => "^10\.\d{4,9}\/[-._;()/:A-Z0-9]+$/i"],
+            ["name" => "DOI", "description" => "A character string used to uniquely identify an object. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.", "pattern" => "^(?:https?:\/\/(?:dx\\.)?doi\.org\/|doi:)?10\.\d{4,9}\/[\-._;()/:A-Z0-9]+$"],
             ["name" => "EAN13", "description" => "A 13-digit barcoding standard that is a superset of the original 12-digit Universal Product Code (UPC) system.", "pattern" => "^\d{13}$/"],
             ["name" => "EISSN", "description" => "ISSN used to identify periodicals in electronic form (eISSN or e-ISSN).", "pattern" => "^\d{4}-\d{3}[0-9X]$/"],
             ["name" => "Handle", "description" => "This refers specifically to an ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).", "pattern" => "^(hdl:)?\d+(\.\d+)*(\/[^\s]+)?$/"],
@@ -853,9 +854,9 @@ function insertTestResourceData($connection)
             ["Identifier" => "10.1007/s10712-020-09590-9", "relation_fk" => 19, "identifier_type_fk" => 4]
         ],
         "Funding_Reference" => [
-            ["funder" => "Gordon and Betty Moore Foundation", "funderid" => "100000936", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.01", "grantname" => "Socioenvironmental Monitoring of the Amazon Basin and Xingu"],
-            ["funder" => "Ford Foundation", "funderid" => "100000016", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.11", "grantname" => "Grants database"],
-            ["funder" => "U.S. Department of Defense", "funderid" => "100000005", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.22", "grantname" => "Grantmaking at a glance"]
+            ["funder" => "Gordon and Betty Moore Foundation", "funderid" => "100000936", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.01", "grantname" => "Socioenvironmental Monitoring of the Amazon Basin and Xingu", "awarduri" => null],
+            ["funder" => "Ford Foundation", "funderid" => "100000016", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.11", "grantname" => "Grants database", "awarduri" => "https://www.moore.org/grants/list/GBMF3859.01"],
+            ["funder" => "U.S. Department of Defense", "funderid" => "100000005", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.22", "grantname" => "Grantmaking at a glance", "awarduri" => "10.3030/892034"]
         ],
         "GGM_Properties" => [
             ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 60, "Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide"],

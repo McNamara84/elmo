@@ -1422,7 +1422,7 @@ class VocabController
             
             header('Content-Type: application/json');
             echo json_encode($representations);
-            
+
         } catch (Exception $e) {
             error_log("API Error in getMathRepresentations: " . $e->getMessage());
             http_response_code(500);
@@ -1430,5 +1430,72 @@ class VocabController
             echo json_encode(['error' => $e->getMessage()]);
         }
     }
-}
 
+    /**
+     * Retrieves all resource types from the database
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getResourceTypes(): void
+    {
+        try {
+            global $connection;
+            $stmt = $connection->prepare('SELECT resource_name_id as id, resource_type_general, description FROM Resource_Type ORDER BY resource_type_general');
+
+            if (!$stmt) {
+                throw new Exception("Failed to prepare statement: " . $connection->error);
+            }
+
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            $types = [];
+            while ($row = $result->fetch_assoc()) {
+                $types[] = $row;
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode($types);
+
+        } catch (Exception $e) {
+            error_log("API Error in getResourceTypes: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Retrieves all languages from the database
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getLanguages(): void
+    {
+        try {
+            global $connection;
+            $stmt = $connection->prepare('SELECT language_id as id, code, name FROM Language ORDER BY name');
+
+            if (!$stmt) {
+                throw new Exception("Failed to prepare statement: " . $connection->error);
+            }
+
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            $languages = [];
+            while ($row = $result->fetch_assoc()) {
+                $languages[] = $row;
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode($languages);
+
+        } catch (Exception $e) {
+            error_log("API Error in getLanguages: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+}

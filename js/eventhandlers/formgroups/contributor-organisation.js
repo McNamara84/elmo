@@ -56,7 +56,7 @@ $(document).ready(function () {
         <input type="hidden" name="cbOrganisationRorIds[]" id="input-contributor-organisationrorid${uniqueSuffix}" />
         <span class="input-group-text"><i class="bi bi-question-circle-fill"
           data-help-section-id="help-contributor-organisation-affiliation"></i></span>
-        <div class="invalid-feedback" data-translate="general.PleaseChoose">Please choose</div>
+        <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
       </div>
     `;
     newContributorRow.find("#input-contributor-organisationaffiliation").closest(".input-group").replaceWith(affFieldHtml);
@@ -64,6 +64,7 @@ $(document).ready(function () {
     // Update label and input field ID
     newContributorRow.find("#input-contributor-name").attr("id", `input-contributor-name${uniqueSuffix}`);
     newContributorRow.find("label[for='input-contributor-name']").attr("for", `input-contributor-name${uniqueSuffix}`);
+    newContributorRow.find("label[for='input-contributor-organisationrole']").attr("for", `input-contributor-organisationrole${uniqueSuffix}`);
 
     // Replace add button with remove button
     newContributorRow.find(".addContributor").replaceWith(createRemoveButton());

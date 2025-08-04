@@ -1,8 +1,13 @@
 {
   "dependencies": {
     "@yaireo/tagify": "^4.33.2",
+    "bootstrap": "^5.3.7",
+    "bootstrap-icons": "^1.13.1",
     "jquery": "^3.7.1",
-    "jquery-ui": "^1.14.1"
+    "jquery-ui": "^1.14.1",
+    "jstree": "^3.3.17",
+    "mark.js": "^8.11.1",
+    "swagger-ui-dist": "^5.27.0"
   },
   "devDependencies": {
     "jest": "^30.0.4",
