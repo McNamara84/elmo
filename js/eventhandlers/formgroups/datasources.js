@@ -147,6 +147,29 @@ $(document).ready(function () {
         const detailsSelect = row.find('select[name="datasource_details[]"]');
         const showField = typeSelect.val() === 'T' && detailsSelect.val() === 'Isostasy';
         row.children('.visibility-datasources-compensation').toggle(showField);
+        adjustLayoutForIsostasy(row, showField);
+    }
+
+    /**
+     * Adjusts column widths when the "Compensation depth" field is shown for
+     * topography data sources so that all fields, including the add button,
+     * fit on a single row.
+     *
+     * @param {jQuery} row - The row to modify.
+     * @param {boolean} isIsostasy - Whether the current selection requires the
+     *   compensation depth field.
+     */
+    function adjustLayoutForIsostasy(row, isIsostasy) {
+        const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
+        const compensationCol = row.find('input[name="compensation_depth[]"]').closest('div[class*="col-"]');
+
+        if (isIsostasy) {
+            descCol.removeClass('col-md-5 col-lg-5').addClass('col-md-3 col-lg-3');
+            compensationCol.removeClass('col-md-12 col-lg-12').addClass('col-md-2 col-lg-2');
+        } else {
+            descCol.removeClass('col-md-3 col-lg-3').addClass('col-md-5 col-lg-5');
+            compensationCol.removeClass('col-md-2 col-lg-2').addClass('col-md-12 col-lg-12');
+        }
     }
 
     /**
