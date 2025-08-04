@@ -1,28 +1,34 @@
 <div class="card mb-2">
     <div class="card-header">
         <b>Modelling approach</b>
-        <i class="bi bi-question-circle-fill" data-help-section-id="help-model-characteristics"></i>
+        <i class="bi bi-question-circle-fill" data-help-section-id="help-modelling-approach"></i>
     </div>
     <div class="card-body">
         <div class="row">
             <div class="col-12 col-md-6 col-lg-2 p-1">
-                <div class="form-floating">
-                    <select class="form-select" id="input-tide-system" name="tide_system">
-                        <option value="zero tide">zero tide</option>
-                        <option value="mean tide">mean tide</option>
-                        <option value="tide free">tide free</option>
-                    </select>
-                    <label for="input-tide-system">Tide system</label>
+                <div class="input-group">
+                    <div class="form-floating">
+                        <select class="form-select input-with-help input-right-no-round-corners" id="input-tide-system" name="tide_system">
+                            <option value="zero tide">zero tide</option>
+                            <option value="mean tide">mean tide</option>
+                            <option value="tide free">tide free</option>
+                        </select>
+                        <label for="input-tide-system">Tide system</label>
+                    </div>
+                    <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-tide-system"></i></span>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-lg-2 p-1">
-                <div class="form-floating">
-                    <select class="form-select" id="input-errors" name="errors">
-                        <option value="calibrated">calibrated</option>
-                        <option value="formal">formal</option>
-                        <option value="no">no</option>
-                    </select>
-                    <label for="input-errors">Errors</label>
+                <div class="input-group">
+                    <div class="form-floating">
+                        <select class="form-select input-with-help input-right-no-round-corners" id="input-errors" name="errors">
+                            <option value="calibrated">calibrated</option>
+                            <option value="formal">formal</option>
+                            <option value="no">no</option>
+                        </select>
+                        <label for="input-errors">Errors</label>
+                    </div>
+                    <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-errors"></i></span>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-lg-6 p-1">
@@ -32,27 +38,36 @@
                 </div>
             </div>
             <div class="col-12 col-md-6 col-lg-2 p-1">
-                <div class="form-floating">
-                    <input type="number" class="form-control" id="input-degree" name="degree">
-                    <label for="input-degree">Degree</label>
+                <div class="input-group">
+                    <div class="form-floating">
+                        <input type="number" class="form-control input-with-help input-right-no-round-corners" id="input-degree" name="degree">
+                        <label for="input-degree">Degree</label>
+                    </div>
+                    <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-degree"></i></span>
                 </div>
             </div>
         </div>
         <div class="row">
             <div class="col-12 col-md-5 col-lg-4 p-1">
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="input-semimajor-axis" name="semimajor_axis_a">
-                    <label for="input-semimajor-axis">Reference ellipsoid: semimajor axis a</label>
+                <div class="input-group">
+                    <div class="form-floating">
+                        <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-semimajor-axis" name="semimajor_axis_a">
+                        <label for="input-semimajor-axis">Reference ellipsoid: semimajor axis a</label>
+                    </div>
+                    <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-reference-ellipsoid"></i></span>
                 </div>
             </div>
             <div class="col-12 col-md-3 col-lg-3 p-1">
-                <div class="form-floating">
-                    <select class="form-select" id="input-second-variable" name="second_variable">
-                        <option value="axis b">axis b</option>
-                        <option value="flattening">flattening</option>
-                        <option value="reciprocal_flattening">reciprocal_flattening</option>
-                    </select>
-                    <label for="input-second-variable">Second variable</label>
+                <div class="input-group">
+                    <div class="form-floating">
+                        <select class="form-select input-with-help input-right-no-round-corners" id="input-second-variable" name="second_variable">
+                            <option value="axis b">axis b</option>
+                            <option value="flattening">flattening</option>
+                            <option value="reciprocal_flattening">reciprocal_flattening</option>
+                        </select>
+                        <label for="input-second-variable">Second variable</label>
+                    </div>
+                    <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-second-variable"></i></span>
                 </div>
             </div>
             <div class="col-12 col-md-4 col-lg-5 p-1">

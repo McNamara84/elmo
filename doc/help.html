@@ -1005,6 +1005,7 @@ include_once "../settings.php";
                 </div>
             </div>
             <!-- formgroup GGMs Properties -->
+            <?php if ($showGGMsProperties): ?>
             <div id="help-model-characteristics" class="section-content">
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
@@ -1218,8 +1219,47 @@ include_once "../settings.php";
                         then the product type is "topographic gravity field".
                     </p>
                 </div>
+                <div id="help-modelling-approach">
+                    <h3>Modelling approach</h3>
+                    <div id="help-tide-system">
+                        <h4>Tide system</h4>
+                        <p>
+                            Choose the tide system used for the model coefficients. Options include
+                            <em>zero tide</em>, <em>mean tide</em> and <em>tide free</em>.
+                            Select the convention that matches the model description.
+                        </p>
+                    </div>
+                    <div id="help-errors">
+                        <h4>Errors</h4>
+                        <p>
+                            Defines which type of errors are provided for the model coefficients. Possible
+                            values are <em>calibrated</em>, <em>formal</em> or <em>no</em> errors.
+                        </p>
+                    </div>
+                    <div id="help-degree">
+                        <h4>Degree</h4>
+                        <p>
+                            Maximum spherical harmonic degree of the gravity field model.
+                            Higher degrees represent finer spatial details.
+                        </p>
+                    </div>
+                    <div id="help-reference-ellipsoid">
+                        <h4>Reference ellipsoid</h4>
+                        <p>
+                            Enter the semimajor axis <em>a</em> of the reference ellipsoid used to compute
+                            the model, typically given in metres.
+                        </p>
+                    </div>
+                    <div id="help-second-variable">
+                        <h4>Second variable</h4>
+                        <p>
+                            Specifies the second defining parameter of the reference ellipsoid. Choose
+                            between the semiminor axis <em>b</em>, flattening, or reciprocal flattening.
+                        </p>
+                    </div>
+                </div>
             </div>
-            <hr>
+            <?php endif; ?>
         </div>
     </div>
     <!-- Bootstrap 5 -->
