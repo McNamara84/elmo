@@ -172,9 +172,9 @@ describe('datasources.js', () => {
     expect(typeCol.hasClass('col-md-4')).toBe(true);
     expect(identifierCol.hasClass('col-md-4')).toBe(true);
     expect(idTypeCol.hasClass('col-md-4')).toBe(true);
-    expect(descCol.hasClass('col-md-5')).toBe(true);
+    expect(descCol.hasClass('col-md-6')).toBe(true);
     expect(modelNameCol.hasClass('col-md-5')).toBe(true);
-    expect(addBtnCol.hasClass('col-md-2')).toBe(true);
+    expect(addBtnCol.hasClass('col-md-1')).toBe(true);
 
     const idxType = row.children().index(typeCol);
     const idxIdentifier = row.children().index(identifierCol);

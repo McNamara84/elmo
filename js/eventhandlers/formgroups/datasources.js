@@ -202,10 +202,8 @@ $(document).ready(function () {
             typeCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
             identifierCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
             identifierTypeCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
+            descCol.removeClass('col-md-5 col-lg-5').addClass('col-md-6 col-lg-6');
             modelNameCol.removeClass('col-md-6 col-lg-6').addClass('col-md-5 col-lg-5');
-            addButtonCol
-                .removeClass('col-2 col-sm-2 col-md-1 col-lg-1')
-                .addClass('col-2 col-sm-2 col-md-2 col-lg-2');
         } else {
             // Restore original order
             typeCol.after(descCol);
@@ -220,7 +218,7 @@ $(document).ready(function () {
             typeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
             identifierCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
             identifierTypeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
-            // Description keeps its original width
+            descCol.removeClass('col-md-6 col-lg-6').addClass('col-md-5 col-lg-5');
             modelNameCol.removeClass('col-md-5 col-lg-5').addClass('col-md-6 col-lg-6');
             addButtonCol
                 .removeClass('col-2 col-sm-2 col-md-2 col-lg-2')
