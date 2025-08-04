@@ -150,6 +150,38 @@ $(document).ready(function () {
     }
 
     /**
+     * Adjusts column widths so that all fields fit on one row when
+     * the "Model" type is selected.
+     *
+     * @param {jQuery} row - The row to modify.
+     * @param {boolean} isModel - Whether the selected type is "Model".
+     */
+    function adjustLayoutForModel(row, isModel) {
+        const typeCol = row.find('select[name="datasource_type[]"]').closest('div[class*="col-"]');
+        const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
+        const modelNameCol = row.find('input[name="dName[]"]').closest('div[class*="col-"]');
+        const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div[class*="col-"]');
+        const identifierTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div[class*="col-"]');
+        const addButtonCol = row.find('.addDataSource').closest('div[class*="col-"]');
+
+        if (isModel) {
+            typeCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
+            descCol.removeClass('col-md-5 col-lg-5').addClass('col-md-4 col-lg-4');
+            modelNameCol.removeClass('col-md-6 col-lg-6').addClass('col-md-4 col-lg-4');
+            identifierCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
+            identifierTypeCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
+            addButtonCol.removeClass('col-2 col-sm-2 col-md-1 col-lg-1').addClass('col-12 col-sm-12 col-md-4 col-lg-4');
+        } else {
+            typeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
+            descCol.removeClass('col-md-4 col-lg-4').addClass('col-md-5 col-lg-5');
+            modelNameCol.removeClass('col-md-4 col-lg-4').addClass('col-md-6 col-lg-6');
+            identifierCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
+            identifierTypeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
+            addButtonCol.removeClass('col-12 col-sm-12 col-md-4 col-lg-4').addClass('col-2 col-sm-2 col-md-1 col-lg-1');
+        }
+    }
+
+    /**
      * Updates the visibility of fields and populates dropdowns for a given data source row.
      * @param {jQuery} row - The jQuery object for the data source row.
      */
@@ -182,6 +214,7 @@ $(document).ready(function () {
         }
 
         handleIsostasyField(row);
+        adjustLayoutForModel(row, selectedType === 'M');
 
         if (selectedType === 'M') {
             const idTypeSelect = row.find('select[name="dIdentifierType[]"]');
