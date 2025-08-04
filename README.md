@@ -377,6 +377,7 @@ To install them: npm install
   This field specifies if the license is used for software (forSoftware=1) or not (forSoftware=0). The controlled list changes for users based on this parameter when resource type Software is chosen.
 
 ### Author(s)
+#### Author Persons
 Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsibleParty>` in the ISO scheme.
 Occurrence is: 1-n
 
@@ -428,6 +429,43 @@ Occurrence is: 1-n
   - Restrictions: is automatically saved when an affiliation is chosen
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#a-affiliationidentifier)
   - Example values: `03v4gjf40`, `04z8jg394`
+
+
+
+#### Author Institutions
+Author Institution has the same role as Author as a person. Here, the institution is entered as the author of the data set, for example: Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+Occurrence is: 0-n
+
+- Institution Name
+
+  This field contains the Name of the Institution(author).
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `institutionname` in the table `Author\_institution`
+  - Restrictions: Optional field, but may become mandatory in certain cases.
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#creatorname)
+  - Example values: `California Digital Library`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
+
+- Affiliation <a href="https://ror.org/" target="\_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+
+  This field contains the author's affiliation.
+  - Data type: String
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `name` in the table `affiliation`
+  - Restrictions: None, can be chosen from the dropdown menu or given as free text
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
+  - Example values: `Technische Universität Berlin`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
+
+
+- *Saved in backend (not visible to user):* rorId
+
+  If an affiliation is chosen from the dropdown menu, which contains the entry from the Research Organization Registry (ROR), the assiciated ROR-ID is saved.
+  - Occurrence: 0-n
+  - The corresponding field in the database where the value is stored is called: `rorId` in the table `affiliation`
+  - Restrictions: is automatically saved when an affiliation is chosen
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#a-affiliationidentifier)
+  - Example values: `03v4gjf40`, `04z8jg394`
+
 
 #### Contact Person(s)
 A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). Authors can be labelled as a contact person with the help of a toggle switch button which adds the additional fields required for contact (Email address, Website).
