@@ -46,6 +46,10 @@ describe('thesauri.js', () => {
       <input id="input-sciencekeyword-search" />
       <div id="jstree-sciencekeyword"></div>
       <ul id="selected-keywords-gcmd"></ul>
+      <input id="input-datasource-platforms" />
+      <input id="input-platforms-thesaurussearch-ds" />
+      <div id="jstree-platforms-datasource"></div>
+      <ul id="selected-keywords-platforms-ds"></ul>
     `;
 
     $ = require('jquery');
@@ -128,7 +132,26 @@ describe('thesauri.js', () => {
     global.Tagify = MockTagify;
     global.translations = { keywords: { thesaurus: { label: 'initial' } } };
 
-    $.getJSON = jest.fn((file, cb) => cb({ data: [ { id: 'root', text: 'Root', children: [ { id: 'child', text: 'Child' } ] } ] }));
+    $.getJSON = jest.fn((file, cb) => {
+      if (file === 'json/thesauri/gcmdPlatformsKeywords.json') {
+        cb({ data: [
+          {
+            id: 'platforms',
+            text: 'Platforms',
+            children: [
+              {
+                id: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
+                text: 'Space-based Platforms',
+                children: [ { id: 'sat', text: 'Satellite' } ]
+              },
+              { id: 'ground', text: 'Ground-based Platforms' }
+            ]
+          }
+        ] });
+      } else {
+        cb({ data: [ { id: 'root', text: 'Root', children: [ { id: 'child', text: 'Child' } ] } ] });
+      }
+    });
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
     window.eval(script);
@@ -173,5 +196,14 @@ describe('thesauri.js', () => {
 
     input._tagify.trigger('remove', { data: { value: 'Root > Child' } });
     expect(tree.get_selected()).toHaveLength(0);
+  });
+
+  test('limits platform keywords to Space-based Platforms', () => {
+    const tree = $('#jstree-platforms-datasource').jstree(true);
+    const data = tree.get_json('#');
+    expect(data).toHaveLength(1);
+    expect(data[0].id).toBe('https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847');
+    const childIds = data[0].children.map(n => n.id);
+    expect(childIds).toEqual(['sat']);
   });
 });
