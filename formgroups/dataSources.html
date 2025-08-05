@@ -30,16 +30,6 @@
             </div>
           </div>
         </div>
-        <!-- Description (free text) -->
-        <div class="col-12 col-sm-12 col-md-5 col-lg-5 p-1 visibility-datasources-basic">
-          <div class="input-group">
-            <div class="form-floating">
-              <textarea class="form-control"
-                id="input-datasource-description" name="datasource_description[]" rows="1"></textarea>
-              <label for="input-datasource-description" data-translate="dataSources.description">Description</label>
-            </div>
-          </div>
-        </div>
         <!-- Details (Dropdown) -->
         <div class="col-12 col-sm-12 col-md-3 col-lg-3 p-1 visibility-datasources-details">
           <div class="input-group has-validation">
@@ -68,17 +58,9 @@
           </div>
         </div>
         <!-- Model-specific Section -->
-        <!-- Model Name (Text Input)-->
-        <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 visibility-datasources-identifier">
-          <div class="input-group">
-            <div class="form-floating">
-              <input type="text" class="form-control" id="input-datasource-modelname" name="dName[]" />
-              <label for="input-datasource-modelname" data-translate="dataSources.modelName">Model name</label>
-            </div>
-          </div>
-        </div>
+        <div class="w-100 visibility-datasources-identifier"></div>
         <!-- Identifier (Text Input)-->
-        <div class="col-12 col-sm-6 col-md-3 col-lg-3 p-1 visibility-datasources-identifier">
+        <div class="col-12 col-sm-6 col-md-6 col-lg-3 p-1 visibility-datasources-identifier">
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
@@ -94,7 +76,7 @@
           </div>
         </div>
         <!-- Identifier Type (Dropdown)-->
-        <div class="col-12 col-sm-6 col-md-3 col-lg-3 p-1 visibility-datasources-identifier">
+        <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1 visibility-datasources-identifier">
           <div class="input-group has-validation">
             <div class="form-floating">
               <select class="form-select input-with-help input-right-no-round-corners"
@@ -107,6 +89,26 @@
             <div class="input-group-append">
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
                   data-help-section-id="help-datasource-identifier-type"></i></span>
+            </div>
+          </div>
+        </div>
+        <div class="w-100 visibility-datasources-identifier"></div>
+        <!-- Model Name (Text Input)-->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 visibility-datasources-identifier">
+          <div class="input-group">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="input-datasource-modelname" name="dName[]" />
+              <label for="input-datasource-modelname" data-translate="dataSources.modelName">Model name</label>
+            </div>
+          </div>
+        </div>
+        <!-- Description (free text) -->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 visibility-datasources-basic">
+          <div class="input-group">
+            <div class="form-floating">
+              <textarea class="form-control"
+                id="input-datasource-description" name="datasource_description[]" rows="1"></textarea>
+              <label for="input-datasource-description" data-translate="dataSources.description">Description</label>
             </div>
           </div>
         </div>
