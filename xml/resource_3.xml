@@ -46,19 +46,23 @@
     </AuthorPerson>
     <AuthorInstitution>
       <institutionname>University of Beira Interior</institutionname>
-      <Affiliation>
-        <affiliation_id>1</affiliation_id>
-        <name>University of Beira Interior</name>
-        <rorId>03nf36p02</rorId>
-      </Affiliation>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>1</affiliation_id>
+          <name>University of Beira Interior</name>
+          <rorId>03nf36p02</rorId>
+        </Affiliation>
+      </Affiliations>
     </AuthorInstitution>
     <AuthorInstitution>
       <institutionname>University of Applied Sciences Potsdam</institutionname>
-      <Affiliation>
-        <affiliation_id>2</affiliation_id>
-        <name>University of Applied Sciences Potsdam</name>
-        <rorId>012m9bp23</rorId>
-      </Affiliation>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>2</affiliation_id>
+          <name>University of Applied Sciences Potsdam</name>
+          <rorId>012m9bp23</rorId>
+        </Affiliation>
+      </Affiliations>
     </AuthorInstitution>
   </Authors>
   <ContactPersons>
