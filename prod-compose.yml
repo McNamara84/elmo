@@ -98,18 +98,11 @@ services:
       #   on port 80 internally. Traefik will direct traffic to this port within the container's network.
       - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
     
-    # --- Network Configuration ---
-    # Containers need to be on the same network as Traefik for discovery and routing.
-    # They also need to be on a common network for internal communication (e.g., web to db).
-    networks:
-      - traefik_network # Connects 'web' to the external Traefik network
-      - default         # Connects 'web' to the default internal network (for 'db' communication)
-
 # --- Network Definitions ---
-networks:
-  traefik_network:
-    external: true # Indicates that 'traefik_network' already exists and was created externally (e.g., by Traefik's own setup)
-  default:
+#networks:
+#  traefik_network:
+#    external: true # Indicates that 'traefik_network' already exists and was created externally (e.g., by Traefik's own setup)
+#  default:
     # This defines the 'default' network that Docker Compose creates for services
     # within the same docker-compose.yaml file, allowing 'web' and 'db' to communicate.
     # It's good practice to explicitly define it for clarity, even if it's implicitly created.
