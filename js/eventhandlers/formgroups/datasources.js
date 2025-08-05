@@ -28,50 +28,94 @@ $(document).ready(function () {
         'M': { 'visibility-datasources-basic': true, 'visibility-datasources-details': false, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': true }
     };
 
-    function bindTagifyEvents(tagifyInstance) {
-        tagifyInstance.on('add', function (e) {
-            if (activePlatformTagify !== tagifyInstance) return;
-            const tagText = e.detail.data.value;
-            const jsTree = $(jsTreeId).jstree(true);
-            const node = jsTree
-                .get_json('#', { flat: true })
-                .find(n => jsTree.get_path(n, ' > ') === tagText);
-            if (node) {
-                jsTree.select_node(node.id);
-            }
-        });
+    // --- Helper functions -------------------------------------------------
 
-        tagifyInstance.on('remove', function (e) {
-            if (activePlatformTagify !== tagifyInstance) return;
-            const tagText = e.detail.data.value;
-            const jsTree = $(jsTreeId).jstree(true);
-            const node = jsTree
-                .get_json('#', { flat: true })
-                .find(n => jsTree.get_path(n, ' > ') === tagText);
-            if (node) {
-                jsTree.deselect_node(node.id);
-            }
-        });
+    const getJsTree = () => $(jsTreeId).jstree(true);
+
+    /**
+     * Find a jsTree node by its path.
+     * @param {string} path - Full path text to search for.
+     * @param {object} jsTree - jsTree instance.
+     * @returns {object|undefined} Matching node if found.
+     */
+    function findNodeByPath(path, jsTree = getJsTree()) {
+        return jsTree
+            .get_json('#', { flat: true })
+            .find(n => jsTree.get_path(n, ' > ') === path);
     }
 
+    /**
+     * Select or deselect a node in the tree based on tag text.
+     * @param {string} tagText - Tag caption.
+     * @param {boolean} select - True to select, false to deselect.
+     * @param {object} jsTree - jsTree instance.
+     */
+    function syncTagWithTree(tagText, select = true, jsTree = getJsTree()) {
+        const node = findNodeByPath(tagText, jsTree);
+        if (node) {
+            select ? jsTree.select_node(node.id) : jsTree.deselect_node(node.id);
+        }
+    }
+
+    /**
+     * Split existing Tagify tags into jsTree backed tags and manual tags.
+     *
+     * @param {Tagify} tagifyInstance - The Tagify instance with current tags.
+     * @param {object} jsTree - jsTree instance.
+     * @returns {{tagsWithNode: Array, manualTags: Array}}
+     */
+    function separateTags(tagifyInstance, jsTree = getJsTree()) {
+        const existingTags = tagifyInstance ? tagifyInstance.value.slice() : [];
+        const tagsWithNode = [];
+        const manualTags = [];
+
+        existingTags.forEach(tag => {
+            if (findNodeByPath(tag.value, jsTree)) {
+                tagsWithNode.push(tag);
+            } else {
+                manualTags.push(tag);
+            }
+        });
+
+        return { tagsWithNode, manualTags };
+    }
+
+    /**
+     * Bind Tagify add/remove events so jsTree selections stay in sync.
+     * @param {Tagify} tagifyInstance - Tagify instance to bind events to.
+     */
+    function bindTagifyEvents(tagifyInstance) {
+        const sync = (e, select) => {
+            if (activePlatformTagify !== tagifyInstance) return;
+            syncTagWithTree(e.detail.data.value, select);
+        };
+
+        tagifyInstance.on('add', e => sync(e, true));
+        tagifyInstance.on('remove', e => sync(e, false));
+    }
+
+    /**
+     * Populate the list of selected keywords below the tree modal.
+     */
     function updateSelectedKeywordsList() {
         const selectedKeywordsList = document.getElementById('selected-keywords-platforms-ds');
         if (!selectedKeywordsList) return;
 
-        selectedKeywordsList.innerHTML = "";
-        const selectedNodes = $(jsTreeId).jstree("get_selected", true);
+        selectedKeywordsList.innerHTML = '';
+        const jsTree = getJsTree();
+        const selectedNodes = jsTree.get_selected(true);
 
         selectedNodes.forEach(function (node) {
-            const fullPath = $(jsTreeId).jstree().get_path(node, " > ");
-            const listItem = document.createElement("li");
-            listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+            const fullPath = jsTree.get_path(node, ' > ');
+            const listItem = document.createElement('li');
+            listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
             listItem.textContent = fullPath;
 
-            const removeButton = document.createElement("button");
-            removeButton.classList.add("btn", "btn-sm", "btn-danger");
-            removeButton.innerHTML = "&times;";
+            const removeButton = document.createElement('button');
+            removeButton.classList.add('btn', 'btn-sm', 'btn-danger');
+            removeButton.innerHTML = '&times;';
             removeButton.onclick = function () {
-                $(jsTreeId).jstree("deselect_node", node.id);
+                syncTagWithTree(fullPath, false, jsTree);
             };
 
             listItem.appendChild(removeButton);
@@ -80,11 +124,12 @@ $(document).ready(function () {
     }
 
     document.addEventListener('translationsLoaded', function () {
+        const jsTree = getJsTree();
         $(jsTreeId).off('changed.jstree');
         $(jsTreeId).on('changed.jstree', function (e, data) {
             updateSelectedKeywordsList();
             if (!activePlatformTagify) return;
-            const selectedNodes = $(jsTreeId).jstree('get_selected', true);
+            const selectedNodes = jsTree.get_selected(true);
             const selectedValues = selectedNodes.map(node => data.instance.get_path(node, ' > '));
             activePlatformTagify.removeAllTags();
             activePlatformTagify.addTags(selectedValues);
@@ -104,29 +149,17 @@ $(document).ready(function () {
         if (!inputElem) return;
 
         const tagifyInstance = inputElem._tagify;
-        const jsTree = $(jsTreeId).jstree(true);
+        const jsTree = getJsTree();
 
         // Preserve current tags before manipulating the tree
-        const existingTags = tagifyInstance ? tagifyInstance.value.slice() : [];
-        const jsTreeNodes = jsTree.get_json('#', { flat: true });
-        const tagsWithNode = existingTags.filter(tag =>
-            jsTreeNodes.find(n => jsTree.get_path(n, ' > ') === tag.value)
-        );
-        const manualTags = existingTags.filter(tag =>
-            !jsTreeNodes.find(n => jsTree.get_path(n, ' > ') === tag.value)
-        );
+        const { tagsWithNode, manualTags } = separateTags(tagifyInstance, jsTree);
 
         // Prevent Tagify from being cleared when deselecting nodes
         activePlatformTagify = null;
         jsTree.deselect_all();
 
         activePlatformTagify = tagifyInstance;
-        tagsWithNode.forEach(tag => {
-            const node = jsTreeNodes.find(n => jsTree.get_path(n, ' > ') === tag.value);
-            if (node) {
-                jsTree.select_node(node.id);
-            }
-        });
+        tagsWithNode.forEach(tag => syncTagWithTree(tag.value, true, jsTree));
 
         if (manualTags.length && activePlatformTagify) {
             activePlatformTagify.addTags(manualTags);
@@ -137,10 +170,94 @@ $(document).ready(function () {
 
     $('#modal-platforms-datasource').on('hidden.bs.modal', function () {
         activePlatformTagify = null;
-        const jsTree = $(jsTreeId).jstree(true);
+        const jsTree = getJsTree();
         jsTree.deselect_all();
         updateSelectedKeywordsList();
     });
+
+    function handleIsostasyField(row) {
+        const typeSelect = row.find('select[name="datasource_type[]"]');
+        const detailsSelect = row.find('select[name="datasource_details[]"]');
+        const showField = typeSelect.val() === 'T' && detailsSelect.val() === 'Isostasy';
+        row.children('.visibility-datasources-compensation').toggle(showField);
+        adjustLayoutForIsostasy(row, showField);
+    }
+
+    /**
+     * Adjusts column widths when the "Compensation depth" field is shown for
+     * topography data sources so that all fields, including the add button,
+     * fit on a single row.
+     *
+     * @param {jQuery} row - The row to modify.
+     * @param {boolean} isIsostasy - Whether the current selection requires the
+     *   compensation depth field.
+     */
+    function adjustLayoutForIsostasy(row, isIsostasy) {
+        const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
+        const compensationCol = row.find('input[name="compensation_depth[]"]').closest('div[class*="col-"]');
+
+        if (isIsostasy) {
+            descCol.removeClass('col-md-5 col-lg-5').addClass('col-md-3 col-lg-3');
+            compensationCol.removeClass('col-md-12 col-lg-12').addClass('col-md-2 col-lg-2');
+        } else {
+            descCol.removeClass('col-md-3 col-lg-3').addClass('col-md-5 col-lg-5');
+            compensationCol.removeClass('col-md-2 col-lg-2').addClass('col-md-12 col-lg-12');
+        }
+    }
+
+    /**
+     * Adjusts column order and widths so that when the "Model" type is
+     * selected, identifier fields stay on the first row while the description
+     * and model name share the second row with the add button.
+     *
+     * @param {jQuery} row - The row to modify.
+     * @param {boolean} isModel - Whether the selected type is "Model".
+     */
+    function adjustLayoutForModel(row, isModel) {
+        const typeCol = row.find('select[name="datasource_type[]"]').closest('div[class*="col-"]');
+        const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
+        const modelNameCol = row.find('input[name="dName[]"]').closest('div[class*="col-"]');
+        const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div[class*="col-"]');
+        const identifierTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div[class*="col-"]');
+        const addButtonCol = row.find('.addDataSource').closest('div[class*="col-"]');
+        const detailsCol = row.find('select[name="datasource_details[]"]').closest('div[class*="col-"]');
+        const compensationCol = row.find('input[name="compensation_depth[]"]').closest('div[class*="col-"]');
+        const satelliteCol = row.find('.visibility-datasources-satellite');
+
+        if (isModel) {
+            // Reorder columns: Type | Identifier | IdentifierType | Description | ModelName | AddButton
+            identifierCol.insertAfter(typeCol);
+            identifierTypeCol.insertAfter(identifierCol);
+            descCol.insertAfter(identifierTypeCol);
+            modelNameCol.insertAfter(descCol);
+            addButtonCol.insertAfter(modelNameCol);
+
+            typeCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
+            identifierCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
+            identifierTypeCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
+            descCol.removeClass('col-md-5 col-lg-5').addClass('col-md-6 col-lg-6');
+            modelNameCol.removeClass('col-md-6 col-lg-6').addClass('col-md-5 col-lg-5');
+        } else {
+            // Restore original order
+            typeCol.after(descCol);
+            descCol.after(detailsCol);
+            detailsCol.after(compensationCol);
+            compensationCol.after(modelNameCol);
+            modelNameCol.after(identifierCol);
+            identifierCol.after(identifierTypeCol);
+            identifierTypeCol.after(satelliteCol);
+            satelliteCol.after(addButtonCol);
+
+            typeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
+            identifierCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
+            identifierTypeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
+            descCol.removeClass('col-md-6 col-lg-6').addClass('col-md-5 col-lg-5');
+            modelNameCol.removeClass('col-md-5 col-lg-5').addClass('col-md-6 col-lg-6');
+            addButtonCol
+                .removeClass('col-2 col-sm-2 col-md-2 col-lg-2')
+                .addClass('col-2 col-sm-2 col-md-1 col-lg-1');
+        }
+    }
 
     /**
      * Updates the visibility of fields and populates dropdowns for a given data source row.
@@ -173,6 +290,9 @@ $(document).ready(function () {
                 detailsSelect.val(options[0]);
             }
         }
+
+        handleIsostasyField(row);
+        adjustLayoutForModel(row, selectedType === 'M');
 
         if (selectedType === 'M') {
             const idTypeSelect = row.find('select[name="dIdentifierType[]"]');
@@ -247,6 +367,11 @@ $(document).ready(function () {
         const row = $(this).closest('.row');
         updateRowState(row);
         restoreHelpButtons(row);
+    });
+
+    datasourceGroup.on('change', 'select[name="datasource_details[]"]', function () {
+        const row = $(this).closest('.row');
+        handleIsostasyField(row);
     });
 
     // --- INITIALIZATION ---

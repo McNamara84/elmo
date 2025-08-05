@@ -634,6 +634,9 @@ function updateDataSourceIdsAndNames() {
       .find('select[name="datasource_details[]"]')
       .attr("id", "input-datasource-details" + index);
     $(this)
+      .find('input[name="dName[]"]')
+      .attr("id", "input-datasource-modelname" + index);
+    $(this)
       .find('input[name="dIdentifier[]"]')
       .attr("id", "input-datasource-identifier" + index);
     $(this)
