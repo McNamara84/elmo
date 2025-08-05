@@ -59,10 +59,8 @@ $showMslVocabs = true;
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
 // SETTINGS FOR ICGEM
-// Show GGMs Properties form group
+// all ICGEM form groups are activated with 1 variable
 $showGGMsProperties = true;
-// Show Characteristics of the model form group
-$characteristicsOfTheModel = false;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
