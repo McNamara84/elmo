@@ -28,50 +28,94 @@ $(document).ready(function () {
         'M': { 'visibility-datasources-basic': true, 'visibility-datasources-details': false, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': true }
     };
 
-    function bindTagifyEvents(tagifyInstance) {
-        tagifyInstance.on('add', function (e) {
-            if (activePlatformTagify !== tagifyInstance) return;
-            const tagText = e.detail.data.value;
-            const jsTree = $(jsTreeId).jstree(true);
-            const node = jsTree
-                .get_json('#', { flat: true })
-                .find(n => jsTree.get_path(n, ' > ') === tagText);
-            if (node) {
-                jsTree.select_node(node.id);
-            }
-        });
+    // --- Helper functions -------------------------------------------------
 
-        tagifyInstance.on('remove', function (e) {
-            if (activePlatformTagify !== tagifyInstance) return;
-            const tagText = e.detail.data.value;
-            const jsTree = $(jsTreeId).jstree(true);
-            const node = jsTree
-                .get_json('#', { flat: true })
-                .find(n => jsTree.get_path(n, ' > ') === tagText);
-            if (node) {
-                jsTree.deselect_node(node.id);
-            }
-        });
+    const getJsTree = () => $(jsTreeId).jstree(true);
+
+    /**
+     * Find a jsTree node by its path.
+     * @param {string} path - Full path text to search for.
+     * @param {object} jsTree - jsTree instance.
+     * @returns {object|undefined} Matching node if found.
+     */
+    function findNodeByPath(path, jsTree = getJsTree()) {
+        return jsTree
+            .get_json('#', { flat: true })
+            .find(n => jsTree.get_path(n, ' > ') === path);
     }
 
+    /**
+     * Select or deselect a node in the tree based on tag text.
+     * @param {string} tagText - Tag caption.
+     * @param {boolean} select - True to select, false to deselect.
+     * @param {object} jsTree - jsTree instance.
+     */
+    function syncTagWithTree(tagText, select = true, jsTree = getJsTree()) {
+        const node = findNodeByPath(tagText, jsTree);
+        if (node) {
+            select ? jsTree.select_node(node.id) : jsTree.deselect_node(node.id);
+        }
+    }
+
+    /**
+     * Split existing Tagify tags into jsTree backed tags and manual tags.
+     *
+     * @param {Tagify} tagifyInstance - The Tagify instance with current tags.
+     * @param {object} jsTree - jsTree instance.
+     * @returns {{tagsWithNode: Array, manualTags: Array}}
+     */
+    function separateTags(tagifyInstance, jsTree = getJsTree()) {
+        const existingTags = tagifyInstance ? tagifyInstance.value.slice() : [];
+        const tagsWithNode = [];
+        const manualTags = [];
+
+        existingTags.forEach(tag => {
+            if (findNodeByPath(tag.value, jsTree)) {
+                tagsWithNode.push(tag);
+            } else {
+                manualTags.push(tag);
+            }
+        });
+
+        return { tagsWithNode, manualTags };
+    }
+
+    /**
+     * Bind Tagify add/remove events so jsTree selections stay in sync.
+     * @param {Tagify} tagifyInstance - Tagify instance to bind events to.
+     */
+    function bindTagifyEvents(tagifyInstance) {
+        const sync = (e, select) => {
+            if (activePlatformTagify !== tagifyInstance) return;
+            syncTagWithTree(e.detail.data.value, select);
+        };
+
+        tagifyInstance.on('add', e => sync(e, true));
+        tagifyInstance.on('remove', e => sync(e, false));
+    }
+
+    /**
+     * Populate the list of selected keywords below the tree modal.
+     */
     function updateSelectedKeywordsList() {
         const selectedKeywordsList = document.getElementById('selected-keywords-platforms-ds');
         if (!selectedKeywordsList) return;
 
-        selectedKeywordsList.innerHTML = "";
-        const selectedNodes = $(jsTreeId).jstree("get_selected", true);
+        selectedKeywordsList.innerHTML = '';
+        const jsTree = getJsTree();
+        const selectedNodes = jsTree.get_selected(true);
 
         selectedNodes.forEach(function (node) {
-            const fullPath = $(jsTreeId).jstree().get_path(node, " > ");
-            const listItem = document.createElement("li");
-            listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+            const fullPath = jsTree.get_path(node, ' > ');
+            const listItem = document.createElement('li');
+            listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
             listItem.textContent = fullPath;
 
-            const removeButton = document.createElement("button");
-            removeButton.classList.add("btn", "btn-sm", "btn-danger");
-            removeButton.innerHTML = "&times;";
+            const removeButton = document.createElement('button');
+            removeButton.classList.add('btn', 'btn-sm', 'btn-danger');
+            removeButton.innerHTML = '&times;';
             removeButton.onclick = function () {
-                $(jsTreeId).jstree("deselect_node", node.id);
+                syncTagWithTree(fullPath, false, jsTree);
             };
 
             listItem.appendChild(removeButton);
@@ -80,11 +124,12 @@ $(document).ready(function () {
     }
 
     document.addEventListener('translationsLoaded', function () {
+        const jsTree = getJsTree();
         $(jsTreeId).off('changed.jstree');
         $(jsTreeId).on('changed.jstree', function (e, data) {
             updateSelectedKeywordsList();
             if (!activePlatformTagify) return;
-            const selectedNodes = $(jsTreeId).jstree('get_selected', true);
+            const selectedNodes = jsTree.get_selected(true);
             const selectedValues = selectedNodes.map(node => data.instance.get_path(node, ' > '));
             activePlatformTagify.removeAllTags();
             activePlatformTagify.addTags(selectedValues);
@@ -104,29 +149,17 @@ $(document).ready(function () {
         if (!inputElem) return;
 
         const tagifyInstance = inputElem._tagify;
-        const jsTree = $(jsTreeId).jstree(true);
+        const jsTree = getJsTree();
 
         // Preserve current tags before manipulating the tree
-        const existingTags = tagifyInstance ? tagifyInstance.value.slice() : [];
-        const jsTreeNodes = jsTree.get_json('#', { flat: true });
-        const tagsWithNode = existingTags.filter(tag =>
-            jsTreeNodes.find(n => jsTree.get_path(n, ' > ') === tag.value)
-        );
-        const manualTags = existingTags.filter(tag =>
-            !jsTreeNodes.find(n => jsTree.get_path(n, ' > ') === tag.value)
-        );
+        const { tagsWithNode, manualTags } = separateTags(tagifyInstance, jsTree);
 
         // Prevent Tagify from being cleared when deselecting nodes
         activePlatformTagify = null;
         jsTree.deselect_all();
 
         activePlatformTagify = tagifyInstance;
-        tagsWithNode.forEach(tag => {
-            const node = jsTreeNodes.find(n => jsTree.get_path(n, ' > ') === tag.value);
-            if (node) {
-                jsTree.select_node(node.id);
-            }
-        });
+        tagsWithNode.forEach(tag => syncTagWithTree(tag.value, true, jsTree));
 
         if (manualTags.length && activePlatformTagify) {
             activePlatformTagify.addTags(manualTags);
@@ -137,7 +170,7 @@ $(document).ready(function () {
 
     $('#modal-platforms-datasource').on('hidden.bs.modal', function () {
         activePlatformTagify = null;
-        const jsTree = $(jsTreeId).jstree(true);
+        const jsTree = getJsTree();
         jsTree.deselect_all();
         updateSelectedKeywordsList();
     });
