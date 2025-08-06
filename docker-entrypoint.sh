@@ -12,6 +12,18 @@ chown -R www-data:www-data /var/www/html/xml
 if [ ! -f /var/www/html/settings.php ]; then
   echo "⚙️  No settings.php found, generating from sample_settings.php"
   cp /var/www/html/sample_settings.php /var/www/html/settings.php
+  # Inject database credentials from environment to ensure consistency with stack.env
+  php - <<'PHP'
+<?php
+$file = '/var/www/html/settings.php';
+$c = file_get_contents($file);
+$c = str_replace(
+    ['your_database_username', 'your_database_password', 'your_database_name', '"localhost"'],
+    [getenv('DB_USER'), getenv('DB_PASSWORD'), getenv('DB_NAME'), '"' . (getenv('DB_HOST') ?: 'localhost') . '"'],
+    $c
+);
+file_put_contents($file, $c);
+PHP
 fi
 
 wait_for_db() {
