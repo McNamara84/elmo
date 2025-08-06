@@ -160,8 +160,15 @@ class DatasetController
     {
         $authors = [];
         $stmt = $connection->prepare("
-        SELECT a.*
+        SELECT 
+            a.author_id,
+            ap.familyname,
+            ap.givenname,
+            ap.orcid,
+            ai.institutionname
         FROM Author a
+        LEFT JOIN Author_person ap ON a.Author_Person_author_person_id = ap.author_person_id
+        LEFT JOIN Author_institution ai ON a.Author_Institution_author_institution_id = ai.author_institution_id
         JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
         WHERE rha.Resource_resource_id = ?
     ");
@@ -178,10 +185,7 @@ class DatasetController
                     'orcid' => $row['orcid'] ?? null,
                     'Affiliations' => $this->getAuthorAffiliations($connection, $row['author_id'])
                 ];
-            }
-
-            // Prüfen: Ist es ein Institution-Author?
-            if (!empty($row['institutionname'])) {
+            } elseif (!empty($row['institutionname'])) {
                 $authors[] = [
                     'type' => 'institution',
                     'institutionname' => $row['institutionname'],
