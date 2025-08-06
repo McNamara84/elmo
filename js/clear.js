@@ -32,6 +32,20 @@ function clearInputFields() {
         firstAffiliationTagify.tagify.removeAllTags();
     }
 
+    // Removes all author-institution lines except the first one
+    $('div[data-authorinstitution-row]').not(':first').remove();
+    // Clears all input fields (input elements) in the first author-institution row
+    $('div[data-authorinstitution-row]:first').find('input').val('');
+
+    // Clear Tagify for institution affiliations in the first institution row
+    const firstInstitutionAffiliationTagify = $('div[data-authorinstitution-row]:first').find('input[name="institutionAffiliation[]"]')[0];
+    if (firstInstitutionAffiliationTagify && firstInstitutionAffiliationTagify.tagify) {
+        firstInstitutionAffiliationTagify.tagify.removeAllTags();
+    }
+
+    // Clear ROR IDs for institution authors
+    $('div[data-authorinstitution-row]:first').find('input[name="authorInstitutionRorIds[]"]').val('');
+
     // Clear author ROR IDs
     $('div[data-creator-row]:first').find('input[name="authorRorIds[]"]').val('');
   
