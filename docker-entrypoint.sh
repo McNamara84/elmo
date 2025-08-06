@@ -10,11 +10,16 @@ wait_for_db() {
   php -r '
   $max = 30;
   while ($max--) {
-      @$c = new mysqli(getenv("DB_HOST"), getenv("DB_USER"), getenv("DB_PASSWORD"));
-      if (!$c->connect_errno) { echo "✅  MariaDB reachable\n"; exit(0); }
-      sleep(2);
+      try {
+          new mysqli(getenv("DB_HOST"), getenv("DB_USER"), getenv("DB_PASSWORD"));
+          echo "✅  MariaDB reachable\n";
+          exit(0);
+      } catch (mysqli_sql_exception $e) {
+          sleep(2);
+      }
   }
-  echo "❌  MariaDB not reachable\n"; exit(1);
+  echo "❌  MariaDB not reachable\n";
+  exit(1);
   ' || exit 1
 }
 
