@@ -8,22 +8,20 @@ chown -R www-data:www-data /var/www/html/xml
 
 wait_for_db() {
   php -r '
-  $max = 30;
-  while ($max--) {
+  while (true) {
       try {
-          new mysqli(getenv("DB_HOST"), getenv("DB_USER"), getenv("DB_PASSWORD"));
+          new mysqli(getenv("DB_HOST"), getenv("DB_USER"), getenv("DB_PASSWORD"), getenv("DB_NAME"));
           echo "✅  MariaDB reachable\n";
           exit(0);
       } catch (mysqli_sql_exception $e) {
+          echo "⏳  Waiting for MariaDB: {$e->getMessage()}\n";
           sleep(2);
       }
   }
-  echo "❌  MariaDB not reachable\n";
-  exit(1);
   ' || exit 1
 }
 
-if [ true ]; then #! -f "$FLAG_FILE" TEMPORARILY REMOVING FLAG FILE 
+if [ true ]; then
   wait_for_db
   echo "🚀  Running initial database setup …"
   php /var/www/html/install.php "${INSTALL_ACTION:-complete}" # can be set to complete or basic
