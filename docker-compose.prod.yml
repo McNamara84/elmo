@@ -10,6 +10,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
+    network_mode: bridge
 
   web:
     build: .
@@ -33,6 +34,7 @@ services:
       - ./doc:/var/www/html/doc:ro
       - ./lang:/var/www/html/lang:ro
       - ./save:/var/www/html/save:ro
+    network_mode: bridge
     labels:
       # traefik.enable=true:
       #   This label tells Traefik to enable routing for this specific service.
