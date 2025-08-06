@@ -33,8 +33,6 @@ services:
       - ./doc:/var/www/html/doc:ro
       - ./lang:/var/www/html/lang:ro
       - ./save:/var/www/html/save:ro
-      - ./install.html:/var/www/html/install.html:ro
-      - ./modals.html:/var/www/html/modals.html:ro
 
 volumes:
   db_data:
