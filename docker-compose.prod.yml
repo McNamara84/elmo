@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: Europe/Berlin
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      INSTALL_ACTION: basic
+      TZ: Europe/Berlin
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - ./js:/var/www/html/js:ro
+      - ./formgroups:/var/www/html/formgroups:ro
+      - ./api:/var/www/html/api:ro
+      - ./css:/var/www/html/css:ro
+      - ./doc:/var/www/html/doc:ro
+      - ./lang:/var/www/html/lang:ro
+      - ./save:/var/www/html/save:ro
+      - ./install.html:/var/www/html/install.html:ro
+      - ./modals.html:/var/www/html/modals.html:ro
+
+volumes:
+  db_data:
