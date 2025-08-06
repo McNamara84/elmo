@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: Europe/Berlin
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - elmo-network
+
+  web:
+    image: ghcr.io/mcnamara84/elmo:latest
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      INSTALL_ACTION: basic
+      TZ: Europe/Berlin
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - elmo-network
+
+volumes:
+  db_data:
+
+networks:
+  elmo-network:
+    driver: bridge
