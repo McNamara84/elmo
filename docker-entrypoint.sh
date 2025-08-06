@@ -14,6 +14,10 @@ wait_for_db() {
           echo "✅  MariaDB reachable\n";
           exit(0);
       } catch (mysqli_sql_exception $e) {
+          if ($e->getCode() === 1045) {
+              fwrite(STDERR, "❌  MariaDB access denied: {$e->getMessage()}\n");
+              exit(1);
+          }
           echo "⏳  Waiting for MariaDB: {$e->getMessage()}\n";
           sleep(2);
       }
@@ -21,7 +25,7 @@ wait_for_db() {
   ' || exit 1
 }
 
-if [ true ]; then
+if [ true ]; then #! -f "$FLAG_FILE" TEMPORARILY REMOVING FLAG FILE 
   wait_for_db
   echo "🚀  Running initial database setup …"
   php /var/www/html/install.php "${INSTALL_ACTION:-complete}" # can be set to complete or basic
