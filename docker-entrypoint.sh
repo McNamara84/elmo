@@ -6,6 +6,14 @@ FLAG_FILE="/var/www/html/.installed"
 # give www-data ownership of the xml folder every start
 chown -R www-data:www-data /var/www/html/xml
 
+# Ensure a settings.php exists; copy from sample if missing so that
+# environment variables can be used for configuration without committing
+# secrets to the repository.
+if [ ! -f /var/www/html/settings.php ]; then
+  echo "⚙️  No settings.php found, generating from sample_settings.php"
+  cp /var/www/html/sample_settings.php /var/www/html/settings.php
+fi
+
 wait_for_db() {
   php -r '
   while (true) {
@@ -25,7 +33,7 @@ wait_for_db() {
   ' || exit 1
 }
 
-if [ true ]; then #! -f "$FLAG_FILE" TEMPORARILY REMOVING FLAG FILE 
+if [ true ]; then
   wait_for_db
   echo "🚀  Running initial database setup …"
   php /var/www/html/install.php "${INSTALL_ACTION:-complete}" # can be set to complete or basic
