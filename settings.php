@@ -34,7 +34,7 @@ function connectDb()
 function getApiKey()
 {
     // Google Maps API Key
-    $apiKeyGoogleMaps = 'AIzaSyD4c-fpy1mBQ0DwckCAQtQsVJdUMq2YYpg';
+    $apiKeyGoogleMaps = 'xxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
     // Set the correct header for a JSON response
     header('Content-Type: application/json');
     // Return API key as JSON
