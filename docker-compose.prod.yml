@@ -10,7 +10,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
-    network_mode: bridge
+    network: backend
 
   web:
     build: .
@@ -34,7 +34,7 @@ services:
       - ./doc:/var/www/html/doc:ro
       - ./lang:/var/www/html/lang:ro
       - ./save:/var/www/html/save:ro
-    network_mode: bridge
+    network: backend
     labels:
       # traefik.enable=true:
       #   This label tells Traefik to enable routing for this specific service.
@@ -75,6 +75,8 @@ services:
       #   'loadbalancer.server.port=80' tells Traefik that the 'web' container is listening
       #   on port 80 internally. Traefik will direct traffic to this port within the container's network.
       - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
-
+networks:
+  backend: # this network will be created by default
+    driver: bridge # bridge is the default network driver, but actually defining it in the d-compose file has benefits. Referencing a container with name is one of them (see DB_HOST)
 volumes:
   db_data:
