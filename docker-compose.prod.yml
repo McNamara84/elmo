@@ -27,14 +27,6 @@ services:
     depends_on:
       - db
     restart: unless-stopped
-    volumes:
-      - ./js:/var/www/html/js:ro
-      - ./formgroups:/var/www/html/formgroups:ro
-      - ./api:/var/www/html/api:ro
-      - ./css:/var/www/html/css:ro
-      - ./doc:/var/www/html/doc:ro
-      - ./lang:/var/www/html/lang:ro
-      - ./save:/var/www/html/save:ro
     networks:
       - internal  # For DB com
       - frontend  # For Traefik com
