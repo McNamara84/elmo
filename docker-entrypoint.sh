@@ -6,6 +6,12 @@ FLAG_FILE="/var/www/html/.installed"
 # give www-data ownership of the xml folder every start
 chown -R www-data:www-data /var/www/html/xml
 
+# Ensure PHP dependencies are installed
+if [ ! -d /var/www/html/vendor ]; then
+  echo "📦  Installing PHP dependencies with Composer"
+  composer install --no-dev --prefer-dist --optimize-autoloader
+fi
+
 # Ensure a settings.php exists; copy from sample if missing so that
 # environment variables can be used for configuration without committing
 # secrets to the repository.
