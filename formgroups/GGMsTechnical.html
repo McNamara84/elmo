@@ -5,6 +5,7 @@
     </div>
     <div class="card-body">
         <div class="row">
+            <!-- Tide System -->
             <div class="col-12 col-md-6 col-lg-2 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
@@ -19,6 +20,7 @@
                     <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-tide-system"></i></span>
                 </div>
             </div>
+            <!-- Errors -->
             <div class="col-12 col-md-6 col-lg-2 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
@@ -40,8 +42,9 @@
                         <label for="input-error-handling-approach" data-translate="technical.errorHandling">Error handling approach</label>
                         <div class="invalid-feedback" data-translate="technical.errorHandlingInvalid">Only letters, numbers and . , ( ) - are allowed.</div>
                     </div>
-                </div>
+                </div>            
             </div>
+            <!-- Degree -->
             <div class="col-12 col-md-6 col-lg-2 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
@@ -56,9 +59,7 @@
         <div class="row">
             <!-- Mathematical Representation triggers the visibility -->
             <!-- This field is already handled by ggmproperties-essential.js -->
-            
-            <!-- Spherical: Radius only -->
-            <!-- input with scientific notation -->
+            <!-- Spherical: Radius with scientific notation (no arrows) -->
             <div class="col-12 col-md-6 col-lg-5 p-1 visibility-spherical" style="display: none;">
                 <div class="input-group has-validation">
                     <div class="form-floating">
@@ -75,46 +76,31 @@
                         <div class="invalid-feedback" data-translate="technical.radiusInvalid">Please provide radius.</div>
                     </div>
                     
-                    <!-- Scientific notation controls -->
-                    <span class="input-group-text px-1">×10</span>
+                    <!-- Scientific notation display -->
+                    <span class="input-group-text px-2">×10</span>
                     
-                    <div class="input-group-scientific">
-                        <input type="number" class="form-control form-control-sm text-center" 
+                    <div class="form-floating" style="max-width: 80px;">
+                        <input type="number" class="form-control text-center" 
                                id="input-radius-exponent" 
                                name="radius_exponent" 
-                               value="6"
+                               step="1" 
                                min="-10" 
                                max="10"
-                               style="width: 60px; font-size: 0.875rem;">
-                        
-                        <!-- Power adjustment buttons -->
-                        <div class="btn-group-vertical radius-power-controls" style="width: 20px;">
-                            <button type="button" class="btn btn-outline-secondary btn-sm p-0" 
-                                    id="radius-power-up" 
-                                    style="height: 15px; line-height: 1; font-size: 10px; border-radius: 0;">
-                                <i class="bi bi-chevron-up" style="font-size: 8px;"></i>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm p-0" 
-                                    id="radius-power-down" 
-                                    style="height: 15px; line-height: 1; font-size: 10px; border-radius: 0;">
-                                <i class="bi bi-chevron-down" style="font-size: 8px;"></i>
-                            </button>
-                        </div>
+                               placeholder="6">
+                        <label for="input-radius-exponent">Exp</label>
                     </div>
                     
                     <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-radius"></i></span>
                 </div>
-                
-                <!-- Hidden field for the actual calculated radius value -->
-                <input type="hidden" id="input-radius" name="radius">
-                
-                <!-- Display calculated value -->
-                <small class="text-muted mt-1 d-block">
-                    <span data-translate="technical.calculatedValue">Calculated value:</span> 
-                    <span id="radius-display">6371000</span> 
-                    <span data-translate="technical.meters">meters</span>
+
+            <!-- Display calculated value -->
+            <small class="text-muted mt-1 d-block">
+                <span data-translate="technical.calculatedValue">Calculated value:</span> 
+                <span id="radius-display">0</span> 
+                <span data-translate="technical.meters">meters</span>
                 </small>
             </div>
+                
 
             <!-- Ellipsoidal: Semimajor Axis -->
             <div class="col-12 col-md-5 col-lg-4 p-1 visibility-ellipsoidal" style="display: none;">
