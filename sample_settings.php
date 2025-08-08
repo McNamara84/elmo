@@ -50,17 +50,17 @@ $showFundingReference = true;
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group
-$showMslLabs = true;
+$showMslLabs = false;
 // URL to the source with all laboratories for MSL
 $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
 // Show MSL vocabularies
-$showMslVocabs = true;
+$showMslVocabs = false;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
 // SETTINGS FOR ICGEM
 // Show GGMs Properties form group
-$showGGMsProperties = true;
+$showGGMsProperties = false;
 // Show Characteristics of the model form group
 $characteristicsOfTheModel = false;
 
