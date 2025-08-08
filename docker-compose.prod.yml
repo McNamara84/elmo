@@ -10,7 +10,8 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
-    network_mode: bridge
+    networks:
+      - internal  # DB stays in the internal network
 
   web:
     build: .
@@ -34,47 +35,24 @@ services:
       - ./doc:/var/www/html/doc:ro
       - ./lang:/var/www/html/lang:ro
       - ./save:/var/www/html/save:ro
-    network_mode: bridge
+    networks:
+      - internal  # For DB com
+      - frontend  # For Traefik com
     labels:
-      # traefik.enable=true:
-      #   This label tells Traefik to enable routing for this specific service.
-      #   Without this, Traefik will ignore the other Traefik-related labels on this container.
       - "traefik.enable=true"
-
-      # traefik.http.routers.elmo-router.rule:
-      #   Defines the routing rule for this service.
-      #   - Host(`env.rz-vm182.gfz.de`): Matches incoming requests where the host header is exactly 'env.rz-vm182.gfz.de'.
-      #   - PathPrefix(`/elmo`): Matches incoming requests where the URL path starts with '/elmo'.
-      #   The '&&' operator means both conditions must be true for the router to activate.
       - "traefik.http.routers.elmo-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo`)"
-
-      # traefik.http.routers.elmo-router.entrypoints=https:
-      #   Specifies which Traefik entrypoint(s) this router should listen on.
-      #   'https' indicates that this service should be accessible via HTTPS (port 443, typically).
-      #   Based on your dashboard, 'https' is the standard for your environment.
       - "traefik.http.routers.elmo-router.entrypoints=https"
-
-      # traefik.http.routers.elmo-router.middlewares=elmo-stripprefix@docker:
-      #   Attaches a middleware to this router.
-      #   'elmo-stripprefix@docker' refers to the middleware defined below.
-      #   This middleware will be applied to the request *before* it's sent to the service.
-      - "traefik.http.routers.elmo-router.middlewares=elmo-stripprefix@docker"
-
-      # traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo:
-      #   Defines a middleware named 'elmo-stripprefix'.
-      #   'stripprefix' is a Traefik middleware type that removes a specified prefix from the request URL path.
-      #   'prefixes=/elmo' means that if the incoming path is '/elmo/some/page', it will be rewritten to '/some/page'
-      #   before being sent to your 'web' container. This is crucial because your web app likely expects to
-      #   be served from the root path ('/'), not '/elmo/'.
-      #   '@docker' is a convention indicating that this middleware is defined via the Docker provider.
+      - "traefik.http.routers.elmo-router.middlewares=elmo-stripprefix"
       - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
-
-      # traefik.http.services.elmo-service.loadbalancer.server.port=80:
-      #   Defines the backend service that the router will forward traffic to.
-      #   'elmo-service' is the name of this internal Traefik service.
-      #   'loadbalancer.server.port=80' tells Traefik that the 'web' container is listening
-      #   on port 80 internally. Traefik will direct traffic to this port within the container's network.
       - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik"  # Traefik network
 
 volumes:
   db_data:
+
+networks:
+  internal:
+    driver: bridge
+  frontend:
+    external:
+      name: traefik
