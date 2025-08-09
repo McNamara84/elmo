@@ -13,7 +13,7 @@ services:
     networks:
       - internal  # DB stays in the internal network
 
-  # Default ELMO /elmo
+  # Default ELMO
   web:
     build: .
     ports:
@@ -25,8 +25,6 @@ services:
       DB_NAME: ${DB_NAME}
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
-      SHOW_MSL_LABS: "false"
-      SHOW_MSL_VOCABS: "false"
     depends_on:
       - db
     restart: unless-stopped
@@ -41,36 +39,15 @@ services:
       - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
       - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"  # Traefik network
-
-  # MSL ELMO /elmo-msl
+  # MSL ELMO
   web-msl:
-    build: .
-    ports:
-      - "8081:80"
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-      INSTALL_ACTION: basic
-      TZ: Europe/Berlin
-      # MSL specific
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
-    depends_on:
-      - db
-    restart: unless-stopped
-    networks:
-      - internal  # For DB com
-      - frontend  # For Traefik com
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.elmo-msl-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo-msl`)"
-      - "traefik.http.routers.elmo-msl-router.entrypoints=https"
-      - "traefik.http.routers.elmo-msl-router.middlewares=elmo-msl-stripprefix"
-      - "traefik.http.middlewares.elmo-msl-stripprefix.stripprefix.prefixes=/elmo-msl"
-      - "traefik.http.services.elmo-msl-service.loadbalancer.server.port=80"
-      - "traefik.docker.network=traefik"  # Traefik network
 
 volumes:
   db_data:
