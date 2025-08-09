@@ -50,11 +50,9 @@ services:
       DB_NAME: ${DB_NAME}
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
-    volumes:
-      - type: bind
-        source: ./sample_settings_msl.php
+    configs:
+      - source: sample_settings_msl
         target: /var/www/html/sample_settings.php
-        read_only: true
     depends_on:
       - db
     restart: unless-stopped
@@ -72,6 +70,10 @@ services:
 
 volumes:
   db_data:
+
+configs:
+  sample_settings_msl:
+    file: ./sample_settings_msl.php
 
 networks:
   internal:
