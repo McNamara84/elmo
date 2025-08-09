@@ -13,6 +13,7 @@ services:
     networks:
       - internal  # DB stays in the internal network
 
+  # Default ELMO
   web:
     build: .
     ports:
@@ -38,6 +39,15 @@ services:
       - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
       - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"  # Traefik network
+  # MSL ELMO
+  web-msl:
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      SHOW_MSL_LABS: "true"
+      SHOW_MSL_VOCABS: "true"
 
 volumes:
   db_data:
