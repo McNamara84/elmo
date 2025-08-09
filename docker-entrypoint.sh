@@ -12,6 +12,12 @@ if [ ! -d /var/www/html/vendor ]; then
   composer install --no-dev --prefer-dist --optimize-autoloader
 fi
 
+# Ensure Node dependencies are installed
+if [ ! -d /var/www/html/node_modules ]; then
+  echo "📦  Installing Node dependencies"
+  npm install --omit=dev
+fi
+
 # Ensure a settings.php exists; copy from sample if missing so that
 # environment variables can be used for configuration without committing
 # secrets to the repository.
