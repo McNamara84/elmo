@@ -57,8 +57,6 @@ services:
     networks:
       - internal  # For DB com
       - frontend  # For Traefik com
-    volumes:
-      - ./sample_settings_msl.php:/var/www/html/sample_settings.php:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.elmo-msl-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo-msl`)"
@@ -70,6 +68,10 @@ services:
 
 volumes:
   db_data:
+
+configs:
+  sample_settings_msl:
+    file: ./sample_settings_msl.php
 
 networks:
   internal:
