@@ -50,9 +50,7 @@ services:
       DB_NAME: ${DB_NAME}
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
-    configs:
-      - source: sample_settings_msl
-        target: /var/www/html/sample_settings.php
+      MSL_ENABLED: "true"
     depends_on:
       - db
     restart: unless-stopped
