@@ -19,7 +19,7 @@ if [ ! -f /var/www/html/settings.php ]; then
   echo "⚙️  No settings.php found, generating from sample_settings.php"
   cp /var/www/html/sample_settings.php /var/www/html/settings.php
   # Inject database credentials from environment to ensure consistency with stack.env
-  php - <<'PHP'
+    php <<'PHP'
 <?php
 $file = '/var/www/html/settings.php';
 $c = file_get_contents($file);
@@ -34,7 +34,7 @@ fi
 
 # Enable MSL-specific features if requested
 if [ "${MSL_ENABLED:-false}" = "true" ]; then
-  php - <<'PHP'
+  php <<'PHP'
 <?php
 $file = '/var/www/html/settings.php';
 $c = file_get_contents($file);
