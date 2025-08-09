@@ -32,21 +32,6 @@ file_put_contents($file, $c);
 PHP
 fi
 
-# Enable MSL-specific features if requested
-if [ "${MSL_ENABLED:-false}" = "true" ]; then
-  php - <<'PHP'
-<?php
-$file = '/var/www/html/settings.php';
-$c = file_get_contents($file);
-$c = str_replace(
-    ['$showMslLabs = false;', '$showMslVocabs = false;'],
-    ['$showMslLabs = true;', '$showMslVocabs = true;'],
-    $c
-);
-file_put_contents($file, $c);
-PHP
-fi
-
 wait_for_db() {
   php -r '
   while (true) {
