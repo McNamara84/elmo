@@ -48,7 +48,8 @@ $(document).ready(function () {
             jsonFile: 'json/thesauri/gcmdPlatformsKeywords.json',
             jsTreeId: '#jstree-platforms-datasource',
             searchInputId: '#input-platforms-thesaurussearch-ds',
-            selectedKeywordsListId: 'selected-keywords-platforms-ds'
+            selectedKeywordsListId: 'selected-keywords-platforms-ds',
+            rootNodeId: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847'
         }
     ];
 
@@ -130,10 +131,10 @@ $(document).ready(function () {
                     return null;
                 }
 
-                // filter node and its children
+                // restrict to the specified node and its descendants
                 var selectedNode = findNodeById(data, config.rootNodeId);
                 if (selectedNode) {
-                    filteredData = selectedNode.children || [];
+                    filteredData = [selectedNode];
                 } else {
                     console.error(`Root node with ID ${config.rootNodeId} not found in ${config.jsonFile}`);
                     return;
