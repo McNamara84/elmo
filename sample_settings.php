@@ -24,110 +24,61 @@ function connectDb()
 $connection = connectDb();
 
 // ELMO API Key
-$apiKeyElmo = getenv('API_KEY_ELMO') ?: '1234-1234-1234-1234';
-
+$apiKeyElmo = '1234-1234-1234-1234';
 // Google Maps API Key
-$apiKeyGoogleMaps = getenv('API_KEY_GOOGLE_MAPS') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
-
+$apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 // API Key for https://timezonedb.com/
-$apiKeyTimezone = getenv('API_KEY_TIMEZONE') ?: 'your_timezone_api_key';
+$apiKeyTimezone = 'your_timezone_api_key';
 
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
 // maximale Anzahl der eingebbaren Titel
-$maxTitles = getenv('MAX_TITLES') ? intval(getenv('MAX_TITLES')) : 2;
-
+$maxTitles = 2;
 // Show Contributor Persons form group
-$showContributorPersons = filter_var(
-    getenv('SHOW_CONTRIBUTOR_PERSONS') ?: 'true',
-    FILTER_VALIDATE_BOOLEAN
-);
-
-// Show Contributor Institutions form group
-$showContributorInstitutions = filter_var(
-    getenv('SHOW_CONTRIBUTOR_INSTITUTIONS') ?: 'true',
-    FILTER_VALIDATE_BOOLEAN
-);
-
+$showContributorPersons = true;
+// Show Contrubutor Institutios form group
+$showContributorInstitutions = true;
 // Show GCMD Thesauri form group
-$showGcmdThesauri = filter_var(
-    getenv('SHOW_GCMD_THESAURI') ?: 'true',
-    FILTER_VALIDATE_BOOLEAN
-);
-
+$showGcmdThesauri = true;
 // Show Free Keywords form group
-$showFreeKeywords = filter_var(
-    getenv('SHOW_FREE_KEYWORDS') ?: 'true',
-    FILTER_VALIDATE_BOOLEAN
-);
-
+$showFreeKeywords = true;
 // Show Spatial and Temporal Coverage form group
-$showSpatialTemporalCoverage = filter_var(
-    getenv('SHOW_SPATIAL_TEMPORAL_COVERAGE') ?: 'true',
-    FILTER_VALIDATE_BOOLEAN
-);
-
+$showSpatialTemporalCoverage = true;
 // Show Related Work form group
-$showRelatedWork = filter_var(
-    getenv('SHOW_RELATED_WORK') ?: 'true',
-    FILTER_VALIDATE_BOOLEAN
-);
-
+$showRelatedWork = true;
 // Show Funding Reference form group
-$showFundingReference = filter_var(
-    getenv('SHOW_FUNDING_REFERENCE') ?: 'true',
-    FILTER_VALIDATE_BOOLEAN
-);
+$showFundingReference = true;
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group
-$showMslLabs = filter_var(
-    getenv('SHOW_MSL_LABS') ?: 'false',
-    FILTER_VALIDATE_BOOLEAN
-);
-
+$showMslLabs = false;
 // URL to the source with all laboratories for MSL
-$mslLabsUrl = getenv('MSL_LABS_URL') ?: 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
-
+$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
 // Show MSL vocabularies
-$showMslVocabs = filter_var(
-    getenv('SHOW_MSL_VOCABS') ?: 'false',
-    FILTER_VALIDATE_BOOLEAN
-);
-
+$showMslVocabs = false;
 // URL to the source with all vocabularies for MSL
-$mslVocabsUrl = getenv('MSL_VOCABS_URL') ?: 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
 // SETTINGS FOR ICGEM
 // Show GGMs Properties form group
-$showGGMsProperties = filter_var(
-    getenv('SHOW_GGMS_PROPERTIES') ?: 'false',
-    FILTER_VALIDATE_BOOLEAN
-);
-
+$showGGMsProperties = false;
 // Show Characteristics of the model form group
-$characteristicsOfTheModel = filter_var(
-    getenv('CHARACTERISTICS_OF_THE_MODEL') ?: 'false',
-    FILTER_VALIDATE_BOOLEAN
-);
+$characteristicsOfTheModel = false;
 
 // Display the feedback link (true to display, false to hide)
-$showFeedbackLink = filter_var(
-    getenv('SHOW_FEEDBACK_LINK') ?: 'true',
-    FILTER_VALIDATE_BOOLEAN
-);
+$showFeedbackLink = true;
 
 // Settings for sending mail with SMTP
-$smtpHost = getenv('SMTP_HOST') ?: 'your_smtp_host';
-$smtpPort = getenv('SMTP_PORT') ? intval(getenv('SMTP_PORT')) : 465;
-$smtpUser = getenv('SMTP_USER') ?: 'your_smtp_username';
-$smtpPassword = getenv('SMTP_PASSWORD') ?: 'your_smtp_password';
-$smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
+$smtpHost = 'your_smtp_host';
+$smtpPort = 465;
+$smtpUser = 'your_smtp_username';
+$smtpPassword = 'your_smtp_password';
+$smtpSender = 'your_smtp_sender_email';
 
 // Target address for feedback
-$feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
+$feedbackAddress = 'feedback@example.com';
 
 // Target address for XML submit
-$xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
+$xmlSubmitAddress = 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
