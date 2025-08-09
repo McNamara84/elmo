@@ -51,7 +51,10 @@ services:
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
     volumes:
-      - ./sample_settings_msl.php:/var/www/html/settings.php:ro
+      - type: bind
+        source: ./sample_settings_msl.php
+        target: /var/www/html/sample_settings.php
+        read_only: true
     depends_on:
       - db
     restart: unless-stopped
