@@ -73,14 +73,21 @@ class ValidationController
         exit();
     }
 
-    /**
-     * Retrieves all identifier types along with their patterns and descriptions.
-     *
-     * @return void
-     */
     public function getIdentifierTypes()
     {
-        $stmt = $this->connection->prepare('SELECT name, pattern, description FROM Identifier_Type');
+        // Get optional filter from query parameter
+        $filter = isset($_GET['isShown']) ? $_GET['isShown'] : null;
+
+        if ($filter === '0' || $filter === '1') {
+            $stmt = $this->connection->prepare(
+                'SELECT name, pattern, description, isShown FROM Identifier_Type WHERE isShown = ?'
+            );
+            $stmt->bind_param('i', $filter);
+        } else {
+            $stmt = $this->connection->prepare(
+                'SELECT name, pattern, description, isShown FROM Identifier_Type'
+            );
+        }
 
         if (!$stmt) {
             http_response_code(500);
@@ -102,7 +109,7 @@ class ValidationController
                 $identifierTypes[] = [
                     'name' => $row['name'],
                     'pattern' => $row['pattern'],
-                    'description' => $row['description']
+                    'description' => $row['description'],
                 ];
             }
             echo json_encode(['identifierTypes' => $identifierTypes]);
