@@ -321,6 +321,7 @@ function createDatabaseStructure($connection)
     `name` VARCHAR(45) NOT NULL,
     `description` TEXT(1000) NULL,
     `pattern` VARCHAR(256),
+    `isShown` SMALLINT,
     PRIMARY KEY (`identifier_type_id`));",
 
         "Related_Work" => "CREATE TABLE IF NOT EXISTS `Related_Work` (
