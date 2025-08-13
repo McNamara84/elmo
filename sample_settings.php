@@ -68,11 +68,11 @@ $characteristicsOfTheModel = false;
 $showFeedbackLink = true;
 
 // Settings for sending mail with SMTP
-$smtpHost = 'your_smtp_host';
-$smtpPort = 465;
-$smtpUser = 'your_smtp_username';
-$smtpPassword = 'your_smtp_password';
-$smtpSender = 'your_smtp_sender_email';
+$smtpHost = getenv('SMTP_HOST') ?: 'your_smtp_host';
+$smtpPort = getenv('SMTP_PORT') ?: 465;
+$smtpUser = getenv('SMTP_USER') ?: 'your_smtp_username';
+$smtpPassword = getenv('SMTP_PASSWORD') ?: 'your_smtp_password';
+$smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
 
 // Target address for feedback
 $feedbackAddress = 'feedback@example.com';
