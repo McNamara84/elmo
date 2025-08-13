@@ -73,6 +73,20 @@ class ValidationController
         exit();
     }
 
+    /**
+     * Retrieves all identifier types, with optional filtering by the `isShown` flag.
+     *
+     * The `isShown` column indicates whether an identifier type should be displayed (1) or hidden (0).
+     * Currently, only 7 of the 19 available identifier types are marked as important (isShown = 1)
+     * and should be visible to users; the rest are hidden.
+     *
+     * Query parameters:
+     *   identifiertypes?isShown=1 → returns only the visible/important identifier types
+     *   identifiertypes?isShown=0 → returns only the hidden/unimportant identifier types
+     *   identifiertypes           → returns all identifier types (no filtering)
+     *
+     * @return void
+     */
     public function getIdentifierTypes()
     {
         // Get optional filter from query parameter
