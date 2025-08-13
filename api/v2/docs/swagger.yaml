@@ -658,7 +658,13 @@ paths:
         - validation
       security: []
       summary: Retrieve all identifier types
-      description: Returns all available identifier types with their validation patterns
+      description: |
+        Returns identifier types with their validation patterns.
+
+        Now supports optional filtering via the `isShown` query parameter:
+          - No parameter → returns all identifier types (default).
+          - `?isShown=1` → returns only visible identifier types.
+          - `?isShown=0` → returns only hidden identifier types.
       operationId: getIdentifierTypes
       responses:
         "200":
