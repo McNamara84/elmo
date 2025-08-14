@@ -16,7 +16,7 @@ services:
   postfix:
     image: boky/postfix
     environment:
-      ALLOWED_SENDER_DOMAINS: gfz.de
+      ALLOWED_SENDER_DOMAINS: ${ALLOWED_SENDER_DOMAINS}
       TZ: Europe/Berlin
     ports:
       - "1587:587"
@@ -38,6 +38,8 @@ services:
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_AUTH: ${SMTP_AUTH}
+      SMTP_SECURE: ${SMTP_SECURE}
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
