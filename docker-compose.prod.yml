@@ -23,6 +23,7 @@ services:
     restart: unless-stopped
     networks:
       - internal
+      - frontend
 
   web:
     build: .
