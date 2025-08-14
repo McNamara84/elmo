@@ -13,6 +13,17 @@ services:
     networks:
       - internal
 
+  postfix:
+    image: boky/postfix
+    environment:
+      ALLOWED_SENDER_DOMAINS: gfz.de
+      TZ: Europe/Berlin
+    ports:
+      - "1587:587"
+    restart: unless-stopped
+    networks:
+      - internal
+
   web:
     build: .
     ports:
@@ -33,6 +44,7 @@ services:
       TZ: Europe/Berlin
     depends_on:
       - db
+      - postfix
     restart: unless-stopped
     networks:
       - internal
