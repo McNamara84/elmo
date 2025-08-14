@@ -31,8 +31,6 @@ $(document).ready(function () {
     newContributorRow.find(".row-label").hide();
     newContributorRow.find("input").removeAttr("required");
 
-    // Replace help buttons with placeholders
-    replaceHelpButtonInClonedRows(newContributorRow);
 
     // Replace role field with fresh markup
     const roleFieldHtml = `
@@ -60,6 +58,9 @@ $(document).ready(function () {
       </div>
     `;
     newContributorRow.find("#input-contributor-organisationaffiliation").closest(".input-group").replaceWith(affFieldHtml);
+
+    // Replace help buttons with placeholders
+    replaceHelpButtonInClonedRows(newContributorRow);
 
     // Update label and input field ID
     newContributorRow.find("#input-contributor-name").attr("id", `input-contributor-name${uniqueSuffix}`);
