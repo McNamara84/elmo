@@ -1,14 +1,17 @@
 <?php
+/**
+ * Script for handling feedback email submission using PHPMailer with GFZ SMTP
+ */
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
 include 'settings.php';
 
-function testNetworkConnectivity() {
+function testGfzSmtpConnectivity() {
     global $smtpHost, $smtpPort;
     
-    error_log("=== Network Connectivity Test ===");
+    error_log("=== GFZ SMTP Connectivity Test ===");
     
     // DNS-Test
     $ip = gethostbyname($smtpHost);
@@ -38,37 +41,36 @@ function sendFeedbackMail(
     global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth;
     
     // Netzwerk-Test vor dem Versenden
-    if (!testNetworkConnectivity()) {
-        echo json_encode(['success' => false, 'message' => 'Network connectivity test failed. Check logs.']);
+    if (!testGfzSmtpConnectivity()) {
+        echo json_encode(['success' => false, 'message' => 'GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.']);
         return;
     }
     
     $mail = new PHPMailer(true);
     
     try {
-        // Debug settings
-        $mail->SMTPDebug = 3; // Maximales Debugging
+        // Debug settings (für Troubleshooting)
+        $mail->SMTPDebug = 2;
         $mail->Debugoutput = 'error_log';
         
-        // Server settings
+        // Server settings für GFZ SMTP
         $mail->isSMTP();
         $mail->Host = $smtpHost;
         $mail->Port = $smtpPort;
         $mail->Timeout = 30;
         $mail->SMTPKeepAlive = false;
         
-        // Authentication
+        // Authentication für GFZ
         $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
         if ($mail->SMTPAuth) {
             $mail->Username = $smtpUser;
             $mail->Password = $smtpPassword;
         }
         
-        // Encryption
-        if (strtolower($smtpSecure) === 'ssl') {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        } elseif (strtolower($smtpSecure) === 'tls') {
+        // STARTTLS für GFZ
+        if (strtolower($smtpSecure) === 'tls') {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->SMTPAutoTLS = true;
         } else {
             $mail->SMTPAutoTLS = false;
         }
@@ -78,41 +80,68 @@ function sendFeedbackMail(
         // Email settings
         $mail->setFrom($smtpSender, 'ELMO Feedback System');
         $mail->addAddress($feedbackAddress);
+        $mail->addReplyTo($smtpSender, 'ELMO System');
+        
         $mail->isHTML(false);
-        $mail->Subject = 'New Feedback for ELMO - ' . date('Y-m-d H:i:s');
+        $mail->Subject = 'Neues ELMO Feedback - ' . date('d.m.Y H:i:s');
         
-        $mail->Body = "New feedback received:\n\n"
-            . "1. Helpful functions: " . $feedbackQuestion1 . "\n\n"
-            . "2. Design changes: " . $feedbackQuestion2 . "\n\n"
-            . "3. Positive usability: " . $feedbackQuestion3 . "\n\n"
-            . "4. Difficult functions: " . $feedbackQuestion4 . "\n\n"
-            . "5. Confusing aspects: " . $feedbackQuestion5 . "\n\n"
-            . "6. Missing functions: " . $feedbackQuestion6 . "\n\n"
-            . "7. Improvements: " . $feedbackQuestion7 . "\n\n"
-            . "Submitted: " . date('Y-m-d H:i:s');
+        // Email body auf Deutsch
+        $mail->Body = "Neues Feedback über ELMO erhalten:\n\n"
+            . "1. Welche Funktionen des neuen Metadaten-Editors finden Sie besonders hilfreich?\n"
+            . $feedbackQuestion1 . "\n\n"
+            . "2. Gibt es eine bestimmte Design- oder Benutzeroberflächen-Änderung, die Ihnen gefällt?\n"
+            . $feedbackQuestion2 . "\n\n"
+            . "3. Was finden Sie positiv an der Benutzerfreundlichkeit des neuen Editors?\n"
+            . $feedbackQuestion3 . "\n\n"
+            . "4. Welche Funktionen des neuen Editors finden Sie schwer zu bedienen?\n"
+            . $feedbackQuestion4 . "\n\n"
+            . "5. Gibt es Aspekte der Benutzeroberfläche, die Sie verwirrend oder störend finden?\n"
+            . $feedbackQuestion5 . "\n\n"
+            . "6. Vermissen Sie bestimmte Funktionen im neuen Metadaten-Editor?\n"
+            . $feedbackQuestion6 . "\n\n"
+            . "7. Gibt es eine spezielle Verbesserung, die Sie gerne sehen würden?\n"
+            . $feedbackQuestion7 . "\n\n"
+            . "---\n"
+            . "Eingereicht am: " . date('d.m.Y H:i:s') . "\n"
+            . "Von: " . ($_SERVER['HTTP_HOST'] ?? 'ELMO System') . "\n"
+            . "IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unbekannt');
         
-        error_log("Attempting to send email via {$smtpHost}:{$smtpPort}");
+        error_log("Sende E-Mail über GFZ SMTP ({$smtpHost}:{$smtpPort}) an {$feedbackAddress}");
         $mail->send();
-        error_log("Email successfully sent!");
+        error_log("E-Mail erfolgreich über GFZ SMTP versendet!");
         
-        echo json_encode(['success' => true, 'message' => 'Feedback sent successfully.']);
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Feedback erfolgreich gesendet!'
+        ]);
         
     } catch (Exception $e) {
-        error_log("SMTP Error Details:");
+        error_log("GFZ SMTP Fehler:");
         error_log("- Host: {$smtpHost}");
         error_log("- Port: {$smtpPort}");
+        error_log("- User: {$smtpUser}");
         error_log("- Security: {$smtpSecure}");
-        error_log("- Error: " . $mail->ErrorInfo);
+        error_log("- PHPMailer Error: " . $mail->ErrorInfo);
         error_log("- Exception: " . $e->getMessage());
+        
+        // Fallback: Feedback in Datei speichern
+        $logFile = '/var/www/html/feedback_backup.txt';
+        $logEntry = "[" . date('Y-m-d H:i:s') . "] BACKUP FEEDBACK\n";
+        $logEntry .= "An: " . $feedbackAddress . "\n";
+        $logEntry .= "Fehler: " . $mail->ErrorInfo . "\n";
+        $logEntry .= "Inhalt:\n" . $mail->Body . "\n";
+        $logEntry .= str_repeat("=", 80) . "\n\n";
+        
+        file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
         
         echo json_encode([
             'success' => false, 
-            'message' => 'Error: ' . $mail->ErrorInfo
+            'message' => 'Fehler beim E-Mail-Versand: ' . $mail->ErrorInfo . '. Feedback wurde gesichert.'
         ]);
     }
 }
 
-// Process POST request
+// POST-Request verarbeiten
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $feedbackQuestion1 = $_POST['feedbackQuestion1'] ?? '';
     $feedbackQuestion2 = $_POST['feedbackQuestion2'] ?? '';
