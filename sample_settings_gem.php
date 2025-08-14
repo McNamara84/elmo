@@ -31,11 +31,11 @@ $apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 $apiKeyTimezone = 'your_timezone_api_key';
 
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
-// maximale Anzahl der eingebbaren Titel
+// Maximum number of titles that can be entered
 $maxTitles = 2;
 // Show Contributor Persons form group
 $showContributorPersons = true;
-// Show Contrubutor Institutios form group
+// Show Contributor Institutions form group
 $showContributorInstitutions = true;
 // Show GCMD Thesauri form group
 $showGcmdThesauri = true;

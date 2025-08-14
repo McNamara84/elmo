@@ -13,11 +13,11 @@ function testGfzSmtpConnectivity() {
     
     error_log("=== GFZ SMTP Connectivity Test ===");
     
-    // DNS-Test
+    // DNS test
     $ip = gethostbyname($smtpHost);
     error_log("DNS Resolution: {$smtpHost} -> {$ip}");
     
-    // Port-Test
+    // Port test
     $connection = @fsockopen($smtpHost, $smtpPort, $errno, $errstr, 10);
     if ($connection) {
         error_log("Port {$smtpPort} on {$smtpHost} is OPEN");
@@ -40,7 +40,7 @@ function sendFeedbackMail(
 ) {
     global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth;
     
-    // Netzwerk-Test vor dem Versenden
+    // Network test before sending
     if (!testGfzSmtpConnectivity()) {
         echo json_encode(['success' => false, 'message' => 'GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.']);
         return;
@@ -49,25 +49,25 @@ function sendFeedbackMail(
     $mail = new PHPMailer(true);
     
     try {
-        // Debug settings (für Troubleshooting)
+        // Debug settings (for troubleshooting)
         $mail->SMTPDebug = 2;
         $mail->Debugoutput = 'error_log';
         
-        // Server settings für GFZ SMTP
+        // Server settings for GFZ SMTP
         $mail->isSMTP();
         $mail->Host = $smtpHost;
         $mail->Port = $smtpPort;
         $mail->Timeout = 30;
         $mail->SMTPKeepAlive = false;
         
-        // Authentication für GFZ
+        // Authentication for GFZ
         $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
         if ($mail->SMTPAuth) {
             $mail->Username = $smtpUser;
             $mail->Password = $smtpPassword;
         }
         
-        // STARTTLS für GFZ
+        // STARTTLS for GFZ
         if (strtolower($smtpSecure) === 'tls') {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->SMTPAutoTLS = true;
@@ -85,7 +85,7 @@ function sendFeedbackMail(
         $mail->isHTML(false);
         $mail->Subject = 'Neues ELMO Feedback - ' . date('d.m.Y H:i:s');
         
-        // Email body auf Deutsch
+        // Email body in German
         $mail->Body = "Neues Feedback über ELMO erhalten:\n\n"
             . "1. Welche Funktionen des neuen Metadaten-Editors finden Sie besonders hilfreich?\n"
             . $feedbackQuestion1 . "\n\n"
@@ -124,7 +124,7 @@ function sendFeedbackMail(
         error_log("- PHPMailer Error: " . $mail->ErrorInfo);
         error_log("- Exception: " . $e->getMessage());
         
-        // Fallback: Feedback in Datei speichern
+        // Fallback: save feedback to file
         $logFile = '/var/www/html/feedback_backup.txt';
         $logEntry = "[" . date('Y-m-d H:i:s') . "] BACKUP FEEDBACK\n";
         $logEntry .= "An: " . $feedbackAddress . "\n";
@@ -141,7 +141,7 @@ function sendFeedbackMail(
     }
 }
 
-// POST-Request verarbeiten
+// Process POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $feedbackQuestion1 = $_POST['feedbackQuestion1'] ?? '';
     $feedbackQuestion2 = $_POST['feedbackQuestion2'] ?? '';

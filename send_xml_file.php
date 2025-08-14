@@ -47,11 +47,11 @@ function testGfzSmtpConnectivity() {
     
     error_log("=== GFZ SMTP Connectivity Test (XML Submit) ===");
     
-    // DNS-Test
+    // DNS test
     $ip = gethostbyname($smtpHost);
     error_log("DNS Resolution: {$smtpHost} -> {$ip}");
     
-    // Port-Test
+    // Port test
     $connection = @fsockopen($smtpHost, $smtpPort, $errno, $errstr, 10);
     if ($connection) {
         error_log("Port {$smtpPort} on {$smtpHost} is OPEN");
@@ -159,21 +159,21 @@ try {
     $mail->SMTPDebug = 2; // Enable verbose debug output
     $mail->Debugoutput = 'error_log';
 
-    // Server settings für GFZ SMTP
+    // Server settings for GFZ SMTP
     $mail->isSMTP();
-    $mail->Host = $smtpHost; // Direkter Hostname für GFZ
+    $mail->Host = $smtpHost; // Direct hostname for GFZ
     $mail->Port = $smtpPort;
     $mail->Timeout = 30;
     $mail->SMTPKeepAlive = false;
 
-    // Authentication für GFZ
+    // Authentication for GFZ
     $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
     if ($mail->SMTPAuth) {
         $mail->Username = $smtpUser;
         $mail->Password = $smtpPassword;
     }
 
-    // STARTTLS für GFZ
+    // STARTTLS for GFZ
     if (strtolower($smtpSecure) === 'tls') {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->SMTPAutoTLS = true;
