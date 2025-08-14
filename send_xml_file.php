@@ -135,7 +135,9 @@ try {
     $mail->isSMTP();
     // Force IPv4 resolution to prevent "Network is unreachable" on IPv6-only hosts
     $mail->Host = gethostbyname($smtpHost);
-    $useAuth = !empty($smtpUser) && !empty($smtpPassword);
+    $useAuth = !empty($smtpAuth)
+        ? filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN)
+        : (!empty($smtpUser) && !empty($smtpPassword));
     $mail->SMTPAuth = $useAuth;
     if ($useAuth) {
         $mail->Username = $smtpUser;

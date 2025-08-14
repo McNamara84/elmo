@@ -36,7 +36,7 @@ function sendFeedbackMail(
     $feedbackQuestion6,
     $feedbackQuestion7
 ) {
-    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure;
+    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth;
 
     // Initialize PHPMailer with exception handling
     $mail = new PHPMailer(true);
@@ -49,8 +49,9 @@ function sendFeedbackMail(
         // Server settings
         $mail->isSMTP();
         // Force IPv4 resolution to avoid issues on hosts without IPv6
-        $mail->Host = gethostbyname($smtpHost);
-        $useAuth = !empty($smtpUser) && !empty($smtpPassword);
+        $mail->Host = gethostbyname($smtpHost);$useAuth = !empty($smtpAuth)
+            ? filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN)
+            : (!empty($smtpUser) && !empty($smtpPassword));$useAuth = !empty($smtpUser) && !empty($smtpPassword);
         $mail->SMTPAuth = $useAuth;
         if ($useAuth) {
             $mail->Username = $smtpUser;
