@@ -50,7 +50,6 @@ function sendFeedbackMail(
         $mail->isSMTP();
         // Force IPv4 resolution to avoid issues on hosts without IPv6
         $mail->Host = gethostbyname($smtpHost);
-        $mail->Host = $smtpHost;
         $mail->SMTPAuth = true;
         $mail->Username = $smtpUser;
         $mail->Password = $smtpPassword;

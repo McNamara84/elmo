@@ -135,7 +135,6 @@ try {
     $mail->isSMTP();
     // Force IPv4 resolution to prevent "Network is unreachable" on IPv6-only hosts
     $mail->Host = gethostbyname($smtpHost);
-    $mail->Host = $smtpHost;
     $mail->SMTPAuth = true;
     $mail->Username = $smtpUser;
     $mail->Password = $smtpPassword;
