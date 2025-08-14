@@ -18,6 +18,9 @@ services:
     environment:
       ALLOWED_SENDER_DOMAINS: ${ALLOWED_SENDER_DOMAINS}
       TZ: Europe/Berlin
+      POSTFIX_myhostname: env.rz-vm182.gfz.de
+      POSTFIX_mydomain: gfz.de
+      POSTFIX_myorigin: gfz.de
     ports:
       - "1587:587"
     restart: unless-stopped
@@ -27,6 +30,7 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
+      - 1.1.1.1
 
   web:
     build: .
