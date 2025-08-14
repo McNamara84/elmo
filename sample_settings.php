@@ -70,8 +70,8 @@ $showFeedbackLink = true;
 // Settings for sending mail with SMTP
 $smtpHost = getenv('SMTP_HOST') ?: 'your_smtp_host';
 $smtpPort = getenv('SMTP_PORT') ?: 465;
-$smtpUser = getenv('SMTP_USER') ?: 'your_smtp_username';
-$smtpPassword = getenv('SMTP_PASSWORD') ?: 'your_smtp_password';
+$smtpUser = getenv('SMTP_USER') ?: '';
+$smtpPassword = getenv('SMTP_PASSWORD') ?: '';
 $smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
 $smtpSecure = getenv('SMTP_SECURE') ?: '';
 $smtpAuth   = getenv('SMTP_AUTH') ?: '';
