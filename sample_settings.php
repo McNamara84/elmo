@@ -73,6 +73,8 @@ $smtpPort = getenv('SMTP_PORT') ?: 465;
 $smtpUser = getenv('SMTP_USER') ?: 'your_smtp_username';
 $smtpPassword = getenv('SMTP_PASSWORD') ?: 'your_smtp_password';
 $smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
+$smtpSecure = getenv('SMTP_SECURE') ?: '';
+$smtpAuth   = getenv('SMTP_AUTH') ?: '';
 
 // Target address for feedback
 $feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
