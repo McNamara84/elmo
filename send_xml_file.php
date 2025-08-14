@@ -135,10 +135,17 @@ try {
     $mail->isSMTP();
     // Force IPv4 resolution to prevent "Network is unreachable" on IPv6-only hosts
     $mail->Host = gethostbyname($smtpHost);
-    $mail->SMTPAuth = true;
-    $mail->Username = $smtpUser;
-    $mail->Password = $smtpPassword;
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+    $useAuth = !empty($smtpUser) && !empty($smtpPassword);
+    $mail->SMTPAuth = $useAuth;
+    if ($useAuth) {
+        $mail->Username = $smtpUser;
+        $mail->Password = $smtpPassword;
+    }
+    if (!empty($smtpSecure)) {
+        $mail->SMTPSecure = $smtpSecure;
+    } else {
+        $mail->SMTPAutoTLS = false;
+    }
     $mail->Port = $smtpPort;
     $mail->CharSet = 'UTF-8';
 
