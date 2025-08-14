@@ -94,7 +94,7 @@ $(document).ready(function () {
     // Enable removal of the new row
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
-      checkMandatoryFields();
+      validateAllMandatoryFields();
     });
   });
 });

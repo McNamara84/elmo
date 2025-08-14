@@ -88,7 +88,7 @@ $(document).ready(function () {
     // Add event listener to remove the row
     newContributorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
-      checkMandatoryFields();
+      validateAllMandatoryFields();
     });
   });
 

@@ -40,7 +40,7 @@ describe('contributor-organisation.js', () => {
     global.replaceHelpButtonInClonedRows = jest.fn();
     global.setupRolesDropdown = jest.fn();
     global.autocompleteAffiliations = jest.fn();
-    global.checkMandatoryFields = jest.fn();
+    global.validateAllMandatoryFields = jest.fn();
 
     window.affiliationsData = [{ id: '1', name: 'Org' }];
 
@@ -59,7 +59,7 @@ describe('contributor-organisation.js', () => {
     delete global.replaceHelpButtonInClonedRows;
     delete global.setupRolesDropdown;
     delete global.autocompleteAffiliations;
-    delete global.checkMandatoryFields;
+    delete global.validateAllMandatoryFields;
     delete window.affiliationsData;
   });
 
@@ -92,6 +92,6 @@ describe('contributor-organisation.js', () => {
     newRow.find('.removeButton').trigger('click');
 
     expect($('#group-contributororganisation .row').length).toBe(1);
-    expect(global.checkMandatoryFields).toHaveBeenCalled();
+    expect(global.validateAllMandatoryFields).toHaveBeenCalled();
   });
 });

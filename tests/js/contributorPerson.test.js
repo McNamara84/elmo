@@ -48,7 +48,7 @@ describe('contributor-person.js', () => {
     window.replaceHelpButtonInClonedRows = jest.fn();
     window.setupRolesDropdown = jest.fn();
     window.autocompleteAffiliations = jest.fn();
-    window.checkMandatoryFields = jest.fn();
+    window.validateAllMandatoryFields = jest.fn();
     window.affiliationsData = [{ id: '1', name: 'Aff' }];
 
     let script = fs.readFileSync(
@@ -101,6 +101,6 @@ describe('contributor-person.js', () => {
 
     newRow.find('.removeButton').trigger('click');
     expect($('#group-contributorperson .row').length).toBe(1);
-    expect(window.checkMandatoryFields).toHaveBeenCalled();
+    expect(window.validateAllMandatoryFields).toHaveBeenCalled();
   });
 });
