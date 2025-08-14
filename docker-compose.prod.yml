@@ -24,6 +24,9 @@ services:
     networks:
       - internal
       - frontend
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   web:
     build: .
