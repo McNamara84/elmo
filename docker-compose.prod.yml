@@ -28,6 +28,8 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_SENDER: ${SMTP_SENDER}
+      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
       TZ: Europe/Berlin
     depends_on:
       - db

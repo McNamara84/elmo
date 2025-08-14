@@ -75,10 +75,10 @@ $smtpPassword = getenv('SMTP_PASSWORD') ?: 'your_smtp_password';
 $smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
 
 // Target address for feedback
-$feedbackAddress = 'feedback@example.com';
+$feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
 
 // Target address for XML submit
-$xmlSubmitAddress = 'xmlsubmit@example.com';
+$xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
