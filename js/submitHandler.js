@@ -276,10 +276,14 @@ class SubmitHandler {
                         parsedResponse.message);
                     this.clearFileInput(); // Clear file input after successful submission
                 } else {
+                    const errorMessage = parsedResponse.message || translations.alerts.submitError;
+                    const debugInfo = parsedResponse.debug || parsedResponse.error;
                     this.showNotification('danger',
                         translations.alerts.errorHeading,
-                        parsedResponse.message);
-                    console.error('Error details:', parsedResponse.debug);
+                        errorMessage);
+                    if (debugInfo) {
+                        console.error('Error details:', debugInfo);
+                    }
                 }
             },
             error: (xhr, textStatus, errorThrown) => {
@@ -301,7 +305,9 @@ class SubmitHandler {
             try {
                 const response = JSON.parse(xhr.responseText);
                 errorMessage = response.message || errorMessage;
-                console.error('Error details:', response.debug);
+                if (response.debug) {
+                    console.error('Error details:', response.debug);
+                }
             } catch (e) {
                 console.error('Invalid JSON response:', xhr.responseText);
             }
@@ -311,7 +317,7 @@ class SubmitHandler {
 
         this.showNotification('danger',
             translations.alerts.errorHeading,
-            errorMessage);
+            errorMessage || translations.alerts.submitError);
     }
 
     /**
