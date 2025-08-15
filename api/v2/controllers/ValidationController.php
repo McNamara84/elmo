@@ -74,34 +74,13 @@ class ValidationController
     }
 
     /**
-     * Retrieves all identifier types, with optional filtering by the `isShown` flag.
-     *
-     * The `isShown` column indicates whether an identifier type should be displayed (1) or hidden (0).
-     * Currently, only 7 of the 19 available identifier types are marked as important (isShown = 1)
-     * and should be visible to users; the rest are hidden.
-     *
-     * Query parameters:
-     *   identifiertypes?isShown=1 → returns only the visible/important identifier types
-     *   identifiertypes?isShown=0 → returns only the hidden/unimportant identifier types
-     *   identifiertypes           → returns all identifier types (no filtering)
+     * Retrieves all identifier types along with their patterns and descriptions.
      *
      * @return void
      */
     public function getIdentifierTypes()
     {
-        // Get optional filter from query parameter
-        $filter = isset($_GET['isShown']) ? $_GET['isShown'] : null;
-
-        if ($filter === '0' || $filter === '1') {
-            $stmt = $this->connection->prepare(
-                'SELECT name, pattern, description, isShown FROM Identifier_Type WHERE isShown = ?'
-            );
-            $stmt->bind_param('i', $filter);
-        } else {
-            $stmt = $this->connection->prepare(
-                'SELECT name, pattern, description, isShown FROM Identifier_Type'
-            );
-        }
+        $stmt = $this->connection->prepare('SELECT name, pattern, description FROM Identifier_Type');
 
         if (!$stmt) {
             http_response_code(500);
@@ -123,7 +102,7 @@ class ValidationController
                 $identifierTypes[] = [
                     'name' => $row['name'],
                     'pattern' => $row['pattern'],
-                    'description' => $row['description'],
+                    'description' => $row['description']
                 ];
             }
             echo json_encode(['identifierTypes' => $identifierTypes]);

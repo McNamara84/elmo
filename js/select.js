@@ -472,7 +472,7 @@ function setupIdentifierTypesDropdown(id) {
   );
 
   // Fetch identifier types from the server
-  $.getJSON("./api/v2/validation/identifiertypes?isShown=1", function (response) {
+  $.getJSON("./api/v2/validation/identifiertypes", function (response) {
     if (response && response.identifierTypes) {
       response.identifierTypes.forEach(function (type) {
         select.append(
