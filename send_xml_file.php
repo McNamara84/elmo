@@ -7,9 +7,9 @@
  * metadata via email.
  */
 
-// Enable error reporting for debugging
+// Enable error logging but suppress direct output to keep JSON responses clean
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 
 // Buffer output
 ob_start();
@@ -157,7 +157,11 @@ try {
     // Configure debugging
     $debugging_output = '';
     $mail->SMTPDebug = 2; // Enable verbose debug output
-    $mail->Debugoutput = 'error_log';
+    // Capture SMTP debug output for returning to the client while still logging it
+    $mail->Debugoutput = function ($str, $level) use (&$debugging_output) {
+        $debugging_output .= $str;
+        error_log($str);
+    };
 
     // Server settings for GFZ SMTP
     $mail->isSMTP();
@@ -310,11 +314,12 @@ try {
     ob_clean();
     
     // Return error response
+    http_response_code(500);
     header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
         'message' => 'Fehler: ' . $e->getMessage(),
-        'debug' => isset($debugging_output) ? $debugging_output : ''
+        'debug' => $debugging_output
     ]);
 }
 
