@@ -15,29 +15,29 @@ ini_set('display_errors', 1);
 ob_start();
 
 // Include required files
-require_once './settings.php';
-require_once 'save/formgroups/save_resourceinformation_and_rights.php';
-require_once 'save/formgroups/save_authors.php';
-require_once 'save/formgroups/save_contactperson.php';
-require_once 'save/formgroups/save_freekeywords.php';
-require_once 'save/formgroups/save_contributorpersons.php';
-require_once 'save/formgroups/save_contributorinstitutions.php';
-require_once 'save/formgroups/save_descriptions.php';
-require_once 'save/formgroups/save_thesauruskeywords.php';
-require_once 'save/formgroups/save_spatialtemporalcoverage.php';
-require_once 'save/formgroups/save_relatedwork.php';
-require_once 'save/formgroups/save_fundingreferences.php';
+require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
+require_once __DIR__ . '/save/formgroups/save_authors.php';
+require_once __DIR__ . '/save/formgroups/save_contactperson.php';
+require_once __DIR__ . '/save/formgroups/save_freekeywords.php';
+require_once __DIR__ . '/save/formgroups/save_contributorpersons.php';
+require_once __DIR__ . '/save/formgroups/save_contributorinstitutions.php';
+require_once __DIR__ . '/save/formgroups/save_descriptions.php';
+require_once __DIR__ . '/save/formgroups/save_thesauruskeywords.php';
+require_once __DIR__ . '/save/formgroups/save_spatialtemporalcoverage.php';
+require_once __DIR__ . '/save/formgroups/save_relatedwork.php';
+require_once __DIR__ . '/save/formgroups/save_fundingreferences.php';
 
 if ($showGGMsProperties) {
-    require_once 'save/formgroups/save_ggmsproperties.php';
+    require_once __DIR__ . '/save/formgroups/save_ggmsproperties.php';
 }
 
 // Include PHPMailer classes
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-require_once 'vendor/phpmailer/phpmailer/src/Exception.php';
-require_once 'vendor/phpmailer/phpmailer/src/PHPMailer.php';
-require_once 'vendor/phpmailer/phpmailer/src/SMTP.php';
+require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/Exception.php';
+require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/SMTP.php';
 
 /**
  * Test GFZ SMTP connectivity
@@ -116,7 +116,7 @@ try {
 
     // Include the dataset controller to generate the file
     try {
-        require_once '../api/v2/controllers/DatasetController.php';
+        require_once __DIR__ . '/api/v2/controllers/DatasetController.php';
         $datasetController = new DatasetController();
     } catch (Exception $e) {
         error_log("Error accessing DatasetController: function getResourceAsXml is not available. Exception: " . $e->getMessage());
