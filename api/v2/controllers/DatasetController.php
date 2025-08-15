@@ -1265,7 +1265,7 @@ class DatasetController
      */
     public function exportAllDownload($vars)
     {
-        return $this->handleExportAll($vars, true);
+        return $this->handleExportAll($vars, true, false);
     }
 
     /**
@@ -1276,7 +1276,7 @@ class DatasetController
      */
     public function exportAll($vars)
     {
-        return $this->handleExportAll($vars, false);
+        return $this->handleExportAll($vars, false, false);
     }
 
     /**
@@ -1284,9 +1284,10 @@ class DatasetController
      *
      * @param array $vars     An associative array containing 'id'.
      * @param bool  $download If true, the combined XML will be downloaded; if false, it will be output directly.
-     * @return void
+     * @param bool  $returnAsString If true, the combined XML string is returned instead of being output.
+     * @return string|void
      */
-    private function handleExportAll($vars, $download)
+    private function handleExportAll($vars, $download, $returnAsString = false)
     {
         $id = intval($vars['id']);
 
@@ -1313,10 +1314,15 @@ class DatasetController
 </envelope>
 XML;
 
+            if ($returnAsString) {
+                return $combinedXml;
+            }
+
             if ($download) {
                 // Ensure no output has been sent before headers
-                if (ob_get_level())
+                if (ob_get_level()) {
                     ob_end_clean();
+                }
 
                 $filename = "dataset_{$id}_all.xml";
 
@@ -1329,16 +1335,20 @@ XML;
 
                 echo $combinedXml;
                 flush();
-                exit();
             } else {
                 header('Content-Type: application/xml; charset=utf-8');
                 echo $combinedXml;
             }
         } catch (Exception $e) {
+            if ($returnAsString) {
+                throw $e;
+            }
             http_response_code(400);
             echo json_encode(['error' => $e->getMessage()]);
         }
-        exit();
+        if (!$returnAsString) {
+            exit();
+        }
     }
     /**
      * this public function is used as an endpoint to get the XML in all formats. So called envelope.
@@ -1349,11 +1359,10 @@ XML;
      */
     public function envelopeXmlAsString($connection, $id)
     {
-        // Use the existing private function, but tell it NOT to download.
-        // The 'false' at the end is the key.
+        // Use the existing private function, returning the combined XML as a string.
         $vars = ['id' => $id];
-        return $this->handleExportAll($vars, false);
-    }    
+        return $this->handleExportAll($vars, false, true);
+    }
     /**
          * Exports the base XML for a resource as a file download.
          *
