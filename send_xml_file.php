@@ -125,7 +125,7 @@ try {
     // Get XML content from API    
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
     $base_url = $protocol . $_SERVER['HTTP_HOST'];
-    $project_path = dirname(dirname($_SERVER['PHP_SELF']));
+    $project_path = rtrim(dirname($_SERVER['PHP_SELF']), '/');
     $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
 
     // Try to fetch via HTTP first
