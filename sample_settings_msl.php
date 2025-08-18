@@ -31,11 +31,11 @@ $apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 $apiKeyTimezone = 'your_timezone_api_key';
 
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
-// Maximum number of titles that can be entered
+// maximale Anzahl der eingebbaren Titel
 $maxTitles = 2;
 // Show Contributor Persons form group
 $showContributorPersons = true;
-// Show Contributor Institutions form group
+// Show Contrubutor Institutios form group
 $showContributorInstitutions = true;
 // Show GCMD Thesauri form group
 $showGcmdThesauri = true;
@@ -68,17 +68,19 @@ $characteristicsOfTheModel = false;
 $showFeedbackLink = true;
 
 // Settings for sending mail with SMTP
-$smtpHost = 'your_smtp_host';
-$smtpPort = 465;
-$smtpUser = 'your_smtp_username';
-$smtpPassword = 'your_smtp_password';
-$smtpSender = 'your_smtp_sender_email';
+$smtpHost = getenv('SMTP_HOST') ?: 'your_smtp_host';
+$smtpPort = getenv('SMTP_PORT') ?: 465;
+$smtpUser = getenv('SMTP_USER') ?: '';
+$smtpPassword = getenv('SMTP_PASSWORD') ?: '';
+$smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
+$smtpSecure = getenv('SMTP_SECURE') ?: '';
+$smtpAuth   = getenv('SMTP_AUTH') ?: '';
 
 // Target address for feedback
-$feedbackAddress = 'feedback@example.com';
+$feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
 
 // Target address for XML submit
-$xmlSubmitAddress = 'xmlsubmit@example.com';
+$xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
