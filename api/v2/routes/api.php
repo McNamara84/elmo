@@ -46,6 +46,7 @@ return [
     ['GET', '/validation/patterns[/{type}]', [new ValidationController(), 'getPattern']],
     ['GET', '/validation/identifiertypes', [new ValidationController(), 'getIdentifierTypes']],
     ['GET', '/validation/identifiertypes/active', [new ValidationController(), 'getActivedIdentifierTypes']],
+    ['GET', '/validation/identifiertypes/inactive', [new ValidationController(), 'getUnActivedIdentifierTypes']],
 
     // Dataset export endpoints
     ['GET', '/dataset/export/{id}/all/download', [new DatasetController(), 'exportAllDownload']],
