@@ -115,6 +115,17 @@ class ValidationController
         exit();
     }
 
+    /**
+     * Retrieves all active identifier types (isShown = 1) 
+     * from the Identifier_Type table and returns them as JSON.
+     *
+     * Each result contains:
+     * - name        → the name of the identifier type
+     * - pattern     → the associated validation pattern (regex)
+     * - description → a description of the type
+     * 
+     * @return void
+     */
     public function getActivedIdentifierTypes(): void
     {
         try {
@@ -142,6 +153,17 @@ class ValidationController
         }
     }
 
+    /**
+     * Retrieves all inactive identifier types (isShown = 0) 
+     * from the Identifier_Type table and returns them as JSON.
+     *
+     * Each result contains:
+     * - name        → the name of the identifier type
+     * - pattern     → the associated validation pattern (regex)
+     * - description → a description of the type
+     * 
+     * @return void
+     */
     public function getUnActivedIdentifierTypes(): void
     {
         try {
