@@ -44,7 +44,7 @@ return [
 
     // Validation endpoints
     ['GET', '/validation/patterns[/{type}]', [new ValidationController(), 'getPattern']],
-    ['GET', '/validation/identifiertypes', [new ValidationController(), 'getIdentifierTypes']],
+    ['GET', '/validation/identifiertypes/all', [new ValidationController(), 'getIdentifierTypes']],
     ['GET', '/validation/identifiertypes/active', [new ValidationController(), 'getActivedIdentifierTypes']],
     ['GET', '/validation/identifiertypes/inactive', [new ValidationController(), 'getUnActivedIdentifierTypes']],
 
