@@ -145,7 +145,7 @@ class ValidationController
             }
             http_response_code(200);
             header('Content-Type: application/json');
-            echo json_encode($identifierTypes);
+            echo json_encode(['identifierTypes' => $identifierTypes]);
         } catch (Exception $e) {
             error_log("API Error in getActiveIdentifierTypes: " . $e->getMessage());
             http_response_code(500);
@@ -183,7 +183,7 @@ class ValidationController
             }
             http_response_code(200);
             header('Content-Type: application/json');
-            echo json_encode($identifierTypes);
+            echo json_encode(['identifierTypes' => $identifierTypes]);
         } catch (Exception $e) {
             error_log("API Error in getUnActivedIdentifierTypes: " . $e->getMessage());
             http_response_code(500);
