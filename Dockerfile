@@ -6,6 +6,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends mariadb-client 
         libxslt-dev \
         libzip-dev \
         dos2unix \
+        nodejs \
+        npm \
+        git \
+        unzip \
     && docker-php-ext-install \
         mysqli \
         pdo_mysql \
@@ -22,6 +26,15 @@ RUN sed -i 's|/var/www/html|${APACHE_DOCUMENT_ROOT}|g' /etc/apache2/sites-availa
 WORKDIR /var/www/html
 
 COPY . .
+
+# Install Node dependencies
+RUN npm install
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
+# Install PHP dependencies
+RUN composer install --no-dev --prefer-dist --optimize-autoloader
 
 # Ensure that the standard user www-data has ownership of the application files
 RUN chown -R www-data:www-data /var/www/html

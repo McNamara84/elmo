@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../validation.php';
-require_once 'save_affiliations.php';
+require_once __DIR__ . '/save_affiliations.php';
 
 /**
  * Saves the contributor institutions into the database.

@@ -115,15 +115,21 @@ describe('submitHandler.js', () => {
 
   test('handleAjaxError parses JSON response', () => {
     const spy = jest.spyOn(handler, 'showNotification');
-    const xhr = { responseText: JSON.stringify({ message: 'server msg', debug: 'x' }) };
-    handler.handleAjaxError(xhr, 'err');
+    const xhr = {
+      responseText: JSON.stringify({ message: 'server msg', debug: 'x' }),
+      getResponseHeader: () => 'application/json'
+    };
+    handler.handleAjaxError(xhr, 'parsererror', 'err');
     expect(spy).toHaveBeenCalledWith('danger', 'Error', 'server msg');
   });
 
   test('handleAjaxError falls back to default on parse failure', () => {
     const spy = jest.spyOn(handler, 'showNotification');
-    const xhr = { responseText: 'notjson' };
-    handler.handleAjaxError(xhr, 'fail');
-    expect(spy).toHaveBeenCalledWith('danger', 'Error', 'Submit Error: fail');
+    const xhr = {
+      responseText: 'notjson',
+      getResponseHeader: () => 'text/html'
+    };
+    handler.handleAjaxError(xhr, 'error', 'fail');
+    expect(spy).toHaveBeenCalledWith('danger', 'Error', 'Submit Error');
   });
 });

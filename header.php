@@ -3,12 +3,19 @@
 $langFiles = glob(__DIR__ . '/lang/*.json');
 $langCodes = array_map(fn($file) => basename($file, '.json'), $langFiles);
 sort($langCodes);
+
+// Determine base href, taking reverse proxy prefixes into account
+$baseHref = '/';
+if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
+    $baseHref = rtrim($_SERVER['HTTP_X_FORWARDED_PREFIX'], '/') . '/';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="utf-8" />
+  <base href="<?php echo htmlspecialchars($baseHref, ENT_QUOTES, 'UTF-8'); ?>">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Local Bootstrap CSS -->
   <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
