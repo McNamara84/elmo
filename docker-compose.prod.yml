@@ -33,6 +33,8 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
       TZ: Europe/Berlin
+    volumes:
+      - ./settings.elmo.php:/var/www/html/settings.php
     depends_on:
       - db
     restart: unless-stopped
