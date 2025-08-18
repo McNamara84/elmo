@@ -31,11 +31,11 @@ $apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 $apiKeyTimezone = 'your_timezone_api_key';
 
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
-// maximale Anzahl der eingebbaren Titel
+// Maximum number of titles that can be entered
 $maxTitles = 2;
 // Show Contributor Persons form group
 $showContributorPersons = true;
-// Show Contrubutor Institutios form group
+// Show Contributor Institutions form group
 $showContributorInstitutions = true;
 // Show GCMD Thesauri form group
 $showGcmdThesauri = true;
@@ -50,11 +50,11 @@ $showFundingReference = true;
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group
-$showMslLabs = false;
+$showMslLabs = true;
 // URL to the source with all laboratories for MSL
 $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
 // Show MSL vocabularies
-$showMslVocabs = false;
+$showMslVocabs = true;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
@@ -68,19 +68,17 @@ $characteristicsOfTheModel = false;
 $showFeedbackLink = true;
 
 // Settings for sending mail with SMTP
-$smtpHost = getenv('SMTP_HOST') ?: 'your_smtp_host';
-$smtpPort = getenv('SMTP_PORT') ?: 465;
-$smtpUser = getenv('SMTP_USER') ?: '';
-$smtpPassword = getenv('SMTP_PASSWORD') ?: '';
-$smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
-$smtpSecure = getenv('SMTP_SECURE') ?: '';
-$smtpAuth   = getenv('SMTP_AUTH') ?: '';
+$smtpHost = 'your_smtp_host';
+$smtpPort = 465;
+$smtpUser = 'your_smtp_username';
+$smtpPassword = 'your_smtp_password';
+$smtpSender = 'your_smtp_sender_email';
 
 // Target address for feedback
-$feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
+$feedbackAddress = 'feedback@example.com';
 
 // Target address for XML submit
-$xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
+$xmlSubmitAddress = 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {

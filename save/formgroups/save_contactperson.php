@@ -1,5 +1,5 @@
 <?php
-require_once 'save_affiliations.php';
+require_once __DIR__ . '/save_affiliations.php';
 
 /**
  * Saves contact person information in the database.
