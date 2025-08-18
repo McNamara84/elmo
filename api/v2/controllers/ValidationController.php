@@ -114,4 +114,31 @@ class ValidationController
         $stmt->close();
         exit();
     }
+
+    public function getActivedIdentifierTypes(): void
+    {
+        try {
+            global $connection;
+            $sql = 'SELECT name, pattern, description FROM Identifier_Type WHERE isShown = 1 ORDER BY name ASC';
+            $result = $connection->query($sql);
+            if ($result === false) {
+                throw new Exception("Database query failed: " . $connection->error);
+            }
+            $identifierTypes = [];
+            while ($row = $result->fetch_assoc()) {
+                $identifierTypes[] = [
+                    'name' => $row['name'],
+                    'pattern' => $row['pattern'],
+                    'description' => $row['description'],
+                ];
+            }
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode($identifierTypes);
+        } catch (Exception $e) {
+            error_log("API Error in getActiveIdentifierTypes: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['error' => 'An error occurred while retrieving identifier types']);
+        }
+    }
 }
