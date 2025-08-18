@@ -652,20 +652,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /validation/identifiertypes:
+  /validation/identifiertypes/all:
     get:
       tags:
         - validation
       security: []
-      summary: Retrieve all identifier types
-      description: |
-        Returns identifier types with their validation patterns.
-
-        Now supports optional filtering via the `isShown` query parameter:
-          - No parameter → returns all identifier types (default).
-          - `?isShown=1` → returns only visible identifier types.
-          - `?isShown=0` → returns only hidden identifier types.
-      operationId: getIdentifierTypes
+      summary: Get all identifier types
+      description: Returns all available identifier types with their validation patterns.
+      operationId: getAllIdentifierTypes
       responses:
         "200":
           description: Successful operation
@@ -675,6 +669,60 @@ paths:
                 $ref: "#/components/schemas/IdentifierTypesResponse"
         "404":
           description: No identifier types found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /validation/identifiertypes/active:
+    get:
+      tags:
+        - validation
+      security: []
+      summary: Get active identifier types
+      description: Returns only identifier types that are currently visible (`isShown = 1`).
+      operationId: getIdentifierTypes
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierTypesResponse"
+        "404":
+          description: No active identifier types found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /validation/identifiertypes/inactive:
+    get:
+      tags:
+        - validation
+      security: []
+      summary: Get inactive identifier types
+      description: Returns only identifier types that are currently hidden (`isShown = 0`).
+      operationId: getInactiveIdentifierTypes
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierTypesResponse"
+        "404":
+          description: No inactive identifier types found
           content:
             application/json:
               schema:
