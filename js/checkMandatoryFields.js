@@ -245,7 +245,7 @@ function checkFunder() {
  * Validates the Author-Institution section of the form.
  * Ensures that the “Author Institution Name” field must be filled in if the “Author Institution Affiliation” field is filled in.
  */
-function checkAuthorInstitut() {
+function validateAuthorInstitutionRequirements() {
     $('#group-authorinstitution').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Author-Institution section
@@ -291,7 +291,7 @@ function checkMandatoryFields() {
     checkFunder();
 
     // Formgroup Autor Institution
-    checkAuthorInstitut();
+    validateAuthorInstitutionRequirements();
 
 };
 
