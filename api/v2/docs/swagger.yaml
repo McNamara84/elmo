@@ -659,7 +659,7 @@ paths:
       security: []
       summary: Get all identifier types
       description: Returns all available identifier types with their validation patterns.
-      operationId: getAllIdentifierTypes
+      operationId: getIdentifierTypes
       responses:
         "200":
           description: Successful operation
@@ -686,7 +686,7 @@ paths:
       security: []
       summary: Get active identifier types
       description: Returns only identifier types that are currently visible (`isShown = 1`).
-      operationId: getIdentifierTypes
+      operationId: getActiveIdentifierTypes
       responses:
         "200":
           description: Successful operation
