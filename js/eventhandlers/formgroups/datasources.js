@@ -337,9 +337,9 @@ $(document).ready(function () {
     }
 
     /**
-     * Adjusts column order and widths so that when the "Model" type is
-     * selected, identifier fields stay on the first row while the description
-     * and model name share the second row with the add button.
+     * Adjusts column order and widths for the "Model" data source type.
+     * Row 1: Type, Identifier, Identifier Type
+     * Row 2: Model Name, Description, Button
      *
      * @param {jQuery} row - The row to modify.
      * @param {boolean} isModel - Whether the selected type is "Model".
@@ -350,43 +350,42 @@ $(document).ready(function () {
         const modelNameCol = row.find('input[name="dName[]"]').closest('div[class*="col-"]');
         const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div[class*="col-"]');
         const identifierTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div[class*="col-"]');
-        const addButtonCol = row.find('.addDataSource').closest('div[class*="col-"]');
+        const addButtonCol = row.find('.addDataSource, .removeButton').closest('div[class*="col-"]');
         const detailsCol = row.find('select[name="datasource_details[]"]').closest('div[class*="col-"]');
         const compensationCol = row.find('input[name="compensation_depth[]"]').closest('div[class*="col-"]');
         const satelliteCol = row.find('.visibility-datasources-satellite');
 
         if (isModel) {
-            // Reorder columns: Type | Identifier | IdentifierType | Description | ModelName | AddButton
+            // Row 1: Type | Identifier | Identifier Type
             identifierCol.insertAfter(typeCol);
             identifierTypeCol.insertAfter(identifierCol);
-            descCol.insertAfter(identifierTypeCol);
-            modelNameCol.insertAfter(descCol);
-            addButtonCol.insertAfter(modelNameCol);
+            // Row 2: Model Name | Description | Button
+            modelNameCol.insertAfter(identifierTypeCol);
+            descCol.insertAfter(modelNameCol);
+            addButtonCol.insertAfter(descCol);
 
-            typeCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
-            identifierCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
-            identifierTypeCol.removeClass('col-md-3 col-lg-3').addClass('col-md-4 col-lg-4');
-            descCol.removeClass('col-md-5 col-lg-5').addClass('col-md-6 col-lg-6');
-            modelNameCol.removeClass('col-md-6 col-lg-6').addClass('col-md-5 col-lg-5');
+            // Adjust column widths for model layout
+            // Row 1 columns: Type (3), Identifier (5), Identifier Type (4)
+  
+            // Row 2 columns: Model Name (5 cols), Description (6 cols), Button (1 col)
         } else {
-            // Restore original order
-            typeCol.after(descCol);
-            descCol.after(detailsCol);
-            detailsCol.after(compensationCol);
-            compensationCol.after(modelNameCol);
-            modelNameCol.after(identifierCol);
-            identifierCol.after(identifierTypeCol);
-            identifierTypeCol.after(satelliteCol);
-            satelliteCol.after(addButtonCol);
+            // Restore original order: Type | Description | Details | Compensation | ModelName | Identifier | IdentifierType | Satellite | AddButton
+            descCol.insertAfter(typeCol);
+            detailsCol.insertAfter(descCol);
+            compensationCol.insertAfter(detailsCol);
+            modelNameCol.insertAfter(compensationCol);
+            identifierCol.insertAfter(modelNameCol);
+            identifierTypeCol.insertAfter(identifierCol);
+            satelliteCol.insertAfter(identifierTypeCol);
+            addButtonCol.insertAfter(satelliteCol);
 
-            typeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
-            identifierCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
-            identifierTypeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
-            descCol.removeClass('col-md-6 col-lg-6').addClass('col-md-5 col-lg-5');
-            modelNameCol.removeClass('col-md-5 col-lg-5').addClass('col-md-6 col-lg-6');
-            addButtonCol
-                .removeClass('col-2 col-sm-2 col-md-2 col-lg-2')
-                .addClass('col-2 col-sm-2 col-md-1 col-lg-1');
+            // Restore original column widths
+            //typeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
+            //identifierCol.removeClass('col-md-4 col-lg-4').addClass('col-md-6 col-lg-3');
+            //identifierTypeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-6 col-lg-2');
+            //descCol.removeClass('col-md-6 col-lg-6').addClass('col-md-6 col-lg-6');
+            //modelNameCol.removeClass('col-md-5 col-lg-5').addClass('col-md-6 col-lg-6');
+            //addButtonCol.removeClass('col-2 col-sm-2 col-md-2 col-lg-2').addClass('col-2 col-sm-2 col-md-1 col-lg-1');
         }
     }
 
@@ -441,6 +440,7 @@ $(document).ready(function () {
      */
     function restoreHelpButtons(row) {
         const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
+        
         row.find('div.help-placeholder').each(function () {
             const placeholder = $(this);
             const helpSectionId = placeholder.data('help-section-id') || '';
@@ -453,6 +453,24 @@ $(document).ready(function () {
                 inputGroup.find('.input-with-help')
                     .addClass('input-right-no-round-corners')
                     .removeClass('input-right-with-round-corners');
+            } else {
+                // If help is off, remove the placeholder and adjust input styling
+                const inputGroup = placeholder.closest('.input-group');
+                placeholder.remove();
+                inputGroup.find('.input-with-help')
+                    .addClass('input-right-with-round-corners')
+                    .removeClass('input-right-no-round-corners');
+            }
+        });
+        
+        // Also handle input-group-append containers that might be empty
+        row.find('.input-group-append').each(function() {
+            if ($(this).is(':empty') || $(this).children().length === 0) {
+                const inputGroup = $(this).closest('.input-group');
+                $(this).remove();
+                inputGroup.find('.input-with-help')
+                    .addClass('input-right-with-round-corners')
+                    .removeClass('input-right-no-round-corners');
             }
         });
     }
