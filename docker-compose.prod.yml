@@ -1,3 +1,11 @@
+version: '3.8'
+
+configs:
+  elmo-settings:
+    file: ./settings.elmo.php
+  msl-settings:
+    file: ./settings.msl.php
+
 services:
   db:
     image: mariadb:11
@@ -98,8 +106,3 @@ networks:
     external:
       name: traefik
 
-configs:
-  elmo-settings:
-    file: ./settings.elmo.php
-  msl-settings:
-    file: ./settings.msl.php
