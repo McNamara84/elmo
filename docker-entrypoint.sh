@@ -65,7 +65,7 @@ if [ true ]; then
   echo "🏁  Database setup finished."
 fi
 
-exec apache2-foreground
-
 # Clean up install files
 rm -f /var/www/html/install.{php,html}
+
+exec apache2-foreground
