@@ -39,6 +39,7 @@ $(document).ready(function () {
      * @returns {object|undefined} Matching node if found.
      */
     function findNodeByPath(path, jsTree = getJsTree()) {
+        if (!jsTree) return undefined;
         return jsTree
             .get_json('#', { flat: true })
             .find(n => jsTree.get_path(n, ' > ') === path);
@@ -51,6 +52,7 @@ $(document).ready(function () {
      * @param {object} jsTree - jsTree instance.
      */
     function syncTagWithTree(tagText, select = true, jsTree = getJsTree()) {
+        if (!jsTree) return;
         const node = findNodeByPath(tagText, jsTree);
         if (node) {
             select ? jsTree.select_node(node.id) : jsTree.deselect_node(node.id);
@@ -65,6 +67,8 @@ $(document).ready(function () {
      * @returns {{tagsWithNode: Array, manualTags: Array}}
      */
     function separateTags(tagifyInstance, jsTree = getJsTree()) {
+        if (!jsTree) return { tagsWithNode: [], manualTags: [] };
+        
         const existingTags = tagifyInstance ? tagifyInstance.value.slice() : [];
         const tagsWithNode = [];
         const manualTags = [];
@@ -85,6 +89,8 @@ $(document).ready(function () {
      * @param {Tagify} tagifyInstance - Tagify instance to bind events to.
      */
     function bindTagifyEvents(tagifyInstance) {
+        if (!tagifyInstance) return;
+        
         const sync = (e, select) => {
             if (activePlatformTagify !== tagifyInstance) return;
             syncTagWithTree(e.detail.data.value, select);
@@ -103,6 +109,8 @@ $(document).ready(function () {
 
         selectedKeywordsList.innerHTML = '';
         const jsTree = getJsTree();
+        if (!jsTree) return;
+        
         const selectedNodes = jsTree.get_selected(true);
 
         selectedNodes.forEach(function (node) {
@@ -124,32 +132,153 @@ $(document).ready(function () {
     }
 
     document.addEventListener('translationsLoaded', function () {
-        const jsTree = getJsTree();
-        $(jsTreeId).off('changed.jstree');
-        $(jsTreeId).on('changed.jstree', function (e, data) {
-            updateSelectedKeywordsList();
-            if (!activePlatformTagify) return;
-            const selectedNodes = jsTree.get_selected(true);
-            const selectedValues = selectedNodes.map(node => data.instance.get_path(node, ' > '));
-            activePlatformTagify.removeAllTags();
-            activePlatformTagify.addTags(selectedValues);
-        });
+        // Initialize the jsTree for platforms datasource
+        if ($(jsTreeId).length && !$(jsTreeId).jstree(true)) {
+            // Load the GCMD platforms data and initialize the tree
+            $.getJSON('json/thesauri/gcmdPlatformsKeywords.json', function(response) {
+                const data = response.data ? response.data : response;
+                const rootNodeId = 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847';
+                
+                // Find the root node for data sources platforms
+                function findNodeById(nodes, id) {
+                    for (var i = 0; i < nodes.length; i++) {
+                        if (nodes[i].id === id) {
+                            return nodes[i];
+                        }
+                        if (nodes[i].children) {
+                            var foundNode = findNodeById(nodes[i].children, id);
+                            if (foundNode) {
+                                return foundNode;
+                            }
+                        }
+                    }
+                    return null;
+                }
 
-        const firstInput = document.querySelector('#input-datasource-platforms');
-        if (firstInput && firstInput._tagify) {
-            firstInput._tagify.off('add').off('remove');
-            bindTagifyEvents(firstInput._tagify);
+                var filteredData = data;
+                var selectedNode = findNodeById(data, rootNodeId);
+                if (selectedNode) {
+                    filteredData = [selectedNode];
+                } else {
+                    console.error(`Root node with ID ${rootNodeId} not found in gcmdPlatformsKeywords.json`);
+                }
+
+                // Process nodes for jsTree
+                function processNodes(nodes) {
+                    return nodes.map(function (node) {
+                        if (node.children) {
+                            node.children = processNodes(node.children);
+                        }
+                        node.a_attr = {
+                            title: node.description
+                        };
+                        node.original = {
+                            scheme: node.scheme || "",
+                            schemeURI: node.schemeURI || "",
+                            language: node.language || ""
+                        };
+                        return node;
+                    });
+                }
+
+                const processedData = processNodes(filteredData);
+
+                // Initialize jsTree
+                $(jsTreeId).jstree({
+                    core: {
+                        data: processedData,
+                        themes: {
+                            icons: false
+                        }
+                    },
+                    checkbox: {
+                        keep_selected_style: true,
+                        three_state: false
+                    },
+                    plugins: ['search', 'checkbox'],
+                    search: {
+                        show_only_matches: true,
+                        search_callback: function (str, node) {
+                            return node.text.toLowerCase().indexOf(str.toLowerCase()) !== -1 ||
+                                (node.a_attr && node.a_attr.title && node.a_attr.title.toLowerCase().indexOf(str.toLowerCase()) !== -1);
+                        }
+                    }
+                });
+
+                // Set up search input handler
+                $('#input-platforms-thesaurussearch-ds').on("input", function () {
+                    const tree = $(jsTreeId).jstree(true);
+                    if (tree) {
+                        tree.search($(this).val());
+                    }
+                });
+
+                // Initialize Tagify for existing datasource platform inputs
+                const platformInputs = document.querySelectorAll('input[name="satellite_platform[]"]');
+                platformInputs.forEach((input, index) => {
+                    if (!input._tagify && typeof Tagify !== 'undefined') {
+                        // Build whitelist from the processed data
+                        const suggestedKeywords = [];
+                        function buildWhitelist(nodes, parentPath = []) {
+                            nodes.forEach(function (item) {
+                                const textToAdd = parentPath.concat(item.text).join(' > ');
+                                suggestedKeywords.push({
+                                    value: textToAdd,
+                                    id: item.id,
+                                    scheme: item.scheme,
+                                    schemeURI: item.schemeURI,
+                                    language: item.language
+                                });
+
+                                if (item.children) {
+                                    buildWhitelist(item.children, parentPath.concat(item.text));
+                                }
+                            });
+                        }
+                        buildWhitelist(filteredData);
+
+                        const tagifyInstance = new Tagify(input, {
+                            whitelist: suggestedKeywords,
+                            enforceWhitelist: true,
+                            placeholder: translations?.keywords?.thesaurus?.label || 'Enter keywords...',
+                            dropdown: {
+                                maxItems: 50,
+                                enabled: 3,
+                                closeOnSelect: true,
+                                classname: "thesaurus-tagify",
+                            },
+                            editTags: false,
+                        });
+                        input._tagify = tagifyInstance;
+                        bindTagifyEvents(tagifyInstance);
+                    }
+                });
+
+                // Set up jsTree event handlers after the tree is initialized
+                $(jsTreeId).off('changed.jstree');
+                $(jsTreeId).on('changed.jstree', function (e, data) {
+                    updateSelectedKeywordsList();
+                    if (!activePlatformTagify) return;
+                    const jsTree = $(jsTreeId).jstree(true);
+                    const selectedNodes = jsTree.get_selected(true);
+                    const selectedValues = selectedNodes.map(node => data.instance.get_path(node, ' > '));
+                    activePlatformTagify.removeAllTags();
+                    activePlatformTagify.addTags(selectedValues);
+                });
+            });
         }
     }, { once: true });
 
     $('#modal-platforms-datasource').on('show.bs.modal', function (e) {
         const button = $(e.relatedTarget);
         const row = button.closest('.row');
-        const inputElem = row.find('#input-datasource-platforms')[0];
+        // Look for the platform input within this specific row
+        const inputElem = row.find('input[name="satellite_platform[]"]')[0];
         if (!inputElem) return;
 
         const tagifyInstance = inputElem._tagify;
         const jsTree = getJsTree();
+        if (!jsTree) return;
 
         // Preserve current tags before manipulating the tree
         const { tagsWithNode, manualTags } = separateTags(tagifyInstance, jsTree);
@@ -171,8 +300,10 @@ $(document).ready(function () {
     $('#modal-platforms-datasource').on('hidden.bs.modal', function () {
         activePlatformTagify = null;
         const jsTree = getJsTree();
-        jsTree.deselect_all();
-        updateSelectedKeywordsList();
+        if (jsTree) {
+            jsTree.deselect_all();
+            updateSelectedKeywordsList();
+        }
     });
 
     function handleIsostasyField(row) {
@@ -336,6 +467,14 @@ $(document).ready(function () {
         newRow.find(".is-invalid, .is-valid").removeClass("is-invalid is-valid");
         newRow.find(".invalid-feedback").hide();
 
+        // Generate unique ID for the new platform input to avoid conflicts
+        const rowCount = datasourceGroup.children('.row').length;
+        const newPlatformInput = newRow.find('input[name="satellite_platform[]"]');
+        if (newPlatformInput.length > 0) {
+            const newId = `input-datasource-platforms-${rowCount}`;
+            newPlatformInput.attr('id', newId);
+        }
+
         replaceHelpButtonInClonedRows(newRow);
         newRow.find(".addDataSource").replaceWith(createRemoveButton());
         
@@ -346,11 +485,11 @@ $(document).ready(function () {
         updateRowState(newRow); // Immediately set the correct visibility.
         restoreHelpButtons(newRow);
 
-        const firstInput = document.querySelector('#input-datasource-platforms');
-        const newInputElem = newRow.find('#input-datasource-platforms')[0];
+        // Initialize Tagify for the new platform input
+        const firstInput = document.querySelector('input[name="satellite_platform[]"]');
+        const newInputElem = newRow.find('input[name="satellite_platform[]"]')[0];
         if (newInputElem && typeof Tagify !== 'undefined') {
-            const baseSettings =
-                firstInput && firstInput._tagify ? { ...firstInput._tagify.settings } : {};
+            const baseSettings = firstInput && firstInput._tagify ? { ...firstInput._tagify.settings } : {};
             const tagifyInstance = new Tagify(newInputElem, baseSettings);
             newInputElem._tagify = tagifyInstance;
             bindTagifyEvents(tagifyInstance);
