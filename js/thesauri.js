@@ -232,6 +232,13 @@ $(document).ready(function () {
                 function updateSelectedKeywordsList() {
                     let selectedKeywordsList = document.getElementById(config.selectedKeywordsListId);
                     if (!selectedKeywordsList) return;
+<<<<<<< HEAD
+=======
+            
+            function updateSelectedKeywordsList() {
+                let selectedKeywordsList = document.getElementById(config.selectedKeywordsListId);
+                if (!selectedKeywordsList) return;
+>>>>>>> 84fafdb3f644591c1f385439040615b266bedf27
 
                     selectedKeywordsList.innerHTML = "";
                     var selectedNodes = $(config.jsTreeId).jstree("get_selected", true);
