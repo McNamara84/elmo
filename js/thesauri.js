@@ -18,7 +18,7 @@ $(document).ready(function () {
             inputId: '#input-sciencekeyword',
             jsonFile: 'json/thesauri/gcmdScienceKeywords.json',
             jsTreeId: '#jstree-sciencekeyword',
-            searchInputId: '#input-sciencekeyword-search',
+            searchInputId: '#input-sciencekeyword-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-gcmd'
         },
         {
@@ -325,5 +325,38 @@ $(document).ready(function () {
             loadKeywords(data);
         });
     }
+
+    // Event listener for search input           
+    // the search event is delegated to the highest level. the input will be propagated, and we can formulate the event handler at this place.
+    $(document).on('input', '[id$="-thesaurussearch"]', function() {
+            const searchInputId = `#${this.id}`;
+            // Find the corresponding config
+            const config = keywordConfigurations.find(c => c.searchInputId === searchInputId);
+            if (config && $(config.jsTreeId).jstree(true)) {
+                $(config.jsTreeId).jstree(true).search($(this).val());
+            }
+        });
+    // Event listener for Enter key in the modal           
+    // Handle Enter in modal search. We don't want it to remove any elements
+    $(document).on('keydown', '[id$="-thesaurussearch"]', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const searchInput = $(this);
+            const config = keywordConfigurations.find(c => c.searchInputId === `#${this.id}`);
+
+            if (!config) return;
+
+            const jsTreeInstance = $(config.jsTreeId).jstree(true);
+            if (!jsTreeInstance) return;
+
+            // Explicitly trigger the search. OPTIONAL
+            jsTreeInstance.search(searchInput.val());
+
+            searchInput.focus();
+        }
+    });
+
     document.addEventListener('translationsLoaded', refreshThesaurusTagifyInstances);
 });
