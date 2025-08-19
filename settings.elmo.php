@@ -48,8 +48,7 @@ $showRelatedWork = true;
 // Show Funding Reference form group
 $showFundingReference = true;
 
-// SETTINGS FOR EPOS MSL
-// Show MSL labs form group
+// SETTINGS FOR EPOS MSL (Defaults: ELMO Variant = false)
 $showMslLabs = false;
 // URL to the source with all laboratories for MSL
 $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
@@ -57,6 +56,16 @@ $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabular
 $showMslVocabs = false;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+
+$envShowMslLabs   = getenv('SHOW_MSL_LABS');
+$envShowMslVocabs = getenv('SHOW_MSL_VOCABS');
+
+if ($envShowMslLabs !== false) {
+    $showMslLabs = filter_var($envShowMslLabs, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowMslVocabs !== false) {
+    $showMslVocabs = filter_var($envShowMslVocabs, FILTER_VALIDATE_BOOLEAN);
+}
 
 // SETTINGS FOR ICGEM
 // Show GGMs Properties form group
@@ -114,7 +123,7 @@ if (isset($_GET['setting'])) {
     exit;
 }
 
-// Initialize logging    
+// Initialize logging
 function elmo_log($msg) {
     error_log('[ELMO save_data] ' . $msg);
 }

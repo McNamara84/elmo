@@ -18,24 +18,11 @@ if [ ! -d /var/www/html/node_modules ]; then
   npm install --omit=dev
 fi
 
-# Ensure a settings.php exists; copy from sample if missing so that
-# environment variables can be used for configuration without committing
-# secrets to the repository.
+# Ensure a settings.php exists
 if [ ! -f /var/www/html/settings.php ]; then
-  echo "⚙️  No settings.php found, generating from sample_settings.php"
-  cp /var/www/html/sample_settings.php /var/www/html/settings.php
-  # Inject database credentials from environment to ensure consistency with stack.env
-  php - <<'PHP'
-<?php
-$file = '/var/www/html/settings.php';
-$c = file_get_contents($file);
-$c = str_replace(
-    ['your_database_username', 'your_database_password', 'your_database_name', '"localhost"'],
-    [getenv('DB_USER'), getenv('DB_PASSWORD'), getenv('DB_NAME'), '"' . (getenv('DB_HOST') ?: 'localhost') . '"'],
-    $c
-);
-file_put_contents($file, $c);
-PHP
+  echo "⚙️  No settings.php found, creating from settings.elmo.php"
+  cp /var/www/html/settings.elmo.php /var/www/html/settings.php
+  chown www-data:www-data /var/www/html/settings.php
 fi
 
 wait_for_db() {
@@ -57,7 +44,8 @@ wait_for_db() {
   ' || exit 1
 }
 
-if [ true ]; then
+# Install only if INSTALL_ACTION != skip
+if [ "${INSTALL_ACTION:-skip}" != "skip" ] && [ ! -f "$FLAG_FILE" ]; then
   wait_for_db
   echo "🚀  Running initial database setup …"
   php /var/www/html/install.php "${INSTALL_ACTION:-complete}" # can be set to complete or basic
