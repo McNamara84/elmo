@@ -126,7 +126,7 @@ class ValidationController
      * 
      * @return void
      */
-    public function getActivedIdentifierTypes(): void
+    public function getActiveIdentifierTypes(): void
     {
         try {
             global $connection;
@@ -164,7 +164,7 @@ class ValidationController
      * 
      * @return void
      */
-    public function getUnActivedIdentifierTypes(): void
+    public function getInactiveIdentifierTypes(): void
     {
         try {
             global $connection;
@@ -185,7 +185,7 @@ class ValidationController
             header('Content-Type: application/json');
             echo json_encode(['identifierTypes' => $identifierTypes]);
         } catch (Exception $e) {
-            error_log("API Error in getUnActivedIdentifierTypes: " . $e->getMessage());
+            error_log("API Error in getInactiveIdentifierTypes: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['error' => 'An error occurred while retrieving identifier types']);
         }
