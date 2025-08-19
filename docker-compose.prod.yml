@@ -33,8 +33,9 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
       TZ: Europe/Berlin
-    volumes:
-      - ./settings.elmo.php:/var/www/html/settings.php
+    configs:
+      - source: elmo-settings
+        target: /var/www/html/settings.php
     depends_on:
       - db
     restart: unless-stopped
@@ -69,8 +70,9 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
       TZ: Europe/Berlin
-    volumes:
-      - ./settings.msl.php:/var/www/html/settings.php
+    configs:
+      - source: msl-settings
+        target: /var/www/html/settings.php
     depends_on:
       - db
     restart: unless-stopped
@@ -95,3 +97,9 @@ networks:
   frontend:
     external:
       name: traefik
+
+configs:
+  elmo-settings:
+    file: ./settings.elmo.php
+  msl-settings:
+    file: ./settings.msl.php
