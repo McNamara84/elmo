@@ -1,8 +1,6 @@
 #!/bin/sh
 set -e
 
-FLAG_FILE="/var/www/html/.installed"
-
 # give www-data ownership of the xml folder every start
 chown -R www-data:www-data /var/www/html/xml
 
@@ -18,42 +16,50 @@ if [ ! -d /var/www/html/node_modules ]; then
   npm install --omit=dev
 fi
 
-# Ensure a settings.php exists
+# Ensure a settings.php exists; in Produktion aus settings.elmo.php erzeugen,
+# damit lokale settings.php (dev) nicht benötigt/überschrieben wird.
 if [ ! -f /var/www/html/settings.php ]; then
   echo "⚙️  No settings.php found, creating from settings.elmo.php"
   cp /var/www/html/settings.elmo.php /var/www/html/settings.php
   chown www-data:www-data /var/www/html/settings.php
 fi
 
+# Warten auf die DB per mysqladmin ping (zuverlässiger)
 wait_for_db() {
-  php -r '
-  while (true) {
-      try {
-          new mysqli(getenv("DB_HOST"), getenv("DB_USER"), getenv("DB_PASSWORD"), getenv("DB_NAME"));
-          echo "✅  MariaDB reachable\n";
-          exit(0);
-      } catch (mysqli_sql_exception $e) {
-          if ($e->getCode() === 1045) {
-              fwrite(STDERR, "❌  MariaDB access denied: {$e->getMessage()}\n");
-              exit(1);
-          }
-          echo "⏳  Waiting for MariaDB: {$e->getMessage()}\n";
-          sleep(2);
-      }
-  }
-  ' || exit 1
+  echo "⏳  Waiting for MariaDB at ${DB_HOST}..."
+  until mysqladmin ping -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" --silent >/dev/null 2>&1; do
+    echo "… still waiting"
+    sleep 2
+  done
+  echo "✅  MariaDB reachable"
 }
 
-# Install only if INSTALL_ACTION != skip
-if [ "${INSTALL_ACTION:-skip}" != "skip" ] && [ ! -f "$FLAG_FILE" ]; then
-  wait_for_db
-  echo "🚀  Running initial database setup …"
-  php /var/www/html/install.php "${INSTALL_ACTION:-complete}" # can be set to complete or basic
-  touch "$FLAG_FILE"
-  echo "🏁  Database setup finished."
+# Prüfen, ob im Ziel-Schema bereits Tabellen existieren
+db_has_tables() {
+  TABLE_COUNT=$(mysql -N -s -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" \
+    -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME}';" 2>/dev/null || echo "0")
+  if [ -z "${TABLE_COUNT}" ]; then
+    TABLE_COUNT=0
+  fi
+  [ "${TABLE_COUNT}" -gt 0 ]
+}
+
+wait_for_db
+
+# Installer nur ausführen, wenn erlaubt UND Schema leer
+if [ "${INSTALL_ACTION:-skip}" != "skip" ]; then
+  if db_has_tables; then
+    echo "📚  Database schema for '${DB_NAME}' already present — skipping install."
+  else
+    echo "🚀  Running initial database setup (${INSTALL_ACTION:-complete})…"
+    php /var/www/html/install.php "${INSTALL_ACTION:-complete}" # complete|basic
+    echo "🏁  Database setup finished."
+  fi
+else
+  echo "⏭️  INSTALL_ACTION=skip — no install attempt."
 fi
 
-# Clean up install files
-rm -f /var/www/html/install.{php,html}
+# Clean up install files (optional)
+rm -f /var/www/html/install.{php,html} || true
 
 exec apache2-foreground
