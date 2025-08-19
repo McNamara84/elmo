@@ -367,10 +367,6 @@ $(document).ready(function () {
             descCol.insertAfter(modelNameCol);
             addButtonCol.insertAfter(descCol);
 
-            // Adjust column widths for model layout
-            // Row 1 columns: Type (3), Identifier (5), Identifier Type (4)
-  
-            // Row 2 columns: Model Name (5 cols), Description (6 cols), Button (1 col)
         } else {
             // Restore original order: Type | Description | Details | Compensation | ModelName | Identifier | IdentifierType | Satellite | AddButton
             descCol.insertAfter(typeCol);
@@ -381,14 +377,6 @@ $(document).ready(function () {
             identifierTypeCol.insertAfter(identifierCol);
             satelliteCol.insertAfter(identifierTypeCol);
             addButtonCol.insertAfter(satelliteCol);
-
-            // Restore original column widths
-            //typeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-3 col-lg-3');
-            //identifierCol.removeClass('col-md-4 col-lg-4').addClass('col-md-6 col-lg-3');
-            //identifierTypeCol.removeClass('col-md-4 col-lg-4').addClass('col-md-6 col-lg-2');
-            //descCol.removeClass('col-md-6 col-lg-6').addClass('col-md-6 col-lg-6');
-            //modelNameCol.removeClass('col-md-5 col-lg-5').addClass('col-md-6 col-lg-6');
-            //addButtonCol.removeClass('col-2 col-sm-2 col-md-2 col-lg-2').addClass('col-2 col-sm-2 col-md-1 col-lg-1');
         }
     }
 
