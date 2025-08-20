@@ -107,12 +107,12 @@ function updateErrorHandlingVisibility() {
         // Show error handling field and adjust widths
         errorHandlingField.show();
         // Adjust errors field to take less space when error handling is visible
-        errorsField.removeClass('col-lg-6 col-md-6').addClass('col-lg-2 col-md-2');
+        errorsField.removeClass('col-lg-6').addClass('col-lg-2');
     } else {
         // Hide error handling field and adjust widths
         errorHandlingField.hide();
         // Expand errors field to take more space when error handling is hidden
-        errorsField.removeClass('col-lg-2 col-md-2').addClass('col-lg-6 col-md-6');
+        errorsField.removeClass('col-lg-2').addClass('col-lg-6');
         // Clear the error handling field value when hidden
         $('#input-error-handling-approach').val('').removeClass('is-valid is-invalid');
     }
