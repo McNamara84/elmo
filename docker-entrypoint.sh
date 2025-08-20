@@ -16,15 +16,15 @@ if [ ! -d /var/www/html/node_modules ]; then
   npm install --omit=dev
 fi
 
-# Ensure a settings.php exists; in Produktion aus settings.elmo.php erzeugen,
-# damit lokale settings.php (dev) nicht benötigt/überschrieben wird.
+# Ensure a settings.php exists; in production create it from settings.elmo.php,
+# so that local settings.php (dev) is not needed/overwritten.
 if [ ! -f /var/www/html/settings.php ]; then
   echo "⚙️  No settings.php found, creating from settings.elmo.php"
   cp /var/www/html/settings.elmo.php /var/www/html/settings.php
   chown www-data:www-data /var/www/html/settings.php
 fi
 
-# Warten auf die DB per mysqladmin ping (zuverlässiger)
+# Wait for the DB using mysqladmin ping (more reliable)
 wait_for_db() {
   echo "⏳  Waiting for MariaDB at ${DB_HOST}..."
   until mysqladmin ping -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" --silent >/dev/null 2>&1; do
@@ -34,7 +34,7 @@ wait_for_db() {
   echo "✅  MariaDB reachable"
 }
 
-# Prüfen, ob im Ziel-Schema bereits Tabellen existieren
+# Check if tables already exist in the target schema
 db_has_tables() {
   TABLE_COUNT=$(mysql -N -s -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" \
     -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME}';" 2>/dev/null || echo "0")
@@ -46,7 +46,7 @@ db_has_tables() {
 
 wait_for_db
 
-# Installer nur ausführen, wenn erlaubt UND Schema leer
+# Only run installer when allowed AND schema is empty
 if [ "${INSTALL_ACTION:-skip}" != "skip" ]; then
   if db_has_tables; then
     echo "📚  Database schema for '${DB_NAME}' already present — skipping install."
