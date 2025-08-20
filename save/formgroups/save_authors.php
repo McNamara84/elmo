@@ -2,6 +2,63 @@
 require_once __DIR__ . '/save_affiliations.php';
 
 /**
+ * Filters the input author data and returns only those authors 
+ * who have both non-empty family (last) names and given (first) names.
+ *
+ * This is used to exclude incomplete author entries before saving to the database.
+ *
+ * @param array $postData Input data containing arrays of author fields:
+ *                        - familynames (array of strings)
+ *                        - givennames (array of strings)
+ *                        - orcids (optional array of strings)
+ *                        - personAffiliation (optional array of strings)
+ *                        - authorPersonRorIds (optional array of strings)
+ * @return array Filtered author data arrays containing only complete entries.
+ */
+function filterValidPersonAuthors(array $postData): array
+{
+    // Initialize arrays to collect valid author data
+    $validAuthors = [
+        'familynames' => [],
+        'givennames' => [],
+        'orcids' => [],
+        'personAffiliation' => [],
+        'authorPersonRorIds' => []
+    ];
+
+    // If either familynames or givennames is missing or empty, return empty validAuthors
+    if (empty($postData['familynames']) || empty($postData['givennames'])) {
+        return $validAuthors;
+    }
+
+    // Extract input arrays or default empty arrays for optional fields
+    $familynames = $postData['familynames'];
+    $givennames = $postData['givennames'];
+    $orcids = $postData['orcids'] ?? [];
+    $affiliations = $postData['personAffiliation'] ?? [];
+    $rorids = $postData['authorPersonRorIds'] ?? [];
+
+    // Loop through all author entries by index
+    foreach ($familynames as $i => $family) {
+        // Get corresponding given name or empty string if not set
+        $given = $givennames[$i] ?? '';
+
+        // Check if both family and given names are non-empty after trimming whitespace
+        if (trim($family) !== '' && trim($given) !== '') {
+            // Append trimmed valid fields to results arrays, safely handling optional data
+            $validAuthors['familynames'][] = trim($family);
+            $validAuthors['givennames'][] = trim($given);
+            $validAuthors['orcids'][] = $orcids[$i] ?? '';
+            $validAuthors['personAffiliation'][] = $affiliations[$i] ?? '';
+            $validAuthors['authorPersonRorIds'][] = $rorids[$i] ?? '';
+        }
+    }
+
+    // Return the filtered list containing only complete author data entries
+    return $validAuthors;
+}
+
+/**
  * Validates the author data array for individuals.
  *
  * Expects the following keys in $postData:
@@ -14,23 +71,21 @@ require_once __DIR__ . '/save_affiliations.php';
 function validatePersonAuthors(array $postData): bool
 {
     if (empty($postData['familynames']) || empty($postData['givennames'])) {
-        return false; // Fields not present or empty
+        return false;
     }
 
     $familynames = $postData['familynames'];
     $givennames = $postData['givennames'];
 
-    if (count($familynames) !== count($givennames)) {
-        return false; // Number of family names doesn't match given names
-    }
-
     foreach ($familynames as $i => $family) {
-        if (trim($family) === '' || trim($givennames[$i]) === '') {
-            return false; // Required field is empty
+        $given = $givennames[$i] ?? '';
+
+        if (trim($family) !== '' && trim($given) !== '') {
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
 /**
@@ -95,12 +150,21 @@ function saveAuthors($connection, $postData, $resource_id)
         return false;
     }
 
-    // Person
-    $familynames = $postData['familynames'] ?? [];
-    $givennames = $postData['givennames'] ?? [];
-    $orcids = $postData['orcids'] ?? [];
-    $personAffiliations = $postData['personAffiliation'] ?? [];
-    $personRorIds = $postData['authorPersonRorIds'] ?? [];
+    // Filtering of person authors: only complete pure
+    $filteredPersons = $hasPersonData ? filterValidPersonAuthors($postData) : [
+        'familynames' => [],
+        'givennames' => [],
+        'orcids' => [],
+        'personAffiliation' => [],
+        'authorPersonRorIds' => []
+    ];
+
+    // Personal data
+    $familynames = $filteredPersons['familynames'];
+    $givennames = $filteredPersons['givennames'];
+    $orcids = $filteredPersons['orcids'];
+    $personAffiliations = $filteredPersons['personAffiliation'];
+    $personRorIds = $filteredPersons['authorPersonRorIds'];
 
     // Institution
     $institutionnames = $postData['authorinstitutionName'] ?? [];
@@ -116,10 +180,6 @@ function saveAuthors($connection, $postData, $resource_id)
         $affiliation_data = trim($personAffiliations[$i] ?? '');
         $rorId_data = trim($personRorIds[$i] ?? '');
 
-        // Check mandatory fields per entry (instead of roughly beforehand)
-        if (empty($familyname) || empty($givenname)) {
-            continue; // Invalid entry is skipped
-        }
 
         $rorIdArray = parseRorIds($rorId_data);
         $affiliationArray = parseAffiliationData($affiliation_data);
