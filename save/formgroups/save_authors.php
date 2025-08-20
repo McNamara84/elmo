@@ -87,7 +87,7 @@ function saveAuthors($connection, $postData, $resource_id)
     $hasInstitutionData = !empty($postData['authorinstitutionName']);
 
     // Validation: at least one group must be valid
-    $validPerson = $hasPersonData;
+    $validPerson = $hasPersonData ? validatePersonAuthors($postData) : false;
     $validInstitution = $hasInstitutionData ? validateInstitutionAuthors($postData) : false;
 
     if (!$validPerson && !$validInstitution) {
