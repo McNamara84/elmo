@@ -6,7 +6,7 @@
     <div class="card-body">
         <div class="row">
             <!-- Tide System -->
-            <div class="col-12 col-md-6 col-lg-2 p-1">
+            <div class="col-12 col-md-6 col-lg-3 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
                         <select class="form-select input-with-help input-right-no-round-corners" id="input-tide-system" name="tide_system" required>
@@ -20,8 +20,19 @@
                     <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-tide-system"></i></span>
                 </div>
             </div>
+            <!-- Degree -->
+            <div class="col-12 col-md-6 col-lg-3 p-1">
+                <div class="input-group has-validation">
+                    <div class="form-floating">
+                        <input type="number" class="form-control input-with-help input-right-no-round-corners" id="input-degree" name="degree" min="0" step="1" required>
+                        <label for="input-degree"><span data-translate="technical.degree">Degree</span> <span class="text-danger">*</span></label>
+                        <div class="invalid-feedback" data-translate="technical.degreeInvalid">Please provide degree.</div>
+                    </div>
+                    <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-degree"></i></span>
+                </div>
+            </div>
             <!-- Errors -->
-            <div class="col-12 col-md-6 col-lg-2 p-1">
+            <div class="col-12 col-md-6 col-lg-6 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
                         <select class="form-select input-with-help input-right-no-round-corners" id="input-errors" name="errors" required>
@@ -35,7 +46,7 @@
                     <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-errors"></i></span>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-6 p-1">
+            <div class="col-12 col-md-4 col-lg-4 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
                         <input type="text" class="form-control" id="input-error-handling-approach" name="error_handling_approach" pattern="^[\w\s.,()\-]*$" maxlength="255">
@@ -44,23 +55,12 @@
                     </div>
                 </div>            
             </div>
-            <!-- Degree -->
-            <div class="col-12 col-md-6 col-lg-2 p-1">
-                <div class="input-group has-validation">
-                    <div class="form-floating">
-                        <input type="number" class="form-control input-with-help input-right-no-round-corners" id="input-degree" name="degree" min="0" step="1" required>
-                        <label for="input-degree"><span data-translate="technical.degree">Degree</span> <span class="text-danger">*</span></label>
-                        <div class="invalid-feedback" data-translate="technical.degreeInvalid">Please provide degree.</div>
-                    </div>
-                    <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-degree"></i></span>
-                </div>
-            </div>
         </div>
         <div class="row">
-            <!-- Mathematical Representation triggers the visibility -->
-            <!-- This field is already handled by ggmproperties-essential.js -->
+            <!-- Mathematical Representation triggers the visibility: either 1 radius or 2 variables -->
+
             <!-- Spherical: Radius with scientific notation (no arrows) -->
-            <div class="col-12 col-md-6 col-lg-5 p-1 visibility-spherical" style="display: none;">
+            <div class="col-12 col-md-6 col-lg-6 p-1 visibility-spherical" style="display: none;">
                 <div class="input-group has-validation">
                     <div class="form-floating">
                         <input type="number" class="form-control input-with-help" 
@@ -102,7 +102,7 @@
             </div>
                 
             <!-- Ellipsoidal: Semimajor Axis -->
-            <div class="col-12 col-md-5 col-lg-4 p-1 visibility-ellipsoidal" style="display: none;">
+            <div class="col-12 col-md-3 col-lg-3 p-1 visibility-ellipsoidal" style="display: none;">
                 <div class="input-group has-validation">
                     <div class="form-floating">
                         <input type="text" class="form-control" 
@@ -141,7 +141,7 @@
             </div>
 
             <!-- Ellipsoidal: Second Variable Value -->
-            <div class="col-12 col-md-4 col-lg-2 p-1 visibility-ellipsoidal" style="display: none;">
+            <div class="col-12 col-md-3 col-lg-3 p-1 visibility-ellipsoidal" style="display: none;">
                 <div class="input-group has-validation">
                     <div class="form-floating">
                         <input type="text" class="form-control" 
@@ -157,7 +157,9 @@
                     <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-second-variable-value"></i></span>
                 </div>
             </div>
-            <div class="col-12 col-md-4 col-lg-5 p-1">
+
+            <!-- Earth Gravity Constant -->
+            <div class="col-12 col-md-6 col-lg-6 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
                         <input type="number" class="form-control" id="input-earth-gravity-constant" name="earth_gravity_constant" step="any" min="0" required>

@@ -94,6 +94,31 @@ function updateSecondVariableLabel() {
 }
 
 /**
+ * @description Handle visibility of error handling approach field based on errors selection
+ * 
+ * @module ggmstechnical
+ */
+function updateErrorHandlingVisibility() {
+    const errorsValue = $('#input-errors').val();
+    const errorHandlingField = $('#input-error-handling-approach').closest('.col-12');
+    const errorsField = $('#input-errors').closest('.col-12');
+    
+    if (errorsValue === 'calibrated') {
+        // Show error handling field and adjust widths
+        errorHandlingField.show();
+        // Adjust errors field to take less space when error handling is visible
+        errorsField.removeClass('col-lg-6 col-md-6').addClass('col-lg-2 col-md-2');
+    } else {
+        // Hide error handling field and adjust widths
+        errorHandlingField.hide();
+        // Expand errors field to take more space when error handling is hidden
+        errorsField.removeClass('col-lg-2 col-md-2').addClass('col-lg-6 col-md-6');
+        // Clear the error handling field value when hidden
+        $('#input-error-handling-approach').val('').removeClass('is-valid is-invalid');
+    }
+}
+
+/**
  * @description Handle visibility of spherical vs ellipsoidal reference system fields
  * based on mathematical representation selection
  * 
@@ -186,6 +211,10 @@ $(document).ready(function() {
         checkGGMsTechnical();
     });
     
+    $(document).on('change', '#input-errors', function() {
+        updateErrorHandlingVisibility();
+    });
+    
     $(document).on('change', '#input-second-variable', function() {
         updateSecondVariableLabel();
         checkGGMsTechnical();
@@ -208,6 +237,7 @@ $(document).ready(function() {
     setTimeout(function() {
         updateReferenceSystemVisibility();
         updateSecondVariableLabel();
+        updateErrorHandlingVisibility();
     }, 1000);
     
     // Also listen for when the math representation dropdown is populated
@@ -224,6 +254,7 @@ $(document).ready(function() {
 function initializeTechnicalFields() {
     updateReferenceSystemVisibility();
     updateSecondVariableLabel();
+    updateErrorHandlingVisibility();
 }
 
 // Export function for potential use by other modules
