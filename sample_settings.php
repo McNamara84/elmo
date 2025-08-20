@@ -35,7 +35,7 @@ $apiKeyTimezone = 'your_timezone_api_key';
 $maxTitles = 2;
 // Show Contributor Persons form group
 $showContributorPersons = true;
-// Show Contrubutor Institutios form group
+// Show Contributor Institutios form group
 $showContributorInstitutions = true;
 // Show GCMD Thesauri form group
 $showGcmdThesauri = true;
