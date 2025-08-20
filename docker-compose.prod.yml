@@ -115,7 +115,6 @@ services:
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
       SHOW_GGMS_PROPERTIES: "true"
-      CHARACTERISTICS_OF_THE_MODEL: "true"
     depends_on:
       - db
     restart: unless-stopped
