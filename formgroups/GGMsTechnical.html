@@ -49,7 +49,11 @@
             <div class="col-12 col-md-8 col-lg-4 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
-                        <input type="text" class="form-control" id="input-error-handling-approach" name="error_handling_approach" pattern="^[\w\s.,()\-]*$" maxlength="255">
+                        <textarea rows="4" 
+                                class="form-control" 
+                                id="input-error-handling-approach" 
+                                name="error_handling_approach" 
+                                maxlength="512"></textarea>
                         <label for="input-error-handling-approach" data-translate="technical.errorHandling">Error handling approach</label>
                         <div class="invalid-feedback" data-translate="technical.errorHandlingInvalid">Only letters, numbers and . , ( ) - are allowed.</div>
                     </div>
@@ -59,21 +63,21 @@
         <div class="row">
             <!-- Mathematical Representation triggers the visibility: either 1 radius or 2 variables -->
 
-            <!-- Spherical: Radius with scientific notation (no arrows) -->
+            <!-- Radius   Spherical harmonics: with scientific notation (no arrows) -->
             <div class="col-12 col-md-6 col-lg-6 p-1 visibility-spherical" style="display: none;">
                 <div class="input-group has-validation">
                     <div class="form-floating">
-                        <input type="number" class="form-control input-with-help" 
+                        <input type="text" class="form-control input-with-help" 
                                id="input-radius-mantissa" 
-                               name="radius_mantissa" 
-                               step="any" 
-                               min="0"
-                               placeholder="6.371">
+                               name="radius_mantissa"
+                               pattern="^[0-9]*\.?[0-9]+$"
+                               inputmode="decimal"
+                               min="0">
                         <label for="input-radius-mantissa">
                             <span data-translate="technical.radiusMantissa">Radius</span> 
                             <span class="text-danger">*</span>
                         </label>
-                        <div class="invalid-feedback" data-translate="technical.radiusInvalid">Please provide radius.</div>
+                        <div class="invalid-feedback" data-translate="technical.radiusInvalid">Please provide radius in scientific notation: significand and exponent.</div>
                     </div>
                     
                     <!-- Scientific notation display -->
