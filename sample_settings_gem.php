@@ -31,18 +31,18 @@ $apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 $apiKeyTimezone = 'your_timezone_api_key';
 
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
-// maximale Anzahl der eingebbaren Titel
+// Maximum number of titles that can be entered
 $maxTitles = 2;
 // Show Contributor Persons form group
 $showContributorPersons = true;
-// Show Contributor Institutios form group
+// Show Contributor Institutions form group
 $showContributorInstitutions = true;
 // Show GCMD Thesauri form group
 $showGcmdThesauri = true;
 // Show Free Keywords form group
 $showFreeKeywords = true;
 // Show Spatial and Temporal Coverage form group
-$showSpatialTemporalCoverage = true;
+$showSpatialTemporalCoverage = false;
 // Show Related Work form group
 $showRelatedWork = true;
 // Show Funding Reference form group
@@ -60,27 +60,25 @@ $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabul
 
 // SETTINGS FOR ICGEM
 // Show GGMs Properties form group
-$showGGMsProperties = false;
+$showGGMsProperties = true;
 // Show Characteristics of the model form group
-$characteristicsOfTheModel = false;
+$characteristicsOfTheModel = true;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
 
 // Settings for sending mail with SMTP
-$smtpHost = getenv('SMTP_HOST') ?: 'your_smtp_host';
-$smtpPort = getenv('SMTP_PORT') ?: 465;
-$smtpUser = getenv('SMTP_USER') ?: '';
-$smtpPassword = getenv('SMTP_PASSWORD') ?: '';
-$smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
-$smtpSecure = getenv('SMTP_SECURE') ?: '';
-$smtpAuth   = getenv('SMTP_AUTH') ?: '';
+$smtpHost = 'your_smtp_host';
+$smtpPort = 465;
+$smtpUser = 'your_smtp_username';
+$smtpPassword = 'your_smtp_password';
+$smtpSender = 'your_smtp_sender_email';
 
 // Target address for feedback
-$feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
+$feedbackAddress = 'feedback@example.com';
 
 // Target address for XML submit
-$xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
+$xmlSubmitAddress = 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
