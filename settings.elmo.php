@@ -73,6 +73,16 @@ $showGGMsProperties = false;
 // Show Characteristics of the model form group
 $characteristicsOfTheModel = false;
 
+$envShowGGMsProperties       = getenv('SHOW_GGMS_PROPERTIES');
+$envCharacteristicsOfTheModel = getenv('CHARACTERISTICS_OF_THE_MODEL');
+
+if ($envShowGGMsProperties !== false) {
+    $showGGMsProperties = filter_var($envShowGGMsProperties, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envCharacteristicsOfTheModel !== false) {
+    $characteristicsOfTheModel = filter_var($envCharacteristicsOfTheModel, FILTER_VALIDATE_BOOLEAN);
+}
+
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
 
