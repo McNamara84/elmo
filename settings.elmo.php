@@ -68,19 +68,13 @@ if ($envShowMslVocabs !== false) {
 }
 
 // SETTINGS FOR ICGEM
-// Show GGMs Properties form group
+// Show ICGEM form groups (GGMs Properties and Characteristics of the model)
 $showGGMsProperties = false;
-// Show Characteristics of the model form group
-$characteristicsOfTheModel = false;
 
-$envShowGGMsProperties       = getenv('SHOW_GGMS_PROPERTIES');
-$envCharacteristicsOfTheModel = getenv('CHARACTERISTICS_OF_THE_MODEL');
+$envShowGGMsProperties = getenv('SHOW_GGMS_PROPERTIES');
 
 if ($envShowGGMsProperties !== false) {
     $showGGMsProperties = filter_var($envShowGGMsProperties, FILTER_VALIDATE_BOOLEAN);
-}
-if ($envCharacteristicsOfTheModel !== false) {
-    $characteristicsOfTheModel = filter_var($envCharacteristicsOfTheModel, FILTER_VALIDATE_BOOLEAN);
 }
 
 // Display the feedback link (true to display, false to hide)
