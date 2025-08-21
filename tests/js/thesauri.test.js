@@ -199,6 +199,7 @@ describe('thesauri.js', () => {
   });
 
   test('limits platform keywords to Space-based Platforms', () => {
+    document.dispatchEvent(new Event('translationsLoaded'));
     const tree = $('#jstree-platforms-datasource').jstree(true);
     const data = tree.get_json('#');
     expect(data).toHaveLength(1);

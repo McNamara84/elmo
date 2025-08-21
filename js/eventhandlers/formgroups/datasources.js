@@ -137,9 +137,11 @@ $(document).ready(function () {
             // Load the GCMD platforms data and initialize the tree
             $.getJSON('json/thesauri/gcmdPlatformsKeywords.json', function(response) {
                 const data = response.data ? response.data : response;
+                // this node is called Space-based Platforms. Theoretically this can be any node.
                 const rootNodeId = 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847';
                 
                 // Find the root node for data sources platforms
+                // OR: find all nodes with id and their children
                 function findNodeById(nodes, id) {
                     for (var i = 0; i < nodes.length; i++) {
                         if (nodes[i].id === id) {
