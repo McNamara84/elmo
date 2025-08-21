@@ -90,6 +90,45 @@ services:
       - "traefik.http.services.elmo-msl-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
 
+  web-gem:
+    build: .
+    ports:
+      - "8082:80"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      # No install routine
+      INSTALL_ACTION: skip
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_AUTH: ${SMTP_AUTH}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_SENDER: ${SMTP_SENDER}
+      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
+      TZ: Europe/Berlin
+      # Flags for gem
+      SHOW_MSL_LABS: "false"
+      SHOW_MSL_VOCABS: "false"
+      SHOW_GGMS_PROPERTIES: "true"
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - internal
+      - frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.elmo-gem-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo-gem`)"
+      - "traefik.http.routers.elmo-gem-router.entrypoints=https"
+      - "traefik.http.routers.elmo-gem-router.middlewares=elmo-gem-stripprefix"
+      - "traefik.http.middlewares.elmo-gem-stripprefix.stripprefix.prefixes=/elmo-gem"
+      - "traefik.http.services.elmo-gem-service.loadbalancer.server.port=80"
+
 volumes:
   db_data:
 
