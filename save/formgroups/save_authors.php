@@ -91,8 +91,9 @@ function validatePersonAuthors(array $postData): bool
 /**
  * Validates the author data array for institutions.
  *
- * Expects the following key in $postData:
- * - authorinstitutionName (array)
+ * Validation rule:
+ * - At least one institutional author must exist
+ * - Every institutional author must have a non-empty institution name
  *
  * @param array $postData
  * @return bool true if valid, otherwise false
@@ -100,18 +101,16 @@ function validatePersonAuthors(array $postData): bool
 function validateInstitutionAuthors(array $postData): bool
 {
     if (empty($postData['authorinstitutionName']) || !is_array($postData['authorinstitutionName'])) {
-        return false; // Field not present or empty
+        return false;
     }
 
-    $institutionnames = $postData['authorinstitutionName'];
-
-    foreach ($institutionnames as $name) {
+    foreach ($postData['authorinstitutionName'] as $name) {
         if (is_string($name) && trim($name) !== '') {
-            return true; // Required field is empty
+            return true; // At least one valid institution found
         }
     }
 
-    return false; // No valid name found
+    return false; // No valid entries found
 }
 
 /**
