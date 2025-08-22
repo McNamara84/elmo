@@ -260,16 +260,15 @@ describe('datasources.js', () => {
     const row = $('#group-datasources .row').first();
     row.find('select[name="datasource_type[]"]').val('T').trigger('change');
     const detailsSelect = row.find('select[name="datasource_details[]"]');
-    const descCol = row.find('textarea[name="datasource_description[]"]').closest('div');
-    const compCol = row.find('input[name="compensation_depth[]"]').closest('div');
+    const compField = row.children('.visibility-datasources-compensation');
 
+    // Set to Isostasy and check visible
     detailsSelect.val('Isostasy').trigger('change');
-    expect(descCol.hasClass('col-md-3')).toBe(true);
-    expect(compCol.hasClass('col-md-2')).toBe(true);
+    expect(compField.css('display')).not.toBe('none');
 
+    // Set to something else and check hidden
     detailsSelect.val('Bathymetry').trigger('change');
-    expect(descCol.hasClass('col-md-5')).toBe(true);
-    expect(compCol.hasClass('col-md-12')).toBe(true);
+    expect(compField.css('display')).toBe('none');
   });
 
   test('changing type to M shows identifier field and only initializes dropdown once', () => {
