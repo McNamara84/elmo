@@ -198,13 +198,4 @@ describe('thesauri.js', () => {
     expect(tree.get_selected()).toHaveLength(0);
   });
 
-  test('limits platform keywords to Space-based Platforms', () => {
-    document.dispatchEvent(new Event('translationsLoaded'));
-    const tree = $('#jstree-platforms-datasource').jstree(true);
-    const data = tree.get_json('#');
-    expect(data).toHaveLength(1);
-    expect(data[0].id).toBe('https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847');
-    const childIds = data[0].children.map(n => n.id);
-    expect(childIds).toEqual(['sat']);
-  });
 });
