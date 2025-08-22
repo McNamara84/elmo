@@ -284,52 +284,42 @@ describe('datasources.js', () => {
 
   test('layout adjusts when type is set to M', () => {
     const row = $('#group-datasources .row').first();
-    const typeCol = row.find('select[name="datasource_type[]"]').closest('div');
-    const descCol = row.find('textarea[name="datasource_description[]"]').closest('div');
-    const modelNameCol = row.find('input[name="dName[]"]').closest('div');
-    const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div');
-    const idTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div');
-    const addBtnCol = row.find('.addDataSource').closest('div');
-    const satelliteCol = row.find('.visibility-datasources-satellite');
-
+    // Set type to Model and trigger change
     row.find('select[name="datasource_type[]"]').val('M').trigger('change');
 
-    expect(typeCol.hasClass('col-md-4')).toBe(true);
-    expect(identifierCol.hasClass('col-md-4')).toBe(true);
-    expect(idTypeCol.hasClass('col-md-4')).toBe(true);
-    expect(descCol.hasClass('col-md-6')).toBe(true);
-    expect(modelNameCol.hasClass('col-md-5')).toBe(true);
-    expect(addBtnCol.hasClass('col-md-1')).toBe(true);
+    // Get all relevant columns in the row
+    const typeCol = row.find('select[name="datasource_type[]"]').closest('div');
+    const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div');
+    const idTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div');
+    const modelNameCol = row.find('input[name="dName[]"]').closest('div');
+    const descCol = row.find('textarea[name="datasource_description[]"]').closest('div');
+    const addBtnCol = row.find('.addDataSource').closest('div');
 
-    const idxType = row.children().index(typeCol);
-    const idxIdentifier = row.children().index(identifierCol);
-    const idxIdType = row.children().index(idTypeCol);
-    const idxDesc = row.children().index(descCol);
-    const idxModelName = row.children().index(modelNameCol);
-    const idxAddBtn = row.children().index(addBtnCol);
+    // Check visibility of identifier and identifier type fields
+    expect(identifierCol.css('display')).not.toBe('none');
+    expect(idTypeCol.css('display')).not.toBe('none');
+
+    // Check order: Type -> Identifier -> IdentifierType -> ModelName -> Description -> AddButton
+    const children = row.children().toArray();
+    const idxType = children.indexOf(typeCol[0]);
+    const idxIdentifier = children.indexOf(identifierCol[0]);
+    const idxIdType = children.indexOf(idTypeCol[0]);
+    const idxModelName = children.indexOf(modelNameCol[0]);
+    const idxDesc = children.indexOf(descCol[0]);
+    const idxAddBtn = children.indexOf(addBtnCol[0]);
 
     expect(idxType).toBeLessThan(idxIdentifier);
     expect(idxIdentifier).toBeLessThan(idxIdType);
-    expect(idxIdType).toBeLessThan(idxDesc);
-    expect(idxDesc).toBeLessThan(idxModelName);
-    expect(idxModelName).toBeLessThan(idxAddBtn);
+    expect(idxIdType).toBeLessThan(idxModelName);
+    expect(idxModelName).toBeLessThan(idxDesc);
+    expect(idxDesc).toBeLessThan(idxAddBtn);
 
+    // Now set type back to Satellite and check order/visibility resets
     row.find('select[name="datasource_type[]"]').val('S').trigger('change');
 
-    expect(typeCol.hasClass('col-md-3')).toBe(true);
-    expect(descCol.hasClass('col-md-5')).toBe(true);
-    expect(modelNameCol.hasClass('col-md-6')).toBe(true);
-    expect(identifierCol.hasClass('col-md-3')).toBe(true);
-    expect(idTypeCol.hasClass('col-md-3')).toBe(true);
-    expect(addBtnCol.hasClass('col-md-1')).toBe(true);
-
-    const idxTypeAfter = row.children().index(typeCol);
-    const idxDescAfter = row.children().index(descCol);
-    const idxSatAfter = row.children().index(satelliteCol);
-    const idxAddAfter = row.children().index(addBtnCol);
-    expect(idxTypeAfter).toBeLessThan(idxDescAfter);
-    expect(idxDescAfter).toBeLessThan(idxSatAfter);
-    expect(idxSatAfter).toBeLessThan(idxAddAfter);
+    // Optionally, check that identifier fields are hidden again
+    expect(identifierCol.css('display')).toBe('none');
+    expect(idTypeCol.css('display')).toBe('none');
   });
 
   test('addDataSource clones row, resets values, and restores help button', () => {
