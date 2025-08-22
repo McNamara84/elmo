@@ -40,7 +40,7 @@ describe('datasources.js', () => {
             <input class="input-with-help" />
             <div class="help-placeholder" data-help-section-id="ds"></div>
           </div>
-          <input id="input-datasource-platforms" />
+          <input id="input-datasource-platforms-0" name="satellite_platform[]" />
           <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center visibility-datasources-basic">
             <button class="addDataSource"></button>
           </div>
@@ -332,7 +332,7 @@ describe('datasources.js', () => {
     expect(newRow.find('.removeButton').length).toBe(1);
     expect(newRow.find('.help-placeholder').length).toBe(0);
     expect(newRow.find('span.input-group-text i[data-help-section-id="ds"]').length).toBe(1);
-    const tagifyInstance = newRow.find('#input-datasource-platforms')[0]._tagify;
+    const tagifyInstance = newRow.find('input[id^="input-datasource-platforms"]')[0]._tagify;
     expect(tagifyInstance).toBeInstanceOf(MockTagify);
     expect(tagifyInstance._callbacks.add).toBeDefined();
     expect(tagifyInstance._callbacks.remove).toBeDefined();
