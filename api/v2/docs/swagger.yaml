@@ -618,6 +618,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /vocabs/titletypes:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get title types
+      description: Retrieve all available title types
+      operationId: getTitleTypes
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TitleType"
+        "404":
+          description: No title types found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /validation/patterns/{type}:
     get:
       tags:
@@ -1267,4 +1296,18 @@ components:
       required:
         - id
         - code
+        - name
+    TitleType:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier of the title type
+          example: 1
+        name:
+          type: string
+          description: Name of the title type
+          example: "TranslatedTitle"
+      required:
+        - id
         - name
