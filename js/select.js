@@ -243,15 +243,66 @@ function setupLanguageDropdown() {
   });
 }
 
+function setupTitleTypeDropdown() {
+  const select = $("#input-resourceinformation-titletype");
+  if (select.length === 0) return;
+
+  select.prop('disabled', true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+    })
+  );
+
+  $.ajax({
+    url: "api/v2/vocabs/titletypes",
+    method: "GET",
+    dataType: "json",
+    success: function (data) {
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Choose...",
+          "data-translate": "general.choose",
+        })
+      );
+
+      if (Array.isArray(data)) {
+        data.forEach(function (type) {
+          select.append(
+            $("<option>", {
+              value: type.id,
+              text: type.name,
+            })
+          );
+        });
+      }
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      console.error("Error loading title types:", textStatus, errorThrown);
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Error loading data",
+        })
+      );
+    },
+    complete: function () {
+      select.prop('disabled', false);
+    },
+  });
+}
+
 // Make functions available globally (important for tests)
 window.setupLanguageDropdown = setupLanguageDropdown;
 window.setupResourceTypeDropdown = setupResourceTypeDropdown;
+window.setupTitleTypeDropdown = setupTitleTypeDropdown;
 
 $(document).ready(function () {
   initializeTimezoneDropdown();
   setupResourceTypeDropdown();
   setupLanguageDropdown();
-
+  setupTitleTypeDropdown();
 
   /**
   * Populates the select field with ID input-rights-license with options created via an API call.
