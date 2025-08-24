@@ -6,12 +6,17 @@ use mysqli_sql_exception;
 require_once __DIR__ . '/../save/formgroups/save_descriptions.php';
 require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 
+/**
+ * Test suite for saving description text sections.
+ */
 class SaveDescriptionsTest extends DatabaseTestCase
 {
     /**
-     * Alle vier Descriptions wurden ausgefüllt
+     * Saves all four description types and verifies persistence.
+     *
+     * @return void
      */
-    public function testSaveAllDescriptions()
+    public function testSaveAllDescriptions(): void
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.ALL.DESCRIPTIONS",
@@ -60,9 +65,11 @@ class SaveDescriptionsTest extends DatabaseTestCase
     }
 
     /**
-     * Nur Abstract wurde ausgefüllt
+     * Saves only the abstract description and ensures others are ignored.
+     *
+     * @return void
      */
-    public function testSaveOnlyAbstract()
+    public function testSaveOnlyAbstract(): void
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.ONLY.ABSTRACT",
@@ -99,9 +106,11 @@ class SaveDescriptionsTest extends DatabaseTestCase
     }
 
     /**
-     * Nur Methods wurde ausgefüllt (sollte fehlschlagen)
+     * Attempts to save only the methods description and expects failure.
+     *
+     * @return void
      */
-    public function testSaveOnlyMethods()
+    public function testSaveOnlyMethods(): void
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.ONLY.METHODS",
