@@ -60,19 +60,19 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $stmt = $this->connection->prepare("SELECT * FROM Spatial_Temporal_Coverage WHERE Description = ?");
         $stmt->bind_param("s", $postData["tscDescription"][0]);
         $stmt->execute();
-        $stc = $stmt->get_result()->fetch_assoc();
+        $retrievedStc = $stmt->get_result()->fetch_assoc();
 
         // Assert all fields were saved correctly
-        $this->assertNotNull($stc, 'STC entry should be saved in the database');
-        $this->assertEquals($postData["tscLatitudeMin"][0], $stc["latitudeMin"]);
-        $this->assertEquals($postData["tscLatitudeMax"][0], $stc["latitudeMax"]);
-        $this->assertEquals($postData["tscLongitudeMin"][0], $stc["longitudeMin"]);
-        $this->assertEquals($postData["tscLongitudeMax"][0], $stc["longitudeMax"]);
-        $this->assertEquals($postData["tscDateStart"][0], $stc["dateStart"]);
-        $this->assertEquals($postData["tscTimeStart"][0], $stc["timeStart"]);
-        $this->assertEquals($postData["tscDateEnd"][0], $stc["dateEnd"]);
-        $this->assertEquals($postData["tscTimeEnd"][0], $stc["timeEnd"]);
-        $this->assertEquals($postData["tscTimezone"][0], $stc["timezone"]);
+        $this->assertNotNull($retrievedStc, 'STC entry should be saved in the database');
+        $this->assertEquals($postData["tscLatitudeMin"][0], $retrievedStc["latitudeMin"]);
+        $this->assertEquals($postData["tscLatitudeMax"][0], $retrievedStc["latitudeMax"]);
+        $this->assertEquals($postData["tscLongitudeMin"][0], $retrievedStc["longitudeMin"]);
+        $this->assertEquals($postData["tscLongitudeMax"][0], $retrievedStc["longitudeMax"]);
+        $this->assertEquals($postData["tscDateStart"][0], $retrievedStc["dateStart"]);
+        $this->assertEquals($postData["tscTimeStart"][0], $retrievedStc["timeStart"]);
+        $this->assertEquals($postData["tscDateEnd"][0], $retrievedStc["dateEnd"]);
+        $this->assertEquals($postData["tscTimeEnd"][0], $retrievedStc["timeEnd"]);
+        $this->assertEquals($postData["tscTimezone"][0], $retrievedStc["timezone"]);
 
         // Verify resource linkage
         $stmt = $this->connection->prepare(
@@ -80,7 +80,7 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
              WHERE Resource_resource_id = ? 
              AND Spatial_Temporal_Coverage_spatial_temporal_coverage_id = ?"
         );
-        $stmt->bind_param("ii", $resource_id, $stc["spatial_temporal_coverage_id"]);
+        $stmt->bind_param("ii", $resource_id, $retrievedStc["spatial_temporal_coverage_id"]);
         $stmt->execute();
         $relation = $stmt->get_result()->fetch_assoc();
 
@@ -183,13 +183,13 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $stmt = $this->connection->prepare("SELECT * FROM Spatial_Temporal_Coverage WHERE Description = ?");
         $stmt->bind_param("s", $postData["tscDescription"][0]);
         $stmt->execute();
-        $stc = $stmt->get_result()->fetch_assoc();
+        $retrievedStc = $stmt->get_result()->fetch_assoc();
 
-        $this->assertNotNull($stc, 'STC entry should be saved');
-        $this->assertEquals($postData["tscLatitudeMin"][0], $stc["latitudeMin"]);
-        $this->assertNull($stc["latitudeMax"]);
-        $this->assertEquals($postData["tscLongitudeMin"][0], $stc["longitudeMin"]);
-        $this->assertNull($stc["longitudeMax"]);
+        $this->assertNotNull($retrievedStc, 'STC entry should be saved');
+        $this->assertEquals($postData["tscLatitudeMin"][0], $retrievedStc["latitudeMin"]);
+        $this->assertNull($retrievedStc["latitudeMax"]);
+        $this->assertEquals($postData["tscLongitudeMin"][0], $retrievedStc["longitudeMin"]);
+        $this->assertNull($retrievedStc["longitudeMax"]);
     }
 
     /**
@@ -326,13 +326,13 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $stmt = $this->connection->prepare("SELECT * FROM Spatial_Temporal_Coverage WHERE Description = ?");
         $stmt->bind_param("s", $postData["tscDescription"][0]);
         $stmt->execute();
-        $stc = $stmt->get_result()->fetch_assoc();
+        $retrievedStc = $stmt->get_result()->fetch_assoc();
 
-        $this->assertNotNull($stc, 'The STC entry should be saved.');
-        $this->assertEquals($postData["tscDateStart"][0], $stc["dateStart"]);
-        $this->assertEquals($postData["tscDateEnd"][0], $stc["dateEnd"]);
-        $this->assertNull($stc["timeStart"]);
-        $this->assertNull($stc["timeEnd"]);
+        $this->assertNotNull($retrievedStc, 'The STC entry should be saved.');
+        $this->assertEquals($postData["tscDateStart"][0], $retrievedStc["dateStart"]);
+        $this->assertEquals($postData["tscDateEnd"][0], $retrievedStc["dateEnd"]);
+        $this->assertNull($retrievedStc["timeStart"]);
+        $this->assertNull($retrievedStc["timeEnd"]);
     }
 
     /**
@@ -378,12 +378,12 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $stmt = $this->connection->prepare("SELECT * FROM Spatial_Temporal_Coverage WHERE Description = ?");
         $stmt->bind_param("s", $postData["tscDescription"][0]);
         $stmt->execute();
-        $stc = $stmt->get_result()->fetch_assoc();
+        $retrievedStc = $stmt->get_result()->fetch_assoc();
 
-        $this->assertNotNull($stc, 'The STC entry should be saved.');
-        $this->assertEquals($postData["tscDateStart"][0], $stc["dateStart"]);
-        $this->assertEquals($postData["tscDateEnd"][0], $stc["dateEnd"]);
-        $this->assertNull($stc["timeStart"]);
-        $this->assertEquals($postData["tscTimeEnd"][0], $stc["timeEnd"]);
+        $this->assertNotNull($retrievedStc, 'The STC entry should be saved.');
+        $this->assertEquals($postData["tscDateStart"][0], $retrievedStc["dateStart"]);
+        $this->assertEquals($postData["tscDateEnd"][0], $retrievedStc["dateEnd"]);
+        $this->assertNull($retrievedStc["timeStart"]);
+        $this->assertEquals($postData["tscTimeEnd"][0], $retrievedStc["timeEnd"]);
     }
 }
