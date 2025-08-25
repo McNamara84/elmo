@@ -8,27 +8,6 @@
  * 
  * @module ggmstechnical
  */
-function updateRadiusValue() {
-    const radius = parseFloat($('#input-radius').val()) || 0;
-    const exponent = parseInt($('#input-radius-exponent').val()) || 6;
-
-    // Calculate the actual value
-    const actualValue = mantissa * Math.pow(10, exponent);
-    
-    // Update the hidden field (this is what gets submitted)
-    $('#input-radius').val(actualValue);
-    
-    // Update the display
-    $('#radius-display').text(actualValue.toLocaleString());
-    
-    // Validate the mantissa field based on the calculated value
-    const mantissaField = $('#input-radius');
-    if (mantissa > 0) {
-        mantissaField.removeClass('is-invalid').addClass('is-valid');
-    } else {
-        mantissaField.removeClass('is-valid');
-    }
-}
 
 /**
  * @description Update the label of the second variable value field based on selection
