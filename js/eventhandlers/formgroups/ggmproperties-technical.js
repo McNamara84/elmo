@@ -9,9 +9,9 @@
  * @module ggmstechnical
  */
 function updateRadiusValue() {
-    const mantissa = parseFloat($('#input-radius').val()) || 0;
+    const radius = parseFloat($('#input-radius').val()) || 0;
     const exponent = parseInt($('#input-radius-exponent').val()) || 6;
-    
+
     // Calculate the actual value
     const actualValue = mantissa * Math.pow(10, exponent);
     
