@@ -57,6 +57,12 @@ function processThesaurusKeyword($connection, $entry, $resource_id, $field)
     $value = $entry['value'];
     $valueURI = isset($entry['id']) ? $entry['id'] : null;       // Uses the URI if available
     $scheme = isset($entry['scheme']) ? $entry['scheme'] : $field; // If no scheme, use the field name
+
+    // Workaround until Utrecht fixed it in the original source, TODO: Remove this when fixed
+    if ($field === 'MSLKeywords') {
+        $scheme = 'EPOS MSL vocabulary';
+    }
+
     $schemeURI = isset($entry['schemeURI']) ? $entry['schemeURI'] : ''; // Optional: URI of the scheme
     $language = isset($entry['language']) ? $entry['language'] : 'en'; // Default language: English
 
