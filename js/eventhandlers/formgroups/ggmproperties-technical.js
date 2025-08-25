@@ -9,7 +9,7 @@
  * @module ggmstechnical
  */
 function updateRadiusValue() {
-    const mantissa = parseFloat($('#input-radius-mantissa').val()) || 0;
+    const mantissa = parseFloat($('#input-radius').val()) || 0;
     const exponent = parseInt($('#input-radius-exponent').val()) || 6;
     
     // Calculate the actual value
@@ -22,47 +22,12 @@ function updateRadiusValue() {
     $('#radius-display').text(actualValue.toLocaleString());
     
     // Validate the mantissa field based on the calculated value
-    const mantissaField = $('#input-radius-mantissa');
+    const mantissaField = $('#input-radius');
     if (mantissa > 0) {
         mantissaField.removeClass('is-invalid').addClass('is-valid');
     } else {
         mantissaField.removeClass('is-valid');
     }
-}
-
-/**
- * @description Handle power adjustment buttons for exponent only
- * 
- * @module ggmstechnical
- */
-function setupRadiusPowerControls() {
-    // Power up button - use the correct ID from HTML
-    $('#exponent-power-up').on('click', function(e) {
-        e.preventDefault();
-        const exponentField = $('#input-radius-exponent');
-        const currentValue = parseInt(exponentField.val()) || 6;
-        const newValue = Math.min(currentValue + 1, 10); // Max 10
-        exponentField.val(newValue);
-        updateRadiusValue();
-    });
-    
-    // Power down button - use the correct ID from HTML
-    $('#exponent-power-down').on('click', function(e) {
-        e.preventDefault();
-        const exponentField = $('#input-radius-exponent');
-        const currentValue = parseInt(exponentField.val()) || 6;
-        const newValue = Math.max(currentValue - 1, -10); // Min -10
-        exponentField.val(newValue);
-        updateRadiusValue();
-    });
-    
-    // Handle direct input changes
-    $('#input-radius-mantissa, #input-radius-exponent').on('input change', function() {
-        updateRadiusValue();
-    });
-    
-    // Initial calculation
-    updateRadiusValue();
 }
 
 /**
@@ -135,7 +100,7 @@ function updateReferenceSystemVisibility() {
     
     // Remove required attributes from conditional fields
     $('#input-radius').removeAttr('required');
-    $('#input-radius-mantissa').removeAttr('required');
+    $('#input-radius').removeAttr('required');
     $('#input-semimajor-axis').removeAttr('required');
     $('#input-second-variable').removeAttr('required');
     $('#input-second-variable-value').removeAttr('required');
@@ -163,7 +128,7 @@ function updateReferenceSystemVisibility() {
     // Show appropriate fields and set requirements
     if (showSpherical) {
         sphericalFields.show();
-        $('#input-radius-mantissa').attr('required', 'required');
+        $('#input-radius').attr('required', 'required');
         // Set up power controls when showing spherical fields
         setTimeout(setupRadiusPowerControls, 100);
     } else if (showEllipsoidal) {
@@ -186,14 +151,14 @@ function checkGGMsTechnical() {
     
     // Define technical fields
     const fields = {
-        radiusMantissa: container.find('#input-radius-mantissa'),
+        radius: container.find('#input-radius'),
         semimajorAxis: container.find('#input-semimajor-axis'),
         secondVariable: container.find('#input-second-variable'),
         secondVariableValue: container.find('#input-second-variable-value')
     };
     
     // Check if any visible field is filled
-    const isAnyFieldFilled = Object.values(fields).some(field => {
+    const  s = Object.values(fields).some(field => {
         if (!field.length || !field.is(':visible')) return false;
         const value = field.val();
         return value && value.trim() !== '';
@@ -222,7 +187,7 @@ $(document).ready(function() {
     
     // Watch for changes on technical fields
     const technicalFieldsToWatch = [
-        '#input-radius-mantissa',
+        '#input-radius',
         '#input-radius-exponent',
         '#input-semimajor-axis',
         '#input-second-variable',
@@ -243,6 +208,23 @@ $(document).ready(function() {
     // Also listen for when the math representation dropdown is populated
     $(document).on('change', '#input-mathematical-representation', function() {
         setTimeout(updateReferenceSystemVisibility, 100);
+    });
+    
+    // Initial check
+    const errorsSelect = $('#input-errors');
+    const errorHandlingApproachCol = $('#input-error-handling-approach').closest('.col-12');
+    
+    // Hide error handling approach field initially if "Choose..." is selected
+    if (errorsSelect.val() === 'calibrated') {
+        errorHandlingApproachCol.show();
+    } else {
+        errorHandlingApproachCol.hide();
+    }
+    
+    // Watch for changes on the errors dropdown
+    errorsSelect.on('change', function() {
+        const errorsValue = $(this).val();
+        errorHandlingApproachCol.toggle(errorsValue === 'calibrated');
     });
 });
 

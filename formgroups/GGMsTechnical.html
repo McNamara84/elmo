@@ -10,6 +10,7 @@
                 <div class="input-group has-validation">
                     <div class="form-floating">
                         <select class="form-select input-with-help input-right-no-round-corners" id="input-tide-system" name="tide_system" required>
+                            <option value="" data-translate="general.choose">Choose...</option>
                             <option value="zero tide" data-translate="technical.tideSystemOptions.zeroTide">zero tide</option>
                             <option value="mean tide" data-translate="technical.tideSystemOptions.meanTide">mean tide</option>
                             <option value="tide free" data-translate="technical.tideSystemOptions.tideFree">tide free</option>
@@ -36,6 +37,7 @@
                 <div class="input-group has-validation">
                     <div class="form-floating">
                         <select class="form-select input-with-help input-right-no-round-corners" id="input-errors" name="errors" required>
+                            <option value="" data-translate="general.choose">Choose...</option>
                             <option value="calibrated" data-translate="technical.errorOptions.calibrated">calibrated</option>
                             <option value="formal" data-translate="technical.errorOptions.formal">formal</option>
                             <option value="no" data-translate="technical.errorOptions.no">no</option>
@@ -67,44 +69,18 @@
             <div class="col-12 col-md-6 col-lg-6 p-1 visibility-spherical" style="display: none;">
                 <div class="input-group has-validation">
                     <div class="form-floating">
-                        <input type="text" class="form-control input-with-help" 
-                               id="input-radius-mantissa" 
-                               name="radius_mantissa"
-                               pattern="^[0-9]*\.?[0-9]+$"
-                               inputmode="decimal"
-                               min="0">
-                        <label for="input-radius-mantissa">
-                            <span data-translate="technical.radiusMantissa">Radius</span> 
-                            <span class="text-danger">*</span>
+                        <input type="text" class="form-control input-with-help input-right-no-round-corners" 
+                               id="input-radius" 
+                               name="radius"
+                               inputmode="decimal">
+                        <label for="input-radius">
+                            <span data-translate="technical.radius">Radius (in km)</span> 
                         </label>
-                        <div class="invalid-feedback" data-translate="technical.radiusInvalid">Please provide radius in scientific notation: significand and exponent.</div>
+                        <div class="invalid-feedback" data-translate="technical.radiusInvalid">Please provide radius</div>
                     </div>
-                    
-                    <!-- Scientific notation display -->
-                    <span class="input-group-text px-2">×10</span>
-                    
-                    <div class="form-floating" style="max-width: 80px;">
-                        <input type="number" class="form-control text-center" 
-                               id="input-radius-exponent" 
-                               name="radius_exponent" 
-                               step="1" 
-                               min="-10" 
-                               max="10"
-                               placeholder="6">
-                        <label for="input-radius-exponent">Exp</label>
-                    </div>
-                    
                     <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-radius"></i></span>
                 </div>
-
-            <!-- Display calculated value -->
-            <small class="text-muted mt-1 d-block">
-                <span data-translate="technical.calculatedValue">Calculated value:</span> 
-                <span id="radius-display">0</span> 
-                <span data-translate="technical.meters">meters</span>
-                </small>
             </div>
-                
             <!-- Ellipsoidal: Semimajor Axis -->
             <div class="col-12 col-md-12 col-lg-4 p-1 visibility-ellipsoidal" style="display: none;">
                 <div class="input-group has-validation">
@@ -166,7 +142,7 @@
             <div class="col-12 col-md-12 col-lg-6 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
-                        <input type="number" class="form-control" id="input-earth-gravity-constant" name="earth_gravity_constant" step="any" min="0" required>
+                        <input type="decimal" class="form-control" id="input-earth-gravity-constant" name="earth_gravity_constant" step="any" min="0" required>
                         <label for="input-earth-gravity-constant"><span data-translate="technical.earthGravityConstant">Earth gravity constant</span> <span class="text-danger">*</span></label>
                         <div class="invalid-feedback" data-translate="technical.earthGravityConstantInvalid">Please provide earth gravity constant.</div>
                     </div>
