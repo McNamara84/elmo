@@ -13,9 +13,13 @@ function saveFreeKeywords($connection, $postData, $resource_id)
     $freekeywords = isset($postData['freekeywords']) && is_array($postData['freekeywords']) ? $postData['freekeywords'] : [];
 
     foreach ($freekeywords as $keywordJSON) {
+        $keywordJSON = trim($keywordJSON);
+        if ($keywordJSON === '') {
+            continue;
+        }
         $keywords = json_decode($keywordJSON, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log("Invalid JSON input: $keywordJSON");
+        if (!is_array($keywords) || json_last_error() !== JSON_ERROR_NONE) {
+            error_log("Invalid JSON input for free keyword: $keywordJSON");
             continue;
         }
         foreach ($keywords as $keywordObj) {

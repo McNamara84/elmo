@@ -5,12 +5,17 @@ use mysqli_sql_exception;
 
 require_once __DIR__ . '/../save/formgroups/save_freekeywords.php';
 
+/**
+ * Test suite for saving free keywords.
+ */
 class SaveFreekeywordsTest extends DatabaseTestCase
 {
     /**
-     * Ein einzelnes, noch nicht kuratiertes, Freies Keyword wurde eingegeben
+     * Saves a new uncurated free keyword and verifies its storage.
+     *
+     * @return void
      */
-    public function testSaveSingleUncuratedFreeKeyword()
+    public function testSaveSingleUncuratedFreeKeyword(): void
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.SINGLE.UNCURATED",
@@ -37,8 +42,8 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
 
-        $this->assertNotNull($result, "Das freie Keyword sollte gespeichert worden sein.");
-        $this->assertEquals(0, $result['isCurated'], "Das Keyword sollte als nicht kuratiert markiert sein.");
+        $this->assertNotNull($result, 'The free keyword should be saved.');
+        $this->assertEquals(0, $result['isCurated'], 'The keyword should be marked as uncurated.');
 
         // Check if the relation to the resource was created
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Free_Keywords WHERE Resource_resource_id = ? AND Free_Keywords_free_keywords_id = ?");
@@ -46,13 +51,15 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         $stmt->execute();
         $relationResult = $stmt->get_result();
 
-        $this->assertEquals(1, $relationResult->num_rows, "Es sollte eine Verknüpfung zwischen Resource und Free Keyword existieren.");
+        $this->assertEquals(1, $relationResult->num_rows, 'A relation between Resource and Free Keyword should exist.');
     }
 
     /**
-     * Ein freies Keyword wurde eingegeben, das bereits existiert, aber noch nicht kuratiert wurde
+     * Saves a free keyword that already exists but remains uncurated.
+     *
+     * @return void
      */
-    public function testSaveExistingUncuratedFreeKeyword()
+    public function testSaveExistingUncuratedFreeKeyword(): void
     {
         // First, insert an uncurated keyword
         $this->connection->query("INSERT INTO Free_Keywords (free_keyword, isCurated) VALUES ('ExistingUncurated', 0)");
@@ -83,7 +90,7 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
-        $this->assertEquals(1, $count, "Es sollte kein neues Keyword erstellt worden sein.");
+        $this->assertEquals(1, $count, 'No new keyword should have been created.');
 
         // Check if the relation to the resource was created
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Free_Keywords WHERE Resource_resource_id = ? AND Free_Keywords_free_keywords_id = ?");
@@ -91,13 +98,15 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         $stmt->execute();
         $relationResult = $stmt->get_result();
 
-        $this->assertEquals(1, $relationResult->num_rows, "Es sollte eine Verknüpfung zwischen Resource und dem existierenden Free Keyword erstellt worden sein.");
+        $this->assertEquals(1, $relationResult->num_rows, 'A link between the resource and the existing free keyword should be created.');
     }
 
     /**
-     * Ein Keyword wurde eingegeben, das bereits existiert und kuratiert wurde
+     * Saves a free keyword that already exists and is curated.
+     *
+     * @return void
      */
-    public function testSaveExistingCuratedFreeKeyword()
+    public function testSaveExistingCuratedFreeKeyword(): void
     {
         // First, insert a curated keyword
         $this->connection->query("INSERT INTO Free_Keywords (free_keyword, isCurated) VALUES ('ExistingCurated', 1)");
@@ -128,7 +137,7 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
-        $this->assertEquals(1, $count, "Es sollte kein neues Keyword erstellt worden sein.");
+        $this->assertEquals(1, $count, 'No new keyword should have been created.');
 
         // Check if the relation to the resource was created
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Free_Keywords WHERE Resource_resource_id = ? AND Free_Keywords_free_keywords_id = ?");
@@ -136,13 +145,15 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         $stmt->execute();
         $relationResult = $stmt->get_result();
 
-        $this->assertEquals(1, $relationResult->num_rows, "Es sollte eine Verknüpfung zwischen Resource und dem existierenden kuratierten Free Keyword erstellt worden sein.");
+        $this->assertEquals(1, $relationResult->num_rows, 'A link between the resource and the existing curated free keyword should be created.');
     }
 
     /**
-     * Mehrere Keywords wurden ausgewählt, manche existieren bereits, manche sind kuratiert und manche nicht
+     * Saves multiple keywords including curated and uncurated ones.
+     *
+     * @return void
      */
-    public function testSaveMultipleMixedFreeKeywords()
+    public function testSaveMultipleMixedFreeKeywords(): void
     {
         // Insert some existing keywords
         $this->connection->query("INSERT INTO Free_Keywords (free_keyword, isCurated) VALUES ('ExistingCurated1', 1), ('ExistingUncurated1', 0)");
@@ -177,7 +188,7 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
-        $this->assertEquals(4, $count, "Es sollten insgesamt 4 Keywords in der Datenbank sein.");
+        $this->assertEquals(4, $count, 'There should be four keywords in the database.');
 
         // Check if all keywords are linked to the resource
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource_has_Free_Keywords WHERE Resource_resource_id = ?");
@@ -185,7 +196,7 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
-        $this->assertEquals(4, $count, "Es sollten 4 Verknüpfungen zwischen der Resource und den Free Keywords existieren.");
+        $this->assertEquals(4, $count, 'There should be four relations between the resource and the free keywords.');
 
         // Check the curation status of the keywords
         $stmt = $this->connection->prepare("SELECT free_keyword, isCurated FROM Free_Keywords");
@@ -201,14 +212,20 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         ];
 
         foreach ($keywords as $keyword) {
-            $this->assertEquals($expectedStatus[$keyword['free_keyword']], $keyword['isCurated'], "Der Kuratierungsstatus für '{$keyword['free_keyword']}' ist nicht korrekt.");
+            $this->assertEquals(
+                $expectedStatus[$keyword['free_keyword']],
+                $keyword['isCurated'],
+                "The curation status for '{$keyword['free_keyword']}' is incorrect."
+            );
         }
     }
 
     /**
-     * Das Eingabefeld für Free Keywords wurde nicht befüllt
+     * Verifies that saving without providing free keywords does not create entries.
+     *
+     * @return void
      */
-    public function testSaveNoFreeKeywords()
+    public function testSaveNoFreeKeywords(): void
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.NO.FREE.KEYWORDS",
@@ -233,7 +250,7 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
-        $this->assertEquals(0, $count, "Es sollten keine Free Keywords gespeichert worden sein.");
+        $this->assertEquals(0, $count, 'No free keywords should be saved.');
 
         // Check if no relations were created
         $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource_has_Free_Keywords WHERE Resource_resource_id = ?");
@@ -241,6 +258,6 @@ class SaveFreekeywordsTest extends DatabaseTestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
-        $this->assertEquals(0, $count, "Es sollten keine Verknüpfungen zwischen Resource und Free Keywords existieren.");
+        $this->assertEquals(0, $count, 'No relations between the resource and free keywords should exist.');
     }
 }

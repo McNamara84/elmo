@@ -258,22 +258,36 @@ class SubmitHandler {
             data: formData,
             processData: false,
             contentType: false,
-            dataType: 'json',
             success: (response) => {
-                if (response.success) {
-                    this.showNotification('success',
-                        translations.alerts.successHeading,
-                        response.message);
-                    this.clearFileInput(); // Clear file input after successful submission
-                } else {
+                let parsedResponse;
+                try {
+                    parsedResponse = typeof response === 'object' ? response : JSON.parse(response);
+                } catch (e) {
+                    console.error('Invalid JSON response:', response);
                     this.showNotification('danger',
                         translations.alerts.errorHeading,
-                        response.message);
-                    console.error('Error details:', response.debug);
+                        translations.alerts.submitError);
+                    return;
+                }
+
+                if (parsedResponse.success) {
+                    this.showNotification('success',
+                        translations.alerts.successHeading,
+                        parsedResponse.message);
+                    this.clearFileInput(); // Clear file input after successful submission
+                } else {
+                    const errorMessage = parsedResponse.message || translations.alerts.submitError;
+                    const debugInfo = parsedResponse.debug || parsedResponse.error;
+                    this.showNotification('danger',
+                        translations.alerts.errorHeading,
+                        errorMessage);
+                    if (debugInfo) {
+                        console.error('Error details:', debugInfo);
+                    }
                 }
             },
-            error: (xhr, status, error) => {
-                this.handleAjaxError(xhr, error);
+            error: (xhr, textStatus, errorThrown) => {
+                this.handleAjaxError(xhr, textStatus, errorThrown);
             }
         });
     }
@@ -283,19 +297,27 @@ class SubmitHandler {
      * @param {XMLHttpRequest} xhr - XHR object
      * @param {string} error - Error message
      */
-    handleAjaxError(xhr, error) {
+    handleAjaxError(xhr, textStatus, errorThrown) {
         let errorMessage = translations.alerts.submitError;
-        try {
-            const response = JSON.parse(xhr.responseText);
-            errorMessage = response.message || errorMessage;
-            console.error('Error details:', response.debug);
-        } catch (e) {
-            errorMessage += ': ' + error;
-            console.error('Response:', xhr.responseText);
+        const contentType = xhr.getResponseHeader('Content-Type') || '';
+
+        if (contentType.includes('application/json')) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                errorMessage = response.message || errorMessage;
+                if (response.debug) {
+                    console.error('Error details:', response.debug);
+                }
+            } catch (e) {
+                console.error('Invalid JSON response:', xhr.responseText);
+            }
+        } else {
+            console.error('Unexpected response:', xhr.responseText);
         }
+
         this.showNotification('danger',
             translations.alerts.errorHeading,
-            errorMessage);
+            errorMessage || translations.alerts.submitError);
     }
 
     /**
