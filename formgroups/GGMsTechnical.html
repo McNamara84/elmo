@@ -59,13 +59,10 @@
             <div class="col-12 col-md-8 col-lg-4 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
-                        <textarea rows="4" 
-                                class="form-control" 
-                                id="input-error-handling-approach" 
-                                name="error_handling_approach" 
-                                maxlength="512"></textarea>
+                        <!-- No spaces inside textarea! -->
+                        <textarea rows="4"class="form-control"id="input-error-handling-approach"name="error_handling_approach"maxlength="512"required></textarea>
                         <label for="input-error-handling-approach" data-translate="technical.errorHandling">Error handling approach</label>
-                        <div class="invalid-feedback" data-translate="technical.errorHandlingInvalid">Only letters, numbers and . , ( ) - are allowed.</div>
+                        <div class="invalid-feedback" data-translate="technical.errorHandlingInvalid">Please describe error handling approach. Only letters, numbers and . , ( ) - are allowed.</div>
                     </div>
                 </div>            
             </div>
