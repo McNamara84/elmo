@@ -82,21 +82,29 @@ function dropTables($connection)
         'Resource_has_GGM_Properties',
         'Model_Type',
         'Mathematical_Representation',
-        'File_Format'
+        'File_Format',
+        'Topographic_Models_Properties',
+        'Resource_has_Topographic_Model_Properties',
+        'Temporal_Model_Properties',
+        'Resource_has_Temporal_Model_Properties',
+        'Ellipsoidal_Parameters',
+        'Resource_has_Ellipsoidal_Parameters',
+        'Data_Sources',
+        'Resource_has_Data_Sources',
+        'Data_Source_has_Thesaurus_Keyword',
+        'Data_Source_has_Related_Work',
+        'Model_Access_Points',
+        'Resource_has_Model_Access_Points'
     ];
-
     // Disable foreign key checks to allow dropping tables with dependencies
     mysqli_query($connection, "SET FOREIGN_KEY_CHECKS = 0;");
-
     foreach ($tables as $table) {
         $sql = "DROP TABLE IF EXISTS $table;";
         mysqli_query($connection, $sql);
     }
-
     // Re-enable foreign key checks
     mysqli_query($connection, "SET FOREIGN_KEY_CHECKS = 1;");
 }
-
 /**
  * Creates the database structure by executing SQL CREATE TABLE statements.
  *
@@ -321,6 +329,7 @@ function createDatabaseStructure($connection)
     `name` VARCHAR(45) NOT NULL,
     `description` TEXT(1000) NULL,
     `pattern` VARCHAR(256),
+    `isShown` SMALLINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (`identifier_type_id`));",
 
         "Related_Work" => "CREATE TABLE IF NOT EXISTS `Related_Work` (
@@ -339,10 +348,14 @@ function createDatabaseStructure($connection)
     `Model_Name` VARCHAR(100) NOT NULL,
     `Celestial_Body` VARCHAR(100) NULL,
     `Product_Type` VARCHAR(100) NULL,
-    `Degree` INT NULL,
     `Errors` VARCHAR(100) NULL,
     `Error_Handling_Approach` TEXT NULL,
     `Tide_System` VARCHAR(100) NULL,
+    `generating_institution` VARCHAR(200) NULL,
+    `degree` INT NULL,
+    `is_normalised` BOOLEAN NULL,
+    `radius` FLOAT(9,2) NULL,
+    `earth_gravity_constant` FLOAT NULL,
     PRIMARY KEY (`GGM_Properties_id`));",
 
         "Resource_has_Related_Work" => "CREATE TABLE IF NOT EXISTS `Resource_has_Related_Work` (
@@ -500,6 +513,91 @@ function createDatabaseStructure($connection)
     REFERENCES `Resource` (`resource_id`),
     FOREIGN KEY (`GGM_Properties_GGM_Properties_id`)
     REFERENCES `GGM_Properties` (`GGM_Properties_id`));",
+    
+            "Topographic_Models_Properties" => "CREATE TABLE IF NOT EXISTS `Topographic_Models_Properties` (
+    `topographic_model_property_id` INT NOT NULL AUTO_INCREMENT,
+    `layer_approach` VARCHAR(100),
+    `forward_modelling_domain` VARCHAR(100),
+    `density_information` VARCHAR(100),
+    `density_information_details` VARCHAR(100),
+    `approximation` VARCHAR(100),
+    `description` TEXT NULL,
+    PRIMARY KEY (`topographic_model_property_id`)
+        );",
+
+        "Resource_has_Topographic_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_Topographic_Model_Properties` (
+    `resource_has_topographic_model_properties_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `topographic_model_property_id` INT NOT NULL,
+    PRIMARY KEY (`resource_has_topographic_model_properties_id`),
+    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`),
+    FOREIGN KEY (`topographic_model_property_id`) REFERENCES `Topographic_Models_Properties`(`topographic_model_property_id`) ON DELETE RESTRICT ON UPDATE CASCADE
+        );",
+
+        "Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Temporal_Model_Properties` (
+    `temporal_model_property_id` INT NOT NULL AUTO_INCREMENT,
+    `science_data_system_participation` BOOLEAN NULL,
+    `temporal_resolution_days` INT NULL,
+    `start_date` DATE NULL,
+    `end_date` DATE NULL,
+    PRIMARY KEY (`temporal_model_property_id`)
+        );",
+
+        "Resource_has_Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_Temporal_Model_Properties` (
+    `resource_has_temporal_model_properties_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `temporal_model_property_id` INT NOT NULL,
+    PRIMARY KEY (`resource_has_temporal_model_properties_id`),
+    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`temporal_model_property_id`) REFERENCES `Temporal_Model_Properties`(`temporal_model_property_id`) ON DELETE CASCADE
+        );",
+
+        "Ellipsoidal_Parameters" => "CREATE TABLE IF NOT EXISTS `Ellipsoidal_Parameters` (
+    `ellipsoidal_parameter_id` INT NOT NULL AUTO_INCREMENT,
+    `semimajor_axis_a` FLOAT (9,2) NOT NULL,
+    `semiminor_axis_b` FLOAT (9,2) NULL,
+    `flattening` FLOAT NULL,
+    `reciprocal_flattening` FLOAT NULL,
+    `description` TEXT NULL,
+    PRIMARY KEY (`ellipsoidal_parameter_id`)
+        );",
+
+        "Resource_has_Ellipsoidal_Parameters" => "CREATE TABLE IF NOT EXISTS `Resource_has_Ellipsoidal_Parameters` (
+    `resource_has_ellipsoidal_parameters_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `ellipsoidal_parameter_id` INT NOT NULL,
+    PRIMARY KEY (`resource_has_ellipsoidal_parameters_id`),
+    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`ellipsoidal_parameter_id`) REFERENCES `Ellipsoidal_Parameters`(`ellipsoidal_parameter_id`) ON DELETE CASCADE
+        );",
+
+        "Data_Sources" => "CREATE TABLE IF NOT EXISTS `Data_Sources` (
+    `data_source_id` INT NOT NULL AUTO_INCREMENT,
+    `type` VARCHAR(100) NOT NULL,
+    `description` TEXT NULL,
+    `S_value_name` VARCHAR(500) NULL,
+    `S_value_uri` VARCHAR(100) NULL,
+    `S_scheme_name` VARCHAR(100) NULL,
+    `S_scheme_uri` VARCHAR(100) NULL,
+    `G_details` VARCHAR(1000) NULL,
+    `A_details` VARCHAR(1000) NULL,
+    `T_details` VARCHAR(1000) NULL,
+    `T_identifier` VARCHAR(1000) NULL,
+    `T_identifier_type` VARCHAR(1000) NULL,
+    `M_details` VARCHAR(1000) NULL,
+    `M_identifier` VARCHAR(1000) NULL,
+    `M_identifier_type` VARCHAR(1000) NULL,
+    PRIMARY KEY (`data_source_id`)
+        );",
+
+        "Resource_has_Data_Sources" => "CREATE TABLE IF NOT EXISTS `Resource_has_Data_Sources` (
+    `Resource_has_Data_Sources_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `data_source_id` INT NOT NULL,
+    PRIMARY KEY (`Resource_has_Data_Sources_id`),
+    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`data_source_id`) REFERENCES `Data_Sources`(`data_source_id`) ON DELETE CASCADE
+        );",
     ];
 
     $created = 0;
@@ -636,25 +734,25 @@ function insertLookupData($connection)
             ["name" => "Collects", "description" => "Indicates A collects B"],
         ],
         "Identifier_Type" => [
-            ["name" => "ARK", "description" => "A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements)", "pattern" => "^ark:\/\d{5}\/\w+$/"],
-            ["name" => "arXiv", "description" => "arXiv.org is a repository of preprints of scientific papers in the fields of mathematics, physics, astronomy, computer science, quantitative biology, statistics, and quantitative finance.", "pattern" => "^(\d{4}\.\d{4,5}|[a-z\-]+(\.[A-Z]{2})?\/\d{7})v\d+$/"],
-            ["name" => "bibcode", "description" => "A standardized 19-character identifier according to the syntax yyyyjjjjjvvvvmppppa. See http://info-uri.info/registry/OAIHandler?verb=GetRecord&metadataPrefix=reg&identifier=info:bibcode/.", "pattern" => "^\d{4}\w{5}[A-Z][0-9A-Za-z\.&]{14}$/"],
-            ["name" => "DOI", "description" => "A character string used to uniquely identify an object. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.", "pattern" => "^(?:https?:\/\/(?:dx\\.)?doi\.org\/|doi:)?10\.\d{4,9}\/[\-._;()/:A-Z0-9]+$"],
-            ["name" => "EAN13", "description" => "A 13-digit barcoding standard that is a superset of the original 12-digit Universal Product Code (UPC) system.", "pattern" => "^\d{13}$/"],
-            ["name" => "EISSN", "description" => "ISSN used to identify periodicals in electronic form (eISSN or e-ISSN).", "pattern" => "^\d{4}-\d{3}[0-9X]$/"],
-            ["name" => "Handle", "description" => "This refers specifically to an ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).", "pattern" => "^(hdl:)?\d+(\.\d+)*(\/[^\s]+)?$/"],
-            ["name" => "IGSN", "description" => "A code that uniquely identifies samples from our natural environment and related features-of-interest.", "pattern" => "^[A-Z]{5}[0-9A-Z]{4}$"],
-            ["name" => "ISBN", "description" => "A unique numeric book identifier. There are 2 formats: a 10-digit ISBN format and a 13-digit ISBN.", "pattern" => "^978\d{10}$"],
-            ["name" => "ISSN", "description" => "A unique 8-digit number used to identify a print or electronic periodical publication.", "pattern" => "^[0-9]{4}-([0-9]{4}|[0-9]{3}X)$"],
-            ["name" => "ISTC", "description" => "A unique “number” assigned to a textual work. An ISTC consists of 16 numbers and/or letters.", "pattern" => "^[0-9A-Z]{3}-[0-9]{4}-[0-9A-Z]{8}-[0-9A-Z]{1}$"],
-            ["name" => "LISSN", "description" => "The linking ISSN or ISSN-L enables collocation or linking among different media versions of a continuing resource.", "pattern" => "^\d{4}‐\d{4}$"],
-            ["name" => "LSID", "description" => "A unique identifier for data in the Life Science domain. Format: urn:lsid:authority:namespace:identifier:revision.", "pattern" => "^urn:lsid:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$"],
-            ["name" => "PMID", "description" => "A unique number assigned to each PubMed record.", "pattern" => "^\d{8}$"],
-            ["name" => "PURL", "description" => "A PURL has three parts: (1) a protocol, (2) a resolver address, and (3) a name.", "pattern" => "^http:\/\/purl\.(org|oclc\.org)\/[a-zA-Z0-9\/._-]+$"],
-            ["name" => "UPC", "description" => "A barcode symbology used for tracking trade items in stores. Its most common form, the UPC-A, consists of 12 numerical digits.", "pattern" => "^\d{12}$"],
-            ["name" => "URL", "description" => "Also known as web address, a URL is a specific character string that constitutes a reference to a resource. The syntax is: scheme://domain:port/path?query_string#fragment_id.", "pattern" => "(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?"],
-            ["name" => "URN", "description" => "A unique and persistent identifier of an electronic document. The syntax is: urn:<NID>:<NSS>. The leading urn: sequence is case-insensitive, <NID> is the namespace identifier, <NSS> is the namespace-specific string.", "pattern" => "^urn:nbn:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$"],
-            ["name" => "w3id", "description" => "Mostly used to publish vocabularies and ontologies. The letters ‘w3’ stand for “World Wide Web”.", "pattern" => "^https:\/\/w3id\.org\/[a-zA-Z0-9\/._-]+(?:#[a-zA-Z0-9._-]+)?$"]
+            ["name" => "ARK", "description" => "A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements)", "pattern" => "^ark:\/\d{5}\/\w+$/", "isShown" => 1],
+            ["name" => "arXiv", "description" => "arXiv.org is a repository of preprints of scientific papers in the fields of mathematics, physics, astronomy, computer science, quantitative biology, statistics, and quantitative finance.", "pattern" => "^(\d{4}\.\d{4,5}|[a-z\-]+(\.[A-Z]{2})?\/\d{7})v\d+$/", "isShown" => 0],
+            ["name" => "bibcode", "description" => "A standardized 19-character identifier according to the syntax yyyyjjjjjvvvvmppppa. See http://info-uri.info/registry/OAIHandler?verb=GetRecord&metadataPrefix=reg&identifier=info:bibcode/.", "pattern" => "^\d{4}\w{5}[A-Z][0-9A-Za-z\.&]{14}$/", "isShown" => 0],
+            ["name" => "DOI", "description" => "A character string used to uniquely identify an object. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.", "pattern" => "^(?:https?:\/\/(?:dx\\.)?doi\.org\/|doi:)?10\.\d{4,9}\/[\-._;()/:A-Z0-9]+$", "isShown" => 1],
+            ["name" => "EAN13", "description" => "A 13-digit barcoding standard that is a superset of the original 12-digit Universal Product Code (UPC) system.", "pattern" => "^\d{13}$/", "isShown" => 0],
+            ["name" => "EISSN", "description" => "ISSN used to identify periodicals in electronic form (eISSN or e-ISSN).", "pattern" => "^\d{4}-\d{3}[0-9X]$/", "isShown" => 0],
+            ["name" => "Handle", "description" => "This refers specifically to an ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).", "pattern" => "^(hdl:)?\d+(\.\d+)*(\/[^\s]+)?$/", "isShown" => 1],
+            ["name" => "IGSN", "description" => "A code that uniquely identifies samples from our natural environment and related features-of-interest.", "pattern" => "^[A-Z]{5}[0-9A-Z]{4}$", "isShown" => 1],
+            ["name" => "ISBN", "description" => "A unique numeric book identifier. There are 2 formats: a 10-digit ISBN format and a 13-digit ISBN.", "pattern" => "^978\d{10}$", "isShown" => 0],
+            ["name" => "ISSN", "description" => "A unique 8-digit number used to identify a print or electronic periodical publication.", "pattern" => "^[0-9]{4}-([0-9]{4}|[0-9]{3}X)$", "isShown" => 0],
+            ["name" => "ISTC", "description" => "A unique “number” assigned to a textual work. An ISTC consists of 16 numbers and/or letters.", "pattern" => "^[0-9A-Z]{3}-[0-9]{4}-[0-9A-Z]{8}-[0-9A-Z]{1}$", "isShown" => 0],
+            ["name" => "LISSN", "description" => "The linking ISSN or ISSN-L enables collocation or linking among different media versions of a continuing resource.", "pattern" => "^\d{4}‐\d{4}$", "isShown" => 0],
+            ["name" => "LSID", "description" => "A unique identifier for data in the Life Science domain. Format: urn:lsid:authority:namespace:identifier:revision.", "pattern" => "^urn:lsid:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$", "isShown" => 1],
+            ["name" => "PMID", "description" => "A unique number assigned to each PubMed record.", "pattern" => "^\d{8}$", "isShown" => 0],
+            ["name" => "PURL", "description" => "A PURL has three parts: (1) a protocol, (2) a resolver address, and (3) a name.", "pattern" => "^http:\/\/purl\.(org|oclc\.org)\/[a-zA-Z0-9\/._-]+$", "isShown" => 0],
+            ["name" => "UPC", "description" => "A barcode symbology used for tracking trade items in stores. Its most common form, the UPC-A, consists of 12 numerical digits.", "pattern" => "^\d{12}$", "isShown" => 0],
+            ["name" => "URL", "description" => "Also known as web address, a URL is a specific character string that constitutes a reference to a resource. The syntax is: scheme://domain:port/path?query_string#fragment_id.", "pattern" => "(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?", "isShown" => 1],
+            ["name" => "URN", "description" => "A unique and persistent identifier of an electronic document. The syntax is: urn:<NID>:<NSS>. The leading urn: sequence is case-insensitive, <NID> is the namespace identifier, <NSS> is the namespace-specific string.", "pattern" => "^urn:nbn:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$", "isShown" => 1],
+            ["name" => "w3id", "description" => "Mostly used to publish vocabularies and ontologies. The letters ‘w3’ stand for “World Wide Web”.", "pattern" => "^https:\/\/w3id\.org\/[a-zA-Z0-9\/._-]+(?:#[a-zA-Z0-9._-]+)?$", "isShown" => 0]
         ],
         // ICGEM-related lookup insert
         "File_Format" => [

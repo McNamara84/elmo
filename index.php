@@ -48,46 +48,48 @@ $optiontitle_type = generateOptions(
     "name"
 );
 
-// Include HTML components
-include("header.php");
-include("formgroups/resourceInformation.html");
-include("formgroups/rights.html");
-include("formgroups/authors.html");
+// Include HTML components using absolute paths to ensure reliable file access
+$baseDir = __DIR__ . '/';
+include $baseDir . 'header.php';
+include $baseDir . 'formgroups/resourceInformation.html';
+include $baseDir . 'formgroups/rights.html';
+include $baseDir . 'formgroups/authors.html';
 if ($showGGMsProperties) {
-    include("formgroups/GGMsProperties.html");
-    include("formgroups/GGMsTechnical.html");
+    include $baseDir . 'formgroups/GGMsProperties.html';
+    include $baseDir . 'formgroups/dataSources.html';
+    include $baseDir . 'formgroups/GGMsTechnical.html';
 }
 if ($showContributorPersons) {
-    include("formgroups/contributorPersons.html");
+    include $baseDir . 'formgroups/contributorPersons.html';
 }
 if ($showContributorInstitutions) {
-    include("formgroups/contributorInstitutions.html");
+    include $baseDir . 'formgroups/contributorInstitutions.html';
 }
 if ($showMslLabs) {
-    include("formgroups/originatingLaboratory.html");
+    include $baseDir . 'formgroups/originatingLaboratory.html';
 }
-include("formgroups/descriptions.html");
+include $baseDir . 'formgroups/descriptions.html';
 if ($showMslVocabs) {
-    include("formgroups/mslKeywords.html");
+    include $baseDir . 'formgroups/mslKeywords.html';
 }
 if ($showGcmdThesauri) {
-    include("formgroups/thesaurusKeywords.html");
+    include $baseDir . 'formgroups/thesaurusKeywords.html';
 }
 if ($showFreeKeywords) {
-    include("formgroups/freeKeywords.html");
+    include $baseDir . 'formgroups/freeKeywords.html';
 }
-include("formgroups/dates.html");
+include $baseDir . 'formgroups/dates.html';
 if ($showSpatialTemporalCoverage) {
-    include("formgroups/coverage.html");
+    include $baseDir . 'formgroups/coverage.html';
 }
 if ($showRelatedWork) {
-    include("formgroups/relatedwork.html");
+    include $baseDir . 'formgroups/relatedwork.html';
 }
 if ($showFundingReference) {
-    include("formgroups/fundingreference.html");
+    include $baseDir . 'formgroups/fundingreference.html';
 }
-include("modals.html");
-include("footer.html");
+include $baseDir . 'modals.html';
+include $baseDir . 'footer.html';
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
