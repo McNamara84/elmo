@@ -200,6 +200,26 @@ describe('select.js', () => {
     expect(select.prop('disabled')).toBe(false);
   });
 
+  test('setupTitleTypeDropdown selects main title and exposes globals', async () => {
+    const select = $('<select id="input-resourceinformation-titletype"></select>').appendTo(document.body);
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success([
+        { id: 1, name: 'Main Title' },
+        { id: 2, name: 'Alternative Title' },
+      ]);
+      if (opts.complete) opts.complete();
+      return { fail: jest.fn() };
+    });
+
+    window.setupTitleTypeDropdown();
+
+    const options = select.find('option').map((i,el)=>$(el).text()).get();
+    expect(options).toEqual(['Choose...','Main Title','Alternative Title']);
+    expect(select.val()).toBe('1');
+    expect(window.mainTitleTypeId).toBe('1');
+    expect(window.titleTypeOptionsHtml).toContain('Alternative Title');
+  });
+
   test('setupLanguageDropdown shows error on ajax failure', async () => {
     const select = $('<select id="input-resourceinformation-language"></select>').appendTo(document.body);
     $.ajax.mockImplementation(opts => { if(opts.error) opts.error(); if(opts.complete) opts.complete(); return { fail: jest.fn() }; });
