@@ -180,9 +180,6 @@ function processTitles(xmlDoc, resolver, titleTypeMapping) {
       // First Title
       $('input[name="title[]"]:first').val(titleText);
       $("#input-resourceinformation-titletype").val(mapTitleType(titleType, titleTypeMapping));
-      if (titleType) {
-        $("#container-resourceinformation-titletype").show();
-      }
     } else {
       // Add Title - Clone new row
       $("#button-resourceinformation-addtitle").click();
