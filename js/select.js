@@ -267,16 +267,29 @@ function setupTitleTypeDropdown() {
         })
       );
 
+      let mainTitleId = "";
+
       if (Array.isArray(data)) {
         data.forEach(function (type) {
-          select.append(
-            $("<option>", {
-              value: type.id,
-              text: type.name,
-            })
-          );
+          const option = $("<option>", {
+            value: type.id,
+            text: type.name,
+          });
+
+          select.append(option);
+
+          if (type.name.toLowerCase() === "main title") {
+            mainTitleId = type.id.toString();
+          }
         });
       }
+
+      if (mainTitleId) {
+        select.val(mainTitleId);
+        window.mainTitleTypeId = mainTitleId;
+      }
+
+      window.titleTypeOptionsHtml = select.html();
     },
     error: function (jqXHR, textStatus, errorThrown) {
       console.error("Error loading title types:", textStatus, errorThrown);
@@ -303,7 +316,6 @@ $(document).ready(function () {
   setupResourceTypeDropdown();
   setupLanguageDropdown();
   setupTitleTypeDropdown();
-
   /**
   * Populates the select field with ID input-rights-license with options created via an API call.
   * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
