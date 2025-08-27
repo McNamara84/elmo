@@ -3,6 +3,9 @@ const path = require('path');
 
 let $;
 
+/**
+ * Mock implementation of Tagify used for testing.
+ */
 class MockTagify {
   constructor(el, options) {
     this.el = el;
@@ -42,6 +45,9 @@ class MockTagify {
   }
 }
 
+/**
+ * Tests for the affiliations.js module.
+ */
 describe('affiliations.js', () => {
   beforeEach(() => {
     document.body.innerHTML = `
@@ -69,6 +75,9 @@ describe('affiliations.js', () => {
     window.eval(script);
   });
 
+  /**
+   * Ensures a Tagify instance is created with the provided whitelist.
+   */
   test('autocompleteAffiliations creates Tagify instance with whitelist', () => {
     const data = [ { id: '1', name: 'TestOrg' } ];
     window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
@@ -78,6 +87,9 @@ describe('affiliations.js', () => {
     expect(input.tagify.whitelist).toEqual(['TestOrg']);
   });
 
+  /**
+   * Verifies that adding tags updates the hidden field and hides the dropdown for unknown values.
+   */
   test('adding a tag updates hidden field and closes dropdown for non-whitelist', () => {
     const data = [ { id: '1', name: 'Allowed' } ];
     window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
@@ -91,6 +103,9 @@ describe('affiliations.js', () => {
     expect(input.tagify.dropdown.hide).toHaveBeenCalled();
   });
 
+  /**
+   * Checks that the remove event clears tags when no contact person is specified.
+   */
   test('remove event clears tags when contact person empty', () => {
     const data = [ { id: '1', name: 'Org' } ];
     window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
@@ -103,6 +118,9 @@ describe('affiliations.js', () => {
     expect(input.tagify.value.length).toBe(0);
   });
 
+  /**
+   * Confirms that input events resize the tagify input width.
+   */
   test('input event resizes input width', () => {
     const data = [];
     window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
@@ -112,6 +130,9 @@ describe('affiliations.js', () => {
     expect(input.tagify.DOM.input.style.width).toBe('40px');
   });
 
+  /**
+   * Ensures refreshTagifyInstances updates the whitelist while retaining existing tags.
+   */
   test('refreshTagifyInstances updates whitelist and keeps tags', () => {
     const data = [ { id: '1', name: 'First' } ];
     window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);

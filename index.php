@@ -61,6 +61,7 @@ if ($showAuthorInstitution) {
 }
 if ($showGGMsProperties) {
     include $baseDir . 'formgroups/GGMsProperties.html';
+    include $baseDir . 'formgroups/dataSources.html';
 }
 if ($showContributorPersons) {
     include $baseDir . 'formgroups/contributorPersons.html';

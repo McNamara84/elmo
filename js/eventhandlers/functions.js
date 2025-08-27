@@ -17,8 +17,11 @@ export function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-ri
   if ($(".input-group-text").is(":visible")) {
     // Find all span elements with the help icon
     row.find("span.input-group-text:has(i.bi-question-circle-fill)").each(function () {
-      // Replace the span with an empty div that has fixed dimensions
-      $(this).replaceWith('<div class="input-group-text" style="visibility: hidden; width: 42px; height: 38px;"></div>');
+      const helpSectionId = $(this).find('i').data('help-section-id') || '';
+      // Replace the span with an empty div that retains the help metadata
+      $(this).replaceWith(
+        `<div class="input-group-text help-placeholder" data-help-section-id="${helpSectionId}" style="visibility: hidden; width: 42px; height: 38px;"></div>`
+      );
     });
 
     // Remove non-rounded corners class to keep structure intact

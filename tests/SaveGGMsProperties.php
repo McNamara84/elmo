@@ -6,12 +6,17 @@ use mysqli_sql_exception;
 
 require_once __DIR__ . '/../save/formgroups/save_ggmsproperties.php';
 
+/**
+ * Test suite for saving Gravity Gradient Model properties.
+ */
 class SaveGGMsProperties extends DatabaseTestCase
 {
-     /**
-     * Test saving a GGM Properties entry with all fields populated.
+    /**
+     * Tests saving a GGM Properties entry with all fields populated.
+     *
+     * @return void
      */
-    public function testSaveFullGGMsProperties()
+    public function testSaveFullGGMsProperties(): void
     {
         $resource_id = $this->createResource('GGM.FULL', 'Test GGM Full');
 
@@ -39,9 +44,11 @@ class SaveGGMsProperties extends DatabaseTestCase
     }
 
     /**
-     * Test saving GGM Properties with only required fields.
+     * Tests saving GGM Properties with only required fields.
+     *
+     * @return void
      */
-    public function testSaveRequiredGGMsProperties()
+    public function testSaveRequiredGGMsProperties(): void
     {
         $resource_id = $this->createResource('GGM.REQUIRED', 'Test GGM Required');
 
@@ -63,9 +70,11 @@ class SaveGGMsProperties extends DatabaseTestCase
     }
 
     /**
-     * Test saving GGM Properties with missing required fields (should not save).
+     * Tests saving GGM Properties with missing required fields.
+     *
+     * @return void
      */
-    public function testSaveGGMsPropertiesMissingRequired()
+    public function testSaveGGMsPropertiesMissingRequired(): void
     {
         $resource_id = $this->createResource('GGM.MISSING', 'Test GGM Missing');
 
