@@ -43,8 +43,6 @@ function clearInputFields() {
         firstInstitutionAffiliationTagify.tagify.removeAllTags();
     }
 
-    // Clear ROR IDs for institution authors
-    $('div[data-authorinstitution-row]:first').find('input[name="authorInstitutionRorIds[]"]').val('');
 
     // Clear author ROR IDs
     $('div[data-creator-row]:first').find('input[name="authorRorIds[]"]').val('');
