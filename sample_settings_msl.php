@@ -50,11 +50,11 @@ $showFundingReference = true;
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group
-$showMslLabs = false;
+$showMslLabs = true;
 // URL to the source with all laboratories for MSL
 $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
 // Show MSL vocabularies
-$showMslVocabs = false;
+$showMslVocabs = true;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 

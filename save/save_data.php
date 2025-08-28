@@ -16,20 +16,20 @@
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Include required configuration and helper files
-    require_once '../settings.php';
-    require_once 'formgroups/save_resourceinformation_and_rights.php';
-    require_once 'formgroups/save_authors.php';
-    require_once 'formgroups/save_contactperson.php';
-    require_once 'formgroups/save_originatinglaboratory.php';
-    require_once 'formgroups/save_freekeywords.php';
-    require_once 'formgroups/save_contributorpersons.php';
-    require_once 'formgroups/save_contributorinstitutions.php';
-    require_once 'formgroups/save_descriptions.php';
-    require_once 'formgroups/save_thesauruskeywords.php';
-    require_once 'formgroups/save_spatialtemporalcoverage.php';
-    require_once 'formgroups/save_relatedwork.php';
-    require_once 'formgroups/save_fundingreferences.php';
-    require_once 'formgroups/save_ggmsproperties.php';
+    require_once __DIR__ . '/../settings.php';
+    require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
+    require_once __DIR__ . '/formgroups/save_authors.php';
+    require_once __DIR__ . '/formgroups/save_contactperson.php';
+    require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
+    require_once __DIR__ . '/formgroups/save_freekeywords.php';
+    require_once __DIR__ . '/formgroups/save_contributorpersons.php';
+    require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
+    require_once __DIR__ . '/formgroups/save_descriptions.php';
+    require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
+    require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
+    require_once __DIR__ . '/formgroups/save_relatedwork.php';
+    require_once __DIR__ . '/formgroups/save_fundingreferences.php';
+    require_once __DIR__ . '/formgroups/save_ggmsproperties.php';
 
     // Check if this is a resource ID request
     if (isset($_POST['get_resource_id']) && $_POST['get_resource_id'] === '1') {
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Currently, nothing transfers the information to xml format.
     // in the meanwhile, if this lines do work,
     // the xml file will be generated on the run
-    require_once '../api/v2/controllers/DatasetController.php';
+    require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
     $datasetController = new DatasetController();
     } catch (Exception $e) {
         error_log("Error accessing DatasetController: function getResourceAsXml is not available. Exception: " . $e->getMessage());

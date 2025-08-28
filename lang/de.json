@@ -161,6 +161,17 @@
         "awardURI": "Förder-URI",
         "awardURIInvalid": "Bitte geben Sie eine gültige URL an."
     },
+    "dataSources": {
+        "title": "Datenquellen",
+        "type": "Typ",
+        "description": "Beschreibung",
+        "details": "Details",
+        "identifier": "Identifikator",
+        "identifierType": "Identifikatortyp",
+        "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
+        "modelName": "Modellname",
+        "compensationDepth": "Ausgleichstiefe (in Metern)"
+    },
     "buttons": {
         "clear": "Löschen",
         "clearTooltip": "Alle Einträge oder Inhalte löschen.",

@@ -9,8 +9,6 @@
 *.swp
 *.swo
 
-# Ignore build and dependency directories
-#node_modules/
 
 # Ignore temporary and log files
 *.log

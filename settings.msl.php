@@ -24,11 +24,11 @@ function connectDb()
 $connection = connectDb();
 
 // ELMO API Key
-$apiKeyElmo = '1234-1234-1234-1234';
+$apiKeyElmo = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
 // Google Maps API Key
-$apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
+$apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 // API Key for https://timezonedb.com/
-$apiKeyTimezone = 'your_timezone_api_key';
+$apiKeyTimezone = getenv('TIMEZONE_API_KEY') ?: 'your_timezone_api_key';
 
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
 // maximale Anzahl der eingebbaren Titel
@@ -50,11 +50,11 @@ $showFundingReference = true;
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group
-$showMslLabs = false;
+$showMslLabs = true;
 // URL to the source with all laboratories for MSL
 $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
 // Show MSL vocabularies
-$showMslVocabs = false;
+$showMslVocabs = true;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
