@@ -76,7 +76,7 @@ $smtpSender = 'your_smtp_sender_email';
 $feedbackAddress = 'feedback@example.com';
 
 // Target address for XML submit
-$xmlSubmitAddress = 'xmlsubmit@example.com';
+$xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS_GEM') ?: 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
