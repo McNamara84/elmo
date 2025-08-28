@@ -149,6 +149,19 @@ function checkGGMsTechnical() {
 
 // Initialize when document is ready
 $(document).ready(function() {
+    // validate scientific notation inputs    
+    $('.needs-validation').on('submit', function(event) {
+        const form = $(this)[0];
+
+        // Check form validity using the native DOM method.
+        if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        // Add the validation class.
+        $(this).addClass('was-validated');
+    });
     // Set up event handlers
     $(document).on('change', '#input-mathematical-representation', function() {
         updateReferenceSystemVisibility();

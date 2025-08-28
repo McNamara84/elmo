@@ -76,14 +76,13 @@
                     <div class="form-floating">
                         <input type="text" class="form-control input-with-help input-right-no-round-corners" 
                                id="input-radius" 
-                               name="radius"
-                               inputmode="decimal"
+                               name="radius"pattern="^[0-9]+(\.[0-9]+)?([eE][0-9]+)?$"inputmode="decimal"
                                required>
                         <label for="input-radius">
                             <span data-translate="technical.radius">Radius (in km)</span>
                             <span class="text-danger">*</span> 
                         </label>
-                        <div class="invalid-feedback" data-translate="technical.radiusInvalid">Please provide radius</div>
+                        <div class="invalid-feedback" data-translate="technical.radiusInvalid">Please provide radius in numeric format. Decimal point is possible, if point is provided, digits after point are required. Scientific notation is possible, exponent base 10 is provided after e or E</div>
                     </div>
                     <div class="input-group-append">
                         <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-radius"></i></span>
@@ -96,13 +95,11 @@
                     <div class="form-floating">
                         <input type="text" class="form-control input-with-help input-right-no-round-corners" 
                                id="input-semimajor-axis" 
-                               name="semimajor_axis_a" 
-                               pattern="^[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$"
-                               inputmode="decimal">
+                               name="semimajor_axis_a"pattern="^[0-9]+(\.[0-9]+)?([eE][0-9]+)?$"inputmode="decimal">
                         <label for="input-semimajor-axis">
                             <span data-translate="technical.referenceEllipsoid">Semimajor axis a</span> 
                         </label>
-                        <div class="invalid-feedback" data-translate="technical.referenceEllipsoidInvalid">Please provide a valid number for semimajor axis.</div>
+                        <div class="invalid-feedback" data-translate="technical.referenceEllipsoidInvalid">Please provide a valid number for the bigger semimajor axis in numeric format. Decimal point is possible, if point is provided, digits after point are required. Scientific notation is possible, exponent base 10 is provided after e or E</div>
                     </div>
                     <div class="input-group-append">
                         <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-reference-ellipsoid"></i></span>
@@ -112,7 +109,7 @@
 
             <!-- Ellipsoidal: Second Variable Type -->
             <div class="col-12 col-md-6 col-lg-4 p-1 visibility-ellipsoidal" style="display: none;">
-                <div class="input-group has-validation">
+                <div class="input-group">
                     <div class="form-floating">
                         <select class="form-select input-with-help input-right-no-round-corners" 
                                 id="input-second-variable" 
@@ -139,13 +136,11 @@
                     <div class="form-floating">
                         <input type="text" class="form-control input-with-help input-right-no-round-corners" 
                                id="input-second-variable-value" 
-                               name="second_variable_value" 
-                               pattern="^[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$"
-                               inputmode="decimal">
+                               name="second_variable_value"pattern="^[0-9]+(\.[0-9]+)?([eE][+\-]?[0-9]+)?$"inputmode="decimal">
                         <label for="input-second-variable-value">
                             <span data-translate="technical.secondVariableValue">Value</span> 
                         </label>
-                        <div class="invalid-feedback" data-translate="technical.secondVariableValueInvalid">Please provide a valid number for second variable value.</div>
+                        <div class="invalid-feedback" data-translate="technical.secondVariableValueInvalid">Please provide a valid number for second variable value in numeric format. Decimal point is possible, if point is provided, digits after point are required. Scientific notation is possible, exponent base 10 is provided after e or E.</div>
                     </div>
                     <div class="input-group-append">
                         <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-second-variable-value"></i></span>
@@ -157,9 +152,11 @@
             <div class="col-12 col-md-12 col-lg-6 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
-                        <input type="decimal" class="form-control" id="input-earth-gravity-constant" name="earth_gravity_constant" step="any" min="0" required>
+                        <input type="decimal" class="form-control" id="input-earth-gravity-constant" name="earth_gravity_constant" step="any" 
+                        min="0" 
+                        pattern="^[0-9]+(\.[0-9]+)?([eE][0-9]+)?$"required>
                         <label for="input-earth-gravity-constant"><span data-translate="technical.earthGravityConstant">Earth gravity constant</span> <span class="text-danger">*</span></label>
-                        <div class="invalid-feedback" data-translate="technical.earthGravityConstantInvalid">Please provide earth gravity constant.</div>
+                        <div class="invalid-feedback" data-translate="technical.earthGravityConstantInvalid">Please provide earth gravity constant in numeric format. Decimal point is possible, if point is provided, digits after point are required. Scientific notation is possible, exponent base 10 is provided after e or E.</div>
                     </div>
                 </div>
             </div>
