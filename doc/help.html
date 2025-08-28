@@ -1336,7 +1336,13 @@ include_once "../settings.php";
                 <div id="help-radius">
                     <h4>Radius</h4>
                     <p>
-                        The radius is entered as a text to allow for different formats in scientific notation. 
+                        The radius is entered in the format used in the model file: 
+                        <ul>
+                            <li>Decimal point is possible. if point is provided, digits after point are required.</li>
+                            <li>Scientific notation is possible, exponent base 10 is provided after e or E.</li>
+                            <li>Negative values are not allowed.</li>
+                            <li>Examples: </li>
+                        </ul>
                     </p>
                 </div>
                 <div id="help-reference-ellipsoid">
