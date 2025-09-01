@@ -35,7 +35,7 @@ function checkContactPerson() {
         // Sets or removes the 'required' attribute for the email field based solely on the checkbox state
         if (isCheckboxChecked) {
             fields.email.attr('required', 'required');  // Make email required if checkbox is checked
-            fields.lastname.attr('required', 'required');
+            fields.firstname.attr('required', 'required');
             fields.lastname.attr('required', 'required');
         } else {
             fields.email.removeAttr('required');  // Remove email requirement if checkbox is unchecked
