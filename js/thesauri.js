@@ -122,10 +122,10 @@ $(document).ready(function () {
                     return null;
                 }
 
-                // filter node and its children
+                // restrict to the specified node and its descendants
                 var selectedNode = findNodeById(data, config.rootNodeId);
                 if (selectedNode) {
-                    filteredData = selectedNode.children || [];
+                    filteredData = [selectedNode];
                 } else {
                     console.error(`Root node with ID ${config.rootNodeId} not found in ${config.jsonFile}`);
                     return;
@@ -214,7 +214,11 @@ $(document).ready(function () {
                     }
                 }
             });
-            
+
+            $(config.searchInputId).on("input", function () {
+                $(config.jsTreeId).jstree(true).search($(this).val());
+            });
+
             function updateSelectedKeywordsList() {
                 let selectedKeywordsList = document.getElementById(config.selectedKeywordsListId);
                 if (!selectedKeywordsList) return;
@@ -257,7 +261,7 @@ $(document).ready(function () {
             /**
             * Event handler for when a tag is added to Tagify.
             * The function selects the corresponding node in jsTree based on the tag text.
-            * 
+            *
             * @param {Event} e - The event triggered by adding a tag to Tagify.
             * @param {Object} e.detail - The details of the event.
             * @param {Object} e.detail.data - The data of the added tag.
@@ -275,7 +279,7 @@ $(document).ready(function () {
             /**
             * Event handler for when a tag is removed from Tagify.
             * The function deselects the corresponding node in jsTree based on the removed tag.
-            * 
+            *
             * @param {Event} e - The event triggered by removing a tag from Tagify.
             * @param {Object} e.detail - The details of the event.
             * @param {Object} e.detail.data - The data of the removed tag.
@@ -293,7 +297,7 @@ $(document).ready(function () {
             /**
             * Finds a node in the jsTree by its full path.
             * This function searches through all the nodes in the jsTree and returns the node that matches the provided path.
-            * 
+            *
             * @param {Object} jsTree - The jsTree instance to search through.
             * @param {string} path - The full path of the node to find, formatted as a string with " > " separators.
             * @returns {Object|null} The node object if found, or `null` if no node matches the path.
