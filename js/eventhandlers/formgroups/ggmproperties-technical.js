@@ -109,7 +109,6 @@ function updateReferenceSystemVisibility() {
         sphericalFields.show();
         $('#input-radius').attr('required', 'required');
         // Set up power controls when showing spherical fields
-        setTimeout(setupRadiusPowerControls, 100);
     } else if (showEllipsoidal) {
         ellipsoidalFields.show();
         $('#input-semimajor-axis').attr('required', 'required');
