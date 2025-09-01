@@ -78,7 +78,7 @@ $smtpAuth   = getenv('SMTP_AUTH') ?: '';
 $feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
 
 // Target address for XML submit
-$xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
+$xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS_MSL') ?: 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
