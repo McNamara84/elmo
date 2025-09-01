@@ -517,7 +517,7 @@ function updateIdentifierType(inputElement) {
 
   if (identifier) {
     $.ajax({
-      url: "api/v2/validation/identifiertypes",
+      url: "api/v2/validation/identifiertypes/active",
       method: "GET",
       dataType: "json",
       success: function (response) {
