@@ -32,8 +32,12 @@ $(document).ready(function () {
       newRow.find(`#${fieldId}`).attr("id", `${fieldId}-${uniqueSuffix}`);
     });
 
-    // Link label to new ID
-    newRow.find("label[for='input-authorinstitution-name']").attr("for", `input-authorinstitution-name-${uniqueSuffix}`);
+    // Link labels to new IDs
+    newRow.find("label[for='input-authorinstitution-name']")
+      .attr("for", `input-authorinstitution-name-${uniqueSuffix}`);
+
+    newRow.find("label[for='input-authorinstitution-affiliation']")
+      .attr("for", `input-authorinstitution-affiliation-${uniqueSuffix}`);
 
     // Remove Tagify
     newRow.find(".tagify").remove();
