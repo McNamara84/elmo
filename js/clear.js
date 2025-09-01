@@ -27,7 +27,7 @@ function clearInputFields() {
     $('div[data-creator-row]:first').find('input[name="contacts[]"]').prop('checked', false);
 
     // Clear Tagify for affiliations in the first author row
-    const firstAffiliationTagify = $('div[data-creator-row]:first').find('input[name="affiliation[]"]')[0];
+    const firstAffiliationTagify = $('div[data-creator-row]:first').find('input[name="personAffiliation[]"]')[0];
     if (firstAffiliationTagify && firstAffiliationTagify.tagify) {
         firstAffiliationTagify.tagify.removeAllTags();
     }
@@ -45,7 +45,7 @@ function clearInputFields() {
 
 
     // Clear author ROR IDs
-    $('div[data-creator-row]:first').find('input[name="authorRorIds[]"]').val('');
+    $('div[data-creator-row]:first').find('input[name="authorPersonRorIds[]"]').val('');
   
     // Reset existing laboratories
     $('#group-originatinglaboratory .row[data-laboratory-row]').not(':first').remove();
