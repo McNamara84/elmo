@@ -1016,6 +1016,7 @@ include_once "../settings.php";
                 </div>
             </div>
             <!-- formgroup GGMs Properties -->
+            <?php if ($showGGMsProperties): ?>
             <div id="help-model-characteristics" class="section-content">
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
@@ -1311,7 +1312,66 @@ include_once "../settings.php";
                 </div>             
             </div>
             <hr>
+            <div id="help-technical">
+                <h3>Technical</h3>
+                <div id="help-tide-system">
+                    <h4>Tide system</h4>
+                    <p>
+                        A tide system defines how permanent tidal effects from the Sun and Moon are treated in a gravity field or geoid model. 
+                        Options include:
+                        <ul>
+                        <li><b>Tide-free</b>: (or nontidal): This geoid is considered for a tide-free Earth with all (direct and indirect) effects of the Sun and Moon removed.</li>
+                        <li><b>Mean-tide</b>: This geoid is considered in the presence of the Sun and the Moon (or, equivalently, if no permanent tidal effects are removed).</li>
+                        <li><b>Zero-tide</b>: This geoid is considered if the permanent direct effects of the Sun and Moon are removed, but the indirect effect component related to the elastic deformation of the Earth is retained.</li>
+                        </ul>
+                    </p>
+                </div>
+                <div id="help-errors">
+                    <h4>Errors</h4>
+                    <p>
+                        Error handling information. Signifies if error information is included in the model file.
+                        Options include:
+                        <ul>
+                            <li><b>calibrated</b>: the uncertainties in the spherical harmonic coefficients are included in the model file. A calibrating factor or a calibration scheme derived from external data is applied. For this option, an error calibration approach is provided.</li>
+                            <li><b>formal</b>: the estimated uncertainties in the spherical harmonic coefficients representing internal accuracy are included in the model file</li>
+                            <li><b>no</b>: no uncertainties or zero values are included.</li>
+                        </ul>
+                    </p>
+                </div>
+                <div id="help-degree">
+                    <h4>Degree</h4>
+                    <p>
+                        The maximum degree expansion of the model simply represents the maximum spatial resolution that can be reached in the model output. (Ince, E.S., Abrykosov, O., Förste, C. et al. Forward Gravity Modelling to Augment High-Resolution Combined Gravity Field Models. Surv Geophys 41, 767–804 (2020). https://doi.org/10.1007/s10712-020-09590-9, page 2)
+                    </p>
+                </div>
+                <div id="help-radius">
+                    <h4>Radius</h4>
+                    <p>
+                        The radius is entered in the format used in the model file: 
+                        <ul>
+                            <li>Decimal point is possible. if point is provided, digits after point are required.</li>
+                            <li>Scientific notation is possible, exponent base 10 is provided after e or E.</li>
+                            <li>Negative values are not allowed.</li>
+                            <li>Examples: 6.3781363000e+06, 0.6378136000E+07</li>
+                        </ul>
+                    </p>
+                </div>
+                <div id="help-reference-ellipsoid">
+                    <h4>Reference ellipsoid values</h4>
+                    <p>
+                        The reference ellipsoid is defined by its semimajor axis <em>a</em> and one of the following: semimajor axis <em>b</em> or flattening <em>f</em> or reciprocal flattening <em>f<sup>-1</sup></em>.
+                    </p>
+                </div>
+                <div id="help-second-variable">
+                    <h4>Second variable</h4>
+                    <p>
+                        Specifies the second defining parameter of the reference ellipsoid. Choose
+                        between the semiminor axis <em>b</em>, flattening, or reciprocal flattening.
+                    </p>
+                </div>
+            </div>
         </div>
+        <?php endif; ?>
     </div>
     <!-- Bootstrap 5 -->
     <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
