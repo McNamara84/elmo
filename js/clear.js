@@ -15,7 +15,7 @@ function clearInputFields() {
     // Reset Titles
     $('input[name="title[]"]').closest('.row').not(':first').remove();
     $('input[name="title[]"]:first').val('');
-    $('#input-resourceinformation-titletype').val('1');
+    $('#input-resourceinformation-titletype').val(window.mainTitleTypeId || '');
   
     // Reset Rights License select field
     $('#input-rights-license').val('');
