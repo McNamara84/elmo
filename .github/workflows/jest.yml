@@ -23,5 +23,25 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run Jest tests
-        run: npx jest --config jest.config.js --runInBand
+      - name: Run Jest tests with coverage
+        run: npx jest --config jest.config.js --runInBand --coverage
+
+      - name: Create coverage badge
+        if: github.event_name == 'push'
+        run: |
+          COVERAGE=$(node -e "console.log(JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct)")
+          COLOR=$(node -e "c=$COVERAGE; if (c >= 90) console.log('brightgreen'); else if (c >= 75) console.log('green'); else if (c >= 60) console.log('yellow'); else if (c >= 45) console.log('orange'); else console.log('red');")
+          mkdir -p output
+          curl -s https://img.shields.io/badge/JS%20Coverage-${COVERAGE}%25-${COLOR}.svg > output/js-coverage.svg
+
+      - name: Publish coverage badge
+        if: github.event_name == 'push'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_dir: ./output
+          publish_branch: image-data-js
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          keep_files: false
+          force_orphan: true
