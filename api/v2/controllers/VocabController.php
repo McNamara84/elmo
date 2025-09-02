@@ -1105,123 +1105,171 @@ class VocabController
             return;
         }
         try {
-            // Fetch latest ROR data dump metadata from Zenodo
-            $rorDataDumpUrl = 'https://zenodo.org/api/communities/ror-data/records?q=&sort=newest';
-            $metadataJson = @file_get_contents($rorDataDumpUrl);
-
-            if ($metadataJson === false) {
-                throw new Exception('Failed to fetch ROR data dump metadata from Zenodo');
-            }
-
-            $metadata = json_decode($metadataJson, true);
-            if (!isset($metadata['hits']['hits'][0]['files'][0])) {
-                throw new Exception('Invalid metadata structure from Zenodo');
-            }
-
-            // Get download URL and filename
-            $latestDataDumpUrl = $metadata['hits']['hits'][0]['files'][0]['links']['self'];
-            $zipFileName = $metadata['hits']['hits'][0]['files'][0]['key'];
-
-            // Download and extract ZIP file
-            if (@file_put_contents($zipFileName, @file_get_contents($latestDataDumpUrl)) === false) {
-                throw new Exception('Failed to download ROR data dump');
-            }
-
-            $zip = new ZipArchive();
-            if ($zip->open($zipFileName) !== true) {
-                throw new Exception('Failed to open ZIP file');
-            }
-
-            $zip->extractTo('./');
-            $zip->close();
-
-            // Find and process CSV file
-            $csvFiles = glob('*-ror-data.csv');
-            if (empty($csvFiles)) {
-                throw new Exception('CSV file not found in ZIP archive');
-            }
-
-            $csvFileName = $csvFiles[0];
-            $csvFile = @fopen($csvFileName, 'r');
-            if ($csvFile === false) {
-                throw new Exception('Failed to open CSV file');
-            }
-
-            // Process CSV data
-            $affiliations = [];
-            $header = fgetcsv($csvFile); // Read header row
-            $indices = array_flip($header);
-
-            while (($row = fgetcsv($csvFile)) !== false) {
-                // Extract aliases, labels and acronyms as other names if present
-                $aliases = [];
-                if (isset($indices['aliases']) && !empty($row[$indices['aliases']])) {
-                    // Split aliases on both pipe and semicolon separators
-                    $aliases = array_map('trim', preg_split('/[|;]/', $row[$indices['aliases']]));
-                }
-
-                $labels = [];
-                if (isset($indices['labels']) && !empty($row[$indices['labels']])) {
-                    $rawLabels = preg_split('/[|;]/', $row[$indices['labels']]);
-                    $labels = array_map(function ($label) {
-                        // Remove language prefixes like "de:" and suffixes like "(de)"
-                        $label = trim($label);
-                        $label = preg_replace('/^[a-z]{2}:\s*/i', '', $label);
-                        $label = preg_replace('/\s*\([a-z]{2}\)$/i', '', $label);
-                        return $label;
-                    }, $rawLabels);
-                }
-
-                $acronyms = [];
-                if (isset($indices['acronyms']) && !empty($row[$indices['acronyms']])) {
-                    $acronyms = array_map('trim', preg_split('/[|;]/', $row[$indices['acronyms']]));
-                }
-
-                $otherNames = array_values(array_filter(array_unique(array_merge($aliases, $labels, $acronyms))));
-
-                $affiliations[] = [
-                    'id' => $row[$indices['id']] ?? '',
-                    'name' => $row[$indices['name']] ?? '',
-                    'other' => $otherNames
-                ];
-            }
-            fclose($csvFile);
-
-            // Ensure json directory exists
-            if (!is_dir('json')) {
-                if (!mkdir('json', 0755, true)) {
-                    throw new Exception('Failed to create json directory');
-                }
-            }
-
-            // Save JSON file
-            if (
-                file_put_contents(
-                    '../json/affiliations.json',
-                    json_encode($affiliations, JSON_PRETTY_PRINT)
-                ) === false
-            ) {
-                throw new Exception('Failed to save affiliations.json');
-            }
-
-            // Clean up temporary files
+            [$latestDataDumpUrl, $zipFileName] = $this->fetchLatestRorMetadata();
+            $csvFileName = $this->downloadAndExtractRorDump($latestDataDumpUrl, $zipFileName);
+            $affiliations = $this->parseRorCsv($csvFileName);
+            $this->saveAffiliationsJson($affiliations);
             $this->cleanupFiles($zipFileName, $csvFileName);
-
-            // Send success response
-            http_response_code(200);
-            header('Content-Type: application/json');
-            echo json_encode([
-                'message' => 'ROR affiliations successfully updated',
-                'count' => count($affiliations),
-                'timestamp' => date('c')
-            ]);
-
+            $this->respondWithAffiliations($affiliations);
         } catch (Exception $e) {
             error_log("API Error in getRorAffiliations: " . $e->getMessage());
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Fetches metadata about the latest ROR data dump from Zenodo
+     *
+     * @return array An array containing:
+     *               - [0] The download URL of the data dump
+     *               - [1] The filename of the ZIP archive
+     * @throws Exception If metadata cannot be retrieved or is invalid
+     */
+    private function fetchLatestRorMetadata(): array
+    {
+        $rorDataDumpUrl = 'https://zenodo.org/api/communities/ror-data/records?q=&sort=newest';
+        $metadataJson = @file_get_contents($rorDataDumpUrl);
+
+        if ($metadataJson === false) {
+            throw new Exception('Failed to fetch ROR data dump metadata from Zenodo');
+        }
+
+        $metadata = json_decode($metadataJson, true);
+        if (!isset($metadata['hits']['hits'][0]['files'][0])) {
+            throw new Exception('Invalid metadata structure from Zenodo');
+        }
+
+        return [
+            $metadata['hits']['hits'][0]['files'][0]['links']['self'],
+            $metadata['hits']['hits'][0]['files'][0]['key']
+        ];
+    }
+
+    /**
+     * Downloads and extracts the ROR data dump
+     *
+     * @param string $latestDataDumpUrl The download URL of the data dump
+     * @param string $zipFileName The filename to save the ZIP as
+     * @return string The name of the extracted CSV file
+     * @throws Exception If the ZIP cannot be downloaded or processed
+     */
+    private function downloadAndExtractRorDump(string $latestDataDumpUrl, string $zipFileName): string
+    {
+        if (@file_put_contents($zipFileName, @file_get_contents($latestDataDumpUrl)) === false) {
+            throw new Exception('Failed to download ROR data dump');
+        }
+
+        $zip = new ZipArchive();
+        if ($zip->open($zipFileName) !== true) {
+            throw new Exception('Failed to open ZIP file');
+        }
+
+        $zip->extractTo('./');
+        $zip->close();
+
+        $csvFiles = glob('*-ror-data.csv');
+        if (empty($csvFiles)) {
+            throw new Exception('CSV file not found in ZIP archive');
+        }
+
+        return $csvFiles[0];
+    }
+
+    /**
+     * Processes the ROR CSV file and returns the affiliations array
+     *
+     * @param string $csvFileName Name of the extracted CSV file
+     * @return array Parsed affiliations data
+     * @throws Exception If the CSV file cannot be read
+     */
+    private function parseRorCsv(string $csvFileName): array
+    {
+        $csvFile = @fopen($csvFileName, 'r');
+        if ($csvFile === false) {
+            throw new Exception('Failed to open CSV file');
+        }
+
+        $affiliations = [];
+        $header = fgetcsv($csvFile);
+        $indices = array_flip($header);
+
+        while (($row = fgetcsv($csvFile)) !== false) {
+            $aliases = [];
+            if (isset($indices['aliases']) && !empty($row[$indices['aliases']])) {
+                $aliases = array_map('trim', preg_split('/[|;]/', $row[$indices['aliases']]));
+            }
+
+            $labels = [];
+            if (isset($indices['labels']) && !empty($row[$indices['labels']])) {
+                $rawLabels = preg_split('/[|;]/', $row[$indices['labels']]);
+                $labels = array_map(function ($label) {
+                    $label = trim($label);
+                    $label = preg_replace('/^[a-z]{2}:\s*/i', '', $label);
+                    $label = preg_replace('/\s*\([a-z]{2}\)$/i', '', $label);
+                    return $label;
+                }, $rawLabels);
+            }
+
+            $acronyms = [];
+            if (isset($indices['acronyms']) && !empty($row[$indices['acronyms']])) {
+                $acronyms = array_map('trim', preg_split('/[|;]/', $row[$indices['acronyms']]));
+            }
+
+            $otherNames = array_values(array_filter(array_unique(array_merge($aliases, $labels, $acronyms))));
+
+            $affiliations[] = [
+                'id' => $row[$indices['id']] ?? '',
+                'name' => $row[$indices['name']] ?? '',
+                'other' => $otherNames
+            ];
+        }
+        fclose($csvFile);
+
+        return $affiliations;
+    }
+
+    /**
+     * Saves the affiliations array as a JSON file
+     *
+     * @param array $affiliations The affiliations data
+     * @return void
+     * @throws Exception If the JSON cannot be saved
+     */
+    private function saveAffiliationsJson(array $affiliations): void
+    {
+        if (!is_dir('json')) {
+            if (!mkdir('json', 0755, true)) {
+                throw new Exception('Failed to create json directory');
+            }
+        }
+
+        if (
+            file_put_contents(
+                '../json/affiliations.json',
+                json_encode($affiliations, JSON_PRETTY_PRINT)
+            ) === false
+        ) {
+            throw new Exception('Failed to save affiliations.json');
+        }
+    }
+
+    /**
+     * Sends a success response after affiliations are updated
+     *
+     * @param array $affiliations The processed affiliations
+     * @return void
+     */
+    private function respondWithAffiliations(array $affiliations): void
+    {
+        http_response_code(200);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'message' => 'ROR affiliations successfully updated',
+            'count' => count($affiliations),
+            'timestamp' => date('c')
+        ]);
     }
 
     /**
