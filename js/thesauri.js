@@ -268,7 +268,8 @@ $(document).ready(function () {
             * @param {string} e.detail.data.value - The value of the added tag.
             */
             thesaurusKeywordstagify.on('add', function (e) {
-                var tagText = e.detail.data.value;
+                var tagText = e.detail && e.detail.data ? e.detail.data.value : null;
+                if (!tagText) return;
                 var jsTree = $(config.jsTreeId).jstree(true);
                 var node = findNodeByPath(jsTree, tagText);
                 if (node) {
@@ -286,7 +287,8 @@ $(document).ready(function () {
             * @param {string} e.detail.data.value - The value of the removed tag.
             */
             thesaurusKeywordstagify.on('remove', function (e) {
-                var tagText = e.detail.data.value;
+                var tagText = e.detail && e.detail.data ? e.detail.data.value : null;
+                if (!tagText) return;
                 var jsTree = $(config.jsTreeId).jstree(true);
                 var node = findNodeByPath(jsTree, tagText);
                 if (node) {

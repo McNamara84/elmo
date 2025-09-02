@@ -243,16 +243,79 @@ function setupLanguageDropdown() {
   });
 }
 
+function setupTitleTypeDropdown() {
+  const select = $("#input-resourceinformation-titletype");
+  if (select.length === 0) return;
+
+  select.prop('disabled', true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+    })
+  );
+
+  $.ajax({
+    url: "api/v2/vocabs/titletypes",
+    method: "GET",
+    dataType: "json",
+    success: function (data) {
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Choose...",
+          "data-translate": "general.choose",
+        })
+      );
+
+      let mainTitleId = "";
+
+      if (Array.isArray(data)) {
+        data.forEach(function (type) {
+          const option = $("<option>", {
+            value: type.id,
+            text: type.name,
+          });
+
+          select.append(option);
+
+          if (type.name.toLowerCase() === "main title") {
+            mainTitleId = type.id.toString();
+          }
+        });
+      }
+
+      if (mainTitleId) {
+        select.val(mainTitleId);
+        window.mainTitleTypeId = mainTitleId;
+      }
+
+      window.titleTypeOptionsHtml = select.html();
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      console.error("Error loading title types:", textStatus, errorThrown);
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Error loading data",
+        })
+      );
+    },
+    complete: function () {
+      select.prop('disabled', false);
+    },
+  });
+}
+
 // Make functions available globally (important for tests)
 window.setupLanguageDropdown = setupLanguageDropdown;
 window.setupResourceTypeDropdown = setupResourceTypeDropdown;
+window.setupTitleTypeDropdown = setupTitleTypeDropdown;
 
 $(document).ready(function () {
   initializeTimezoneDropdown();
   setupResourceTypeDropdown();
   setupLanguageDropdown();
-
-
+  setupTitleTypeDropdown();
   /**
   * Populates the select field with ID input-rights-license with options created via an API call.
   * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
