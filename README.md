@@ -4,6 +4,7 @@
 ![Bootstrap 5.3](https://img.shields.io/badge/bootstrap-5.3-563d7c?logo=bootstrap)
 ![OpenAPI 3.1](https://img.shields.io/badge/openapi-3.1-6BA539?logo=openapiinitiative)
 ![Coverage](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Optimizer/blob/image-data/coverage.svg?raw=true)
+![JS Coverage](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Optimizer/blob/image-data-js/js-coverage.svg?raw=true)
 
 # ELMO - Enhanced Laboratory Metadata Organizer
 
