@@ -1149,11 +1149,40 @@ class VocabController
 
             // Process CSV data
             $affiliations = [];
-            $header = fgetcsv($csvFile); // Skip header row
+            $header = fgetcsv($csvFile); // Read header row
+            $indices = array_flip($header);
+
             while (($row = fgetcsv($csvFile)) !== false) {
+                // Extract aliases, labels and acronyms as other names if present
+                $aliases = [];
+                if (isset($indices['aliases']) && !empty($row[$indices['aliases']])) {
+                    // Split aliases on both pipe and semicolon separators
+                    $aliases = array_map('trim', preg_split('/[|;]/', $row[$indices['aliases']]));
+                }
+
+                $labels = [];
+                if (isset($indices['labels']) && !empty($row[$indices['labels']])) {
+                    $rawLabels = preg_split('/[|;]/', $row[$indices['labels']]);
+                    $labels = array_map(function ($label) {
+                        // Remove language prefixes like "de:" and suffixes like "(de)"
+                        $label = trim($label);
+                        $label = preg_replace('/^[a-z]{2}:\s*/i', '', $label);
+                        $label = preg_replace('/\s*\([a-z]{2}\)$/i', '', $label);
+                        return $label;
+                    }, $rawLabels);
+                }
+
+                $acronyms = [];
+                if (isset($indices['acronyms']) && !empty($row[$indices['acronyms']])) {
+                    $acronyms = array_map('trim', preg_split('/[|;]/', $row[$indices['acronyms']]));
+                }
+
+                $otherNames = array_values(array_filter(array_unique(array_merge($aliases, $labels, $acronyms))));
+
                 $affiliations[] = [
-                    'id' => $row[0],
-                    'name' => $row[1]
+                    'id' => $row[$indices['id']] ?? '',
+                    'name' => $row[$indices['name']] ?? '',
+                    'other' => $otherNames
                 ];
             }
             fclose($csvFile);
