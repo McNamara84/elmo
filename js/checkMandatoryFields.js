@@ -255,7 +255,8 @@ function validateAuthorInstitutionRequirements() {
         };
 
         // Check that the “Author-Institution-Affiliation” field is filled in.
-        var isauthorinstitutionAffiliationFilled = (fields.authorinstitutionAffiliation.val() && fields.authorinstitutionAffiliation.val().trim() !== '')
+        var affVal = (fields.authorinstitutionAffiliation.val() || '').trim();
+        var isauthorinstitutionAffiliationFilled = affVal !== '';
 
         // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
         if (isauthorinstitutionAffiliationFilled) {
