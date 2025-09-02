@@ -117,17 +117,49 @@ async function createLanguageMapping() {
 }
 
 /**
+ * Creates a title type mapping from API data
+ * @returns {Promise<Object>} A promise that resolves to a mapping of title types
+ */
+async function createTitleTypeMapping() {
+  try {
+    const response = await $.getJSON("./api/v2/vocabs/titletypes");
+    const mapping = {};
+
+    response.forEach((type) => {
+      const key = type.name.replace(/\s+/g, "");
+      mapping[key] = type.id.toString();
+    });
+
+    const main = response.find((t) => t.name.toLowerCase() === "main title");
+    if (main) {
+      mapping[""] = main.id.toString();
+      mapping["MainTitle"] = main.id.toString();
+    }
+
+    return mapping;
+  } catch (error) {
+    console.error("Error creating title type mapping:", error);
+    return {
+      "": "1",
+      MainTitle: "1",
+      AlternativeTitle: "2",
+      TranslatedTitle: "3",
+    };
+  }
+}
+
+/**
  * Maps title type to select option value
  * @param {string} titleType - The type of the title from XML
+ * @param {Object} mapping - Mapping object returned by createTitleTypeMapping
  * @returns {string} The corresponding select option value
  */
-function mapTitleType(titleType) {
-  const typeMap = {
-    undefined: "1", // Main Title
-    AlternativeTitle: "2",
-    TranslatedTitle: "3",
-  };
-  return typeMap[titleType] || "1";
+function mapTitleType(titleType, mapping = {}) {
+  const key = (titleType || "").replace(/\s+/g, "");
+  const map = Object.keys(mapping).length
+    ? mapping
+    : { "": "1", MainTitle: "1", AlternativeTitle: "2", TranslatedTitle: "3" };
+  return map[key] || map[""] || "1";
 }
 
 /**
@@ -135,7 +167,7 @@ function mapTitleType(titleType) {
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
-function processTitles(xmlDoc, resolver) {
+function processTitles(xmlDoc, resolver, titleTypeMapping) {
   const titleNodes = xmlDoc.evaluate(".//ns:titles/ns:title", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < titleNodes.snapshotLength; i++) {
@@ -147,10 +179,7 @@ function processTitles(xmlDoc, resolver) {
     if (i === 0) {
       // First Title
       $('input[name="title[]"]:first').val(titleText);
-      $("#input-resourceinformation-titletype").val(mapTitleType(titleType));
-      if (titleType) {
-        $("#container-resourceinformation-titletype").show();
-      }
+      $("#input-resourceinformation-titletype").val(mapTitleType(titleType, titleTypeMapping));
     } else {
       // Add Title - Clone new row
       $("#button-resourceinformation-addtitle").click();
@@ -160,7 +189,7 @@ function processTitles(xmlDoc, resolver) {
 
       // Set values
       $lastRow.find('input[name="title[]"]').val(titleText);
-      $lastRow.find('select[name="titleType[]"]').val(mapTitleType(titleType));
+      $lastRow.find('select[name="titleType[]"]').val(mapTitleType(titleType, titleTypeMapping));
     }
   }
 }
@@ -1198,6 +1227,7 @@ async function loadXmlToForm(xmlDoc) {
   // Erstelle das License- und Language-Mapping zuerst
   const licenseMapping = await createLicenseMapping();
   const languageMapping = await createLanguageMapping();
+  const titleTypeMapping = await createTitleTypeMapping();
 
   // Definiere das komplette XML_MAPPING mit dem erstellten licenseMapping
   const XML_MAPPING = {
@@ -1261,7 +1291,7 @@ async function loadXmlToForm(xmlDoc) {
 
   processResourceType(xmlDoc);
   // Process titles
-  processTitles(xmlDoc, resolver);
+  processTitles(xmlDoc, resolver, titleTypeMapping);
   // Processing Creators
   processCreators(xmlDoc, resolver);
   // Process Contact Persons
