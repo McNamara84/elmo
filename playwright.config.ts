@@ -20,7 +20,7 @@ export default defineConfig({
   reporter: 'html',
   use: {
     // Different baseURL depending on whether running in CI or locally
-    baseURL: process.env.CI ? 'http://localhost:8000/' : 'http://localhost/elmo/',
+    baseURL: process.env.CI ? 'http://localhost/elmo/' : 'http://localhost:8080/',
     trace: 'on-first-retry',
   },
 
