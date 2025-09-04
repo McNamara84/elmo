@@ -70,7 +70,7 @@ services:
       SMTP_SECURE: ${SMTP_SECURE}
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
-      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_MSL}
       TZ: Europe/Berlin
       # Flags for msl
       SHOW_MSL_LABS: "true"
@@ -109,7 +109,7 @@ services:
       SMTP_SECURE: ${SMTP_SECURE}
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
-      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
       TZ: Europe/Berlin
       # Flags for gem
       SHOW_MSL_LABS: "false"

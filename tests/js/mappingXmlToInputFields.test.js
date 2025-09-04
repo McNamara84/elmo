@@ -173,6 +173,25 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(fallback.de).toBe("2");
   });
 
+  test("createTitleTypeMapping resolves API data and handles errors", async () => {
+    const getJSON = jest.fn(() => Promise.resolve([
+      { id: 1, name: "Main Title" },
+      { id: 2, name: "Alternative Title" },
+    ]));
+    const ctx = loadMappingModule({ $: { getJSON } });
+    const result = await ctx.createTitleTypeMapping();
+    expect(getJSON).toHaveBeenCalled();
+    expect(result.MainTitle).toBe("1");
+    expect(result.AlternativeTitle).toBe("2");
+
+    const failingGetJSON = jest.fn(() => Promise.reject(new Error("fail")));
+    const ctxFail = loadMappingModule({ $: { getJSON: failingGetJSON }, console: { ...console, error: jest.fn() } });
+    const fallback = await ctxFail.createTitleTypeMapping();
+    expect(failingGetJSON).toHaveBeenCalled();
+    expect(fallback[""]).toBe("1");
+    expect(fallback.AlternativeTitle).toBe("2");
+  });
+
   test("setLabDataInRow populates fields and triggers change", () => {
     document.body.innerHTML = `
       <div id="row">
