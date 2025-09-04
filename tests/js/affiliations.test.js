@@ -34,7 +34,7 @@ class MockTagify {
   }
   trigger(event, detail) {
     if (event === 'add' && detail?.data) {
-      this.addTags({ value: detail.data.value });
+      this.addTags({ value: detail.data.value, id: detail.data.id });
     }
     if (event === 'remove') {
       this.removeAllTags();
@@ -79,12 +79,14 @@ describe('affiliations.js', () => {
    * Ensures a Tagify instance is created with the provided whitelist.
    */
   test('autocompleteAffiliations creates Tagify instance with whitelist', () => {
-    const data = [ { id: '1', name: 'TestOrg' } ];
+    const data = [ { id: '1', name: 'TestOrg', other: ['Alias1', 'Alias2'] } ];
     window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
 
     const input = document.getElementById('input-author-affiliation');
     expect(input.tagify).toBeInstanceOf(MockTagify);
-    expect(input.tagify.whitelist).toEqual(['TestOrg']);
+    expect(input.tagify.whitelist).toEqual([
+      { value: 'TestOrg', id: '1', other: ['Alias1', 'Alias2'] }
+    ]);
   });
 
   /**
@@ -96,7 +98,7 @@ describe('affiliations.js', () => {
     const input = document.getElementById('input-author-affiliation');
     const hidden = document.getElementById('input-author-rorid');
 
-    input.tagify.trigger('add', { data: { value: 'Allowed' } });
+    input.tagify.trigger('add', { data: { value: 'Allowed', id: '1' } });
     expect(hidden.value).toBe('1');
 
     input.tagify.trigger('add', { data: { value: 'Unknown' } });
@@ -134,15 +136,17 @@ describe('affiliations.js', () => {
    * Ensures refreshTagifyInstances updates the whitelist while retaining existing tags.
    */
   test('refreshTagifyInstances updates whitelist and keeps tags', () => {
-    const data = [ { id: '1', name: 'First' } ];
+    const data = [ { id: '1', name: 'First', other: ['Alt1'] } ];
     window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
     const input = document.getElementById('input-author-affiliation');
     input.tagify.addTags('First');
 
-    window.affiliationsData = [ { id: '2', name: 'Second' } ];
+    window.affiliationsData = [ { id: '2', name: 'Second', other: ['Alt2'] } ];
     window.refreshTagifyInstances();
 
-    expect(input.tagify.settings.whitelist).toEqual(['Second']);
+     expect(input.tagify.settings.whitelist).toEqual([
+      { value: 'Second', id: '2', other: ['Alt2'] }
+    ]);
     expect(input.tagify.value[0].value).toBe('First');
   });
 });
