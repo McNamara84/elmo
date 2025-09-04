@@ -6,7 +6,7 @@ info:
 
     Some useful links:
     - [The ELMO repository](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Optimizer)
-    - [Test Server](https://elmo.cats4future.de)
+    - [Test Server](https://env.rz-vm182.gfz.de/elmo)
     - [Legal notice](https://dataservices-cms.gfz.de/about-us/legal-notice)
 
     ### Authentication
@@ -21,7 +21,7 @@ info:
   contact:
     name: Holger Ehrmann
     email: ehrmann@gfz.de
-    url: https://elmo.cats4future.de
+    url: https://env.rz-vm182.gfz.de/elmo
   license:
     name: GPL-2.0-only
     url: https://raw.githubusercontent.com/McNamara84/gfz-metadata-editor-msl-v2/refs/heads/main/LICENSE.md
@@ -30,7 +30,7 @@ externalDocs:
   description: Documentation of the API V1 at GitHub
   url: https://github.com/McNamara84/gfz-metadata-editor-msl-v2#api-endpunkte
 servers:
-  - url: https://elmo.cats4future.de/api/v2
+  - url: https://env.rz-vm182.gfz.de/elmo/api/v2
     description: Test server
 security:
   - []
@@ -79,7 +79,7 @@ paths:
         - update
       summary: Update ROR affiliations
       description: |-
-        Updates the ROR (Research Organization Registry) affiliations saving them as JSON for autocomplete functionality
+        Updates the ROR (Research Organization Registry) affiliations and stores them in `json/affiliations.json` for autocomplete functionality. Each entry in the generated file contains the ROR identifier (`id`), the preferred affiliation name (`name`), and an array of alternative names (`other`) including aliases, labels without language codes, and acronyms.
       operationId: getRorAffiliations
       responses:
         "200":
@@ -1099,6 +1099,31 @@ components:
         - id
         - name
         - affiliation
+    RorAffiliation:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ROR identifier of the affiliation
+          example: "https://ror.org/012m9bp23"
+        name:
+          type: string
+          description: Preferred name of the affiliation
+          example: "University of Applied Sciences Potsdam"
+        other:
+          type: array
+          description: Alternative names (aliases, labels, acronyms)
+          items:
+            type: string
+          example:
+            - "FH Potsdam"
+            - "Fachhochschule Potsdam University of Applied Sciences"
+            - "Fachhochschule Potsdam"
+            - "FHP"
+      required:
+        - id
+        - name
+        - other
     Error:
       type: object
       properties:
