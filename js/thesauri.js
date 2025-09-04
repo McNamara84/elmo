@@ -268,7 +268,7 @@ $(document).ready(function () {
             * @param {string} e.detail.data.value - The value of the added tag.
             */
             thesaurusKeywordstagify.on('add', function (e) {
-                var tagText = e.detail && e.detail.data ? e.detail.data.value : null;
+                var tagText = e.detail?.data?.value;
                 if (!tagText) return;
                 var jsTree = $(config.jsTreeId).jstree(true);
                 var node = findNodeByPath(jsTree, tagText);
