@@ -133,8 +133,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     updateHiddenField();
 
     // Clear tags if no contact person is selected
-    const contactField = document.getElementById("contact-person-field");
-    if (!contactField){
+    if (!contactField) {
       return;
     }
     if (!contactField.value) {
