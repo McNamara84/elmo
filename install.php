@@ -823,6 +823,16 @@ function insertTestResourceData($connection)
         "Author_person" => [
             ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "0000-0003-1076-615X"],
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "0000-0003-1552-0861"],
+            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242"],
+            ["familyName" => "Flechtner", "givenname" => "Frank", "orcid" => "0000-0002-3093-5558"],
+            ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "0000-0002-4108-578X"],
+            ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "0000-0003-1463-412X"],
+            ["familyName" => "Ince", "givenname" => "E. Sinem", "orcid" => "0000-0002-3393-1392"],
+            ["familyName" => "Foerste", "givenname" => "Christoph", "orcid" => "0000-0002-4476-9183"],
+            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242"],
+            ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "0000-0002-4108-578X"],
+            ["familyName" => "Michalak", "givenname" => "Grzegorz", "orcid" => "0000-0002-1925-8824"],
+            ["familyName" => "König", "givenname" => "Rolf", "orcid" => "0000-0002-7155-6976"],
             ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "0000-0003-0930-6527"]
         ],
         "Author_institution" => [
@@ -831,6 +841,16 @@ function insertTestResourceData($connection)
             ["institutionname" => "Institut für Luft- und Raumfahrt"]
         ],
         "Author" => [
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
             ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
             ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
             ["Author_Person_author_person_id" => 1, "Author_Institution_author_institution_id" => 3]
@@ -994,12 +1014,29 @@ function insertTestResourceData($connection)
         "Resource_has_Author" => [
             ["Resource_resource_id" => 3, "Author_author_id" => 1],
             ["Resource_resource_id" => 2, "Author_author_id" => 3],
-            ["Resource_resource_id" => 1, "Author_author_id" => 2]
+            ["Resource_resource_id" => 1, "Author_author_id" => 2],
+            ["Resource_resource_id" => 4, "Author_author_id" => 4],
+            ["Resource_resource_id" => 4, "Author_author_id" => 5],
+            ["Resource_resource_id" => 4, "Author_author_id" => 6],
+            ["Resource_resource_id" => 5, "Author_author_id" => 7],
+            ["Resource_resource_id" => 5, "Author_author_id" => 8],
+            ["Resource_resource_id" => 5, "Author_author_id" => 9],
+            ["Resource_resource_id" => 5, "Author_author_id" => 5],     // dr. prof. Flectner co-authored models 4 AND 5                               
+            ["Resource_resource_id" => 4, "Author_author_id" => 10],
+            ["Resource_resource_id" => 4, "Author_author_id" => 11],
+            ["Resource_resource_id" => 4, "Author_author_id" => 12],
+            ["Resource_resource_id" => 4, "Author_author_id" => 13]
         ],
         "Author_has_Affiliation" => [
             ["Author_author_id" => 1, "Affiliation_affiliation_id" => 2],
             ["Author_author_id" => 2, "Affiliation_affiliation_id" => 1],
-            ["Author_author_id" => 3, "Affiliation_affiliation_id" => 3]
+            ["Author_author_id" => 3, "Affiliation_affiliation_id" => 3],
+            ["Author_author_id" => 4, "Affiliation_affiliation_id" => 1],
+            ["Author_author_id" => 5, "Affiliation_affiliation_id" => 1],
+            ["Author_author_id" => 6, "Affiliation_affiliation_id" => 1],
+            ["Author_author_id" => 7, "Affiliation_affiliation_id" => 1],
+            ["Author_author_id" => 8, "Affiliation_affiliation_id" => 1],
+            ["Author_author_id" => 9, "Affiliation_affiliation_id" => 1]
         ],
         "Contact_Person_has_Affiliation" => [
             ["Contact_Person_contact_person_id" => 1, "Affiliation_affiliation_id" => 2],
