@@ -258,9 +258,8 @@ To install them: npm install
 
 </details>
 
-## API
+## [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html)
 
-[API documentation](https://elmo.cats4future.de/api/v2/docs/index.html)
 
 <details>
   <summary>
