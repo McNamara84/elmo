@@ -131,14 +131,6 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   // Event listener for when a tag is removed
   tagify.on("remove", function () {
     updateHiddenField();
-
-    // Clear tags if no contact person is selected
-    if (!contactField) {
-      return;
-    }
-    if (!contactField.value) {
-      tagify.removeAllTags();
-    }
   });
 
   // Event listener for input changes to adjust the input field width dynamically
