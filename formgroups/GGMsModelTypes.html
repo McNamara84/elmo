@@ -4,154 +4,160 @@
     </div>
     <div class="card-body" id="group-modelvars">
         <!-- Static models special variables -->
-        <h6 class="mb-2">Static models special variables</h6>
-        <div class="row mb-3">
-            <!-- Description of time-variable coefficients -->
-            <div class="col-sm-6 col-lg-8 p-1">
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="input-static-description" name="staticDescription[]">
-                    <label for="input-static-description">
-                        Description of time-variable coefficients
-                    </label>
+        <div class="visibility-modeltype-static d-none">
+            <h6 class="mb-2">Static models special variables</h6>
+            <div class="row mb-3">
+                <!-- Description of time-variable coefficients -->
+                <div class="col-sm-6 col-lg-8 p-1">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="input-static-description" name="staticDescription[]">
+                        <label for="input-static-description">
+                            Description of time-variable coefficients
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <!-- De-aliasing (TRUE/FALSE) -->
-            <div class="col-sm-2 col-lg-2 p-1">
-                <div class="form-floating">
-                    <select class="form-select" id="select-static-dealiasing" name="staticDealiasing[]">
-                        <option selected value=""></option>
-                        <option value="true">TRUE</option>
-                        <option value="false">FALSE</option>
-                    </select>
-                    <label for="select-static-dealiasing">
-                        De-aliasing
-                    </label>
+                <!-- De-aliasing (TRUE/FALSE) -->
+                <div class="col-sm-2 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <select class="form-select" id="select-static-dealiasing" name="staticDealiasing[]">
+                            <option selected value=""></option>
+                            <option value="true">TRUE</option>
+                            <option value="false">FALSE</option>
+                        </select>
+                        <label for="select-static-dealiasing">
+                            De-aliasing
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <!-- Version -->
-            <div class="col-sm-2 col-lg-2 p-1">
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="input-static-version" name="staticVersion[]">
-                    <label for="input-static-version">
-                        Version
-                    </label>
+                <!-- Version -->
+                <div class="col-sm-2 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="input-static-version" name="staticVersion[]">
+                        <label for="input-static-version">
+                            Version
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
         <!-- Temporal models special variables -->
-        <h6 class="mb-2">Temporal models special variables</h6>
-        <div class="row mb-3">
-            <!-- Start date -->
-            <div class="col-sm-2 col-lg-2 p-1">
-                <div class="form-floating">
-                    <input type="date" class="form-control" id="input-temporal-start" name="temporalStart[]">
-                    <label for="input-temporal-start">
-                        Start date
-                    </label>
+        <div class="visibility-modeltype-temporal d-none">
+            <h6 class="mb-2">Temporal models special variables</h6>
+            <div class="row mb-3">
+                <!-- Start date -->
+                <div class="col-sm-2 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <input type="date" class="form-control" id="input-temporal-start" name="temporalStart[]">
+                        <label for="input-temporal-start">
+                            Start date
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <!-- End date -->
-            <div class="col-sm-2 col-lg-2 p-1">
-                <div class="form-floating">
-                    <input type="date" class="form-control" id="input-temporal-end" name="temporalEnd[]">
-                    <label for="input-temporal-end">
-                        End date
-                    </label>
+                <!-- End date -->
+                <div class="col-sm-2 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <input type="date" class="form-control" id="input-temporal-end" name="temporalEnd[]">
+                        <label for="input-temporal-end">
+                            End date
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <!-- Release frequency / temporal resolution -->
-            <div class="col-sm-3 col-lg-3 p-1">
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency[]">
-                    <label for="input-temporal-frequency">
-                        Release frequency / temporal resolution
-                    </label>
+                <!-- Release frequency / temporal resolution -->
+                <div class="col-sm-3 col-lg-3 p-1">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency[]">
+                        <label for="input-temporal-frequency">
+                            Release frequency / temporal resolution
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <!-- Choose frequency from list -->
-            <div class="col-sm-2 col-lg-2 p-1">
-                <div class="form-floating">
-                    <select class="form-select" id="select-temporal-frequency-predef" name="temporalFrequencyPredef[]">
-                        <option selected value=""></option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                    </select>
-                    <label for="select-temporal-frequency-predef">
-                        Choose from list
-                    </label>
+                <!-- Choose frequency from list -->
+                <div class="col-sm-2 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <select class="form-select" id="select-temporal-frequency-predef" name="temporalFrequencyPredef[]">
+                            <option selected value=""></option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                        <label for="select-temporal-frequency-predef">
+                            Choose from list
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <!-- Generating institution -->
-            <div class="col-sm-3 col-lg-3 p-1">
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="input-temporal-institution" name="temporalInstitution[]"
-                        autocomplete="off">
-                    <label for="input-temporal-institution">
-                        Generating institution
-                    </label>
+                <!-- Generating institution -->
+                <div class="col-sm-3 col-lg-3 p-1">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="input-temporal-institution" name="temporalInstitution[]"
+                            autocomplete="off">
+                        <label for="input-temporal-institution">
+                            Generating institution
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
         <!-- Topographic variables special variables -->
-        <h6 class="mb-2">Topographic variables special variables</h6>
-        <div class="row">
-            <!-- Layer approach -->
-            <div class="col-sm-4 col-lg-2 p-1">
-                <div class="form-floating">
-                    <select class="form-select" id="select-topo-layerapproach" name="topoLayerApproach[]">
-                        <option selected value=""></option>
-                        <option value="single-layer">Single-layer</option>
-                        <option value="multi-layer">Multi-layer</option>
-                    </select>
-                    <label for="select-topo-layerapproach">
-                        Layer approach
-                    </label>
+        <div class="visibility-modeltype-topographic d-none">
+            <h6 class="mb-2">Topographic variables special variables</h6>
+            <div class="row">
+                <!-- Layer approach -->
+                <div class="col-sm-4 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <select class="form-select" id="select-topo-layerapproach" name="topoLayerApproach[]">
+                            <option selected value=""></option>
+                            <option value="single-layer">Single-layer</option>
+                            <option value="multi-layer">Multi-layer</option>
+                        </select>
+                        <label for="select-topo-layerapproach">
+                            Layer approach
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <!-- Forward modelling domain -->
-            <div class="col-sm-4 col-lg-2 p-1">
-                <div class="form-floating">
-                    <select class="form-select" id="select-topo-domain" name="topoDomain[]">
-                        <option selected value=""></option>
-                        <option value="2d">2-D</option>
-                        <option value="3d">3-D</option>
-                    </select>
-                    <label for="select-topo-domain">
-                        Forward modelling domain
-                    </label>
+                <!-- Forward modelling domain -->
+                <div class="col-sm-4 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <select class="form-select" id="select-topo-domain" name="topoDomain[]">
+                            <option selected value=""></option>
+                            <option value="2d">2-D</option>
+                            <option value="3d">3-D</option>
+                        </select>
+                        <label for="select-topo-domain">
+                            Forward modelling domain
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <!-- Approximation -->
-            <div class="col-sm-4 col-lg-2 p-1">
-                <div class="form-floating">
-                    <select class="form-select" id="select-topo-approximation" name="topoApproximation[]">
-                        <option selected value=""></option>
-                        <option value="ray-tracing">Ray tracing</option>
-                        <option value="finite-difference">Finite difference</option>
-                        <option value="analytical">Analytical</option>
-                    </select>
-                    <label for="select-topo-approximation">
-                        Approximation
-                    </label>
+                <!-- Approximation -->
+                <div class="col-sm-4 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <select class="form-select" id="select-topo-approximation" name="topoApproximation[]">
+                            <option selected value=""></option>
+                            <option value="ray-tracing">Ray tracing</option>
+                            <option value="finite-difference">Finite difference</option>
+                            <option value="analytical">Analytical</option>
+                        </select>
+                        <label for="select-topo-approximation">
+                            Approximation
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <!-- Density information -->
-            <div class="col-sm-6 col-lg-3 p-1">
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="input-topo-density" name="topoDensity[]">
-                    <label for="input-topo-density">
-                        Density information
-                    </label>
+                <!-- Density information -->
+                <div class="col-sm-6 col-lg-3 p-1">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="input-topo-density" name="topoDensity[]">
+                        <label for="input-topo-density">
+                            Density information
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <!-- Density information details -->
-            <div class="col-sm-6 col-lg-3 p-1">
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="input-topo-density-details" name="topoDensityDetails[]">
-                    <label for="input-topo-density-details">
-                        Density information details
-                    </label>
+                <!-- Density information details -->
+                <div class="col-sm-6 col-lg-3 p-1">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="input-topo-density-details" name="topoDensityDetails[]">
+                        <label for="input-topo-density-details">
+                            Density information details
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
