@@ -25,7 +25,12 @@ function refreshTagifyInstances() {
     const currentValues = [...inputElement.tagify.value]; // Create a copy
 
     // Update whitelist without destroying the instance
-    inputElement.tagify.settings.whitelist = window.affiliationsData.map(item => item.name);
+    inputElement.tagify.settings.whitelist = window.affiliationsData.map(item => ({
+      value: item.name,
+      id: item.id,
+      other: item.other
+    }));
+    inputElement.tagify.settings.dropdown.searchKeys = ['value', 'other'];
 
     // Update placeholder if translations are available
     if (translations?.general?.affiliation) {
@@ -62,6 +67,7 @@ $.getJSON("json/affiliations.json", function (data) {
  * @typedef {Object} Affiliation
  * @property {string} id - The unique identifier of the affiliation.
  * @property {string} name - The name of the affiliation.
+ * @property {string[]} [other] - Alternative names for the affiliation.
  */
 
 /**
@@ -85,12 +91,17 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     enforceWhitelist: false,
     duplicates: false,
     placeholder: placeholderValue,
-    whitelist: data.map(item => item.name),
+    whitelist: data.map(item => ({
+      value: item.name,
+      id: item.id,
+      other: item.other
+    })),
     dropdown: {
       maxItems: 20,
       classname: "affiliation",
       enabled: 3,
-      closeOnSelect: true
+      closeOnSelect: true,
+      searchKeys: ['value', 'other']
     },
     editTags: false,
     keepInvalidTags: false,
@@ -103,10 +114,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
    * Updates the hidden input field with the IDs of the selected affiliations.
    */
   function updateHiddenField() {
-    const allSelectedItems = tagify.value.map(tag => {
-      const item = data.find(affiliationItem => affiliationItem.name === tag.value);
-      return item ? item.id : "";
-    });
+    const allSelectedItems = tagify.value.map(tag => tag.id || "");
     hiddenField.val(allSelectedItems.join(','));
   }
 
@@ -122,7 +130,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     updateHiddenField();
 
     const selectedName = e.detail.data.value;
-    const isOnWhitelist = tagify.whitelist.includes(selectedName);
+    const isOnWhitelist = tagify.whitelist.some(item => item.value === selectedName);
     if (!isOnWhitelist) {
       closeDropdown();
     }
@@ -131,15 +139,6 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   // Event listener for when a tag is removed
   tagify.on("remove", function () {
     updateHiddenField();
-
-    // Clear tags if no contact person is selected
-    const contactField = document.getElementById("contact-person-field");
-    if (!contactField){
-      return;
-    }
-    if (!contactField.value) {
-      tagify.removeAllTags();
-    }
   });
 
   // Event listener for input changes to adjust the input field width dynamically
