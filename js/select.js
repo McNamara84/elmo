@@ -243,16 +243,79 @@ function setupLanguageDropdown() {
   });
 }
 
+function setupTitleTypeDropdown() {
+  const select = $("#input-resourceinformation-titletype");
+  if (select.length === 0) return;
+
+  select.prop('disabled', true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+    })
+  );
+
+  $.ajax({
+    url: "api/v2/vocabs/titletypes",
+    method: "GET",
+    dataType: "json",
+    success: function (data) {
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Choose...",
+          "data-translate": "general.choose",
+        })
+      );
+
+      let mainTitleId = "";
+
+      if (Array.isArray(data)) {
+        data.forEach(function (type) {
+          const option = $("<option>", {
+            value: type.id,
+            text: type.name,
+          });
+
+          select.append(option);
+
+          if (type.name.toLowerCase() === "main title") {
+            mainTitleId = type.id.toString();
+          }
+        });
+      }
+
+      if (mainTitleId) {
+        select.val(mainTitleId);
+        window.mainTitleTypeId = mainTitleId;
+      }
+
+      window.titleTypeOptionsHtml = select.html();
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      console.error("Error loading title types:", textStatus, errorThrown);
+      select.empty().append(
+        $("<option>", {
+          value: "",
+          text: "Error loading data",
+        })
+      );
+    },
+    complete: function () {
+      select.prop('disabled', false);
+    },
+  });
+}
+
 // Make functions available globally (important for tests)
 window.setupLanguageDropdown = setupLanguageDropdown;
 window.setupResourceTypeDropdown = setupResourceTypeDropdown;
+window.setupTitleTypeDropdown = setupTitleTypeDropdown;
 
 $(document).ready(function () {
   initializeTimezoneDropdown();
   setupResourceTypeDropdown();
   setupLanguageDropdown();
-
-
+  setupTitleTypeDropdown();
   /**
   * Populates the select field with ID input-rights-license with options created via an API call.
   * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
@@ -472,7 +535,7 @@ function setupIdentifierTypesDropdown(id) {
   );
 
   // Fetch identifier types from the server
-  $.getJSON("./api/v2/validation/identifiertypes", function (response) {
+  $.getJSON("./api/v2/validation/identifiertypes/active", function (response) {
     if (response && response.identifierTypes) {
       response.identifierTypes.forEach(function (type) {
         select.append(
@@ -512,11 +575,12 @@ function getIdentifierPriority(name) {
 
 function updateIdentifierType(inputElement) {
   var identifier = $(inputElement).val();
-  var selectElement = $(inputElement).closest(".row").find('select[name="rIdentifierType[]"]');
+  // Apply the function to the identifier type select elements of related work and data sources
+  var selectElement = $(inputElement).closest(".row").find('select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]');
 
   if (identifier) {
     $.ajax({
-      url: "api/v2/validation/identifiertypes",
+      url: "api/v2/validation/identifiertypes/active",
       method: "GET",
       dataType: "json",
       success: function (response) {
@@ -622,6 +686,39 @@ function updateIdsAndNames() {
       .attr("id", "input-relatedwork-identifiertype" + index);
   });
 }
-
-// Initialize the dropdowns for identifier types
 setupIdentifierTypesDropdown("#input-relatedwork-identifiertype");
+
+function updateDataSourceIdsAndNames() {
+  $("#group-datasources .row").each(function (index) {
+    $(this)
+      .find('select[name="datasource_type[]"]')
+      .attr("id", "input-datasource-type" + index);
+    $(this)
+      .find('select[name="datasource_details[]"]')
+      .attr("id", "input-datasource-details" + index);
+    $(this)
+      .find('input[name="dName[]"]')
+      .attr("id", "input-datasource-modelname" + index);
+    $(this)
+      .find('input[name="dIdentifier[]"]')
+      .attr("id", "input-datasource-identifier" + index);
+    $(this)
+      .find('select[name="dIdentifierType[]"]')
+      .attr("id", "input-datasource-identifiertype" + index);
+  });
+}
+
+// Event listener for input in the data source identifier input field with debounce
+$(document).on(
+  "input",
+  'input[name="dIdentifier[]"]',
+  debounce(function () {
+    updateDataSourceIdsAndNames();
+    updateIdentifierType(this);
+  }, 300)
+);
+
+// Event listener for leaving the data source identifier input field
+$(document).on("blur", 'input[name="dIdentifier[]"]', function () {
+  updateIdentifierType(this);
+});

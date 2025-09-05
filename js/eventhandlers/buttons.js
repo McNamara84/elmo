@@ -9,12 +9,14 @@
 import './formgroups/feedback.js';
 import './formgroups/author.js';
 import './formgroups/ggmproperties-essential.js';
+import './formgroups/ggmproperties-technical.js';
 import './formgroups/contributor-person.js';
 import './formgroups/contributor-organisation.js';
 import './formgroups/resourceinformation-title.js';
 import './formgroups/stc.js';
 import './formgroups/relatedwork.js';
 import './formgroups/fundingreference.js';
+import './formgroups/datasources.js';
 import { replaceHelpButtonInClonedRows, createRemoveButton, updateOverlayLabels } from './functions.js';
 
 /**

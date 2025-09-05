@@ -36,6 +36,7 @@ return [
     ['GET', '/vocabs/freekeywords/uncurated', [new VocabController(), 'getUncuratedFreeKeywords']],
     ['GET', '/vocabs/resourcetypes', [new VocabController(), 'getResourceTypes']],
     ['GET', '/vocabs/languages', [new VocabController(), 'getLanguages']],
+    ['GET', '/vocabs/titletypes', [new VocabController(), 'getTitleTypes']],
 
     // Vocabulary retrieval for ICGEM implementation
     ['GET', '/vocabs/icgemformats', [new VocabController(), 'getICGEMFileFormats']],
@@ -44,7 +45,9 @@ return [
 
     // Validation endpoints
     ['GET', '/validation/patterns[/{type}]', [new ValidationController(), 'getPattern']],
-    ['GET', '/validation/identifiertypes', [new ValidationController(), 'getIdentifierTypes']],
+    ['GET', '/validation/identifiertypes/all', [new ValidationController(), 'getIdentifierTypes']],
+    ['GET', '/validation/identifiertypes/active', [new ValidationController(), 'getActiveIdentifierTypes']],
+    ['GET', '/validation/identifiertypes/inactive', [new ValidationController(), 'getInactiveIdentifierTypes']],
 
     // Dataset export endpoints
     ['GET', '/dataset/export/{id}/all/download', [new DatasetController(), 'exportAllDownload']],

@@ -1,15 +1,49 @@
 <!-- Changelog Content -->
 <div class="accordion" id="accordion-changelog">
+    <!-- Version 2.0.4 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-changelog-version9">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse-changelog-version9" aria-expanded="true"
+                aria-controls="collapse-changelog-version9">
+                Version 2.0.4 - 2025/0x/xx
+            </button>
+        </h2>
+        <div id="collapse-changelog-version9" class="accordion-collapse collapse show"
+            aria-labelledby="heading-changelog-version9" data-bs-parent="#accordion-changelog">
+            <div class="accordion-body">
+                <ul>
+                    <li><strong>Features:</strong>
+                        <ul>
+                            <li>Search RORs other names in all affiliations input fields</li>
+                        </ul>
+                    </li>
+                    <li><strong>Fixes:</strong>
+                        <ul>
+                        </ul>
+                    </li>
+                    <li><strong>Documentation:</strong>
+                        <ul>
+                        </ul>
+                    </li>
+                    <li><strong>Chore:</strong>
+                        <ul>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
     <!-- Version 2.0.3 -->
     <div class="accordion-item">
         <h2 class="accordion-header" id="heading-changelog-version8">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse-changelog-version8" aria-expanded="true"
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse-changelog-version8" aria-expanded="false"
                 aria-controls="collapse-changelog-version8">
-                Version 2.0.3 - 2025/0x/xx
+                Version 2.0.3 - 2025/09/02
             </button>
         </h2>
-        <div id="collapse-changelog-version8" class="accordion-collapse collapse show"
+        <div id="collapse-changelog-version8" class="accordion-collapse collapse"
             aria-labelledby="heading-changelog-version8" data-bs-parent="#accordion-changelog">
             <div class="accordion-body">
                 <ul>
@@ -18,9 +52,14 @@
                             <li>Autodetect new language files</li>
                             <li>New API endpoint for CGI keywords</li>
                             <li>New API endpoint for resource types</li>
+                            <li>New API endpoint for title types</li>
                             <li>Search for help in guide</li>
                             <li>New input field for award URI</li>
-                            <li>New form group Model Types for ICGEM metadata</li>
+                            <li>Added optional <code>isShown</code> filter to <code>/validation/identifiertypes</code>
+                                API endpoint to control visibility of identifier types</li>
+                            <li>New form group Data Sources for ICGEM metadata scheme</li>
+                            <li>New form group Technical for ICGEM metadata scheme</li>
+                            <li>New form group Model-specific for ICGEM metadata scheme</li>    
                         </ul>
                     </li>
                     <li><strong>Fixes:</strong>
@@ -29,21 +68,23 @@
                             <li>Initialization of Tagify input fields optimized</li>
                             <li>Translation of messages in save and submit workflow</li>
                             <li>Automatic detection and differentiation of DOIs and URLs fixed</li>
+                            <li>Thesaurus keywords: fix the search in the modals to work propperly and independently</li>
+                            <li>MSL keywords are saved with the "EPOS MSL vocabulary" scheme</li>
                         </ul>
                     </li>
                     <li><strong>Documentation:</strong>
                         <ul>
                             <li>Tech stack badges in ReadMe</li>
                             <li>Added ORCID and ROR logos to the ELMO Guide</li>
+                            <li>Updated documentations with new URL to test server</li>
                         </ul>
                     </li>
                     <li><strong>Chore:</strong>
                         <ul>
                             <li>Increased code coverage with more unit tests</li>
                             <li>First unit tests for JavaScript Code with Jest</li>
-                            <li>Replaced CDN links with npm packages</li>
                             <li>Increased development speed: Mounted docker volumes for the folders subjected to change</li>
-
+                            <li>Replaced CDN links with npm packages</li>
                         </ul>
                     </li>
                 </ul>
@@ -73,10 +114,12 @@
                             <li>Backend: Updated the save in the database for the new input fields</li>
                             <li>Frontend: Updated save and submit model workflows</li>
                             <li>Added the new fields to the XML export</li>
-                            <li>Enabled a new opportunity for the XML export: base export -- export in freestyle schema</li>
+                            <li>Enabled a new opportunity for the XML export: base export -- export in freestyle schema
+                            </li>
                             <li>Covered the new code with unit tests</li>
                             <li>Updated the user guide to include the new formgroup</li>
-                            <li>Enabled an installation option: populate database with test data and generate XML files from it</li>
+                            <li>Enabled an installation option: populate database with test data and generate XML files
+                                from it</li>
                             <li>Updated the documentation</li>
                             <li>Added search box in map modal for coverage data</li>
                         </ul>
@@ -101,7 +144,8 @@
                     <li><strong>New Features:</strong>
                         <ul>
                             <li>Added easy installation with docker-compose file</li>
-                            <li>Event handlers are outsourced to separate JavaScript files for better maintainability.</li>
+                            <li>Event handlers are outsourced to separate JavaScript files for better maintainability.
+                            </li>
                         </ul>
                     </li>
                     <li><strong>Fixed Bugs:</strong>
@@ -113,10 +157,12 @@
                             <li>Language menu doesn't show active language setting</li>
                             <li>Saving Contributor Person(s)</li>
                             <li>Submitting xml files</li>
-                            <li>GCMD Platform and Instrument Keywords are saved with thesaurus information in ISO scheme</li>
+                            <li>GCMD Platform and Instrument Keywords are saved with thesaurus information in ISO scheme
+                            </li>
                             <li>Updated link to EPOS MSL vocabularies</li>
                             <li>Tagify installed locally instead of via CDN to improve loading time</li>
-                            <li>Corrected re-initialization of Tagify fields after removing contact persons, preventing duplicate entries in role, affiliation, and free keyword fields</li>
+                            <li>Corrected re-initialization of Tagify fields after removing contact persons, preventing
+                                duplicate entries in role, affiliation, and free keyword fields</li>
                             <li>Changed square corners of the timezone input field to rounded corners</li>
                             <li>Fixed loading issue for geographic coverage data</li>
                             <li>Addressed accessibility issues:

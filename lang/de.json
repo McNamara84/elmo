@@ -161,6 +161,49 @@
         "awardURI": "Förder-URI",
         "awardURIInvalid": "Bitte geben Sie eine gültige URL an."
     },
+    "dataSources": {
+        "title": "Datenquellen",
+        "type": "Typ",
+        "description": "Beschreibung",
+        "details": "Details",
+        "identifier": "Identifikator",
+        "identifierType": "Identifikatortyp",
+        "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
+        "modelName": "Modellname",
+        "compensationDepth": "Ausgleichstiefe (in Metern)"
+    },
+    "technical": {
+        "title": "Technische Angaben",
+        "tideSystem": "Gezeitensystem",
+        "tideSystemInvalid": "Bitte Gezeitensystem wählen.",
+        "tideSystemOptions": {
+            "zeroTide": "Zero Tide",
+            "meanTide": "Mean Tide",
+            "tideFree": "Tide Free"
+        },
+        "errors": "Fehler",
+        "errorsInvalid": "Bitte Fehlertyp wählen.",
+        "errorOptions": {
+            "calibrated": "kalibriert",
+            "formal": "formal",
+            "no": "keine"
+        },
+        "errorHandling": "Vorgehensweise zur Fehlerbehandlung",
+        "errorHandlingInvalid": "Es sind nur Buchstaben, Zahlen sowie . , ( ) - erlaubt.",
+        "degree": "Grad",
+        "degreeInvalid": "Bitte Grad angeben.",
+        "referenceEllipsoid": "Referenzellipsoid: große Halbachse a",
+        "referenceEllipsoidInvalid": "Bitte große Halbachse angeben.",
+        "secondVariable": "Zweite Variable",
+        "secondVariableInvalid": "Bitte zweite Variable wählen.",
+        "secondVariableOptions": {
+            "axisB": "Achse b",
+            "flattening": "Abplattung",
+            "reciprocalFlattening": "Reziproke Abplattung"
+        },
+        "earthGravityConstant": "Erdschwerekonstante",
+        "earthGravityConstantInvalid": "Bitte Erdschwerekonstante angeben."
+    },
     "buttons": {
         "clear": "Löschen",
         "clearTooltip": "Alle Einträge oder Inhalte löschen.",

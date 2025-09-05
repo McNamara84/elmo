@@ -30,6 +30,16 @@ describe('select.js', () => {
           </select>
         </div>
       </div>
+      <div id="group-datasources">
+        <div class="row">
+          <input name="dName[]" />
+          <input name="dIdentifier[]" />
+          <select name="dIdentifierType[]">
+            <option value=""></option>
+            <option value="DOI">DOI</option>
+          </select>
+        </div>
+      </div>
     `;
 
     $ = require('jquery');
@@ -159,6 +169,25 @@ describe('select.js', () => {
     expect(ids).toEqual(['input-relatedwork-relation0','input-relatedwork-relation1']);
   });
 
+  test('updateIdentifierType detects type for data source fields', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[{name:'DOI', pattern:'^10\\..+'}]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-datasources input[name="dIdentifier[]"]');
+    const select = $('#group-datasources select[name="dIdentifierType[]"]');
+    input.val('10.1234/abcd');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('DOI');
+  });
+
+  test('updateDataSourceIdsAndNames assigns ids to model fields', () => {
+    window.updateDataSourceIdsAndNames();
+    expect($('#group-datasources input[name="dName[]"]').attr('id')).toBe('input-datasource-modelname0');
+    expect($('#group-datasources input[name="dIdentifier[]"]').attr('id')).toBe('input-datasource-identifier0');
+    expect($('#group-datasources select[name="dIdentifierType[]"]').attr('id')).toBe('input-datasource-identifiertype0');
+  });
+
   test('initializeTimezoneDropdown fetches and selects timezone', async () => {
     const tzData = [{label:'UTC+00:00 (Europe/Berlin)'}];
     global.fetch = jest.fn(() => Promise.resolve({json: () => Promise.resolve(tzData)}));
@@ -198,6 +227,26 @@ describe('select.js', () => {
     const options = select.find('option').map((i,el)=>$(el).text()).get();
     expect(options).toEqual(['Choose...','English','German']);
     expect(select.prop('disabled')).toBe(false);
+  });
+
+  test('setupTitleTypeDropdown selects main title and exposes globals', async () => {
+    const select = $('<select id="input-resourceinformation-titletype"></select>').appendTo(document.body);
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success([
+        { id: 1, name: 'Main Title' },
+        { id: 2, name: 'Alternative Title' },
+      ]);
+      if (opts.complete) opts.complete();
+      return { fail: jest.fn() };
+    });
+
+    window.setupTitleTypeDropdown();
+
+    const options = select.find('option').map((i,el)=>$(el).text()).get();
+    expect(options).toEqual(['Choose...','Main Title','Alternative Title']);
+    expect(select.val()).toBe('1');
+    expect(window.mainTitleTypeId).toBe('1');
+    expect(window.titleTypeOptionsHtml).toContain('Alternative Title');
   });
 
   test('setupLanguageDropdown shows error on ajax failure', async () => {

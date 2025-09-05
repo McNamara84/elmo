@@ -161,6 +161,49 @@
         "awardURI": "Award URI",
         "awardURIInvalid": "Please provide a valid URL."
     },
+    "dataSources": {
+        "title": "Data Sources",
+        "type": "Type",
+        "description": "Description",
+        "details": "Details",
+        "identifier": "Identifier",
+        "identifierType": "Identifier type",
+        "identifierInvalid": "Please enter a valid identifier.",
+        "modelName": "Model name",
+        "compensationDepth": "Compensation depth (in meters)"
+    },
+    "technical": {
+        "title": "Technical",
+        "tideSystem": "Tide system",
+        "tideSystemInvalid": "Please choose tide system.",
+        "tideSystemOptions": {
+            "zeroTide": "zero tide",
+            "meanTide": "mean tide",
+            "tideFree": "tide free"
+        },
+        "errors": "Errors",
+        "errorsInvalid": "Please choose error type.",
+        "errorOptions": {
+            "calibrated": "calibrated",
+            "formal": "formal",
+            "no": "no"
+        },
+        "errorHandling": "Error handling approach",
+        "errorHandlingInvalid": "Only letters, numbers and . , ( ) - are allowed.",
+        "degree": "Degree",
+        "degreeInvalid": "Please provide degree.",
+        "referenceEllipsoid": "Reference ellipsoid: semimajor axis a",
+        "referenceEllipsoidInvalid": "Please provide semimajor axis.",
+        "secondVariable": "Second variable",
+        "secondVariableInvalid": "Please choose second variable.",
+        "secondVariableOptions": {
+            "axisB": "axis b",
+            "flattening": "flattening",
+            "reciprocalFlattening": "reciprocal_flattening"
+        },
+        "earthGravityConstant": "Earth gravity constant",
+        "earthGravityConstantInvalid": "Please provide earth gravity constant."
+    },
     "buttons": {
         "clear": "Clear",
         "clearTooltip": "Delete all entries or content.",

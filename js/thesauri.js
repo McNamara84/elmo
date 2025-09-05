@@ -18,7 +18,7 @@ $(document).ready(function () {
             inputId: '#input-sciencekeyword',
             jsonFile: 'json/thesauri/gcmdScienceKeywords.json',
             jsTreeId: '#jstree-sciencekeyword',
-            searchInputId: '#input-sciencekeyword-search',
+            searchInputId: '#input-sciencekeyword-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-gcmd'
         },
         {
@@ -122,10 +122,10 @@ $(document).ready(function () {
                     return null;
                 }
 
-                // filter node and its children
+                // restrict to the specified node and its descendants
                 var selectedNode = findNodeById(data, config.rootNodeId);
                 if (selectedNode) {
-                    filteredData = selectedNode.children || [];
+                    filteredData = [selectedNode];
                 } else {
                     console.error(`Root node with ID ${config.rootNodeId} not found in ${config.jsonFile}`);
                     return;
@@ -261,14 +261,15 @@ $(document).ready(function () {
             /**
             * Event handler for when a tag is added to Tagify.
             * The function selects the corresponding node in jsTree based on the tag text.
-            * 
+            *
             * @param {Event} e - The event triggered by adding a tag to Tagify.
             * @param {Object} e.detail - The details of the event.
             * @param {Object} e.detail.data - The data of the added tag.
             * @param {string} e.detail.data.value - The value of the added tag.
             */
             thesaurusKeywordstagify.on('add', function (e) {
-                var tagText = e.detail.data.value;
+                var tagText = e.detail?.data?.value;
+                if (!tagText) return;
                 var jsTree = $(config.jsTreeId).jstree(true);
                 var node = findNodeByPath(jsTree, tagText);
                 if (node) {
@@ -279,14 +280,15 @@ $(document).ready(function () {
             /**
             * Event handler for when a tag is removed from Tagify.
             * The function deselects the corresponding node in jsTree based on the removed tag.
-            * 
+            *
             * @param {Event} e - The event triggered by removing a tag from Tagify.
             * @param {Object} e.detail - The details of the event.
             * @param {Object} e.detail.data - The data of the removed tag.
             * @param {string} e.detail.data.value - The value of the removed tag.
             */
             thesaurusKeywordstagify.on('remove', function (e) {
-                var tagText = e.detail.data.value;
+                var tagText = e.detail && e.detail.data ? e.detail.data.value : null;
+                if (!tagText) return;
                 var jsTree = $(config.jsTreeId).jstree(true);
                 var node = findNodeByPath(jsTree, tagText);
                 if (node) {
@@ -297,7 +299,7 @@ $(document).ready(function () {
             /**
             * Finds a node in the jsTree by its full path.
             * This function searches through all the nodes in the jsTree and returns the node that matches the provided path.
-            * 
+            *
             * @param {Object} jsTree - The jsTree instance to search through.
             * @param {string} path - The full path of the node to find, formatted as a string with " > " separators.
             * @returns {Object|null} The node object if found, or `null` if no node matches the path.
@@ -314,5 +316,38 @@ $(document).ready(function () {
             loadKeywords(data);
         });
     }
+
+    // Event listener for search input           
+    // the search event is delegated to the highest level. the input will be propagated, and we can formulate the event handler at this place.
+    $(document).on('input', '[id$="-thesaurussearch"]', function() {
+            const searchInputId = `#${this.id}`;
+            // Find the corresponding config
+            const config = keywordConfigurations.find(c => c.searchInputId === searchInputId);
+            if (config && $(config.jsTreeId).jstree(true)) {
+                $(config.jsTreeId).jstree(true).search($(this).val());
+            }
+        });
+    // Event listener for Enter key in the modal           
+    // Handle Enter in modal search. We don't want it to remove any elements
+    $(document).on('keydown', '[id$="-thesaurussearch"]', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const searchInput = $(this);
+            const config = keywordConfigurations.find(c => c.searchInputId === `#${this.id}`);
+
+            if (!config) return;
+
+            const jsTreeInstance = $(config.jsTreeId).jstree(true);
+            if (!jsTreeInstance) return;
+
+            // Explicitly trigger the search. OPTIONAL
+            jsTreeInstance.search(searchInput.val());
+
+            searchInput.focus();
+        }
+    });
+
     document.addEventListener('translationsLoaded', refreshThesaurusTagifyInstances);
 });

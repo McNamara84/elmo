@@ -244,7 +244,7 @@ To install them: npm install
   - `$smtpPassword`: Password of the mailbox
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
-  - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent
+  - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `XML_SUBMIT_ADDRESS_GEM` for the standard, MSL, and GEM variants respectively.
   - `$showContributorPersons`: Specifies whether the form group Contributor Persons should be displayed (true/false).
   - `$showContributorInstitutions`: Specifies whether the form group Contributor Institutions should be displayed (true/false).
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
@@ -254,13 +254,13 @@ To install them: npm install
   - `$showSpatialTemporalCoverage`: Specifies whether the form group Spatial and Temporal Coverages should be displayed (true/false).
   - `$showRelatedWork`: Specifies whether the form group Related Work should be displayed (true/false).
   - `$showFundingReference`: Specifies whether the form group Funding Reference should be displayed (true/false).
-  - `$showGGMsProperties`: specific for implementation for the ICGEM platform. Specifies whether the form group GGMs Properties (essential) should be displayed (true/false).
+  - `$showGGMsProperties`: specific for implementation for the ICGEM platform. Specifies whether ICGEM form groups (GGMs Properties and Characteristics of the model) should be displayed (true/false).
 
 </details>
 
 ## API
 
-[API documentation](https://elmo.cats4future.de/api/v2/docs/index.html)
+[API documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/index.html)
 
 <details>
   <summary>
@@ -479,7 +479,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
 ### Originating Laboratory
-The controlled list is provided and maintained by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/laboratories.json)) and can be updated via API call (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html)).
+The controlled list is provided and maintained by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/laboratories.json)) and can be updated via API call (see [API documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/index.html)).
 
 - Laboratory Name
   This field contains the laboratory, where the research data came from. Its content is mapped to `<contributor contributorType="HostingInstitution"><contributorName>` in the DataCite scheme. 
@@ -634,7 +634,7 @@ Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD
 
 #### EPOS Multi-Scale Laboratories Keywords
 
-Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies) are provided by Utrecht University on [GitHub](https://github.com/UtrechtUniversity/msl_vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://elmo.cats4future.de/api/v2/docs/index.html)).
+Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies) are provided by Utrecht University on [GitHub](https://github.com/UtrechtUniversity/msl_vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/index.html)).
 
 - EPOS Multi-Scale Laboratories Keyword
 
@@ -662,7 +662,7 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
 
 #### Thesaurus Keywords
 
-Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GCMD Instruments are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html))
+Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GCMD Instruments are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/index.html))
 
 - **GCMD Science Keyword**
 

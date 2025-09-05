@@ -8,22 +8,10 @@ import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.
 
 $(document).ready(function () {
   /**
-   * HTML markup for the title type options, copied from the initial dropdown.
-   * @type {string}
-   */
-  const optionTitleTypeHTML = $("#titleType").html();
-
-  /**
    * Counter for the number of titles currently added.
    * @type {number}
    */
   let titlesNumber = 1;
-
-  /**
-   * Stores the main title type, which is set for the first title row.
-   * @type {string}
-   */
-  let mainTitleType = "";
 
   /**
    * Click event handler for the "Add Title" button.
@@ -63,15 +51,12 @@ $(document).ready(function () {
       $("#container-resourceinformation-titletype").addClass("unvisible");
     }
 
-    // Capture the main title type for the first row.
-    if (titlesNumber === 1) {
-      mainTitleType = newTitleRow.find("select").val();
-    }
-
     // Populate the title type dropdown with options and remove the main title type.
     const $select = newTitleRow.find("select");
-    $select.html(optionTitleTypeHTML);
-    $select.find(`option[value='${mainTitleType}']`).remove();
+    $select.html(window.titleTypeOptionsHtml || "");
+    if (window.mainTitleTypeId) {
+      $select.find(`option[value='${window.mainTitleTypeId}']`).remove();
+    }
     $select.val("");
 
     // Create a remove button for the new row.

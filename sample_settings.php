@@ -24,7 +24,7 @@ function connectDb()
 $connection = connectDb();
 
 // ELMO API Key
-$apiKeyElmo = '1234-1234-1234-1234';
+$apiKeyElmo = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
 // Google Maps API Key
 $apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 // API Key for https://timezonedb.com/
@@ -35,7 +35,7 @@ $apiKeyTimezone = 'your_timezone_api_key';
 $maxTitles = 2;
 // Show Contributor Persons form group
 $showContributorPersons = true;
-// Show Contrubutor Institutios form group
+// Show Contributor Institutios form group
 $showContributorInstitutions = true;
 // Show GCMD Thesauri form group
 $showGcmdThesauri = true;
@@ -50,35 +50,35 @@ $showFundingReference = true;
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group
-$showMslLabs = true;
+$showMslLabs = false;
 // URL to the source with all laboratories for MSL
 $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
 // Show MSL vocabularies
-$showMslVocabs = true;
+$showMslVocabs = false;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
 // SETTINGS FOR ICGEM
-// Show GGMs Properties form group
-$showGGMsProperties = true;
-// Show Characteristics of the model form group
-$characteristicsOfTheModel = false;
+// Show ICGEM form groups (GGMs Properties and Characteristics of the model)
+$showGGMsProperties = false;
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
 
 // Settings for sending mail with SMTP
-$smtpHost = 'your_smtp_host';
-$smtpPort = 465;
-$smtpUser = 'your_smtp_username';
-$smtpPassword = 'your_smtp_password';
-$smtpSender = 'your_smtp_sender_email';
+$smtpHost = getenv('SMTP_HOST') ?: 'your_smtp_host';
+$smtpPort = getenv('SMTP_PORT') ?: 465;
+$smtpUser = getenv('SMTP_USER') ?: '';
+$smtpPassword = getenv('SMTP_PASSWORD') ?: '';
+$smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
+$smtpSecure = getenv('SMTP_SECURE') ?: '';
+$smtpAuth   = getenv('SMTP_AUTH') ?: '';
 
 // Target address for feedback
-$feedbackAddress = 'feedback@example.com';
+$feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
 
 // Target address for XML submit
-$xmlSubmitAddress = 'xmlsubmit@example.com';
+$xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
