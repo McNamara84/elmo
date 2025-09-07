@@ -19,7 +19,9 @@ test.describe('Minimal Valid Dataset Test', () => {
   await page.locator('#input-author-orcid').click();
   await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
   // click on the last name to trigger the API call
-  await page.getByRole('textbox', { name: 'Last Name*' }).click();
+  await page.getByRole('textbox', { name: 'Last Name*' }).fill('Alice');
+  await page.getByRole('textbox', { name: 'First Name*' }).fill('Bob');
+
   // type in the affiliation -- only 3 letters
   await page.locator('#group-author tags').getByRole('textbox').click();
   await page.locator('#group-author tags').getByRole('textbox').fill('gfz');
@@ -35,7 +37,6 @@ test.describe('Minimal Valid Dataset Test', () => {
   await page.getByRole('textbox', { name: 'Email address*' }).fill('example@gmail.com');
 
   // fill the abstract
-  await page.getByRole('textbox', { name: 'Abstract*' }).click();
   await page.getByRole('textbox', { name: 'Abstract*' }).fill('Necessary abstract');
   // fill the date created
   await page.getByRole('textbox', { name: 'Date created*' }).fill('2025-01-01');
