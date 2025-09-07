@@ -27,7 +27,6 @@ test.describe('Minimal Valid Dataset Test', () => {
   await page.getByRole('option', { name: 'GFZ Helmholtz Centre for' }).click();
   // full name of our Centre should be displayed
   await expect(page.locator('tag')).toContainText('GFZ Helmholtz Centre for Geosciences');
-  await page.getByRole('option', { name: 'GFZ Helmholtz Centre for' }).click();
   // select the author as contact person
   await page.getByText('ContactPerson?').click();
   await page.getByRole('textbox', { name: 'Email address*' }).click();
