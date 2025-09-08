@@ -69,7 +69,7 @@
     "authors": {
         "title": "Author(s)",
         "affiliationInvalid": "Please provide an affiliation.",
-        "InstitutionsNameInvalid": "Please provide a Institution name."
+        "InstitutionsNameInvalid": "Please provide an Institution name."
     },
     "authorsInstitutions": {
         "title": "Author Institution",
