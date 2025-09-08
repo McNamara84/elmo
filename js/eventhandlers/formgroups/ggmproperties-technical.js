@@ -46,19 +46,22 @@ function updateErrorHandlingVisibility() {
     const errorsValue = $('#input-errors').val();
     const errorHandlingField = $('#input-error-handling-approach').closest('.col-12');
     const errorsField = $('#input-errors').closest('.col-12');
+    const errorHandlingInput = $('#input-error-handling-approach');
     
     if (errorsValue === 'calibrated') {
         // Show error handling field and adjust widths
         errorHandlingField.show();
+        errorHandlingInput.attr('required', 'required');
         // Adjust errors field to take less space when error handling is visible
         errorsField.removeClass('col-lg-6').addClass('col-lg-2');
     } else {
         // Hide error handling field and adjust widths
         errorHandlingField.hide();
+        errorHandlingInput.removeAttr('required');
         // Expand errors field to take more space when error handling is hidden
         errorsField.removeClass('col-lg-2').addClass('col-lg-6');
         // Clear the error handling field value when hidden
-        $('#input-error-handling-approach').val('').removeClass('is-valid is-invalid');
+        errorHandlingInput.val('').removeClass('is-valid is-invalid');
     }
 }
 
@@ -78,7 +81,6 @@ function updateReferenceSystemVisibility() {
     ellipsoidalFields.hide();
     
     // Remove required attributes from conditional fields
-    $('#input-radius').removeAttr('required');
     $('#input-radius').removeAttr('required');
     $('#input-semimajor-axis').removeAttr('required');
     $('#input-second-variable').removeAttr('required');
@@ -108,8 +110,6 @@ function updateReferenceSystemVisibility() {
     if (showSpherical) {
         sphericalFields.show();
         $('#input-radius').attr('required', 'required');
-        // Set up power controls when showing spherical fields
-        setTimeout(setupRadiusPowerControls, 100);
     } else if (showEllipsoidal) {
         ellipsoidalFields.show();
         $('#input-semimajor-axis').attr('required', 'required');

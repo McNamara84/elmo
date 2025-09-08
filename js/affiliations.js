@@ -12,6 +12,7 @@ function refreshTagifyInstances() {
 
   const allPairs = [
     { input: "input-author-affiliation", hidden: "input-author-rorid" },
+    { input: "input-authorinstitution-affiliation", hidden: "input-author-institutionrorid" },
     { input: "input-contactperson-affiliation", hidden: "input-contactperson-rorid" },
     { input: "input-contributorpersons-affiliation", hidden: "input-contributor-personrorid" },
     { input: "input-contributor-organisationaffiliation", hidden: "input-contributor-organisationrorid" }
@@ -57,6 +58,7 @@ $.getJSON("json/affiliations.json", function (data) {
   // Initialize Tagify for existing input fields when the document is ready
   $(document).ready(function () {
     autocompleteAffiliations("input-author-affiliation", "input-author-rorid", affiliationsData);
+    autocompleteAffiliations("input-authorinstitution-affiliation", "input-author-institutionrorid", affiliationsData);
     autocompleteAffiliations("input-contributorpersons-affiliation", "input-contributor-personrorid", affiliationsData);
     autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid", affiliationsData);
     document.addEventListener('translationsLoaded', refreshTagifyInstances);
@@ -139,15 +141,6 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   // Event listener for when a tag is removed
   tagify.on("remove", function () {
     updateHiddenField();
-
-    // Clear tags if no contact person is selected
-    const contactField = document.getElementById("contact-person-field");
-    if (!contactField){
-      return;
-    }
-    if (!contactField.value) {
-      tagify.removeAllTags();
-    }
   });
 
   // Event listener for input changes to adjust the input field width dynamically

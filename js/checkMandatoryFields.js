@@ -35,7 +35,7 @@ function validateContactPersonRequirements() {
         // Sets or removes the 'required' attribute for the email field based solely on the checkbox state
         if (isCheckboxChecked) {
             fields.email.attr('required', 'required');  // Make email required if checkbox is checked
-            fields.lastname.attr('required', 'required');
+            fields.firstname.attr('required', 'required');
             fields.lastname.attr('required', 'required');
         } else {
             fields.email.removeAttr('required');  // Remove email requirement if checkbox is unchecked
@@ -241,6 +241,31 @@ function validateFundingReferenceRequirements() {
     });
 };
 
+/**
+ * Validates the Author-Institution section of the form.
+ * Ensures that the “Author Institution Name” field must be filled in if the “Author Institution Affiliation” field is filled in.
+ */
+function validateAuthorInstitutionRequirements() {
+    $('#group-authorinstitution').children('.row').each(function () {
+        var row = $(this);
+        // Defines the relevant fields for the Author-Institution section
+        var fields = {
+            authorinstitutionName: row.find('[id^="input-authorinstitution-name"]'),
+            authorinstitutionAffiliation: row.find('[id^="input-authorinstitution-affiliation"]')
+        };
+
+        // Check that the “Author-Institution-Affiliation” field is filled in.
+        var affVal = (fields.authorinstitutionAffiliation.val() || '').trim();
+        var isauthorinstitutionAffiliationFilled = affVal !== '';
+
+        // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
+        if (isauthorinstitutionAffiliationFilled) {
+            fields.authorinstitutionName.attr('required', 'required');
+        } else {
+            fields.authorinstitutionName.removeAttr('required');
+        }
+    });
+};
 
 /**
  * Checks and dynamically sets the 'required' attribute for input fields across various formgroups.
@@ -265,6 +290,9 @@ function validateAllMandatoryFields() {
 
     // Formgroup Funding Reference
     validateFundingReferenceRequirements();
+
+    // Formgroup Autor Institution
+    validateAuthorInstitutionRequirements();
 
 };
 
@@ -315,7 +343,8 @@ $(document).on('change',
     'select[name="relation[]"], ' +
     'select[name="rIdentifierType[]"], ' +
     'select[name="timezone[]"], ' +
-    'input[name="funder[]"]',
+    'input[name="funder[]"], ' +
+    'input[name="institutionAffiliation[]"]',
     function () {
         // Check mandatory fields when any of these fields' values change
         validateAllMandatoryFields();

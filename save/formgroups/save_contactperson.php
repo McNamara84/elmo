@@ -29,8 +29,8 @@ function saveContactPerson($connection, $postData, $resource_id)
     $orcids = $postData['orcids'] ?? [];
     $emails = $postData['cpEmail'] ?? [];
     $websites = $postData['cpOnlineResource'] ?? [];
-    $affiliations = $postData['affiliation'] ?? [];
-    $rorIds = $postData['authorRorIds'] ?? [];
+    $affiliations = $postData['personAffiliation'] ?? [];
+    $rorIds = $postData['authorPersonRorIds'] ?? [];
 
     $maxLen = count($familynames);
 

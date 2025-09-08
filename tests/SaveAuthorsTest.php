@@ -17,12 +17,12 @@ require_once __DIR__ . '/../save/formgroups/save_authors.php';
 class SaveAuthorsTest extends DatabaseTestCase
 {
     /**
-     * Tests saving a single author with all fields populated.
+     * Tests saving a single person author with all fields populated.
      *
      * @return void
      * @throws \Exception
      */
-    public function testSaveSingleAuthorWithAllFields()
+    public function testSaveSinglePersonAuthorWithAllFields()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.SINGLE.AUTHOR",
@@ -40,30 +40,38 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["Doe"],
             "givennames" => ["John"],
             "orcids" => ["0000-0001-2345-6789"],
-            "affiliation" => ['[{"value":"Test University"}]'],
-            "authorRorIds" => ['https://ror.org/047w75g40']
+            "personAffiliation" => ['[{"value":"Test University"}]'],
+            "authorPersonRorIds" => ['https://ror.org/047w75g40']
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ?");
-        $stmt->bind_param("s", $authorData["familynames"][0]);
+        // Check: Person is in Author_person
+        $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
+        $stmt->bind_param("ss", $authorData["familynames"][0], $authorData["givennames"][0]);
         $stmt->execute();
-        $authorResult = $stmt->get_result()->fetch_assoc();
+        $personResult = $stmt->get_result()->fetch_assoc();
+        $this->assertNotEmpty($personResult, "Der Autor wurde nicht in Author_person gespeichert.");
 
-        $this->assertEquals(
-            $authorData["givennames"][0],
-            $authorResult["givenname"],
-            "Der Vorname des Autors wurde nicht korrekt gespeichert."
-        );
         $this->assertEquals(
             $authorData["orcids"][0],
-            $authorResult["orcid"],
-            "Die ORCID des Autors wurde nicht korrekt gespeichert."
+            $personResult["orcid"],
+            "Die ORCID des Autors wurde nicht korrekt in Author_person gespeichert."
         );
 
+        $author_person_id = $personResult["author_person_id"];
+
+        // Check: Link entry in Author
+        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Person_author_person_id = ?");
+        $stmt->bind_param("i", $author_person_id);
+        $stmt->execute();
+        $authorLinkResult = $stmt->get_result()->fetch_assoc();
+        $this->assertNotEmpty($authorLinkResult, "Der Autor wurde nicht korrekt mit der Author-Tabelle verknüpft.");
+        $author_id = $authorLinkResult["author_id"];
+
+        // Check: Link to resource
         $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
-        $stmt->bind_param("ii", $resource_id, $authorResult["author_id"]);
+        $stmt->bind_param("ii", $resource_id, $author_id);
         $stmt->execute();
         $this->assertEquals(
             1,
@@ -71,10 +79,11 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Die Verknüpfung zwischen Autor und Resource wurde nicht korrekt gespeichert."
         );
 
+        // Check: Affiliation saved and linked
         $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
-                                            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
-                                            WHERE aha.Author_author_id = ?");
-        $stmt->bind_param("i", $authorResult["author_id"]);
+                                        JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
+                                        WHERE aha.Author_author_id = ?");
+        $stmt->bind_param("i", $author_id);
         $stmt->execute();
         $affiliationResult = $stmt->get_result()->fetch_assoc();
 
@@ -89,14 +98,79 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert."
         );
     }
+    public function testSaveSingleInstitutionAuthorWithAllFields()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.SINGLE.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Single Institution"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => ["Test Institution"],
+            "institutionAffiliation" => ['[{"value":"Test Institution University"}]'],
+            "authorInstitutionRorIds" => ['https://ror.org/012345678']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT * FROM Author_institution WHERE institutionname = ?");
+        $stmt->bind_param("s", $authorData["authorinstitutionName"][0]);
+        $stmt->execute();
+        $institutionResult = $stmt->get_result()->fetch_assoc();
+        $this->assertNotEmpty($institutionResult, "Die Institution wurde nicht in Author_institution gespeichert.");
+
+        $author_institution_id = $institutionResult["author_institution_id"];
+
+        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Institution_author_institution_id = ?");
+        $stmt->bind_param("i", $author_institution_id);
+        $stmt->execute();
+        $authorLinkResult = $stmt->get_result()->fetch_assoc();
+        $this->assertNotEmpty($authorLinkResult, "Die Institution wurde nicht korrekt mit der Author-Tabelle verknüpft.");
+        $author_id = $authorLinkResult["author_id"];
+
+        $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
+        $stmt->bind_param("ii", $resource_id, $author_id);
+        $stmt->execute();
+        $this->assertEquals(
+            1,
+            $stmt->get_result()->num_rows,
+            "Die Verknüpfung zwischen Institution und Resource wurde nicht korrekt gespeichert."
+        );
+
+        // Affiliations prüfen
+        $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
+            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
+            WHERE aha.Author_author_id = ?");
+        $stmt->bind_param("i", $author_id);
+        $stmt->execute();
+        $affiliationResult = $stmt->get_result()->fetch_assoc();
+
+        $this->assertEquals(
+            "Test Institution University",
+            $affiliationResult["name"],
+            "Der Name der Affiliation wurde nicht korrekt gespeichert."
+        );
+        $this->assertEquals(
+            "012345678",
+            $affiliationResult["rorId"],
+            "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert."
+        );
+    }
 
     /**
-     * Tests saving three authors with all fields populated.
+     * Tests saving three personal authors with all fields populated.
      *
      * @return void
      * @throws \Exception
      */
-    public function testSaveThreeAuthorsWithAllFields()
+    public function testSaveThreePersonAuthorsWithAllFields()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.THREE.AUTHORS",
@@ -114,52 +188,148 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["Doe", "Smith", "Johnson"],
             "givennames" => ["John", "Jane", "Bob"],
             "orcids" => ["0000-0001-2345-6789", "0000-0002-3456-7890", "0000-0003-4567-8901"],
-            "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
-            "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
+            "personAffiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
+            "authorPersonRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
         for ($i = 0; $i < 3; $i++) {
-            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
+            // Retrieve Author_person entry
+            $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
             $stmt->bind_param("ss", $authorData["familynames"][$i], $authorData["givennames"][$i]);
             $stmt->execute();
-            $authorResult = $stmt->get_result()->fetch_assoc();
-
+            $personResult = $stmt->get_result()->fetch_assoc();
+            $this->assertNotEmpty($personResult, "Author_person nicht gefunden für Autor " . ($i + 1));
             $this->assertEquals(
                 $authorData["orcids"][$i],
-                $authorResult["orcid"],
+                $personResult["orcid"],
                 "Die ORCID des Autors " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
+            $stmt->close();
 
+            // Get link to author
+            $author_person_id = $personResult["author_person_id"];
+            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Person_author_person_id = ?");
+            $stmt->bind_param("i", $author_person_id);
+            $stmt->execute();
+            $authorLinkResult = $stmt->get_result()->fetch_assoc();
+            $this->assertNotEmpty($authorLinkResult, "Der Autor wurde nicht korrekt mit der Author-Tabelle verknüpft.");
+            $author_id = $authorLinkResult["author_id"];
+            $stmt->close();
+
+            // Check Resource_has_Author link
             $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
-            $stmt->bind_param("ii", $resource_id, $authorResult["author_id"]);
+            $stmt->bind_param("ii", $resource_id, $author_id);
             $stmt->execute();
             $this->assertEquals(
                 1,
                 $stmt->get_result()->num_rows,
                 "Die Verknüpfung zwischen Autor " . ($i + 1) . " und Resource wurde nicht korrekt gespeichert."
             );
+            $stmt->close();
 
-            $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
-                                                JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
-                                                WHERE aha.Author_author_id = ?");
-            $stmt->bind_param("i", $authorResult["author_id"]);
+            // Check Affiliation
+            $stmt = $this->connection->prepare("SELECT a.name, a.rorId 
+                                            FROM Affiliation a 
+                                            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
+                                            WHERE aha.Author_author_id = ?");
+            $stmt->bind_param("i", $author_id);
             $stmt->execute();
             $affiliationResult = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            $expectedName = json_decode($authorData["personAffiliation"][$i], true)[0]["value"];
+            $expectedRor = str_replace("https://ror.org/", "", $authorData["authorPersonRorIds"][$i]);
 
             $this->assertEquals(
-                json_decode($authorData["affiliation"][$i], true)[0]["value"],
+                $expectedName,
                 $affiliationResult["name"],
                 "Der Name der Affiliation für Autor " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
             $this->assertEquals(
-                str_replace("https://ror.org/", "", $authorData["authorRorIds"][$i]),
+                $expectedRor,
                 $affiliationResult["rorId"],
                 "Die ROR-ID der Affiliation für Autor " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
         }
     }
+
+    public function testSaveMultipleInstitutionAuthorsWithAllFields()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.MULTIPLE.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Multiple Institutions"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => ["Test Institution A", "Test Institution B", "Test Institution C"],
+            "institutionAffiliation" => [
+                '[{"value":"University A"}]',
+                '[{"value":"University B"},{"value":"Institute C"}]',
+                '[{"value":"University E"},{"value":"Institute F"}]'
+            ],
+            "authorInstitutionRorIds" => [
+                'https://ror.org/03yrm5c26',
+                'https://ror.org/02nr0ka47,https://ror.org/0168r3w48',
+                'https://ror.org/05dxps055,https://ror.org/00hx57361'
+            ]
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        for ($i = 0; $i < 3; $i++) {
+            $stmt = $this->connection->prepare("SELECT * FROM Author_institution WHERE institutionname = ?");
+            $stmt->bind_param("s", $authorData["authorinstitutionName"][$i]);
+            $stmt->execute();
+            $institution = $stmt->get_result()->fetch_assoc();
+
+            $this->assertNotEmpty($institution, "Author_institution nicht gefunden für Institution " . ($i + 1));
+
+            $stmt = $this->connection->prepare("SELECT author_id FROM Author WHERE Author_Institution_author_institution_id = ?");
+            $stmt->bind_param("i", $institution["author_institution_id"]);
+            $stmt->execute();
+            $author = $stmt->get_result()->fetch_assoc();
+            $author_id = $author["author_id"];
+
+            $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
+                JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id 
+                WHERE aha.Author_author_id = ?");
+            $stmt->bind_param("i", $author_id);
+            $stmt->execute();
+            $affiliations = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            $expectedNames = json_decode($authorData["institutionAffiliation"][$i], true);
+            $expectedRorIds = explode(',', $authorData["authorInstitutionRorIds"][$i]);
+
+            $this->assertCount(
+                count($expectedNames),
+                $affiliations,
+                "Die Anzahl der Affiliations stimmt nicht mit der erwarteten Anzahl überein für Institution " . ($i + 1)
+            );
+
+            foreach ($affiliations as $index => $affiliation) {
+                $this->assertEquals(
+                    $expectedNames[$index]["value"],
+                    $affiliation["name"],
+                    "Affiliation Name wurde nicht korrekt gespeichert. Index " . ($index + 1) . " für Institution " . ($i + 1)
+                );
+                $this->assertEquals(
+                    str_replace("https://ror.org/", "", $expectedRorIds[$index]),
+                    $affiliation["rorId"],
+                    "ROR-ID wurde nicht korrekt gespeichert. Index " . ($index + 1) . " bei Institution " . ($i + 1)
+                );
+            }
+        }
+    }
+
 
     /**
      * Tests saving a single author with only required fields.
@@ -167,7 +337,13 @@ class SaveAuthorsTest extends DatabaseTestCase
      * @return void
      * @throws \Exception
      */
-    public function testSaveSingleAuthorWithOnlyRequiredFields()
+    /**
+     * Tests saving a single author with only required fields.
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function testSaveSinglePersonAuthorWithMissingGivenname()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.SINGLE.REQUIRED",
@@ -191,47 +367,54 @@ class SaveAuthorsTest extends DatabaseTestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ?");
-        $stmt->bind_param("s", $authorData["familynames"][0]);
-        $stmt->execute();
-        $authorResult = $stmt->get_result()->fetch_assoc();
-
-        $this->assertEmpty(
-            $authorResult["givenname"],
-            "Der Vorname des Autors sollte leer sein."
-        );
-        $this->assertEmpty(
-            $authorResult["orcid"],
-            "Die ORCID des Autors sollte leer sein."
-        );
-
-        $stmt = $this->connection->prepare("SELECT * FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ?");
-        $stmt->bind_param("ii", $resource_id, $authorResult["author_id"]);
-        $stmt->execute();
-        $this->assertEquals(
-            1,
-            $stmt->get_result()->num_rows,
-            "Die Verknüpfung zwischen Autor und Resource wurde nicht korrekt gespeichert."
-        );
-
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_has_Affiliation WHERE Author_author_id = ?");
-        $stmt->bind_param("i", $authorResult["author_id"]);
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_person");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
             0,
             $count,
-            "Es sollten keine Affiliationen für diesen Autor gespeichert worden sein."
+            "Es sollte kein Autor gespeichert werden, wenn kein Vorname angegeben wurde."
+        );
+    }
+    public function testSaveSingleInstitutionAuthorWithMissingName()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.SINGLE.REQUIRED.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Single Institution Required"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => [""],
+            "institutionAffiliation" => [''],
+            "authorInstitutionRorIds" => ['']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_institution");
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(
+            0,
+            $count,
+            "Es sollte kein Autor gespeichert werden, wenn kein Institutionname angegeben wurde."
         );
     }
 
     /**
-     * Tests behavior when attempting to save an author with empty fields.
+     * Tests behavior when attempting to save an personal author with empty fields.
      *
      * @return void
      * @throws \Exception
      */
-    public function testSaveAuthorWithEmptyFields()
+    public function testSavePersonAuthorWithEmptyFields()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.EMPTY.AUTHOR",
@@ -249,13 +432,44 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => [],
             "givennames" => [],
             "orcids" => [],
-            "affiliation" => [],
-            "authorRorIds" => []
+            "personAffiliation" => [],
+            "authorPersonRorIds" => []
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author");
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_person");
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(
+            0,
+            $count,
+            "Es sollte kein Autor gespeichert worden sein, da alle Felder leer waren."
+        );
+    }
+    public function testSaveInstitutionAuthorsWithEmptyFields()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.EMPTY.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Empty Institution"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => [],
+            "institutionAffiliation" => [],
+            "authorInstitutionRorIds" => []
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_institution");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
@@ -266,12 +480,12 @@ class SaveAuthorsTest extends DatabaseTestCase
     }
 
     /**
-     * Tests saving three authors where one has a missing last name.
+     * Tests saving three personal authors where one has a missing last name.
      *
      * @return void
      * @throws \Exception
      */
-    public function testSaveThreeAuthorsWithOneMissingLastName()
+    public function testSaveThreePersonAuthorsWithOneMissingLastName()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.THREE.AUTHORS.ONE.MISSING",
@@ -289,13 +503,13 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["Doe", "", "Johnson"],
             "givennames" => ["John", "Jane", "Bob"],
             "orcids" => ["0000-0001-2345-6789", "0000-0002-3456-7890", "0000-0003-4567-8901"],
-            "affiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
-            "authorRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
+            "personAffiliation" => ['[{"value":"University A"}]', '[{"value":"University B"}]', '[{"value":"University C"}]'],
+            "authorPersonRorIds" => ['https://ror.org/03yrm5c26', 'https://ror.org/02nr0ka47', 'https://ror.org/0168r3w48']
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author");
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_person");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
@@ -304,7 +518,7 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Es sollten nur zwei Autoren gespeichert worden sein, da einer einen fehlenden Nachnamen hatte."
         );
 
-        $stmt = $this->connection->prepare("SELECT familyname FROM Author ORDER BY familyname");
+        $stmt = $this->connection->prepare("SELECT familyname FROM Author_person ORDER BY familyname");
         $stmt->execute();
         $result = $stmt->get_result();
         $savedFamilynames = [];
@@ -317,6 +531,60 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Nur die Autoren 'Doe' und 'Johnson' sollten gespeichert worden sein."
         );
     }
+    public function testSaveMultipleInstitutionAuthorsWithOneMissingName()
+{
+    $resourceData = [
+        "doi" => "10.5880/GFZ.TEST.MULTIPLE.INSTITUTIONS.ONE.MISSING",
+        "year" => 2023,
+        "dateCreated" => "2023-06-01",
+        "resourcetype" => 1,
+        "language" => 1,
+        "Rights" => 1,
+        "title" => ["Test Multiple Institutions One Missing"],
+        "titleType" => [1]
+    ];
+    $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+    $authorData = [
+        "authorinstitutionName" => ["Institution A", "", "Institution C"],
+        "institutionAffiliation" => [
+            '[{"value":"University A"}]',
+            '[{"value":"University B"}]',
+            '[{"value":"University C"}]'
+        ],
+        "authorInstitutionRorIds" => [
+            'https://ror.org/03yrm5c26',
+            'https://ror.org/02nr0ka47',
+            'https://ror.org/0168r3w48'
+        ]
+    ];
+
+    saveAuthors($this->connection, $authorData, $resource_id);
+
+    // Prüfe, dass nur die gültigen Institutionen gespeichert wurden
+    $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_institution");
+    $stmt->execute();
+    $count = $stmt->get_result()->fetch_assoc()['count'];
+    $this->assertEquals(
+        2,
+        $count,
+        "Es sollten nur zwei Institutionen gespeichert worden sein, da eine keinen Namen hatte."
+    );
+
+    $stmt = $this->connection->prepare("SELECT institutionname FROM Author_institution ORDER BY institutionname");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $savedInstitutionNames = [];
+    while ($row = $result->fetch_assoc()) {
+        $savedInstitutionNames[] = $row['institutionname'];
+    }
+    $this->assertEquals(
+        ["Institution A", "Institution C"],
+        $savedInstitutionNames,
+        "Nur die Institutionen 'Institution A' und 'Institution C' sollten gespeichert worden sein."
+    );
+}
+
 
     /**
      * Tests saving authors with multiple affiliations.
@@ -325,7 +593,7 @@ class SaveAuthorsTest extends DatabaseTestCase
      * @return void
      * @throws \Exception
      */
-    public function testSaveAuthorsWithMultipleAffiliations()
+    public function testSavePersonAuthorsWithMultipleAffiliations()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.MULTIPLE.AFFILIATIONS",
@@ -343,13 +611,13 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["Doe", "Smith", "Johnson"],
             "givennames" => ["John", "Jane", "Bob"],
             "orcids" => ["0000-0001-2345-6789", "0000-0002-3456-7890", "0000-0003-4567-8901"],
-            "affiliation" => [
+            "personAffiliation" => [
                 '[{"value":"University A"}]',
                 '[{"value":"University B"},{"value":"Institute C"},{"value":"Lab D"}]',
                 '[{"value":"University E"},{"value":"Institute F"}]'
             ],
-            "authorRorIds" => [
-                'https://ror.org/03yrm5c26]',
+            "authorPersonRorIds" => [
+                'https://ror.org/03yrm5c26',
                 'https://ror.org/02nr0ka47,https://ror.org/0168r3w48,https://ror.org/04m7fg108',
                 'https://ror.org/05dxps055,https://ror.org/00hx57361'
             ]
@@ -358,43 +626,125 @@ class SaveAuthorsTest extends DatabaseTestCase
         saveAuthors($this->connection, $authorData, $resource_id);
 
         for ($i = 0; $i < 3; $i++) {
-            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
+            $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
             $stmt->bind_param("ss", $authorData["familynames"][$i], $authorData["givennames"][$i]);
             $stmt->execute();
-            $authorResult = $stmt->get_result()->fetch_assoc();
+            $person = $stmt->get_result()->fetch_assoc();
 
             $this->assertEquals(
                 $authorData["orcids"][$i],
-                $authorResult["orcid"],
+                $person["orcid"],
                 "Die ORCID des Autors " . ($i + 1) . " wurde nicht korrekt gespeichert."
             );
 
-            $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
-                                            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id
-                                            WHERE aha.Author_author_id = ?");
-            $stmt->bind_param("i", $authorResult["author_id"]);
+            // Zu Author mappen
+            $stmt = $this->connection->prepare("SELECT author_id FROM Author WHERE Author_Person_author_person_id = ?");
+            $stmt->bind_param("i", $person["author_person_id"]);
             $stmt->execute();
-            $affiliationResults = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $author = $stmt->get_result()->fetch_assoc();
+            $author_id = $author["author_id"];
 
-            $expectedAffiliations = json_decode($authorData["affiliation"][$i], true);
-            $expectedRorIds = explode(',', $authorData["authorRorIds"][$i]);
+            // Affiliations prüfen
+            $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
+            JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id 
+            WHERE aha.Author_author_id = ?");
+            $stmt->bind_param("i", $author_id);
+            $stmt->execute();
+            $affiliations = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            $expectedNames = json_decode($authorData["personAffiliation"][$i], true);
+            $expectedRorIds = explode(',', $authorData["authorPersonRorIds"][$i]);
 
             $this->assertCount(
-                count($expectedAffiliations),
-                $affiliationResults,
-                "Die Anzahl der gespeicherten Affiliationen für Autor " . ($i + 1) . " stimmt nicht mit der erwarteten Anzahl überein."
+                count($expectedNames),
+                $affiliations,
+                " stimmt nicht mit der erwarteten Anzahl überein " . ($i + 1)
             );
 
-            foreach ($affiliationResults as $index => $affiliation) {
+            foreach ($affiliations as $index => $affiliation) {
                 $this->assertEquals(
-                    $expectedAffiliations[$index]["value"],
+                    $expectedNames[$index]["value"],
                     $affiliation["name"],
-                    "Der Name der Affiliation " . ($index + 1) . " für Autor " . ($i + 1) . " wurde nicht korrekt gespeichert."
+                    "wurde nicht korrekt gespeichert. " . ($index + 1) . " für Autor " . ($i + 1)
                 );
                 $this->assertEquals(
                     str_replace("https://ror.org/", "", $expectedRorIds[$index]),
                     $affiliation["rorId"],
-                    "Die ROR-ID der Affiliation " . ($index + 1) . " für Autor " . ($i + 1) . " wurde nicht korrekt gespeichert."
+                    "wurde nicht korrekt gespeichert. " . ($index + 1) . " bei Autor " . ($i + 1)
+                );
+            }
+        }
+    }
+    public function testSaveInstitutionAuthorsWithMultipleAffiliations()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.MULTIPLE.AFFILIATIONS.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Multiple Affiliations Institution"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => ["Institution A", "Institution B", "Institution C"],
+            "institutionAffiliation" => [
+                '[{"value":"University A"}]',
+                '[{"value":"University B"},{"value":"Institute C"},{"value":"Lab D"}]',
+                '[{"value":"University E"},{"value":"Institute F"}]'
+            ],
+            "authorInstitutionRorIds" => [
+                'https://ror.org/03yrm5c26',
+                'https://ror.org/02nr0ka47,https://ror.org/0168r3w48,https://ror.org/04m7fg108',
+                'https://ror.org/05dxps055,https://ror.org/00hx57361'
+            ]
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        for ($i = 0; $i < 3; $i++) {
+            $stmt = $this->connection->prepare("SELECT * FROM Author_institution WHERE institutionname = ?");
+            $stmt->bind_param("s", $authorData["authorinstitutionName"][$i]);
+            $stmt->execute();
+            $institution = $stmt->get_result()->fetch_assoc();
+
+            $this->assertNotEmpty($institution, "Author_institution nicht gefunden für Institution " . ($i + 1));
+
+            $stmt = $this->connection->prepare("SELECT author_id FROM Author WHERE Author_Institution_author_institution_id = ?");
+            $stmt->bind_param("i", $institution["author_institution_id"]);
+            $stmt->execute();
+            $author = $stmt->get_result()->fetch_assoc();
+            $author_id = $author["author_id"];
+
+            $stmt = $this->connection->prepare("SELECT a.name, a.rorId FROM Affiliation a 
+                JOIN Author_has_Affiliation aha ON a.affiliation_id = aha.Affiliation_affiliation_id 
+                WHERE aha.Author_author_id = ?");
+            $stmt->bind_param("i", $author_id);
+            $stmt->execute();
+            $affiliations = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            $expectedNames = json_decode($authorData["institutionAffiliation"][$i], true);
+            $expectedRorIds = explode(',', $authorData["authorInstitutionRorIds"][$i]);
+
+            $this->assertCount(
+                count($expectedNames),
+                $affiliations,
+                "Die Anzahl der Affiliations stimmt nicht mit der erwarteten Anzahl überein für Institution " . ($i + 1)
+            );
+
+            foreach ($affiliations as $index => $affiliation) {
+                $this->assertEquals(
+                    $expectedNames[$index]["value"],
+                    $affiliation["name"],
+                    "Affiliation Name wurde nicht korrekt gespeichert. Index " . ($index + 1) . " für Institution " . ($i + 1)
+                );
+                $this->assertEquals(
+                    str_replace("https://ror.org/", "", $expectedRorIds[$index]),
+                    $affiliation["rorId"],
+                    "ROR-ID wurde nicht korrekt gespeichert. Index " . ($index + 1) . " bei Institution " . ($i + 1)
                 );
             }
         }
@@ -408,7 +758,7 @@ class SaveAuthorsTest extends DatabaseTestCase
      * @return void
      * @throws \Exception
      */
-    public function testSaveAuthorsWithMixedAffiliationsAndRorIds()
+    public function testSavePersonAuthorsWithMixedAffiliationsAndRorIds()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.MIXED.AFFILIATIONS",
@@ -426,12 +776,12 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["Doe", "Smith", "Johnson"],
             "givennames" => ["John", "Jane", "Bob"],
             "orcids" => ["0000-0001-2345-6789", "0000-0002-3456-7890", "0000-0003-4567-8901"],
-            "affiliation" => [
+            "personAffiliation" => [
                 '[]',
                 '[{"value":"University B"}]',
                 '[]'
             ],
-            "authorRorIds" => [
+            "authorPersonRorIds" => [
                 '',
                 '',
                 'https://ror.org/03yrm5c26'
@@ -440,7 +790,7 @@ class SaveAuthorsTest extends DatabaseTestCase
 
         saveAuthors($this->connection, $authorData, $resource_id);
 
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author");
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_person");
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
@@ -450,18 +800,20 @@ class SaveAuthorsTest extends DatabaseTestCase
         );
 
         for ($i = 0; $i < 2; $i++) {
-            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
+            $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
             $stmt->bind_param("ss", $authorData["familynames"][$i], $authorData["givennames"][$i]);
             $stmt->execute();
-            $authorResult = $stmt->get_result()->fetch_assoc();
+            $personResult = $stmt->get_result()->fetch_assoc();
+            $this->assertNotNull($personResult, "Autor {$authorData["familynames"][$i]} sollte gespeichert worden sein.");
 
-            $this->assertNotNull(
-                $authorResult,
-                "Autor {$authorData["familynames"][$i]} sollte gespeichert worden sein."
-            );
+            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Person_author_person_id = ?");
+            $stmt->bind_param("i", $personResult["author_person_id"]);
+            $stmt->execute();
+            $authorLink = $stmt->get_result()->fetch_assoc();
+            $author_id = $authorLink["author_id"];
 
             $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_has_Affiliation WHERE Author_author_id = ?");
-            $stmt->bind_param("i", $authorResult["author_id"]);
+            $stmt->bind_param("i", $author_id);
             $stmt->execute();
             $affiliationCount = $stmt->get_result()->fetch_assoc()['count'];
 
@@ -480,7 +832,7 @@ class SaveAuthorsTest extends DatabaseTestCase
             }
         }
 
-        $stmt = $this->connection->prepare("SELECT * FROM Author WHERE familyname = ? AND givenname = ?");
+        $stmt = $this->connection->prepare("SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?");
         $stmt->bind_param("ss", $authorData["familynames"][2], $authorData["givennames"][2]);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -488,6 +840,88 @@ class SaveAuthorsTest extends DatabaseTestCase
             0,
             $result->num_rows,
             "Der dritte Autor sollte nicht gespeichert worden sein, da er eine ROR-ID ohne Affiliation hatte."
+        );
+    }
+    public function testSaveInstitutionAuthorsWithMixedAffiliationsAndRorIds()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.MIXED.AFFILIATIONS.INSTITUTION",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Mixed Affiliations and RorIds Institution"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $authorData = [
+            "authorinstitutionName" => ["Institution A", "Institution B", "Institution C"],
+            "institutionAffiliation" => [
+                '[]',
+                '[{"value":"University B"}]',
+                '[]'
+            ],
+            "authorInstitutionRorIds" => [
+                '',
+                '',
+                'https://ror.org/03yrm5c26'
+            ]
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_institution");
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(
+            2,
+            $count,
+            "Es sollten nur zwei Institutionen gespeichert worden sein, da die dritte eine ROR-ID ohne Affiliation hatte."
+        );
+
+        for ($i = 0; $i < 2; $i++) {
+            $stmt = $this->connection->prepare("SELECT * FROM Author_institution WHERE institutionname = ?");
+            $stmt->bind_param("s", $authorData["authorinstitutionName"][$i]);
+            $stmt->execute();
+            $institutionResult = $stmt->get_result()->fetch_assoc();
+            $this->assertNotNull($institutionResult, "Institution {$authorData["authorinstitutionName"][$i]} sollte gespeichert worden sein.");
+
+            $stmt = $this->connection->prepare("SELECT * FROM Author WHERE Author_Institution_author_institution_id = ?");
+            $stmt->bind_param("i", $institutionResult["author_institution_id"]);
+            $stmt->execute();
+            $authorLink = $stmt->get_result()->fetch_assoc();
+            $author_id = $authorLink["author_id"];
+
+            $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_has_Affiliation WHERE Author_author_id = ?");
+            $stmt->bind_param("i", $author_id);
+            $stmt->execute();
+            $affiliationCount = $stmt->get_result()->fetch_assoc()['count'];
+
+            if ($i == 0) {
+                $this->assertEquals(
+                    0,
+                    $affiliationCount,
+                    "Institution ohne Affiliation sollte keine Affiliations haben."
+                );
+            } else {
+                $this->assertEquals(
+                    1,
+                    $affiliationCount,
+                    "Institution mit Affiliation sollte eine Affiliation haben."
+                );
+            }
+        }
+
+        $stmt = $this->connection->prepare("SELECT * FROM Author_institution WHERE institutionname = ?");
+        $stmt->bind_param("s", $authorData["authorinstitutionName"][2]);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $this->assertEquals(
+            0,
+            $result->num_rows,
+            "Die dritte Institution sollte nicht gespeichert worden sein, da sie eine ROR-ID ohne Affiliation hatte."
         );
     }
 
@@ -522,8 +956,8 @@ class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["Existing"],
             "givennames" => ["Author"],
             "orcids" => ["0000-0001-2345-6789"],
-            "affiliation" => ['[{"value":"Existing University"}]'],
-            "authorRorIds" => ['https://ror.org/03yrm5c26']
+            "personAffiliation" => ['[{"value":"Existing University"}]'],
+            "authorPersonRorIds" => ['https://ror.org/03yrm5c26']
         ];
         saveAuthors($this->connection, $initialAuthorData, $initial_resource_id);
 
@@ -561,14 +995,14 @@ class SaveAuthorsTest extends DatabaseTestCase
                 "",                        // Empty ORCID
                 "0000-0001-2345-6789"      // Existing ORCID
             ],
-            "affiliation" => [
+            "personAffiliation" => [
                 '[{"value":"University A"}]',
                 '[{"value":"University B"},{"value":"Institute C"}]',
                 '[{"value":"Universität D"}]',  // Non-ASCII character
                 '[{"value":"' . str_repeat("X", 256) . '"}]',  // Very long affiliation
                 '[{"value":"Existing University"},{"value":"New University"}]'  // Existing and new affiliation
             ],
-            "authorRorIds" => [
+            "authorPersonRorIds" => [
                 'https://ror.org/04m7fg108',
                 'https://ror.org/02nr0ka47,https://ror.org/0168r3w48',
                 '',
@@ -590,8 +1024,17 @@ class SaveAuthorsTest extends DatabaseTestCase
             "Es sollten insgesamt 5 Autoren gespeichert worden sein, einschließlich des bestehenden Autors."
         );
 
-        $stmt = $this->connection->prepare("SELECT a.*, GROUP_CONCAT(DISTINCT rha.Resource_resource_id) as resource_ids, COUNT(DISTINCT aha.Affiliation_affiliation_id) as affiliation_count FROM Author a JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id LEFT JOIN Author_has_Affiliation aha ON a.author_id = aha.Author_author_id WHERE a.orcid = ? GROUP BY a.author_id");
         $existingOrcid = "0000-0001-2345-6789";
+        $stmt = $this->connection->prepare("
+        SELECT a.author_id, GROUP_CONCAT(DISTINCT rha.Resource_resource_id) as resource_ids,
+               COUNT(DISTINCT aha.Affiliation_affiliation_id) as affiliation_count
+        FROM Author a
+        JOIN Author_person ap ON a.Author_Person_author_person_id = ap.author_person_id
+        JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
+        LEFT JOIN Author_has_Affiliation aha ON a.author_id = aha.Author_author_id
+        WHERE ap.orcid = ?
+        GROUP BY a.author_id
+    ");
         $stmt->bind_param("s", $existingOrcid);
         $stmt->execute();
         $existingAuthor = $stmt->get_result()->fetch_assoc();

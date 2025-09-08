@@ -42,6 +42,8 @@ function dropTables($connection)
         'Resource',
         'Resource_has_Author',
         'Author',
+        'Author_person',
+        'Author_institution',
         'Resource_Type',
         'Rights',
         'Language',
@@ -134,12 +136,28 @@ function createDatabaseStructure($connection)
     `name` VARCHAR(20) NOT NULL,
     PRIMARY KEY (`language_id`));",
 
-        "Author" => "CREATE TABLE IF NOT EXISTS `Author` (
-    `author_id` INT NOT NULL AUTO_INCREMENT,
+
+        "Author_person" => "CREATE TABLE IF NOT EXISTS `Author_person` (
+    `author_person_id` INT NOT NULL AUTO_INCREMENT,
     `familyname` TEXT(666) NOT NULL,
     `givenname` TEXT(746) NOT NULL,
     `orcid` VARCHAR(19) NOT NULL,
-    PRIMARY KEY (`author_id`));",
+    PRIMARY KEY (`author_person_id`));",
+
+        "Author_institution" => "CREATE TABLE IF NOT EXISTS `Author_institution` (
+    `author_institution_id` INT NOT NULL AUTO_INCREMENT,
+    `institutionname` TEXT(666) NOT NULL,
+    PRIMARY KEY (`author_institution_id`));",
+
+        "Author" => "CREATE TABLE IF NOT EXISTS `Author` (
+    `author_id` INT NOT NULL AUTO_INCREMENT,
+    `Author_Person_author_person_id` INT NULL,
+    `Author_Institution_author_institution_id` INT NULL,
+    PRIMARY KEY (`author_id`),
+    FOREIGN KEY (`Author_Person_author_person_id`)
+    REFERENCES `Author_person` (`author_person_id`),
+    FOREIGN KEY (`Author_Institution_author_institution_id`)
+    REFERENCES `Author_institution` (`author_institution_id`));",
 
         "Role" => "CREATE TABLE IF NOT EXISTS `Role` (
     `role_id` INT NOT NULL AUTO_INCREMENT,
@@ -802,12 +820,10 @@ function insertTestResourceData($connection)
             ["doi" => "https://doi.org/10.5880/ICGEM.2019.011", "version" => null, "year" => 2019, "dateCreated" => "2020-04-17", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id" => 3, "Mathematical_Representation_id" => 1, "File_format_id" => 1]
 
         ],
-        "Author" => [
+        "Author_person" => [
             ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "0000-0003-1076-615X"],
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "0000-0003-1552-0861"],
-            ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "0000-0003-0930-6527"],
             ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242"],
-            //5
             ["familyName" => "Flechtner", "givenname" => "Frank", "orcid" => "0000-0002-3093-5558"],
             ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "0000-0002-4108-578X"],
             ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "0000-0003-1463-412X"],
@@ -816,9 +832,28 @@ function insertTestResourceData($connection)
             ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242"],
             ["familyName" => "Murböck", "givenname" => "Michael", "orcid" => "0000-0002-4108-578X"],
             ["familyName" => "Michalak", "givenname" => "Grzegorz", "orcid" => "0000-0002-1925-8824"],
-            ["familyName" => "König", "givenname" => "Rolf", "orcid" => "0000-0002-7155-6976"] // comma 
-            //    ["familyName" => "Anton", "givenname" => "Reinhold", "orcid" => null],
-            //    ["familyName" => "Neumayer", "givenname" => "Karl Hans", "orcid" => null]
+            ["familyName" => "König", "givenname" => "Rolf", "orcid" => "0000-0002-7155-6976"],
+            ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "0000-0003-0930-6527"]
+        ],
+        "Author_institution" => [
+            ["institutionname" => "Institut für Bauforschung und Bauerhaltung (IBB)"],
+            ["institutionname" => "Institut für Maschinenkonstruktion und Systemtechnik"],
+            ["institutionname" => "Institut für Luft- und Raumfahrt"]
+        ],
+        "Author" => [
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => 1, "Author_Institution_author_institution_id" => 3]
         ],
         "Affiliation" => [
             ["name" => "GFZ German Research Centre for Geosciences", "rorId" => "04z8jg394"],
@@ -990,9 +1025,7 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 4, "Author_author_id" => 10],
             ["Resource_resource_id" => 4, "Author_author_id" => 11],
             ["Resource_resource_id" => 4, "Author_author_id" => 12],
-            ["Resource_resource_id" => 4, "Author_author_id" => 13]     // comma nicht vergessen <3
-            //    ["Resource_resource_id" => 4, "Author_author_id" => 14],
-            //    ["Resource_resource_id" => 4, "Author_author_id" => 15]
+            ["Resource_resource_id" => 4, "Author_author_id" => 13]
         ],
         "Author_has_Affiliation" => [
             ["Author_author_id" => 1, "Affiliation_affiliation_id" => 2],

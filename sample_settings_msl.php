@@ -24,7 +24,7 @@ function connectDb()
 $connection = connectDb();
 
 // ELMO API Key
-$apiKeyElmo = '1234-1234-1234-1234';
+$apiKeyElmo = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
 // Google Maps API Key
 $apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 // API Key for https://timezonedb.com/
@@ -47,6 +47,8 @@ $showSpatialTemporalCoverage = true;
 $showRelatedWork = true;
 // Show Funding Reference form group
 $showFundingReference = true;
+// Show Author Institution form group
+$showAuthorInstitution = true;
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group
