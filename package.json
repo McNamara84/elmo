@@ -10,6 +10,8 @@
     "swagger-ui-dist": "^5.27.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.0.14",
     "jest": "^30.0.4",
     "jest-environment-jsdom": "^30.0.4"
   },
