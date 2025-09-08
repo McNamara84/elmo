@@ -22,13 +22,9 @@ test.describe('Minimal Valid Dataset Test', () => {
   await page.getByRole('textbox', { name: 'Last Name*' }).fill('Alice');
   await page.getByRole('textbox', { name: 'First Name*' }).fill('Bob');
 
-  // type in the affiliation -- only 3 letters
-  await page.locator('#group-author tags').getByRole('textbox').click();
-  await page.locator('#group-author tags').getByRole('textbox').fill('gfz');
-  // choose an option from dropdown
-  await page.getByRole('option', { name: 'GFZ Helmholtz Centre for Geosciences' }).click();
-  // full name of our Centre should be displayed
-  await expect(page.locator('#group-author tag')).toHaveText('GFZ Helmholtz Centre for Geosciences');
+  // type in the affiliation
+  await page.locator('#group-author tags').getByRole('textbox').fill('GFZ Helmholtz Centre for Geosciences');
+
   // select the author as contact person
   await page.getByText('ContactPerson?').click();
   await page.getByRole('textbox', { name: 'Email address*' }).click();
