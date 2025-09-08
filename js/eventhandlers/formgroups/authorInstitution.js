@@ -15,6 +15,18 @@ $(document).ready(function () {
     const authorInstitutionGroup = $("#group-authorinstitution");
     const newRow = originalAuthorInstitutionRow.clone();
 
+
+    /**
+    * Initialize sortable drag-and-drop behavior for author-Institution rows.
+    */
+    $("#group-authorinstitution").sortable({
+      items: "[data-authorinstitution-row]",
+      handle: ".drag-handle",
+      axis: "y",
+      tolerance: "pointer",
+      containment: "parent"
+    });
+
     // Clear fields & reset validation
     newRow.find("input").val("").removeClass("is-invalid is-valid");
     newRow.find(".invalid-feedback, .valid-feedback").css("display", "");

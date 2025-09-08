@@ -9,9 +9,10 @@
                 <div class="col-12 col-md-5 p-1">
                     <div class="input-group has-validation">
                         <div class="form-floating">
-                            <input type="text" class="form-control"
-                            id="input-authorinstitution-name" name="authorinstitutionName[]">
-                            <label for="input-authorinstitution-name" data-translate="authorsInstitutions.name">Author Institution name</label>
+                            <input type="text" class="form-control" id="input-authorinstitution-name"
+                                name="authorinstitutionName[]">
+                            <label for="input-authorinstitution-name" data-translate="authorsInstitutions.name">Author
+                                Institution name</label>
                             <div class="invalid-feedback" data-translate="authors.InstitutionsNameInvalid"></div>
                         </div>
                     </div>
@@ -30,6 +31,12 @@
                 </div>
                 <!-- Button to add new row -->
                 <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
+                    <!-- Drag handle -->
+                    <div class="drag-handle align-items-center me-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="Drag & drop to change order">
+                        <i class="bi bi-grip-vertical"></i>
+                    </div>
+                    <!-- Add button -->
                     <div class="align-items-center">
                         <button type="button" class="btn btn-primary addauthorinstitution add-button"
                             id="button-authorinstitution-add" data-translate="general.add">+</button>
