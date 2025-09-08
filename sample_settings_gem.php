@@ -47,6 +47,8 @@ $showSpatialTemporalCoverage = false;
 $showRelatedWork = true;
 // Show Funding Reference form group
 $showFundingReference = true;
+// Show Author Institution form group
+$showAuthorInstitution = true;
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group
