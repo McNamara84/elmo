@@ -26,16 +26,10 @@ services:
       - db
     restart: unless-stopped
     volumes:
-      # Mount only the folders that change oftenas read-only for security
-      - ./js:/var/www/html/js:ro
-      - ./formgroups:/var/www/html/formgroups:ro
-      - ./api:/var/www/html/api:ro
-      - ./css:/var/www/html/css:ro
-      - ./doc:/var/www/html/doc:ro
-      - ./lang:/var/www/html/lang:ro
-      - ./save:/var/www/html/save:ro
-      - ./install.html:/var/www/html/install.html:ro
-      - ./modals.html:/var/www/html/modals.html:ro
+      # Mount the entire project directory for live code changes.
+      # This is only for development. No way to production.
+      - .:/var/www/html
+
 
 volumes:
   db_data:
