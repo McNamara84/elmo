@@ -33,6 +33,7 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
       TZ: Europe/Berlin
+      ELMO_API_KEY: ${ELMO_API_KEY}
       # Flags for Standard ELMO
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
@@ -72,6 +73,7 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_MSL}
       TZ: Europe/Berlin
+      ELMO_API_KEY: ${ELMO_API_KEY}
       # Flags for msl
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
@@ -111,6 +113,7 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
       TZ: Europe/Berlin
+      ELMO_API_KEY: ${ELMO_API_KEY}
       # Flags for gem
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
