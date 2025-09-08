@@ -218,22 +218,25 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processCreators(xmlDoc, resolver) {
+  // Select all <creator> elements inside <creators> using namespace resolver
   const creatorNodes = xmlDoc.evaluate(".//ns:creators/ns:creator", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < creatorNodes.snapshotLength; i++) {
     const creatorNode = creatorNodes.snapshotItem(i);
 
-    // Extract Creator Data
+    // Extract basic creator info: given name, family name, ORCID, and creatorName
     const givenName = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
     const familyName = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
+    // Clean ORCID by removing URL prefix if present
     const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace("https://orcid.org/", "");
+    const creatorName = getNodeText(creatorNode, "ns:creatorName", xmlDoc, resolver);
 
-    // Extract Affiliations
-    const affiliationNodes = xmlDoc.evaluate("ns:affiliation", creatorNode, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-
+    // Extract affiliations, either <personAffiliation> or <affiliation> elements under the current creator node
+    const affiliationNodes = xmlDoc.evaluate("ns:personAffiliation | ns:affiliation", creatorNode, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
     const affiliations = [];
     const rorIds = [];
 
+    // Collect all affiliation names and ROR IDs for the current creator
     for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
       const affNode = affiliationNodes.snapshotItem(j);
       const affiliationName = affNode.textContent;
@@ -247,37 +250,80 @@ function processCreators(xmlDoc, resolver) {
       }
     }
 
-    // Find the row to populate (either the first one, or the newly added one)
-    let $row;
-    if (i === 0) {
-      // Use the first row
-      $row = $("div[data-creator-row]").eq(0);
-    } else {
-      // Add a new row and use it
-      $("#button-author-add").click();
-      $row = $("div[data-creator-row]").eq(i);
+    // ------- Handle Person Authors -------
+    // If givenName or familyName exists, we treat this as a personal author
+    if (givenName || familyName) {
+      let $row;
+      if (i === 0) {
+        // For the first creator, use the first existing row in the form
+        $row = $("div[data-creator-row]").eq(0);
+      } else {
+        // For subsequent creators, simulate click on "add author" button to create new row
+        $("#button-author-add").click();
+        $row = $("div[data-creator-row]").eq(i);
+      }
+
+      // Populate the personal author fields
+      $row.find('input[name="orcids[]"]').val(orcid);
+      $row.find('input[name="familynames[]"]').val(familyName);
+      $row.find('input[name="givennames[]"]').val(givenName);
+
+      // Handle affiliations with Tagify plugin if initialized
+      const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
+      if (tagifyInput && tagifyInput.tagify) {
+        tagifyInput.tagify.removeAllTags(); // Clear existing tags
+        tagifyInput.tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
+        $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(",")); // Set ROR IDs as CSV string
+      } else {
+        // Fallback if Tagify is not used: set affiliations as comma-separated string
+        $row.find('input[name="personAffiliation[]"]').val(affiliations.join(","));
+        $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(","));
+      }
+
+      // Reset contact-related inputs (checkbox, email, online resource) for the author row
+      $row.find('input[name="contacts[]"]').prop("checked", false);
+      $row.find(".contact-person-input").hide();
+      $row.find('input[name="cpEmail[]"]').val("");
+      $row.find('input[name="cpOnlineResource[]"]').val("");
     }
+    // ------- Handle Institution Authors -------
+    else if (creatorName) {
+      // Select all institution rows container
+      let $instRows = $("div[data-authorinstitution-row]");
+      let $instRow;
 
-    // Populate fields in the author section
-    $row.find('input[name="orcids[]"]').val(orcid);
-    $row.find('input[name="familynames[]"]').val(familyName);
-    $row.find('input[name="givennames[]"]').val(givenName);
+      // Try to find the first empty institution row to reuse
+      const foundEmptyRow = $instRows.toArray().find((row) => {
+        return $(row).find('input[name="authorinstitutionName[]"]').val().trim() === "";
+      });
 
-    // Tagify handling for affiliations
-    const tagifyInput = $row.find('input[name="affiliation[]"]')[0];
-    if (tagifyInput && tagifyInput.tagify) {
-      tagifyInput.tagify.removeAllTags(); // Clear existing tags
-      tagifyInput.tagify.addTags(affiliations.map((a) => ({ value: a })));
-      $row.find('input[name="authorRorIds[]"]').val(rorIds.join(","));
+      if (foundEmptyRow) {
+        $instRow = $(foundEmptyRow);
+      } else {
+        // If no empty row found, simulate click to add new institution row and select it
+        $("#button-authorinstitution-add").click();
+        $instRow = $("div[data-authorinstitution-row]").last();
+      }
+
+      // Set institution name
+      $instRow.find('input[name="authorinstitutionName[]"]').val(creatorName);
+
+      // Handle institution affiliations with Tagify plugin if present
+      const tagifyInput = $instRow.find('input[name="institutionAffiliation[]"]')[0];
+      if (tagifyInput && tagifyInput.tagify) {
+        tagifyInput.tagify.removeAllTags(); // Clear existing tags
+        tagifyInput.tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
+      } else {
+        // Fallback: set affiliations as comma-separated string if no Tagify
+        $instRow.find('input[name="institutionAffiliation[]"]').val(affiliations.join(","));
+      }
+
+      // Set ROR IDs for the institution as CSV string
+      $instRow.find('input[name="authorInstitutionRorIds[]"]').val(rorIds.join(","));
     }
-
-    //** Clear Contact Person fields (Crucial!) **
-    $row.find('input[name="contacts[]"]').prop("checked", false);
-    $row.find(".contact-person-input").hide();
-    $row.find('input[name="cpEmail[]"]').val("");
-    $row.find('input[name="cpOnlineResource[]"]').val("");
   }
 }
+
 
 /**
  * Process contact persons from XML and populate the form
