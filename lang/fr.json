@@ -68,7 +68,8 @@
     },
     "authors": {
         "title": "Auteur(s)",
-        "affiliationInvalid": "Veuillez indiquer une affiliation."
+        "affiliationInvalid": "Veuillez indiquer une affiliation.",
+        "InstitutionsNameInvalid": "Veuillez fournir le nom de l'institution."
     },
     "authorsInstitutions": {
         "title": "Institution de l'auteur",
