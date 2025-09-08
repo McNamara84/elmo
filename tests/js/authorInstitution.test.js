@@ -46,6 +46,10 @@ describe('authorInstitution.js', () => {
     window.$ = $;
     window.jQuery = $;
 
+    // Mock jQuery UI sortable (noop for jsdom)
+    $.fn.sortable = jest.fn(() => $);
+
+
     // Set mock functions
     window.createRemoveButton = jest.fn(() => $('<button type="button" class="removeButton"></button>'));
     window.replaceHelpButtonInClonedRows = jest.fn();
