@@ -16,8 +16,8 @@ $(() => {
   // to point to the form instead of the button that triggered the submit event.
   // Fix: Store the action on click and fall back to the submitter property when available.
   let pendingAction = null;
-  $('#form-mde button[type="submit"]').on('click', function () {
-    pendingAction = $(this).data('action');
+  $('button[type="submit"][form="form-mde"], #form-mde button[type="submit"]').on('click', function () {
+    pendingAction = this.dataset.action;
   });
 
   // Form submit event handler
@@ -26,7 +26,7 @@ $(() => {
     e.preventDefault();
     e.stopPropagation();
 
-    const action = $(document.activeElement).data('action');
+    const action = e.originalEvent?.submitter?.dataset.action ?? pendingAction;
 
     if (action === 'save') {
       saveHandler.handleSave();
@@ -34,5 +34,7 @@ $(() => {
       submitHandler.handleSubmit();
     }
 
+    // Reset stored action
+    pendingAction = null;
   });
 });
