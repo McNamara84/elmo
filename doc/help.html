@@ -1375,21 +1375,37 @@ include_once "../settings.php";
                 <h3>Model specific variables</h3>
                 <p>This section is dedicated to variables specific for each model type. Please choose a model type above to start input.</p>
             </div>
+
             <div id="help-static" class="help-section d-none">
                 <h3 data-translate="help.static.title">Static Model Help</h3>
-                <p data-translate="help.static.description">This section provides help for static models...</p>
+                <p data-translate="help.static.description">This section provides help for static models:</p>
+                <h4 data-translate="help.static.dealiasing">De-aliasing</h4>
+                <p data-translate="help.static.dealiasing.description">
+                    a priori information about temporal variations in the Earth's gravity field caused by global mass variability in atmosphere and ocean.
+                </p>
             </div>
 
             <div id="help-temporal" class="help-section d-none">
                 <h3 data-translate="help.temporal.title">Temporal Model Help</h3>
                 <p data-translate="help.temporal.description">This section provides help for temporal models...</p>
+                <h4 data-translate="help.temporal.time-coverage">Start/stop date</h4>
+                <p>
+                    the time frame of a model release: from the begin of release to the most recent available data.
+                </p>
             </div>
 
             <div id="help-topographic" class="help-section d-none">
                 <h3 data-translate="help.topographic.title">Topographic Model Help</h3>
                 <p data-translate="help.topographic.description">This section provides help for topographic models...</p>
+                <h4 data-translate="help.topographic.harmonics">Approximation</h4>
+                <p>
+                    this denotes the coefficients, in which model was computed. If before the publication the model was transformed into different harmonics, this can be dented in “mathematical_representation” field in the core data model.
+                </p>
+                <h4 data-translate="help.topographic.density">Density information description</h4>
+                <p>
+                    for example, layer-specific density values can be given here
+                </p>
             </div>
-        </div>
         <?php endif; ?>
     </div>
     <!-- Bootstrap 5 -->
