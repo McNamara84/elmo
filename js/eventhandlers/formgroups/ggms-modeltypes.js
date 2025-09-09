@@ -33,6 +33,20 @@ $(document).ready(function() {
         } else if (modelTypeLower.includes('topographic')) {
             topographicSection.removeClass('d-none');
         }
+        
+    // Update the help button's data-help-section-id
+        const helpButton = $('#model-specific-card .bi-question-circle-fill');
+        helpButton.removeAttr('data-help-section-id');
+
+        let helpSectionId = 'help-no-model-type'; // Default fallback
+        if (modelTypeLower.includes('static')) {
+            helpSectionId = 'help-static';
+        } else if (modelTypeLower.includes('temporal')) {
+            helpSectionId = 'help-temporal';
+        } else if (modelTypeLower.includes('topographic')) {
+            helpSectionId = 'help-topographic';
+        }
+        helpButton.attr('data-help-section-id', helpSectionId);
     }
 
     // Set up an event handler to listen for changes on the 'Model Type' dropdown.
