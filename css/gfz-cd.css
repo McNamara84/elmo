@@ -238,3 +238,11 @@ label.mandatory-field::after {
   position: relative;
   top: -0.45em;
 }
+
+/* Hide Bootstrap/Browser "valid" styles when the field is empty (placeholder-shown) */
+.form-control:placeholder-shown.is-valid,
+.was-validated .form-control:placeholder-shown:valid {
+  background-image: none !important;  /* remove the green checkmark icon */
+  box-shadow: none !important;        /* remove the green glow */
+  border-color: #ced4da !important;   /* reset to the default border color */
+}
