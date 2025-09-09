@@ -16,12 +16,12 @@ if [ ! -d /var/www/html/node_modules ]; then
   npm install --omit=dev
 fi
 
-# Ensure a settings.php exists; in production create it from settings.elmo.php,
-# so that local settings.php (dev) is not needed/overwritten.
-if [ ! -f /var/www/html/settings.php ]; then
-  echo "⚙️  No settings.php found, creating from settings.elmo.php"
-  cp /var/www/html/settings.elmo.php /var/www/html/settings.php
-  chown www-data:www-data /var/www/html/settings.php
+# Ensure a helper-functions.php exists; in production create it from settings.elmo.php,
+# so that local helper-functions.php (dev) is not needed/overwritten.
+if [ ! -f /var/www/html/helper-functions.php ]; then
+  echo "⚙️  No helper-functions.php found, creating from settings.elmo.php"
+  cp /var/www/html/settings.elmo.php /var/www/html/helper-functions.php
+  chown www-data:www-data /var/www/html/helper-functions.php
 fi
 
 # Wait for the DB using mysqladmin ping (more reliable)
