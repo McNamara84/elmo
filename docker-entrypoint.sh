@@ -44,6 +44,27 @@ db_has_tables() {
   [ "${TABLE_COUNT}" -gt 0 ]
 }
 
+# Copy the appropriate .env file based on CONFIG_VERSION
+# CONFIG_VERSION determines which configuration to use.
+case "${CONFIG_VERSION}" in
+  "generic"|"")
+    echo "🔧 Using generic.env configuration"
+    cp /var/www/html/envs/generic.env /var/www/html/.env
+    ;;
+  "msl")
+    echo "🔧 Using msl.env configuration"
+    cp /var/www/html/envs/msl.env /var/www/html/.env
+    ;;
+  "elmogem")
+    echo "🔧 Using elmogem.env configuration"
+    cp /var/www/html/envs/elmogem.env /var/www/html/.env
+    ;;
+  *)
+    echo "❌ Invalid CONFIG_VERSION specified. Use 'msl' or 'elmogem'."
+    exit 1
+    ;;
+esac
+
 wait_for_db
 
 # Only run installer when allowed AND schema is empty
