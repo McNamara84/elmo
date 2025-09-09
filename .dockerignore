@@ -9,12 +9,14 @@
 *.swp
 *.swo
 
-
 # Ignore temporary and log files
 *.log
 *.tmp
 tmp/
 temp/
+
+# Ignore xml folder -- leave it to container 
+xml/
 
 # Ignore environment and secret files
 .env*

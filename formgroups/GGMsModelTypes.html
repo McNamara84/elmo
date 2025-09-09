@@ -1,0 +1,239 @@
+<div class="card mb-2" id="model-specific-card">
+    <div class="card-header">
+        <b>Model Types</b>
+        <i class="bi bi-question-circle-fill" data-help-section-id="help-no-model-type"></i>
+    </div>
+    <div class="card-body" id="group-modelvars">
+        <!-- Static models special variables -->
+        <div class="visibility-modeltype-static d-none">
+            <h6 class="mb-2">Static models special variables</h6>
+            <div class="row mb-3">
+                <!-- Description of time-variable coefficients -->
+                <div class="col-sm-6 col-lg-8 p-1">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="input-static-description" name="staticDescription[]">
+                        <label for="input-static-description">
+                            Description of time-variable coefficients
+                        </label>
+                    </div>
+                </div>
+                <!-- De-aliasing (TRUE/FALSE) -->
+                <div class="col-sm-2 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <select class="form-select" id="select-static-dealiasing" name="staticDealiasing[]">
+                            <option selected value=""></option>
+                            <option value="true">TRUE</option>
+                            <option value="false">FALSE</option>
+                        </select>
+                        <label for="select-static-dealiasing">
+                            De-aliasing
+                        </label>
+                    </div>
+                </div>
+                <!-- Version -->
+                <div class="col-sm-2 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="input-static-version" name="staticVersion[]">
+                        <label for="input-static-version">
+                            Version
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Temporal models special variables -->
+        <div class="visibility-modeltype-temporal d-none">
+            <h6 class="mb-2">Temporal models special variables</h6>
+            <div class="row mb-3">
+                <!-- Start date -->
+                <div class="col-sm-2 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <input type="date" class="form-control" id="input-temporal-start" name="temporalStart[]">
+                        <label for="input-temporal-start">
+                            Start date
+                        </label>
+                    </div>
+                </div>
+                <!-- End date -->
+                <div class="col-sm-2 col-lg-2 p-1">
+                    <div class="form-floating">
+                        <input type="date" class="form-control" id="input-temporal-end" name="temporalEnd[]">
+                        <label for="input-temporal-end">
+                            End date
+                        </label>
+                    </div>
+                </div>
+                <!-- Release frequency / temporal resolution -->
+                <div class="col-sm-5 col-lg-5 p-1">
+                    <div class="form-floating mb-1">
+                        <select class="form-select" id="select-temporal-frequency-predef" name="temporalFrequencyPredef[]">
+                            <option selected value=""></option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+
+                        </select>
+                        <label for="select-temporal-frequency-predef">
+                            Release frequency / temporal resolution
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="checkbox-custom-frequency">
+                        <label class="form-check-label" for="checkbox-custom-frequency">
+                            Use custom frequency value
+                        </label>
+                    </div>
+                    <div class="form-floating mt-1 d-none" id="custom-frequency-container">
+                        <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency[]" placeholder="Enter a numeric value"
+                        pattern="^\d+$">
+                        <label for="input-temporal-frequency">
+                            Custom frequency (days)
+                        </label>
+                        <div class="invalid-feedback" data-translate="general.numericTemporalResolutionInvalid">
+                            Please enter a valid temporal resolution. Only numbers are allowed.
+                        </div>
+                    </div>
+                </div>
+                <!-- Generating institution -->
+                <div class="col-sm-3 col-lg-3 p-1">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="input-temporal-institution" name="temporalInstitution[]"
+                            autocomplete="off">
+                        <label for="input-temporal-institution">
+                            Generating institution
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Topographic variables special variables -->
+        <div class="visibility-modeltype-topographic d-none">
+            <h6 class="mb-2">Topographic variables special variables</h6>
+            <div class="row">
+                <!-- Layer approach -->
+                <div class="col-sm-4 col-lg-4 p-1">
+                    <div class="form-floating">
+                        <select class="form-select" id="select-topo-layerapproach" name="topoLayerApproach[]">
+                            <option selected value=""></option>
+                            <option value="single-layer">Single-layer</option>
+                            <option value="multi-layer">Multi-layer</option>
+                        </select>
+                        <label for="select-topo-layerapproach">
+                            Layer approach
+                        </label>
+                    </div>
+                </div>
+                <!-- Forward modelling domain -->
+                <div class="col-sm-4 col-lg-4 p-1">
+                    <div class="form-floating">
+                        <select class="form-select" id="select-topo-domain" name="topoDomain[]">
+                            <option selected value=""></option>
+                            <option value="spatial">Spatial</option>
+                            <option value="spectral">Spectral</option>
+                        </select>
+                        <label for="select-topo-domain">
+                            Forward modelling domain
+                        </label>
+                    </div>
+                </div>
+                <!-- Approximation -->
+                <div class="col-sm-4 col-lg-4 p-1">
+                    <div class="form-floating">
+                        <select class="form-select" id="select-topo-approximation" name="topoApproximation[]">
+                            <option selected value=""></option>
+                            <option value="spherical">Spherical</option>
+                            <option value="ellipsoidal">Ellipsoidal</option>
+                        </select>
+                        <label for="select-topo-approximation">
+                            Approximation
+                        </label>
+                    </div>
+                </div>
+                <!-- DENSITY SECTION -->
+                <div id="single-density-container" class="col-12">
+                    <!-- Original single density input row -->
+                    <div class="row" id="single-density-row">
+                        <!-- Density information -->
+                        <div class="col-sm-6 col-lg-3 p-1">
+                            <div class="form-floating">
+                                <select class="form-select" id="select-topo-density" name="topoDensity[]">
+                                    <option selected value=""></option>
+                                    <option value="constant">Constant</option>
+                                    <option value="layer-specific">Layer-specific density values</option>
+                                    <option value="density-model">Density model</option>
+                                </select>
+                                <label for="select-topo-density">
+                                    Density information
+                                </label>
+                            </div>
+                        </div>
+                        <!-- Density information details -->
+                        <div class="col-sm-6 col-lg-9 p-1">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="input-topo-density-details" name="topoDensityDetails[]">
+                                <label for="input-topo-density-details">
+                                    Density information details
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    <!-- Checkbox to toggle separate density inputs -->
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="checkbox-separate-density">
+                        <label class="form-check-label" for="checkbox-separate-density">
+                            Provide separate density for crust and mantle
+                        </label>
+                    </div>
+
+                <!-- Container for separate crust and mantle density inputs, hidden by default -->
+                <div id="separate-density-container" class="d-none mt-2">
+                    <!-- Crust Density Row -->
+                    <div class="row">
+                        <div class="col-12 p-1"><strong>Crust</strong></div>
+                        <div class="col-sm-6 col-lg-3 p-1">
+                            <div class="form-floating">
+                                <select class="form-select" id="select-topo-density-crust" name="topoDensityCrust">
+                                    <option selected value=""></option>
+                                    <option value="constant">Constant</option>
+                                    <option value="layer-specific">Layer-specific density values</option>
+                                    <option value="density-model">Density model</option>
+                                </select>
+                                <label for="select-topo-density-crust">Density information</label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-9 p-1">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="input-topo-density-details-crust" name="topoDensityDetailsCrust">
+                                <label for="input-topo-density-details-crust">Density information details</label>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Mantle Density Row -->
+                    <div class="row mt-2">
+                        <div class="col-12 p-1"><strong>Mantle</strong></div>
+                        <div class="col-sm-6 col-lg-3 p-1">
+                            <div class="form-floating">
+                                <select class="form-select" id="select-topo-density-mantle" name="topoDensityMantle">
+                                    <option selected value=""></option>
+                                    <option value="constant">Constant</option>
+                                    <option value="layer-specific">Layer-specific density values</option>
+                                    <option value="density-model">Density model</option>
+                                </select>
+                                <label for="select-topo-density-mantle">Density information</label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-9 p-1">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="input-topo-density-details-mantle" name="topoDensityDetailsMantle">
+                                <label for="input-topo-density-details-mantle">Density information details</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
