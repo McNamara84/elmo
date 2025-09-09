@@ -102,23 +102,8 @@ $(document).ready(function() {
             }
         }
         
-        /**
-         * Validates that the custom input contains only numeric values
-         */
-        function validateCustomFrequencyInput() {
-            const value = $customFrequencyInput.val();
-            const isValid = /^\d*$/.test(value);
-            
-            if (!isValid && value !== '') {
-                $customFrequencyInput.removeClass('is-valid').addClass('is-invalid');
-            } else {
-                $customFrequencyInput.removeClass('is-invalid');
-            }
-        }
-        
         // Event handlers
         $customFrequencyCheckbox.on('change', toggleCustomFrequencyInput);
-        $customFrequencyInput.on('input', validateCustomFrequencyInput);
         $predefinedFrequencySelect.on('change', function() {
             if ($(this).val()) {
                 $customFrequencyCheckbox.prop('checked', false);
