@@ -1,0 +1,48 @@
+<div class="card mb-2">
+    <div class="card-header"><b data-translate="authorsInstitutions.title">Author Institution</b>
+        <i class="bi bi-question-circle-fill" data-help-section-id="help-author-institution-fg"></i>
+    </div>
+    <div class="card-body">
+        <div id="group-authorinstitution">
+            <div class="row" data-authorinstitution-row>
+                <!-- Input field for Institution Name -->
+                <div class="col-12 col-md-5 p-1">
+                    <div class="input-group has-validation">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="input-authorinstitution-name"
+                                name="authorinstitutionName[]">
+                            <label for="input-authorinstitution-name" data-translate="authorsInstitutions.name">Author
+                                Institution name</label>
+                            <div class="invalid-feedback" data-translate="authors.InstitutionsNameInvalid"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- input field for Institution Affiliation -->
+                <div class="col-12 col-md-6 p-1">
+                    <label for="input-authorinstitution-affiliation" class="visually-hidden">Affiliation</label>
+                    <div class="input-group has-validation">
+                        <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                            id="input-authorinstitution-affiliation" name="institutionAffiliation[]"
+                            data-translate-placeholder="general.affiliation" />
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                data-help-section-id="help-contributorinstitutions-affiliation"></i></span>
+                        <input type="hidden" id="input-author-institutionrorid" name="authorInstitutionRorIds[]" />
+                    </div>
+                </div>
+                <!-- Button to add new row -->
+                <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
+                    <!-- Drag handle -->
+                    <div class="drag-handle align-items-center me-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="Drag & drop to change order">
+                        <i class="bi bi-grip-vertical"></i>
+                    </div>
+                    <!-- Add button -->
+                    <div class="align-items-center">
+                        <button type="button" class="btn btn-primary addauthorinstitution add-button"
+                            id="button-authorinstitution-add" data-translate="general.add">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
