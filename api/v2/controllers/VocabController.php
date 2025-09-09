@@ -8,8 +8,8 @@ use EasyRdf\Graph;
 
 // Set Max Execution Time to 300 seconds
 ini_set('max_execution_time', 300);
-// Include settings.php so that variables are available
-require_once __DIR__ . '/../../../settings.php';
+// Include helper-functions.php so that variables are available
+require_once __DIR__ . '/../../../helper-functions.php';
 
 /**
  * Class VocabController

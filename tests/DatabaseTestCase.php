@@ -26,7 +26,7 @@ abstract class DatabaseTestCase extends TestCase
         parent::setUp();
 
         // Load global settings and test database setup
-        require_once __DIR__ . '/../settings.php';
+        require_once __DIR__ . '/../helper-functions.php';
         require_once __DIR__ . '/TestDatabaseSetup.php';
 
         global $connection;

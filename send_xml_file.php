@@ -15,7 +15,7 @@ ini_set('display_errors', 0);
 ob_start();
 
 // Include required files
-require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/helper-functions.php';
 require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/save/formgroups/save_authors.php';
 require_once __DIR__ . '/save/formgroups/save_contactperson.php';

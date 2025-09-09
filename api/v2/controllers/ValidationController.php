@@ -5,8 +5,8 @@
  *
  */
 
-// Include settings.php so that variables are available
-require_once __DIR__ . '/../../../settings.php';
+// Include helper-functions.php so that variables are available
+require_once __DIR__ . '/../../../helper-functions.php';
 
 /**
  * Class ValidationController
