@@ -47,4 +47,26 @@ $(document).ready(function() {
         updateModelTypeVisibility();
     }, 500);
 
+    /**
+     * Toggles the visibility of density input sections based on the checkbox state.
+     */
+    const separateDensityCheckbox = $('#checkbox-separate-density');
+    const singleDensity = $('#single-density-container');
+    const separateDensity = $('#separate-density-container');
+    
+    function toggleDensityInputs() {
+        if (separateDensityCheckbox.is(':checked')) {
+            singleDensity.addClass('d-none');
+            separateDensity.removeClass('d-none');
+        } else {
+            singleDensity.removeClass('d-none');
+            separateDensity.addClass('d-none');
+        }
+    }
+
+    // Add event listener for the checkbox
+    separateDensityCheckbox.on('change', toggleDensityInputs);
+
+    // Initial check to set the correct visibility on page load
+    toggleDensityInputs();
 });

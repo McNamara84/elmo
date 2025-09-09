@@ -102,7 +102,7 @@
             <h6 class="mb-2">Topographic variables special variables</h6>
             <div class="row">
                 <!-- Layer approach -->
-                <div class="col-sm-4 col-lg-2 p-1">
+                <div class="col-sm-4 col-lg-4 p-1">
                     <div class="form-floating">
                         <select class="form-select" id="select-topo-layerapproach" name="topoLayerApproach[]">
                             <option selected value=""></option>
@@ -115,7 +115,7 @@
                     </div>
                 </div>
                 <!-- Forward modelling domain -->
-                <div class="col-sm-4 col-lg-2 p-1">
+                <div class="col-sm-4 col-lg-4 p-1">
                     <div class="form-floating">
                         <select class="form-select" id="select-topo-domain" name="topoDomain[]">
                             <option selected value=""></option>
@@ -128,7 +128,7 @@
                     </div>
                 </div>
                 <!-- Approximation -->
-                <div class="col-sm-4 col-lg-2 p-1">
+                <div class="col-sm-4 col-lg-4 p-1">
                     <div class="form-floating">
                         <select class="form-select" id="select-topo-approximation" name="topoApproximation[]">
                             <option selected value=""></option>
@@ -140,27 +140,86 @@
                         </label>
                     </div>
                 </div>
-                <!-- Density information -->
-                <div class="col-sm-6 col-lg-3 p-1">
-                    <div class="form-floating">
-                        <select class="form-select" id="select-topo-density" name="topoDensity[]">
-                            <option selected value=""></option>
-                            <option value="constant">Constant</option>
-                            <option value="layer-specific">Layer-specific density values</option>
-                            <option value="density-model">Density model</option>                            
-                        </select>                        
-                        <label for="select-topo-density">
-                            Density information
-                        </label>
+                <!-- DENSITY SECTION -->
+                <div id="single-density-container" class="col-12">
+                    <!-- Original single density input row -->
+                    <div class="row" id="single-density-row">
+                        <!-- Density information -->
+                        <div class="col-sm-6 col-lg-3 p-1">
+                            <div class="form-floating">
+                                <select class="form-select" id="select-topo-density" name="topoDensity[]">
+                                    <option selected value=""></option>
+                                    <option value="constant">Constant</option>
+                                    <option value="layer-specific">Layer-specific density values</option>
+                                    <option value="density-model">Density model</option>
+                                </select>
+                                <label for="select-topo-density">
+                                    Density information
+                                </label>
+                            </div>
+                        </div>
+                        <!-- Density information details -->
+                        <div class="col-sm-6 col-lg-9 p-1">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="input-topo-density-details" name="topoDensityDetails[]">
+                                <label for="input-topo-density-details">
+                                    Density information details
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <!-- Density information details -->
-                <div class="col-sm-6 col-lg-3 p-1">
-                    <div class="form-floating">
-                        <input type="text" class="form-control" id="input-topo-density-details" name="topoDensityDetails[]">
-                        <label for="input-topo-density-details">
-                            Density information details
+                    <!-- Checkbox to toggle separate density inputs -->
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="checkbox-separate-density">
+                        <label class="form-check-label" for="checkbox-separate-density">
+                            Provide separate density for crust and mantle
                         </label>
+                    </div>
+
+                <!-- Container for separate crust and mantle density inputs, hidden by default -->
+                <div id="separate-density-container" class="d-none mt-2">
+                    <!-- Crust Density Row -->
+                    <div class="row">
+                        <div class="col-12 p-1"><strong>Crust</strong></div>
+                        <div class="col-sm-6 col-lg-3 p-1">
+                            <div class="form-floating">
+                                <select class="form-select" id="select-topo-density-crust" name="topoDensityCrust">
+                                    <option selected value=""></option>
+                                    <option value="constant">Constant</option>
+                                    <option value="layer-specific">Layer-specific density values</option>
+                                    <option value="density-model">Density model</option>
+                                </select>
+                                <label for="select-topo-density-crust">Density information</label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-9 p-1">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="input-topo-density-details-crust" name="topoDensityDetailsCrust">
+                                <label for="input-topo-density-details-crust">Density information details</label>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Mantle Density Row -->
+                    <div class="row mt-2">
+                        <div class="col-12 p-1"><strong>Mantle</strong></div>
+                        <div class="col-sm-6 col-lg-3 p-1">
+                            <div class="form-floating">
+                                <select class="form-select" id="select-topo-density-mantle" name="topoDensityMantle">
+                                    <option selected value=""></option>
+                                    <option value="constant">Constant</option>
+                                    <option value="layer-specific">Layer-specific density values</option>
+                                    <option value="density-model">Density model</option>
+                                </select>
+                                <label for="select-topo-density-mantle">Density information</label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-9 p-1">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="input-topo-density-details-mantle" name="topoDensityDetailsMantle">
+                                <label for="input-topo-density-details-mantle">Density information details</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
