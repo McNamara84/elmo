@@ -2,7 +2,9 @@ name: Jest Tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - "main"
+      - "fix/*" # for testing fix
   pull_request:
     branches: [ "main" ]
 
