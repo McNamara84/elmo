@@ -1,5 +1,4 @@
-const fs = require('fs');
-const path = require('path');
+const { requireFresh } = require('./utils');
 
 class MockTagify {
   constructor(el, options = {}) {
@@ -33,8 +32,7 @@ function loadScript(ajaxImpl, translations = { keywords: { free: { placeholder: 
   global.Tagify = MockTagify;
   global.translations = translations;
   $.ajax = jest.fn(ajaxImpl);
-  const script = fs.readFileSync(path.resolve(__dirname, '../../js/freekeywordTags.js'), 'utf8');
-  window.eval(script);
+  requireFresh('../../js/freekeywordTags.js');
   document.dispatchEvent(new Event('DOMContentLoaded'));
   return { $ };
 }

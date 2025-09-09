@@ -1,8 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+const { requireFresh } = require('./utils');
 
 describe('submitHandler.js', () => {
   let SubmitHandler;
+  let validateEmbargoDate;
+  let validateTemporalCoverage;
+  let validateContactPerson;
   let handler;
   let $;
 
@@ -55,10 +57,8 @@ describe('submitHandler.js', () => {
       }
     };
 
-    let script = fs.readFileSync(path.resolve(__dirname, '../../js/submitHandler.js'), 'utf8');
-    script = script.replace('export default SubmitHandler;', `window.SubmitHandler = SubmitHandler;\nwindow.validateEmbargoDate = validateEmbargoDate;\nwindow.validateTemporalCoverage = validateTemporalCoverage;\nwindow.validateContactPerson = validateContactPerson;`);
-    window.eval(script);
-    SubmitHandler = window.SubmitHandler;
+    ({ SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson } =
+      requireFresh('../../js/submitHandler.js'));
     handler = new SubmitHandler('test-form', 'modal-submit', 'modal-notification');
   });
 
@@ -70,7 +70,7 @@ describe('submitHandler.js', () => {
   test('validateEmbargoDate marks invalid when embargo before creation', () => {
     $('#input-date-created').val('2024-05-10');
     $('#input-date-embargo').val('2024-05-01');
-    const result = window.validateEmbargoDate();
+    const result = validateEmbargoDate();
     expect(result).toBe(false);
     expect($('#input-date-embargo').hasClass('is-invalid')).toBe(true);
     expect($('.embargo-invalid').text()).toBe('Embargo Error');
@@ -80,7 +80,7 @@ describe('submitHandler.js', () => {
     $('#input-stc-datestart-row1').val('2024-05-10');
     $('#input-stc-dateend-row1').val('2024-05-01');
     const row = document.getElementById('row');
-    const result = window.validateTemporalCoverage(row);
+    const result = validateTemporalCoverage(row);
     expect(result).toBe(false);
     expect($('#input-stc-dateend-row1').hasClass('is-invalid')).toBe(true);
     expect(row.querySelector('.invalid-feedback').textContent).toBe('End Date Error');

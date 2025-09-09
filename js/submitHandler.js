@@ -342,4 +342,11 @@ class SubmitHandler {
     }
 }
 
-export default SubmitHandler;
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    SubmitHandler,
+    validateEmbargoDate,
+    validateTemporalCoverage,
+    validateContactPerson
+  };
+}

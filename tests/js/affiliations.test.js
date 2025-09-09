@@ -1,7 +1,8 @@
-const fs = require('fs');
-const path = require('path');
+const { requireFresh } = require('./utils');
 
 let $;
+let autocompleteAffiliations;
+let refreshTagifyInstances;
 
 /**
  * Mock implementation of Tagify used for testing.
@@ -71,8 +72,7 @@ describe('affiliations.js', () => {
     global.Tagify = MockTagify;
     global.translations = { general: { affiliation: 'affiliation' } };
 
-    const script = fs.readFileSync(path.resolve(__dirname, '../../js/affiliations.js'), 'utf8');
-    window.eval(script);
+    ({ autocompleteAffiliations, refreshTagifyInstances } = requireFresh('../../js/affiliations.js'));
   });
 
   /**
@@ -80,7 +80,7 @@ describe('affiliations.js', () => {
    */
   test('autocompleteAffiliations creates Tagify instance with whitelist', () => {
     const data = [ { id: '1', name: 'TestOrg', other: ['Alias1', 'Alias2'] } ];
-    window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
 
     const input = document.getElementById('input-author-affiliation');
     expect(input.tagify).toBeInstanceOf(MockTagify);
@@ -94,7 +94,7 @@ describe('affiliations.js', () => {
    */
   test('adding a tag updates hidden field and closes dropdown for non-whitelist', () => {
     const data = [ { id: '1', name: 'Allowed' } ];
-    window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
     const input = document.getElementById('input-author-affiliation');
     const hidden = document.getElementById('input-author-rorid');
 
@@ -110,7 +110,7 @@ describe('affiliations.js', () => {
    */
   test('remove event clears tags when contact person empty', () => {
     const data = [ { id: '1', name: 'Org' } ];
-    window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
     const input = document.getElementById('input-author-affiliation');
 
     input.tagify.addTags('Org');
@@ -125,7 +125,7 @@ describe('affiliations.js', () => {
    */
   test('input event resizes input width', () => {
     const data = [];
-    window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
     const input = document.getElementById('input-author-affiliation');
 
     input.tagify.trigger('input', { value: 'abcd' });
@@ -137,12 +137,12 @@ describe('affiliations.js', () => {
    */
   test('refreshTagifyInstances updates whitelist and keeps tags', () => {
     const data = [ { id: '1', name: 'First', other: ['Alt1'] } ];
-    window.autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
     const input = document.getElementById('input-author-affiliation');
     input.tagify.addTags('First');
 
     window.affiliationsData = [ { id: '2', name: 'Second', other: ['Alt2'] } ];
-    window.refreshTagifyInstances();
+    refreshTagifyInstances();
 
      expect(input.tagify.settings.whitelist).toEqual([
       { value: 'Second', id: '2', other: ['Alt2'] }

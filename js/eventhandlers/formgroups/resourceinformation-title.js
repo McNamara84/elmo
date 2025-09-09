@@ -4,7 +4,7 @@
  * @module resourceInformationTitle
  */
 
-import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
+import { replaceHelpButtonInClonedRows } from '../functions.js';
 
 $(document).ready(function () {
   /**
@@ -24,8 +24,14 @@ $(document).ready(function () {
      */
     const $addTitleBtn = $(this);
 
+    /**
+     * Parsed maximum titles allowed, falling back to 2 if not provided.
+     * @type {number}
+     */
+    const maxTitles = Number(window.maxTitles) || 2;
+
     // Check if the current number of titles is below the allowed maximum.
-    if (titlesNumber >= window.maxTitles) return;
+    if (titlesNumber >= maxTitles) return;
 
     // Clone the existing title row and reset its input fields.
     const newTitleRow = $addTitleBtn.closest(".row").clone();
@@ -70,7 +76,7 @@ $(document).ready(function () {
       titlesNumber--;
 
       // Enable the "Add Title" button if below the maximum limit.
-      if (titlesNumber < window.maxTitles) {
+      if (titlesNumber < maxTitles) {
         $addTitleBtn.prop("disabled", false);
       }
     });
@@ -83,7 +89,7 @@ $(document).ready(function () {
     titlesNumber++;
 
     // Disable the "Add Title" button if the maximum number of titles is reached.
-    if (titlesNumber == window.maxTitles) {
+    if (titlesNumber >= maxTitles) {
       $addTitleBtn.prop("disabled", true);
     }
   });

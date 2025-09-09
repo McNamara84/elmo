@@ -299,4 +299,11 @@ class SaveHandler {
     }
 }
 
-export default SaveHandler;
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    SaveHandler,
+    validateEmbargoDate,
+    validateTemporalCoverage,
+    validateContactPerson
+  };
+}
