@@ -5,5 +5,6 @@ module.exports = {
     '/tests/playwright/' // Ignore Playwright tests
   ],
   collectCoverageFrom: ['tests/js/**/*.js'],
+  coverageProvider: 'v8',
   coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
 };
