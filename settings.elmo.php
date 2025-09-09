@@ -48,6 +48,9 @@ $showRelatedWork = true;
 // Show Funding Reference form group
 $showFundingReference = true;
 
+$showAuthorInstitution = true;
+
+
 // SETTINGS FOR EPOS MSL (Defaults: ELMO Variant = false)
 $showMslLabs = false;
 // URL to the source with all laboratories for MSL
