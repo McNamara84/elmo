@@ -63,26 +63,35 @@
                     </div>
                 </div>
                 <!-- Release frequency / temporal resolution -->
-                <div class="col-sm-3 col-lg-3 p-1">
-                    <div class="form-floating">
-                        <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency[]">
-                        <label for="input-temporal-frequency">
-                            Release frequency / temporal resolution
-                        </label>
-                    </div>
-                </div>
-                <!-- Choose frequency from list -->
-                <div class="col-sm-2 col-lg-2 p-1">
-                    <div class="form-floating">
+                <div class="col-sm-5 col-lg-5 p-1">
+                    <div class="form-floating mb-1">
                         <select class="form-select" id="select-temporal-frequency-predef" name="temporalFrequencyPredef[]">
                             <option selected value=""></option>
                             <option value="daily">Daily</option>
                             <option value="weekly">Weekly</option>
                             <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+
                         </select>
                         <label for="select-temporal-frequency-predef">
-                            Choose from list
+                            Release frequency / temporal resolution
                         </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="checkbox-custom-frequency">
+                        <label class="form-check-label" for="checkbox-custom-frequency">
+                            Use custom frequency value
+                        </label>
+                    </div>
+                    <div class="form-floating mt-1 d-none" id="custom-frequency-container">
+                        <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency[]" placeholder="Enter a numeric value">
+                        <label for="input-temporal-frequency">
+                            Custom frequency (days)
+                        </label>
+                        <div class="invalid-feedback" data-translate="general.numericTemporalResolutionInvalid">
+                            Please enter a valid temporal resolution. Only numbers are allowed.
+                        </div>
                     </div>
                 </div>
                 <!-- Generating institution -->
