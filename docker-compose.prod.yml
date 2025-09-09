@@ -18,25 +18,7 @@ services:
     ports:
       - "8080:80"
     environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      INSTALL_ACTION: basic
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_AUTH: ${SMTP_AUTH}
-      SMTP_SECURE: ${SMTP_SECURE}
-      SMTP_SENDER: ${SMTP_SENDER}
-      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
-      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
-      TZ: Europe/Berlin
-      ELMO_API_KEY: ${ELMO_API_KEY}
-      # Flags for Standard ELMO
-      SHOW_MSL_LABS: "false"
-      SHOW_MSL_VOCABS: "false"
+      - CONFIG_VERSION=generic # Set the desired configuration version here
     depends_on:
       - db
     restart: unless-stopped
@@ -57,26 +39,7 @@ services:
     ports:
       - "8081:80"
     environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      # No install routine
-      INSTALL_ACTION: skip
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_AUTH: ${SMTP_AUTH}
-      SMTP_SECURE: ${SMTP_SECURE}
-      SMTP_SENDER: ${SMTP_SENDER}
-      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
-      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_MSL}
-      TZ: Europe/Berlin
-      ELMO_API_KEY: ${ELMO_API_KEY}
-      # Flags for msl
-      SHOW_MSL_LABS: "true"
-      SHOW_MSL_VOCABS: "true"
+      - CONFIG_VERSION=msl # Set the desired configuration version here
     depends_on:
       - db
     restart: unless-stopped
@@ -97,27 +60,7 @@ services:
     ports:
       - "8082:80"
     environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      # No install routine
-      INSTALL_ACTION: skip
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_AUTH: ${SMTP_AUTH}
-      SMTP_SECURE: ${SMTP_SECURE}
-      SMTP_SENDER: ${SMTP_SENDER}
-      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
-      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
-      TZ: Europe/Berlin
-      ELMO_API_KEY: ${ELMO_API_KEY}
-      # Flags for gem
-      SHOW_MSL_LABS: "false"
-      SHOW_MSL_VOCABS: "false"
-      SHOW_GGMS_PROPERTIES: "true"
+      - CONFIG_VERSION=elmogem # Set the desired configuration version here 
     depends_on:
       - db
     restart: unless-stopped
