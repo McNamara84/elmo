@@ -62,20 +62,31 @@
                 </div>
               </div>
 
-              <!-- Celestial Body (Dropdown) -->
+              <!-- File Format (Dropdown) -->
               <div class="col-12 col-md-3 col-lg-3 p-1">
                 <div class="form-floating">
-                  <select class="form-select" id="input-celestial-body" name="celestial_body">
-                    <option value="Earth" selected>Earth</option>
-                    <option value="Moon of the Earth">Moon of the Earth</option>
-                    <option value="Mars">Mars</option>
-                    <option value="Ceres">Ceres</option>
-                    <option value="Venus">Venus</option>
-                    <option value="Other">Other</option>
+                  <select class="form-select" id="input-file-format" name="file_format" required>
                   </select>
-                  <label for="input-celestial-body">Celestial body</label>
+                  <label for="input-file-format">File format</label>
+                  <div class="invalid-feedback">Please provide file format</div>
                 </div>
               </div>
+            </div>
+
+            <!-- Celestial Body (Dropdown) -->
+            <div class="col-12 col-md-3 col-lg-3 p-1">
+              <div class="form-floating">
+                <select class="form-select" id="input-celestial-body" name="celestial_body">
+                  <option value="Earth" selected>Earth</option>
+                  <option value="Moon of the Earth">Moon of the Earth</option>
+                  <option value="Mars">Mars</option>
+                  <option value="Ceres">Ceres</option>
+                  <option value="Venus">Venus</option>
+                  <option value="Other">Other</option>
+                </select>
+                <label for="input-celestial-body">Celestial body</label>
+              </div>
+            </div>
 
             <!-- Second Row -->
             <div class="row mt-2">
@@ -91,9 +102,8 @@
                   </label>
                   <div class="invalid-feedback">Please provide model name. No spaces are allowed in it.</div>
                 </div>
-              </div>              
+              </div>
             </div> <!-- End of Second Row -->
-          </div>  
         </div> <!-- End of group-ggmspropertiesessential -->
     </div> <!-- End of Card Body -->
 </div>
