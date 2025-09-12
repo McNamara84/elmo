@@ -239,18 +239,18 @@ label.mandatory-field::after {
   top: -0.45em;
 }
 
-/* Hide Bootstrap/Browser "valid" styles when the field is empty (placeholder-shown) */
-.form-control:placeholder-shown.is-valid,
-.was-validated .form-control:placeholder-shown:valid {
+/* Unified rule: hide Bootstrap "valid" styles when the field is actually empty */
+.form-control:placeholder-shown.is-valid,                     /* Input fields using placeholder (e.g. text, email) */
+.was-validated .form-control:placeholder-shown:valid,
+
+.was-validated .form-select:valid:has(option[value=""]:checked), /* Select fields with empty option selected */
+.form-select.is-valid:has(option[value=""]:checked),
+
+.was-validated .form-control[type="date"]:valid:empty,        /* Date fields with no value */
+.form-control[type="date"].is-valid:empty,
+.was-validated .form-control[type="time"]:valid:empty,        /* Time fields with no value */
+.form-control[type="time"].is-valid:empty {
   background-image: none !important;  /* remove the green checkmark icon */
   box-shadow: none !important;        /* remove the green glow */
-  border-color: #ced4da !important;   /* reset to the default border color */
-}
-
-/* If Select is on an empty option AND is "valid" → reset styles */
-.was-validated .form-select:valid:has(option[value=""]:checked),
-.form-select.is-valid:has(option[value=""]:checked) {
-  background-image: none !important;  /* no green checkmark */
-  box-shadow: none !important;        /* no green glow */
-  border-color: #ced4da !important;   /* default color */
+  border-color: #ced4da !important;   /* reset to default Bootstrap border color */
 }
