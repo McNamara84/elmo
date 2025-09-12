@@ -246,3 +246,11 @@ label.mandatory-field::after {
   box-shadow: none !important;        /* remove the green glow */
   border-color: #ced4da !important;   /* reset to the default border color */
 }
+
+/* If Select is on an empty option AND is "valid" → reset styles */
+.was-validated .form-select:valid:has(option[value=""]:checked),
+.form-select.is-valid:has(option[value=""]:checked) {
+  background-image: none !important;  /* no green checkmark */
+  box-shadow: none !important;        /* no green glow */
+  border-color: #ced4da !important;   /* default color */
+}
