@@ -1,128 +1,165 @@
-
-  <!-- defer ensures that the script loads AFTER other dependencies (bzw. JQuery) in footer-->
 <div class="card mb-2">
-        <div class="card-header">
-          <b>Definition of the model</b>
-          <i class="bi bi-question-circle-fill" data-help-section-id="help-model-characteristics"></i>
+    <div class="card-header">
+        <b data-translate="technical.title">Characteristics of the model</b>
+        <i class="bi bi-question-circle-fill" data-help-section-id="help-technical"></i>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <!-- Tide System -->
+            <div class="col-12 col-md-6 col-lg-3 p-1">
+                <div class="input-group has-validation">
+                    <div class="form-floating">
+                        <select class="form-select input-with-help input-right-no-round-corners" id="input-tide-system" name="tide_system" required>
+                            <option value="" data-translate="general.choose">Choose...</option>
+                            <option value="zero tide" data-translate="technical.tideSystemOptions.zeroTide">zero tide</option>
+                            <option value="mean tide" data-translate="technical.tideSystemOptions.meanTide">mean tide</option>
+                            <option value="tide free" data-translate="technical.tideSystemOptions.tideFree">tide free</option>
+                        </select>
+                        <label for="input-tide-system"><span data-translate="technical.tideSystem">Tide system</span> <span class="text-danger">*</span></label>
+                        <div class="invalid-feedback" data-translate="technical.tideSystemInvalid">Please choose tide system.</div>
+                    </div>
+                    <div class="input-group-append">
+                        <span class="input-group-text">
+                            <i class="bi bi-question-circle-fill" data-help-section-id="help-tide-system"></i>
+                        </span>
+                    </div> 
+                </div>
+            </div>
+            <!-- Degree -->
+            <div class="col-12 col-md-6 col-lg-3 p-1">
+                <div class="input-group has-validation">
+                    <div class="form-floating">
+                        <input type="number" class="form-control input-with-help input-right-no-round-corners" id="input-degree" name="degree" min="0" step="1" required>
+                        <label for="input-degree"><span data-translate="technical.degree">Degree</span> <span class="text-danger">*</span></label>
+                        <div class="invalid-feedback" data-translate="technical.degreeInvalid">Please provide degree.</div>
+                    </div>
+                    <div class="input-group-append">
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-degree"></i></span>
+                    </div>
+                </div>
+            </div>
+            <!-- Errors -->
+            <div class="col-12 col-md-4 col-lg-6 p-1">
+                <div class="input-group has-validation">
+                    <div class="form-floating">
+                        <select class="form-select input-with-help input-right-no-round-corners" id="input-errors" name="errors" required>
+                            <option value="" data-translate="general.choose">Choose...</option>
+                            <option value="calibrated" data-translate="technical.errorOptions.calibrated">calibrated</option>
+                            <option value="formal" data-translate="technical.errorOptions.formal">formal</option>
+                            <option value="no" data-translate="technical.errorOptions.no">no</option>
+                        </select>
+                        <label for="input-errors"><span data-translate="technical.errors">Errors</span> <span class="text-danger">*</span></label>
+                        <div class="invalid-feedback" data-translate="technical.errorsInvalid">Please choose error type.</div>
+                    </div>
+                    <div class="input-group-append">
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-errors"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-8 col-lg-4 p-1">
+                <div class="input-group has-validation">
+                    <div class="form-floating">
+                        <!-- No spaces inside textarea! -->
+                        <textarea rows="4"class="form-control"id="input-error-handling-approach"name="error_handling_approach"maxlength="512"></textarea>
+                        <label for="input-error-handling-approach" data-translate="technical.errorHandling">Error handling approach</label>
+                        <div class="invalid-feedback" data-translate="technical.errorHandlingInvalid">Please describe error handling approach. Only letters, numbers and . , ( ) - are allowed.</div>
+                    </div>
+                </div>            
+            </div>
         </div>
-        <div class="card-body">
-          <div id = "group-ggmspropertiesessential">
-            <div class="row">
-              <!-- Model Type (Dropdown) -->
-              <div class="col-12 col-md-6 col-lg-3 p-1">
+        <div class="row">
+            <!-- Mathematical Representation triggers the visibility: either 1 radius or 2 variables -->
+
+            <!-- Radius   Spherical harmonics: with scientific notation (no arrows) -->
+            <div class="col-12 col-md-6 col-lg-6 p-1 visibility-spherical" style="display: none;">
                 <div class="input-group has-validation">
-                  <div class="form-floating">
-                    <select class="form-select input-with-help input-right-no-round-corners" 
-                            id="input-model-type" 
-                            name="model_type" 
-                            required>
-                    </select>
-                  
-                    <!-- Label with translation -->
-                    <label for="input-model-type">
-                      <span data-translate="model.type">Model Type</span>
-                      <span class="text-danger">*</span>
-                    </label>
-                    <div class="invalid-feedback">Please provide model type.</div>
-                  </div>
-                  <!-- Help button (aligned to input) -->
-                  <div class="input-group-append">
-                    <span class="input-group-text">
-                      <i class="bi bi-question-circle-fill" data-help-section-id="help-model-type"></i>
-                    </span>
-                  </div>
-
-                  <!-- Validation message -->
-                  <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
+                    <div class="form-floating">
+                        <input type="text" class="form-control input-with-help input-right-no-round-corners" 
+                               id="input-radius" 
+                               name="radius"pattern="^[0-9]+(\.[0-9]+)?([eEdD][+]?[0-9]+)?$"inputmode="decimal"
+                               required>
+                        <label for="input-radius">
+                            <span data-translate="technical.radius">Radius (in km)</span>
+                            <span class="text-danger">*</span> 
+                        </label>
+                        <div class="invalid-feedback" data-translate="technical.radiusInvalid">Please provide radius in numeric format. The format is described in the help section.</div>
+                    </div>
+                    <div class="input-group-append">
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-radius"></i></span>
+                    </div>
                 </div>
-              </div>
-              <!-- Mathematical Representation (Dropdown) -->
-              <div class="col-12 col-md-6 col-lg-3 p-1">
+            </div>
+            <!-- Ellipsoidal: Semimajor Axis -->
+            <div class="col-12 col-md-12 col-lg-4 p-1 visibility-ellipsoidal" style="display: none;">
                 <div class="input-group has-validation">
-                  <div class="form-floating">
-                    <select class="form-select input-with-help input-right-no-round-corners" 
-                      id="input-mathematical-representation" 
-                      name="mathematical_representation" 
-                      required>
-                    </select>
-                    <!-- Fixed label syntax -->
-                    <label for="input-mathematical-representation">
-                      Mathematical representation
-                      <span class="text-danger">*</span>
-                    </label>
-                    <!-- Keep this feedback inside form-floating -->
-                    <div class="invalid-feedback">Please provide mathematical representation.</div>
-                  </div>
-                  <!-- Added proper wrapper div -->
-                  <div class="input-group-append">
-                    <span class="input-group-text">
-                      <i class="bi bi-question-circle-fill" data-help-section-id="help-math-representation"></i>
-                    </span>
-                  </div>
+                    <div class="form-floating">
+                        <input type="text" class="form-control input-with-help input-right-no-round-corners" 
+                               id="input-semimajor-axis" 
+                               name="semimajor_axis_a"pattern="^[0-9]+(\.[0-9]+)?([eEdD][+]?[0-9]+)?$"inputmode="decimal">
+                        <label for="input-semimajor-axis">
+                            <span data-translate="technical.referenceEllipsoid">Semimajor axis a</span> 
+                        </label>
+                        <div class="invalid-feedback" data-translate="technical.referenceEllipsoidInvalid">Please provide a valid number for the bigger semimajor axis in numeric format. The format is described in the help section.</div>
+                    </div>
+                    <div class="input-group-append">
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-reference-ellipsoid"></i></span>
+                    </div>
                 </div>
-              </div>
-
-              <!-- Celestial Body (Dropdown) -->
-              <div class="col-12 col-md-3 col-lg-3 p-1">
-                <div class="form-floating">
-                  <select class="form-select" id="input-celestial-body" name="celestial_body">
-                    <option value="Earth" selected>Earth</option>
-                    <option value="Moon of the Earth">Moon of the Earth</option>
-                    <option value="Mars">Mars</option>
-                    <option value="Ceres">Ceres</option>
-                    <option value="Venus">Venus</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <label for="input-celestial-body">Celestial body</label>
-                </div>
-              </div>
-
-              <!-- File Format (Dropdown) -->
-              <div class="col-12 col-md-3 col-lg-3 p-1">
-                <div class="form-floating">
-                  <select class="form-select" id="input-file-format" name="file_format" required>
-                  </select>
-                  <label for="input-file-format">File format</label>
-                  <div class="invalid-feedback">Please provide file format</div>
-                </div>
-              </div>
             </div>
 
-            <!-- Second Row -->
-            <div class="row mt-2">
-              <!-- Model Name (Text Input) -->
-              <div class="col-12 col-md-6 col-lg-8 p-1">
-                <div class="form-floating">
-                  <input type="text" class="form-control" id="input-model-name" 
-                    name="model_name" 
-                    pattern="^[^\s]+$"      
-                    required>
-                  <label for="input-model-name">Model name
-                    <span class="text-danger">*</span>
-                  </label>
-                  <div class="invalid-feedback">Please provide model name. No spaces are allowed in it.</div>
+            <!-- Ellipsoidal: Second Variable Type -->
+            <div class="col-12 col-md-6 col-lg-4 p-1 visibility-ellipsoidal" style="display: none;">
+                <div class="input-group">
+                    <div class="form-floating">
+                        <select class="form-select input-with-help input-right-no-round-corners" 
+                                id="input-second-variable" 
+                                name="second_variable">
+                            <option value="" data-translate="general.choose">Choose...</option>
+                            <option value="axis_b" data-translate="technical.secondVariableOptions.axisB">axis b</option>
+                            <option value="flattening" data-translate="technical.secondVariableOptions.flattening">flattening</option>
+                            <option value="reciprocal_flattening" data-translate="technical.secondVariableOptions.reciprocalFlattening">reciprocal flattening</option>
+                        </select>
+                        <label for="input-second-variable">
+                            <span data-translate="technical.secondVariable">Second variable</span> 
+                        </label>
+                        <div class="invalid-feedback" data-translate="technical.secondVariableInvalid">Please choose second variable.</div>
+                    </div>
+                    <div class="input-group-append">
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-second-variable"></i></span>
+                    </div>
                 </div>
-              </div>
+            </div>
 
-              <!-- Product Type (Dropdown) -->
-              <div class="col-12 col-md-6 col-lg-4 p-1">
+            <!-- Ellipsoidal: Second Variable Value -->
+            <div class="col-12 col-md-6 col-lg-4 p-1 visibility-ellipsoidal" style="display: none;">
                 <div class="input-group has-validation">
-                  <div class="form-floating">
-                    <select class="form-select input-with-help input-right-no-round-corners" 
-                    id="input-product-type" 
-                    name="product_type">
-                      <option value="Gravity Field" selected>Gravity Field</option>
-                      <option value="Topographic Gravity Field">Topographic Gravity Field</option>
-                    </select>
-                    <label for="input-product-type">Product type</label>
-                  </div>
-                  <span class="input-group-text">
-                    <i class="bi bi-question-circle-fill" data-help-section-id="help-product-type"></i>
-                  </span>
+                    <div class="form-floating">
+                        <input type="text" class="form-control input-with-help input-right-no-round-corners" 
+                               id="input-second-variable-value" 
+                               name="second_variable_value"pattern="^[0-9]+(\.[0-9]+)?([eE][+\-]?[0-9]+)?$"inputmode="decimal">
+                        <label for="input-second-variable-value">
+                            <span data-translate="technical.secondVariableValue">Value</span> 
+                        </label>
+                        <div class="invalid-feedback" data-translate="technical.secondVariableValueInvalid">Please provide a valid number for second variable value in numeric format. The format is described in the help section.</div>
+                    </div>
+                    <div class="input-group-append">
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-second-variable-value"></i></span>
+                    </div>
                 </div>
-              </div>
-            </div> <!-- End of Second Row -->
-        </div> <!-- End of group-ggmspropertiesessential -->
-    </div> <!-- End of Card Body -->
+            </div>
+
+            <!-- Earth Gravity Constant -->
+            <div class="col-12 col-md-12 col-lg-6 p-1">
+                <div class="input-group has-validation">
+                    <div class="form-floating">
+                        <input type="decimal" class="form-control" id="input-earth-gravity-constant" name="earth_gravity_constant" step="any" 
+                        min="0" 
+                        pattern="^[0-9]+(\.[0-9]+)?([eEdD][+]?[0-9]+)?$"required>
+                        <label for="input-earth-gravity-constant"><span data-translate="technical.earthGravityConstant">Earth gravity constant</span> <span class="text-danger">*</span></label>
+                        <div class="invalid-feedback" data-translate="technical.earthGravityConstantInvalid">Please provide earth gravity constant in numeric format. The format is described in the help section.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<!-- End of Column -->
