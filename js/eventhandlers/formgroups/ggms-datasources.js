@@ -370,9 +370,9 @@ $(document).ready(function () {
             addButtonCol.insertAfter(descCol);
 
         } else {
-            // Restore original order: Type | Description | Details | Compensation | ModelName | Identifier | IdentifierType | Satellite | AddButton
-            descCol.insertAfter(typeCol);
+            // Restore original order: Type | Description | Details | Compensation | ModelName | Identifier | IdentifierType | Satellite | AddButton 
             detailsCol.insertAfter(descCol);
+            descCol.insertAfter(typeCol);
             compensationCol.insertAfter(detailsCol);
             modelNameCol.insertAfter(compensationCol);
             identifierCol.insertAfter(modelNameCol);
