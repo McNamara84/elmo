@@ -1,0 +1,128 @@
+
+  <!-- defer ensures that the script loads AFTER other dependencies (bzw. JQuery) in footer-->
+<div class="card mb-2">
+        <div class="card-header">
+          <b>Definition of the model</b>
+          <i class="bi bi-question-circle-fill" data-help-section-id="help-model-characteristics"></i>
+        </div>
+        <div class="card-body">
+          <div id = "group-ggmspropertiesessential">
+            <div class="row">
+              <!-- Model Type (Dropdown) -->
+              <div class="col-12 col-md-6 col-lg-3 p-1">
+                <div class="input-group has-validation">
+                  <div class="form-floating">
+                    <select class="form-select input-with-help input-right-no-round-corners" 
+                            id="input-model-type" 
+                            name="model_type" 
+                            required>
+                    </select>
+                  
+                    <!-- Label with translation -->
+                    <label for="input-model-type">
+                      <span data-translate="model.type">Model Type</span>
+                      <span class="text-danger">*</span>
+                    </label>
+                    <div class="invalid-feedback">Please provide model type.</div>
+                  </div>
+                  <!-- Help button (aligned to input) -->
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <i class="bi bi-question-circle-fill" data-help-section-id="help-model-type"></i>
+                    </span>
+                  </div>
+
+                  <!-- Validation message -->
+                  <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
+                </div>
+              </div>
+              <!-- Mathematical Representation (Dropdown) -->
+              <div class="col-12 col-md-6 col-lg-3 p-1">
+                <div class="input-group has-validation">
+                  <div class="form-floating">
+                    <select class="form-select input-with-help input-right-no-round-corners" 
+                      id="input-mathematical-representation" 
+                      name="mathematical_representation" 
+                      required>
+                    </select>
+                    <!-- Fixed label syntax -->
+                    <label for="input-mathematical-representation">
+                      Mathematical representation
+                      <span class="text-danger">*</span>
+                    </label>
+                    <!-- Keep this feedback inside form-floating -->
+                    <div class="invalid-feedback">Please provide mathematical representation.</div>
+                  </div>
+                  <!-- Added proper wrapper div -->
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <i class="bi bi-question-circle-fill" data-help-section-id="help-math-representation"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Celestial Body (Dropdown) -->
+              <div class="col-12 col-md-3 col-lg-3 p-1">
+                <div class="form-floating">
+                  <select class="form-select" id="input-celestial-body" name="celestial_body">
+                    <option value="Earth" selected>Earth</option>
+                    <option value="Moon of the Earth">Moon of the Earth</option>
+                    <option value="Mars">Mars</option>
+                    <option value="Ceres">Ceres</option>
+                    <option value="Venus">Venus</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <label for="input-celestial-body">Celestial body</label>
+                </div>
+              </div>
+
+              <!-- File Format (Dropdown) -->
+              <div class="col-12 col-md-3 col-lg-3 p-1">
+                <div class="form-floating">
+                  <select class="form-select" id="input-file-format" name="file_format" required>
+                  </select>
+                  <label for="input-file-format">File format</label>
+                  <div class="invalid-feedback">Please provide file format</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Second Row -->
+            <div class="row mt-2">
+              <!-- Model Name (Text Input) -->
+              <div class="col-12 col-md-6 col-lg-8 p-1">
+                <div class="form-floating">
+                  <input type="text" class="form-control" id="input-model-name" 
+                    name="model_name" 
+                    pattern="^[^\s]+$"      
+                    required>
+                  <label for="input-model-name">Model name
+                    <span class="text-danger">*</span>
+                  </label>
+                  <div class="invalid-feedback">Please provide model name. No spaces are allowed in it.</div>
+                </div>
+              </div>
+
+              <!-- Product Type (Dropdown) -->
+              <div class="col-12 col-md-6 col-lg-4 p-1">
+                <div class="input-group has-validation">
+                  <div class="form-floating">
+                    <select class="form-select input-with-help input-right-no-round-corners" 
+                    id="input-product-type" 
+                    name="product_type">
+                      <option value="Gravity Field" selected>Gravity Field</option>
+                      <option value="Topographic Gravity Field">Topographic Gravity Field</option>
+                    </select>
+                    <label for="input-product-type">Product type</label>
+                  </div>
+                  <span class="input-group-text">
+                    <i class="bi bi-question-circle-fill" data-help-section-id="help-product-type"></i>
+                  </span>
+                </div>
+              </div>
+            </div> <!-- End of Second Row -->
+        </div> <!-- End of group-ggmspropertiesessential -->
+    </div> <!-- End of Card Body -->
+</div>
+<!-- End of Column -->
