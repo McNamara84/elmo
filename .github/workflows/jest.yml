@@ -27,7 +27,7 @@ jobs:
         run: npx jest --config jest.config.js --runInBand --coverage
 
       - name: Create coverage badge
-        if: github.event_name == 'push'
+        if: github.event_name == 'pull_request'
         run: |
           COVERAGE=$(node -e "const fs=require('fs'); const pct=JSON.parse(fs.readFileSync('coverage/coverage-summary.json')).total.lines.pct; const value=Number(pct)||0; console.log(value);")
           COLOR=$(node -e "const c=Number(process.argv[1]); if (c >= 90) console.log('brightgreen'); else if (c >= 75) console.log('green'); else if (c >= 60) console.log('yellow'); else if (c >= 45) console.log('orange'); else console.log('red');" "$COVERAGE")
