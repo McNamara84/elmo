@@ -47,6 +47,8 @@ function updateOverlayLabels() {
   }
 }
 
+export { replaceHelpButtonInClonedRows, createRemoveButton, updateOverlayLabels };
+
 // Expose functions for both browser and Node environments
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
