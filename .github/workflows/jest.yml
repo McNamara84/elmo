@@ -35,7 +35,7 @@ jobs:
           curl -s https://img.shields.io/badge/JS%20Coverage-${COVERAGE}%25-${COLOR}.svg > output/js-coverage.svg
 
       - name: Publish coverage badge
-        if: github.event_name == 'push'
+        if: github.event_name == 'pull_request'
         uses: peaceiris/actions-gh-pages@v3
         with:
           publish_dir: ./output
