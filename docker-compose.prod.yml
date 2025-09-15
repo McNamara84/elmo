@@ -131,6 +131,7 @@ services:
       - "traefik.http.routers.elmo-gem-router.middlewares=elmo-gem-stripprefix"
       - "traefik.http.middlewares.elmo-gem-stripprefix.stripprefix.prefixes=/elmo-gem"
       - "traefik.http.services.elmo-gem-service.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik"
 
 volumes:
   db_data:
