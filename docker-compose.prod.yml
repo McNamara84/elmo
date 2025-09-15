@@ -45,7 +45,7 @@ services:
       - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.elmo-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo`)"
+      - "traefik.http.routers.elmo-router.rule=Host(`dataservices.gfz.de`) && PathPrefix(`/elmo`)"
       - "traefik.http.routers.elmo-router.entrypoints=https"
       - "traefik.http.routers.elmo-router.middlewares=elmo-stripprefix"
       - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
