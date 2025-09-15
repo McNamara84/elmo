@@ -9,12 +9,12 @@
 *.swp
 *.swo
 
-
 # Ignore temporary and log files
 *.log
 *.tmp
 tmp/
 temp/
+
 
 # Ignore environment and secret files
 .env*

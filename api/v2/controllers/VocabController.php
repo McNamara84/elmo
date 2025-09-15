@@ -1415,10 +1415,10 @@ class VocabController
     {
         try {
             global $connection;
-            $stmt = $connection->prepare('SELECT File_format_id as id, name, description FROM File_Format ORDER BY name');
-            
+            $stmt = $connection->prepare('SELECT File_format_id as id, name, description FROM File_Format ORDER BY File_format_id ASC');
+
             if (!$stmt) {
-                throw new Exception("Failed to prepare statement: " . connection->error);
+                throw new Exception("Failed to prepare statement: " . $connection->error);
             }
             
             $stmt->execute();
@@ -1449,8 +1449,8 @@ class VocabController
     {
         try {
             global $connection;
-            $stmt = $connection->prepare('SELECT Model_type_id as id, name, description FROM Model_Type ORDER BY name');
-            
+            $stmt = $connection->prepare('SELECT Model_type_id as id, name, description FROM Model_Type ORDER BY Model_type_id ASC');
+
             if (!$stmt) {
                 throw new Exception("Failed to prepare statement: " . connection->error);
             }
@@ -1483,8 +1483,8 @@ class VocabController
     {
         try {
             global $connection;
-            $stmt = $connection->prepare('SELECT Mathematical_representation_id as id, name, description FROM Mathematical_Representation ORDER BY name');
-            
+            $stmt = $connection->prepare('SELECT Mathematical_representation_id as id, name, description FROM Mathematical_Representation ORDER BY Mathematical_representation_id ASC');
+
             if (!$stmt) {
                 throw new Exception("Failed to prepare statement: " . connection->error);
             }
