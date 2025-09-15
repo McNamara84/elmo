@@ -267,6 +267,54 @@ function validateAuthorInstitutionRequirements() {
     });
 };
 
+
+// Select the abstract textarea element
+const abstract = document.getElementById('input-abstract');
+
+// Add event listeners for both input (typing) and blur (leaving the field)
+['input', 'blur'].forEach(evt =>
+    abstract.addEventListener(evt, validateAbstractField)
+);
+
+/**
+ * Validates the abstract textarea field.
+ * - Marks the field as valid if it contains text.
+ * - Marks the field as invalid if it is empty or contains only whitespace.
+ * - Appends or removes the corresponding feedback message dynamically.
+ */
+function validateAbstractField() {
+    // Trim the current value to ignore leading/trailing whitespace
+    const value = abstract.value.trim();
+
+    // Reset validation state (remove valid/invalid classes)
+    abstract.classList.remove('is-valid', 'is-invalid');
+
+    // Locate the closest input-group wrapper (contains textarea and optional help button)
+    const inputGroup = abstract.closest('.input-group');
+
+    // Remove any previous feedback messages to avoid duplicates
+    const oldFeedback = inputGroup.querySelector('.invalid-feedback');
+    if (oldFeedback) oldFeedback.remove();
+
+    if (value.length === 0) {
+        // If empty or whitespace-only, mark field as invalid
+        abstract.classList.add('is-invalid');
+
+        // Create a new feedback element and append it after the input group
+        const feedbackElem = document.createElement('div');
+        feedbackElem.className = 'invalid-feedback';
+        feedbackElem.innerText = 'Please enter a valid abstract text.';
+        inputGroup.appendChild(feedbackElem);
+    } else {
+        // Otherwise, mark field as valid
+        abstract.classList.add('is-valid');
+    }
+}
+
+
+
+
+
 /**
  * Checks and dynamically sets the 'required' attribute for input fields across various formgroups.
  * This function ensures that mandatory fields are validated only when relevant data is provided in related fields.
@@ -293,6 +341,10 @@ function validateAllMandatoryFields() {
 
     // Formgroup Autor Institution
     validateAuthorInstitutionRequirements();
+
+    // Formgroup Abstract
+    validateAbstractRequirement();
+
 
 };
 
@@ -323,7 +375,8 @@ $(document).on('blur',
     'input[name="tscTimeStart[]"],' +
     'input[name="tscTimeEnd[]"],' +
     'input[name="rIdentifier[]"],' +
-    'input[name="awardURI[]"]',
+    'input[name="awardURI[]"], ' +
+    'textarea#input-abstract',
     function () {
         // Check mandatory fields when user leaves any of these input fields
         validateAllMandatoryFields();
