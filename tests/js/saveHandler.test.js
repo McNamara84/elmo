@@ -155,4 +155,13 @@ describe('saveHandler.js', () => {
     document.querySelector('#modal-notification .btn-close').click();
     expect(modalInstances[1].hide).toHaveBeenCalled();
   });
+
+  test('provides ES module exports', async () => {
+    const mod = await import('../../js/saveHandler.js');
+    expect(mod.default).toBeDefined();
+    expect(mod.SaveHandler).toBeDefined();
+    expect(mod.validateEmbargoDate).toBeDefined();
+    expect(mod.validateTemporalCoverage).toBeDefined();
+    expect(mod.validateContactPerson).toBeDefined();
+  });
 });

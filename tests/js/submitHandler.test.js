@@ -8,6 +8,12 @@ describe('submitHandler.js', () => {
   let handler;
   let $;
 
+  function loadScript() {
+    ({ SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson } =
+      requireFresh('../../js/submitHandler.js'));
+    handler = new SubmitHandler('test-form', 'modal-submit', 'modal-notification');
+  }
+
   beforeEach(() => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
     document.body.innerHTML = `
@@ -57,9 +63,7 @@ describe('submitHandler.js', () => {
       }
     };
 
-    ({ SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson } =
-      requireFresh('../../js/submitHandler.js'));
-    handler = new SubmitHandler('test-form', 'modal-submit', 'modal-notification');
+    loadScript();
   });
 
   afterEach(() => {
@@ -131,5 +135,14 @@ describe('submitHandler.js', () => {
     };
     handler.handleAjaxError(xhr, 'error', 'fail');
     expect(spy).toHaveBeenCalledWith('danger', 'Error', 'Submit Error');
+  });
+
+  test('provides ES module exports', async () => {
+    const mod = await import('../../js/submitHandler.js');
+    expect(mod.default).toBeDefined();
+    expect(mod.SubmitHandler).toBeDefined();
+    expect(mod.validateEmbargoDate).toBeDefined();
+    expect(mod.validateTemporalCoverage).toBeDefined();
+    expect(mod.validateContactPerson).toBeDefined();
   });
 });
