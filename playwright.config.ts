@@ -1,3 +1,4 @@
+import './playwright-require.cjs';
 import { defineConfig, devices } from '@playwright/test';
 
 /**

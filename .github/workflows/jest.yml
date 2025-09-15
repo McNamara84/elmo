@@ -2,12 +2,12 @@ name: Jest Tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["**"]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test:
@@ -29,8 +29,8 @@ jobs:
       - name: Create coverage badge
         if: github.event_name == 'push'
         run: |
-          COVERAGE=$(node -e "console.log(JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct)")
-          COLOR=$(node -e "c=$COVERAGE; if (c >= 90) console.log('brightgreen'); else if (c >= 75) console.log('green'); else if (c >= 60) console.log('yellow'); else if (c >= 45) console.log('orange'); else console.log('red');")
+          COVERAGE=$(node -e "const fs=require('fs'); const pct=JSON.parse(fs.readFileSync('coverage/coverage-summary.json')).total.lines.pct; const value=Number(pct)||0; console.log(value);")
+          COLOR=$(node -e "const c=Number(process.argv[1]); if (c >= 90) console.log('brightgreen'); else if (c >= 75) console.log('green'); else if (c >= 60) console.log('yellow'); else if (c >= 45) console.log('orange'); else console.log('red');" "$COVERAGE")
           mkdir -p output
           curl -s https://img.shields.io/badge/JS%20Coverage-${COVERAGE}%25-${COLOR}.svg > output/js-coverage.svg
 

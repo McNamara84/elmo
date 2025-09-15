@@ -1,8 +1,7 @@
-const fs = require('fs');
 const path = require('path');
 
 describe('eventhandlers/functions.js', () => {
-  let $;
+  let $, funcs;
 
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -24,21 +23,12 @@ describe('eventhandlers/functions.js', () => {
     };
     $.fn.is.__original = originalIs;
 
-    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/functions.js'), 'utf8');
-    script = script.replace('export function replaceHelpButtonInClonedRows', 'function replaceHelpButtonInClonedRows');
-    script = script.replace('export function createRemoveButton', 'function createRemoveButton');
-    script = script.replace('export function updateOverlayLabels', 'function updateOverlayLabels');
-    script += '\nwindow.replaceHelpButtonInClonedRows = replaceHelpButtonInClonedRows;';
-    script += '\nwindow.createRemoveButton = createRemoveButton;';
-    script += '\nwindow.updateOverlayLabelsWrapper = updateOverlayLabels;';
-    window.eval(script);
+    funcs = require(path.resolve(__dirname, '../../js/eventhandlers/functions.js'));
   });
 
   afterEach(() => {
-    delete window.updateOverlayLabels;
-    delete window.updateOverlayLabelsWrapper;
-    delete window.replaceHelpButtonInClonedRows;
-    delete window.createRemoveButton;
+    delete global.$;
+    delete global.jQuery;
     $.fn.is = $.fn.is.__original;
   });
 
@@ -51,7 +41,7 @@ describe('eventhandlers/functions.js', () => {
       </div>`;
     const row = $('#row');
 
-    window.replaceHelpButtonInClonedRows(row);
+    funcs.replaceHelpButtonInClonedRows(row);
 
     const placeholder = row.find('div.help-placeholder');
     expect(placeholder.length).toBe(1);
@@ -72,7 +62,7 @@ describe('eventhandlers/functions.js', () => {
       </div>`;
     const row = $('#row');
 
-    window.replaceHelpButtonInClonedRows(row);
+    funcs.replaceHelpButtonInClonedRows(row);
 
     const placeholder = row.find('div.help-placeholder');
     expect(placeholder.length).toBe(1);
@@ -87,7 +77,7 @@ describe('eventhandlers/functions.js', () => {
       </div>`;
     const row = $('#row');
 
-    window.replaceHelpButtonInClonedRows(row);
+    funcs.replaceHelpButtonInClonedRows(row);
 
     expect(row.find('div.help-placeholder').length).toBe(0);
     expect(row.find('span.input-group-text').length).toBe(1);
@@ -105,7 +95,7 @@ describe('eventhandlers/functions.js', () => {
       </div>`;
     const row = $('#row');
 
-    window.replaceHelpButtonInClonedRows(row, 'custom-class');
+    funcs.replaceHelpButtonInClonedRows(row, 'custom-class');
 
     const input = row.find('.input-with-help');
     expect(input.hasClass('custom-class')).toBe(true);
@@ -121,7 +111,7 @@ describe('eventhandlers/functions.js', () => {
       </div>`;
     const row = $('#row');
 
-    window.replaceHelpButtonInClonedRows(row);
+    funcs.replaceHelpButtonInClonedRows(row);
 
     expect(row.find('div.help-placeholder').length).toBe(0);
     expect(row.find('span.input-group-text').length).toBe(1);
@@ -131,7 +121,7 @@ describe('eventhandlers/functions.js', () => {
   });
 
   test('createRemoveButton returns correct button', () => {
-    const btn = window.createRemoveButton();
+    const btn = funcs.createRemoveButton();
     expect(btn.is('button')).toBe(true);
     expect(btn.attr('type')).toBe('button');
     expect(btn.hasClass('btn-danger')).toBe(true);
@@ -140,15 +130,15 @@ describe('eventhandlers/functions.js', () => {
     expect(btn.attr('style')).toContain('width: 36px');
   });
 
-  test('updateOverlayLabelsWrapper calls global updateOverlayLabels if present', () => {
+  test('updateOverlayLabels calls global updateOverlayLabels if present', () => {
     const spy = jest.fn();
     window.updateOverlayLabels = spy;
-    window.updateOverlayLabelsWrapper();
+    funcs.updateOverlayLabels();
     expect(spy).toHaveBeenCalled();
   });
 
-  test('updateOverlayLabelsWrapper does nothing when global function absent', () => {
+  test('updateOverlayLabels does nothing when global function absent', () => {
     window.updateOverlayLabels = undefined;
-    expect(() => window.updateOverlayLabelsWrapper()).not.toThrow();
+    expect(() => funcs.updateOverlayLabels()).not.toThrow();
   });
 });

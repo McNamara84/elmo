@@ -1,19 +1,7 @@
-const fs = require('fs');
 const path = require('path');
 
 describe('help.js', () => {
-  let $;
-
-  const loadScript = () => {
-    const script = fs.readFileSync(path.resolve(__dirname, '../../js/help.js'), 'utf8');
-    const match = script.match(/\$\(document\)\.ready\(function \(\) {([\s\S]*)}\);/);
-    if (match) {
-      const fn = new Function(match[1]);
-      fn();
-    } else {
-      throw new Error('Unable to parse help.js');
-    }
-  };
+  let $, help;
 
   beforeEach(() => {
     jest.resetModules();
@@ -31,6 +19,8 @@ describe('help.js', () => {
     global.$ = $;
     global.jQuery = $;
     $.fn.modal = jest.fn();
+    help = require(path.resolve(__dirname, '../../js/help.js'));
+    help.initHelp();
   });
 
   afterEach(() => {
@@ -40,7 +30,6 @@ describe('help.js', () => {
   });
 
   test('initializes to help-on by default', () => {
-    loadScript();
     expect($('#buttonHelpOn').hasClass('active')).toBe(true);
     expect($('#buttonHelpOff').hasClass('active')).toBe(false);
     expect($('#bd-help-icon').hasClass('bi-question-square-fill')).toBe(true);
@@ -49,7 +38,7 @@ describe('help.js', () => {
 
   test('initializes to help-off when stored', () => {
     localStorage.setItem('helpStatus', 'help-off');
-    loadScript();
+    help.initHelp();
     expect($('#buttonHelpOn').hasClass('active')).toBe(false);
     expect($('#buttonHelpOff').hasClass('active')).toBe(true);
     expect($('#bd-help-icon').hasClass('bi-question-square')).toBe(true);
@@ -57,7 +46,6 @@ describe('help.js', () => {
   });
 
   test('clicking Help Off stores status and updates UI', () => {
-    loadScript();
     $('#buttonHelpOff').trigger('click');
     expect(localStorage.getItem('helpStatus')).toBe('help-off');
     expect($('#buttonHelpOff').hasClass('active')).toBe(true);
@@ -68,7 +56,7 @@ describe('help.js', () => {
 
   test('clicking Help On stores status and updates UI', () => {
     localStorage.setItem('helpStatus', 'help-off');
-    loadScript();
+    help.initHelp();
     $('#buttonHelpOn').trigger('click');
     expect(localStorage.getItem('helpStatus')).toBe('help-on');
     expect($('#buttonHelpOn').hasClass('active')).toBe(true);
@@ -78,7 +66,7 @@ describe('help.js', () => {
   });
 
   test('clicking help icon triggers loadHelpContent with section id', () => {
-    loadScript();
+    $.get = jest.fn(() => ({ fail: jest.fn() }));
     const spy = jest.spyOn(window, 'loadHelpContent').mockImplementation(() => {});
     $('#helpIcon').trigger('click');
     expect(spy).toHaveBeenCalledWith('section1');
@@ -86,12 +74,11 @@ describe('help.js', () => {
   });
 
   test('loadHelpContent populates modal on success', () => {
-    loadScript();
     $.get = jest.fn((url, success) => {
       success('<div id="sec">Content</div>');
       return { fail: jest.fn() };
     });
-    window.loadHelpContent('sec');
+    help.loadHelpContent('sec');
     expect($.get).toHaveBeenCalledWith('doc/help.php', expect.any(Function));
     expect($('#helpModal .modal-body').html()).toBe('Content');
     expect($.fn.modal).toHaveBeenCalledWith('show');
@@ -99,16 +86,14 @@ describe('help.js', () => {
 
   test('loadHelpContent logs error on failure', () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    loadScript();
     $.get = jest.fn(() => ({ fail: cb => cb() }));
-    window.loadHelpContent('sec');
+    help.loadHelpContent('sec');
     expect(errorSpy).toHaveBeenCalledWith('Error loading help content.');
     errorSpy.mockRestore();
   });
 
   test('Help button opens help page', () => {
     const openSpy = jest.spyOn(window, 'open').mockImplementation(() => {});
-    loadScript();
     const btn = document.getElementById('buttonHelp');
     const evt = new MouseEvent('click', { bubbles: true, cancelable: true });
     btn.dispatchEvent(evt);
