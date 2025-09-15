@@ -150,4 +150,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
 
   // Store the Tagify instance in the DOM element for later access
   inputElement[0].tagify = tagify;
+  }
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { autocompleteAffiliations, refreshTagifyInstances };
 }

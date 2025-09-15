@@ -1,15 +1,15 @@
-const fs = require('fs');
-const path = require('path');
+const { requireFresh } = require('./utils');
 
 let SaveHandler;
+let validateEmbargoDate;
+let validateTemporalCoverage;
+let validateContactPerson;
 let $;
 let modalInstances;
 
 function loadScript() {
-  const script = fs.readFileSync(path.resolve(__dirname, '../../js/saveHandler.js'), 'utf8')
-    .replace('export default SaveHandler;', 'window.SaveHandler = SaveHandler;');
-  window.eval(script);
-  SaveHandler = window.SaveHandler;
+  ({ SaveHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson } =
+    requireFresh('../../js/saveHandler.js'));
 }
 
 describe('saveHandler.js', () => {
@@ -74,7 +74,7 @@ describe('saveHandler.js', () => {
     const feedback = document.querySelector('.embargo-invalid');
     created.value = '2024-06-02';
     embargo.value = '2024-06-01';
-    const result = window.validateEmbargoDate();
+    const result = validateEmbargoDate();
     expect(result).toBe(false);
     expect(embargo.classList.contains('is-invalid')).toBe(true);
     expect(feedback.textContent).toBe('embargoErr');
@@ -82,7 +82,7 @@ describe('saveHandler.js', () => {
 
   test('validateEmbargoDate resets when empty', () => {
     const embargo = document.getElementById('input-date-embargo');
-    window.validateEmbargoDate();
+    validateEmbargoDate();
     expect(embargo.className).not.toContain('is-invalid');
     expect(embargo.className).not.toContain('is-valid');
   });
@@ -96,26 +96,26 @@ describe('saveHandler.js', () => {
       <div class="invalid-feedback" data-translate="coverage.dateTimeInvalid"></div>`;
     document.body.appendChild(row);
 
-    const result = window.validateTemporalCoverage(row);
+    const result = validateTemporalCoverage(row);
     const end = row.querySelector('[id*="input-stc-dateend"]');
     expect(result).toBe(false);
     expect(end.classList.contains('is-invalid')).toBe(true);
     expect(row.querySelector('.invalid-feedback').textContent).toBe('endErr');
 
     end.value = '2024-06-20';
-    const result2 = window.validateTemporalCoverage(row);
+    const result2 = validateTemporalCoverage(row);
     expect(result2).toBe(true);
     expect(end.classList.contains('is-valid')).toBe(true);
   });
 
   test('validateContactPerson requires one selection', () => {
     const boxes = document.querySelectorAll('input[name="contacts[]"]');
-    expect(window.validateContactPerson()).toBe(false);
+    expect(validateContactPerson()).toBe(false);
     expect(document.getElementById('contact-person-error')).not.toBeNull();
     boxes.forEach(b => expect(b.required).toBe(true));
 
     boxes[0].checked = true;
-    const res2 = window.validateContactPerson();
+    const res2 = validateContactPerson();
     expect(res2).toBe(true);
     expect(document.getElementById('contact-person-error')).toBeNull();
     boxes.forEach(b => expect(b.required).toBe(false));
@@ -154,5 +154,14 @@ describe('saveHandler.js', () => {
 
     document.querySelector('#modal-notification .btn-close').click();
     expect(modalInstances[1].hide).toHaveBeenCalled();
+  });
+
+  test('provides ES module exports', async () => {
+    const mod = await import('../../js/saveHandler.js');
+    expect(mod.default).toBeDefined();
+    expect(mod.SaveHandler).toBeDefined();
+    expect(mod.validateEmbargoDate).toBeDefined();
+    expect(mod.validateTemporalCoverage).toBeDefined();
+    expect(mod.validateContactPerson).toBeDefined();
   });
 });

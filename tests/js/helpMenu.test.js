@@ -1,5 +1,4 @@
-const fs = require('fs');
-const path = require('path');
+const { requireFresh } = require('./utils');
 
 describe('helpMenu.js', () => {
   let offcanvasElement;
@@ -25,8 +24,7 @@ describe('helpMenu.js', () => {
       ScrollSpy: jest.fn(),
     };
 
-    const script = fs.readFileSync(path.resolve(__dirname, '../../doc/helpMenu.js'), 'utf8');
-    window.eval(script);
+    requireFresh('../../doc/helpMenu.js');
     document.dispatchEvent(new Event('DOMContentLoaded'));
   });
 
