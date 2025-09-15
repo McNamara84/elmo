@@ -343,10 +343,6 @@ function validateAllMandatoryFields() {
     // Formgroup Autor Institution
     validateAuthorInstitutionRequirements();
 
-    // Formgroup Abstract
-    validateAbstractRequirement();
-
-
 };
 
 
