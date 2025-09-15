@@ -347,6 +347,10 @@ if (typeof module !== 'undefined' && module.exports) {
     SubmitHandler,
     validateEmbargoDate,
     validateTemporalCoverage,
-    validateContactPerson
+    validateContactPerson,
+    default: SubmitHandler
   };
 }
+
+export { SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson };
+export default SubmitHandler;
