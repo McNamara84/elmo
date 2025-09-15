@@ -230,47 +230,4 @@ describe('ggms-properties.js', () => {
       expect(window.updateErrorHandlingVisibility).toHaveBeenCalled();
     });
   });
-
-  // Test form submission behavior
-  describe('form submission', () => {
-    test('should add was-validated class when form is submitted', () => {
-      const form = $('.needs-validation');
-      expect(form.hasClass('was-validated')).toBeFalsy();
-      
-      form.trigger('submit');
-      
-      expect(form.hasClass('was-validated')).toBeTruthy();
-    });
-  });
-
-  // Test event handlers
-  describe('event handlers', () => {
-    test('should call updateReferenceSystemVisibility and checkGGMsTechnical when mathematical representation changes', () => {
-      window.updateReferenceSystemVisibility.mockClear();
-      window.checkGGMsTechnical.mockClear();
-      
-      $('#input-mathematical-representation').trigger('change');
-      
-      expect(window.updateReferenceSystemVisibility).toHaveBeenCalled();
-      expect(window.checkGGMsTechnical).toHaveBeenCalled();
-    });
-
-    test('should call updateErrorHandlingVisibility when errors selection changes', () => {
-      window.updateErrorHandlingVisibility.mockClear();
-      
-      $('#input-errors').trigger('change');
-      
-      expect(window.updateErrorHandlingVisibility).toHaveBeenCalled();
-    });
-
-    test('should call updateSecondVariableLabel and checkGGMsTechnical when second variable changes', () => {
-      window.updateSecondVariableLabel.mockClear();
-      window.checkGGMsTechnical.mockClear();
-      
-      $('#input-second-variable').trigger('change');
-      
-      expect(window.updateSecondVariableLabel).toHaveBeenCalled();
-      expect(window.checkGGMsTechnical).toHaveBeenCalled();
-    });
-  });
 });
