@@ -7,4 +7,7 @@ module.exports = {
   collectCoverageFrom: ['js/**/*.js'],
   coverageProvider: 'v8',
   coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
+  transform: {
+    '^.+\\.js$': 'babel-jest'
+  }
 };
