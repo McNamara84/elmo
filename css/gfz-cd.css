@@ -254,3 +254,32 @@ label.mandatory-field::after {
   box-shadow: none !important;        /* remove the green glow */
   border-color: #ced4da !important;   /* reset to default Bootstrap border color */
 }
+
+
+/* Show red shadow only when the field is focused and invalid */
+textarea.is-invalid:focus,
+.input-group.is-invalid textarea:focus {
+  box-shadow: 0 0 0 0.25rem rgba(220,53,69,.25) !important; /* Red shadow for focus */
+}
+
+/* Normal invalid state: red border only, no shadow or background image */
+textarea.is-invalid,
+.input-group.is-invalid textarea {
+  border-color: #dc3545 !important; /* Red border */
+  box-shadow: none !important;      /* No shadow when not focused */
+  background-image: none !important; /* Remove any default background icons/images */
+}
+
+/* Show green shadow only when the field is focused and valid */
+textarea.is-valid:focus,
+.input-group.is-valid textarea:focus {
+  box-shadow: 0 0 0 0.25rem rgba(25,135,84,.25) !important; /* Green shadow for focus */
+}
+
+/* Normal valid state: green border only, no shadow or background image */
+textarea.is-valid,
+.input-group.is-valid textarea {
+  border-color: #198754 !important;  /* Green border */
+  box-shadow: none !important;       /* No shadow when not focused */
+  background-image: none !important; /* Remove any default background icons/images */
+}
