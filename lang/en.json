@@ -100,6 +100,7 @@
         "abstract": "Abstract",
         "abstractTooltip": "Please enter an abstract...",
         "abstractPlaceholder": "Please enter an abstract of the data. Please do not repeat the abstract of a paper, but describe the data itself.",
+        "abstractInvalid": "Please enter a valid abstract text.",
         "methods": "Methods",
         "methodsTooltip": "Please describe the methods...",
         "methodsPlaceholder": "Please enter a description of the methodology employed for the study or research.",

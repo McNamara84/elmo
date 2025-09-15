@@ -100,6 +100,7 @@
         "abstract": "Résumé",
         "abstractTooltip": "Veuillez saisir un résumé...",
         "abstractPlaceholder": "Veuillez soumettre un résumé des données. Veuillez ne pas répéter le résumé d'un article, mais décrire les données elles-mêmes.",
+        "abstractInvalid": "Veuillez entrer un texte abstrait valide.",
         "methods": "Méthodes",
         "methodsTooltip": "Veuillez décrire les méthodes...",
         "methodsPlaceholder": "Veuillez décrire la méthodologie employée pour l'étude ou la recherche.",

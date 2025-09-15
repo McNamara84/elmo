@@ -100,6 +100,7 @@
         "abstract": "Abstract",
         "abstractTooltip": "Bitte geben Sie eine Zusammenfassung ein...",
         "abstractPlaceholder": "Bitte ein Abstract zu den Daten einreichen. Bitte nicht das Abstract der dazugehörigen Publikation wiederholen, sondern die Daten an sich beschreiben.",
+        "abstractInvalid": "Bitte geben Sie einen gültigen Abstract-Text ein.",
         "methods": "Methoden",
         "methodsTooltip": "Bitte beschreiben Sie die Methoden...",
         "methodsPlaceholder": "Bitte eine Beschreibung der für die Studie oder Forschung verwendeten Methodik eingeben.",

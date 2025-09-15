@@ -303,7 +303,7 @@ function validateAbstractField() {
         // Create a new feedback element and append it after the input group
         const feedbackElem = document.createElement('div');
         feedbackElem.className = 'invalid-feedback';
-        feedbackElem.innerText = 'Please enter a valid abstract text.';
+        feedbackElem.innerText = translations.descriptions.abstractInvalid;
         inputGroup.appendChild(feedbackElem);
     } else {
         // Otherwise, mark field as valid
