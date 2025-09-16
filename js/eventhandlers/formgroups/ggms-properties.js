@@ -118,34 +118,6 @@ function updateReferenceSystemVisibility() {
     }
 }
 
-/**
- * @description Real-time validation for GGMs Technical fields
- * 
- * @module ggmstechnical
- */
-function checkGGMsTechnical() {
-    const container = $('#group-ggmstechnical, #group-ggms-technical');
-    
-    if (!container.length) return;
-    
-    // Define technical fields
-    const fields = {
-        radius: container.find('#input-radius'),
-        semimajorAxis: container.find('#input-semimajor-axis'),
-        secondVariable: container.find('#input-second-variable'),
-        secondVariableValue: container.find('#input-second-variable-value')
-    };
-    
-    // Check if any visible field is filled
-    const  s = Object.values(fields).some(field => {
-        if (!field.length || !field.is(':visible')) return false;
-        const value = field.val();
-        return value && value.trim() !== '';
-    });
-    
-    // Update requirements based on visibility and content
-    updateReferenceSystemVisibility();
-}
 
 // Initialize when document is ready
 $(document).ready(function() {
