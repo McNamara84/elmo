@@ -6,28 +6,27 @@
  */
 
 /**
+
 * Replaces help buttons in cloned rows with invisible placeholders.
 * This helps maintain the structure and prevents changes in field sizes.
 *
 * @param {jQuery} row - The cloned row from which to replace help buttons.
 * @param {string} [roundCornersClass="input-right-with-round-corners"] - The CSS class for rounded corners.
 */
-export function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-with-round-corners") {
+function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-with-round-corners") {
   if ($(".input-group-text").is(":visible")) {
     // Find all span elements with the help icon
-    if (row.find("span.input-group-text:has(i.bi-question-circle-fill)").length) {
-      row.find("span.input-group-text:has(i.bi-question-circle-fill)").each(function () {
-        const helpSectionId = $(this).find('i').data('help-section-id') || '';
-        // Replace the span with an empty div that retains the help metadata
-        $(this).replaceWith(
-          `<div class="input-group-text help-placeholder" data-help-section-id="${helpSectionId}" style="visibility: hidden; width: 42px; height: 38px;"></div>`
-        );
-      });
+    row.find("span.input-group-text:has(i.bi-question-circle-fill)").each(function () {
+      const helpSectionId = $(this).find('i').data('help-section-id') || '';
+      // Replace the span with an empty div that retains the help metadata
+      $(this).replaceWith(
+        `<div class="input-group-text help-placeholder" data-help-section-id="${helpSectionId}" style="visibility: hidden; width: 42px; height: 38px;"></div>`
+      );
+    });
 
-      // Remove non-rounded corners class to keep structure intact
-      row.find(".input-with-help")
-        .removeClass("input-right-no-round-corners").addClass(roundCornersClass);
-    }
+    // Remove non-rounded corners class to keep structure intact
+    row.find(".input-with-help").removeClass("input-right-no-round-corners");
+    row.find(".input-with-help").addClass(roundCornersClass);
   }
 }
 
