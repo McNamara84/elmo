@@ -334,4 +334,16 @@ describe('ggms-definition.js', () => {
             consoleErrorSpy.mockRestore();
         });
     });
+    describe('Essential fields', () => {
+        test('if 1 field has value, all essential fields should have required attributes', () => {
+            // Set a value and trigger the change event to run the validation logic
+            $('#input-model-name').val('SAMPLE_MODEL').trigger('change');
+            
+            // Use .prop('required') to get the boolean state of the attribute
+            expect($('#input-model-name').prop('required')).toBe(true);
+            expect($('#input-model-type').prop('required')).toBe(true);
+            expect($('#input-mathematical-representation').prop('required')).toBe(true);
+            expect($('#input-file-format').prop('required')).toBe(true);
+        });
+    });
 });
