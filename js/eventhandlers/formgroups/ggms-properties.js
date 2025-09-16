@@ -137,7 +137,6 @@ $(document).ready(function() {
     // Set up event handlers
     $(document).on('change', '#input-mathematical-representation', function() {
         updateReferenceSystemVisibility();
-        checkGGMsTechnical();
     });
     
     $(document).on('change', '#input-errors', function() {
@@ -146,7 +145,6 @@ $(document).ready(function() {
     
     $(document).on('change', '#input-second-variable', function() {
         updateSecondVariableLabel();
-        checkGGMsTechnical();
     });
     
     // Watch for changes on technical fields
@@ -159,7 +157,7 @@ $(document).ready(function() {
     ];
     
     $(document).on('change blur', technicalFieldsToWatch.join(', '), function() {
-        checkGGMsTechnical();
+        updateReferenceSystemVisibility();
     });
     
     // Initialize on page load - wait a bit for API data to load

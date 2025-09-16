@@ -113,7 +113,7 @@ describe('ggms-properties.js', () => {
     jest.spyOn(window, 'updateSecondVariableLabel');
     jest.spyOn(window, 'updateErrorHandlingVisibility');
     jest.spyOn(window, 'updateReferenceSystemVisibility');
-    jest.spyOn(window, 'checkGGMsTechnical');
+    jest.spyOn(window, 'updateReferenceSystemVisibility');
     jest.spyOn(window, 'initializeTechnicalFields');
   });
 
@@ -197,23 +197,6 @@ describe('ggms-properties.js', () => {
         expect($('#input-error-handling-approach').val()).toBe('');
         expect($('#input-error-handling-approach').hasClass('is-valid')).toBeFalsy();
     });
-  });
-
-    // Test checkGGMsTechnical function
-    describe('checkGGMsTechnical', () => {
-        test('should call updateReferenceSystemVisibility when executed', () => {
-        window.updateReferenceSystemVisibility.mockClear();
-        window.checkGGMsTechnical();
-        expect(window.updateReferenceSystemVisibility).toHaveBeenCalled();
-        });
-
-        test('should not proceed if the container does not exist', () => {
-        // Remove the container
-        $('#group-ggmstechnical').remove();
-        window.updateReferenceSystemVisibility.mockClear();
-        window.checkGGMsTechnical();
-        expect(window.updateReferenceSystemVisibility).not.toHaveBeenCalled();
-        });
   });
 
   // Test initializeTechnicalFields function
