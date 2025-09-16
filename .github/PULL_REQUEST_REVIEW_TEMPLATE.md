@@ -1,31 +1,31 @@
-## Code-Qualität
-- [ ] Der Code ist gut lesbar und verständlich
-- [ ] Die Namensgebung von Variablen und Funktionen ist klar und konsistent
-- [ ] Der Code folgt unserem Style Guide
+## Code Quality
+- [ ] Code is readable and understandable.
+- [ ] Naming of variables and functions is clear and consistent.
+- [ ] Code follows our style guide.
 
-## Funktionalität
-- [ ] Die implementierte Funktionalität entspricht den Anforderungen
-- [ ] Edge Cases wurden berücksichtigt
-- [ ] Die Änderungen verursachen keine Regressionen (alle vorher bestehenden Funktionalitäten sind weiter vorhanden)
+## Functionality
+- [ ] Implemented functionality meets the requirements.
+- [ ] Edge cases are considered.
+- [ ] Changes do not cause regressions (previous functionality still works).
 
 ## Tests
-- [ ] Neue Unit Tests wurden hinzugefügt, um die Änderungen abzudecken
-- [ ] Neue Playwright Tests wurden hinzugefügt, um die Änderungen abzudecken
-- [ ] Bestehende Tests wurden angepasst, falls notwendig
-- [ ] Alle Tests laufen lokal erfolgreich durch
-- [ ] automatisierte Unit Tests werden auch beim Pull Request in github bestanden
-- [ ] automatisierte Playwright Tests werden auch beim Pull Request in github bestanden 
+- [ ] New unit tests were added to cover the changes (if applicable).
+- [ ] New Playwright tests were added to cover the changes (if applicable).
+- [ ] Existing tests were updated if necessary.
+- [ ] All tests pass locally.
+- [ ] Automated unit tests pass in the pull request.
+- [ ] Automated Playwright tests pass in the pull request.
 
-## Dokumentation
-- [ ] Der ELMO Guide wurde aktualisiert, falls notwendig
-- [ ] Die ReadMe wurde aktualisiert, falls notwendig
-- [ ] Die API-Dokumentation wurde aktualisiert, falls notwendig
-- [ ] Der Changelog wurde aktualisiert, falls notwendig
-- [ ] Code-Dokumentation nach PHPDoc-Standard
-- [ ] Code-Dokumentation nach JSDoc-Standard
+## Documentation
+- [ ] The ELMO Guide has been updated if needed.
+- [ ] The README has been updated if needed.
+- [ ] The API documentation has been updated if needed.
+- [ ] The changelog has been updated if needed.
+- [ ] PHP code is documented according to PHPDoc (if applicable).
+- [ ] JavaScript code is documented according to JSDoc (if applicable).
 
-## Sicherheit
-[Potenzielle Sicherheitsrisiken wurden berücksichtigt und adressiert]
+## Security
+[Potential security risks have been considered and addressed]
 
-## Probleme
-[Führe hier sämtliche Probleme auf, die aufgetreten sind,  hinzu, möglichst als leere Checkbox-Liste]
+## Issues
+[List any problems encountered, ideally as an unchecked checklist]
