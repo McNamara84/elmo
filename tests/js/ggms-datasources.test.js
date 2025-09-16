@@ -14,7 +14,7 @@ class MockTagify {
   removeAllTags() {}
 }
 
-describe('datasources.js', () => {
+describe('ggms-datasources.js', () => {
   let $;
   beforeEach(() => {
     document.body.innerHTML = `

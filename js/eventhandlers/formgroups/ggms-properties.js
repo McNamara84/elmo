@@ -97,9 +97,9 @@ function updateReferenceSystemVisibility() {
     if (!mathRepresentation || mathRepresentation.trim() === '') {
         // Default: show spherical (radius) when no math representation is selected
         showSpherical = true;
-    } else if (mathRepresentation.toLowerCase().includes('spherical')) {
+    } else if (mathRepresentation.toLowerCase() === 'spherical harmonics') {
         showSpherical = true;
-    } else if (mathRepresentation.toLowerCase().includes('ellipsoidal')) {
+    } else if (mathRepresentation.toLowerCase() === 'ellipsoidal harmonics') {
         showEllipsoidal = true;
     } else {
         // For any other mathematical representation, default to spherical
