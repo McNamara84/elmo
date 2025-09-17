@@ -1,8 +1,38 @@
 import { test, expect } from '@playwright/test';
+import path from 'node:path';
+import { readFileSync } from 'node:fs';
 
 declare const translations: any;
 
 const SCIENCE_PATH = 'Science Keywords > EARTH SCIENCE > AGRICULTURE > AGRICULTURAL AQUATIC SCIENCES > AQUACULTURE';
+const PLATFORMS_PATH = 'Platforms > Air-based Platforms > BALLOONS';
+
+const ROOT_DIR = path.resolve(__dirname, '../..');
+const THESAURI_TEMPLATE = readFileSync(path.join(ROOT_DIR, 'formgroups/thesaurusKeywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
+const TEST_ROUTE_PATH = '/gcmd-thesauri-test';
+const TEST_PAGE_HTML = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>GCMD Thesauri Keywords Playground</title>
+  </head>
+  <body>
+    <nav class="p-2 border-bottom">
+      <button id="bd-lang" type="button" class="btn btn-link">Language</button>
+      <div class="d-flex gap-2 mt-2" role="group" aria-label="Language selection">
+        <button type="button" data-bs-language-value="en" class="btn btn-outline-primary">English</button>
+        <button type="button" data-bs-language-value="de" class="btn btn-outline-primary">Deutsch</button>
+      </div>
+    </nav>
+    <main class="container p-3">
+      ${THESAURI_TEMPLATE}
+      <div id="help-scienceKeywords-keyword" role="note">Science Keywords Help</div>
+      <div id="help-gcmd-platforms-keyword" role="note">Platforms Help</div>
+      <div id="help-gcmd-instruments-keyword" role="note">Instruments Help</div>
+      <div id="help-keywords-keywordviewer" role="note">Keyword Viewer Help</div>
+    </main>
+  </body>
+</html>`;
 
 async function waitForTranslations(page: import('@playwright/test').Page) {
   await page.waitForFunction(() => {
