@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
 <Resource>
-  <currentDate>2025-05-18</currentDate>
-  <year>2009</year>
-  <dateCreated>2025-05-16</dateCreated>
+  <currentDate>2025-09-17</currentDate>
+  <doi>10.21384/test-dataset</doi>
+  <version>1.23</version>
+  <year>2024</year>
+  <dateCreated>2023-07-02</dateCreated>
+  <dateEmbargoUntil>2023-07-10</dateEmbargoUntil>
   <Rights>
     <rights_id>1</rights_id>
     <text>Creative Commons Attribution 4.0 International</text>
@@ -11,9 +14,9 @@
     <forSoftware>0</forSoftware>
   </Rights>
   <ResourceType>
-    <resource_name_id>2</resource_name_id>
-    <resource_type_general>Collection</resource_type_general>
-    <description>An aggregation of resources, which may encompass collections of one resourceType as well as those of mixed types. A collection is described as a group; its parts may also be separately described.</description>
+    <resource_name_id>3</resource_name_id>
+    <resource_type_general>ComputationalNotebook</resource_type_general>
+    <description>A virtual notebook environment used for literate programming.</description>
   </ResourceType>
   <Language>
     <language_id>1</language_id>
@@ -22,74 +25,162 @@
   </Language>
   <Titles>
     <Title>
-      <text>TESTTITLE</text>
+      <text>Long-term CO2 and CH4 flux measurements and associated environmental variables from a rewetted peatland</text>
       <type>Main Title</type>
     </Title>
   </Titles>
   <Authors>
     <AuthorPerson>
-      <familyname>Ehrmann</familyname>
-      <givenname>Holger</givenname>
-      <orcid>0009-0000-1235-6950</orcid>
+      <familyname>Dahle</familyname>
+      <givenname>Christoph</givenname>
+      <orcid>0000-0002-4733-9242</orcid>
       <Affiliations>
         <Affiliation>
-          <affiliation_id>1</affiliation_id>
-          <name>Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences</name>
-          <rorId>04z8jg394</rorId>
-        </Affiliation>
-        <Affiliation>
           <affiliation_id>2</affiliation_id>
-          <name>Fachhochschule Potsdam University of Applied Sciences</name>
-          <rorId>012m9bp23</rorId>
+          <name>Department of Earth Sciences, Memphis Center for Earthquake Research and Information, University of Memphis</name>
+          <rorId>05dyx6314</rorId>
         </Affiliation>
       </Affiliations>
     </AuthorPerson>
-    <AuthorInstitution>
-      <institutionname>University of Beira Interior</institutionname>
-      <Affiliations>
-        <Affiliation>
-          <affiliation_id>1</affiliation_id>
-          <name>University of Beira Interior</name>
-          <rorId>03nf36p02</rorId>
-        </Affiliation>
-      </Affiliations>
-    </AuthorInstitution>
-    <AuthorInstitution>
-      <institutionname>University of Applied Sciences Potsdam</institutionname>
-      <Affiliations>
-        <Affiliation>
-          <affiliation_id>2</affiliation_id>
-          <name>University of Applied Sciences Potsdam</name>
-          <rorId>012m9bp23</rorId>
-        </Affiliation>
-      </Affiliations>
-    </AuthorInstitution>
   </Authors>
   <ContactPersons>
     <ContactPerson>
-      <familyname>Ehrmann</familyname>
-      <givenname>Holger</givenname>
-      <orcid>0009-0000-1235-6950</orcid>
-      <email>holgerehrmann@gmail.com</email>
+      <familyname>Grzegorz</familyname>
+      <givenname>Kwiatek</givenname>
+      <orcid>1234-1234-1234-1234</orcid>
+      <email>Kwiatek.Grzegorz@gfz.de</email>
+      <website>gfz.de</website>
       <Affiliations>
         <Affiliation>
-          <affiliation_id>1</affiliation_id>
-          <name>Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences</name>
-          <rorId>04z8jg394</rorId>
-        </Affiliation>
-        <Affiliation>
           <affiliation_id>2</affiliation_id>
-          <name>Fachhochschule Potsdam University of Applied Sciences</name>
-          <rorId>012m9bp23</rorId>
+          <name>Department of Earth Sciences, Memphis Center for Earthquake Research and Information, University of Memphis</name>
+          <rorId>05dyx6314</rorId>
         </Affiliation>
       </Affiliations>
     </ContactPerson>
   </ContactPersons>
+  <OriginatingLaboratories>
+    <OriginatingLaboratory>
+      <laboratoryname>Lab 1</laboratoryname>
+      <labId>123456789c7caa2d763b647d476b2910</labId>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>2</affiliation_id>
+          <name>Department of Earth Sciences, Memphis Center for Earthquake Research and Information, University of Memphis</name>
+          <rorId>05dyx6314</rorId>
+        </Affiliation>
+        <Affiliation>
+          <affiliation_id>2</affiliation_id>
+          <name>Department of Earth Sciences, Memphis Center for Earthquake Research and Information, University of Memphis</name>
+          <rorId>05dyx6314</rorId>
+        </Affiliation>
+      </Affiliations>
+    </OriginatingLaboratory>
+  </OriginatingLaboratories>
+  <Contributors>
+    <Persons>
+      <Person>
+        <familyname>M&#xFC;ller</familyname>
+        <givenname>Anna</givenname>
+        <orcid>4100-4503-1076-415X</orcid>
+        <Affiliations>
+          <Affiliation>
+            <affiliation_id>3</affiliation_id>
+            <name>University of Applied Sciences Potsdam</name>
+            <rorId>012m9bp23</rorId>
+          </Affiliation>
+        </Affiliations>
+        <Roles>
+          <Role>
+            <name>Data Manager</name>
+          </Role>
+        </Roles>
+      </Person>
+    </Persons>
+    <Institutions>
+      <Institution>
+        <name>GFZ German Research Centre for Geosciences</name>
+        <Affiliations>
+          <Affiliation>
+            <affiliation_id>3</affiliation_id>
+            <name>University of Applied Sciences Potsdam</name>
+            <rorId>012m9bp23</rorId>
+          </Affiliation>
+        </Affiliations>
+        <Roles>
+          <Role>
+            <name>Data Manager</name>
+          </Role>
+        </Roles>
+      </Institution>
+    </Institutions>
+  </Contributors>
   <Descriptions>
     <Description>
       <type>Abstract</type>
-      <description>dfffd</description>
+      <description>Global database of &#x2009;&gt;20,&#x2009;000 geochemical analyses of Neogene-Quaternary intraplate volcanic rocks. The database collates major, trace element and Sr-Nd-Pb isotopic data for whole-rock samples &lt;20 Ma old that were published between 1990 and 2020. Database as published in Ball et al. (2021).</description>
+    </Description>
+    <Description>
+      <type>Other</type>
+      <description>The DIGIS geochemical data repository is a research data repository in the Earth Sciences domain with a specific focus on geochemical data. It is hosted at GFZ Data Services through a collaboration between the Digital Geochemical Data Infrastructure (DIGIS) for GEOROC 2.0 (https://digis.geo.uni-goettingen.de) and the GFZ German Research Centre for Geosciences. The repository archives, publishes and makes accessible user-contributed, peer-reviewed research data that fall within the scope of the GEOROC database. Compilations of previously published data are also made available on the GEOROC website (https://georoc.eu) as Expert Datasets.</description>
     </Description>
   </Descriptions>
-  <SpatialTemporalCoverages/>
+  <ThesaurusKeywords>
+    <Keyword>
+      <thesaurus_keywords_id>1</thesaurus_keywords_id>
+      <keyword>Science Keywords &gt; EARTH SCIENCE &gt; OCEANS &gt; SEA ICE &gt; SEA ICE VOLUME</keyword>
+      <scheme>NASA/GCMD Earth Science Keywords</scheme>
+      <schemeURI>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords</schemeURI>
+      <valueURI>https://gcmd.earthdata.nasa.gov/kms/concept/32929f40-ee7f-411d-8d2d-1d2cd9b78b09</valueURI>
+      <language>en</language>
+    </Keyword>
+    <lastUpdatedGcmdPlatformsKeywords>2025-05-09</lastUpdatedGcmdPlatformsKeywords>
+    <lastUpdatedGcmdInstrumentsKeywords>2025-05-09</lastUpdatedGcmdInstrumentsKeywords>
+    <lastUpdatedGcmdScienceKeywords>2025-05-09</lastUpdatedGcmdScienceKeywords>
+    <lastUpdatedMslVocabularies>2025-05-09</lastUpdatedMslVocabularies>
+  </ThesaurusKeywords>
+  <FreeKeywords>
+    <Keyword>
+      <free_keywords_id>1</free_keywords_id>
+      <free_keyword>Acoustic Emission</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+  </FreeKeywords>
+  <SpatialTemporalCoverages>
+    <SpatialTemporalCoverage>
+      <spatial_temporal_coverage_id>1</spatial_temporal_coverage_id>
+      <latitudeMin>53.7731</latitudeMin>
+      <latitudeMax>56.193</latitudeMax>
+      <longitudeMin>49.4175</longitudeMin>
+      <longitudeMax>57.5035</longitudeMax>
+      <description>Ein gro&#xDF;es Sedimentbecken in Westaustralien, das reich an fossilen Brennstoffen und bedeutenden Erd&#xF6;l- und Erdgasvorkommen ist.</description>
+      <dateStart>2024-06-03</dateStart>
+      <dateEnd>2024-06-03</dateEnd>
+      <timezone>+00:00</timezone>
+    </SpatialTemporalCoverage>
+  </SpatialTemporalCoverages>
+  <RelatedWorks>
+    <RelatedWork>
+      <Identifier>10.1016/j.epsl.2011.11.037</Identifier>
+      <Relation>
+        <name>Continues</name>
+      </Relation>
+      <IdentifierType>
+        <name>ARK</name>
+      </IdentifierType>
+    </RelatedWork>
+  </RelatedWorks>
+  <FundingReferences>
+    <FundingReference>
+      <Resource_has_Funding_Reference_id>1</Resource_has_Funding_Reference_id>
+      <Resource_resource_id>3</Resource_resource_id>
+      <Funding_Reference_funding_reference_id>1</Funding_Reference_funding_reference_id>
+      <funding_reference_id>1</funding_reference_id>
+      <funder>Gordon and Betty Moore Foundation</funder>
+      <funderid>100000936</funderid>
+      <funderidtyp>Crossref Funder ID</funderidtyp>
+      <grantnumber>GBMF3859.01</grantnumber>
+      <grantname>Socioenvironmental Monitoring of the Amazon Basin and Xingu</grantname>
+    </FundingReference>
+  </FundingReferences>
 </Resource>

@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
 <Resource>
-  <currentDate>2024-11-26</currentDate>
-  <doi>http://doi.org/10.1029/2023JB028411</doi>
-  <version/>
+  <currentDate>2025-09-17</currentDate>
+  <doi>10.1029/2023JB028411</doi>
   <year>2024</year>
   <dateCreated>2024-06-05</dateCreated>
   <dateEmbargoUntil>2024-06-15</dateEmbargoUntil>
@@ -15,8 +14,8 @@
   </Rights>
   <ResourceType>
     <resource_name_id>3</resource_name_id>
-    <resource_type_general>BookChapter</resource_type_general>
-    <description>One of the main divisions of a book.</description>
+    <resource_type_general>ComputationalNotebook</resource_type_general>
+    <description>A virtual notebook environment used for literate programming.</description>
   </ResourceType>
   <Language>
     <language_id>1</language_id>
@@ -30,7 +29,7 @@
     </Title>
   </Titles>
   <Authors>
-    <Author>
+    <AuthorPerson>
       <familyname>Goebel</familyname>
       <givenname>Thomas</givenname>
       <orcid>0000-0003-1552-0861</orcid>
@@ -41,22 +40,37 @@
           <rorId>04z8jg394</rorId>
         </Affiliation>
       </Affiliations>
-    </Author>
+    </AuthorPerson>
   </Authors>
-  <Descriptions>
-    <Description>
-      <type>Abstract</type>
-      <description>This dataset contains element concentrations of six different hydrological compartments sampled on a daily basis over the course of one year in two neighboured first order headwater catchments located in the Conventwald (Black Forest, Germany). Critical Zone water compartments include above-canopy precipitation (bulk precipitation including rainwater, snow and fog water), below-canopy precipitation (throughfall), subsurface flow from three distinct soil layers (organic layer, upper mineral soil, deep mineral soil), groundwater, creek water and spring water. Element concentrations include major elements (Ca, K, Mg, Na, Si, S), trace elements (Al, Ba, Cr, Cu, Fe, Li, Mn, P, Sr, Zn), anion (Cl), and dissolved organic elements (DOC, DON).\The data were used to explore concentration (C) - discharge (Q) relationships and to calculate short-term element-specific chemical weathering fluxes, which were compared with previously published long-term element-specific chemical weathering fluxes. The ratio of both weathering fluxes, described by the so-called &#x201C;Dissolved Export Efficiency&#x201D; (DEE) metric revealed deficits in the stream dissolved load. These deficits were attributed to colloid-bound export and either storage in re-growing forest biomass or export in biogenic particulate form.\Tables supplementary to the article, including data quality control, are provided in .pdf and .xlsx formats. In addition, data measured in the course of the study are also provided as machine readable ASCII files.</description>
-    </Description>
-    <Description>
-      <type>Methods</type>
-      <description>The field campaign and subsequent findings are derived from UAV data collected between July 27th and August 5th, 2016. We used lightweight cameras mounted on a modified DJI Matrice 100 quadcopter drone, allowing flight durations of over 30 min and simultaneous use of optical and thermal cameras. Flight control was based on GPS, with live video feed to the operator and predefined flight paths. Overflights were conducted at different times to optimize image quality: daylight flights at 5:00 local time for optimal contrast for the optical camera, and cold night flights at 3:00 local time for the infrared camera. Altitudes were 120 meters above ground to ensure comprehensive image coverage. The optical camera, a DJI Zenmuse X5R, captured 16-megapixel images at 2 frames per second, with each image geotagged by GPS. The thermal camera, a FLIR Tau 2, had a fully radiometric resolution of 640 &#xD7; 512 pixels and a spectral band of 7.5-13.5 &#x3BC;m, with GPS geotagging for each image.</description>
-    </Description>
-    <Description>
-      <type>Other</type>
-      <description>Orbital products describe positions and velocities of satellites, be it the Global Navigation Satellite System (GNSS) satellites or Low Earth Orbiter (LEO) satellites. These orbital products can be divided into the fastest available ones, the Near Realtime Orbits (NRT), which are mostly available within 15 to 60 minutes delay, followed by Rapid Science Orbit (RSO) products with a latency of two days and finally the Precise Science Orbit (PSO) which, with a latency of up to a few weeks, are the most delayed. The absolute positional accuracy increases with the time delay.</description>
-    </Description>
-  </Descriptions>
+  <ContactPersons>
+    <ContactPerson>
+      <familyname>Goebel</familyname>
+      <givenname>Thomas</givenname>
+      <orcid>5678-5678-5678-5678</orcid>
+      <email>Thomas.Goebel@tu-berlin.de</email>
+      <website>www.tu.berlin</website>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>1</affiliation_id>
+          <name>GFZ German Research Centre for Geosciences</name>
+          <rorId>04z8jg394</rorId>
+        </Affiliation>
+      </Affiliations>
+    </ContactPerson>
+  </ContactPersons>
+  <OriginatingLaboratories>
+    <OriginatingLaboratory>
+      <laboratoryname>Lab 2</laboratoryname>
+      <labId>9cd562c216daa82792972a01234567</labId>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>3</affiliation_id>
+          <name>University of Applied Sciences Potsdam</name>
+          <rorId>012m9bp23</rorId>
+        </Affiliation>
+      </Affiliations>
+    </OriginatingLaboratory>
+  </OriginatingLaboratories>
   <Contributors>
     <Persons>
       <Person>
@@ -72,7 +86,7 @@
         </Affiliations>
         <Roles>
           <Role>
-            <name>Contact Person</name>
+            <name>Data Collector</name>
           </Role>
         </Roles>
       </Person>
@@ -89,54 +103,26 @@
         </Affiliations>
         <Roles>
           <Role>
-            <name>Contact Person</name>
+            <name>Data Collector</name>
           </Role>
         </Roles>
       </Institution>
     </Institutions>
   </Contributors>
-  <ContactPersons>
-    <ContactPerson>
-      <familyname>Goebel</familyname>
-      <givenname>Thomas</givenname>
-      <position>Projektleiter</position>
-      <email>Thomas.Goebel@tu-berlin.de</email>
-      <website>www.tu.berlin</website>
-      <Affiliations>
-        <Affiliation>
-          <affiliation_id>1</affiliation_id>
-          <name>GFZ German Research Centre for Geosciences</name>
-          <rorId>04z8jg394</rorId>
-        </Affiliation>
-      </Affiliations>
-    </ContactPerson>
-  </ContactPersons>
-  <RelatedWorks>
-    <RelatedWork>
-      <Identifier>IECUR0097</Identifier>
-      <Relation>
-        <name>IsSupplementTo</name>
-      </Relation>
-      <IdentifierType>
-        <name>EAN13</name>
-      </IdentifierType>
-    </RelatedWork>
-  </RelatedWorks>
-  <SpatialTemporalCoverages>
-    <SpatialTemporalCoverage>
-      <spatial_temporal_coverage_id>2</spatial_temporal_coverage_id>
-      <latitudeMin>7.35755</latitudeMin>
-      <latitudeMax>8.83675</latitudeMax>
-      <longitudeMin>-70.8163</longitudeMin>
-      <longitudeMax>-69.498</longitudeMax>
-      <Description>Eine geologisch aktive Region in den Alpen, gepr&#xE4;gt durch die Kollision der eurasischen und afrikanischen Kontinentalplatten, die zur Bildung hoher Gebirgsketten f&#xFC;hrt.</Description>
-      <dateStart>2000-07-23</dateStart>
-      <dateEnd>2024-06-03</dateEnd>
-      <TimeStart>12:13:00</TimeStart>
-      <TimeEnd>12:22:55</TimeEnd>
-      <timezone>+05:00</timezone>
-    </SpatialTemporalCoverage>
-  </SpatialTemporalCoverages>
+  <Descriptions>
+    <Description>
+      <type>Abstract</type>
+      <description>This dataset contains element concentrations of six different hydrological compartments sampled on a daily basis over the course of one year in two neighboured first order headwater catchments located in the Conventwald (Black Forest, Germany). Critical Zone water compartments include above-canopy precipitation (bulk precipitation including rainwater, snow and fog water), below-canopy precipitation (throughfall), subsurface flow from three distinct soil layers (organic layer, upper mineral soil, deep mineral soil), groundwater, creek water and spring water. Element concentrations include major elements (Ca, K, Mg, Na, Si, S), trace elements (Al, Ba, Cr, Cu, Fe, Li, Mn, P, Sr, Zn), anion (Cl), and dissolved organic elements (DOC, DON).\The data were used to explore concentration (C) - discharge (Q) relationships and to calculate short-term element-specific chemical weathering fluxes, which were compared with previously published long-term element-specific chemical weathering fluxes. The ratio of both weathering fluxes, described by the so-called &#x201C;Dissolved Export Efficiency&#x201D; (DEE) metric revealed deficits in the stream dissolved load. These deficits were attributed to colloid-bound export and either storage in re-growing forest biomass or export in biogenic particulate form.\Tables supplementary to the article, including data quality control, are provided in .pdf and .xlsx formats. In addition, data measured in the course of the study are also provided as machine readable ASCII files.</description>
+    </Description>
+    <Description>
+      <type>Methods</type>
+      <description>The field campaign and subsequent findings are derived from UAV data collected between July 27th and August 5th, 2016. We used lightweight cameras mounted on a modified DJI Matrice 100 quadcopter drone, allowing flight durations of over 30 min and simultaneous use of optical and thermal cameras. Flight control was based on GPS, with live video feed to the operator and predefined flight paths. Overflights were conducted at different times to optimize image quality: daylight flights at 5:00 local time for optimal contrast for the optical camera, and cold night flights at 3:00 local time for the infrared camera. Altitudes were 120 meters above ground to ensure comprehensive image coverage. The optical camera, a DJI Zenmuse X5R, captured 16-megapixel images at 2 frames per second, with each image geotagged by GPS. The thermal camera, a FLIR Tau 2, had a fully radiometric resolution of 640 &#xD7; 512 pixels and a spectral band of 7.5-13.5 &#x3BC;m, with GPS geotagging for each image.</description>
+    </Description>
+    <Description>
+      <type>Other</type>
+      <description>Orbital products describe positions and velocities of satellites, be it the Global Navigation Satellite System (GNSS) satellites or Low Earth Orbiter (LEO) satellites. These orbital products can be divided into the fastest available ones, the Near Realtime Orbits (NRT), which are mostly available within 15 to 60 minutes delay, followed by Rapid Science Orbit (RSO) products with a latency of two days and finally the Precise Science Orbit (PSO) which, with a latency of up to a few weeks, are the most delayed. The absolute positional accuracy increases with the time delay.</description>
+    </Description>
+  </Descriptions>
   <ThesaurusKeywords>
     <Keyword>
       <thesaurus_keywords_id>3</thesaurus_keywords_id>
@@ -170,6 +156,10 @@
       <valueURI>http://www.eionet.europa.eu/gemet/concept/4131</valueURI>
       <language>en</language>
     </Keyword>
+    <lastUpdatedGcmdPlatformsKeywords>2025-05-09</lastUpdatedGcmdPlatformsKeywords>
+    <lastUpdatedGcmdInstrumentsKeywords>2025-05-09</lastUpdatedGcmdInstrumentsKeywords>
+    <lastUpdatedGcmdScienceKeywords>2025-05-09</lastUpdatedGcmdScienceKeywords>
+    <lastUpdatedMslVocabularies>2025-05-09</lastUpdatedMslVocabularies>
   </ThesaurusKeywords>
   <FreeKeywords>
     <Keyword>
@@ -178,6 +168,32 @@
       <isCurated>1</isCurated>
     </Keyword>
   </FreeKeywords>
+  <SpatialTemporalCoverages>
+    <SpatialTemporalCoverage>
+      <spatial_temporal_coverage_id>2</spatial_temporal_coverage_id>
+      <latitudeMin>7.35755</latitudeMin>
+      <latitudeMax>8.83675</latitudeMax>
+      <longitudeMin>-70.8163</longitudeMin>
+      <longitudeMax>-69.498</longitudeMax>
+      <description>Eine geologisch aktive Region in den Alpen, gepr&#xE4;gt durch die Kollision der eurasischen und afrikanischen Kontinentalplatten, die zur Bildung hoher Gebirgsketten f&#xFC;hrt.</description>
+      <dateStart>2000-07-23</dateStart>
+      <dateEnd>2024-06-03</dateEnd>
+      <timeStart>12:13:00</timeStart>
+      <timeEnd>12:22:55</timeEnd>
+      <timezone>+05:00</timezone>
+    </SpatialTemporalCoverage>
+  </SpatialTemporalCoverages>
+  <RelatedWorks>
+    <RelatedWork>
+      <Identifier>IECUR0097</Identifier>
+      <Relation>
+        <name>IsSupplementTo</name>
+      </Relation>
+      <IdentifierType>
+        <name>EAN13</name>
+      </IdentifierType>
+    </RelatedWork>
+  </RelatedWorks>
   <FundingReferences>
     <FundingReference>
       <Resource_has_Funding_Reference_id>3</Resource_has_Funding_Reference_id>
@@ -189,19 +205,7 @@
       <funderidtyp>Crossref Funder ID</funderidtyp>
       <grantnumber>GBMF3859.11</grantnumber>
       <grantname>Grants database</grantname>
+      <awarduri>https://www.moore.org/grants/list/GBMF3859.01</awarduri>
     </FundingReference>
   </FundingReferences>
-  <OriginatingLaboratories>
-    <OriginatingLaboratory>
-      <laboratoryname>Fragmentation Lab (Ludwig-Maximilians-University Munich, Germany)</laboratoryname>
-      <labId>9cd562c216daa82792972a074a222c52</labId>
-      <Affiliations>
-        <Affiliation>
-          <affiliation_id>3</affiliation_id>
-          <name>University of Applied Sciences Potsdam</name>
-          <rorId>012m9bp23</rorId>
-        </Affiliation>
-      </Affiliations>
-    </OriginatingLaboratory>
-  </OriginatingLaboratories>
 </Resource>

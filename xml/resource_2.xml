@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+<Resource>
+  <currentDate>2025-09-17</currentDate>
+  <doi>10.5880/GFZ.2.4.2024.001</doi>
+  <version>2.1</version>
+  <year>2024</year>
+  <dateCreated>1999-04-07</dateCreated>
+  <dateEmbargoUntil>2000-12-31</dateEmbargoUntil>
+  <Rights>
+    <rights_id>1</rights_id>
+    <text>Creative Commons Attribution 4.0 International</text>
+    <rightsIdentifier>CC-BY-4.0</rightsIdentifier>
+    <rightsURI>https://creativecommons.org/licenses/by/4.0/legalcode</rightsURI>
+    <forSoftware>0</forSoftware>
+  </Rights>
+  <ResourceType>
+    <resource_name_id>3</resource_name_id>
+    <resource_type_general>ComputationalNotebook</resource_type_general>
+    <description>A virtual notebook environment used for literate programming.</description>
+  </ResourceType>
+  <Language>
+    <language_id>1</language_id>
+    <code>en</code>
+    <name>English</name>
+  </Language>
+  <Titles>
+    <Title>
+      <text>A decade of short-period earthquake rupture histories from multi-array back-projection</text>
+      <type>Main Title</type>
+    </Title>
+  </Titles>
+  <Authors>
+    <AuthorPerson>
+      <familyname>Dahle</familyname>
+      <givenname>Christoph</givenname>
+      <orcid>0000-0002-4733-9242</orcid>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>3</affiliation_id>
+          <name>University of Applied Sciences Potsdam</name>
+          <rorId>012m9bp23</rorId>
+        </Affiliation>
+      </Affiliations>
+    </AuthorPerson>
+  </Authors>
+  <ContactPersons>
+    <ContactPerson>
+      <familyname>Wille</familyname>
+      <givenname>Christian</givenname>
+      <orcid>9012-9012-9012-9012</orcid>
+      <email>Christian.Wille@fh-potsdam.de</email>
+      <website>fh-potsdam.de</website>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>3</affiliation_id>
+          <name>University of Applied Sciences Potsdam</name>
+          <rorId>012m9bp23</rorId>
+        </Affiliation>
+      </Affiliations>
+    </ContactPerson>
+  </ContactPersons>
+  <OriginatingLaboratories>
+    <OriginatingLaboratory>
+      <laboratoryname>Lab 3</laboratoryname>
+      <labId>abc1234567890</labId>
+      <Affiliations/>
+    </OriginatingLaboratory>
+  </OriginatingLaboratories>
+  <Contributors>
+    <Persons>
+      <Person>
+        <familyname>Fischer</familyname>
+        <givenname>Lena</givenname>
+        <orcid>7854-3000-5930-6527</orcid>
+        <Affiliations>
+          <Affiliation>
+            <affiliation_id>2</affiliation_id>
+            <name>Department of Earth Sciences, Memphis Center for Earthquake Research and Information, University of Memphis</name>
+            <rorId>05dyx6314</rorId>
+          </Affiliation>
+        </Affiliations>
+        <Roles>
+          <Role>
+            <name>Data Curator</name>
+          </Role>
+        </Roles>
+      </Person>
+    </Persons>
+    <Institutions>
+      <Institution>
+        <name>University of Applied Sciences Potsdam</name>
+        <Affiliations>
+          <Affiliation>
+            <affiliation_id>2</affiliation_id>
+            <name>Department of Earth Sciences, Memphis Center for Earthquake Research and Information, University of Memphis</name>
+            <rorId>05dyx6314</rorId>
+          </Affiliation>
+        </Affiliations>
+        <Roles>
+          <Role>
+            <name>Data Curator</name>
+          </Role>
+        </Roles>
+      </Institution>
+    </Institutions>
+  </Contributors>
+  <Descriptions>
+    <Description>
+      <type>Abstract</type>
+      <description>The model named EHFM_Earth_7200 was derived by layer-based forward modeling technique in ellipsoidal harmonics, the maximum degree of this model reaches 7200. The relief information was provided by Earth2014 relief model. EHFM_Earth_7200 provides very detailed (~3 km) information for the Earth&#x2019;s short-scale gravity field, and it is expected to be able to augment or refine existing global gravity models. To meet the existing standard, here we provide spherical harmonic coefficients, which are transformed from original ellipsoidal harmonic coefficients. The maximum degree of the spherical harmonic coefficients is 7300.</description>
+    </Description>
+    <Description>
+      <type>Methods</type>
+      <description>- Compute global equiangular reduced latitude grids from degree 10800 Earth2014 SHCs and expanded these grids into EHCs. The grids are band-limited in spherical harmonics instead of in ellipsoidal harmonics so extra degrees beyond the truncation degree are also calculated. We obtained surface EHCs up to degree and order (d/o) 11000 but truncated them to d/o 7200.
+                - Calculate potential models of three layers (crust, water and ice) separately from Earth2014 reliefs by new developed ellipsoidal harmonic forward modeling formulas. The densities of the three layers are 2670, 1030, and 917 kg/m^3.
+                - Sum up results from the three layers and obtain EHFM_Earth_7200 ellipsoidal harmonic coefficients.
+                - Convert ellipsoidal harmonic coefficients to spherical harmonic coefficients. The maximum degree of the spherical harmonic coefficients is 7300.</description>
+    </Description>
+  </Descriptions>
+  <ThesaurusKeywords>
+    <Keyword>
+      <thesaurus_keywords_id>2</thesaurus_keywords_id>
+      <keyword>Instruments &gt; Solar/Space Observing Instruments &gt; Particle Detectors &gt; HYDRA</keyword>
+      <scheme>NASA/GCMD Instruments</scheme>
+      <schemeURI>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments</schemeURI>
+      <valueURI>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments</valueURI>
+      <language>en</language>
+    </Keyword>
+    <lastUpdatedGcmdPlatformsKeywords>2025-05-09</lastUpdatedGcmdPlatformsKeywords>
+    <lastUpdatedGcmdInstrumentsKeywords>2025-05-09</lastUpdatedGcmdInstrumentsKeywords>
+    <lastUpdatedGcmdScienceKeywords>2025-05-09</lastUpdatedGcmdScienceKeywords>
+    <lastUpdatedMslVocabularies>2025-05-09</lastUpdatedMslVocabularies>
+  </ThesaurusKeywords>
+  <FreeKeywords>
+    <Keyword>
+      <free_keywords_id>2</free_keywords_id>
+      <free_keyword>CO2 flux measurements</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+  </FreeKeywords>
+  <SpatialTemporalCoverages>
+    <SpatialTemporalCoverage>
+      <spatial_temporal_coverage_id>3</spatial_temporal_coverage_id>
+      <latitudeMin>26.4088</latitudeMin>
+      <latitudeMax>56.193</latitudeMax>
+      <longitudeMin>14.853</longitudeMin>
+      <longitudeMax>18.5664</longitudeMax>
+      <description> Ein aktives vulkanisches Gebiet in Island, bekannt f&#xFC;r seine regelm&#xE4;&#xDF;igen Ausbr&#xFC;che, Lavafelder und geothermischen Aktivit&#xE4;ten.</description>
+      <dateStart>2024-06-10</dateStart>
+      <dateEnd>2024-06-03</dateEnd>
+      <timezone>+02:00</timezone>
+    </SpatialTemporalCoverage>
+  </SpatialTemporalCoverages>
+  <RelatedWorks>
+    <RelatedWork>
+      <Identifier>978-3-905673-82-1</Identifier>
+      <Relation>
+        <name>IsSupplementedBy</name>
+      </Relation>
+      <IdentifierType>
+        <name>arXiv</name>
+      </IdentifierType>
+    </RelatedWork>
+  </RelatedWorks>
+  <FundingReferences>
+    <FundingReference>
+      <Resource_has_Funding_Reference_id>2</Resource_has_Funding_Reference_id>
+      <Resource_resource_id>2</Resource_resource_id>
+      <Funding_Reference_funding_reference_id>3</Funding_Reference_funding_reference_id>
+      <funding_reference_id>3</funding_reference_id>
+      <funder>U.S. Department of Defense</funder>
+      <funderid>100000005</funderid>
+      <funderidtyp>Crossref Funder ID</funderidtyp>
+      <grantnumber>GBMF3859.22</grantnumber>
+      <grantname>Grantmaking at a glance</grantname>
+      <awarduri>10.3030/892034</awarduri>
+    </FundingReference>
+  </FundingReferences>
+</Resource>

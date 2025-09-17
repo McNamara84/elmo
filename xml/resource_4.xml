@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <Resource>
-  <currentDate>2025-01-22</currentDate>
-  <year>2000</year>
-  <dateCreated>2025-01-08</dateCreated>
+  <currentDate>2025-09-17</currentDate>
+  <doi>https://doi.org/10.5880/GFZ.GRACEFO_06_GSM</doi>
+  <year>2024</year>
+  <dateCreated>2024-06-15</dateCreated>
   <Rights>
     <rights_id>1</rights_id>
     <text>Creative Commons Attribution 4.0 International</text>
@@ -11,9 +12,9 @@
     <forSoftware>0</forSoftware>
   </Rights>
   <ResourceType>
-    <resource_name_id>2</resource_name_id>
-    <resource_type_general>Book</resource_type_general>
-    <description>A medium for recording information in the form of writing or images, typically composed of many pages bound together and protected by a cover.</description>
+    <resource_name_id>5</resource_name_id>
+    <resource_type_general>Dataset</resource_type_general>
+    <description>Data encoded in a defined structure.</description>
   </ResourceType>
   <Language>
     <language_id>1</language_id>
@@ -22,129 +23,232 @@
   </Language>
   <Titles>
     <Title>
-      <text>DOI test</text>
+      <text>GRACE-FO Geopotential GSM Coefficients GFZ RL06</text>
       <type>Main Title</type>
-    </Title>
-    <Title>
-      <text>Testen 2.0</text>
-      <type>Alternative Title</type>
     </Title>
   </Titles>
   <Authors>
-    <Author>
-      <familyname>Ilyas khan</familyname>
-      <givenname>Muhammad</givenname>
-      <orcid>0000-0003-4816-5915</orcid>
+    <AuthorPerson>
+      <familyname>Goebel</familyname>
+      <givenname>Thomas</givenname>
+      <orcid>0000-0003-1552-0861</orcid>
       <Affiliations>
         <Affiliation>
-          <affiliation_id>4</affiliation_id>
-          <name>International Islamic University, Islamabad</name>
-          <rorId>047w75g40</rorId>
+          <affiliation_id>1</affiliation_id>
+          <name>GFZ German Research Centre for Geosciences</name>
+          <rorId>04z8jg394</rorId>
         </Affiliation>
       </Affiliations>
-    </Author>
+    </AuthorPerson>
+    <AuthorPerson>
+      <familyname>Dahle</familyname>
+      <givenname>Christoph</givenname>
+      <orcid>0000-0002-4733-9242</orcid>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>1</affiliation_id>
+          <name>GFZ German Research Centre for Geosciences</name>
+          <rorId>04z8jg394</rorId>
+        </Affiliation>
+      </Affiliations>
+    </AuthorPerson>
+    <AuthorPerson>
+      <familyname>Goebel</familyname>
+      <givenname>Thomas</givenname>
+      <orcid>0000-0003-1552-0861</orcid>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>1</affiliation_id>
+          <name>GFZ German Research Centre for Geosciences</name>
+          <rorId>04z8jg394</rorId>
+        </Affiliation>
+      </Affiliations>
+    </AuthorPerson>
+    <AuthorPerson>
+      <familyname>Goebel</familyname>
+      <givenname>Thomas</givenname>
+      <orcid>0000-0003-1552-0861</orcid>
+    </AuthorPerson>
+    <AuthorPerson>
+      <familyname>Dahle</familyname>
+      <givenname>Christoph</givenname>
+      <orcid>0000-0002-4733-9242</orcid>
+    </AuthorPerson>
+    <AuthorPerson>
+      <familyname>Goebel</familyname>
+      <givenname>Thomas</givenname>
+      <orcid>0000-0003-1552-0861</orcid>
+    </AuthorPerson>
+    <AuthorPerson>
+      <familyname>Grzegorz</familyname>
+      <givenname>Kwiatek</givenname>
+      <orcid>0000-0003-1076-615X</orcid>
+    </AuthorPerson>
   </Authors>
   <ContactPersons>
     <ContactPerson>
-      <familyname>Naja</familyname>
-      <givenname>Jana</givenname>
-      <position>CP</position>
-      <email>CP@cp.de</email>
-      <website>www.contact.de</website>
+      <familyname>Dahle</familyname>
+      <givenname>Christoph</givenname>
+      <orcid>0000-0002-4733-9242</orcid>
+      <email>grace@gfz-potsdam.de</email>
       <Affiliations>
         <Affiliation>
-          <affiliation_id>5</affiliation_id>
-          <name>RMIT University</name>
-          <rorId>04ttjf776</rorId>
+          <affiliation_id>1</affiliation_id>
+          <name>GFZ German Research Centre for Geosciences</name>
+          <rorId>04z8jg394</rorId>
         </Affiliation>
       </Affiliations>
     </ContactPerson>
   </ContactPersons>
-  <OriginatingLaboratories>
-    <OriginatingLaboratory>
-      <laboratoryname>Gmmodel - Laboratoire de mod&#xC3;&#xA9;lisation analogique G&#xC3;&#xA9;osciences Montpellier (CNRS-Montpellier University, France)</laboratoryname>
-      <labId>f780441f60a30a86b752e00adb66f107</labId>
-      <Affiliations>
-        <Affiliation>
-          <affiliation_id>6</affiliation_id>
-          <name>CNRS-Montpellier University, Montpellier, France</name>
-        </Affiliation>
-      </Affiliations>
-    </OriginatingLaboratory>
-  </OriginatingLaboratories>
-  <Contributors>
-    <Persons>
-      <Person>
-        <familyname>Malik</familyname>
-        <givenname>Ayesha</givenname>
-        <orcid>0000-0002-7471-0457</orcid>
-        <Affiliations>
-          <Affiliation>
-            <affiliation_id>7</affiliation_id>
-            <name>Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences</name>
-            <rorId>04z8jg394</rorId>
-          </Affiliation>
-        </Affiliations>
-        <Roles>
-          <Role>
-            <name>Data Curator</name>
-          </Role>
-          <Role>
-            <name>Data Manager</name>
-          </Role>
-        </Roles>
-      </Person>
-      <Person>
-        <familyname>Nana</familyname>
-        <givenname>Nina</givenname>
-        <Affiliations>
-          <Affiliation>
-            <affiliation_id>8</affiliation_id>
-            <name>No</name>
-          </Affiliation>
-          <Affiliation>
-            <affiliation_id>9</affiliation_id>
-            <name>ne</name>
-          </Affiliation>
-        </Affiliations>
-        <Roles>
-          <Role>
-            <name>Data Curator</name>
-          </Role>
-          <Role>
-            <name>Data Manager</name>
-          </Role>
-        </Roles>
-      </Person>
-      <Person>
-        <familyname>Lila</familyname>
-        <givenname>Lala</givenname>
-        <Affiliations/>
-        <Roles>
-          <Role>
-            <name>Project Member</name>
-          </Role>
-        </Roles>
-      </Person>
-    </Persons>
-  </Contributors>
-  <Descriptions>
-    <Description>
-      <type>Abstract</type>
-      <description>ABSTRACT</description>
-    </Description>
-  </Descriptions>
+  <Descriptions/>
+  <ThesaurusKeywords>
+    <Keyword>
+      <thesaurus_keywords_id>9</thesaurus_keywords_id>
+      <keyword>EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITY</keyword>
+      <scheme>GCMD Earth Sciences Keywords </scheme>
+      <schemeURI>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords</schemeURI>
+      <valueURI>https://gcmd.earthdata.nasa.gov/kms/concept/69af3046-08e0-4c24-981d-803c0412ce58</valueURI>
+      <language>en</language>
+    </Keyword>
+    <Keyword>
+      <thesaurus_keywords_id>10</thesaurus_keywords_id>
+      <keyword>EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</keyword>
+      <scheme>GCMD Earth Sciences Keywords </scheme>
+      <schemeURI>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords</schemeURI>
+      <valueURI>https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa</valueURI>
+      <language>en</language>
+    </Keyword>
+    <lastUpdatedGcmdPlatformsKeywords>2025-05-09</lastUpdatedGcmdPlatformsKeywords>
+    <lastUpdatedGcmdInstrumentsKeywords>2025-05-09</lastUpdatedGcmdInstrumentsKeywords>
+    <lastUpdatedGcmdScienceKeywords>2025-05-09</lastUpdatedGcmdScienceKeywords>
+    <lastUpdatedMslVocabularies>2025-05-09</lastUpdatedMslVocabularies>
+  </ThesaurusKeywords>
+  <FreeKeywords>
+    <Keyword>
+      <free_keywords_id>26</free_keywords_id>
+      <free_keyword>Gravity Recovery And Climate Experiment Follow-On (GRACE-FO)</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>27</free_keywords_id>
+      <free_keyword>Gravity Recovery And Climate Experiment (GRACE)</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>28</free_keywords_id>
+      <free_keyword>Level-2</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>29</free_keywords_id>
+      <free_keyword>SHM</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>30</free_keywords_id>
+      <free_keyword>Spherical Harmonic Model</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>31</free_keywords_id>
+      <free_keyword>Gravitational Field</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>32</free_keywords_id>
+      <free_keyword>GSM</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>33</free_keywords_id>
+      <free_keyword>Geopotential</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>34</free_keywords_id>
+      <free_keyword>Gravity Field</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>35</free_keywords_id>
+      <free_keyword>Mass</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>36</free_keywords_id>
+      <free_keyword>Mass Transport</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>37</free_keywords_id>
+      <free_keyword>Total Water Storage</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>38</free_keywords_id>
+      <free_keyword>Time Variable Gravity</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>39</free_keywords_id>
+      <free_keyword>Mass Balance</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>40</free_keywords_id>
+      <free_keyword>Gravity Anomaly</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>41</free_keywords_id>
+      <free_keyword>Satellite Geodesy</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+  </FreeKeywords>
   <SpatialTemporalCoverages>
     <SpatialTemporalCoverage>
       <spatial_temporal_coverage_id>4</spatial_temporal_coverage_id>
-      <latitudeMin>67.358</latitudeMin>
-      <latitudeMax>67.358</latitudeMax>
-      <longitudeMin>3.22221</longitudeMin>
-      <longitudeMax>3.22221</longitudeMax>
-      <description>Description</description>
-      <dateStart>2025-01-22</dateStart>
-      <dateEnd>2025-01-22</dateEnd>
-      <timezone>+03:00</timezone>
+      <latitudeMin>-90</latitudeMin>
+      <latitudeMax>90</latitudeMax>
+      <longitudeMin>-180</longitudeMin>
+      <longitudeMax>180</longitudeMax>
+      <description>Global coverage</description>
     </SpatialTemporalCoverage>
   </SpatialTemporalCoverages>
+  <RelatedWorks>
+    <RelatedWork>
+      <Identifier>ftp://isdcftp.gfz-potsdam.de/grace-fo/DOCUMENTS/Level-2/GRACE-FO_L2_Gravity_Field_Product_User_Handbook_v1.0.pdf</Identifier>
+      <Relation>
+        <name>References</name>
+      </Relation>
+      <IdentifierType>
+        <name>URL</name>
+      </IdentifierType>
+    </RelatedWork>
+    <RelatedWork>
+      <Identifier>10.2312/GFZ.b103-19098</Identifier>
+      <Relation>
+        <name>References</name>
+      </Relation>
+      <IdentifierType>
+        <name>DOI</name>
+      </IdentifierType>
+    </RelatedWork>
+    <RelatedWork>
+      <Identifier>ftp://isdcftp.gfz-potsdam.de/grace-fo/DOCUMENTS/RELEASE_NOTES/GRACE-FO_GFZ_L2_Release_Notes_for_RL06.3.pdf</Identifier>
+      <Relation>
+        <name>References</name>
+      </Relation>
+      <IdentifierType>
+        <name>URL</name>
+      </IdentifierType>
+    </RelatedWork>
+  </RelatedWorks>
+  <ggm_properties>
+    <model_name>GRACE-FO Geopotential GSM Coefficients GFZ RL06.3</model_name>
+    <model_type>Temporal</model_type>
+    <mathematical_representation>Spherical harmonics</mathematical_representation>
+    <file_format>icgem1.0</file_format>
+    <product_type>gravity_field</product_type>
+  </ggm_properties>
 </Resource>
