@@ -121,8 +121,10 @@ test.describe('Free Keywords Form Group', () => {
     const dropdownItems = dropdown.locator('.tagify__dropdown__item');
     await expect(dropdownItems.first()).toContainText('Arctic Ocean Circulation');
 
-    await tagInput.press('ArrowDown');
-    await tagInput.press('Enter');
+    await dropdownItems
+      .filter({ hasText: 'Arctic Ocean Circulation' })
+      .first()
+      .click();
 
     const tags = page.locator('#group-freekeyword .tagify__tag');
     await expect(tags).toHaveCount(1);
