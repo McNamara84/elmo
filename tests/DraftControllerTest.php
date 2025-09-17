@@ -207,6 +207,47 @@ class DraftControllerTest extends TestCase
         $this->assertSame('Second', $data['payload']['values']['title']);
     }
 
+    public function testLatestForSessionIgnoresFileModificationOrdering(): void
+    {
+        $controller = new DraftController();
+        [$statusFirst, $first] = $this->captureResponse(function () use ($controller) {
+            $controller->create([], [
+                'payload' => [
+                    'values' => ['title' => 'First'],
+                    'timestamp' => '2024-01-01T00:00:00Z'
+                ]
+            ]);
+        });
+        $this->assertSame(201, $statusFirst);
+
+        usleep(1000);
+
+        [$statusSecond, $second] = $this->captureResponse(function () use ($controller) {
+            $controller->create([], [
+                'payload' => [
+                    'values' => ['title' => 'Second'],
+                    'timestamp' => '2024-01-02T00:00:00Z'
+                ]
+            ]);
+        });
+        $this->assertSame(201, $statusSecond);
+
+        $firstPath = $this->storagePath . '/session-test/' . $first['id'] . '.json';
+        $secondPath = $this->storagePath . '/session-test/' . $second['id'] . '.json';
+
+        $newerTimestamp = time() + 10;
+        touch($firstPath, $newerTimestamp);
+        touch($secondPath, $newerTimestamp - 5);
+
+        [$status, $data] = $this->captureResponse(function () use ($controller) {
+            $controller->latestForSession();
+        });
+
+        $this->assertSame(200, $status);
+        $this->assertSame('Second', $data['payload']['values']['title']);
+        $this->assertMatchesRegularExpression('/\\.\\d{6}Z$/', $data['updatedAt']);
+    }
+
     public function testDifferentSessionCannotReadDraft(): void
     {
         $controller = new DraftController();

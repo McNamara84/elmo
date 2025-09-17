@@ -177,15 +177,39 @@ class DraftController
             return;
         }
 
-        usort($files, static fn($a, $b) => filemtime($b) <=> filemtime($a));
-        $record = json_decode(file_get_contents($files[0]), true);
+        $latestRecord = null;
+        $latestScore = -INF;
 
-        if (!$record) {
+        foreach ($files as $file) {
+            $contents = file_get_contents($file);
+            if ($contents === false) {
+                continue;
+            }
+
+            $record = json_decode($contents, true);
+            if (!is_array($record)) {
+                continue;
+            }
+
+            $score = $this->recordTimestampScore($record, $file);
+
+            if ($score > $latestScore) {
+                $latestScore = $score;
+                $latestRecord = $record;
+                continue;
+            }
+
+            if ($score === $latestScore && $latestRecord !== null) {
+                $latestRecord = $this->preferLatestRecord($latestRecord, $record);
+            }
+        }
+
+        if ($latestRecord === null) {
             $this->respond(204, null);
             return;
         }
 
-        $this->respond(200, $this->exposeRecord($record));
+        $this->respond(200, $this->exposeRecord($latestRecord));
     }
 
     /**
@@ -394,7 +418,14 @@ class DraftController
      */
     private function now(): string
     {
-        return gmdate('c');
+        $microtime = microtime(true);
+        $date = \DateTimeImmutable::createFromFormat('U.u', sprintf('%.6F', $microtime), new \DateTimeZone('UTC'));
+
+        if ($date === false) {
+            return gmdate('c');
+        }
+
+        return $date->format('Y-m-d\\TH:i:s.u\\Z');
     }
 
     /**
@@ -406,6 +437,61 @@ class DraftController
     private function checksum(array $payload): string
     {
         return hash('sha256', json_encode($payload));
+    }
+
+    /**
+     * Calculates a comparable timestamp score for a persisted record.
+     *
+     * @param array $record Draft record to evaluate.
+     * @param string $filePath Path to the record file used for fallbacks.
+     * @return float
+     */
+    private function recordTimestampScore(array $record, string $filePath): float
+    {
+        $timestamp = $record['updatedAt'] ?? null;
+
+        if (is_string($timestamp)) {
+            $date = \DateTimeImmutable::createFromFormat('Y-m-d\\TH:i:s.u\\Z', $timestamp, new \DateTimeZone('UTC'));
+            if ($date === false) {
+                try {
+                    $date = new \DateTimeImmutable($timestamp, new \DateTimeZone('UTC'));
+                } catch (\Exception $exception) {
+                    $date = false;
+                }
+            }
+
+            if ($date !== false) {
+                return (float) $date->format('U.u');
+            }
+        }
+
+        return (float) filemtime($filePath);
+    }
+
+    /**
+     * Determines which record should win when timestamp scores are identical.
+     *
+     * @param array $current Currently selected record.
+     * @param array $candidate Candidate record being evaluated.
+     * @return array
+     */
+    private function preferLatestRecord(array $current, array $candidate): array
+    {
+        $currentUpdated = $current['updatedAt'] ?? '';
+        $candidateUpdated = $candidate['updatedAt'] ?? '';
+
+        if ($candidateUpdated > $currentUpdated) {
+            return $candidate;
+        }
+
+        if ($candidateUpdated < $currentUpdated) {
+            return $current;
+        }
+
+        $currentId = $current['id'] ?? '';
+        $candidateId = $candidate['id'] ?? '';
+
+        return $candidateId > $currentId ? $candidate : $current;
     }
 
     /**
