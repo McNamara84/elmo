@@ -56,16 +56,16 @@ Following conditions are required for installation:
 2. The XSL and ZIP extensions for PHP must be installed and enabled.
 3. Don't forget to start Apache and MySQL.
 4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
-5. Copy the content of the file `sample_helper-functions.php` into a new file `helper-functions.php` and adjust the settings for the database connection.
-6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `helper-functions.php`.
-7. Create a Google Maps JS API key and paste it into the `helper-functions.php` file as well.
+5. Copy the content of the file `sample_helper_functions.php` into a new file `helper_functions.php` and adjust the settings for the database connection.
+6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `helper_functions.php`.
+7. Create a Google Maps JS API key and paste it into the `helper_functions.php` file as well.
 8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
 9. In this folder run `npm install` via bash.
 10. There you run `composer install`. 
 11. Access `install.html` via the browser and choose to install with or without test datasets. The database tables will be created in your database, as well as 3 test datasets, if you chose that first option.
 12. Delete `install.php` and `install.html` after successfully creating the database.
 13. The metadata editor is now accessible in the browser via `localhost/directoryname`.
-14. Adjust settings in `helper-functions.php` (see [Settings Section](#einstellungen)).
+14. Adjust settings in `helper_functions.php` (see [Settings Section](#einstellungen)).
 
 ### Installation via Docker
 1. Install [Docker](https://docs.docker.com/engine/install/).
@@ -138,13 +138,13 @@ If you encounter problems with the installation, feel free to leave an entry in 
   2. The XSL and ZIP extensions for PHP must be installed and enabled.
   3. Don't forget to start Apache and MySQL.
   4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
-  5. Copy the content of the file `sample_helper-functions.php` into a new file `helper-functions.php` and adjust the settings for the database connection.
-  6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `helper-functions.php`.
-  7. Create a Google Maps JS API key and paste it into the `helper-functions.php` file as well.
+  5. Copy the content of the file `sample_helper_functions.php` into a new file `helper_functions.php` and adjust the settings for the database connection.
+  6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `helper_functions.php`.
+  7. Create a Google Maps JS API key and paste it into the `helper_functions.php` file as well.
   8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
   9. Access `install.php` via the browser. The database tables will be created automatically in your database.
   10. The metadata editor is now accessible in the browser via `localhost/directoryname`.
-  11. Adjust settings in `helper-functions.php` (see [Settings Section](#einstellungen)).
+  11. Adjust settings in `helper_functions.php` (see [Settings Section](#einstellungen)).
 
   If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
   
@@ -171,25 +171,25 @@ If you encounter problems with the installation, feel free to leave an entry in 
     - Create a new MySQL-user for the installation: `CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';`
     - Granting rights to this user: `GRANT CREATE ON your_database.* TO 'username'@'localhost';` and save with `FLUSH PRIVILEGES;`
     - Optional: confirm the creation of the database while being logged in as the new user: `SHOW DATABASES;`
-  #### 4. Setting up the `helper-functions.php` file
+  #### 4. Setting up the `helper_functions.php` file
   - Download all files from this repository into the `htdocs`or`www`folder of your webserver.
-  - Create `helper-functions.php`:
-     - Copy the entire contents of `sample_helper-functions.php` which is located in the first level of the ELMO repository and save it as `helper-functions.php` in the same directory.
+  - Create `helper_functions.php`:
+     - Copy the entire contents of `sample_helper_functions.php` which is located in the first level of the ELMO repository and save it as `helper_functions.php` in the same directory.
   - Adjust the database connection:
-    - Open the `helper-functions.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
+    - Open the `helper_functions.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
   #### 5. Setting up the application
   - Access the installation script in your browser as follows: `http://localhost/your_directory/install.html`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.html` if you chose this option.
   #### 6. Delete installation files
   - Please delete `install.php` and `install.html` after successfully creating the database.
   #### 7. (Optional) Creating an API key for the automatically generated time zone selection
   - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
-  - Insert your API key in `helper-functions.php`in the according line.
+  - Insert your API key in `helper_functions.php`in the according line.
   #### 8. Creating a Google Maps JS API key
   - Get a Google Maps JS API key via the [Google Cloud Console](https://console.cloud.google.com). To do this, create a project, enable the Google Maps JavaScript API and get your API key.
-  - Insert your Google Maps API key in the corresponding line in the `helper-functions.php`file. 
+  - Insert your Google Maps API key in the corresponding line in the `helper_functions.php`file. 
   #### 9. Accessing the metadata editor
   - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
-  - Settings may be modified in `helper-functions.php`.
+  - Settings may be modified in `helper_functions.php`.
   </details>
 </details> 
 
@@ -229,7 +229,7 @@ To install them: npm install
   ## Settings
   </summary>
 
-  In addition to the access data for the database, other settings can also be adjusted in the `helper-functions.php` file:
+  In addition to the access data for the database, other settings can also be adjusted in the `helper_functions.php` file:
 
   - `$host`: Database host.
   - `$username`: Username of the user with access to the given database.
@@ -330,7 +330,7 @@ To install them: npm install
 
   This field contains the title of the resource.
   - Data type: String
-  - Occurrence: 1-n, with n=$maxTitles specified in the helper-functions.php
+  - Occurrence: 1-n, with n=$maxTitles specified in the helper_functions.php
   - The corresponding field in the database where the value is stored is called: `text` in the table `title`
   - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)
@@ -1098,7 +1098,7 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | **Resource Type**                         |                    1                    |                   1                   | `<resourceType>` as well as `<resourceTypeGeneral>`                                                                                                                         |
 |                            | **Version**                               |                   0-1                   |                  0-1                  | `<version>`                                                                                                                                                                 |
 |                            | **Language of Dataset**                   |                    1                    |                  0-1                  | `<language>`                                                                                                                                                                |
-|                            | **Title**                                 |   1-n (n=$maxTitles in helper-functions.php)    |                  1-n                  | `<title>`                                                                                                                                                                   |
+|                            | **Title**                                 |   1-n (n=$maxTitles in helper_functions.php)    |                  1-n                  | `<title>`                                                                                                                                                                   |
 |                            | **Title Type**                            | 1 (if corresponding title ≠ main title) |                  0-1                  | `<titleType>`                                                                                                                                                               |
 | Licenses & Rights          |                                           |                                         |                                       |                                                                                                                                                                             |
 |                            | **Rights Title**                          |                    1                    |                  0-n                  | `<rights>`                                                                                                                                                                  |

@@ -14,7 +14,7 @@ error_reporting(E_ALL);
 ob_start();
 
 // Include settings and configurations
-include_once("helper-functions.php");
+include_once("helper_functions.php");
 
 // Include HTML components using absolute paths to ensure reliable file access
 $baseDir = __DIR__ . '/';

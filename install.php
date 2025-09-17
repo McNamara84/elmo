@@ -11,22 +11,22 @@
 // Include database connection
 if (!defined('INCLUDED_FROM_TEST')) {
     // Include database connection only when not called from tests
-    if (!file_exists('helper-functions.php')) {
-        $msg = 'Error: helper-functions.php not found. ' .
-            'Please copy sample_helper-functions.php to helper-functions.php and update your database credentials.';
+    if (!file_exists('helper_functions.php')) {
+        $msg = 'Error: helper_functions.php not found. ' .
+            'Please copy sample_helper_functions.php to helper_functions.php and update your database credentials.';
         die(json_encode([
             'status' => 'error',
             'message' => $msg,
         ]));
     }
-    require_once 'helper-functions.php';
+    require_once 'helper_functions.php';
 }
 
 // Check database connection
 if (!isset($connection) || !$connection) {
     die(json_encode([
         'status' => 'error',
-        'message' => 'Error: Database connection could not be established. Please check helper-functions.php and database availability.'
+        'message' => 'Error: Database connection could not be established. Please check helper_functions.php and database availability.'
     ]));
 }
 
