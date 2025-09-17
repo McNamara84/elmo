@@ -168,11 +168,6 @@ class DraftController
         if (!$data || !isset($data['payload']) || !is_array($data['payload'])) {
             return false;
         }
-
-        if (!isset($data['payload']['values']) || !is_array($data['payload']['values'])) {
-            return false;
-        }
-
         return true;
     }
 
@@ -201,6 +196,10 @@ class DraftController
     {
         $path = $this->recordPath($sessionId, $draftId);
         if (!is_file($path)) {
+            if ($this->draftExistsElsewhere($draftId)) {
+                $forbidden = true;
+            }
+
             return null;
         }
 
@@ -220,6 +219,14 @@ class DraftController
         }
 
         return $record;
+    }
+
+    private function draftExistsElsewhere(string $draftId): bool
+    {
+        $pattern = $this->storageRoot . DIRECTORY_SEPARATOR . '*' . DIRECTORY_SEPARATOR . $draftId . '.json';
+        $matches = glob($pattern) ?: [];
+
+        return !empty($matches);
     }
 
     private function exposeRecord(array $record): array
