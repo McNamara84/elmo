@@ -38,6 +38,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
+- Autosave functionality
 
 ## Installation
 
