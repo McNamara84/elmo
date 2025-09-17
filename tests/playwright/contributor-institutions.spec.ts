@@ -1,6 +1,74 @@
 import { test, expect } from '@playwright/test';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 const STATIC_BASE_URL = 'http://localhost:8080/';
+
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+
+const STATIC_ASSETS: Array<{ pattern: string; file: string; contentType: string }> = [
+  {
+    pattern: '**/node_modules/bootstrap/dist/css/bootstrap.min.css',
+    file: 'node_modules/bootstrap/dist/css/bootstrap.min.css',
+    contentType: 'text/css'
+  },
+  {
+    pattern: '**/node_modules/@yaireo/tagify/dist/tagify.css',
+    file: 'node_modules/@yaireo/tagify/dist/tagify.css',
+    contentType: 'text/css'
+  },
+  {
+    pattern: '**/node_modules/jquery/dist/jquery.min.js',
+    file: 'node_modules/jquery/dist/jquery.min.js',
+    contentType: 'application/javascript'
+  },
+  {
+    pattern: '**/node_modules/jquery-ui/dist/jquery-ui.min.js',
+    file: 'node_modules/jquery-ui/dist/jquery-ui.min.js',
+    contentType: 'application/javascript'
+  },
+  {
+    pattern: '**/node_modules/@yaireo/tagify/dist/tagify.js',
+    file: 'node_modules/@yaireo/tagify/dist/tagify.js',
+    contentType: 'application/javascript'
+  },
+  {
+    pattern: '**/js/roles.js',
+    file: 'js/roles.js',
+    contentType: 'application/javascript'
+  },
+  {
+    pattern: '**/js/affiliations.js',
+    file: 'js/affiliations.js',
+    contentType: 'application/javascript'
+  },
+  {
+    pattern: '**/js/checkMandatoryFields.js',
+    file: 'js/checkMandatoryFields.js',
+    contentType: 'application/javascript'
+  },
+  {
+    pattern: '**/js/autocomplete.js',
+    file: 'js/autocomplete.js',
+    contentType: 'application/javascript'
+  },
+  {
+    pattern: '**/js/eventhandlers/formgroups/contributor-organisation.js',
+    file: 'js/eventhandlers/formgroups/contributor-organisation.js',
+    contentType: 'application/javascript'
+  },
+  {
+    pattern: '**/js/eventhandlers/functions.js',
+    file: 'js/eventhandlers/functions.js',
+    contentType: 'application/javascript'
+  }
+];
+
+async function fulfillStaticAsset(route, relativePath, contentType) {
+  const absolutePath = path.resolve(REPO_ROOT, relativePath);
+  const body = await fs.readFile(absolutePath);
+  await route.fulfill({ status: 200, body, contentType });
+}
 
 const contributorInstitutionsMarkup = String.raw`
 <div class="card mb-2">
@@ -116,6 +184,9 @@ function buildTestPageMarkup() {
 
 test.describe('Contributor (Institutions) form group', () => {
   test.beforeEach(async ({ page }) => {
+    for (const asset of STATIC_ASSETS) {
+      await page.route(asset.pattern, route => fulfillStaticAsset(route, asset.file, asset.contentType));
+    }
     await page.route('**/api/v2/vocabs/roles?type=**', async route => {
       const url = new URL(route.request().url());
       const type = url.searchParams.get('type') as keyof typeof roleFixtures | null;
