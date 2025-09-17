@@ -96,6 +96,27 @@ class DraftControllerTest extends TestCase
         $this->assertSame('Test dataset', $stored['payload']['values']['title']);
     }
 
+    public function testCreateDraftAllowsPartialPayload(): void
+    {
+        $controller = new DraftController();
+        [$status, $data] = $this->captureResponse(function () use ($controller) {
+            $controller->create([], [
+                'payload' => [
+                    'timestamp' => '2024-01-01T00:00:00Z'
+                ]
+            ]);
+        });
+
+        $this->assertSame(201, $status);
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('id', $data);
+
+        $draftFile = $this->storagePath . '/session-test/' . $data['id'] . '.json';
+        $this->assertFileExists($draftFile);
+        $stored = json_decode(file_get_contents($draftFile), true);
+        $this->assertSame('2024-01-01T00:00:00Z', $stored['payload']['timestamp']);
+    }
+
     public function testUpdateDraftOverwritesPayload(): void
     {
         $controller = new DraftController();
@@ -124,6 +145,37 @@ class DraftControllerTest extends TestCase
         $draftFile = $this->storagePath . '/session-test/' . $draftId . '.json';
         $stored = json_decode(file_get_contents($draftFile), true);
         $this->assertSame('Updated', $stored['payload']['values']['title']);
+    }
+
+    public function testUpdateDraftAcceptsPartialPayload(): void
+    {
+        $controller = new DraftController();
+        [$status, $data] = $this->captureResponse(function () use ($controller) {
+            $controller->create([], [
+                'payload' => [
+                    'values' => ['title' => 'Initial']
+                ]
+            ]);
+        });
+
+        $this->assertSame(201, $status);
+        $draftId = $data['id'];
+
+        [$updateStatus, $updateData] = $this->captureResponse(function () use ($controller, $draftId) {
+            $controller->update(['id' => $draftId], [
+                'payload' => [
+                    'timestamp' => '2024-01-02T00:00:00Z'
+                ]
+            ]);
+        });
+
+        $this->assertSame(200, $updateStatus);
+        $this->assertArrayHasKey('checksum', $updateData);
+
+        $draftFile = $this->storagePath . '/session-test/' . $draftId . '.json';
+        $stored = json_decode(file_get_contents($draftFile), true);
+        $this->assertArrayNotHasKey('values', $stored['payload']);
+        $this->assertSame('2024-01-02T00:00:00Z', $stored['payload']['timestamp']);
     }
 
     public function testLatestForSessionReturnsMostRecentDraft(): void
