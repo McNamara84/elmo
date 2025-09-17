@@ -2,7 +2,7 @@ services:
   db:
     image: mariadb:11
     env_file:
-      - .developer.env
+      - developer.env
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
