@@ -55,6 +55,55 @@ if (isset($_GET['setting'])) {
     exit;
 }
 
+function loadEnvVariables($path = null) {
+    // Default to .env file in the root directory if no path specified
+    $path = $path ?: __DIR__ . '/.env';
+    
+    // Check if file exists
+    if (!file_exists($path)) {
+        elmo_log("Environment file not found: $path");
+        return false;
+    }
+    
+    // Read file
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    
+    // Parse each line
+    foreach ($lines as $line) {
+        // Skip comments
+        if (strpos(trim($line), '#') === 0) {
+            continue;
+        }
+        
+        // Parse line and set environment variable
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            $name = trim($name);
+            $value = trim($value);
+            
+            // Remove quotes if present
+            if (strpos($value, '"') === 0 && strrpos($value, '"') === strlen($value) - 1) {
+                $value = substr($value, 1, -1);
+            } elseif (strpos($value, "'") === 0 && strrpos($value, "'") === strlen($value) - 1) {
+                $value = substr($value, 1, -1);
+            }
+            
+            // Convert boolean-like values (true, false, yes, no, 1, 0)
+            if (in_array(strtolower($value), ['true', 'false', 'yes', 'no', '1', '0', 'on', 'off'])) {
+                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                
+                // Set as global PHP variable directly (for use in templates)
+                global $$name;
+                $$name = $value;
+            }
+            
+            putenv("$name=$value");
+        }
+    }
+    
+    return true;
+}
+
 // Initialize logging    
 function elmo_log($msg) {
     error_log('[ELMO save_data] ' . $msg);

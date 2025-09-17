@@ -1,8 +1,14 @@
 services:
   db:
     image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: ${TZ}
     env_file:
-      - developer.env
+      - .env
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
@@ -10,7 +16,7 @@ services:
   web:
     build: .
     env_file:
-      - developer.env
+      - .env
     ports:
       - "8080:80"
     environment:
