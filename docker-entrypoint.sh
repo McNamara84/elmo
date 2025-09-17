@@ -42,11 +42,14 @@ db_has_tables() {
     TABLE_COUNT=0
   fi
   [ "${TABLE_COUNT}" -gt 0 ]
-}
 
-# Copy the appropriate .env file based on CONFIG_VERSION
-# CONFIG_VERSION determines which configuration to use.
-case "${CONFIG_VERSION}" in
+}
+if [ -f /var/www/html/.env ] && [ "$(stat -c %s /var/www/html/.env)" -gt 0 ]; then
+  echo "🔧 Using mounted .env file"
+else
+  # Copy the appropriate .env file based on CONFIG_VERSION
+  # CONFIG_VERSION determines which configuration to use.
+  case "${CONFIG_VERSION}" in
   "generic"|"")
     echo "🔧 Using generic.env configuration"
     cp /var/www/html/envs/generic.env /var/www/html/.env
@@ -59,8 +62,12 @@ case "${CONFIG_VERSION}" in
     echo "🔧 Using elmogem.env configuration"
     cp /var/www/html/envs/elmogem.env /var/www/html/.env
     ;;
+  "testing")
+    echo "🔧 Using testing.env configuration"
+    cp /var/www/html/envs/testing.env /var/www/html/.env
+    ;;
   *)
-    echo "❌ Invalid CONFIG_VERSION specified. Use 'msl' or 'elmogem'."
+    echo "❌ Invalid CONFIG_VERSION specified. Allowed values: 'generic', 'msl', 'elmogem' or 'testing'."
     exit 1
     ;;
 esac
