@@ -44,33 +44,37 @@ db_has_tables() {
   [ "${TABLE_COUNT}" -gt 0 ]
 
 }
-if [ -f /var/www/html/.env ] && [ "$(stat -c %s /var/www/html/.env)" -gt 0 ]; then
-  echo "🔧 Using mounted .env file"
-else
-  # Copy the appropriate .env file based on CONFIG_VERSION
-  # CONFIG_VERSION determines which configuration to use.
-  case "${CONFIG_VERSION}" in
-  "generic"|"")
-    echo "🔧 Using generic.env configuration"
+
+# In case a stable version of container is needed, set CONFIG_VERSION to one of:
+# Copy the appropriate .env file based on CONFIG_VERSION
+# CONFIG_VERSION determines which configuration to use.
+if [ -n "${CONFIG_VERSION}" ]; then
+    case "${CONFIG_VERSION}" in
+    "generic")
+      echo "🔧 Using generic.env configuration"
+      cp /var/www/html/envs/generic.env /var/www/html/.env
+      ;;
+    "msl")
+      echo "🔧 Using msl.env configuration"
+      cp /var/www/html/envs/msl.env /var/www/html/.env
+      ;;
+    "elmogem")
+      echo "🔧 Using elmogem.env configuration"
+      cp /var/www/html/envs/elmogem.env /var/www/html/.env
+      ;;
+    "testing")
+      echo "🔧 Using testing.env configuration"
+      cp /var/www/html/envs/testing.env /var/www/html/.env
+      ;;
+    *)
+      echo "⚠️ Invalid CONFIG_VERSION '${CONFIG_VERSION}' specified. Using generic as default configuration."
+      cp /var/www/html/envs/generic.env /var/www/html/.env
+      ;;
+    esac
+  else
+    echo "🔧 No CONFIG_VERSION specified. It is assumed, you have specified your .env-file in the docker-compose. Happy coding!"
     cp /var/www/html/envs/generic.env /var/www/html/.env
-    ;;
-  "msl")
-    echo "🔧 Using msl.env configuration"
-    cp /var/www/html/envs/msl.env /var/www/html/.env
-    ;;
-  "elmogem")
-    echo "🔧 Using elmogem.env configuration"
-    cp /var/www/html/envs/elmogem.env /var/www/html/.env
-    ;;
-  "testing")
-    echo "🔧 Using testing.env configuration"
-    cp /var/www/html/envs/testing.env /var/www/html/.env
-    ;;
-  *)
-    echo "❌ Invalid CONFIG_VERSION specified. Allowed values: 'generic', 'msl', 'elmogem' or 'testing'."
-    exit 1
-    ;;
-esac
+fi
 
 wait_for_db
 
