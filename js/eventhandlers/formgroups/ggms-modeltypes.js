@@ -26,11 +26,11 @@ $(document).ready(function() {
         // Check the value and show the relevant section.
         const modelTypeLower = modelType.toLowerCase();
 
-        if (modelTypeLower.includes('static')) {
+        if (modelTypeLower === 'static') {
             staticSection.removeClass('d-none');
-        } else if (modelTypeLower.includes('temporal')) {
+        } else if (modelTypeLower === 'temporal') {
             temporalSection.removeClass('d-none');
-        } else if (modelTypeLower.includes('topographic')) {
+        } else if (modelTypeLower === 'topographic') {
             topographicSection.removeClass('d-none');
         }
         
@@ -39,11 +39,11 @@ $(document).ready(function() {
         helpButton.removeAttr('data-help-section-id');
 
         let helpSectionId = 'help-no-model-type'; // Default fallback
-        if (modelTypeLower.includes('static')) {
+        if (modelTypeLower === 'static') {
             helpSectionId = 'help-static';
-        } else if (modelTypeLower.includes('temporal')) {
+        } else if (modelTypeLower === 'temporal') {
             helpSectionId = 'help-temporal';
-        } else if (modelTypeLower.includes('topographic')) {
+        } else if (modelTypeLower === 'topographic') {
             helpSectionId = 'help-topographic';
         }
         helpButton.attr('data-help-section-id', helpSectionId);

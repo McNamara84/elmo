@@ -97,9 +97,9 @@ function updateReferenceSystemVisibility() {
     if (!mathRepresentation || mathRepresentation.trim() === '') {
         // Default: show spherical (radius) when no math representation is selected
         showSpherical = true;
-    } else if (mathRepresentation.toLowerCase().includes('spherical')) {
+    } else if (mathRepresentation.toLowerCase() === 'spherical harmonics') {
         showSpherical = true;
-    } else if (mathRepresentation.toLowerCase().includes('ellipsoidal')) {
+    } else if (mathRepresentation.toLowerCase() === 'ellipsoidal harmonics') {
         showEllipsoidal = true;
     } else {
         // For any other mathematical representation, default to spherical
@@ -118,34 +118,6 @@ function updateReferenceSystemVisibility() {
     }
 }
 
-/**
- * @description Real-time validation for GGMs Technical fields
- * 
- * @module ggmstechnical
- */
-function checkGGMsTechnical() {
-    const container = $('#group-ggmstechnical, #group-ggms-technical');
-    
-    if (!container.length) return;
-    
-    // Define technical fields
-    const fields = {
-        radius: container.find('#input-radius'),
-        semimajorAxis: container.find('#input-semimajor-axis'),
-        secondVariable: container.find('#input-second-variable'),
-        secondVariableValue: container.find('#input-second-variable-value')
-    };
-    
-    // Check if any visible field is filled
-    const  s = Object.values(fields).some(field => {
-        if (!field.length || !field.is(':visible')) return false;
-        const value = field.val();
-        return value && value.trim() !== '';
-    });
-    
-    // Update requirements based on visibility and content
-    updateReferenceSystemVisibility();
-}
 
 // Initialize when document is ready
 $(document).ready(function() {
@@ -165,7 +137,6 @@ $(document).ready(function() {
     // Set up event handlers
     $(document).on('change', '#input-mathematical-representation', function() {
         updateReferenceSystemVisibility();
-        checkGGMsTechnical();
     });
     
     $(document).on('change', '#input-errors', function() {
@@ -174,7 +145,6 @@ $(document).ready(function() {
     
     $(document).on('change', '#input-second-variable', function() {
         updateSecondVariableLabel();
-        checkGGMsTechnical();
     });
     
     // Watch for changes on technical fields
@@ -187,7 +157,7 @@ $(document).ready(function() {
     ];
     
     $(document).on('change blur', technicalFieldsToWatch.join(', '), function() {
-        checkGGMsTechnical();
+        updateReferenceSystemVisibility();
     });
     
     // Initialize on page load - wait a bit for API data to load

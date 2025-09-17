@@ -28,10 +28,10 @@ if ($showAuthorInstitution) {
     include("formgroups/authorInstitution.html");
 }
 if ($showGGMsProperties) {
-    include $baseDir . 'formgroups/GGMsProperties.html';
-    include $baseDir . 'formgroups/dataSources.html';
-    include $baseDir . 'formgroups/GGMsTechnical.html';
+    include $baseDir . 'formgroups/GGMsDefinition.html';
     include $baseDir . "formgroups/GGMsModelTypes.html";
+    include $baseDir . 'formgroups/GGMsDataSources.html';
+    include $baseDir . 'formgroups/GGMsProperties.html';
 }
 if ($showContributorPersons) {
     include $baseDir . 'formgroups/contributorPersons.html';

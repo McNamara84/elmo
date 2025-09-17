@@ -369,16 +369,19 @@ $(document).ready(function () {
             descCol.insertAfter(modelNameCol);
             addButtonCol.insertAfter(descCol);
 
-        } else {
-            // Restore original order: Type | Description | Details | Compensation | ModelName | Identifier | IdentifierType | Satellite | AddButton
-            descCol.insertAfter(typeCol);
-            detailsCol.insertAfter(descCol);
-            compensationCol.insertAfter(detailsCol);
-            modelNameCol.insertAfter(compensationCol);
-            identifierCol.insertAfter(modelNameCol);
-            identifierTypeCol.insertAfter(identifierCol);
-            satelliteCol.insertAfter(identifierTypeCol);
-            addButtonCol.insertAfter(satelliteCol);
+        }
+        // Restore original order: Type | Description | Details | Compensation | ModelName | Identifier | IdentifierType | Satellite | AddButton
+        else {
+            // Clear the row and stack fields in the desired order
+            row.append(typeCol);          // Type
+            row.append(detailsCol);       // Details
+            row.append(compensationCol);  // Compensation
+            row.append(modelNameCol);     // Model Name
+            row.append(identifierCol);    // Identifier
+            row.append(identifierTypeCol);// Identifier Type
+            row.append(satelliteCol);     // Satellite
+            row.append(descCol);          // Description (always after detalisation)
+            row.append(addButtonCol);     // Add Button
         }
     }
 
