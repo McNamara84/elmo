@@ -7,6 +7,7 @@ class AutosaveService {
     this.restoreApplyId = options.restoreApplyButtonId || 'button-restore-apply';
     this.restoreDismissId = options.restoreDismissButtonId || 'button-restore-dismiss';
     this.fetchImpl = options.fetch || (typeof window !== 'undefined' ? window.fetch.bind(window) : null);
+    this.apiBaseUrl = this.normalizeBaseUrl(options.apiBaseUrl ?? this.detectDefaultBaseUrl());
     this.throttleMs = options.throttleMs ?? 15000;
     this.localStorageKey = options.localStorageKey || 'elmo.autosave.draftId';
 
@@ -31,6 +32,74 @@ class AutosaveService {
       return explicit;
     }
     return id ? document.getElementById(id) : null;
+  }
+
+  detectDefaultBaseUrl() {
+    if (typeof document !== 'undefined') {
+      const baseTag = document.querySelector('base[href]');
+      const baseHref = baseTag ? baseTag.getAttribute('href') : null;
+
+      if (baseHref) {
+        if (/^https?:\/\//i.test(baseHref) || baseHref.startsWith('//')) {
+          try {
+            const resolved = new URL(baseHref, typeof window !== 'undefined' ? window.location.origin : undefined);
+            return `${resolved.origin}${resolved.pathname.replace(/\/+$/, '')}/api/v2`;
+          } catch (error) {
+            // Fall back to relative default below.
+          }
+        }
+
+        if (baseHref.startsWith('/')) {
+          return `${baseHref.replace(/\/+$/, '')}/api/v2`;
+        }
+
+        if (baseHref.startsWith('./') || baseHref.startsWith('../')) {
+          return `${baseHref.replace(/\/+$/, '')}/api/v2`;
+        }
+      }
+    }
+
+    return './api/v2';
+  }
+
+  normalizeBaseUrl(url) {
+    if (!url) {
+      return '';
+    }
+
+    const trimmed = url.trim();
+    if (trimmed === '') {
+      return '';
+    }
+
+    const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
+
+    if (/^https?:\/\//i.test(withoutTrailingSlash) || withoutTrailingSlash.startsWith('//')) {
+      return withoutTrailingSlash;
+    }
+
+    if (withoutTrailingSlash.startsWith('/')) {
+      return withoutTrailingSlash;
+    }
+
+    if (withoutTrailingSlash.startsWith('./') || withoutTrailingSlash.startsWith('../')) {
+      return withoutTrailingSlash;
+    }
+
+    return `./${withoutTrailingSlash}`;
+  }
+
+  buildUrl(path) {
+    const safePath = String(path ?? '').replace(/^\/+/, '');
+    if (!safePath) {
+      return this.apiBaseUrl || '';
+    }
+
+    if (!this.apiBaseUrl) {
+      return `/${safePath}`;
+    }
+
+    return `${this.apiBaseUrl}/${safePath}`;
   }
 
   start() {
@@ -102,7 +171,9 @@ class AutosaveService {
       }
     };
 
-    const url = this.draftId ? `/api/v2/drafts/${this.draftId}` : '/api/v2/drafts';
+    const url = this.draftId
+      ? this.buildUrl(`drafts/${this.draftId}`)
+      : this.buildUrl('drafts');
     const method = this.draftId ? 'PUT' : 'POST';
 
     this.isSaving = true;
@@ -169,7 +240,7 @@ class AutosaveService {
 
     if (this.draftId) {
       try {
-        await this.fetchImpl(`/api/v2/drafts/${this.draftId}`, {
+        await this.fetchImpl(this.buildUrl(`drafts/${this.draftId}`), {
           method: 'DELETE',
           credentials: 'include'
         });
@@ -191,7 +262,9 @@ class AutosaveService {
       return;
     }
 
-    const endpoint = this.draftId ? `/api/v2/drafts/${this.draftId}` : '/api/v2/drafts/session/latest';
+    const endpoint = this.draftId
+      ? this.buildUrl(`drafts/${this.draftId}`)
+      : this.buildUrl('drafts/session/latest');
 
     try {
       const response = await this.fetchImpl(endpoint, {

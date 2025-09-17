@@ -60,6 +60,7 @@ describe('autosaveService', () => {
 
     await jest.advanceTimersByTimeAsync(200);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts');
     const requestArgs = fetchMock.mock.calls[0][1];
     expect(requestArgs.method).toBe('POST');
     const body = JSON.parse(requestArgs.body);
@@ -104,6 +105,7 @@ describe('autosaveService', () => {
 
     await Promise.resolve();
     await Promise.resolve();
+    expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts/session/latest');
     expect(modalInstance.show).toHaveBeenCalled();
 
     document.getElementById('button-restore-apply').click();
@@ -114,5 +116,36 @@ describe('autosaveService', () => {
     expect(window.localStorage.getItem('elmo.autosave.draftId')).toBe('rest-1');
     const statusText = document.getElementById('autosave-status-text').textContent;
     expect(statusText).toMatch(/Draft saved/);
+  });
+
+  test('supports configurable API base URL', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ id: 'custom-1', updatedAt: '2024-02-01T12:00:00Z' })
+    });
+
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 0,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft',
+      apiBaseUrl: '/mde-msl/api/v2/'
+    });
+
+    service.start();
+    await Promise.resolve();
+    fetchMock.mockClear();
+
+    const input = document.querySelector('input[name="title"]');
+    input.value = 'Configurable base path';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    await jest.runOnlyPendingTimersAsync();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe('/mde-msl/api/v2/drafts');
+    expect(service.apiBaseUrl).toBe('/mde-msl/api/v2');
   });
 });
