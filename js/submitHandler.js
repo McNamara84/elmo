@@ -125,7 +125,7 @@ class SubmitHandler {
      * @param {string} submitModalId - ID of the submit modal
      * @param {string} notificationModalId - ID of the notification modal
      */
-    constructor(formId, submitModalId, notificationModalId) {
+    constructor(formId, submitModalId, notificationModalId, autosaveService = null) {
         this.$form = $(`#${formId}`);
         this.modals = {
             submit: new bootstrap.Modal($(`#${submitModalId}`)[0]),
@@ -136,6 +136,7 @@ class SubmitHandler {
         this.$fileInput = $('#input-submit-datadescription');
         this.$removeFileBtn = $('#remove-file-btn');
         this.$selectedFileName = $('#selected-file-name');
+        this.autosaveService = autosaveService;
 
         this.initializeEventListeners();
         this.initializeFileHandlers();
@@ -214,6 +215,9 @@ class SubmitHandler {
      * Handle submit action
      */
     handleSubmit() {
+        if (this.autosaveService) {
+            this.autosaveService.flushPending();
+        }
         validateEmbargoDate();
         if (!this.$form[0].checkValidity() || !validateContactPerson()) {
             this.$form.addClass('was-validated');
@@ -233,6 +237,9 @@ class SubmitHandler {
      * Handle modal submit
      */
     async handleModalSubmit() {
+        if (this.autosaveService) {
+            await this.autosaveService.flushPending();
+        }
         const submitData = new FormData(this.$form[0]);
 
         submitData.append('urgency', $('#input-submit-urgency').val());
@@ -274,6 +281,9 @@ class SubmitHandler {
                     this.showNotification('success',
                         translations.alerts.successHeading,
                         parsedResponse.message);
+                    if (this.autosaveService) {
+                        this.autosaveService.clearDraft();
+                    }
                     this.clearFileInput(); // Clear file input after successful submission
                 } else {
                     const errorMessage = parsedResponse.message || translations.alerts.submitError;
