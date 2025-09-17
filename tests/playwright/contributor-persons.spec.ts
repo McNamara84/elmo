@@ -1,4 +1,48 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Route } from '@playwright/test';
+import { promises as fs } from 'fs';
+import * as path from 'path';
+
+const REPO_ROOT = path.resolve(__dirname, '../..');
+
+const CONTENT_TYPES: Record<string, string> = {
+  '.js': 'application/javascript; charset=utf-8',
+  '.mjs': 'application/javascript; charset=utf-8',
+  '.cjs': 'application/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.map': 'application/json; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml; charset=utf-8'
+};
+
+async function fulfillWithLocalAsset(route: Route) {
+  const request = route.request();
+  const url = new URL(request.url());
+
+  if (!url.hostname.includes('localhost')) {
+    await route.fallback();
+    return;
+  }
+
+  const pathname = decodeURIComponent(url.pathname.replace(/^\/+/u, ''));
+  const filePath = path.join(REPO_ROOT, pathname);
+
+  try {
+    const body = await fs.readFile(filePath);
+    const extension = path.extname(filePath).toLowerCase();
+    const contentType = CONTENT_TYPES[extension] ?? 'application/octet-stream';
+
+    await route.fulfill({
+      status: 200,
+      body,
+      headers: {
+        'content-type': contentType
+      }
+    });
+  } catch (error) {
+    console.warn(`Unable to serve asset for ${request.url()}:`, error);
+    await route.fulfill({ status: 404, body: 'Not Found' });
+  }
+}
 
 const STATIC_BASE_URL = 'http://localhost:8080/';
 
@@ -187,6 +231,9 @@ function buildTestPageMarkup() {
 
 test.describe('Contributor (Persons) form group', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/node_modules/**', fulfillWithLocalAsset);
+    await page.route('**/js/**', fulfillWithLocalAsset);
+    await page.route('**/*.css', fulfillWithLocalAsset);
     await page.route('**/api/v2/vocabs/roles?type=**', async route => {
       const url = new URL(route.request().url());
       const type = url.searchParams.get('type') as keyof typeof roleFixtures | null;
