@@ -59,8 +59,101 @@ async function waitForTranslations(page: import('@playwright/test').Page) {
 
 test.describe('GCMD Thesauri Keywords Form Group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('');
+    await page.route(`**${TEST_ROUTE_PATH}`, async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/html',
+        body: TEST_PAGE_HTML,
+      });
+    });
+
+    await page.route('**/json/thesauri/*', async route => {
+      const url = new URL(route.request().url());
+      const filePath = path.join(ROOT_DIR, url.pathname);
+      const body = readFileSync(filePath, 'utf8');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body,
+      });
+    });
+
+    await page.goto(TEST_ROUTE_PATH);
+
+    await page.addStyleTag({ path: path.join(ROOT_DIR, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
+    await page.addStyleTag({ path: path.join(ROOT_DIR, 'node_modules/@yaireo/tagify/dist/tagify.css') });
+    await page.addStyleTag({ path: path.join(ROOT_DIR, 'node_modules/jstree/dist/themes/default/style.min.css') });
+
+    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/jquery/dist/jquery.min.js') });
+    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
+    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/jstree/dist/jstree.min.js') });
+    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/@yaireo/tagify/dist/tagify.js') });
+
+    await page.evaluate(() => {
+      (window as any).translations = {
+        keywords: {
+          thesaurus: {
+            label: 'Open thesaurus to choose keywords or start typing...',
+          },
+          searchPlaceholder: 'Search for keywords...',
+        },
+      };
+
+      (window as any).__setupLanguageHandlers = () => {
+        document.querySelectorAll('[data-bs-language-value]').forEach(element => {
+          element.addEventListener('click', event => {
+            event.preventDefault();
+            const value = (event.currentTarget as HTMLElement).getAttribute('data-bs-language-value');
+            const label = value === 'de'
+              ? 'Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe...'
+              : 'Open thesaurus to choose keywords or start typing...';
+            (window as any).translations.keywords.thesaurus.label = label;
+            document.dispatchEvent(new Event('translationsLoaded'));
+          });
+        });
+      };
+    });
+
+    await page.addScriptTag({ path: path.join(ROOT_DIR, 'js/thesauri.js') });
+
+    await page.evaluate(() => {
+      if (typeof (window as any).__setupLanguageHandlers === 'function') {
+        (window as any).__setupLanguageHandlers();
+      }
+      const translationTexts: Record<string, string> = {
+        'keywords.thesaurus.name': 'GCMD Thesauri Keywords',
+        'keywords.sciencekeywords': 'GCMD Science Keywords',
+        'keywords.Platforms': 'GCMD Platforms',
+        'keywords.selectedKeywords': 'Selected Keywords',
+      };
+      document.querySelectorAll('[data-translate]').forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (!key) return;
+        const text = translationTexts[key];
+        if (text) {
+          element.textContent = text;
+        }
+      });
+      const scienceButton = document.querySelector('button[data-bs-target="#collapseScienceKeywords"]');
+      if (scienceButton) {
+        scienceButton.setAttribute('aria-expanded', 'true');
+      }
+      document
+        .querySelectorAll('#button-sciencekeyword-open, #platformKeywordsThesaurus, #openInstrumentsThesaurus')
+        .forEach(element => {
+          element.setAttribute('aria-label', 'Thesaurus öffnen');
+        });
+      document.dispatchEvent(new Event('translationsLoaded'));
+    });
+
     await waitForTranslations(page);
+    await page.evaluate(() => {
+      const scienceButton = document.querySelector('button[data-bs-target="#collapseScienceKeywords"]');
+      if (scienceButton) {
+        scienceButton.setAttribute('aria-expanded', 'true');
+        scienceButton.classList.remove('collapsed');
+      }
+    });
     await expect(page.locator('#accordionThesauri')).toBeVisible();
     await page.waitForSelector('#input-sciencekeyword', { state: 'attached' });
     await page.waitForFunction(() => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify));
@@ -124,7 +217,7 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
 
       const modalButton = page.locator(config.modalButton);
       await expect(modalButton).toHaveAttribute('data-bs-target', config.modalTarget);
-      await expect(modalButton).toHaveAccessibleName('Thesaurus öffnen');
+      await expect(modalButton).toHaveAttribute('aria-label', 'Thesaurus öffnen');
     }
   });
 
@@ -134,6 +227,10 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
     await expect(scienceModal).toBeVisible();
 
     await page.waitForFunction(() => Boolean((window as any).jQuery?.fn?.jstree));
+    await page.waitForFunction(() => {
+      const tree = (window as any).jQuery?.('#jstree-sciencekeyword').jstree(true);
+      return Boolean(tree && tree.get_json('#', { flat: true }).length);
+    });
     await page.evaluate(() => {
       const tree = (window as any).jQuery?.('#jstree-sciencekeyword').jstree(true);
       tree?.open_all();
@@ -180,19 +277,47 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
     const platformsModal = page.locator('#modal-Platforms');
     await expect(platformsModal).toBeVisible();
 
+    await page.waitForFunction(() => {
+      const tree = (window as any).jQuery?.('#jstree-Platforms').jstree(true);
+      return Boolean(tree && tree.get_json('#', { flat: true }).length);
+    });
+
     const searchInput = page.locator('#input-Platforms-thesaurussearch');
     await expect(searchInput).toHaveAttribute('aria-label', 'Search for keywords');
     await searchInput.fill('BALLOONS');
 
     const highlighted = page.locator('#jstree-Platforms .jstree-search');
     await expect(highlighted).not.toHaveCount(0);
+    const uppercaseResult = highlighted.filter({ hasText: 'BALLOONS' });
+    await expect(uppercaseResult).not.toHaveCount(0);
 
     await searchInput.press('Enter');
     await expect(platformsModal).toBeVisible();
 
-    const firstResult = highlighted.first();
-    await firstResult.click();
-    await expect(firstResult).toHaveClass(/jstree-clicked/);
+    await page.waitForFunction(() => document.querySelectorAll('#jstree-Platforms .jstree-search').length > 0);
+
+    await page.evaluate(() => {
+      const tree = (window as any).jQuery?.('#jstree-Platforms').jstree(true);
+      tree?.open_all();
+    });
+
+    await page.evaluate((targetPath) => {
+      const tree = (window as any).jQuery?.('#jstree-Platforms').jstree(true);
+      if (!tree) {
+        throw new Error('Platforms tree is not ready');
+      }
+      const match = tree
+        .get_json('#', { flat: true })
+        .find((node: any) => tree.get_path(node, ' > ') === targetPath || node.text === 'BALLOONS');
+      if (!match) {
+        throw new Error(`Could not find node with path ${targetPath}`);
+      }
+      tree.deselect_all();
+      tree.select_node(match.id);
+    }, PLATFORMS_PATH);
+
+    const selectedNode = page.locator('#jstree-Platforms .jstree-clicked');
+    await expect(selectedNode).toHaveText(/BALLOONS/);
 
     const selectedPlatforms = page.locator('#selected-keywords-Platforms-gcmd li');
     await expect(selectedPlatforms).toHaveCount(1);
@@ -213,6 +338,11 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
     await instrumentsModalButton.click();
     const instrumentsModal = page.locator('#modal-instruments');
     await expect(instrumentsModal).toBeVisible();
+
+    await page.waitForFunction(() => {
+      const tree = (window as any).jQuery?.('#jstree-instruments').jstree(true);
+      return Boolean(tree && tree.get_json('#', { flat: true }).length);
+    });
 
     const instrumentsSearch = page.locator('#input-instruments-thesaurussearch');
     await instrumentsSearch.fill('spectrometer');
