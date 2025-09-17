@@ -1,0 +1,1564 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <base href="/elmo/">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Local Bootstrap CSS -->
+  <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Local jQuery UI CSS -->
+  <link rel="stylesheet" href="node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css" />
+  <!-- Local Bootstrap Icons CSS -->
+  <link rel="stylesheet" href="node_modules/bootstrap-icons/font/bootstrap-icons.min.css" />
+  <!-- Local Tagify CSS -->
+  <link href="node_modules/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
+  <!-- Local jsTree CSS -->
+  <link rel="stylesheet" href="node_modules/jstree/dist/themes/default/style.min.css" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/gfz-cd.css">
+  <link rel="stylesheet" href="./css/tagify-adj.css">
+  <link rel="stylesheet" href="./css/darkmode.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
+  <title>ELMO</title>
+</head>
+
+<body>
+  <!-- Fixed Header -->
+  <header class="navbar navbar-primary sticky-top bg-primary flex-md-nowrap p-0 shadow">
+    <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3 text-white" href="#" id="headtitle"
+      data-translate="general.logoTitle">
+      ELMO
+    </a>
+    <div class="ms-auto d-flex align-items-center me-3 p-1">
+
+      <!-- Link to legal notice -->
+      <a href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
+        class="text-white me-3 settings-menu-link" data-translate="header.legalNotice">Legal Notice</a>
+      <!-- Dropdown menu for help -->
+      <div class="dropdown ms-auto me-3 p-1">
+        <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
+          aria-expanded="false" data-translate="header.help">
+          <i class="bi bi-question-square-fill"></i>
+          Help
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-help">
+          <li><a href="doc/privacyPolicy.html" class="dropdown-item" target="_blank" id="buttonPrivacy"><i
+                class="bi bi-shield-check"></i> Privacy Policy</a></li>
+          <li><a href="doc/help.html" class="dropdown-item" target="_blank" id="buttonHelp"
+              data-translate="buttons.guide">
+              <i class="bi bi-book"></i> Guide</a></li>
+          <li><a class="dropdown-item" data-bs-theme-value="help-on" id="buttonHelpOn" data-translate="buttons.helpOn">
+              <i class="bi bi-question-circle-fill"></i> <span data-translate="header.on">On</span></a></li>
+          <li><a class="dropdown-item" data-bs-theme-value="help-off" id="buttonHelpOff"
+              data-translate="buttons.helpOff">
+              <i class="bi bi-question-circle"></i> <span data-translate="header.off">Off</span></a></li>
+          <li><a class="dropdown-item" id="button-changelog-show">
+              <i class="bi bi-card-checklist"></i> <span data-translate="buttons.about">About</span></a></li>
+        </ul>
+      </div>
+      <div class="dropdown me-3 p-1">
+        <!-- Dropdown menu for dark mode settings -->
+        <button class="btn btn-primary dropdown-toggle" id="bd-theme" type="button" data-bs-toggle="dropdown"
+          aria-expanded="false" data-translate="header.mode">
+          <i class="bi bi-circle-half"></i>
+          Mode
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme">
+          <li><a class="dropdown-item active" data-bs-theme-value="auto" data-translate="buttons.auto">
+              <i class="bi bi-circle-half"></i> Auto</a></li>
+          <li><a class="dropdown-item" data-bs-theme-value="light" data-translate="buttons.light">
+              <i class="bi bi-sun-fill"></i> <span data-translate="header.light">Light</span></a></li>
+          <li><a class="dropdown-item" data-bs-theme-value="dark" data-translate="buttons.dark">
+              <i class="bi bi-moon-stars-fill"></i> <span data-translate="header.dark">Dark</span></a></li>
+        </ul>
+      </div>
+      <div class="dropdown me-3 p-1">
+        <!-- Dropdown menu for language settings -->
+        <button class="btn btn-primary dropdown-toggle" id="bd-lang" type="button" data-bs-toggle="dropdown"
+          aria-expanded="false" data-translate="header.language">
+          <i class="bi bi-translate"></i>
+          Language
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-lang">
+          <li><a class="dropdown-item" data-bs-language-value="auto" data-translate="buttons.langAuto">
+              <i class="bi bi-gear-fill"></i> Auto</a></li>
+                      <li><a class="dropdown-item" data-bs-language-value="de"
+                data-translate="buttons.langDE">
+                <i class="bi bi-globe"></i> DE</a></li>
+                      <li><a class="dropdown-item" data-bs-language-value="en"
+                data-translate="buttons.langEN">
+                <i class="bi bi-globe"></i> EN</a></li>
+                      <li><a class="dropdown-item" data-bs-language-value="fr"
+                data-translate="buttons.langFR">
+                <i class="bi bi-globe"></i> FR</a></li>
+                  </ul>
+      </div>
+    </div>
+  </header><main class="container-fluid my-3 pb-5">
+  <!-- Warning if JS is deactivated -->
+  <noscript>
+    <div class="alert alert-danger text-center">JavaScript is disabled. Please
+      enable JavaScript to use this form.</div>
+  </noscript>
+  <div class="alert alert-info p-2">
+    <div class="row">
+      <div class="col-11 text-center" data-translate="alerts.languageWarning">Please fill out the form in english.</div>
+    </div>
+  </div>
+  <form id="form-mde" method="post" action="index.php" class="needs-validation" novalidate>
+    <div class="card mb-2">
+      <div class="card-header"><b data-translate="resourceInfo.title"></b>
+        <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-fg"></i>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Input field for DOI -->
+          <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <input type="text" class="form-control input-with-help input-right-no-round-corners input-greyed-out"
+                  id="input-resourceinformation-doi" name="doi" pattern="^10\.\d{4,9}\/[._;\/\(\)\-:A-Za-z0-9]+$" />
+                <label for="input-resourceinformation-doi" data-translate="resourceInfo.doi"></label>
+                <div class="invalid-feedback" data-translate="resourceInfo.doiInvalid"></div>
+                <div class="valid-feedback" data-translate="resourceInfo.doiValid"></div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text">
+                  <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-doi"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Input field for Publication Year -->
+          <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <input type="text" inputmode="numeric" class="form-control input-with-help input-right-no-round-corners"
+                  name="year" pattern="^(19(0[1-9]|[1-9][0-9])|20[0-9]{2}|21[0-4][0-9]|215[0-5])$" required
+                  id="input-resourceinformation-publicationyear"/>
+                <label for="input-resourceinformation-publicationyear">
+                  <span data-translate="resourceInfo.publicationYear"></span><span class="red-star">*</span>
+                </label>
+                <div class="invalid-feedback" data-translate="resourceInfo.publicationYearInvalid"></div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text">
+                  <i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-resourceinformation-publicationyear"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Input field for Resource Type -->
+          <div class="col-12 col-sm-12 col-md-12 col-lg-4 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <select class="form-select input-with-help input-right-no-round-corners"
+                  id="input-resourceinformation-resourcetype" name="resourcetype" required>
+                  <option disabled selected hidden value="" data-translate="general.choose"></option>
+                </select>
+                <label for="input-resourceinformation-resourcetype">
+                  <span data-translate="resourceInfo.resourceType"></span><span class="red-star">*</span>
+                </label>
+                <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text">
+                  <i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-resourceinformation-resourcetype"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Input field for Version -->
+          <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                  id="input-resourceinformation-version" name="version" pattern="[0-9\.]{0,5}" />
+                <label for="input-resourceinformation-version" data-translate="resourceInfo.version"></label>
+                <div class="invalid-feedback" data-translate="resourceInfo.versionInvalid"></div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text">
+                  <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-version"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Input field for Language -->
+          <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <select class="form-select" id="input-resourceinformation-language" name="language" required>
+                  <option disabled selected hidden value="" data-translate="general.choose"></option>
+                </select>
+                <label for="input-resourceinformation-language">
+                  <span data-translate="resourceInfo.datasetLanguage"></span><span class="red-star">*</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Spacing between rows -->
+        <div class="space-between-row"></div>
+        <div class="row">
+          <!-- Input field Title -->
+          <div class="col-10 col-sm-11 col-md-11 col-lg-11 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                  id="input-resourceinformation-title" name="title[]" pattern="^[a-zA-ZäÄöÖ_ßüÜ0-9.\(\)\!\:\?\- ]+$"
+                  required />
+                <label for="input-resourceinformation-title">
+                  <span data-translate="resourceInfo.resourceTitle"></span><span class="red-star">*</span>
+                </label>
+                <div class="invalid-feedback" data-translate="resourceInfo.resourceTitleInvalid"></div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text">
+                  <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-title"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Input field for Title Type (hidden until second title) -->
+          <div class="col-10 col-md-3 p-1 unvisible" id="container-resourceinformation-titletype">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <select class="form-select input-with-help input-right-no-round-corners"
+                  id="input-resourceinformation-titletype" name="titleType[]" required>
+                </select>
+                <label for="input-resourceinformation-titletype">
+                  <span data-translate="resourceInfo.titleType"></span><span class="red-star">*</span>
+                </label>
+                <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text">
+                  <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-titletype"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Button for cloning new rows for other titles -->
+          <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
+            <div class="align-items-center">
+              <button type="button" class="btn btn-primary addTitle add-button" id="button-resourceinformation-addtitle"
+               data-translate="general.add"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><div class="card mb-2">
+  <div class="card-header">
+    <b data-translate="rights.title">Licenses and Rights</b>
+    <i class="bi bi-question-circle-fill" data-help-section-id="help-rights"></i>
+
+  </div>
+  <div id="group-rights">
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <select class="form-select input-right-round-corners" id="input-rights-license"
+                name="Rights" required>
+              </select>
+              <label for="input-rights-license"><span data-translate="rights.licenseTitle">License</span><span
+                  class="red-star">*</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="card mb-2">
+  <div class="card-header"><b data-translate="authors.title">Author(s)</b>
+    <i class="bi bi-question-circle-fill" data-help-section-id="help-authors-fg"></i>
+  </div>
+  <div class="card-body">
+    <div id="group-author">
+      <div class="row" data-creator-row>
+        <!-- Input field ORCID Author mit Contact Person Toggle -->
+        <div class="col-12 col-sm-12 col-md-5 col-lg-3 p-1">
+          <div class="input-group has-validation">
+            <!-- Toggle-Checkbox als Button (Bootstrap Toggle Button) -->
+            <input type="checkbox" class="btn-check" id="checkbox-author-contactperson" name="contacts[]" autocomplete="off">
+            <label class="btn btn-outline-primary lh-sm round-corners-left con-reduce" for="checkbox-author-contactperson"
+              data-translate="contactPersons.toggleCheckbox">
+              Contact<br>Person
+            </label>
+            <!-- ORCID Input Field -->
+            <div class="form-floating flex-grow-1">
+              <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                id="input-author-orcid" name="orcids[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
+              <label for="input-author-orcid" data-translate="general.ORCID">ORCID</label>
+              <div class="invalid-feedback" data-translate="general.orcidInvalid">
+                Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))
+              </div>
+            </div>
+            <!-- Help Icon -->
+            <span class="input-group-text">
+              <i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i>
+            </span>
+          </div>
+        </div>
+        <!-- Input field Lastname Author -->
+        <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="input-author-lastname" name="familynames[]"
+                pattern="^[a-zA-ZäöüÄéÖÜß \-]*$" required />
+              <label for="input-author-lastname"><span data-translate="general.lastName">Last Name</span><span
+                  class="red-star">*</span></label>
+              <div class="invalid-feedback" data-translate="general.lastNameInvalid">
+                Please provide a lastname. Only letters are allowed.
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Input field Firstname Author -->
+        <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="input-author-firstname" name="givennames[]"
+                pattern="^[a-zA-ZäöüÄéÖÜß \-.]*$" required />
+              <label for="input-author-firstname"><span data-translate="general.firstName">First Name</span><span
+                  class="red-star">*</span></label>
+              <div class="invalid-feedback" data-translate="general.firstNameInvalid">
+                Please provide a firstname. Only letters are allowed.
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Input field Affiliation Author-->
+        <div class="col-10 col-sm-11 col-md-10 col-lg-4 p-1">
+          <label for="input-author-affiliation" class="visually-hidden">Affiliation</label>
+          <div class="input-group has-validation">
+            <input type="text" class="form-control input-with-help input-right-no-round-corners"
+              id="input-author-affiliation" name="personAffiliation[]" data-translate-placeholder="general.affiliation" />
+            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-author-affiliation"></i></span>
+            <input type="hidden" id="input-author-rorid" name="authorPersonRorIds[]" />
+          </div>
+        </div>
+        <!-- Button "add Author" -->
+        <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
+          <div class="drag-handle align-items-center" data-bs-toggle="tooltip" data-bs-placement="top"
+            title="Drag & drop to change order">
+            <i class="bi bi-grip-vertical pe-4"></i>
+          </div>
+          <div class="align-items-center">
+            <button type="button" class="btn btn-primary addAuthor" id="button-author-add" class="add-button" data-translate="general.add">
+              +
+            </button>
+          </div>
+        </div>
+        <!-- Input field Email Address -->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 contact-person-input">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="email" class="form-control" name="cpEmail[]"
+                pattern="^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$"
+                id="input-contactperson-email"  />
+              <label for="input-contactperson-email"><span data-translate="contactPersons.email">Email
+                  address</span><span class="red-star">*</span>
+              </label>
+              <div class="invalid-feedback" data-translate="contactPersons.emailInvalid">
+                Please provide a valid email address in the format xxx.xxx@xxx.xxx.
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Input field Website -->
+        <div class="col-12 col-sm-12 col-md-6 col-lg-5 p-1 contact-person-input">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                id="input-contactperson-website" name="cpOnlineResource[]"
+                pattern="^(http(s)?:\/\/)?(www\.)?[a-zA-Z0-9\-\.]+(\.[a-zA-Z]{2,})+(\/[^\s]*)?$" />
+              <label for="input-contactperson-website" data-translate="contactPersons.website">
+                Website
+              </label>
+              <div class="invalid-feedback" data-translate="contactPersons.websiteInvalid">
+                Please provide a valid URL.
+              </div>
+            </div>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-contactperson-website"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="card mb-2">
+    <div class="card-header"><b data-translate="authorsInstitutions.title">Author Institution</b>
+        <i class="bi bi-question-circle-fill" data-help-section-id="help-author-institution-fg"></i>
+    </div>
+    <div class="card-body">
+        <div id="group-authorinstitution">
+            <div class="row" data-authorinstitution-row>
+                <!-- Input field for Institution Name -->
+                <div class="col-12 col-md-5 p-1">
+                    <div class="input-group has-validation">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="input-authorinstitution-name"
+                                name="authorinstitutionName[]">
+                            <label for="input-authorinstitution-name" data-translate="authorsInstitutions.name">Author
+                                Institution name</label>
+                            <div class="invalid-feedback" data-translate="authors.InstitutionsNameInvalid"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- input field for Institution Affiliation -->
+                <div class="col-12 col-md-6 p-1">
+                    <label for="input-authorinstitution-affiliation" class="visually-hidden">Affiliation</label>
+                    <div class="input-group has-validation">
+                        <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                            id="input-authorinstitution-affiliation" name="institutionAffiliation[]"
+                            data-translate-placeholder="general.affiliation" />
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                data-help-section-id="help-contributorinstitutions-affiliation"></i></span>
+                        <input type="hidden" id="input-author-institutionrorid" name="authorInstitutionRorIds[]" />
+                    </div>
+                </div>
+                <!-- Button to add new row -->
+                <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
+                    <!-- Drag handle -->
+                    <div class="drag-handle align-items-center me-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="Drag & drop to change order">
+                        <i class="bi bi-grip-vertical"></i>
+                    </div>
+                    <!-- Add button -->
+                    <div class="align-items-center">
+                        <button type="button" class="btn btn-primary addauthorinstitution add-button"
+                            id="button-authorinstitution-add" data-translate="general.add">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><div class="card mb-2">
+  <div class="card-header">
+    <b data-translate="contributorPersons.title">Contributors</b>
+    <i class="bi bi-question-circle-fill" data-help-section-id="help-contributorpersons-fg"></i>
+  </div>
+  <div class="card-body">
+    <div id="group-contributorperson">
+      <!-- Row for Contributor Persons -->
+      <div class="row" contributor-person-row>
+        <!-- Input field for Contributor ORCID -->
+        <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                id="input-contributor-orcid" name="cbORCID[]" 
+                pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
+              <label for="input-contributor-orcid" data-translate="general.ORCID">ORCID</label>
+              <div class="invalid-feedback" data-translate="general.orcidInvalid">Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))</div>
+            </div>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-contributorpersons-orcid"></i></span>
+            </div>
+          </div>
+        </div>
+        <!-- Input field for Contributor Lastname -->
+        <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="input-contributor-lastname" pattern="^[a-zA-ZäöéüÄÖÜß \-]*$"
+                name="cbPersonLastname[]"  />
+              <label for="input-contributor-lastname" data-translate="general.lastName">Last Name</label>
+              <div class="invalid-feedback" data-translate="general.lastNameInvalid">Please provide a lastname. Only letters are allowed.</div>
+            </div>
+          </div>
+        </div>
+        <!-- Input field for Contributor Firstname -->
+        <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="input-contributor-firstname" pattern="^[a-zA-ZäöéüÄÖÜß \-.]*$"
+                name="cbPersonFirstname[]"  />
+              <label for="input-contributor-firstname" data-translate="general.firstName">First Name</label>
+              <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Input field for Contributor Person Role(s) -->
+        <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
+          <label for="input-contributor-personrole" class="visually-hidden" data-translate="general.roleLabel">Role</label>
+          <div class="input-group has-validation">
+            <input name="cbPersonRoles[]"  id="input-contributor-personrole"
+              class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
+              data-translate-placeholder="general.roleLabel" />
+            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-contributorpersons-role"></i></span>
+            <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+          </div>
+        </div>
+        <!-- Input field for Contributor Affiliation -->
+        <div class="col-10 col-sm-10 col-md-7 col-lg-3 p-1">
+          <label for="input-contributorpersons-affiliation" class="visually-hidden">Affiliation</label>
+          <div class="input-group has-validation">
+            <input type="text" class="form-control input-with-help input-right-no-round-corners"
+              id="input-contributorpersons-affiliation" name="cbAffiliation[]" />
+            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-contributorinstitutions-affiliation"></i></span>
+            <input type="hidden" id="input-contributor-personrorid" name="cbpRorIds[]" />
+          </div>
+        </div>
+        <!-- Button for Cloning Contributor Person row -->
+        <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
+          <button type="button" class="btn btn-primary addContributorPerson add-button" id="button-contributor-addperson"
+            data-translate="general.add">
+            +
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="card mb-2">
+    <div class="card-header">
+      <b data-translate="contributorInstitutions.title">Contributor Institution(s)</b>
+      <i class="bi bi-question-circle-fill" data-help-section-id="help-contributorinstitutions-fg"></i>
+    </div>
+    <div class="card-body">
+      <div id="group-contributorperson">
+      <!-- Row for Contributor Organisation -->
+      <div id="group-contributororganisation">
+        <div class="row" contributors-row>
+          <!-- Input field for Organisation Name-->
+          <div class="col-12 col-sm-12 col-md-12 col-lg-4 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                  id="input-contributor-name" name="cbOrganisationName[]"  />
+                <label for="input-contributor-name" data-translate="contributorInstitutions.organization">Organisation name</label>
+                <div class="invalid-feedback" data-translate="contributorInstitutions.organizationInvalid">Please enter a valid organization name.</div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="bi bi-question-circle-fill"    
+                    data-help-section-id="help-contributorinstitutions-organisationname"></i></span>
+              </div>
+            </div>
+          </div>
+          <!-- Input field for Organisation Role(s)-->
+          <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
+            <label for="input-contributor-organisationrole" class="visually-hidden" data-translate="general.roleLabel">Role</label>
+            <div class="input-group has-validation">
+              <input name="cbOrganisationRoles[]"  id="input-contributor-organisationrole"
+                class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
+                data-translate-placeholder="general.roleLabel" />
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-contributorinstitutions-organisationrole"></i></span>
+              <div class="invalid-feedback" data-translate="general.pleaseChoose"></div>
+            </div>
+          </div>
+          <!-- Input field for Organisation Affiliation -->
+          <div class="col-10 col-sm-10 col-md-7 col-lg-5 p-1">
+            <label for="input-contributor-organisationaffiliation" class="visually-hidden">Affiliation</label>
+            <div class="input-group has-validation">
+              <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]" />
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-contributorinstitutions-affiliation"></i></span>
+              <input type="hidden" id="input-contributor-organisationrorid" name="hiddenOrganisationRorId[]" />
+            </div>
+          </div>
+          <!-- Button for cloning Contributor row -->
+          <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
+            <button type="button" class="btn btn-primary addContributor add-button" id="button-contributor-addorganisation" data-translate="general.add">
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div><div class="card mb-2">
+  <div class="card-header"><b data-translate="descriptions.title">Descriptions</b>
+    <i class="bi bi-question-circle-fill" data-help-section-id="help-descriptions-fg"></i>
+  </div>
+  <div id="group-description">
+    <div class="accordion p-2" id="accordion-description">
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-abstract"
+            aria-expanded="true" aria-controls="collapse-abstract" data-translate="descriptions.abstract">
+            Abstract
+          </button>
+        </h2>
+        <!-- Input field Abstract -->
+        <div id="collapse-abstract" class="accordion-collapse collapse show" data-bs-parent="#accordion-description">
+          <div class="accordion-body">
+            <label for="input-abstract" class="visually-hidden">
+              <span data-translate="descriptions.abstract">Abstract</span><span class="red-star">*</span>
+            </label>
+            <div class="input-group has-validation">
+              <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
+                data-translate-placeholder="descriptions.abstractPlaceholder" id="input-abstract"
+                name="descriptionAbstract" required aria-describedby="abstract-help"></textarea>
+              <span class="input-group-text">
+                <i class="bi bi-question-circle-fill" id="abstract-help"
+                  data-help-section-id="help-description-abstract"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapse-methods" aria-expanded="false" aria-controls="collapse-methods"
+            data-translate="descriptions.methods">
+            Methods
+          </button>
+        </h2>
+        <!-- Input field Methods -->
+        <div id="collapse-methods" class="accordion-collapse collapse" data-bs-parent="#accordion-description">
+          <div class="accordion-body">
+            <div class="input-group has-validation">
+                <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
+                  id="input-methods" name="descriptionMethods"
+                  data-translate-placeholder="descriptions.methodsPlaceholder"></textarea>
+                <label for="input-methods" data-translate="descriptions.methods" style="display: none;">
+                  Methods
+                </label>
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-description-methods"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapse-technicalinfo" aria-expanded="false" aria-controls="collapse-technicalinfo"
+            data-translate="descriptions.technicalInfo">
+            Technical Information
+          </button>
+        </h2>
+        <!-- Input field Technical Information -->
+        <div id="collapse-technicalinfo" class="accordion-collapse collapse" data-bs-parent="#accordion-description">
+          <div class="accordion-body">
+            <div class="input-group has-validation">
+                <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
+                data-translate-placeholder="descriptions.technicalinfoPlaceholder" id="input-technicalinfo"
+                  name="descriptionTechnical"></textarea>
+                <label for="input-technicalinfo" data-translate="descriptions.technicalInfo" style="display: none;">
+                  Technical Information
+                </label>
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-description-technicalinfo"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapse-other" aria-expanded="false" aria-controls="collapse-other"
+            data-translate="descriptions.other">
+            Other
+          </button>
+        </h2>
+        <!-- Input field Other -->
+        <div id="collapse-other" class="accordion-collapse collapse" data-bs-parent="#accordion-description">
+          <div class="accordion-body">
+            <div class="input-group has-validation">
+                <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
+                data-translate-placeholder="descriptions.otherPlaceholder" id="input-other" name="descriptionOther"></textarea>
+                <label for="input-other" data-translate="descriptions.other" style="display: none;">
+                  Other
+                </label>
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-description-other"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="card mb-2">
+  <div class="card-header">
+    <b data-translate="keywords.thesaurus.name"></b>
+  </div>
+
+  <div id="thesaurusKeywordsGroup">
+    <div class="accordion p-2" id="accordionThesauri">
+
+      <!------------------------------- GCMD SCIENCE KEYWORDS ------------------------------------------------------------>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingScienceKeywords">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapseScienceKeywords" aria-expanded="false" aria-controls="collapseScienceKeywords">
+            GCMD Science Keywords
+          </button>
+        </h2>
+        <div id="collapseScienceKeywords" class="accordion-collapse collapse show" aria-labelledby="headingScienceKeywords"
+          data-bs-parent="#accordionThesauri">
+          <div class="accordion-body">
+            <!-- Input field -->
+            <div class="input-group has-validation input-margin-top-bottom">
+              <label for="input-sciencekeyword" class="visually-hidden">sciencekeyword</label>
+              <div class="form-floating">
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="input-sciencekeyword" name="gcmdScienceKeywords" />
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-scienceKeywords-keyword"></i></span>
+                </div>
+              </div>
+              <!-- Thesaurus button -->
+              <div class="col-auto p-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                  data-bs-target="#modal-sciencekeyword" id="button-sciencekeyword-open">
+                  <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                  <span class="visually-hidden">Thesaurus öffnen</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!------------------------------- GCMD PLATFORMS ------------------------------------------------------------>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingPlatforms">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapsePlatforms" aria-expanded="false" aria-controls="collapsePlatforms">
+            GCMD Platforms
+          </button>
+        </h2>
+        <div id="collapsePlatforms" class="accordion-collapse collapse" data-bs-parent="#accordionThesauri">
+          <div class="accordion-body">
+            <!-- Input field -->
+            <div class="input-group has-validation input-margin-top-bottom">
+              <label for="input-Platforms" class="visually-hidden">Platforms</label>
+              <div class="form-floating">
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="input-Platforms" name="platforms" />
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-gcmd-platforms-keyword"></i></span>
+                </div>
+              </div>
+              <!-- Thesaurus button -->
+              <div class="col-auto p-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-Platforms"
+                  id="platformKeywordsThesaurus">
+                  <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                  <span class="visually-hidden">Thesaurus öffnen</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!------------------------------- GCMD INSTRUMENTS ------------------------------------------------------------>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingInstruments">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapseInstruments" aria-expanded="false" aria-controls="collapseInstruments">
+            GCMD Instruments
+          </button>
+        </h2>
+        <div id="collapseInstruments" class="accordion-collapse collapse" data-bs-parent="#accordionThesauri">
+          <div class="accordion-body">
+            <!-- Input field -->
+            <div class="input-group has-validation input-margin-top-bottom">
+              <label for="input-Instruments" class="visually-hidden">Instruments</label>
+              <div class="form-floating">
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                    id="input-Instruments" name="instruments" />
+                  <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                      data-help-section-id="help-gcmd-instruments-keyword"></i></span>
+                </div>
+              </div>
+              <!-- Thesaurus button -->
+              <div class="col-auto p-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-instruments"
+                  id="openInstrumentsThesaurus">
+                  <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                  <span class="visually-hidden">Thesaurus öffnen</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!------------------------------- Modals ------------------------------------------------------------>
+
+<!-- Modal for Science Keywords -->
+<div class="modal fade       " id="modal-sciencekeyword" tabindex="-1" aria-labelledby="label-sciencekeyword-modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="label-sciencekeyword-modal" data-translate="keywords.sciencekeywords">
+          GCMD Science Keywords
+        </h5>
+        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+            data-help-section-id="help-keywords-keywordviewer"></i></span>
+      </div>
+      <div class="modal-body d-flex">
+        <!-- Left Side: Keyword Selection Tree -->
+        <div id="panel-sciencekeyword-thesaurus" class="w-50 pe-3 border-end">
+          <label for="input-sciencekeyword-thesaurussearch" class="visually-hidden">Search for keywords</label>
+          <input type="text" class="form-control mb-3" id="input-sciencekeyword-thesaurussearch"
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder" aria-label="Search for keywords">
+          <div id="jstree-sciencekeyword"></div>
+        </div>
+
+        <!-- Right Side: Selected Keywords -->
+        <div class="w-50 ps-3">
+          <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+          <ul id="selected-keywords-gcmd" class="list-group">
+            <!-- Selected keywords will appear here dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal for GCMD PLATFORMS -->
+<div class="modal fade       " id="modal-Platforms" tabindex="-1" aria-labelledby="label-Platforms-modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="label-Platforms-modal" data-translate="keywords.Platforms">
+          GCMD Platforms
+        </h5>
+        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+            data-help-section-id="help-keywords-keywordviewer"></i></span>
+      </div>
+      <div class="modal-body d-flex">
+        <!-- Left Side: Keyword Selection Tree -->
+        <div id="panel-Platforms-thesaurus" class="w-50 pe-3 border-end">
+          <label for="input-Platforms-thesaurussearch" class="visually-hidden">Search for keywords</label>
+          <input type="text" class="form-control mb-3" id="input-Platforms-thesaurussearch"
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder" aria-label="Search for keywords">
+          <div id="jstree-Platforms"></div>
+        </div>
+
+        <!-- Right Side: Selected Keywords -->
+        <div class="w-50 ps-3">
+          <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+          <ul id="selected-keywords-Platforms-gcmd" class="list-group">
+            <!-- Selected keywords will appear here dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal for GCMD INSTRUMENTS -->
+<div class="modal fade       " id="modal-instruments" tabindex="-1" aria-labelledby="label-instruments-modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="label-instruments-modal" data-translate="keywords.instruments">
+          GCMD Instruments
+        </h5>
+        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+            data-help-section-id="help-keywords-keywordviewer"></i></span>
+      </div>
+      <div class="modal-body d-flex">
+        <!-- Left Side: Keyword Selection Tree -->
+        <div id="panel-instruments-thesaurus" class="w-50 pe-3 border-end">
+          <label for="input-instruments-thesaurussearch" class="visually-hidden">Search for keywords</label>
+          <input type="text" class="form-control mb-3" id="input-instruments-thesaurussearch"
+            placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder" aria-label="Search for keywords">
+          <div id="jstree-instruments"></div>
+        </div>
+
+        <!-- Right Side: Selected Keywords -->
+        <div class="w-50 ps-3">
+          <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
+          <ul id="selected-keywords-instruments-gcmd" class="list-group">
+            <!-- Selected keywords will appear here dynamically -->
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div><div class="card mb-2">
+  <div class="card-header">
+    <b data-translate="keywords.free.title">Free Keywords</b>
+  </div>
+  <div class="card-body reduce-padding">
+    <div id="group-freekeyword" class="form-floating">
+      <div class="row align-items-center">
+        <!-- Input field -->
+        <div class="input-group input-margin-top-bottom">
+          <label for="input-freekeyword" class="visually-hidden">Free Keyword</label>
+          <input type="text" class="form-control input-with-help input-right-no-round-corners" name="freekeywords[]" id="input-freekeyword" data-translate-placeholder="keywords.free.placeholder">
+          <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-freeKeywords"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="card mb-2">
+  <div class="card-header"><b data-translate="dates.title">Dates</b>
+    <i class="bi bi-question-circle-fill" data-help-section-id="help-dates-fg"></i>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <!-- Input field Date Created -->
+      <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1">
+        <div class="input-group has-validation">
+          <div class="form-floating">
+            <input type="date" class="form-control input-with-help input-right-no-round-corners" id="input-date-created"
+              name="dateCreated" min="1900-01-01" max="2100-12-31" required />
+            <label for="input-date-created"><span data-translate="dates.created">Date created</span><span
+                class="red-star">*</span></label>
+            <div class="invalid-feedback" data-translate="dates.dateInvalid">Please enter a valid date!</div>
+          </div>
+          <div class="input-group-append">
+            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-date-created"></i></span>
+          </div>
+        </div>
+      </div>
+      <!-- Input field Date Embargo -->
+      <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1">
+        <div class="input-group has-validation">
+          <div class="form-floating">
+            <input type="date" class="form-control input-with-help input-right-no-round-corners" id="input-date-embargo"
+              name="dateEmbargo" min="1900-01-01" max="2100-12-31" />
+            <label for="input-date-embargo" data-translate="dates.embargoUntil">Embargo until</label>
+            <div class="invalid-feedback embargo-invalid" data-translate="dates.dateInvalid"></div>
+          </div>
+          <div class="input-group-append">
+            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-date-embargo"></i></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="card mb-2">
+    <div class="card-header">
+        <b data-translate="coverage.title">Spatial and Temporal Coverages</b>
+        <i class="bi bi-question-circle-fill" data-help-section-id="help-stc-fg"></i>
+    </div>
+    <div>
+        <div class="card-body" id="group-stc">
+            <div class="row" tsc-row tsc-row-id="1">
+                <div class="form-floating">
+                    <!-- Column for 2 input fields -->
+                    <div class="row">
+                        <div class="col-3 col-sm-3 col-md-2 col-lg-1 d-flex align-items-center">
+                            <!-- Button for opening the modal with the map -->
+                            <button type="button" class="btn btn-primary" id="button-stc-openmap" data-bs-toggle="modal"
+                                data-bs-target="#modal-stc-map" data-translate="coverage.map">
+                                Map
+                            </button>
+                        </div>
+                        <div class="col-9 col-sm-9 col-md-10 col-lg-2 p-1">
+                            <!-- Input fields for Latitude Min and Max -->
+                            <label for="input-stc-latmin_1" class="form-label"
+                                data-translate="coverage.latitude">Latitude Min</label>
+                            <label for="input-stc-latmax_1" class="visually-hidden">Latitude Max</label>
+                            <div class="input-group has-validation">
+                                <input type="text" class="form-control" id="input-stc-latmin_1" placeholder="Min"
+                                    name="tscLatitudeMin[]" pattern="^-?(90(\.0+)?|[1-8]?\d(\.\d+)?)$">
+                                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                                    id="input-stc-latmax_1" placeholder="Max" name="tscLatitudeMax[]"
+                                    pattern="^-?(90(\.0+)?|[1-8]?\d(\.\d+)?)$">
+                                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                        data-help-section-id="help-tsc-geographicalcoverage"></i></span>
+                                <div class="invalid-feedback" data-translate="coverage.latitudeInvalid">Please enter a
+                                    latitude between -90 and +90.</div>
+                            </div>
+                            <!-- Input fields for Longitude Min and Max -->
+                            <label for="input-stc-longmin_1" class="form-label"
+                                data-translate="coverage.longitude">Longitude Min</label>
+                            <label for="input-stc-longmax_1" class="visually-hidden">Longitude Max</label>
+                            <div class="input-group has-validation">
+                                <input type="text" class="form-control" id="input-stc-longmin_1" placeholder="Min"
+                                    name="tscLongitudeMin[]" pattern="^-?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$">
+                                <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                                    id="input-stc-longmax_1" placeholder="Max" name="tscLongitudeMax[]"
+                                    pattern="^-?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$">
+                                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                        data-help-section-id="help-tsc-geographicalcoverage"></i></span>
+                                <div class="invalid-feedback" data-translate="coverage.longitudeInvalid">Please enter a
+                                    longitude between -180 and +180.</div>
+                            </div>
+                        </div>
+                        <!-- Input field for Description -->
+                        <div class="col-12 col-sm-12 col-md-12 col-lg-2 p-1">
+                            <label for="input-stc-description" class="form-label"
+                                data-translate="coverage.description">Description</label>
+                            <div class="input-group">
+                                <textarea rows="4"
+                                    class="form-control input-right-no-round-corners input-with-help input-right-with-round-corners"
+                                    placeholder="coverage.descriptionPlaceholder"
+                                    data-translate-placeholder="coverage.descriptionPlaceholder" name="tscDescription[]"
+                                    id="input-stc-description"></textarea>
+                                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                        data-help-section-id="help-tsc-description"></i></span>
+                            </div>
+                        </div>
+                        <!-- Input fields for Date and Time -->
+                        <div class="col-12 col-sm-12 col-md-8 col-lg-3 p-1">
+                            <label for="input-stc-datestart" class="form-label" data-translate="coverage.start">Start
+                                Date</label>
+                            <label for="input-stc-timestart" class="visually-hidden">Start Time</label>
+                            <div class="input-group has-validation">
+                                <input type="date" class="form-control" id="input-stc-datestart" name="tscDateStart[]"
+                                    min="1900-01-01" max="2100-12-31">
+                                <input type="time" class="form-control input-with-help input-right-no-round-corners"
+                                    id="input-stc-timestart" name="tscTimeStart[]">
+                                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                        data-help-section-id="help-tsc-temporalcoverage"></i></span>
+                                <div class="invalid-feedback" data-translate="coverage.dateTimeInvalid">Please enter a
+                                    valid date and time!</div>
+                            </div>
+                            <label for="input-stc-dateend" class="form-label" data-translate="coverage.end">End
+                                Date</label>
+                            <label for="input-stc-timeend" class="visually-hidden">End Time</label>
+                            <div class="input-group has-validation">
+                                <input type="date" class="form-control " id="input-stc-dateend" name="tscDateEnd[]"
+                                    min="1900-01-01" max="2100-12-31">
+                                <input type="time" class="form-control input-with-help input-right-no-round-corners"
+                                    id="input-stc-timeend" name="tscTimeEnd[]">
+                                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                        data-help-section-id="help-tsc-temporalcoverage"></i></span>
+                                <div class="invalid-feedback" data-translate="coverage.dateTimeInvalid">Please enter a
+                                    valid date and time!</div>
+                            </div>
+                        </div>
+                        <!-- Input field for Timezone -->
+                        <div class="col-8 col-sm-8 col-md-3 col-lg-3 p-1">
+                            <label for="input-stc-timezone" class="form-label"
+                                data-translate="coverage.timezone"></label>
+                            <div class="input-group has validation">
+                                <select class="form-select input-with-help input-right-with-round-corners"
+                                    id="input-stc-timezone" name="tscTimezone[]">
+                                    <!-- Options will be filled with jQuery API call -->
+                                </select>
+                                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                        data-help-section-id="help-tsc-timezone"></i></span>
+                                <div class="invalid-feedback" data-translate="coverage.timezoneInvalid">Please choose
+                                    the timezone.</div>
+                            </div>
+                        </div>
+                        <!-- Button for cloning new row -->
+                        <div
+                            class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
+                            <button type="button" class="btn btn-primary addtsc" id="button-stc-add"
+                                data-translate="general.add">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal for Google Maps select panel -->
+    <div class="modal fade
+     " id="modal-stc-map" tabindex="-1" aria-labelledby="label-stc-map" aria-hidden="true" data-tsc-row-id="">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="label-stc-map" data-translate="coverage.map">Map</h5>
+                    <br>&nbsp;&nbsp;&nbsp;
+                    <div data-translate="coverage.mapInfo">(Please choose coordinates with rectangle or marker)
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="input-stc-map-search" class="form-control mb-2" placeholder="Search for a place" data-translate-placeholder="coverage.mapSearch">
+                    <div class="map-panel" id="panel-stc-map">
+                        <!-- Panel for loading google maps -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="button-stc-cancelpanel"
+                        data-translate="general.cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="button-stc-sendcoords"
+                        data-translate="general.accept">Accept</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><div class="card mb-2">
+  <div class="card-header"><b data-translate="relatedWork.title">Related work</b> <i class="bi bi-question-circle-fill"
+      data-help-section-id="help-relatedwork-fg"></i></div>
+  <div class="card-body">
+    <div id="group-relatedwork">
+      <div class="row" related-work-row>
+        <!-- Input field Relation -->
+        <div class="col-12 col-sm-12 col-md-4 col-lg-3 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <select class="form-select input-with-help input-right-no-round-corners"
+                aria-label="Default select example" id="input-relatedwork-relation" name="relation[]"></select>
+              <label for="input-relatedwork-relation" data-translate="relatedWork.relation">Relation</label>
+              <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+            </div>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-relatedwork-relation"></i></span>
+            </div>
+          </div>
+        </div>
+        <!-- Input field Identifier -->
+        <div class="col-12 col-sm-12 col-md-4 col-lg-5 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                id="input-relatedwork-identifier" name="rIdentifier[]" />
+              <label for="input-relatedwork-identifier" data-translate="relatedWork.identifier">Identifier</label>
+              <div class="invalid-feedback" data-translate="relatedWork.identifierInvalid">Please enter a valid identifier.</div>
+            </div>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-relatedwork-identifier"></i></span>
+            </div>
+          </div>
+        </div>
+        <!-- Input field Identifier Type -->
+        <div class="col-10 col-sm-10 col-md-3 col-lg-3 p-1">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <select class="form-select input-with-help input-right-no-round-corners"
+                aria-label="Default select example" id="input-relatedwork-identifiertype" name="rIdentifierType[]">
+              </select>
+              <label for="input-relatedwork-identifiertype" data-translate="relatedWork.identifierType">Identifier type</label>
+              <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+            </div>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-relatedwork-relation"></i></span>
+            </div>
+          </div>
+        </div>
+        <!-- Clone Related Work row button-->
+        <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
+          <button type="button" class="btn btn-primary addRelatedWork" id="button-relatedwork-add" class="add-button" data-translate="general.add">
+            +
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="card mb-2">
+    <div class="card-header"><b data-translate="funding.title">Funding Reference</b></div>
+    <div class="card-body">
+        <div id="group-fundingreference">
+            <div class="row" funding-reference-row>
+                <!-- Input field Funder -->
+                <div class="col-sm-6 col-md-6 col-lg-3 p-1">
+                    <div class="input-group has-validation">
+                        <div class="form-floating ">
+                            <input type="text"
+                                class="form-control input-with-help input-right-with-round-corners inputFunder"
+                                name="funder[]" autocomplete="off" id="input-funder">
+                            <label for="input-funder" data-translate="funding.funder">Funder</label>
+                            <div class="invalid-feedback" data-translate="funding.funderInvalid">Please enter the name of the funder.</div>
+                            <!-- Hidden input fields Funder ID and Funder ID Typ -->
+                            <input type="hidden" class="inputFunderId" name="funderId[]">
+                            <input type="hidden" class="inputFunderIdTyp" name="funderidtyp[]">
+                        </div>
+                        <div class="input-group-append">
+                            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                    data-help-section-id="help-fundingreference-funder"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Input field Grant Number -->
+                <div class="col-sm-6 col-md-6 col-lg-2 p-1">
+                    <div class="input-group has-validation">
+                        <div class="form-floating">
+                            <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                                id="input-grantnumber" name="grantNummer[]"  />
+                            <label for="input-grantnumber" data-translate="funding.grantNumber">Grant Number</label>
+                        </div>
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                data-help-section-id="help-fundingreference-grantnumber"></i></span>
+                    </div>
+                </div>
+                <!-- Input field Grant Name -->
+                <div class="col-sm-6 col-md-6 col-lg-3 p-1">
+                    <div class="input-group has-validation">
+                        <div class="form-floating">
+                            <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                                id="input-grantname" name="grantName[]" />
+                            <label for="input-grantname" data-translate="funding.grantName">Grant Name</label>
+                        </div>
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                                data-help-section-id="help-fundingreference-grantname"></i></span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-3 p-1">
+                    <div class="input-group has-validation">
+                        <div class="form-floating">
+                            <input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-awarduri" name="awardURI[]" pattern="^(http(s)?:\/\/)?(www\.)?[a-zA-Z0-9\-\.]+(\.[a-zA-Z]{2,})+(\/[^\s]*)?$" />
+                            <label for="input-awarduri" data-translate="funding.awardURI">Award URI</label>
+                            <div class="invalid-feedback" data-translate="funding.awardURIInvalid">Please provide a valid URL.</div>
+                        </div>
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-fundingreference-awarduri"></i></span>
+                    </div>
+                </div>
+                <!-- Button "add Funding Reference" -->
+                <div class="col-12 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
+                    <button type="button" class="btn btn-primary addFundingReference" id="button-fundingreference-add"
+                        class="add-button" data-translate="general.add">
+                        +
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div></form>
+</main>
+<!-- Upload Modal -->
+<div class="modal fade" id="modal-uploadxml" tabindex="-1" aria-labelledby="modal-uploadxml" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-uploadxml">XML hochladen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>            
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="input-uploadxml-file" class="form-label" data-translate="modals.upload.title">Select XML file:</label>
+                    <input class="form-control" type="file" id="input-uploadxml-file" accept=".xml">
+                </div>
+
+                <div class="drop-zone mb-3 p-5 border rounded text-center" id="panel-uploadxml-dropfile">
+                    <p class="mb-0" data-translate="modals.upload.dropZoneInfo">Drop XML file here</p>
+                </div>
+                <div class="alert alert-info d-none" id="xml-upload-status"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpModalLabel" data-translate="header.help">Help</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Section of guide is inserted dynamically here -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Notification Modal -->
+<div class="modal fade" id="modal-notification" tabindex="-1" aria-labelledby="modal-notification-label"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-notification-label">Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modal-notification-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Changelog Modal -->
+<div class="modal fade" id="modal-changelog" tabindex="-1" aria-labelledby="label-changelog-modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="label-changelog-modal" data-translate="modals.changelog.aboutHeading">About ELMO - Enhanced Laboratory Metadata Organizer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="lead text-center fs-6" data-translate="modals.changelog.aboutText">
+                    The ELMO Metadata Editor was developed in 2024 by students of the University of Applied Sciences
+                    Potsdam in cooperation with the German Research Centre for Geosciences and is released under the GNU
+                    General Public License, Version 2.
+                </p>
+                <hr>
+                <!-- Changelog -->
+                <h5 data-translate="modals.changelog.title">Changelog</h5>
+                <div id="panel-changelog-content">
+                    <!-- Content will be loaded from doc/changelog.html -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Save As Modal -->
+<div class="modal fade" id="modal-saveas" tabindex="-1" aria-labelledby="label-saveas-modal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="label-saveas-modal"data-translate="modals.save.saveAs">
+                    Save as XML
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-saveas-filename">
+                    <div class="mb-3">
+                        <label for="input-saveas-filename" class="form-label" data-translate="modals.save.filename">
+                            Filename
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="input-saveas-filename">
+                            <span class="input-group-text">.xml</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="general.cancel">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="button-saveas-save" data-translate="modals.save.save">
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Submit Modal -->
+<div class="modal fade" id="modal-submit" tabindex="-1" aria-labelledby="modal-submit-label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modal-submit-label" data-translate="modals.submit.title">Submit Dataset</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="modal-submit-form">
+            <!-- Publication urgency dropdown -->
+            <div class="mb-3">
+              <label for="input-submit-urgency" class="form-label" data-translate="modals.submit.urgency">Urgency</label>
+              <select class="form-select" id="input-submit-urgency">
+                <option value="" data-translate="modals.submit.urgencyNotice" selected disabled>Please select an urgency</option>
+                <option value="2" data-translate="modals.submit.high">high (2 weeks)</option>
+                <option value="4" data-translate="modals.submit.normal">normal (4 weeks)</option>
+                <option value="6" data-translate="modals.submit.low">low (6 weeks)</option>
+              </select>
+            </div>
+            <!-- Data URL -->
+            <div class="mb-3">
+              <label for="input-submit-dataurl" class="form-label" data-translate="modals.submit.url">URL to data</label>
+              <input type="url" class="form-control" id="input-submit-dataurl" placeholder="https://...">
+            </div>
+            <!-- PDF upload -->
+            <div class="mb-3">
+                <label for="input-submit-datadescription" class="form-label" data-translate="modals.submit.dataDescription">Data
+                    Description (as mentioned in the Data Description Template)</label>
+                <div class="input-group">
+                    <input type="file" class="form-control" id="input-submit-datadescription" accept=".pdf,.doc,.docx">
+                    <button class="btn btn-outline-danger" type="button" id="remove-file-btn" style="display: none;">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        <span class="visually-hidden">Datei entfernen</span>
+                      </button>                      
+                </div>
+                <small class="form-text text-muted" id="selected-file-name"></small>
+            </div>
+            <!-- Privacy policy checkbox -->
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="input-submit-privacycheck" required>
+              <label class="form-check-label" for="input-submit-privacycheck" data-translate="modals.submit.privacypolice">
+                I have read the privacy policy and agree to the transmission of my data.
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="general.cancel">Cancel</button>
+          <button type="button" class="btn btn-success" id="button-submit-submit" data-translate="buttons.submit" disabled>Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- Feedback Modal -->
+<div class="modal fade" id="modal-feedback" tabindex="-1" aria-labelledby="label-feedbackmodal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="label-feedbackmodal" data-translate="modals.feedback.title">Feedback</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>            
+            <div class="modal-body">
+                <div id="panel-feedback-status"></div>
+                <div id="panel-feedback-message"
+                    class="feedback-message-thanks"
+                    data-translate="modals.feedback.thankYou"></div>
+
+                <form id="form-feedback" method="POST" action="send_feedback_mail.php">
+                    <div class="mb-3">
+                        <label for="input-feedback-question1" class="form-label"
+                            data-translate="modals.feedback.question1"></label>
+                        <textarea class="form-control" id="input-feedback-question1" name="feedbackQuestion1" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question2" class="form-label"
+                            data-translate="modals.feedback.question2"></label>
+                        <textarea class="form-control" id="input-feedback-question2" name="feedbackQuestion2" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question3" class="form-label"
+                            data-translate="modals.feedback.question3"></label>
+                        <textarea class="form-control" id="input-feedback-question3" name="feedbackQuestion3" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question4" class="form-label"
+                            data-translate="modals.feedback.question4"></label>
+                        <textarea class="form-control" id="input-feedback-question4" name="feedbackQuestion4" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question5" class="form-label"
+                            data-translate="modals.feedback.question5"></label>
+                        <textarea class="form-control" id="input-feedback-question5" name="feedbackQuestion5" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question6" class="form-label"
+                            data-translate="modals.feedback.question6"></label>
+                        <textarea class="form-control" id="input-feedback-question6" name="feedbackQuestion6" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="input-feedback-question7" class="form-label"
+                            data-translate="modals.feedback.question7"></label>
+                        <textarea class="form-control" id="input-feedback-question7" name="feedbackQuestion7" rows="3"
+                            required></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="button-feedback-send" class="feedback-button-send"
+                        data-translate="modals.feedback.sendButton"></button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div><!-- Fixed Footer für die Buttons -->
+<footer class="footer mt-auto py-0 fixed-bottom">
+  <div class="container">
+    <div class="row">
+      <div class="col d-flex align-items-center justify-content-center">
+        <div class="col-auto d-flex align-items-center justify-content-end">
+          <button type="button" class="btn btn-danger m-1" data-bs-toggle="tooltip" data-translate="buttons.clear"
+            id="button-form-reset" data-translate-tooltip="buttons.clearTooltip">
+            Clear
+          </button>
+          <button class="btn btn-primary m-1" type="button" id="button-form-load" data-action="load"
+            data-translate="buttons.load" data-translate-tooltip="buttons.loadTooltip">
+            Load
+          </button>
+          <button type="submit" class="btn btn-warning m-1" form="form-mde" id="button-form-save" data-action="save"
+            data-translate="buttons.saveAs" data-translate-tooltip="buttons.saveAsTooltip">
+            Save
+          </button>
+          <button type="submit" class="btn btn-success m-1" form="form-mde" id="button-form-submit" data-action="submit"
+            data-translate="buttons.submit" data-translate-tooltip="buttons.submitTooltip">
+            Submit
+          </button>
+                    <button type="button" class="btn feedback-button multi-color-blink m-2 text-feedback" id="button-feedback-openmodalfooter"
+            data-bs-toggle="modal" data-bs-target="#modal-feedback" data-translate="feedback.button"
+            data-translate-tooltip="modals.feedback.buttonTooltip">
+            Feedback
+          </button>
+                  </div>
+      </div>
+    </div>
+  </div>
+</footer>
+<!-- jQuery -->
+<script src="node_modules/jquery/dist/jquery.min.js"></script>
+<!-- jQuery UI -->
+<script src="node_modules/jquery-ui/dist/jquery-ui.min.js"></script>
+<!-- JavaScript-Dateien -->
+<!-- Language switch -->
+<script src="js/language.js"></script>
+<!-- Thesauri laden -->
+<script src="js/thesauri.js"></script>
+<!-- Validierungen laden -->
+<script type="module" src="js/validation.js"></script>
+<!-- autocomplete laden -->
+<script src="js/autocomplete.js"></script>
+<!-- Eventhandlers einbinden -->
+<script type="module" src="js/eventhandlers/buttons.js"></script>
+<!-- Roles laden -->
+<script src="js/roles.js"></script>
+<!-- Load Originating Laboratories -->
+<script src="js/originatingLaboratories.js"></script>
+<!-- JS-Datei für die Tags einbinden -->
+<script src="js/freekeywordTags.js"></script>
+<!-- affiliations laden -->
+<script src="js/affiliations.js"></script>
+<!-- Darkmode-Funktionen eingebunden -->
+<script src="js/darkmode.js"></script>
+<!-- JS-Datei für Hilfe-PopUps einbinden -->
+<script src="js/help.js"></script>
+<!-- JS-Karten-Funktionen einbinden -->
+<script src="js/map.js"></script>
+<!-- Titel Verkleinerungsfunktion einbinden -->
+<script src="js/headerResponsiveDesign.js"></script>
+<!-- Contributor Pflichtfelder überprüfungsfunktion einbinden -->
+<script src="js/checkMandatoryFields.js"></script>
+<!-- Clear form -->
+<script src="js/clear.js"></script> 
+<!-- Upload Handler -->
+<script src="js/upload.js"></script>
+<!-- Mapping from XML file to input fields -->
+<script src="js/mappingXmlToInputFields.js"></script>
+<!-- Bootstrap 5 -->
+<script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<!-- select-Funktionen laden -->
+<script src="js/select.js"></script>
+<!--Tagify-->
+<script src="node_modules/@yaireo/tagify/dist/tagify.js"></script>
+<!--jsTree-->
+<script src="node_modules/jstree/dist/jstree.min.js"></script>
+<script type="text/javascript">
+  var maxTitles = "2";
+</script>
+</body>
+
+</html>
