@@ -27,6 +27,7 @@ test.describe('Autosave experience', () => {
       </form>
       <div class="autosave-status" id="autosave-status" role="status" aria-live="polite" aria-atomic="true">
         <span class="visually-hidden">Autosave status:</span>
+        <span class="autosave-status__indicator" aria-hidden="true"></span>
         <span id="autosave-status-text">Autosave ready.</span>
       </div>
     </main>

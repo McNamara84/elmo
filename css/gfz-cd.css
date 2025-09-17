@@ -199,43 +199,48 @@ label.mandatory-field::after {
 }
 
 .autosave-status {
-    padding: 0.35rem 0.85rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    min-width: 220px;
-    text-align: center;
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--bs-secondary-color, #495057);
+    text-align: left;
+    transition: color 0.2s ease-in-out;
+}
+
+.autosave-status__indicator {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 50%;
+    background-color: currentColor;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.75);
 }
 
 .autosave-status--idle {
-    background-color: #0b2545;
-    color: #ffffff;
+    color: var(--bs-secondary-color, #495057);
 }
 
 .autosave-status--pending {
-    background-color: #ffc107;
-    color: #1b1b1b;
+    color: #b35c00;
 }
 
 .autosave-status--saving {
-    background-color: #0d6efd;
-    color: #ffffff;
+    color: #0a58ca;
 }
 
 .autosave-status--synced {
-    background-color: #198754;
-    color: #ffffff;
+    color: #0f5132;
 }
 
 .autosave-status--error {
-    background-color: #dc3545;
-    color: #ffffff;
+    color: #842029;
 }
 
 .autosave-status--cleared {
-    background-color: #6c757d;
-    color: #ffffff;
+    color: #495057;
 }
 
 .unvisible {
