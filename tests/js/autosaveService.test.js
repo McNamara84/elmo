@@ -11,7 +11,9 @@ describe('autosaveService', () => {
       <form id="form-mde">
         <input name="title" value="">
       </form>
-      <div id="autosave-status" class="autosave-status">
+      <div id="autosave-status" class="autosave-status" role="status" aria-live="polite" aria-atomic="true">
+        <span class="visually-hidden">Autosave status:</span>
+        <span class="autosave-status__indicator" aria-hidden="true"></span>
         <span id="autosave-status-text"></span>
       </div>
       <div id="modal-restore-draft">
@@ -70,6 +72,24 @@ describe('autosaveService', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await jest.advanceTimersByTimeAsync(500);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test('updateStatus applies semantic classes and messages', () => {
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.updateStatus('pending');
+    expect(document.getElementById('autosave-status').classList.contains('autosave-status--pending')).toBe(true);
+    expect(document.getElementById('autosave-status-text').textContent).toBe('Autosave scheduled.');
+
+    service.updateStatus('error', 'Network unavailable');
+    const statusElement = document.getElementById('autosave-status');
+    expect(statusElement.classList.contains('autosave-status--error')).toBe(true);
+    expect(statusElement.classList.contains('autosave-status--pending')).toBe(false);
+    expect(document.getElementById('autosave-status-text').textContent).toContain('Network unavailable');
   });
 
   test('restores draft when user accepts prompt', async () => {
