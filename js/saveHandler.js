@@ -126,6 +126,7 @@ class SaveHandler {
      * @param {string} formId - ID of the main form
      * @param {string} saveAsModalId - ID of the save-as modal
      * @param {string} notificationModalId - ID of the notification modal
+     * @param {import('./services/autosaveService.js').default|null} [autosaveService=null] - Autosave coordination service.
      */
     constructor(formId, saveAsModalId, notificationModalId, autosaveService = null) {
         this.$form = $(`#${formId}`);

@@ -124,6 +124,7 @@ class SubmitHandler {
      * @param {string} formId - ID of the main form
      * @param {string} submitModalId - ID of the submit modal
      * @param {string} notificationModalId - ID of the notification modal
+     * @param {import('./services/autosaveService.js').default|null} [autosaveService=null] - Autosave coordination service.
      */
     constructor(formId, submitModalId, notificationModalId, autosaveService = null) {
         this.$form = $(`#${formId}`);
