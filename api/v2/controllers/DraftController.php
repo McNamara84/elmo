@@ -5,9 +5,23 @@
 
 class DraftController
 {
+    /**
+     * Absolute path to the directory where draft payloads are stored.
+     *
+     * @var string
+     */
     private string $storageRoot;
+
+    /**
+     * Number of days draft payloads are retained before being purged.
+     *
+     * @var int
+     */
     private int $retentionDays;
 
+    /**
+     * Creates the controller instance and ensures the storage directory exists.
+     */
     public function __construct()
     {
         $this->storageRoot = rtrim(getenv('ELMO_DRAFT_STORAGE') ?: (__DIR__ . '/../../../storage/drafts'), DIRECTORY_SEPARATOR);
@@ -18,6 +32,13 @@ class DraftController
         }
     }
 
+    /**
+     * Creates a new autosave draft for the active user session.
+     *
+     * @param array $vars Route variables provided by the router.
+     * @param array|null $body Optional parsed request payload for testing.
+     * @return void
+     */
     public function create(array $vars = [], ?array $body = null): void
     {
         $sessionId = $this->ensureSession();
@@ -36,6 +57,13 @@ class DraftController
         $this->respond(201, $this->responseMetadata($record));
     }
 
+    /**
+     * Updates an existing autosave draft belonging to the current session.
+     *
+     * @param array $vars Route variables containing the draft identifier.
+     * @param array|null $body Optional parsed request payload for testing.
+     * @return void
+     */
     public function update(array $vars = [], ?array $body = null): void
     {
         $sessionId = $this->ensureSession();
@@ -73,6 +101,13 @@ class DraftController
         $this->respond(200, $this->responseMetadata($record));
     }
 
+    /**
+     * Retrieves the payload of the specified draft if it belongs to the session.
+     *
+     * @param array $vars Route variables containing the draft identifier.
+     * @param array|null $body Optional parsed request payload (unused).
+     * @return void
+     */
     public function get(array $vars = [], ?array $body = null): void
     {
         $sessionId = $this->ensureSession();
@@ -98,6 +133,13 @@ class DraftController
         $this->respond(200, $this->exposeRecord($record));
     }
 
+    /**
+     * Deletes the specified draft for the current session.
+     *
+     * @param array $vars Route variables containing the draft identifier.
+     * @param array|null $body Optional parsed request payload (unused).
+     * @return void
+     */
     public function delete(array $vars = [], ?array $body = null): void
     {
         $sessionId = $this->ensureSession();
@@ -118,6 +160,13 @@ class DraftController
         $this->respond(204, null);
     }
 
+    /**
+     * Returns the latest draft belonging to the current session, if available.
+     *
+     * @param array $vars Route variables (unused).
+     * @param array|null $body Optional parsed request payload (unused).
+     * @return void
+     */
     public function latestForSession(array $vars = [], ?array $body = null): void
     {
         $sessionId = $this->ensureSession();
@@ -139,6 +188,11 @@ class DraftController
         $this->respond(200, $this->exposeRecord($record));
     }
 
+    /**
+     * Ensures a PHP session is active and returns its identifier.
+     *
+     * @return string
+     */
     private function ensureSession(): string
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -148,6 +202,11 @@ class DraftController
         return session_id();
     }
 
+    /**
+     * Reads and decodes the JSON request payload from the input stream.
+     *
+     * @return array|null
+     */
     private function readJsonBody(): ?array
     {
         $raw = file_get_contents('php://input');
@@ -163,6 +222,12 @@ class DraftController
         return $data;
     }
 
+    /**
+     * Validates the autosave payload structure.
+     *
+     * @param array|null $data Request payload to validate.
+     * @return bool
+     */
     private function isValidPayload(?array $data): bool
     {
         if (!$data || !isset($data['payload']) || !is_array($data['payload'])) {
@@ -171,6 +236,14 @@ class DraftController
         return true;
     }
 
+    /**
+     * Creates a new record array for persistence.
+     *
+     * @param string $draftId Generated draft identifier.
+     * @param string $sessionId Current session identifier.
+     * @param array $payload Submitted payload data.
+     * @return array
+     */
     private function createRecord(string $draftId, string $sessionId, array $payload): array
     {
         return [
@@ -182,6 +255,12 @@ class DraftController
         ];
     }
 
+    /**
+     * Persists the provided record to disk.
+     *
+     * @param array $record Draft record to store.
+     * @return void
+     */
     private function persistRecord(array $record): void
     {
         $dir = $this->sessionDirectory($record['sessionId']);
@@ -192,6 +271,14 @@ class DraftController
         file_put_contents($this->recordPath($record['sessionId'], $record['id']), json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 
+    /**
+     * Reads a draft record from disk when accessible to the session.
+     *
+     * @param string $sessionId Current session identifier.
+     * @param string $draftId Draft identifier to load.
+     * @param bool $forbidden Flag set to true when record belongs to another session.
+     * @return array|null
+     */
     private function readRecord(string $sessionId, string $draftId, bool &$forbidden = false): ?array
     {
         $path = $this->recordPath($sessionId, $draftId);
@@ -221,6 +308,12 @@ class DraftController
         return $record;
     }
 
+    /**
+     * Determines whether the draft exists for a different session.
+     *
+     * @param string $draftId Draft identifier to check.
+     * @return bool
+     */
     private function draftExistsElsewhere(string $draftId): bool
     {
         $pattern = $this->storageRoot . DIRECTORY_SEPARATOR . '*' . DIRECTORY_SEPARATOR . $draftId . '.json';
@@ -229,6 +322,12 @@ class DraftController
         return !empty($matches);
     }
 
+    /**
+     * Reduces a record to the fields exposed to API consumers.
+     *
+     * @param array $record Draft record to expose.
+     * @return array
+     */
     private function exposeRecord(array $record): array
     {
         return [
@@ -239,6 +338,12 @@ class DraftController
         ];
     }
 
+    /**
+     * Prepares metadata payload for create/update responses.
+     *
+     * @param array $record Draft record to summarize.
+     * @return array
+     */
     private function responseMetadata(array $record): array
     {
         return [
@@ -248,31 +353,66 @@ class DraftController
         ];
     }
 
+    /**
+     * Validates that the provided draft ID is well-formed.
+     *
+     * @param string $draftId Draft identifier to validate.
+     * @return string
+     */
     private function sanitizeDraftId(string $draftId): string
     {
         return preg_match('/^[a-f0-9]{32}$/', $draftId) ? $draftId : '';
     }
 
+    /**
+     * Computes the file path for a draft belonging to the provided session.
+     *
+     * @param string $sessionId Current session identifier.
+     * @param string $draftId Draft identifier.
+     * @return string
+     */
     private function recordPath(string $sessionId, string $draftId): string
     {
         return $this->sessionDirectory($sessionId) . DIRECTORY_SEPARATOR . $draftId . '.json';
     }
 
+    /**
+     * Returns the directory path for a given session identifier.
+     *
+     * @param string $sessionId Current session identifier.
+     * @return string
+     */
     private function sessionDirectory(string $sessionId): string
     {
         return $this->storageRoot . DIRECTORY_SEPARATOR . $sessionId;
     }
 
+    /**
+     * Provides the current timestamp in ISO 8601 format.
+     *
+     * @return string
+     */
     private function now(): string
     {
         return gmdate('c');
     }
 
+    /**
+     * Computes a checksum to track payload changes.
+     *
+     * @param array $payload Payload to hash.
+     * @return string
+     */
     private function checksum(array $payload): string
     {
         return hash('sha256', json_encode($payload));
     }
 
+    /**
+     * Removes expired draft files from storage.
+     *
+     * @return void
+     */
     private function cleanupOldDrafts(): void
     {
         if ($this->retentionDays <= 0) {
@@ -297,6 +437,13 @@ class DraftController
         }
     }
 
+    /**
+     * Sends a JSON response with the provided HTTP status code.
+     *
+     * @param int $status HTTP status code to send.
+     * @param array|null $payload Response payload.
+     * @return void
+     */
     private function respond(int $status, ?array $payload): void
     {
         http_response_code($status);
