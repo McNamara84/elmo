@@ -198,6 +198,46 @@ label.mandatory-field::after {
     height: 10px;
 }
 
+.autosave-status {
+    padding: 0.35rem 0.85rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    min-width: 220px;
+    text-align: center;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+}
+
+.autosave-status--idle {
+    background-color: #0b2545;
+    color: #ffffff;
+}
+
+.autosave-status--pending {
+    background-color: #ffc107;
+    color: #1b1b1b;
+}
+
+.autosave-status--saving {
+    background-color: #0d6efd;
+    color: #ffffff;
+}
+
+.autosave-status--synced {
+    background-color: #198754;
+    color: #ffffff;
+}
+
+.autosave-status--error {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+.autosave-status--cleared {
+    background-color: #6c757d;
+    color: #ffffff;
+}
+
 .unvisible {
     display: none !important;
 }
