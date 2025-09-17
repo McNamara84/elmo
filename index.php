@@ -16,6 +16,8 @@ ob_start();
 // Include settings and configurations
 include_once("helper_functions.php");
 
+loadEnvVariables();
+
 // Include HTML components using absolute paths to ensure reliable file access
 $baseDir = __DIR__ . '/';
 include $baseDir . 'header.php';
