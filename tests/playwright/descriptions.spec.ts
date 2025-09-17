@@ -15,10 +15,38 @@ test.describe('Descriptions Form Group', () => {
     await expect(accordionButtons).toHaveCount(4);
 
     const sectionConfigs = [
-      { index: 0, target: '#collapse-abstract', translateKey: 'descriptions.abstract', expanded: 'true' },
-      { index: 1, target: '#collapse-methods', translateKey: 'descriptions.methods', expanded: 'false' },
-      { index: 2, target: '#collapse-technicalinfo', translateKey: 'descriptions.technicalInfo', expanded: 'false' },
-      { index: 3, target: '#collapse-other', translateKey: 'descriptions.other', expanded: 'false' },
+      {
+        index: 0,
+        target: '#collapse-abstract',
+        translateKey: 'descriptions.abstract',
+        expanded: 'true',
+        helpId: 'help-description-abstract',
+        visible: true,
+      },
+      {
+        index: 1,
+        target: '#collapse-methods',
+        translateKey: 'descriptions.methods',
+        expanded: 'false',
+        helpId: 'help-description-methods',
+        visible: false,
+      },
+      {
+        index: 2,
+        target: '#collapse-technicalinfo',
+        translateKey: 'descriptions.technicalInfo',
+        expanded: 'false',
+        helpId: 'help-description-technicalinfo',
+        visible: false,
+      },
+      {
+        index: 3,
+        target: '#collapse-other',
+        translateKey: 'descriptions.other',
+        expanded: 'false',
+        helpId: 'help-description-other',
+        visible: false,
+      },
     ] as const;
 
     for (const config of sectionConfigs) {
@@ -26,7 +54,12 @@ test.describe('Descriptions Form Group', () => {
       await expect(button).toHaveAttribute('data-bs-target', config.target);
       await expect(button).toHaveAttribute('data-translate', config.translateKey);
       await expect(button).toHaveAttribute('aria-expanded', config.expanded);
-      await expect(page.locator(`${config.target} i.bi-question-circle-fill`)).toBeVisible();
+      const helpIcon = page.locator(`${config.target} i.bi-question-circle-fill`);
+      await expect(helpIcon).toHaveAttribute('data-help-section-id', config.helpId);
+      await expect(helpIcon).toBeAttached();
+      if (config.visible) {
+        await expect(helpIcon).toBeVisible();
+      }
     }
   });
 
