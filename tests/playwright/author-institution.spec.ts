@@ -2,12 +2,13 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Author Institution form group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/tests/playwright/pages/elmo-default.fixture.html');
+    await page.goto('/index.php');
   });
 
   test('renders base fields with accessible structure and help affordances', async ({ page }) => {
     const formGroup = page.locator('#group-authorinstitution');
     const rows = formGroup.locator('[data-authorinstitution-row]');
+    const firstRow = rows.first();
 
     await expect(rows).toHaveCount(1);
 
@@ -18,8 +19,10 @@ test.describe('Author Institution form group', () => {
     await expect(nameInput).toBeVisible();
     await expect(page.getByLabel('Author Institution name')).toBeVisible();
 
-    const affiliationInput = formGroup.locator('input[name="institutionAffiliation[]"]');
-    await expect(affiliationInput).toBeVisible();
+    const affiliationTagify = firstRow.locator('.tagify');
+    const affiliationInteractiveInput = affiliationTagify.locator('.tagify__input');
+    await expect(affiliationTagify).toBeVisible();
+    await expect(affiliationInteractiveInput).toBeVisible();
 
     const affiliationLabel = formGroup.locator('label[for="input-authorinstitution-affiliation"]');
     await expect(affiliationLabel).toHaveClass(/visually-hidden/);
@@ -27,11 +30,11 @@ test.describe('Author Institution form group', () => {
     const formHelpIcon = page.locator('[data-help-section-id="help-author-institution-fg"]');
     await expect(formHelpIcon).toBeVisible();
 
-    const affiliationHelpIcon = page.locator('[data-help-section-id="help-contributorinstitutions-affiliation"]');
+    const affiliationHelpIcon = formGroup.locator('[data-help-section-id="help-contributorinstitutions-affiliation"]');
     await expect(affiliationHelpIcon).toBeVisible();
 
     const dragHandle = formGroup.locator('.drag-handle');
-    await expect(dragHandle).toHaveAttribute('title', 'Drag & drop to change order');
+    await expect(dragHandle).toHaveAttribute('aria-label', 'Drag & drop to change order');
   });
 
   test('adds uniquely identified rows and restores the base row when removed', async ({ page }) => {
@@ -45,6 +48,8 @@ test.describe('Author Institution form group', () => {
 
     const firstRow = rows.nth(0);
     const secondRow = rows.nth(1);
+
+    await expect(secondRow.locator('.tagify')).toBeVisible();
 
     const firstNameId = await firstRow.locator('input[name="authorinstitutionName[]"]').getAttribute('id');
     const secondNameInput = secondRow.locator('input[name="authorinstitutionName[]"]');
@@ -81,16 +86,23 @@ test.describe('Author Institution form group', () => {
     const row = formGroup.locator('[data-authorinstitution-row]').first();
 
     const nameInput = row.locator('input[name="authorinstitutionName[]"]');
-    const affiliationInput = row.locator('input[name="institutionAffiliation[]"]');
+    const affiliationTagify = row.locator('.tagify');
+    const affiliationInput = affiliationTagify.locator('.tagify__input');
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');
+    await expect(affiliationInput).toBeVisible();
 
+    await affiliationInput.click();
     await affiliationInput.fill('Helmholtz Centre Potsdam - GFZ');
+    await affiliationInput.press('Enter');
+    await expect(affiliationTagify.locator('.tagify__tag')).toHaveCount(1);
     await affiliationInput.press('Tab');
 
     await expect(nameInput).toHaveAttribute('required', 'required');
 
-    await affiliationInput.fill('');
+    await affiliationInput.click();
+    await affiliationInput.press('Backspace');
+    await expect(affiliationTagify.locator('.tagify__tag')).toHaveCount(0);
     await affiliationInput.press('Tab');
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');

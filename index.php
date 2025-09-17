@@ -16,6 +16,30 @@ ob_start();
 // Include settings and configurations
 include_once("settings.php");
 
+// Provide default feature toggles when settings.php does not define them.
+// This keeps the application resilient in environments that bootstrap a minimal
+// settings file (e.g. automated tests) and ensures important form groups remain
+// accessible by default.
+$featureToggles = [
+    'showAuthorInstitution' => true,
+    'showContributorPersons' => true,
+    'showContributorInstitutions' => true,
+    'showGcmdThesauri' => true,
+    'showFreeKeywords' => true,
+    'showSpatialTemporalCoverage' => true,
+    'showRelatedWork' => true,
+    'showFundingReference' => true,
+    'showGGMsProperties' => false,
+    'showMslLabs' => false,
+    'showMslVocabs' => false,
+];
+
+foreach ($featureToggles as $toggle => $defaultValue) {
+    if (!isset($$toggle)) {
+        $$toggle = $defaultValue;
+    }
+}
+
 // Include HTML components using absolute paths to ensure reliable file access
 $baseDir = __DIR__ . '/';
 include $baseDir . 'header.php';
