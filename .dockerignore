@@ -18,6 +18,7 @@ temp/
 
 # Ignore environment and secret files
 .env*
+developer.env
 *.pem
 *.key
 *.crt
