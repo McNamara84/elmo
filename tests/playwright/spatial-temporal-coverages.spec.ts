@@ -1,10 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-
-if (!apiKey) {
-  throw new Error('GOOGLE_MAPS_API_KEY environment variable must be defined to run spatial and temporal coverage tests.');
-}
+const apiKey = process.env.GOOGLE_MAPS_API_KEY ?? 'playwright-test-google-maps-key';
 
 const googleMapsStub = String.raw`(() => {
   const listeners = new WeakMap();
