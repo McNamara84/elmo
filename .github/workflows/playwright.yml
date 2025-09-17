@@ -73,9 +73,9 @@ jobs:
           FLUSH PRIVILEGES;
         "
 
-    - name: Create helper-functions.php
+    - name: Create helper_functions.php
       run: |
-        cat << EOF > helper-functions.php
+        cat << EOF > helper_functions.php
         <?php
         function connectDb() {
             \$host = '127.0.0.1';

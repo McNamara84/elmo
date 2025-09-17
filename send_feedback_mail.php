@@ -6,7 +6,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
-include 'helper-functions.php';
+include 'helper_functions.php';
 
 function testGfzSmtpConnectivity() {
     global $smtpHost, $smtpPort;
