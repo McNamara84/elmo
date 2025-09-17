@@ -1,9 +1,30 @@
 import { test, expect } from '@playwright/test';
 
+declare const translations: any;
+
 const SCIENCE_PATH = 'Science Keywords > EARTH SCIENCE > AGRICULTURE > AGRICULTURAL AQUATIC SCIENCES > AQUACULTURE';
 
 async function waitForTranslations(page: import('@playwright/test').Page) {
-  await page.waitForFunction(() => Boolean((window as any).translations?.keywords?.thesaurus?.label));
+  await page.waitForFunction(() => {
+    const globalTranslations = (window as any).translations;
+    const lexicalTranslations = typeof translations !== 'undefined' ? (translations as any) : undefined;
+    const label = globalTranslations?.keywords?.thesaurus?.label ?? lexicalTranslations?.keywords?.thesaurus?.label;
+    if (label) {
+      (window as any).__translationsReady = true;
+      return true;
+    }
+    if (!(window as any).__waitingForTranslations) {
+      (window as any).__waitingForTranslations = true;
+      document.addEventListener(
+        'translationsLoaded',
+        () => {
+          (window as any).__translationsReady = true;
+        },
+        { once: true }
+      );
+    }
+    return Boolean((window as any).__translationsReady);
+  });
 }
 
 test.describe('GCMD Thesauri Keywords Form Group', () => {
