@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <Resource>
-  <currentDate>2025-02-21</currentDate>
-  <year>2025</year>
-  <dateCreated>2025-02-06</dateCreated>
+  <currentDate>2025-09-17</currentDate>
+  <doi>https://doi.org/10.5880/ICGEM.2019.011</doi>
+  <year>2019</year>
+  <dateCreated>2020-04-17</dateCreated>
   <Rights>
     <rights_id>1</rights_id>
     <text>Creative Commons Attribution 4.0 International</text>
@@ -11,9 +12,9 @@
     <forSoftware>0</forSoftware>
   </Rights>
   <ResourceType>
-    <resource_name_id>1</resource_name_id>
-    <resource_type_general>Audiovisual</resource_type_general>
-    <description>A series of visual representations imparting an impression of motion when shown in succession. May or may not include sound.</description>
+    <resource_name_id>5</resource_name_id>
+    <resource_type_general>Dataset</resource_type_general>
+    <description>Data encoded in a defined structure.</description>
   </ResourceType>
   <Language>
     <language_id>1</language_id>
@@ -22,34 +23,161 @@
   </Language>
   <Titles>
     <Title>
-      <text>This is the best title in the woooorld</text>
+      <text>ROLI topographic gravity field model, from four-layer Earth decomposition</text>
       <type>Main Title</type>
     </Title>
   </Titles>
   <Authors>
-    <Author>
-      <familyname>Rosenau</familyname>
-      <givenname>Matthias</givenname>
-      <orcid>0000-0003-1134-5381</orcid>
-    </Author>
-    <Author>
-      <familyname>Hernandez</familyname>
-      <givenname>Sofia</givenname>
-      <orcid>0000-0002-2771-9344</orcid>
-    </Author>
+    <AuthorPerson>
+      <familyname>Dahle</familyname>
+      <givenname>Christoph</givenname>
+      <orcid>0000-0002-4733-9242</orcid>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>1</affiliation_id>
+          <name>GFZ German Research Centre for Geosciences</name>
+          <rorId>04z8jg394</rorId>
+        </Affiliation>
+      </Affiliations>
+    </AuthorPerson>
+    <AuthorPerson>
+      <familyname>Goebel</familyname>
+      <givenname>Thomas</givenname>
+      <orcid>0000-0003-1552-0861</orcid>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>1</affiliation_id>
+          <name>GFZ German Research Centre for Geosciences</name>
+          <rorId>04z8jg394</rorId>
+        </Affiliation>
+      </Affiliations>
+    </AuthorPerson>
+    <AuthorPerson>
+      <familyname>Dahle</familyname>
+      <givenname>Christoph</givenname>
+      <orcid>0000-0002-4733-9242</orcid>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>1</affiliation_id>
+          <name>GFZ German Research Centre for Geosciences</name>
+          <rorId>04z8jg394</rorId>
+        </Affiliation>
+      </Affiliations>
+    </AuthorPerson>
+    <AuthorPerson>
+      <familyname>Dahle</familyname>
+      <givenname>Christoph</givenname>
+      <orcid>0000-0002-4733-9242</orcid>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>1</affiliation_id>
+          <name>GFZ German Research Centre for Geosciences</name>
+          <rorId>04z8jg394</rorId>
+        </Affiliation>
+      </Affiliations>
+    </AuthorPerson>
   </Authors>
   <ContactPersons>
     <ContactPerson>
-      <familyname>Hernandez</familyname>
-      <givenname>Sofia</givenname>
-      <email>CP@cp.de</email>
+      <familyname>Abrykosov</familyname>
+      <givenname>Oleh</givenname>
+      <orcid>0000-0003-1463-412X</orcid>
+      <email>oleh.abrykosov@gfz-potsdam.de</email>
+      <Affiliations>
+        <Affiliation>
+          <affiliation_id>1</affiliation_id>
+          <name>GFZ German Research Centre for Geosciences</name>
+          <rorId>04z8jg394</rorId>
+        </Affiliation>
+      </Affiliations>
     </ContactPerson>
   </ContactPersons>
-  <Descriptions>
-    <Description>
-      <type>Abstract</type>
-      <description>ffffffffffffffff</description>
-    </Description>
-  </Descriptions>
-  <SpatialTemporalCoverages/>
+  <Contributors>
+    <Persons>
+      <Person>
+        <familyname>Rei&#xDF;land</familyname>
+        <givenname>Sven</givenname>
+        <orcid>0000-0001-6293-5336</orcid>
+        <Affiliations/>
+        <Roles/>
+      </Person>
+    </Persons>
+  </Contributors>
+  <Descriptions/>
+  <ThesaurusKeywords>
+    <Keyword>
+      <thesaurus_keywords_id>10</thesaurus_keywords_id>
+      <keyword>EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</keyword>
+      <scheme>GCMD Earth Sciences Keywords </scheme>
+      <schemeURI>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords</schemeURI>
+      <valueURI>https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa</valueURI>
+      <language>en</language>
+    </Keyword>
+    <Keyword>
+      <thesaurus_keywords_id>11</thesaurus_keywords_id>
+      <keyword>EARTH SCIENCE &gt; LAND SURFACE &gt; TOPOGRAPHY &gt; TOPOGRAPHIC EFFECTS</keyword>
+      <scheme>GCMD Earth Sciences Keywords </scheme>
+      <schemeURI>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</schemeURI>
+      <valueURI>https://gcmd.earthdata.nasa.gov/kms/concept/05bef198-cfff-48be-b0cb-14e296d38dbc</valueURI>
+      <language>en</language>
+    </Keyword>
+    <lastUpdatedGcmdPlatformsKeywords>2025-05-09</lastUpdatedGcmdPlatformsKeywords>
+    <lastUpdatedGcmdInstrumentsKeywords>2025-05-09</lastUpdatedGcmdInstrumentsKeywords>
+    <lastUpdatedGcmdScienceKeywords>2025-05-09</lastUpdatedGcmdScienceKeywords>
+    <lastUpdatedMslVocabularies>2025-05-09</lastUpdatedMslVocabularies>
+  </ThesaurusKeywords>
+  <FreeKeywords>
+    <Keyword>
+      <free_keywords_id>23</free_keywords_id>
+      <free_keyword>ICGEM</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>24</free_keywords_id>
+      <free_keyword>Forward gravity modelling</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+    <Keyword>
+      <free_keywords_id>25</free_keywords_id>
+      <free_keyword>topographic gravity field modelling</free_keyword>
+      <isCurated>1</isCurated>
+    </Keyword>
+  </FreeKeywords>
+  <SpatialTemporalCoverages>
+    <SpatialTemporalCoverage>
+      <spatial_temporal_coverage_id>4</spatial_temporal_coverage_id>
+      <latitudeMin>-90</latitudeMin>
+      <latitudeMax>90</latitudeMax>
+      <longitudeMin>-180</longitudeMin>
+      <longitudeMax>180</longitudeMax>
+      <description>Global coverage</description>
+    </SpatialTemporalCoverage>
+  </SpatialTemporalCoverages>
+  <RelatedWorks>
+    <RelatedWork>
+      <Identifier>10.1016/j.jag.2015.03.001</Identifier>
+      <Relation>
+        <name>References</name>
+      </Relation>
+      <IdentifierType>
+        <name>DOI</name>
+      </IdentifierType>
+    </RelatedWork>
+    <RelatedWork>
+      <Identifier>10.1007/s10712-020-09590-9</Identifier>
+      <Relation>
+        <name>References</name>
+      </Relation>
+      <IdentifierType>
+        <name>DOI</name>
+      </IdentifierType>
+    </RelatedWork>
+  </RelatedWorks>
+  <ggm_properties>
+    <model_name>ROLI_EllApprox_SphN_3660</model_name>
+    <model_type>Topographic</model_type>
+    <mathematical_representation>Spherical harmonics</mathematical_representation>
+    <file_format>icgem1.0</file_format>
+    <product_type>gravity_field</product_type>
+  </ggm_properties>
 </Resource>
