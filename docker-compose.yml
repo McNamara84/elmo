@@ -20,7 +20,6 @@ services:
     ports:
       - "8080:80"
     environment:
-      CONFIG_VERSION: elmogem 
       INSTALL_ACTION: basic
     depends_on:
       - db
