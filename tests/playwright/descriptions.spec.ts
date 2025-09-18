@@ -109,7 +109,8 @@ test.describe('Descriptions Form Group', () => {
 
     await otherButton.click();
     await expect(otherButton).toHaveAttribute('aria-expanded', 'false');
-    await waitForCollapseHidden('#collapse-other');
+    await expect(otherPanel).not.toHaveClass(/show/);
+    await expect(otherPanel).toHaveClass(/collapse/);
 
     await otherButton.click();
     await expect(otherPanel).toHaveClass(/show/);
@@ -117,10 +118,14 @@ test.describe('Descriptions Form Group', () => {
 
     // Close previously opened sections to keep the UI state tidy for following tests
     await technicalButton.click();
-    await waitForCollapseHidden('#collapse-technicalinfo');
+    const technicalPanel = page.locator('#collapse-technicalinfo');
+    await expect(technicalPanel).not.toHaveClass(/show/);
+    await expect(technicalPanel).toHaveClass(/collapse/);
     await expect(technicalButton).toHaveAttribute('aria-expanded', 'false');
     await methodsButton.click();
-    await waitForCollapseHidden('#collapse-methods');
+    const methodsPanel = page.locator('#collapse-methods');
+    await expect(methodsPanel).not.toHaveClass(/show/);
+    await expect(methodsPanel).toHaveClass(/collapse/);
     await expect(methodsButton).toHaveAttribute('aria-expanded', 'false');
   });
 
