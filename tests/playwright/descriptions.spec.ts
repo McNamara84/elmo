@@ -117,11 +117,11 @@ test.describe('Descriptions Form Group', () => {
 
     // Close previously opened sections to keep the UI state tidy for following tests
     await technicalButton.click();
-    await expect(technicalButton).toHaveAttribute('aria-expanded', 'false');
     await waitForCollapseHidden('#collapse-technicalinfo');
+    await expect(technicalButton).toHaveAttribute('aria-expanded', 'false');
     await methodsButton.click();
-    await expect(methodsButton).toHaveAttribute('aria-expanded', 'false');
     await waitForCollapseHidden('#collapse-methods');
+    await expect(methodsButton).toHaveAttribute('aria-expanded', 'false');
   });
 
   test('supports expanding sections via mouse and keyboard interactions', async ({ page }) => {

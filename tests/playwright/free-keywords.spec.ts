@@ -185,6 +185,12 @@ test.describe('Free Keywords Form Group', () => {
       return input?._tagify?.settings?.placeholder === 'Geben Sie freie Schlagwörter ein.';
     });
 
+    await page.waitForFunction(() => {
+      const input = document.querySelector('#input-freekeyword') as any;
+      return Array.isArray(input?._tagify?.value) &&
+        input._tagify.value.some((tag: any) => tag.value === 'Persistent Tag');
+    });
+
     const result = await page.evaluate(() => {
       const input = document.querySelector('#input-freekeyword') as any;
       return {

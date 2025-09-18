@@ -105,7 +105,7 @@ test.describe('Minimal Valid Dataset Test', () => {
     );
     expect(removeButtonDisplay).not.toBe('none');
 
-    await notificationModal.locator('[data-bs-dismiss="modal"]').click();
+    await notificationModal.getByRole('button', { name: 'OK' }).click();
     await expect(notificationModal).toBeHidden();
     await page.getByRole('button', { name: 'Submit' }).click();
     await expect(page.locator('#modal-submit')).toBeVisible();
