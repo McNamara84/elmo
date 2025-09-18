@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Locator } from '@playwright/test';
 
 test.describe('Descriptions Form Group', () => {
   test.beforeEach(async ({ page }) => {
@@ -70,49 +70,30 @@ test.describe('Descriptions Form Group', () => {
     await abstractField.fill('Comprehensive overview of the dataset.');
     await expect(abstractField).toHaveValue('Comprehensive overview of the dataset.');
 
-    const waitForCollapseState = async (selector: string, state: 'shown' | 'hidden') => {
-      await page.waitForFunction(
-        (collapseSelector: string, desiredState: 'shown' | 'hidden') => {
-          const element = document.querySelector(collapseSelector);
-          if (!element) {
-            return false;
-          }
-
-          const classList = element.classList;
-          const isCollapsing = classList.contains('collapsing');
-          const isShown = classList.contains('show');
-
-          if (desiredState === 'shown') {
-            return !isCollapsing && isShown;
-          }
-
-          return !isCollapsing && !isShown && classList.contains('collapse');
-        },
-        selector,
-        state
-      );
-    };
-
     const expandSection = async (target: string) => {
       const button = page.locator(`button[data-bs-target="${target}"]`);
       const panel = page.locator(target);
       await button.click();
       await expect(button).toHaveAttribute('aria-expanded', 'true');
-      await waitForCollapseState(target, 'shown');
       await expect(panel).toHaveClass(/show/);
+      await expect(panel).toBeVisible();
       return { button, panel };
     };
 
-    const waitForCollapseHidden = async (selector: string) => {
-      await waitForCollapseState(selector, 'hidden');
+    const collapseSection = async (button: Locator, panel: Locator) => {
+      await button.click();
+      await expect(button).toHaveAttribute('aria-expanded', 'false');
+      await expect(panel).not.toBeVisible();
+      await expect(panel).not.toHaveClass(/show/);
+      await expect(panel).toHaveClass(/collapse/);
     };
 
-    const { button: methodsButton } = await expandSection('#collapse-methods');
+    const { button: methodsButton, panel: methodsPanel } = await expandSection('#collapse-methods');
     const methodsField = page.locator('#input-methods');
     await methodsField.fill('Detailed methodology description.');
     await expect(methodsField).toHaveValue('Detailed methodology description.');
 
-    const { button: technicalButton } = await expandSection('#collapse-technicalinfo');
+    const { button: technicalButton, panel: technicalPanel } = await expandSection('#collapse-technicalinfo');
     const technicalField = page.locator('#input-technicalinfo');
     await technicalField.fill('Technical specs and processing information.');
     await expect(technicalField).toHaveValue('Technical specs and processing information.');
@@ -122,30 +103,29 @@ test.describe('Descriptions Form Group', () => {
     await otherField.fill('Supplementary notes and related information.');
     await expect(otherField).toHaveValue('Supplementary notes and related information.');
 
-    await otherButton.click();
-    await expect(otherButton).toHaveAttribute('aria-expanded', 'false');
-    await waitForCollapseHidden('#collapse-other');
-    await expect(otherPanel).not.toHaveClass(/show/);
-    await expect(otherPanel).toHaveClass(/collapse/);
+    await collapseSection(otherButton, otherPanel);
 
     await otherButton.click();
-    await waitForCollapseState('#collapse-other', 'shown');
+    await expect(otherButton).toHaveAttribute('aria-expanded', 'true');
     await expect(otherPanel).toHaveClass(/show/);
+    await expect(otherPanel).toBeVisible();
     await expect(otherField).toHaveValue('Supplementary notes and related information.');
 
     // Close previously opened sections to keep the UI state tidy for following tests
-    await technicalButton.click();
-    const technicalPanel = page.locator('#collapse-technicalinfo');
-    await waitForCollapseHidden('#collapse-technicalinfo');
-    await expect(technicalPanel).not.toHaveClass(/show/);
-    await expect(technicalPanel).toHaveClass(/collapse/);
-    await expect(technicalButton).toHaveAttribute('aria-expanded', 'false');
-    await methodsButton.click();
-    const methodsPanel = page.locator('#collapse-methods');
-    await waitForCollapseHidden('#collapse-methods');
-    await expect(methodsPanel).not.toHaveClass(/show/);
-    await expect(methodsPanel).toHaveClass(/collapse/);
-    await expect(methodsButton).toHaveAttribute('aria-expanded', 'false');
+    const closeSectionIfExpanded = async (sectionButton: Locator, panel: Locator) => {
+      if ((await sectionButton.getAttribute('aria-expanded')) === 'true') {
+        await collapseSection(sectionButton, panel);
+        return;
+      }
+
+      await expect(panel).not.toBeVisible();
+      await expect(panel).toHaveClass(/collapse/);
+      await expect(sectionButton).toHaveAttribute('aria-expanded', 'false');
+    };
+
+    // Close previously opened sections to keep the UI state tidy for following tests
+    await closeSectionIfExpanded(technicalButton, technicalPanel);
+    await closeSectionIfExpanded(methodsButton, methodsPanel);
   });
 
   test('supports expanding sections via mouse and keyboard interactions', async ({ page }) => {
