@@ -70,26 +70,41 @@ test.describe('Descriptions Form Group', () => {
     await abstractField.fill('Comprehensive overview of the dataset.');
     await expect(abstractField).toHaveValue('Comprehensive overview of the dataset.');
 
+    const waitForCollapseState = async (selector: string, state: 'shown' | 'hidden') => {
+      await page.waitForFunction(
+        (collapseSelector: string, desiredState: 'shown' | 'hidden') => {
+          const element = document.querySelector(collapseSelector);
+          if (!element) {
+            return false;
+          }
+
+          const classList = element.classList;
+          const isCollapsing = classList.contains('collapsing');
+          const isShown = classList.contains('show');
+
+          if (desiredState === 'shown') {
+            return !isCollapsing && isShown;
+          }
+
+          return !isCollapsing && !isShown && classList.contains('collapse');
+        },
+        selector,
+        state
+      );
+    };
+
     const expandSection = async (target: string) => {
       const button = page.locator(`button[data-bs-target="${target}"]`);
       const panel = page.locator(target);
       await button.click();
+      await expect(button).toHaveAttribute('aria-expanded', 'true');
+      await waitForCollapseState(target, 'shown');
       await expect(panel).toHaveClass(/show/);
       return { button, panel };
     };
 
     const waitForCollapseHidden = async (selector: string) => {
-      await page.waitForFunction((collapseSelector: string) => {
-        const element = document.querySelector(collapseSelector);
-        if (!element) {
-          return false;
-        }
-
-        const classList = element.classList;
-        return classList.contains('collapse') &&
-          !classList.contains('collapsing') &&
-          !classList.contains('show');
-      }, selector);
+      await waitForCollapseState(selector, 'hidden');
     };
 
     const { button: methodsButton } = await expandSection('#collapse-methods');
@@ -109,21 +124,25 @@ test.describe('Descriptions Form Group', () => {
 
     await otherButton.click();
     await expect(otherButton).toHaveAttribute('aria-expanded', 'false');
+    await waitForCollapseHidden('#collapse-other');
     await expect(otherPanel).not.toHaveClass(/show/);
     await expect(otherPanel).toHaveClass(/collapse/);
 
     await otherButton.click();
+    await waitForCollapseState('#collapse-other', 'shown');
     await expect(otherPanel).toHaveClass(/show/);
     await expect(otherField).toHaveValue('Supplementary notes and related information.');
 
     // Close previously opened sections to keep the UI state tidy for following tests
     await technicalButton.click();
     const technicalPanel = page.locator('#collapse-technicalinfo');
+    await waitForCollapseHidden('#collapse-technicalinfo');
     await expect(technicalPanel).not.toHaveClass(/show/);
     await expect(technicalPanel).toHaveClass(/collapse/);
     await expect(technicalButton).toHaveAttribute('aria-expanded', 'false');
     await methodsButton.click();
     const methodsPanel = page.locator('#collapse-methods');
+    await waitForCollapseHidden('#collapse-methods');
     await expect(methodsPanel).not.toHaveClass(/show/);
     await expect(methodsPanel).toHaveClass(/collapse/);
     await expect(methodsButton).toHaveAttribute('aria-expanded', 'false');
