@@ -64,7 +64,8 @@ if [ -n "${CONFIG_VERSION}" ]; then
       ;;
     esac
   else
-    echo "🔧 No CONFIG_VERSION specified. It is assumed, you have specified your .env-file in the docker-compose. Happy coding!"
+    echo "🔧 No CONFIG_VERSION specified. It is assumed, you have specified your preferences in the .env file"
+        echo "Happy coding!"
     cp /var/www/html/envs/generic.env /var/www/html/.env
 fi
 
