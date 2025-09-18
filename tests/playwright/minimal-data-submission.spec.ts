@@ -86,7 +86,16 @@ test.describe('Minimal Valid Dataset Test', () => {
     await expect(notificationModal).toBeVisible();
     const notificationAlert = notificationModal.locator('.alert');
     await expect(notificationAlert).toHaveClass(/alert-danger/);
-    await expect(notificationAlert).toContainText(/Dataset submission failed|Submit Error/);
+    const translatedSubmitError = await page.evaluate(() => {
+      const alerts = (window as any).translations?.alerts;
+      return alerts?.submitError ?? null;
+    });
+
+    if (translatedSubmitError) {
+      await expect(notificationAlert).toContainText(translatedSubmitError);
+    } else {
+      await expect(notificationAlert).toContainText(/Dataset submission failed|Submit Error/);
+    }
 
     await expect(page.locator('#selected-file-name')).toContainText(MOCK_DATA_DESCRIPTION_FILE.name);
     await expect(page.locator('#remove-file-btn')).toBeVisible();

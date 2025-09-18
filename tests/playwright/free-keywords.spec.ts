@@ -165,19 +165,29 @@ test.describe('Free Keywords Form Group', () => {
     await tagInput.type('Persistent Tag');
     await tagInput.press('Enter');
 
-    const result = await page.evaluate(() => {
+    const beforePlaceholder = await page.evaluate(() => {
       const input = document.querySelector('#input-freekeyword') as any;
-      const beforePlaceholder = input._tagify.settings.placeholder;
+      return input._tagify.settings.placeholder;
+    });
 
+    await page.evaluate(() => {
+      const input = document.querySelector('#input-freekeyword') as any;
       const translations = (window as any).translations || ((window as any).translations = {});
       translations.keywords = translations.keywords || {};
       translations.keywords.free = translations.keywords.free || {};
       translations.keywords.free.placeholder = 'Geben Sie freie Schlagwörter ein.';
 
       document.dispatchEvent(new Event('translationsLoaded'));
+    });
 
+    await page.waitForFunction(() => {
+      const input = document.querySelector('#input-freekeyword') as any;
+      return input?._tagify?.settings?.placeholder === 'Geben Sie freie Schlagwörter ein.';
+    });
+
+    const result = await page.evaluate(() => {
+      const input = document.querySelector('#input-freekeyword') as any;
       return {
-        beforePlaceholder,
         afterPlaceholder: input._tagify.settings.placeholder,
         values: input._tagify.value.map((tag: any) => tag.value),
         display: window.getComputedStyle(input).display,
@@ -185,7 +195,7 @@ test.describe('Free Keywords Form Group', () => {
       };
     });
 
-    expect(result.beforePlaceholder).toContain('Please enter keywords');
+    expect(beforePlaceholder).toContain('Please enter keywords');
     expect(result.afterPlaceholder).toBe('Geben Sie freie Schlagwörter ein.');
     expect(result.values).toEqual(['Persistent Tag']);
     expect(result.display).toBe('block');
