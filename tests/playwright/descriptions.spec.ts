@@ -78,6 +78,20 @@ test.describe('Descriptions Form Group', () => {
       return { button, panel };
     };
 
+    const waitForCollapseHidden = async (selector: string) => {
+      await page.waitForFunction((collapseSelector: string) => {
+        const element = document.querySelector(collapseSelector);
+        if (!element) {
+          return false;
+        }
+
+        const classList = element.classList;
+        return classList.contains('collapse') &&
+          !classList.contains('collapsing') &&
+          !classList.contains('show');
+      }, selector);
+    };
+
     const { button: methodsButton } = await expandSection('#collapse-methods');
     const methodsField = page.locator('#input-methods');
     await methodsField.fill('Detailed methodology description.');
@@ -94,7 +108,8 @@ test.describe('Descriptions Form Group', () => {
     await expect(otherField).toHaveValue('Supplementary notes and related information.');
 
     await otherButton.click();
-    await expect(otherPanel).toBeHidden();
+    await expect(otherButton).toHaveAttribute('aria-expanded', 'false');
+    await waitForCollapseHidden('#collapse-other');
 
     await otherButton.click();
     await expect(otherPanel).toHaveClass(/show/);
@@ -102,9 +117,11 @@ test.describe('Descriptions Form Group', () => {
 
     // Close previously opened sections to keep the UI state tidy for following tests
     await technicalButton.click();
-    await expect(page.locator('#collapse-technicalinfo')).toBeHidden();
+    await expect(technicalButton).toHaveAttribute('aria-expanded', 'false');
+    await waitForCollapseHidden('#collapse-technicalinfo');
     await methodsButton.click();
-    await expect(page.locator('#collapse-methods')).toBeHidden();
+    await expect(methodsButton).toHaveAttribute('aria-expanded', 'false');
+    await waitForCollapseHidden('#collapse-methods');
   });
 
   test('supports expanding sections via mouse and keyboard interactions', async ({ page }) => {

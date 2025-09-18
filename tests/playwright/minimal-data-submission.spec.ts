@@ -98,7 +98,18 @@ test.describe('Minimal Valid Dataset Test', () => {
     }
 
     await expect(page.locator('#selected-file-name')).toContainText(MOCK_DATA_DESCRIPTION_FILE.name);
-    await expect(page.locator('#remove-file-btn')).toBeVisible();
+    
+    const removeFileButton = page.locator('#remove-file-btn');
+    const removeButtonDisplay = await removeFileButton.evaluate((element) =>
+      window.getComputedStyle(element as HTMLElement).display
+    );
+    expect(removeButtonDisplay).not.toBe('none');
+
+    await notificationModal.locator('[data-bs-dismiss="modal"]').click();
+    await expect(notificationModal).toBeHidden();
+    await page.getByRole('button', { name: 'Submit' }).click();
+    await expect(page.locator('#modal-submit')).toBeVisible();
+    await expect(removeFileButton).toBeVisible();
 
     await page.unroute(SUBMISSION_ENDPOINT);
   });
