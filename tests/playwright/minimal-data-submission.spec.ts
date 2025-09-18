@@ -75,14 +75,18 @@ test.describe('Minimal Valid Dataset Test', () => {
     await page.check('#input-submit-privacycheck');
     await expect(modalSubmitButton).toBeEnabled();
 
-    await Promise.all([
-      page.waitForRequest(SUBMISSION_ENDPOINT),
-      modalSubmitButton.click(),
-    ]);
+    const responsePromise = page.waitForResponse((response) =>
+      response.url().includes('send_xml_file.php')
+    );
+    await modalSubmitButton.click();
+    const submissionResponse = await responsePromise;
+    expect(submissionResponse.status()).toBe(500);
 
     const notificationModal = page.locator('#modal-notification');
     await expect(notificationModal).toBeVisible();
-    await expect(notificationModal.locator('.alert-danger')).toContainText('Dataset submission failed');
+    const notificationAlert = notificationModal.locator('.alert');
+    await expect(notificationAlert).toHaveClass(/alert-danger/);
+    await expect(notificationAlert).toContainText(/Dataset submission failed|Submit Error/);
 
     await expect(page.locator('#selected-file-name')).toContainText(MOCK_DATA_DESCRIPTION_FILE.name);
     await expect(page.locator('#remove-file-btn')).toBeVisible();
