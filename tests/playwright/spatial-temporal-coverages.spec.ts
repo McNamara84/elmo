@@ -60,6 +60,11 @@ const googleMapsStub = String.raw`(() => {
     getSouthWest() {
       return this._sw;
     }
+    getCenter() {
+      const lat = (this._ne.lat() + this._sw.lat()) / 2;
+      const lng = (this._ne.lng() + this._sw.lng()) / 2;
+      return new LatLng(lat, lng);
+    }
     extend(latLng) {
       this._ne = new LatLng(Math.max(this._ne.lat(), latLng.lat()), Math.max(this._ne.lng(), latLng.lng()));
       this._sw = new LatLng(Math.min(this._sw.lat(), latLng.lat()), Math.min(this._sw.lng(), latLng.lng()));
