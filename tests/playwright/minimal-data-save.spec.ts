@@ -35,6 +35,9 @@ test.describe('Minimal dataset save-as flow', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/xml',
+        headers: {
+          'Content-Disposition': `attachment; filename="${CUSTOM_FILENAME}.xml"`,
+        },
         body: MOCK_XML_RESPONSE,
       });
     });
@@ -65,12 +68,13 @@ test.describe('Minimal dataset save-as flow', () => {
       return alerts?.savingSuccess ?? null;
     });
 
+    const successAlert = notificationModal.locator('.alert-success');
+    await expect(successAlert).toBeVisible();
+
     if (translatedSuccessMessage) {
-      await expect(notificationModal.locator('.alert-success')).toContainText(
-        translatedSuccessMessage
-      );
+      await expect(successAlert).toContainText(translatedSuccessMessage);
     } else {
-      await expect(notificationModal.locator('.alert-success')).toContainText(
+      await expect(successAlert).toContainText(
         /Dataset saved successfully|successfully saved/
       );
     }
@@ -104,8 +108,8 @@ test.describe('Minimal dataset save-as flow', () => {
     expect(failedResponse.status()).toBe(500);
 
     await expect(notificationModal).toBeVisible();
-    const notificationAlert = notificationModal.locator('.alert');
-    await expect(notificationAlert).toHaveClass(/alert-danger/);
+    const notificationAlert = notificationModal.locator('.alert-danger');
+    await expect(notificationAlert).toBeVisible();
 
     const translatedErrorMessage = await page.evaluate(() => {
       const alerts = (window as any).translations?.alerts;
