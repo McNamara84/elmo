@@ -16,14 +16,6 @@ if [ ! -d /var/www/html/node_modules ]; then
   npm install --omit=dev
 fi
 
-# Ensure a helper_functions.php exists; in production create it from settings.elmo.php,
-# so that local helper_functions.php (dev) is not needed/overwritten.
-if [ ! -f /var/www/html/helper_functions.php ]; then
-  echo "⚙️  No helper_functions.php found, creating from settings.elmo.php"
-  cp /var/www/html/settings.elmo.php /var/www/html/helper_functions.php
-  chown www-data:www-data /var/www/html/helper_functions.php
-fi
-
 # Wait for the DB using mysqladmin ping (more reliable)
 wait_for_db() {
   echo "⏳  Waiting for MariaDB at ${DB_HOST}..."
