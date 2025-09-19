@@ -95,6 +95,12 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     ? translations.general.affiliation
     : 'Affiliation';
 
+  const scheduleMicrotask = typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : (cb) => Promise.resolve().then(cb);
+
+  let requirementSyncPending = false;
+
   const tagify = new Tagify(inputElement[0], {
     enforceWhitelist: false,
     duplicates: false,
@@ -127,16 +133,36 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   }
 
   /**
-   * Updates the required state of the accompanying author institution name input based on Tagify selections.
+   * Applies ARIA enhancements to the interactive Tagify input, ensuring that
+   * assistive technologies are aware of the current required state.
+   *
+   * @param {boolean} isRequired - Whether the associated name input is required.
+   */
+  function updateTagifyAccessibilityState(isRequired) {
+    if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+      window.applyTagifyAccessibilityAttributes(tagify, inputElement[0], {
+        placeholder: placeholderValue,
+        isRequired
+      });
+    }
+  }
+
+  /**
+   * Updates the required state of the accompanying author institution name input
+   * based on Tagify selections or free text input.
    */
   function syncAuthorInstitutionRequirement() {
+    requirementSyncPending = false;
+
     const authorInstitutionRow = inputElement.closest('[data-authorinstitution-row]');
     if (!authorInstitutionRow.length) {
+      updateTagifyAccessibilityState(false);
       return;
     }
 
     const nameInput = authorInstitutionRow.find('input[name="authorinstitutionName[]"]');
-    const hasAffiliations = tagify.value.length > 0;
+    const rawValue = (inputElement.val() || '').trim();
+    const hasAffiliations = tagify.value.length > 0 || rawValue.length > 0;
 
     nameInput.each((_, element) => {
       if (hasAffiliations) {
@@ -147,6 +173,22 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
         element.removeAttribute('aria-required');
       }
     });
+
+    updateTagifyAccessibilityState(hasAffiliations);
+  }
+
+  /**
+   * Schedules a deferred synchronization so that Tagify's internal state is
+   * fully updated before we inspect it. This avoids race conditions when tags
+   * are added or removed in quick succession.
+   */
+  function scheduleRequirementSync() {
+    if (requirementSyncPending) {
+      return;
+    }
+
+    requirementSyncPending = true;
+    scheduleMicrotask(syncAuthorInstitutionRequirement);
   }
 
   /**
@@ -159,7 +201,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   // Event listener for when a tag is added
   tagify.on("add", function (e) {
     updateHiddenField();
-    syncAuthorInstitutionRequirement();
+    scheduleRequirementSync();
 
     const selectedName = e.detail.data.value;
     const isOnWhitelist = tagify.whitelist.some(item => item.value === selectedName);
@@ -174,7 +216,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   // Event listener for when a tag is removed
   tagify.on("remove", function () {
     updateHiddenField();
-    syncAuthorInstitutionRequirement();
+    scheduleRequirementSync();
     if (typeof window.checkMandatoryFields === 'function') {
       window.checkMandatoryFields();
     }
@@ -187,12 +229,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
 
   // Store the Tagify instance in the DOM element for later access
   inputElement[0].tagify = tagify;
-  if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
-    window.applyTagifyAccessibilityAttributes(tagify, inputElement[0], {
-      placeholder: placeholderValue
-    });
-  }
-  syncAuthorInstitutionRequirement();
+  updateTagifyAccessibilityState(false);
+  scheduleRequirementSync();
 }
 
 if (typeof module !== 'undefined' && module.exports) {
