@@ -100,6 +100,7 @@ test.describe('Author Institution form group', () => {
     await affiliationInput.press('Tab');
 
     await expect(nameInput).toHaveAttribute('required', 'required');
+    await expect(nameInput).toHaveAttribute('aria-required', 'true');
 
     await affiliationInput.click();
     await affiliationInput.press('Backspace');
@@ -107,5 +108,6 @@ test.describe('Author Institution form group', () => {
     await affiliationInput.press('Tab');
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');
+    await expect(nameInput).not.toHaveAttribute('aria-required', 'true');
   });
 });

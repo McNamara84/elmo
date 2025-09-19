@@ -261,8 +261,10 @@ function validateAuthorInstitutionRequirements() {
         // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
         if (isauthorinstitutionAffiliationFilled) {
             fields.authorinstitutionName.attr('required', 'required');
+        fields.authorinstitutionName.attr('aria-required', 'true');
         } else {
             fields.authorinstitutionName.removeAttr('required');
+            fields.authorinstitutionName.removeAttr('aria-required');
         }
     });
 };

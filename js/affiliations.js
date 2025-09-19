@@ -142,11 +142,17 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     if (!isOnWhitelist) {
       closeDropdown();
     }
+    if (typeof window.checkMandatoryFields === 'function') {
+        window.checkMandatoryFields();
+    }
   });
 
   // Event listener for when a tag is removed
   tagify.on("remove", function () {
     updateHiddenField();
+    if (typeof window.checkMandatoryFields === 'function') {
+      window.checkMandatoryFields();
+    }
   });
 
   // Event listener for input changes to adjust the input field width dynamically
