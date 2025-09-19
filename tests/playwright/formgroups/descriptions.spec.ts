@@ -1,9 +1,10 @@
 import { test, expect, Locator } from '@playwright/test';
+import { navigateToHome, openLanguageMenu, SELECTORS } from '../utils';
 
 test.describe('Descriptions Form Group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('');
-    await expect(page.locator('#group-description')).toBeVisible();
+    await navigateToHome(page);
+    await expect(page.locator(SELECTORS.formGroups.descriptions)).toBeVisible();
   });
 
   test('renders descriptions accordion with accessible sections and help icons', async ({ page }) => {
@@ -163,7 +164,7 @@ test.describe('Descriptions Form Group', () => {
       'Please enter a description of the methodology employed for the study or research.'
     );
 
-    await page.locator('#bd-lang').click();
+    await openLanguageMenu(page);
     await page.locator('[data-bs-language-value="de"]').click();
     await page.waitForTimeout(1000);
 
@@ -176,7 +177,7 @@ test.describe('Descriptions Form Group', () => {
       'Bitte eine Beschreibung der für die Studie oder Forschung verwendeten Methodik eingeben.'
     );
 
-    await page.locator('#bd-lang').click();
+    await openLanguageMenu(page);
     await page.locator('[data-bs-language-value="en"]').click();
     await page.waitForTimeout(500);
   });
