@@ -1,7 +1,18 @@
 import { expect, type Page, type Route } from '@playwright/test';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { CONTENT_TYPES, REPO_ROOT, STATIC_ASSET_ROUTE_PATTERNS } from './constants';
+import { APP_BASE_URL, CONTENT_TYPES, REPO_ROOT, STATIC_ASSET_ROUTE_PATTERNS } from './constants';
+
+function getRepositoryRelativePath(pathname: string) {
+  const trimmedPath = pathname.replace(/^\/+/, '');
+  const basePath = new URL(APP_BASE_URL).pathname.replace(/^\/+|\/+$/g, '');
+
+  if (basePath && (trimmedPath === basePath || trimmedPath.startsWith(`${basePath}/`))) {
+    return trimmedPath.slice(basePath.length).replace(/^\/+/, '');
+  }
+
+  return trimmedPath;
+}
 
 export async function fulfillWithLocalAsset(route: Route) {
   const request = route.request();
@@ -12,8 +23,9 @@ export async function fulfillWithLocalAsset(route: Route) {
     return;
   }
 
-  const pathname = decodeURIComponent(url.pathname.replace(/^\/+/u, ''));
-  const filePath = path.join(REPO_ROOT, pathname);
+  const pathname = decodeURIComponent(url.pathname);
+  const repoRelativePath = getRepositoryRelativePath(pathname);
+  const filePath = path.join(REPO_ROOT, repoRelativePath);
 
   try {
     const body = await fs.readFile(filePath);
