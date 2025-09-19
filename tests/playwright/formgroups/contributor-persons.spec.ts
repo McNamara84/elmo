@@ -2,7 +2,7 @@ import { test, expect, type Route } from '@playwright/test';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
-const REPO_ROOT = path.resolve(__dirname, '../..');
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 
 const CONTENT_TYPES: Record<string, string> = {
   '.js': 'application/javascript; charset=utf-8',

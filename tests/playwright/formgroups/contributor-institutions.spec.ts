@@ -5,7 +5,7 @@ import path from 'path';
 
 const STATIC_BASE_URL = 'http://localhost:8080/';
 
-const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 
 const STATIC_ASSETS: Array<{ pattern: string; file: string; contentType: string }> = [
   {
