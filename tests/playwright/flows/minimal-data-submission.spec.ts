@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { completeMinimalDatasetForm, navigateToHome, SELECTORS } from '../utils';
 
 const SUBMISSION_ENDPOINT = '**/send_xml_file.php';
 const MOCK_DATA_DESCRIPTION_FILE = {
@@ -9,13 +10,13 @@ const MOCK_DATA_DESCRIPTION_FILE = {
 
 test.describe('Minimal Valid Dataset Test', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('');
+    await navigateToHome(page);
     await completeMinimalDatasetForm(page);
 
     await page.getByRole('button', { name: 'Submit' }).click();
 
     await expect(page.locator('.is-invalid')).toHaveCount(0);
-    await expect(page.locator('#modal-submit')).toBeVisible();
+    await expect(page.locator(SELECTORS.modals.submit)).toBeVisible();
   });
 
   test('submits dataset successfully via AJAX', async ({ page }) => {
@@ -43,9 +44,9 @@ test.describe('Minimal Valid Dataset Test', () => {
       modalSubmitButton.click(),
     ]);
 
-    await expect(page.locator('#modal-submit')).toBeHidden();
+    await expect(page.locator(SELECTORS.modals.submit)).toBeHidden();
 
-    const notificationModal = page.locator('#modal-notification');
+    const notificationModal = page.locator(SELECTORS.modals.notification);
     await expect(notificationModal).toBeVisible();
     await expect(notificationModal.locator('.alert-success')).toContainText('Submitted successfully');
 
@@ -82,7 +83,7 @@ test.describe('Minimal Valid Dataset Test', () => {
     const submissionResponse = await responsePromise;
     expect(submissionResponse.status()).toBe(500);
 
-    const notificationModal = page.locator('#modal-notification');
+    const notificationModal = page.locator(SELECTORS.modals.notification);
     await expect(notificationModal).toBeVisible();
     const notificationAlert = notificationModal.locator('.alert');
     await expect(notificationAlert).toHaveClass(/alert-danger/);
@@ -108,32 +109,12 @@ test.describe('Minimal Valid Dataset Test', () => {
     await notificationModal.getByRole('button', { name: 'OK' }).click();
     await expect(notificationModal).toBeHidden();
     await page.getByRole('button', { name: 'Submit' }).click();
-    await expect(page.locator('#modal-submit')).toBeVisible();
+    await expect(page.locator(SELECTORS.modals.submit)).toBeVisible();
     await expect(removeFileButton).toBeVisible();
 
     await page.unroute(SUBMISSION_ENDPOINT);
   });
 });
-
-async function completeMinimalDatasetForm(page: Page) {
-  await page.getByRole('textbox', { name: 'Publication Year (YYYY)*' }).fill('2025');
-  await page.getByLabel('Resource Type*').selectOption('5');
-  await page.getByLabel('Language of dataset*').selectOption('1');
-  await page.getByRole('textbox', { name: 'Title*' }).fill('A dataset');
-
-  await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
-  await page.getByRole('textbox', { name: 'Last Name*' }).fill('Alice');
-  await page.getByRole('textbox', { name: 'First Name*' }).fill('Bob');
-
-  await page.locator('#group-author tags').getByRole('textbox').fill('GFZ Helmholtz Centre for Geosciences');
-  await page.getByText('ContactPerson?').click();
-
-  await expect(page.getByRole('textbox', { name: 'Email address*' })).toBeVisible();
-  await page.getByRole('textbox', { name: 'Email address*' }).fill('example@gmail.com');
-
-  await page.getByRole('textbox', { name: 'Abstract*' }).fill('Necessary abstract');
-  await page.getByRole('textbox', { name: 'Date created*' }).fill('2025-01-01');
-}
 
 async function attachSupportingSubmissionData(page: Page) {
   await page.setInputFiles('#input-submit-datadescription', MOCK_DATA_DESCRIPTION_FILE);
