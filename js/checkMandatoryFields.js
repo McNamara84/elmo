@@ -254,14 +254,16 @@ function validateAuthorInstitutionRequirements() {
             authorinstitutionAffiliation: row.find('[id^="input-authorinstitution-affiliation"]')
         };
 
-        // Check that the “Author-Institution-Affiliation” field is filled in.
+        // Check whether the Author-Institution-Affiliation field has a visible value or Tagify tags assigned.
         var affVal = (fields.authorinstitutionAffiliation.val() || '').trim();
-        var isauthorinstitutionAffiliationFilled = affVal !== '';
+        var tagifyInstance = fields.authorinstitutionAffiliation.get(0)?.tagify;
+        var hasTagifyAffiliations = Array.isArray(tagifyInstance?.value) && tagifyInstance.value.length > 0;
+        var isauthorinstitutionAffiliationFilled = affVal !== '' || hasTagifyAffiliations;
 
         // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
         if (isauthorinstitutionAffiliationFilled) {
             fields.authorinstitutionName.attr('required', 'required');
-        fields.authorinstitutionName.attr('aria-required', 'true');
+            fields.authorinstitutionName.attr('aria-required', 'true');
         } else {
             fields.authorinstitutionName.removeAttr('required');
             fields.authorinstitutionName.removeAttr('aria-required');
