@@ -514,20 +514,60 @@ class AutosaveService {
     }
 
     const addButton = this.findAddButtonForElement(elements[0]);
-    if (!addButton) {
-      return;
-    }
-
     let previousLength = elements.length;
-    while (elements.length < requiredCount) {
-      addButton.click();
 
-      elements = this.form.querySelectorAll(`[name="${safeName}"]`);
-      if (elements.length === previousLength) {
-        break;
+    while (elements.length < requiredCount) {
+      let changed = false;
+
+      if (addButton) {
+        addButton.click();
+        elements = this.form.querySelectorAll(`[name="${safeName}"]`);
+        if (elements.length > previousLength) {
+          previousLength = elements.length;
+          changed = true;
+        }
       }
-      previousLength = elements.length;
+
+      if (!changed) {
+        const expanded = this.requestArrayFieldExpansion(name, requiredCount, elements.length, elements[0] || null);
+        elements = this.form.querySelectorAll(`[name="${safeName}"]`);
+
+        if (!expanded || elements.length === previousLength) {
+          break;
+        }
+
+        previousLength = elements.length;
+      }
     }
+  }
+
+  requestArrayFieldExpansion(name, requiredCount, currentCount, referenceElement) {
+    if (typeof document === 'undefined' || typeof CustomEvent !== 'function') {
+      return false;
+    }
+
+    const detail = {
+      name,
+      requiredCount,
+      currentCount: currentCount ?? 0,
+      formId: this.form ? this.form.id : null
+    };
+
+    const event = new CustomEvent('autosave:ensure-array-field', {
+      bubbles: true,
+      cancelable: false,
+      detail
+    });
+
+    if (referenceElement && typeof referenceElement.dispatchEvent === 'function') {
+      referenceElement.dispatchEvent(event);
+    } else if (this.form && typeof this.form.dispatchEvent === 'function') {
+      this.form.dispatchEvent(event);
+    } else {
+      document.dispatchEvent(event);
+    }
+
+    return true;
   }
 
   findAddButtonForElement(element) {

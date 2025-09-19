@@ -177,6 +177,46 @@ describe('autosaveService', () => {
     expect(rorIds).toEqual(['ror-1', 'ror-2']);
   });
 
+  test('applyDraftValues requests external expansion when add button unavailable', () => {
+    const form = document.getElementById('form-mde');
+    form.innerHTML = `
+      <div data-creator-row>
+        <input name="givennames[]" value="">
+      </div>
+    `;
+
+    const handler = (event) => {
+      const { detail } = event;
+      if (!detail || detail.name !== 'givennames[]') {
+        return;
+      }
+
+      while (form.querySelectorAll('input[name="givennames[]"]').length < detail.requiredCount) {
+        const input = document.createElement('input');
+        input.name = 'givennames[]';
+        input.value = '';
+        form.appendChild(input);
+      }
+    };
+
+    document.addEventListener('autosave:ensure-array-field', handler);
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.applyDraftValues({
+      'givennames[]': ['Ada', 'Grace']
+    });
+
+    const names = Array.from(form.querySelectorAll('input[name="givennames[]"]')).map((input) => input.value);
+    expect(names).toEqual(['Ada', 'Grace']);
+
+    document.removeEventListener('autosave:ensure-array-field', handler);
+  });
+
   test('applyDraftValues expands repeatable groups before restoring values', () => {
     const form = document.getElementById('form-mde');
     form.innerHTML = `
