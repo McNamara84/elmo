@@ -1,50 +1,5 @@
-import { test, expect, type Route } from '@playwright/test';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-
-const CONTENT_TYPES: Record<string, string> = {
-  '.js': 'application/javascript; charset=utf-8',
-  '.mjs': 'application/javascript; charset=utf-8',
-  '.cjs': 'application/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.map': 'application/json; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml; charset=utf-8'
-};
-
-async function fulfillWithLocalAsset(route: Route) {
-  const request = route.request();
-  const url = new URL(request.url());
-
-  if (!url.hostname.includes('localhost')) {
-    await route.fallback();
-    return;
-  }
-
-  const pathname = decodeURIComponent(url.pathname.replace(/^\/+/u, ''));
-  const filePath = path.join(REPO_ROOT, pathname);
-
-  try {
-    const body = await fs.readFile(filePath);
-    const extension = path.extname(filePath).toLowerCase();
-    const contentType = CONTENT_TYPES[extension] ?? 'application/octet-stream';
-
-    await route.fulfill({
-      status: 200,
-      body,
-      headers: {
-        'content-type': contentType
-      }
-    });
-  } catch (error) {
-    console.warn(`Unable to serve asset for ${request.url()}:`, error);
-    await route.fulfill({ status: 404, body: 'Not Found' });
-  }
-}
-
-const STATIC_BASE_URL = 'http://localhost:8080/';
+import { test, expect } from '@playwright/test';
+import { APP_BASE_URL, registerStaticAssetRoutes, SELECTORS } from '../utils';
 
 const contributorGroupMarkup = String.raw`
 <div class="card mb-2">
@@ -197,7 +152,7 @@ function buildTestPageMarkup() {
   <head>
     <meta charset="utf-8">
     <title>Contributor Persons Test Harness</title>
-    <base href="${STATIC_BASE_URL}">
+    <base href="${APP_BASE_URL}">
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="node_modules/@yaireo/tagify/dist/tagify.css">
   </head>
@@ -231,9 +186,7 @@ function buildTestPageMarkup() {
 
 test.describe('Contributor (Persons) form group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route('**/node_modules/**', fulfillWithLocalAsset);
-    await page.route('**/js/**', fulfillWithLocalAsset);
-    await page.route('**/*.css', fulfillWithLocalAsset);
+    await registerStaticAssetRoutes(page);
     await page.route('**/api/v2/vocabs/roles?type=**', async route => {
       const url = new URL(route.request().url());
       const type = url.searchParams.get('type') as keyof typeof roleFixtures | null;
@@ -261,7 +214,7 @@ test.describe('Contributor (Persons) form group', () => {
       });
     });
 
-    await page.goto(`${STATIC_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${APP_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => {
       const roleInput: any = document.querySelector('#input-contributor-personrole');
@@ -279,7 +232,7 @@ test.describe('Contributor (Persons) form group', () => {
   });
 
   test('renders contributor person fields with accessible helpers', async ({ page }) => {
-    await expect(page.locator('#group-contributorperson')).toBeVisible();
+    await expect(page.locator(SELECTORS.formGroups.contributorPersons)).toBeVisible();
     await expect(page.locator('b[data-translate="contributorPersons.title"]')).toBeVisible();
 
     await expect(page.locator('#input-contributor-orcid')).toBeVisible();
@@ -288,7 +241,7 @@ test.describe('Contributor (Persons) form group', () => {
     await expect(page.locator('#input-contributor-lastname')).toBeVisible();
     await expect(page.locator('#input-contributor-firstname')).toBeVisible();
 
-    const roleTagify = page.locator('#group-contributorperson .tagify').first();
+    const roleTagify = page.locator(`${SELECTORS.formGroups.contributorPersons} .tagify`).first();
     await expect(roleTagify).toBeVisible();
     await expect(roleTagify.locator('.tagify__input')).toBeVisible();
 
@@ -338,7 +291,7 @@ test.describe('Contributor (Persons) form group', () => {
     const addButton = page.locator('#button-contributor-addperson');
     await addButton.click();
 
-    const rows = page.locator('#group-contributorperson [contributor-person-row]');
+    const rows = page.locator(`${SELECTORS.formGroups.contributorPersons} [contributor-person-row]`);
     await expect(rows).toHaveCount(2);
 
     const firstOrcidId = await rows.nth(0).locator('input[name="cbORCID[]"]').getAttribute('id');
@@ -392,7 +345,7 @@ test.describe('Contributor (Persons) form group', () => {
     expect(roleValue).toContain('Data Curator');
     expect(roleValue).toContain('Software Developer');
 
-    const renderedTags = page.locator('#group-contributorperson').locator('.tagify__tag');
+    const renderedTags = page.locator(SELECTORS.formGroups.contributorPersons).locator('.tagify__tag');
     await expect(renderedTags).toHaveCount(2);
     await expect(renderedTags.nth(0)).toContainText('Data Curator');
     await expect(renderedTags.nth(1)).toContainText('Software Developer');
