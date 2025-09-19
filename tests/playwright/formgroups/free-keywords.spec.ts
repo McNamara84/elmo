@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
+import { REPO_ROOT, SELECTORS } from '../utils';
 
 const CURATED_KEYWORDS = [
   { free_keyword: 'Arctic Ocean Circulation' },
@@ -8,8 +9,7 @@ const CURATED_KEYWORDS = [
   { free_keyword: 'Crustal Deformation Analysis' },
 ];
 
-const ROOT_DIR = path.resolve(__dirname, '../../..');
-const FREE_KEYWORDS_TEMPLATE = readFileSync(path.join(ROOT_DIR, 'formgroups/freeKeywords.html'), 'utf8');
+const FREE_KEYWORDS_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/freeKeywords.html'), 'utf8');
 const TEST_ROUTE_PATH = '/free-keywords-test';
 const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -49,15 +49,15 @@ test.describe('Free Keywords Form Group', () => {
 
     await page.goto(TEST_ROUTE_PATH);
 
-    await page.addStyleTag({ path: path.join(ROOT_DIR, 'node_modules/@yaireo/tagify/dist/tagify.css') });
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/jquery/dist/jquery.min.js') });
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/@yaireo/tagify/dist/tagify.js') });
+    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.css') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery/dist/jquery.min.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.js') });
     await page.addScriptTag({
       content: `window.translations = ${JSON.stringify({
         keywords: { free: { placeholder: 'Please enter keywords and separate them by a comma.' } },
       })};`,
     });
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'js/freekeywordTags.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'js/freekeywordTags.js') });
     await page.evaluate(() => document.dispatchEvent(new Event('DOMContentLoaded')));
 
     await waitForFreeKeywordTagify(page);
@@ -95,7 +95,7 @@ test.describe('Free Keywords Form Group', () => {
     });
     expect(tagifySettings.whitelist).toEqual(CURATED_KEYWORDS.map(item => item.free_keyword));
 
-    const helpIcon = page.locator('#group-freekeyword i.bi-question-circle-fill');
+    const helpIcon = page.locator(`${SELECTORS.formGroups.freeKeywords} i.bi-question-circle-fill`);
     await expect(helpIcon).toHaveAttribute('data-help-section-id', 'help-freeKeywords');
     const helpStyles = await helpIcon.evaluate(element => {
       const styles = window.getComputedStyle(element as HTMLElement);
@@ -104,14 +104,14 @@ test.describe('Free Keywords Form Group', () => {
     expect(helpStyles.display).not.toBe('none');
     expect(helpStyles.visibility).toBe('visible');
 
-    const tagInput = page.locator('#group-freekeyword .tagify__input');
+    const tagInput = page.locator(`${SELECTORS.formGroups.freeKeywords} .tagify__input`);
     await expect(tagInput).toBeVisible();
     const isEditable = await tagInput.evaluate(element => (element as HTMLElement).isContentEditable);
     expect(isEditable).toBe(true);
   });
 
   test('supports curated suggestions, manual keywords, keyboard interactions, and removal', async ({ page }) => {
-    const tagInput = page.locator('#group-freekeyword .tagify__input');
+    const tagInput = page.locator(`${SELECTORS.formGroups.freeKeywords} .tagify__input`);
     await tagInput.click();
     await tagInput.type('Arc');
 
@@ -126,7 +126,7 @@ test.describe('Free Keywords Form Group', () => {
       .first()
       .click();
 
-    const tags = page.locator('#group-freekeyword .tagify__tag');
+    const tags = page.locator(`${SELECTORS.formGroups.freeKeywords} .tagify__tag`);
     await expect(tags).toHaveCount(1);
     await expect(tags.first()).toContainText('Arctic Ocean Circulation');
 
@@ -160,7 +160,7 @@ test.describe('Free Keywords Form Group', () => {
   });
 
   test('updates placeholder on translation changes while preserving existing tags', async ({ page }) => {
-    const tagInput = page.locator('#group-freekeyword .tagify__input');
+    const tagInput = page.locator(`${SELECTORS.formGroups.freeKeywords} .tagify__input`);
     await tagInput.click();
     await tagInput.type('Persistent Tag');
     await tagInput.press('Enter');
