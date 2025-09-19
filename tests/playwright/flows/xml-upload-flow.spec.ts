@@ -58,7 +58,7 @@ const SAMPLE_XML_CONTENT = `<?xml version="1.0" encoding="UTF-8"?>
   </relatedIdentifiers>
 </resource>`;
 
-const ROOT_DIR = path.resolve(__dirname, '../..');
+const ROOT_DIR = path.resolve(__dirname, '../../..');
 
 function loadTemplate(relativePath: string): string {
   return readFileSync(path.join(ROOT_DIR, relativePath), 'utf8');
