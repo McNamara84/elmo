@@ -1,4 +1,5 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
+import { navigateToHome, SELECTORS } from '../utils';
 
 const FEEDBACK_ENDPOINT = '**/send_feedback_mail.php';
 const DEFAULT_NETWORK_DELAY_MS = 150;
@@ -8,7 +9,7 @@ function delay(ms: number) {
 }
 
 async function navigateToFeedbackModal(page: Page) {
-  await page.goto('');
+  await navigateToHome(page);
 
   const feedbackButton = page.locator('#button-feedback-openmodalfooter');
   if (!(await feedbackButton.isVisible())) {
@@ -17,7 +18,7 @@ async function navigateToFeedbackModal(page: Page) {
 
   await feedbackButton.click();
 
-  const feedbackModal = page.locator('#modal-feedback');
+  const feedbackModal = page.locator(SELECTORS.modals.feedback);
   await expect(feedbackModal).toBeVisible();
   await expect(feedbackModal.locator('#form-feedback')).toBeVisible();
 
