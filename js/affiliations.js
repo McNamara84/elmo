@@ -202,6 +202,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   tagify.on("add", function (e) {
     updateHiddenField();
     scheduleRequirementSync();
+    syncAuthorInstitutionRequirement();
 
     const selectedName = e.detail.data.value;
     const isOnWhitelist = tagify.whitelist.some(item => item.value === selectedName);
@@ -217,6 +218,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   tagify.on("remove", function () {
     updateHiddenField();
     scheduleRequirementSync();
+    syncAuthorInstitutionRequirement();
     if (typeof window.checkMandatoryFields === 'function') {
       window.checkMandatoryFields();
     }
@@ -231,6 +233,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   inputElement[0].tagify = tagify;
   updateTagifyAccessibilityState(false);
   scheduleRequirementSync();
+  syncAuthorInstitutionRequirement();
 }
 
 if (typeof module !== 'undefined' && module.exports) {
