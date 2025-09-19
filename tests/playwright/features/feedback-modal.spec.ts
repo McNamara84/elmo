@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
-import { navigateToHome, SELECTORS } from '../utils';
+import { navigateToHome, runAxeAudit, SELECTORS } from '../utils';
 
 const FEEDBACK_ENDPOINT = '**/send_feedback_mail.php';
 const DEFAULT_NETWORK_DELAY_MS = 150;
@@ -69,6 +69,10 @@ test.describe('Feedback modal interactions', () => {
     const sendButton = feedbackModal.locator('#button-feedback-send');
     const closeButton = feedbackModal.locator('button[aria-label="Close"]');
 
+    await test.step('Validate accessibility of initial feedback modal state', async () => {
+      await runAxeAudit(page);
+    });
+
     await fillFeedbackForm(page);
 
     const sendingLabel = await page.evaluate(() => {
@@ -100,6 +104,10 @@ test.describe('Feedback modal interactions', () => {
     const successAlert = statusPanel.locator('.alert-success');
     await expect(successAlert).toBeVisible();
     await expect(successAlert).toContainText(successLabel);
+
+    await test.step('Validate accessibility of feedback modal success state', async () => {
+      await runAxeAudit(page);
+    });
 
     await expect(feedbackModal).toBeVisible();
 
@@ -135,6 +143,10 @@ test.describe('Feedback modal interactions', () => {
     const sendButton = feedbackModal.locator('#button-feedback-send');
     const closeButton = feedbackModal.locator('button[aria-label="Close"]');
 
+    await test.step('Validate accessibility of initial feedback modal state', async () => {
+      await runAxeAudit(page);
+    });
+
     await fillFeedbackForm(page);
 
     const errorLabel = await page.evaluate(() => {
@@ -169,6 +181,10 @@ test.describe('Feedback modal interactions', () => {
     await expect(sendButton).toBeEnabled();
     await expect(sendButton).toHaveText(sendLabel);
     await expect(sendButton).toBeFocused();
+
+    await test.step('Validate accessibility of feedback modal error state', async () => {
+      await runAxeAudit(page);
+    });
 
     await closeButton.click();
     await expect(feedbackModal).toBeHidden();
