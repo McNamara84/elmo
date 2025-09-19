@@ -14,6 +14,26 @@ $(document).ready(function () {
   const statusPanel = $("#panel-feedback-status");
   const thankYouMessage = $("#panel-feedback-message");
 
+  /**
+   * Applies or removes a boolean attribute while ensuring an empty string value for accessibility checks.
+   *
+   * @param {JQuery} $elements - The jQuery collection to update.
+   * @param {string} attributeName - The boolean attribute that should be toggled.
+   * @param {boolean} isActive - Whether the attribute should be present (true) or removed (false).
+   * @returns {JQuery} The original jQuery collection for chaining.
+   */
+  function applyBooleanAttribute($elements, attributeName, isActive) {
+    $elements.each((_, element) => {
+      if (isActive) {
+        element.setAttribute(attributeName, "");
+      } else {
+        element.removeAttribute(attributeName);
+      }
+    });
+
+    return $elements;
+  }
+
   sendButton.click(function (event) {
     event.preventDefault();
 
@@ -30,8 +50,8 @@ $(document).ready(function () {
       );
 
     feedbackForm.attr("aria-busy", "true");
-    thankYouMessage.attr("hidden", "").attr("aria-hidden", "true");
-    statusPanel.attr("hidden", "");
+    applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");
+    applyBooleanAttribute(statusPanel, "hidden", true);
 
     // Send AJAX POST request
     $.ajax({
@@ -42,13 +62,11 @@ $(document).ready(function () {
         // Hide the form and show success message
         feedbackForm.hide().attr("aria-hidden", "true").attr("aria-busy", "false");
         sendButton.attr("aria-busy", "false");
-        thankYouMessage
-          .removeAttr("hidden")
+        applyBooleanAttribute(thankYouMessage, "hidden", false)
           .attr("aria-hidden", "false")
           .show()
           .trigger("focus");
-        statusPanel
-          .removeAttr("hidden")
+        applyBooleanAttribute(statusPanel, "hidden", false)
           .attr("role", "status")
           .attr("aria-live", "polite")
           .attr("aria-atomic", "true")
@@ -65,8 +83,7 @@ $(document).ready(function () {
       },
       error: function (xhr, status, error) {
         // Show error message and re-enable send button
-        statusPanel
-          .removeAttr("hidden")
+        applyBooleanAttribute(statusPanel, "hidden", false)
           .attr("role", "alert")
           .attr("aria-live", "assertive")
           .attr("aria-atomic", "true")
@@ -81,7 +98,9 @@ $(document).ready(function () {
           .html(getNestedValue(translations, 'modals.feedback.sendButton'))
           .trigger("focus");
         feedbackForm.attr("aria-busy", "false");
-        thankYouMessage.hide().attr("hidden", "").attr("aria-hidden", "true");
+        thankYouMessage
+          .hide();
+        applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");
       },
       complete: function () {
       }
@@ -92,10 +111,11 @@ $(document).ready(function () {
     .on('show.bs.modal', function () {
       feedbackForm[0].reset();
       feedbackForm.show().attr({ "aria-hidden": "false", "aria-busy": "false" });
-      thankYouMessage.hide().attr("hidden", "").attr("aria-hidden", "true");
+      thankYouMessage.hide();
+      applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");
       statusPanel
-        .empty()
-        .attr("hidden", "")
+        .empty();
+      applyBooleanAttribute(statusPanel, "hidden", true)
         .removeAttr("role")
         .attr("aria-live", "polite")
         .attr("aria-atomic", "true");

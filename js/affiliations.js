@@ -127,6 +127,29 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   }
 
   /**
+   * Updates the required state of the accompanying author institution name input based on Tagify selections.
+   */
+  function syncAuthorInstitutionRequirement() {
+    const authorInstitutionRow = inputElement.closest('[data-authorinstitution-row]');
+    if (!authorInstitutionRow.length) {
+      return;
+    }
+
+    const nameInput = authorInstitutionRow.find('input[name="authorinstitutionName[]"]');
+    const hasAffiliations = tagify.value.length > 0;
+
+    nameInput.each((_, element) => {
+      if (hasAffiliations) {
+        element.setAttribute('required', 'required');
+        element.setAttribute('aria-required', 'true');
+      } else {
+        element.removeAttribute('required');
+        element.removeAttribute('aria-required');
+      }
+    });
+  }
+
+  /**
    * Hides the Tagify dropdown menu.
    */
   function closeDropdown() {
@@ -136,6 +159,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   // Event listener for when a tag is added
   tagify.on("add", function (e) {
     updateHiddenField();
+    syncAuthorInstitutionRequirement();
 
     const selectedName = e.detail.data.value;
     const isOnWhitelist = tagify.whitelist.some(item => item.value === selectedName);
@@ -150,6 +174,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   // Event listener for when a tag is removed
   tagify.on("remove", function () {
     updateHiddenField();
+    syncAuthorInstitutionRequirement();
     if (typeof window.checkMandatoryFields === 'function') {
       window.checkMandatoryFields();
     }
@@ -167,6 +192,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
       placeholder: placeholderValue
     });
   }
+  syncAuthorInstitutionRequirement();
 }
 
 if (typeof module !== 'undefined' && module.exports) {
