@@ -1,6 +1,39 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import { navigateToHome, runAxeAudit, SELECTORS } from '../utils';
 
+function parseRgbString(color: string): [number, number, number] {
+  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (!match) {
+    throw new Error(`Unsupported color format: ${color}`);
+  }
+
+  return [match[1], match[2], match[3]].map((value) => Number.parseInt(value, 10)) as [
+    number,
+    number,
+    number,
+  ];
+}
+
+function srgbToLinear(value: number) {
+  const srgb = value / 255;
+  return srgb <= 0.04045
+    ? srgb / 12.92
+    : Math.pow((srgb + 0.055) / 1.055, 2.4);
+}
+
+function relativeLuminance([r, g, b]: [number, number, number]) {
+  const [rLin, gLin, bLin] = [r, g, b].map(srgbToLinear);
+  return 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+}
+
+function computeContrastRatio(foreground: string, background: string) {
+  const fgLuminance = relativeLuminance(parseRgbString(foreground));
+  const bgLuminance = relativeLuminance(parseRgbString(background));
+  const lighter = Math.max(fgLuminance, bgLuminance);
+  const darker = Math.min(fgLuminance, bgLuminance);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 const FEEDBACK_ENDPOINT = '**/send_feedback_mail.php';
 const DEFAULT_NETWORK_DELAY_MS = 150;
 
@@ -103,6 +136,20 @@ test.describe('Feedback modal interactions', () => {
     await expect(thankYouPanel).toHaveCSS('display', 'block');
     await expect(thankYouPanel).toHaveJSProperty('hidden', false);
     await expect(thankYouPanel).toBeFocused();
+
+    const { color: thankYouColor, backgroundColor: thankYouBackground } =
+      await thankYouPanel.evaluate((element) => {
+        const styles = window.getComputedStyle(element);
+        return {
+          color: styles.color,
+          backgroundColor: styles.backgroundColor,
+        };
+      });
+    const contrastRatio = computeContrastRatio(
+      thankYouColor,
+      thankYouBackground === 'rgba(0, 0, 0, 0)' ? 'rgb(255, 255, 255)' : thankYouBackground
+    );
+    expect(contrastRatio).toBeGreaterThanOrEqual(4.5);
 
     const successAlert = statusPanel.locator('.alert-success');
     await expect(successAlert).toBeVisible();

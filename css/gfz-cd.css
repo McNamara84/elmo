@@ -169,7 +169,8 @@ label.mandatory-field::after {
 }
 
 .feedback-message-thanks {
-    color: green;
+    color: var(--bs-success-text-emphasis, #0f5132);
+    font-weight: 600;
     font-size: 1.2em;
     text-align: center;
     margin-bottom: 20px;
