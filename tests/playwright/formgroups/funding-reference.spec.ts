@@ -2,7 +2,7 @@ import { test, expect, type Route } from '@playwright/test';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 
-const REPO_ROOT = path.resolve(__dirname, '../..');
+const REPO_ROOT = path.resolve(__dirname, '../../..');
 const STATIC_BASE_URL = 'http://localhost:8080/';
 const TEST_ROUTE = 'funding-reference-harness';
 
