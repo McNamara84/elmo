@@ -11,10 +11,13 @@ describe('autosaveService', () => {
       <form id="form-mde">
         <input name="title" value="">
       </form>
-      <div id="autosave-status" class="autosave-status" role="status" aria-live="polite" aria-atomic="true">
-        <span class="visually-hidden">Autosave status:</span>
+      <div id="autosave-status" class="autosave-status" role="status" aria-live="polite" aria-atomic="true" aria-labelledby="autosave-status-label autosave-status-text">
+        <span class="visually-hidden" id="autosave-status-label">Autosave status:</span>
         <span class="autosave-status__indicator" aria-hidden="true"></span>
-        <span id="autosave-status-text"></span>
+        <div class="autosave-status__text">
+          <span class="autosave-status__heading" id="autosave-status-heading">Autosave</span>
+          <span id="autosave-status-text"></span>
+        </div>
       </div>
       <div id="modal-restore-draft">
         <div id="modal-restore-draft-description"></div>
@@ -34,6 +37,7 @@ describe('autosaveService', () => {
   afterEach(() => {
     jest.useRealTimers();
     delete global.bootstrap;
+    delete window.elmo;
   });
 
   test('throttles autosave cadence before persisting', async () => {
@@ -74,22 +78,103 @@ describe('autosaveService', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  test('updateStatus applies semantic classes and messages', () => {
+  test('updateStatus applies semantic classes and localized messages', () => {
     const service = new AutosaveService('form-mde', {
       fetch: jest.fn(),
       statusElementId: 'autosave-status',
       statusTextId: 'autosave-status-text'
     });
 
-    service.updateStatus('pending');
-    expect(document.getElementById('autosave-status').classList.contains('autosave-status--pending')).toBe(true);
-    expect(document.getElementById('autosave-status-text').textContent).toBe('Autosave scheduled.');
+    const translations = {
+      autosave: {
+        status: {
+          label: 'Status des automatischen Speicherns:',
+          heading: 'Automatisches Speichern',
+          pending: 'Automatisches Speichern geplant.',
+          saving: 'Automatisches Speichern…',
+          syncedWithTime: 'Entwurf gespeichert um {time}.',
+          error: 'Automatisches Speichern fehlgeschlagen: {detail}',
+          errorNoDetail: 'Automatisches Speichern fehlgeschlagen.',
+          manual: 'Manuell gespeichert.',
+          idle: 'Automatisches Speichern bereit.'
+        }
+      }
+    };
 
-    service.updateStatus('error', 'Network unavailable');
+    document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: { translations } }));
+
+    service.updateStatus('pending');
     const statusElement = document.getElementById('autosave-status');
+    expect(statusElement.classList.contains('autosave-status--pending')).toBe(true);
+    expect(document.getElementById('autosave-status-text').textContent).toBe('Automatisches Speichern geplant.');
+    expect(statusElement.getAttribute('aria-busy')).toBe('false');
+
+    service.updateStatus('saving');
+    expect(statusElement.classList.contains('autosave-status--saving')).toBe(true);
+    expect(statusElement.getAttribute('aria-busy')).toBe('true');
+
+    const formatSpy = jest.spyOn(service, 'formatTime').mockReturnValue('12:34');
+    service.lastSavedAt = new Date('2024-01-01T12:34:00Z');
+    service.updateStatus('synced');
+    expect(document.getElementById('autosave-status-text').textContent).toBe('Entwurf gespeichert um 12:34.');
+    formatSpy.mockRestore();
+
+    service.updateStatus('error', 'Netzwerkfehler');
     expect(statusElement.classList.contains('autosave-status--error')).toBe(true);
-    expect(statusElement.classList.contains('autosave-status--pending')).toBe(false);
-    expect(document.getElementById('autosave-status-text').textContent).toContain('Network unavailable');
+    expect(document.getElementById('autosave-status-text').textContent).toBe('Automatisches Speichern fehlgeschlagen: Netzwerkfehler');
+
+    service.updateStatus('error');
+    expect(document.getElementById('autosave-status-text').textContent).toBe('Automatisches Speichern fehlgeschlagen.');
+
+    expect(document.getElementById('autosave-status-heading').textContent).toBe('Automatisches Speichern');
+    expect(document.getElementById('autosave-status-label').textContent).toBe('Status des automatischen Speicherns:');
+  });
+
+  test('serializeValues preserves repeated field arrays', () => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', `
+      <input name="givennames[]" value="Ada">
+      <input name="givennames[]" value="Grace">
+      <input type="hidden" name="authorPersonRorIds[]" value="ror-1">
+      <input type="hidden" name="authorPersonRorIds[]" value="ror-2">
+    `);
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    const values = service.serializeValues();
+    expect(values['givennames[]']).toEqual(['Ada', 'Grace']);
+    expect(values['authorPersonRorIds[]']).toEqual(['ror-1', 'ror-2']);
+  });
+
+  test('applyDraftValues restores repeated inputs sequentially', () => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', `
+      <input name="givennames[]" value="">
+      <input name="givennames[]" value="">
+      <input type="hidden" name="authorPersonRorIds[]" value="">
+      <input type="hidden" name="authorPersonRorIds[]" value="">
+    `);
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.applyDraftValues({
+      'givennames[]': ['Ada', 'Grace'],
+      'authorPersonRorIds[]': ['ror-1', 'ror-2']
+    });
+
+    const names = Array.from(form.querySelectorAll('input[name="givennames[]"]')).map((input) => input.value);
+    const rorIds = Array.from(form.querySelectorAll('input[name="authorPersonRorIds[]"]')).map((input) => input.value);
+
+    expect(names).toEqual(['Ada', 'Grace']);
+    expect(rorIds).toEqual(['ror-1', 'ror-2']);
   });
 
   test('restores draft when user accepts prompt', async () => {

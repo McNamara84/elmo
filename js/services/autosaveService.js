@@ -3,6 +3,8 @@ class AutosaveService {
     this.form = typeof formId === 'string' ? document.getElementById(formId) : formId;
     this.statusElement = this.resolveElement(options.statusElementId || 'autosave-status', options.statusElement);
     this.statusTextElement = this.resolveElement(options.statusTextId || 'autosave-status-text');
+    this.statusLabelElement = this.resolveElement(options.statusLabelId || 'autosave-status-label', options.statusLabelElement);
+    this.statusHeadingElement = this.resolveElement(options.statusHeadingId || 'autosave-status-heading', options.statusHeadingElement);
     this.restoreModalId = options.restoreModalId || 'modal-restore-draft';
     this.restoreApplyId = options.restoreApplyButtonId || 'button-restore-apply';
     this.restoreDismissId = options.restoreDismissButtonId || 'button-restore-dismiss';
@@ -10,6 +12,11 @@ class AutosaveService {
     this.apiBaseUrl = this.normalizeBaseUrl(options.apiBaseUrl ?? this.detectDefaultBaseUrl());
     this.throttleMs = options.throttleMs ?? 15000;
     this.localStorageKey = options.localStorageKey || 'elmo.autosave.draftId';
+
+    this.translationFn = this.resolveTranslator(options.translate);
+    this.activeTranslations = options.translations || null;
+    this.currentState = 'idle';
+    this.currentDetail = '';
 
     this.pendingTimeout = null;
     this.isSaving = false;
@@ -22,9 +29,14 @@ class AutosaveService {
     this.handleInput = this.handleInput.bind(this);
     this.applyPendingRestore = this.applyPendingRestore.bind(this);
     this.handleRestoreDismiss = this.handleRestoreDismiss.bind(this);
+    this.boundHandleTranslationsLoaded = this.handleTranslationsLoaded.bind(this);
 
     this.restoreModal = null;
     this.restoreDescriptionElement = null;
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('translationsLoaded', this.boundHandleTranslationsLoaded, { passive: true });
+    }
   }
 
   resolveElement(id, explicit) {
@@ -112,6 +124,7 @@ class AutosaveService {
     this.form.addEventListener('change', this.handleInput, true);
 
     this.updateStatus('idle');
+    this.refreshTranslations();
     this.checkForExistingDraft();
   }
 
@@ -308,10 +321,7 @@ class AutosaveService {
   }
 
   promptRestore(record) {
-    const timestamp = record.updatedAt ? new Date(record.updatedAt) : null;
-    const message = timestamp
-      ? `We found an autosaved draft from ${this.formatLong(timestamp)}. Would you like to restore it?`
-      : 'We found an autosaved draft from a previous session. Would you like to restore it?';
+    const message = this.getRestoreMessage(record);
 
     if (this.restoreDescriptionElement) {
       this.restoreDescriptionElement.textContent = message;
@@ -365,6 +375,7 @@ class AutosaveService {
 
     const elements = Array.from(this.form.elements);
     const handledNames = new Set(Object.keys(values));
+    const arrayPositions = new Map();
 
     elements.forEach((element) => {
       if (!element.name || element.disabled) {
@@ -373,6 +384,7 @@ class AutosaveService {
 
       const type = (element.type || element.tagName).toLowerCase();
       const value = values[element.name];
+      const isArrayField = Array.isArray(value) && this.isArrayFieldName(element.name);
 
       if (type === 'checkbox') {
         const expected = Array.isArray(value) ? value : [];
@@ -384,6 +396,11 @@ class AutosaveService {
         Array.from(element.options).forEach((option) => {
           option.selected = options.includes(option.value);
         });
+      } else if (isArrayField) {
+        const index = arrayPositions.get(element.name) ?? 0;
+        const nextValue = value[index];
+        arrayPositions.set(element.name, index + 1);
+        element.value = nextValue ?? '';
       } else if (value !== undefined) {
         element.value = value;
       }
@@ -452,6 +469,13 @@ class AutosaveService {
         return;
       }
 
+      if (this.isArrayFieldName(element.name)) {
+        const arr = Array.isArray(values[element.name]) ? values[element.name] : [];
+        arr.push(element.value);
+        values[element.name] = arr;
+        return;
+      }
+
       values[element.name] = element.value;
     });
 
@@ -463,6 +487,10 @@ class AutosaveService {
       return;
     }
 
+    const effectiveState = state || 'idle';
+    this.currentState = effectiveState;
+    this.currentDetail = detail ?? '';
+
     const stateClasses = [
       'autosave-status--idle',
       'autosave-status--pending',
@@ -473,40 +501,52 @@ class AutosaveService {
     ];
 
     this.statusElement.classList.remove(...stateClasses);
+    this.statusElement.dataset.state = effectiveState;
+    this.statusElement.setAttribute('aria-busy', effectiveState === 'saving' ? 'true' : 'false');
 
     let message = '';
     const timestamp = this.lastSavedAt instanceof Date && !Number.isNaN(this.lastSavedAt.valueOf())
       ? this.formatTime(this.lastSavedAt)
       : null;
 
-    switch (state) {
+    switch (effectiveState) {
       case 'pending':
-        message = 'Autosave scheduled.';
+        message = this.translate('autosave.status.pending', 'Autosave scheduled.');
         this.statusElement.classList.add('autosave-status--pending');
         break;
       case 'saving':
-        message = 'Autosaving…';
+        message = this.translate('autosave.status.saving', 'Autosaving…');
         this.statusElement.classList.add('autosave-status--saving');
         break;
       case 'synced':
-        message = timestamp ? `Draft saved at ${timestamp}.` : 'Draft saved.';
+        message = timestamp
+          ? this.translate('autosave.status.syncedWithTime', 'Draft saved at {time}.', { time: timestamp })
+          : this.translate('autosave.status.synced', 'Draft saved.');
         this.statusElement.classList.add('autosave-status--synced');
         break;
       case 'manual':
-        message = timestamp ? `Saved manually at ${timestamp}.` : 'Saved manually.';
+        message = timestamp
+          ? this.translate('autosave.status.manualWithTime', 'Saved manually at {time}.', { time: timestamp })
+          : this.translate('autosave.status.manual', 'Saved manually.');
         this.statusElement.classList.add('autosave-status--synced');
         break;
       case 'error':
-        message = `Autosave failed: ${detail}`;
+        if (detail) {
+          message = this.translate('autosave.status.error', 'Autosave failed: {detail}', {
+            detail
+          });
+        } else {
+          message = this.translate('autosave.status.errorNoDetail', 'Autosave failed.');
+        }
         this.statusElement.classList.add('autosave-status--error');
         break;
       case 'cleared':
-        message = 'Autosave draft cleared.';
+        message = this.translate('autosave.status.cleared', 'Autosave draft cleared.');
         this.statusElement.classList.add('autosave-status--cleared');
         break;
       case 'idle':
       default:
-        message = 'Autosave ready.';
+        message = this.translate('autosave.status.idle', 'Autosave ready.');
         this.statusElement.classList.add('autosave-status--idle');
         break;
     }
@@ -516,6 +556,126 @@ class AutosaveService {
     } else {
       this.statusElement.textContent = message;
     }
+  }
+
+  refreshTranslations() {
+    if (this.statusLabelElement) {
+      const fallbackLabel = this.statusLabelElement.getAttribute('data-default-text') || 'Autosave status:';
+      const translatedLabel = this.translate('autosave.status.label', fallbackLabel);
+      this.statusLabelElement.textContent = translatedLabel;
+      this.statusLabelElement.setAttribute('data-default-text', fallbackLabel);
+    }
+
+    if (this.statusHeadingElement) {
+      const fallbackHeading = this.statusHeadingElement.getAttribute('data-default-text') || 'Autosave';
+      const translatedHeading = this.translate('autosave.status.heading', fallbackHeading);
+      this.statusHeadingElement.textContent = translatedHeading;
+      this.statusHeadingElement.setAttribute('data-default-text', fallbackHeading);
+    }
+
+    this.updateStatus(this.currentState, this.currentDetail);
+
+    if (this.pendingRestoreRecord && this.restoreDescriptionElement) {
+      this.restoreDescriptionElement.textContent = this.getRestoreMessage(this.pendingRestoreRecord);
+    }
+  }
+
+  handleTranslationsLoaded(event) {
+    if (event?.detail?.translations) {
+      this.activeTranslations = event.detail.translations;
+    }
+    this.refreshTranslations();
+  }
+
+  resolveTranslator(candidate) {
+    if (typeof candidate === 'function') {
+      return candidate;
+    }
+
+    if (typeof window !== 'undefined') {
+      const elmoTranslator = window.elmo && typeof window.elmo.translate === 'function'
+        ? window.elmo.translate.bind(window.elmo)
+        : null;
+      if (elmoTranslator) {
+        return elmoTranslator;
+      }
+
+      if (typeof window.getNestedValue === 'function' && typeof window.translations !== 'undefined') {
+        return (key) => window.getNestedValue(window.translations, key);
+      }
+    }
+
+    return null;
+  }
+
+  lookupTranslation(key) {
+    if (!this.activeTranslations || !key) {
+      return undefined;
+    }
+
+    return key.split('.').reduce((accumulator, segment) => {
+      if (accumulator && Object.prototype.hasOwnProperty.call(accumulator, segment)) {
+        return accumulator[segment];
+      }
+      return undefined;
+    }, this.activeTranslations);
+  }
+
+  translate(key, fallback, variables = {}) {
+    let template;
+
+    if (this.translationFn) {
+      template = this.translationFn(key, variables, this.activeTranslations);
+    }
+
+    if (template === undefined || template === null || template === '') {
+      template = this.lookupTranslation(key);
+    }
+
+    if (template === undefined || template === null || template === '') {
+      template = fallback ?? '';
+    }
+
+    if (typeof template !== 'string') {
+      return template;
+    }
+
+    return this.interpolate(template, variables);
+  }
+
+  interpolate(template, variables = {}) {
+    if (typeof template !== 'string') {
+      return template;
+    }
+
+    return Object.keys(variables).reduce((result, placeholder) => {
+      const value = variables[placeholder];
+      const replacement = value === undefined || value === null ? '' : String(value);
+      const pattern = new RegExp(`\\{${placeholder}\\}`, 'g');
+      return result.replace(pattern, replacement);
+    }, template);
+  }
+
+  getRestoreMessage(record) {
+    const timestamp = record?.updatedAt ? new Date(record.updatedAt) : null;
+
+    if (timestamp) {
+      const formatted = this.formatLong(timestamp);
+      return this.translate(
+        'autosave.restore.foundWithTimestamp',
+        `We found an autosaved draft from ${formatted}. Would you like to restore it?`,
+        { timestamp: formatted }
+      );
+    }
+
+    return this.translate(
+      'autosave.restore.foundWithoutTimestamp',
+      'We found an autosaved draft from a previous session. Would you like to restore it?'
+    );
+  }
+
+  isArrayFieldName(name) {
+    return typeof name === 'string' && /\[\]$/.test(name);
   }
 
   formatTime(date) {
