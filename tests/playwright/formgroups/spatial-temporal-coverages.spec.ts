@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { navigateToHome, SELECTORS } from '../utils';
 
 const apiKey = process.env.GOOGLE_MAPS_API_KEY ?? 'playwright-test-google-maps-key';
 
@@ -223,18 +224,26 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
       });
     });
 
-    await page.goto('');
-    await expect(page.locator('#group-stc')).toBeVisible();
+    await navigateToHome(page);
+    await expect(page.locator(SELECTORS.formGroups.spatialTemporalCoverages)).toBeVisible();
     await page.waitForFunction(() => document.querySelectorAll('#input-stc-timezone option').length > 0);
   });
 
   test('renders spatial and temporal coverage fields with accessible helpers', async ({ page }) => {
     const groupHeader = page.locator('b[data-translate="coverage.title"]');
     await expect(groupHeader).toBeVisible();
-    await expect(page.locator('#group-stc [data-help-section-id="help-tsc-geographicalcoverage"]')).toHaveCount(2);
-    await expect(page.locator('#group-stc [data-help-section-id="help-tsc-description"]')).toBeVisible();
-    await expect(page.locator('#group-stc [data-help-section-id="help-tsc-temporalcoverage"]')).toHaveCount(2);
-    await expect(page.locator('#group-stc [data-help-section-id="help-tsc-timezone"]')).toBeVisible();
+    await expect(
+      page.locator(`${SELECTORS.formGroups.spatialTemporalCoverages} [data-help-section-id="help-tsc-geographicalcoverage"]`)
+    ).toHaveCount(2);
+    await expect(
+      page.locator(`${SELECTORS.formGroups.spatialTemporalCoverages} [data-help-section-id="help-tsc-description"]`)
+    ).toBeVisible();
+    await expect(
+      page.locator(`${SELECTORS.formGroups.spatialTemporalCoverages} [data-help-section-id="help-tsc-temporalcoverage"]`)
+    ).toHaveCount(2);
+    await expect(
+      page.locator(`${SELECTORS.formGroups.spatialTemporalCoverages} [data-help-section-id="help-tsc-timezone"]`)
+    ).toBeVisible();
 
     const latMin = page.locator('#input-stc-latmin_1');
     const latMax = page.locator('#input-stc-latmax_1');
@@ -284,7 +293,7 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     const chosenValue = await timezoneSelect.inputValue();
 
     await page.locator('#button-stc-add').click();
-    const rows = page.locator('#group-stc [tsc-row]');
+    const rows = page.locator(`${SELECTORS.formGroups.spatialTemporalCoverages} [tsc-row]`);
     await expect(rows).toHaveCount(2);
 
     const secondRowTimezone = page.locator('[tsc-row-id="2"] select[name="tscTimezone[]"]');
