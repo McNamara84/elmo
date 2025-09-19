@@ -1,6 +1,11 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 
 const FEEDBACK_ENDPOINT = '**/send_feedback_mail.php';
+const DEFAULT_NETWORK_DELAY_MS = 150;
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function navigateToFeedbackModal(page: Page) {
   await page.goto('');
@@ -32,9 +37,15 @@ async function fillFeedbackForm(page: Page) {
 async function mockFeedbackEndpoint(
   page: Page,
   status: number,
-  handler?: (route: Route) => Promise<void>
+  handler?: (route: Route) => Promise<void>,
+  options?: { delayMs?: number }
 ) {
+  const delayMs = options?.delayMs ?? DEFAULT_NETWORK_DELAY_MS;
   await page.route(FEEDBACK_ENDPOINT, async (route) => {
+    if (delayMs > 0) {
+      await delay(delayMs);
+    }
+
     if (handler) {
       await handler(route);
       return;
@@ -83,7 +94,7 @@ test.describe('Feedback modal interactions', () => {
     expect(response.status()).toBe(200);
 
     await expect(feedbackForm).toBeHidden();
-    await expect(thankYouPanel).toBeVisible();
+    await expect(thankYouPanel).toHaveCSS('display', 'block');
 
     const successAlert = statusPanel.locator('.alert-success');
     await expect(successAlert).toBeVisible();
