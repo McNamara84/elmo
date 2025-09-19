@@ -12,6 +12,8 @@ permissions:
 jobs:
   playwright-tests:
     runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
     strategy:
       fail-fast: false
       matrix:
@@ -54,7 +56,7 @@ jobs:
       run: |
         composer install --prefer-dist --no-progress --no-suggest
         composer dump-autoload -o
-        npm install
+        npm ci
 
     - name: Wait for MySQL to be ready
       run: |
@@ -145,7 +147,18 @@ jobs:
         curl -v http://localhost:8000/test.html || echo "Static file test failed"
         rm test.html
 
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          playwright-${{ runner.os }}-
+
     - name: Install Playwright Browsers
+      env:
+        PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
       run: npx playwright install --with-deps ${{ matrix.browser }}
 
     - name: Verify server is running
