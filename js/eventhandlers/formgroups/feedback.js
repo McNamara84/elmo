@@ -52,19 +52,24 @@ $(document).ready(function () {
           '</div>'
         );
         $("#button-feedback-send").prop("disabled", false)
-          .html(getNestedValue(translations, 'modals.feedback.sendButton'));
+          .html(getNestedValue(translations, 'modals.feedback.sendButton'))
+          .trigger("focus");
       },
       complete: function () {
       }
     });
   });
-  // Optional: Reset form when the modal is opened
-  $('#modal-feedback').on('show.bs.modal', function () {
-    $("#form-feedback")[0].reset();
-    $("#form-feedback").show();
-    $("#panel-feedback-message").hide();
-    $("#panel-feedback-status").html("");
-    $("#button-feedback-send").prop("disabled", false)
-      .html(getNestedValue(translations, 'modals.feedback.sendButton'));
-  });
+
+  $('#modal-feedback')
+    .on('show.bs.modal', function () {
+      $("#form-feedback")[0].reset();
+      $("#form-feedback").show();
+      $("#panel-feedback-message").hide();
+      $("#panel-feedback-status").html("");
+      $("#button-feedback-send").prop("disabled", false)
+        .html(getNestedValue(translations, 'modals.feedback.sendButton'));
+    })
+    .on('hidden.bs.modal', function () {
+      $("#button-feedback-openmodalfooter").trigger("focus");
+    });
 });
