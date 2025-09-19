@@ -12,7 +12,7 @@ async function navigateToFeedbackModal(page: Page) {
 
   const feedbackButton = page.locator('#button-feedback-openmodalfooter');
   if (!(await feedbackButton.isVisible())) {
-    test.skip('Feedback feature is disabled via feature flag.');
+    test.skip(true, 'Feedback feature is disabled via feature flag.');
   }
 
   await feedbackButton.click();
