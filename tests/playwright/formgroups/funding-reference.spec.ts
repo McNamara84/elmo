@@ -1,50 +1,8 @@
-import { test, expect, type Route } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-
-const REPO_ROOT = path.resolve(__dirname, '../../..');
-const STATIC_BASE_URL = 'http://localhost:8080/';
+import { APP_BASE_URL, registerStaticAssetRoutes, REPO_ROOT, SELECTORS } from '../utils';
 const TEST_ROUTE = 'funding-reference-harness';
-
-const CONTENT_TYPES: Record<string, string> = {
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.map': 'application/json; charset=utf-8',
-  '.mjs': 'application/javascript; charset=utf-8',
-  '.cjs': 'application/javascript; charset=utf-8',
-  '.svg': 'image/svg+xml; charset=utf-8'
-};
-
-async function fulfillWithLocalAsset(route: Route) {
-  const request = route.request();
-  const url = new URL(request.url());
-
-  if (!url.hostname.includes('localhost')) {
-    await route.fallback();
-    return;
-  }
-
-  const pathname = decodeURIComponent(url.pathname.replace(/^\/+/, ''));
-  const filePath = path.join(REPO_ROOT, pathname);
-
-  try {
-    const body = await fs.readFile(filePath);
-    const extension = path.extname(filePath).toLowerCase();
-    const contentType = CONTENT_TYPES[extension] ?? 'application/octet-stream';
-
-    await route.fulfill({
-      status: 200,
-      body,
-      headers: {
-        'content-type': contentType
-      }
-    });
-  } catch (error) {
-    console.warn(`Unable to serve asset for ${request.url()}:`, error);
-    await route.fulfill({ status: 404, body: 'Not Found' });
-  }
-}
 
 const FUNDING_REFERENCE_TEMPLATE = fs.readFile(path.join(REPO_ROOT, 'formgroups/fundingreference.html'), 'utf8');
 
@@ -61,7 +19,7 @@ async function buildHarnessPage(): Promise<string> {
   <head>
     <meta charset="utf-8" />
     <title>Funding Reference Test Harness</title>
-    <base href="${STATIC_BASE_URL}">
+    <base href="${APP_BASE_URL}">
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="node_modules/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css">
@@ -91,9 +49,7 @@ async function buildHarnessPage(): Promise<string> {
 
 test.describe('Funding Reference form group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route('**/node_modules/**', fulfillWithLocalAsset);
-    await page.route('**/js/**', fulfillWithLocalAsset);
-    await page.route('**/*.css', fulfillWithLocalAsset);
+    await registerStaticAssetRoutes(page);
 
     await page.route('**/json/funders.json', async route => {
       await route.fulfill({
@@ -111,7 +67,7 @@ test.describe('Funding Reference form group', () => {
       });
     });
 
-    await page.goto(`${STATIC_BASE_URL}${TEST_ROUTE}`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${APP_BASE_URL}${TEST_ROUTE}`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
 
     await page.waitForFunction(() => {
@@ -132,7 +88,7 @@ test.describe('Funding Reference form group', () => {
   test('renders accessible inputs, help affordances, and validation hooks', async ({ page }) => {
     await expect(page.locator('b[data-translate="funding.title"]')).toHaveText('Funding Reference');
 
-    const rows = page.locator('#group-fundingreference [funding-reference-row]');
+    const rows = page.locator(`${SELECTORS.formGroups.fundingReference} [funding-reference-row]`);
     await expect(rows).toHaveCount(1);
 
     const funderInput = rows.first().locator('input.inputFunder');
@@ -163,7 +119,7 @@ test.describe('Funding Reference form group', () => {
   });
 
   test('supports autocomplete, dynamic row management, and award URI validation', async ({ page }) => {
-    const rows = page.locator('#group-fundingreference [funding-reference-row]');
+    const rows = page.locator(`${SELECTORS.formGroups.fundingReference} [funding-reference-row]`);
     const firstRow = rows.first();
     const funderInput = firstRow.locator('.inputFunder');
 
