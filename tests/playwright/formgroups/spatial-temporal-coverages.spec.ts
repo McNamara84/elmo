@@ -266,7 +266,7 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await page.evaluate(() => {
       (window as any).__deletedRows = [];
       const originalDelete = (window as any).deleteDrawnOverlaysForRow;
-      (window as any).deleteDrawnOverlaysForRow = function patched(rowId) {
+      (window as any).deleteDrawnOverlaysForRow = function patched(rowId: string) {
         (window as any).__deletedRows.push(rowId);
         if (typeof originalDelete === 'function') {
           return originalDelete.call(this, rowId);
