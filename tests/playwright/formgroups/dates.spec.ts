@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { navigateToHome, openLanguageMenu, SELECTORS } from '../utils';
 
 const selectors = {
   createdInput: '#input-date-created',
@@ -9,14 +10,14 @@ const selectors = {
   cardHelpIcon: '[data-help-section-id="help-dates-fg"]',
   createdHelpIcon: '[data-help-section-id="help-date-created"]',
   embargoHelpIcon: '[data-help-section-id="help-date-embargo"]',
-  languageToggle: '#bd-lang',
+  languageToggle: SELECTORS.navigation.languageToggle,
   germanLanguageOption: '[data-bs-language-value="de"]',
   englishLanguageOption: '[data-bs-language-value="en"]',
 };
 
 test.describe('Dates form group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('');
+    await navigateToHome(page);
     await expect(page.locator(selectors.createdInput)).toBeVisible();
   });
 
@@ -92,7 +93,7 @@ test.describe('Dates form group', () => {
     await expect(createdLabel).toHaveText(/Date created/);
     await expect(embargoLabel).toHaveText(/Embargo until/);
 
-    await page.locator(selectors.languageToggle).click();
+    await openLanguageMenu(page);
     await page.locator(selectors.germanLanguageOption).click();
     await expect(createdLabel).toHaveText(/Erstellungsdatum/);
     await expect(embargoLabel).toHaveText(/Embargo bis \(nur nach Absprache\)/);
@@ -104,7 +105,7 @@ test.describe('Dates form group', () => {
     await expect(embargoFeedback).toHaveText('Das Embargodatum muss nach oder gleich dem Erstellungsdatum sein.');
     await expect(embargoInput).toHaveJSProperty('validationMessage', 'Das Embargodatum muss nach oder gleich dem Erstellungsdatum sein.');
 
-    await page.locator(selectors.languageToggle).click();
+    await openLanguageMenu(page);
     await page.locator(selectors.englishLanguageOption).click();
     await expect(createdLabel).toHaveText(/Date created/);
   });
