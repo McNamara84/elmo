@@ -24,11 +24,21 @@ test.describe('Autosave experience', () => {
         <label for="title-input">Title*</label>
         <input id="title-input" name="title" aria-describedby="title-help" />
         <p id="title-help">Provide a concise, descriptive dataset title.</p>
+      <fieldset>
+          <legend>Authors</legend>
+          <label for="author-given-1">Given name 1</label>
+          <input id="author-given-1" name="givennames[]" />
+          <label for="author-given-2">Given name 2</label>
+          <input id="author-given-2" name="givennames[]" />
+        </fieldset>
       </form>
-      <div class="autosave-status" id="autosave-status" role="status" aria-live="polite" aria-atomic="true">
-        <span class="visually-hidden">Autosave status:</span>
+      <div class="autosave-status" id="autosave-status" role="status" aria-live="polite" aria-atomic="true" aria-labelledby="autosave-status-label autosave-status-text">
+        <span class="visually-hidden" id="autosave-status-label">Autosave status:</span>
         <span class="autosave-status__indicator" aria-hidden="true"></span>
-        <span id="autosave-status-text">Autosave ready.</span>
+        <div class="autosave-status__text">
+          <span class="autosave-status__heading" id="autosave-status-heading">Autosave</span>
+          <span id="autosave-status-text">Autosave ready.</span>
+        </div>
       </div>
     </main>
     <script type="module">
@@ -111,20 +121,33 @@ test.describe('Autosave experience', () => {
 
     const titleInput = page.getByRole('textbox', { name: 'Title*' });
     await titleInput.fill('Playwright autosave draft');
+    await page.locator('#author-given-1').fill('Ada');
+    await page.locator('#author-given-2').fill('Grace');
 
     await expect(statusRegion).toContainText('Autosave scheduled.');
     await expect(statusRegion).toContainText('Draft saved');
 
-    expect(postPayloads).toHaveLength(1);
-    expect(postPayloads[0]).toHaveProperty('payload');
+    await expect.poll(() => postPayloads.length).toBe(1);
+    await expect
+      .poll(
+        () => postPayloads.at(-1)?.payload?.values?.['givennames[]'] as string[] | undefined,
+        { timeout: 2000 }
+      )
+      .toEqual(['Ada', 'Grace']);
 
     const storedDraftId = await page.evaluate(() => window.localStorage.getItem('elmo.autosave.draftId'));
     expect(storedDraftId).toBe('draft-playwright');
 
     await titleInput.fill('Playwright autosave draft updated');
+    await page.locator('#author-given-2').fill('Grace Hopper');
     await expect(statusRegion).toContainText('Draft saved');
 
-    expect(putPayloads).toHaveLength(1);
-    expect(putPayloads[0]).toHaveProperty('payload');
+    await expect.poll(() => putPayloads.length).toBe(1);
+    await expect
+      .poll(
+        () => putPayloads.at(-1)?.payload?.values?.['givennames[]'] as string[] | undefined,
+        { timeout: 2000 }
+      )
+      .toEqual(['Ada', 'Grace Hopper']);
   });
 });
