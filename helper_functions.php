@@ -105,6 +105,6 @@ function loadEnvVariables($path = null) {
 }
 
 // Initialize logging    
-function elmo_log($prefix, $msg) {
+function elmo_log($prefix = "", $msg) {
     error_log("[ELMO $prefix] $msg");
 }
