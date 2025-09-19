@@ -176,11 +176,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>            
             <div class="modal-body">
-                <div id="panel-feedback-status"></div>
+                <div id="panel-feedback-status" aria-live="polite" aria-atomic="true" hidden></div>
                 <div id="panel-feedback-message"
                     class="feedback-message-thanks"
-                    data-translate="modals.feedback.thankYou"></div>
-
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    tabindex="-1"
+                    hidden
+                    data-translate="modals.feedback.thankYou">Thank you for your feedback.</div>
                 <form id="form-feedback" method="POST" action="send_feedback_mail.php">
                     <div class="mb-3">
                         <label for="input-feedback-question1" class="form-label"
@@ -224,8 +228,8 @@
                         <textarea class="form-control" id="input-feedback-question7" name="feedbackQuestion7" rows="3"
                             required></textarea>
                     </div>
-                    <button class="btn btn-primary" id="button-feedback-send" class="feedback-button-send"
-                        data-translate="modals.feedback.sendButton"></button>
+                    <button class="btn btn-primary feedback-button-send" type="submit" id="button-feedback-send"
+                        data-translate="modals.feedback.sendButton">Send feedback</button>
                 </form>
             </div>
         </div>

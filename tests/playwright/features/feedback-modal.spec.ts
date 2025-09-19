@@ -99,11 +99,17 @@ test.describe('Feedback modal interactions', () => {
     expect(response.status()).toBe(200);
 
     await expect(feedbackForm).toBeHidden();
+    await expect(feedbackForm).toHaveAttribute('aria-hidden', 'true');
     await expect(thankYouPanel).toHaveCSS('display', 'block');
+    await expect(thankYouPanel).toHaveJSProperty('hidden', false);
+    await expect(thankYouPanel).toBeFocused();
 
     const successAlert = statusPanel.locator('.alert-success');
     await expect(successAlert).toBeVisible();
     await expect(successAlert).toContainText(successLabel);
+    await expect(statusPanel).toHaveAttribute('role', 'status');
+    await expect(statusPanel).toHaveAttribute('aria-live', 'polite');
+    await expect(statusPanel).toHaveAttribute('aria-atomic', 'true');
 
     await test.step('Validate accessibility of feedback modal success state', async () => {
       await runAxeAudit(page);
@@ -119,8 +125,12 @@ test.describe('Feedback modal interactions', () => {
     await feedbackButton.click();
     await expect(feedbackModal).toBeVisible();
     await expect(feedbackForm).toBeVisible();
+    await expect(feedbackForm).toHaveAttribute('aria-hidden', 'false');
     await expect(thankYouPanel).toBeHidden();
+    await expect(thankYouPanel).toHaveJSProperty('hidden', true);
     await expect(statusPanel).toBeEmpty();
+    await expect(statusPanel).toHaveAttribute('hidden', '');
+    await expect(statusPanel).toHaveAttribute('aria-live', 'polite');
 
     const sendLabel = await page.evaluate(() => {
       return (window as any).translations?.modals?.feedback?.sendButton ?? 'Send Feedback';
@@ -140,6 +150,7 @@ test.describe('Feedback modal interactions', () => {
     const { feedbackButton, feedbackModal } = await navigateToFeedbackModal(page);
     const feedbackForm = feedbackModal.locator('#form-feedback');
     const statusPanel = feedbackModal.locator('#panel-feedback-status');
+    const thankYouPanel = feedbackModal.locator('#panel-feedback-message');
     const sendButton = feedbackModal.locator('#button-feedback-send');
     const closeButton = feedbackModal.locator('button[aria-label="Close"]');
 
@@ -177,10 +188,15 @@ test.describe('Feedback modal interactions', () => {
     const errorAlert = statusPanel.locator('.alert-danger');
     await expect(errorAlert).toBeVisible();
     await expect(errorAlert).toContainText(errorLabel);
+    await expect(statusPanel).toHaveAttribute('role', 'alert');
+    await expect(statusPanel).toHaveAttribute('aria-live', 'assertive');
+    await expect(statusPanel).toHaveAttribute('aria-atomic', 'true');
 
     await expect(sendButton).toBeEnabled();
     await expect(sendButton).toHaveText(sendLabel);
     await expect(sendButton).toBeFocused();
+    await expect(feedbackForm).toHaveAttribute('aria-hidden', 'false');
+    await expect(thankYouPanel).toHaveJSProperty('hidden', true);
 
     await test.step('Validate accessibility of feedback modal error state', async () => {
       await runAxeAudit(page);
@@ -194,6 +210,7 @@ test.describe('Feedback modal interactions', () => {
     await expect(feedbackModal).toBeVisible();
     await expect(feedbackForm).toBeVisible();
     await expect(statusPanel).toBeEmpty();
+    await expect(statusPanel).toHaveAttribute('hidden', '');
 
     const textareas = page.locator('textarea[name^="feedbackQuestion"]');
     const count = await textareas.count();

@@ -169,11 +169,15 @@ label.mandatory-field::after {
 }
 
 .feedback-message-thanks {
-    display: none;
     color: green;
     font-size: 1.2em;
     text-align: center;
     margin-bottom: 20px;
+}
+
+#panel-feedback-status[hidden],
+.feedback-message-thanks[hidden] {
+    display: none !important;
 }
 
 .feedback-button-send {
