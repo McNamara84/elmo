@@ -7,18 +7,56 @@
 import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
 
 $(document).ready(function () {
-  // Clone original line
-  const originalAuthorInstitutionRow = $("#group-authorinstitution").children().first().clone();
 
-  // Click handler for adding
+  let authorInstitutionIndex = 1; // Start index for new rows
+
   $("#button-authorinstitution-add").click(function () {
     const authorInstitutionGroup = $("#group-authorinstitution");
-    const newRow = originalAuthorInstitutionRow.clone();
+    const firstAuthorInstitutionLine = authorInstitutionGroup.children().first();
+    const newAuthorInstitutionRow = firstAuthorInstitutionLine.clone();
 
+    // Reset input values and remove validation classes
+    newAuthorInstitutionRow.find("input").val("").removeClass("is-invalid is-valid");
+    newAuthorInstitutionRow.find(".invalid-feedback, .valid-feedback").css("display", "");
+
+    // Remove 'required' attributes so the new row doesn't force validation immediately
+    newAuthorInstitutionRow.find("input, select").removeAttr("required");
+
+    // Remove Tagify markup
+    newAuthorInstitutionRow.find(".tagify").remove();
+
+    // Update IDs and labels to ensure uniqueness
+    const fieldsToUpdate = [
+      "input-authorinstitution-name",
+      "input-authorinstitution-affiliation",
+      "input-author-institutionrorid"
+    ];
+
+    fieldsToUpdate.forEach(fieldId => {
+      const newId = `${fieldId}-${authorInstitutionIndex}`;
+
+      // Adjust input ID
+      newAuthorInstitutionRow.find(`#${fieldId}`).attr("id", newId);
+
+      // Adjust label 'for' attribute
+      newAuthorInstitutionRow.find(`label[for='${fieldId}']`).attr("for", newId);
+
+    });
+
+    authorInstitutionIndex++; // Increment index for next addition
+
+    // Replace help icons and format properly
+    replaceHelpButtonInClonedRows(newAuthorInstitutionRow);
+
+    // Replace the add button in the new row with a remove button
+    newAuthorInstitutionRow.find("#button-authorinstitution-add").replaceWith(createRemoveButton());
+
+    // Append the cloned row
+    authorInstitutionGroup.append(newAuthorInstitutionRow);
 
     /**
-    * Initialize sortable drag-and-drop behavior for author-Institution rows.
-    */
+     * Initialize sortable drag-and-drop behavior for author-Institution rows.
+     */
     $("#group-authorinstitution").sortable({
       items: "[data-authorinstitution-row]",
       handle: ".drag-handle",
@@ -27,46 +65,13 @@ $(document).ready(function () {
       containment: "parent"
     });
 
-    // Clear fields & reset validation
-    newRow.find("input").val("").removeClass("is-invalid is-valid");
-    newRow.find(".invalid-feedback, .valid-feedback").css("display", "");
-
-    // Generate unique IDs (using timestamps)
-    const uniqueSuffix = new Date().getTime();
-
-    const fieldsToUpdate = [
-      "input-authorinstitution-name",
-      "input-authorinstitution-affiliation",
-      "input-author-institutionrorid"
-    ];
-
-    fieldsToUpdate.forEach(fieldId => {
-      newRow.find(`#${fieldId}`).attr("id", `${fieldId}-${uniqueSuffix}`);
-    });
-
-    // Link labels to new IDs
-    newRow.find("label[for='input-authorinstitution-name']")
-      .attr("for", `input-authorinstitution-name-${uniqueSuffix}`);
-
-    newRow.find("label[for='input-authorinstitution-affiliation']")
-      .attr("for", `input-authorinstitution-affiliation-${uniqueSuffix}`);
-
-    // Remove Tagify
-    newRow.find(".tagify").remove();
-
-    // Add-Button → Remove-Button
-    newRow.find("#button-authorinstitution-add").replaceWith(createRemoveButton());
-
-    replaceHelpButtonInClonedRows(newRow);
-
-    // Add new line
-    authorInstitutionGroup.append(newRow);
-
-    // Initialize autocomplete
+    /**
+     * Initialize autocomplete
+     */
     if (window.affiliationsData && Array.isArray(window.affiliationsData)) {
       autocompleteAffiliations(
-        `input-authorinstitution-affiliation-${uniqueSuffix}`,
-        `input-author-institutionrorid-${uniqueSuffix}`,
+        `input-authorinstitution-affiliation-${authorInstitutionIndex - 1}`,
+        `input-author-institutionrorid-${authorInstitutionIndex - 1}`,
         window.affiliationsData
       );
     }
@@ -74,7 +79,7 @@ $(document).ready(function () {
     /**
      * Attach click handler to the remove button of this newly added row.
      */
-    newRow.on("click", ".removeButton", function () {
+    newAuthorInstitutionRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
     });
   });
