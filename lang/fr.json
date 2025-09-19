@@ -46,6 +46,26 @@
         "errorHeading": "Erreur",
         "successHeading": "Succès!"
     },
+    "autosave": {
+        "status": {
+            "label": "Statut de la sauvegarde automatique :",
+            "heading": "Sauvegarde automatique",
+            "idle": "Sauvegarde automatique prête.",
+            "pending": "Sauvegarde automatique planifiée.",
+            "saving": "Sauvegarde automatique…",
+            "synced": "Brouillon enregistré.",
+            "syncedWithTime": "Brouillon enregistré à {time}.",
+            "manual": "Enregistré manuellement.",
+            "manualWithTime": "Enregistré manuellement à {time}.",
+            "error": "Échec de la sauvegarde automatique : {detail}",
+            "errorNoDetail": "Échec de la sauvegarde automatique.",
+            "cleared": "Brouillon de sauvegarde automatique effacé."
+        },
+        "restore": {
+            "foundWithTimestamp": "Nous avons trouvé un brouillon sauvegardé automatiquement du {timestamp}. Voulez-vous le restaurer ?",
+            "foundWithoutTimestamp": "Nous avons trouvé un brouillon sauvegardé automatiquement d’une session précédente. Voulez-vous le restaurer ?"
+        }
+    },
     "resourceInfo": {
         "title": "Informations sur la ressource",
         "doi": "DOI",

@@ -46,6 +46,26 @@
         "errorHeading": "Fehler",
         "successHeading": "Erfolg!"
     },
+    "autosave": {
+        "status": {
+            "label": "Status des automatischen Speicherns:",
+            "heading": "Automatisches Speichern",
+            "idle": "Automatisches Speichern bereit.",
+            "pending": "Automatisches Speichern geplant.",
+            "saving": "Automatisches Speichern…",
+            "synced": "Entwurf gespeichert.",
+            "syncedWithTime": "Entwurf gespeichert um {time}.",
+            "manual": "Manuell gespeichert.",
+            "manualWithTime": "Manuell gespeichert um {time}.",
+            "error": "Automatisches Speichern fehlgeschlagen: {detail}",
+            "errorNoDetail": "Automatisches Speichern fehlgeschlagen.",
+            "cleared": "Entwurf des automatischen Speicherns gelöscht."
+        },
+        "restore": {
+            "foundWithTimestamp": "Wir haben einen automatisch gespeicherten Entwurf vom {timestamp} gefunden. Möchten Sie ihn wiederherstellen?",
+            "foundWithoutTimestamp": "Wir haben einen automatisch gespeicherten Entwurf aus einer früheren Sitzung gefunden. Möchten Sie ihn wiederherstellen?"
+        }
+    },
     "resourceInfo": {
         "title": "Ressourceninformationen",
         "doi": "DOI",

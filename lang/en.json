@@ -46,6 +46,26 @@
         "errorHeading": "Error",
         "successHeading": "Success!"
     },
+    "autosave": {
+        "status": {
+            "label": "Autosave status:",
+            "heading": "Autosave",
+            "idle": "Autosave ready.",
+            "pending": "Autosave scheduled.",
+            "saving": "Autosaving…",
+            "synced": "Draft saved.",
+            "syncedWithTime": "Draft saved at {time}.",
+            "manual": "Saved manually.",
+            "manualWithTime": "Saved manually at {time}.",
+            "error": "Autosave failed: {detail}",
+            "errorNoDetail": "Autosave failed.",
+            "cleared": "Autosave draft cleared."
+        },
+        "restore": {
+            "foundWithTimestamp": "We found an autosaved draft from {timestamp}. Would you like to restore it?",
+            "foundWithoutTimestamp": "We found an autosaved draft from a previous session. Would you like to restore it?"
+        }
+    },
     "resourceInfo": {
         "title": "Resource Information",
         "doi": "DOI",
