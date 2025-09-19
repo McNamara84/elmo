@@ -1,50 +1,7 @@
-import { test, expect, type Route } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { promises as fs, readFileSync } from 'node:fs';
-
-const REPO_ROOT = path.resolve(__dirname, '../../..');
-const STATIC_BASE_URL = 'http://localhost:8080/';
-
-const CONTENT_TYPES: Record<string, string> = {
-  '.js': 'application/javascript; charset=utf-8',
-  '.mjs': 'application/javascript; charset=utf-8',
-  '.cjs': 'application/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.map': 'application/json; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml; charset=utf-8',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2'
-};
-
-async function fulfillWithLocalAsset(route: Route) {
-  const requestUrl = new URL(route.request().url());
-
-  if (!requestUrl.hostname.includes('localhost')) {
-    await route.fallback();
-    return;
-  }
-
-  const pathname = decodeURIComponent(requestUrl.pathname.replace(/^\/+/, ''));
-  const filePath = path.join(REPO_ROOT, pathname);
-
-  try {
-    const body = await fs.readFile(filePath);
-    const extension = path.extname(filePath).toLowerCase();
-    const contentType = CONTENT_TYPES[extension] ?? 'application/octet-stream';
-
-    await route.fulfill({
-      status: 200,
-      body,
-      headers: {
-        'content-type': contentType
-      }
-    });
-  } catch (error) {
-    console.warn(`Unable to serve asset for ${route.request().url()}:`, error);
-    await route.fulfill({ status: 404, body: 'Not Found' });
-  }
-}
+import { APP_BASE_URL, registerStaticAssetRoutes, REPO_ROOT, SELECTORS } from '../utils';
 
 const relationsFixture = {
   relations: [
@@ -87,7 +44,7 @@ const relatedWorkMarkup = String.raw`<!DOCTYPE html>
   <head>
     <meta charset="utf-8" />
     <title>Related Work Test Harness</title>
-    <base href="${STATIC_BASE_URL}">
+    <base href="${APP_BASE_URL}">
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="node_modules/bootstrap-icons/font/bootstrap-icons.css" />
   </head>
@@ -113,7 +70,7 @@ const relatedWorkMarkup = String.raw`<!DOCTYPE html>
 
 test.describe('Related work form group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route('**/node_modules/**', fulfillWithLocalAsset);
+    await registerStaticAssetRoutes(page);
     await page.route('**/js/select.js', async route => {
       const filePath = path.join(REPO_ROOT, 'js/select.js');
       let body = await fs.readFile(filePath, 'utf8');
@@ -124,9 +81,6 @@ test.describe('Related work form group', () => {
         body
       });
     });
-    await page.route('**/js/**', fulfillWithLocalAsset);
-    await page.route('**/*.css', fulfillWithLocalAsset);
-
     await page.route('**/api/v2/vocabs/relations', async route => {
       await route.fulfill({
         status: 200,
@@ -162,7 +116,7 @@ test.describe('Related work form group', () => {
       });
     });
 
-    await page.goto(`${STATIC_BASE_URL}related-work-harness`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${APP_BASE_URL}related-work-harness`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
 
     await page.waitForFunction(() => {
@@ -253,7 +207,7 @@ test.describe('Related work form group', () => {
   });
 
   test('supports adding and removing rows while preserving help metadata', async ({ page }) => {
-    const rows = page.locator('#group-relatedwork .row');
+    const rows = page.locator(`${SELECTORS.formGroups.relatedWork} .row`);
     await expect(rows).toHaveCount(1);
 
     const addButton = page.locator('#button-relatedwork-add');
