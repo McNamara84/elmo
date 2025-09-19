@@ -64,18 +64,18 @@ function loadTemplate(relativePath: string): string {
   return readFileSync(path.join(ROOT_DIR, relativePath), 'utf8');
 }
 
-const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resourceInformation.html');
-const RIGHTS_HTML = loadTemplate('formgroups/rights.html');
-const AUTHORS_HTML = loadTemplate('formgroups/authors.html');
-const ORIGINATING_LAB_HTML = loadTemplate('formgroups/originatingLaboratory.html');
-const DESCRIPTIONS_HTML = loadTemplate('formgroups/descriptions.html');
-const THESAURUS_HTML = loadTemplate('formgroups/thesaurusKeywords.html');
-const MSL_KEYWORDS_HTML = loadTemplate('formgroups/mslKeywords.html');
-const FREE_KEYWORDS_HTML = loadTemplate('formgroups/freeKeywords.html');
-const DATES_HTML = loadTemplate('formgroups/dates.html');
-const RELATED_WORK_HTML = loadTemplate('formgroups/relatedwork.html');
-const FUNDING_REFERENCE_HTML = loadTemplate('formgroups/fundingreference.html');
-const MODALS_HTML = loadTemplate('modals.html');
+const RESOURCE_INFORMATION_HTML = loadTemplate('../formgroups/resourceInformation.html');
+const RIGHTS_HTML = loadTemplate('../formgroups/rights.html');
+const AUTHORS_HTML = loadTemplate('../formgroups/authors.html');
+const ORIGINATING_LAB_HTML = loadTemplate('../formgroups/originatingLaboratory.html');
+const DESCRIPTIONS_HTML = loadTemplate('../formgroups/descriptions.html');
+const THESAURUS_HTML = loadTemplate('../formgroups/thesaurusKeywords.html');
+const MSL_KEYWORDS_HTML = loadTemplate('../formgroups/mslKeywords.html');
+const FREE_KEYWORDS_HTML = loadTemplate('../formgroups/freeKeywords.html');
+const DATES_HTML = loadTemplate('../formgroups/dates.html');
+const RELATED_WORK_HTML = loadTemplate('../formgroups/relatedwork.html');
+const FUNDING_REFERENCE_HTML = loadTemplate('../formgroups/fundingreference.html');
+const MODALS_HTML = loadTemplate('../modals.html');
 
 const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
