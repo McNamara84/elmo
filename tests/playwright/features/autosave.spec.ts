@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-const autosaveModuleSource = readFileSync(resolve(__dirname, '../../js/services/autosaveService.js'), 'utf-8');
+const autosaveModuleSource = readFileSync(resolve(__dirname, '../../../js/services/autosaveService.js'), 'utf-8');
 
 test.describe('Autosave experience', () => {
   test('persists form changes and updates accessible status', async ({ page }, testInfo) => {
