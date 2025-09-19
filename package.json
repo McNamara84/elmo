@@ -11,6 +11,7 @@
     "swagger-ui-dist": "^5.27.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@babel/preset-env": "^7.28.3",
     "@playwright/test": "^1.55.0",
     "@types/node": "^24.0.14",
