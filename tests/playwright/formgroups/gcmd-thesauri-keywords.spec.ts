@@ -1,14 +1,14 @@
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
+import { REPO_ROOT, SELECTORS } from '../utils';
 
 declare const translations: any;
 
 const SCIENCE_PATH = 'Science Keywords > EARTH SCIENCE > AGRICULTURE > AGRICULTURAL AQUATIC SCIENCES > AQUACULTURE';
 const PLATFORMS_PATH = 'Platforms > Air-based Platforms > BALLOONS';
 
-const ROOT_DIR = path.resolve(__dirname, '../../..');
-const THESAURI_TEMPLATE = readFileSync(path.join(ROOT_DIR, 'formgroups/thesaurusKeywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
+const THESAURI_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/thesaurusKeywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
 const TEST_ROUTE_PATH = '/gcmd-thesauri-test';
 const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -69,7 +69,7 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
 
     await page.route('**/json/thesauri/*', async route => {
       const url = new URL(route.request().url());
-      const filePath = path.join(ROOT_DIR, url.pathname);
+      const filePath = path.join(REPO_ROOT, url.pathname);
       const body = readFileSync(filePath, 'utf8');
       await route.fulfill({
         status: 200,
@@ -80,14 +80,14 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
 
     await page.goto(TEST_ROUTE_PATH);
 
-    await page.addStyleTag({ path: path.join(ROOT_DIR, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
-    await page.addStyleTag({ path: path.join(ROOT_DIR, 'node_modules/@yaireo/tagify/dist/tagify.css') });
-    await page.addStyleTag({ path: path.join(ROOT_DIR, 'node_modules/jstree/dist/themes/default/style.min.css') });
+    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
+    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.css') });
+    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/jstree/dist/themes/default/style.min.css') });
 
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/jquery/dist/jquery.min.js') });
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/jstree/dist/jstree.min.js') });
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/@yaireo/tagify/dist/tagify.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery/dist/jquery.min.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jstree/dist/jstree.min.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.js') });
 
     await page.evaluate(() => {
       (window as any).translations = {
@@ -114,7 +114,7 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
       };
     });
 
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'js/thesauri.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'js/thesauri.js') });
 
     await page.evaluate(() => {
       if (typeof (window as any).__setupLanguageHandlers === 'function') {
@@ -370,7 +370,7 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
       expect(value.dataPlaceholder).toBe('Open thesaurus to choose keywords or start typing...');
     }
 
-    await page.locator('#bd-lang').click();
+    await page.locator(SELECTORS.navigation.languageToggle).click();
     await page.locator('[data-bs-language-value="de"]').click();
 
     await expect.poll(async () => {
@@ -378,7 +378,7 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
       return placeholders.every((value) => value.placeholder === 'Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe...' && value.dataPlaceholder === 'Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe...');
     }).toBeTruthy();
 
-    await page.locator('#bd-lang').click();
+    await page.locator(SELECTORS.navigation.languageToggle).click();
     await page.locator('[data-bs-language-value="en"]').click();
 
     await expect.poll(async () => {
