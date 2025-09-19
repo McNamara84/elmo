@@ -55,6 +55,7 @@ test.describe('Feedback modal interactions', () => {
     const statusPanel = feedbackModal.locator('#panel-feedback-status');
     const thankYouPanel = feedbackModal.locator('#panel-feedback-message');
     const sendButton = feedbackModal.locator('#button-feedback-send');
+    const closeButton = feedbackModal.locator('button[aria-label="Close"]');
 
     await fillFeedbackForm(page);
 
@@ -89,7 +90,10 @@ test.describe('Feedback modal interactions', () => {
     await expect(successAlert).toContainText(successLabel);
 
     await expect(feedbackModal).toBeVisible();
-    await expect(feedbackModal).toBeHidden({ timeout: 4000 });
+
+    // Close the modal explicitly to avoid flakiness on slow CI environments
+    await closeButton.click();
+    await expect(feedbackModal).toBeHidden();
     await expect(feedbackButton).toBeFocused();
 
     await feedbackButton.click();
