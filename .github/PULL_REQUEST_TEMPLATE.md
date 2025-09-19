@@ -1,29 +1,29 @@
-[Beschreibe kurz die vorgenommenen Änderungen und zu welchen Issues diese gehören]
+[Briefly describe the changes and reference any related issues.]
 
 ## Changes
-[Welche Änderungen hast du hierfür vorgenommen?]
+[What changes have you made?]
 
 ## Notes for Reviewer
-[Beschreibung der notwendigen Testschritte]
+[Describe the steps needed to test this]
 
 ## Checklist
-- [ ] Mein Code folgt dem Style Guide.
-- [ ] Ich habe selbst eine Code Review durchgeführt.
-- [ ] Ich habe Kommentare zu schwer verständlichem Code hinzugefügt.
-- [ ] Ich habe PHP-Code nach PHPDoc-Standard dokumentiert bzw. die Code-Dokumentation angepasst.
-- [ ] Ich habe JavaScript-Code nach JSDoc-Standard dokumentiert bzw. die Code-Dokumentation angepasst.
-- [ ] Ich habe, wenn nötig, entsprechende Änderungen im ELMO Guide vorgenommen.
-- [ ] Ich habe, wenn nötig, entsprechende Änderungen in der ReadMe vorgenommen.
-- [ ] Ich habe, wenn nötig, entsprechende Änderungen in der API-Dokumentation vorgenommen.
-- [ ] Falls ich ein neues Feature implementiert oder einen Bug gefixt habe, wurde der Changelog erweitert
-- [ ] Meine Änderungen erzeugen keine neuen Warnungen in der Konsole des Testbrowsers
-- [ ] Ich habe Unit-Tests hinzugefügt, die meinen Code abdecken
-- [ ] Neue und bereits vorhandene Unit-Tests werden lokal bestanden
-- [ ] Neue und bereits vorhandende automatische Unit-Tests werden im Pull Request bestanden
-- [ ] Ich habe, wenn nötig die Playwright Tests aktualisiert und ggf. neue hinzugefügt
-- [ ] Neue und bereits vorhandene automatisierte Playwright Tests werden im Pull Request bestanden
-- [ ] Ich habe sicher gestellt, dass die Änderungen den Barrierefreiheitsrichtlinien entsprechen.
+- [ ] My code follows the style guide.
+- [ ] I have self-reviewed my code.
+- [ ] I added comments for hard-to-understand code.
+- [ ] If applicable, PHP code is documented using PHPDoc.
+- [ ] If applicable, JavaScript code is documented using JSDoc.
+- [ ] If needed, the ELMO Guide has been updated.
+- [ ] If needed, the README has been updated.
+- [ ] If needed, the API documentation has been updated.
+- [ ] If a new feature was added or a bug fixed, the changelog has been updated.
+- [ ] My changes do not create new warnings in the test browser console.
+- [ ] I have added unit tests that cover my code.
+- [ ] All new and existing unit tests pass locally.
+- [ ] All new and existing automated unit tests pass in the pull request.
+- [ ] If applicable, Playwright tests have been updated and new tests added.
+- [ ] All new and existing automated Playwright tests pass in the pull request.
+- [ ] I ensured the changes meet accessibility guidelines.
 
 
 ## Known Issues
-[Welche Probleme mit niedrigerer Priorität bestehen noch?]
+[What lower priority problems remain?]
