@@ -3,7 +3,7 @@ import { test, expect, type Page, type Route } from '@playwright/test';
 const FEEDBACK_ENDPOINT = '**/send_feedback_mail.php';
 
 async function navigateToFeedbackModal(page: Page) {
-  await page.goto('/index.php');
+  await page.goto('');
 
   const feedbackButton = page.locator('#button-feedback-openmodalfooter');
   if (!(await feedbackButton.isVisible())) {
