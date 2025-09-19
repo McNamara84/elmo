@@ -102,8 +102,9 @@ $(document).ready(function () {
     });
 
     // Initialize Bootstrap tooltips for new row
+    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
     newAuthorRow.find('[data-bs-toggle="tooltip"]').each(function () {
-      new bootstrap.Tooltip(this);
+      new bootstrap.Tooltip(this, { container: tooltipContainer });
     });
 
     // Setup toggle behavior for contact person fields

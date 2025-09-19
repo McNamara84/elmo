@@ -76,6 +76,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Assign the Tagify instance explicitly to the input for direct access
         input._tagify = freeKeywordstagify;
+
+        if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+            window.applyTagifyAccessibilityAttributes(freeKeywordstagify, input, {
+                placeholder: placeholderValue
+            });
+        }
     }
 
     /**
@@ -97,10 +103,16 @@ document.addEventListener('DOMContentLoaded', function () {
         // Update placeholder
         const placeholderValue = getPlaceholderTranslation();
         input._tagify.settings.placeholder = placeholderValue;
-    
+
         // Update whitelist
         input._tagify.settings.whitelist = currentWhitelist;
-    
+
+        if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+            window.applyTagifyAccessibilityAttributes(input._tagify, input, {
+                placeholder: placeholderValue
+            });
+        }
+
         // Remove all tags and add the new tags
         input._tagify.removeAllTags();
         input._tagify.addTags(currentTags);

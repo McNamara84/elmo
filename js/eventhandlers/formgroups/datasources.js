@@ -252,6 +252,11 @@ $(document).ready(function () {
                             editTags: false,
                         });
                         input._tagify = tagifyInstance;
+                        if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+                            window.applyTagifyAccessibilityAttributes(tagifyInstance, input, {
+                                placeholder: tagifyInstance.settings.placeholder
+                            });
+                        }
                         bindTagifyEvents(tagifyInstance);
                     }
                 });
@@ -503,6 +508,11 @@ $(document).ready(function () {
             const baseSettings = firstInput && firstInput._tagify ? { ...firstInput._tagify.settings } : {};
             const tagifyInstance = new Tagify(newInputElem, baseSettings);
             newInputElem._tagify = tagifyInstance;
+            if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+                window.applyTagifyAccessibilityAttributes(tagifyInstance, newInputElem, {
+                    placeholder: baseSettings.placeholder
+                });
+            }
             bindTagifyEvents(tagifyInstance);
         }
     });

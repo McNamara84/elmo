@@ -42,6 +42,12 @@ function refreshTagifyInstances() {
       }
     }
 
+    if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+      window.applyTagifyAccessibilityAttributes(inputElement.tagify, inputElement, {
+        placeholder: inputElement.tagify.settings.placeholder
+      });
+    }
+
     // Restore previously selected values
     inputElement.tagify.removeAllTags();
     inputElement.tagify.addTags(currentValues);
@@ -150,7 +156,12 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
 
   // Store the Tagify instance in the DOM element for later access
   inputElement[0].tagify = tagify;
+  if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+    window.applyTagifyAccessibilityAttributes(tagify, inputElement[0], {
+      placeholder: placeholderValue
+    });
   }
+}
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { autocompleteAffiliations, refreshTagifyInstances };

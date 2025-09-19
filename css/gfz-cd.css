@@ -112,15 +112,27 @@
 /* Drag & drop sort */
 .drag-handle {
     cursor: move;
-    color: #999;
+    color: #6c757d;
+    background-color: transparent;
+    border: 0;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .drag-handle .bi-grip-vertical {
     font-size: 24px;
 }
 
-.drag-handle:hover {
-    color: #666;
+.drag-handle:hover,
+.drag-handle:focus {
+    color: #495057;
+}
+
+.drag-handle:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
 }
 
 [data-creator-row].ui-sortable-helper {
@@ -160,7 +172,7 @@ label.mandatory-field::after {
 .input-greyed-out {
     background-color: #e9ecef;
     /* Light grey background for normal mode */
-    color: #6c757d;
+    color: #495057;
     /* Grey text color */
 }
 

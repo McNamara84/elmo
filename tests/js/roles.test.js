@@ -7,6 +7,7 @@ class MockTagify {
     this.settings = options;
     this.on = jest.fn();
     this.destroy = jest.fn();
+    this.DOM = { scope: el.parentElement };
   }
 }
 
@@ -16,10 +17,12 @@ describe('roles.js', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <div id="wrapper1">
+        <label for="input-contributor-personrole">Role</label>
         <input id="input-contributor-personrole" name="cbPersonRoles[]" />
         <div class="tagify__input"></div>
       </div>
       <div id="wrapper2">
+        <label for="input-contributor-organisationrole">Role</label>
         <input id="input-contributor-organisationrole" name="cbOrganisationRoles[]" />
         <div class="tagify__input"></div>
       </div>
@@ -28,6 +31,10 @@ describe('roles.js', () => {
     global.Tagify = MockTagify;
     global.fetch = jest.fn();
     global.translations = { general: { roleLabel: 'Role' } };
+
+    const accessibilityScript = fs.readFileSync(path.resolve(__dirname, '../../js/accessibility.js'), 'utf8');
+    window.eval(accessibilityScript);
+    jest.spyOn(window, 'applyTagifyAccessibilityAttributes');
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/roles.js'), 'utf8');
     window.eval(script);
@@ -47,6 +54,9 @@ describe('roles.js', () => {
     expect(input._tagify.settings.whitelist).toEqual(['Author', 'Editor']);
     expect(input._tagify.settings.placeholder).toBe('Role');
     expect(input._tagify.on).toHaveBeenCalledWith('invalid', expect.any(Function));
+    expect(window.applyTagifyAccessibilityAttributes).toHaveBeenCalledWith(expect.any(MockTagify), input, {
+      placeholder: 'Role'
+    });
   });
 
   test('setupRolesDropdown uses cached roles and destroys existing Tagify', () => {
@@ -108,6 +118,7 @@ describe('roles.js', () => {
     expect(placeholder1.getAttribute('data-placeholder')).toBe('Role');
     expect(placeholder2.getAttribute('data-placeholder')).toBe('Role');
     expect(placeholder3.getAttribute('data-placeholder')).toBe('Role');
+    expect(window.applyTagifyAccessibilityAttributes).toHaveBeenCalledTimes(3);
   });
 
   test('DOM initialization creates Tagify and reacts to translationsLoaded', () => {
@@ -126,5 +137,6 @@ describe('roles.js', () => {
 
     expect(personInput._tagify.settings.placeholder).toBe('Updated');
     expect(orgInput._tagify.settings.placeholder).toBe('Updated');
+    expect(window.applyTagifyAccessibilityAttributes).toHaveBeenCalled();
   });
 });
