@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { navigateToHome, SELECTORS } from '../utils';
 
 const mockOrcidRecord = {
   person: {
@@ -53,7 +54,7 @@ const mockOrcidRecord = {
 
 test.describe('Author(s) form group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('');
+    await navigateToHome(page);
   });
 
   test('populates author details and affiliations from a valid ORCID', async ({ page }) => {
@@ -71,7 +72,7 @@ test.describe('Author(s) form group', () => {
     await expect(page.getByRole('textbox', { name: 'Last Name*' })).toHaveValue('Carberry');
     await expect(page.getByRole('textbox', { name: 'First Name*' })).toHaveValue('Josiah');
 
-    const affiliationTags = page.locator('#group-author tag');
+    const affiliationTags = page.locator(`${SELECTORS.formGroups.authors} tag`);
     await expect(affiliationTags).toHaveCount(2);
     await expect(affiliationTags.nth(0)).toContainText('Brown University');
     await expect(affiliationTags.nth(1)).toContainText('Yale University');
@@ -107,7 +108,7 @@ test.describe('Author(s) form group', () => {
 
     await addAuthorButton.click();
 
-    const authorRows = page.locator('#group-author [data-creator-row]');
+    const authorRows = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`);
     await expect(authorRows).toHaveCount(2);
 
     const firstRow = authorRows.nth(0);
