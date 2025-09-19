@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
+import { APP_BASE_URL, REPO_ROOT } from '../utils';
 
 const SAMPLE_XML_CONTENT = `<?xml version="1.0" encoding="UTF-8"?>
 <resource xmlns="http://datacite.org/schema/kernel-4">
@@ -58,10 +59,8 @@ const SAMPLE_XML_CONTENT = `<?xml version="1.0" encoding="UTF-8"?>
   </relatedIdentifiers>
 </resource>`;
 
-const ROOT_DIR = path.resolve(__dirname, '../../..');
-
 function loadTemplate(relativePath: string): string {
-  return readFileSync(path.join(ROOT_DIR, relativePath), 'utf8');
+  return readFileSync(path.join(REPO_ROOT, relativePath), 'utf8');
 }
 
 const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resourceInformation.html');
@@ -81,7 +80,7 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <base href="http://localhost:8080/" />
+    <base href="${APP_BASE_URL}" />
     <title>XML Upload Flow Harness</title>
   </head>
   <body>
@@ -407,15 +406,15 @@ test.describe('XML Upload Mapping Flow', () => {
     await page.goto('about:blank');
     await page.setContent(TEST_PAGE_HTML);
 
-    await page.addStyleTag({ path: path.join(ROOT_DIR, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
-    await page.addStyleTag({ path: path.join(ROOT_DIR, 'node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css') });
-    await page.addStyleTag({ path: path.join(ROOT_DIR, 'node_modules/@yaireo/tagify/dist/tagify.css') });
+    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
+    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css') });
+    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.css') });
 
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/jquery/dist/jquery.min.js') });
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/jquery-ui/dist/jquery-ui.min.js') });
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/@yaireo/tagify/dist/tagify.js') });
-    await page.addScriptTag({ path: path.join(ROOT_DIR, 'node_modules/jstree/dist/jstree.min.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery/dist/jquery.min.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery-ui/dist/jquery-ui.min.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.js') });
+    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jstree/dist/jstree.min.js') });
 
     await page.evaluate(() => {
       const $ = (window as any).jQuery;
@@ -444,7 +443,7 @@ test.describe('XML Upload Mapping Flow', () => {
     ];
 
     for (const script of appScripts) {
-      await page.addScriptTag({ path: path.join(ROOT_DIR, script) });
+      await page.addScriptTag({ path: path.join(REPO_ROOT, script) });
     }
 
     await page.evaluate(() => {
