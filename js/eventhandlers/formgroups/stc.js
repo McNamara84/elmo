@@ -6,6 +6,31 @@
 
 import { createRemoveButton, replaceHelpButtonInClonedRows, updateOverlayLabels } from '../functions.js';
 
+const STC_FIELD_NAMES = new Set([
+  'tscLatitudeMin[]',
+  'tscLatitudeMax[]',
+  'tscLongitudeMin[]',
+  'tscLongitudeMax[]',
+  'tscDescription[]',
+  'tscDateStart[]',
+  'tscTimeStart[]',
+  'tscDateEnd[]',
+  'tscTimeEnd[]',
+  'tscTimezone[]'
+]);
+
+function escapeSelector(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  if (typeof window.CSS !== 'undefined' && typeof window.CSS.escape === 'function') {
+    return window.CSS.escape(value);
+  }
+
+  return value.replace(/([\0-\x1F\x7F"'\\#.:;,!?+*~=<>^$\[\](){}|\/\s-])/g, '\\$1');
+}
+
 $(document).ready(function () {
   /**
   * Global variable to keep track of unique tsc-row-ids.
@@ -13,28 +38,22 @@ $(document).ready(function () {
   */
   let tscRowIdCounter = 1;
 
-  /**
-   * Event handler for the "Add TSC" button click.
-   * Clones the last TSC row, resets input fields, updates IDs, and appends it to the TSC group.
-   * @event click#button-stc-add
-   */
-  $("#button-stc-add").click(function () {
+  function addTscRow() {
     const tscGroup = $("#group-stc");
     const lastTscLine = tscGroup.children().last();
 
-    // Store the selected timezone value before cloning
+    if (!lastTscLine.length) {
+      return null;
+    }
+
     const selectedTimezone = lastTscLine.find('select[name="tscTimezone[]"]').find(':selected').text();
 
-    // Increment the unique row counter
-    tscRowIdCounter++;
+    tscRowIdCounter += 1;
 
-    // Clone the last row
     const newTscLine = lastTscLine.clone();
 
-    // Set the new tsc-row-id
     newTscLine.attr("tsc-row-id", tscRowIdCounter);
 
-    // Update IDs of input fields to include the new unique tsc-row-id
     newTscLine.find("input, select, textarea").each(function () {
       const oldId = $(this).attr("id");
       if (oldId) {
@@ -43,25 +62,25 @@ $(document).ready(function () {
       }
     });
 
-    // Reset only non-timezone fields and remove the required attribute
     newTscLine.find("input:not(#input-stc-timezone), textarea")
-      .val("")  // Clear values
-      .removeClass("is-invalid is-valid")  // Remove validation classes
-      .removeAttr("required");  // Remove required attribute
+      .val("")
+      .removeClass("is-invalid is-valid")
+      .removeAttr("required");
 
-    // Remove help buttons  
+    newTscLine.find('select:not([name="tscTimezone[]"])').each(function () {
+      $(this).val('');
+      $(this).removeClass('is-invalid is-valid');
+      $(this).removeAttr('required');
+    });
+
     replaceHelpButtonInClonedRows(newTscLine);
 
-    // Replace the Add button with a Remove button
     newTscLine.find("#button-stc-add").replaceWith(createRemoveButton());
 
-    // Append the new TSC line
     tscGroup.append(newTscLine);
 
-    // Update the overlay labels
     updateOverlayLabels();
 
-    // Set the same timezone option in the new row
     const timezoneSelect = newTscLine.find('select[name="tscTimezone[]"]');
     timezoneSelect.find('option').each(function () {
       if ($(this).text() === selectedTimezone) {
@@ -70,30 +89,57 @@ $(document).ready(function () {
         $(this).prop('selected', false);
       }
     });
+
+    return newTscLine;
+  }
+
+  $("#button-stc-add").click(function () {
+    addTscRow();
   });
 
-  /**
-   * Event handler for the "Remove TSC" button click.
-   * Removes the TSC row and its associated map overlays.
-   */
   $(document).on("click", ".removeButton", function () {
     const row = $(this).closest("[tsc-row-id]");
     const rowId = row.attr("tsc-row-id");
 
-   // Remove the map overlays for this row 
     if (typeof window.deleteDrawnOverlaysForRow === 'function') {
       window.deleteDrawnOverlaysForRow(rowId);
     }
-    
-    // Remove the row
+
     row.remove();
 
-    // Update the overlay labels
     updateOverlayLabels();
 
-    // Update the map view
     if (typeof window.fitMapBounds === 'function') {
       window.fitMapBounds();
+    }
+  });
+
+  document.addEventListener('autosave:ensure-array-field', (event) => {
+    const { detail, target } = event || {};
+    const { name, requiredCount } = detail || {};
+
+    if (!name || !STC_FIELD_NAMES.has(name) || !requiredCount || requiredCount <= 1) {
+      return;
+    }
+
+    const group = $("#group-stc");
+    if (!group.length) {
+      return;
+    }
+
+    if (target && !group[0].contains(target)) {
+      return;
+    }
+
+    const selector = `[name="${escapeSelector(name)}"]`;
+    let currentCount = group.find(selector).length;
+
+    while (currentCount < requiredCount) {
+      const newRow = addTscRow();
+      if (!newRow) {
+        break;
+      }
+      currentCount = group.find(selector).length;
     }
   });
 });
