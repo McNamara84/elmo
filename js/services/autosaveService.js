@@ -373,6 +373,8 @@ class AutosaveService {
       return;
     }
 
+    this.prepareArrayFields(values);
+
     const elements = Array.from(this.form.elements);
     const handledNames = new Set(Object.keys(values));
     const arrayPositions = new Map();
@@ -480,6 +482,94 @@ class AutosaveService {
     });
 
     return values;
+  }
+
+  prepareArrayFields(values) {
+    if (!this.form || !values) {
+      return;
+    }
+
+    const repeatableEntries = Object.entries(values)
+      .filter(([name, value]) => this.isArrayFieldName(name) && Array.isArray(value) && value.length > 1)
+      .sort(([, valueA], [, valueB]) => valueB.length - valueA.length);
+
+    repeatableEntries.forEach(([name, value]) => {
+      this.ensureArrayFieldCapacity(name, value.length);
+    });
+  }
+
+  ensureArrayFieldCapacity(name, requiredCount) {
+    if (!this.form || !name || requiredCount <= 1) {
+      return;
+    }
+
+    const safeName = this.escapeNameForSelector(name);
+    if (!safeName) {
+      return;
+    }
+
+    let elements = this.form.querySelectorAll(`[name="${safeName}"]`);
+    if (!elements.length) {
+      return;
+    }
+
+    const addButton = this.findAddButtonForElement(elements[0]);
+    if (!addButton) {
+      return;
+    }
+
+    let previousLength = elements.length;
+    while (elements.length < requiredCount) {
+      addButton.click();
+
+      elements = this.form.querySelectorAll(`[name="${safeName}"]`);
+      if (elements.length === previousLength) {
+        break;
+      }
+      previousLength = elements.length;
+    }
+  }
+
+  findAddButtonForElement(element) {
+    if (!element || !element.closest) {
+      return null;
+    }
+
+    const selectors = ['[data-autosave-add]', '.add-button'];
+    let current = element.parentElement;
+
+    while (current && current !== this.form) {
+      for (const selector of selectors) {
+        const button = current.querySelector(selector);
+        if (button && this.isElementInsideForm(button)) {
+          return button;
+        }
+      }
+
+      current = current.parentElement;
+    }
+
+    return null;
+  }
+
+  isElementInsideForm(element) {
+    if (!element) {
+      return false;
+    }
+
+    return element.closest('form') === this.form;
+  }
+
+  escapeNameForSelector(name) {
+    if (typeof name !== 'string') {
+      return '';
+    }
+
+    if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+      return CSS.escape(name);
+    }
+
+    return name.replace(/([\0-\x1F\x7F"'\\#.:;,!?+*~=<>^$\[\](){}|\/\s-])/g, '\\$1');
   }
 
   updateStatus(state, detail = '') {
