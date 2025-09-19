@@ -177,6 +177,55 @@ describe('autosaveService', () => {
     expect(rorIds).toEqual(['ror-1', 'ror-2']);
   });
 
+  test('applyDraftValues expands repeatable groups before restoring values', () => {
+    const form = document.getElementById('form-mde');
+    form.innerHTML = `
+      <div class="repeatable">
+        <div class="row" data-repeatable-row>
+          <input name="givennames[]" value="">
+          <input name="familynames[]" value="">
+          <button type="button" class="add-button" id="button-author-add"></button>
+        </div>
+      </div>
+    `;
+
+    const repeatable = form.querySelector('.repeatable');
+    const templateRow = repeatable.querySelector('[data-repeatable-row]');
+    const addButton = repeatable.querySelector('.add-button');
+
+    addButton.addEventListener('click', () => {
+      const clone = templateRow.cloneNode(true);
+      clone.querySelectorAll('input').forEach((input) => {
+        input.value = '';
+      });
+      const cloneButton = clone.querySelector('.add-button');
+      if (cloneButton) {
+        cloneButton.remove();
+      }
+      repeatable.appendChild(clone);
+    });
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.applyDraftValues({
+      'givennames[]': ['Ada', 'Grace'],
+      'familynames[]': ['Lovelace', 'Hopper']
+    });
+
+    const rows = repeatable.querySelectorAll('[data-repeatable-row]');
+    expect(rows).toHaveLength(2);
+
+    const givenNames = Array.from(form.querySelectorAll('input[name="givennames[]"]')).map((input) => input.value);
+    const familyNames = Array.from(form.querySelectorAll('input[name="familynames[]"]')).map((input) => input.value);
+
+    expect(givenNames).toEqual(['Ada', 'Grace']);
+    expect(familyNames).toEqual(['Lovelace', 'Hopper']);
+  });
+
   test('restores draft when user accepts prompt', async () => {
     const fetchMock = jest
       .fn()
