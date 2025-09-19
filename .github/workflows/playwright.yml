@@ -12,6 +12,10 @@ permissions:
 jobs:
   playwright-tests:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     
     services:
       mysql:
@@ -141,7 +145,7 @@ jobs:
         rm test.html
 
     - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      run: npx playwright install --with-deps ${{ matrix.browser }}
 
     - name: Verify server is running
       run: |
@@ -202,7 +206,7 @@ jobs:
         EOF
 
     - name: Run Playwright tests
-      run: npx playwright test --config=playwright.config.ci.ts
+      run: npx playwright test --config=playwright.config.ci.ts --project=${{ matrix.browser }}
       env:
         CI: true
 
@@ -218,7 +222,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: playwright-report
+        name: playwright-report-${{ matrix.browser }}
         path: playwright-report/
         retention-days: 30
 
@@ -226,7 +230,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results
+        name: test-results-${{ matrix.browser }}
         path: test-results/
         retention-days: 30
 
