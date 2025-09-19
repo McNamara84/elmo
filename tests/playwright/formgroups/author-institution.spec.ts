@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
+import { navigateToHome, SELECTORS } from '../utils';
 
 test.describe('Author Institution form group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/index.php');
+    await navigateToHome(page);
   });
 
   test('renders base fields with accessible structure and help affordances', async ({ page }) => {
-    const formGroup = page.locator('#group-authorinstitution');
+    const formGroup = page.locator(SELECTORS.formGroups.authorInstitution);
     const rows = formGroup.locator('[data-authorinstitution-row]');
     const firstRow = rows.first();
 
@@ -38,7 +39,7 @@ test.describe('Author Institution form group', () => {
   });
 
   test('adds uniquely identified rows and restores the base row when removed', async ({ page }) => {
-    const formGroup = page.locator('#group-authorinstitution');
+    const formGroup = page.locator(SELECTORS.formGroups.authorInstitution);
     const addButton = page.locator('#button-authorinstitution-add');
 
     await addButton.click();
@@ -82,7 +83,7 @@ test.describe('Author Institution form group', () => {
   });
 
   test('enforces institution name when affiliation is provided', async ({ page }) => {
-    const formGroup = page.locator('#group-authorinstitution');
+    const formGroup = page.locator(SELECTORS.formGroups.authorInstitution);
     const row = formGroup.locator('[data-authorinstitution-row]').first();
 
     const nameInput = row.locator('input[name="authorinstitutionName[]"]');
