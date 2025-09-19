@@ -7,7 +7,7 @@ declare const translations: any;
 const SCIENCE_PATH = 'Science Keywords > EARTH SCIENCE > AGRICULTURE > AGRICULTURAL AQUATIC SCIENCES > AQUACULTURE';
 const PLATFORMS_PATH = 'Platforms > Air-based Platforms > BALLOONS';
 
-const ROOT_DIR = path.resolve(__dirname, '../..');
+const ROOT_DIR = path.resolve(__dirname, '../../..');
 const THESAURI_TEMPLATE = readFileSync(path.join(ROOT_DIR, 'formgroups/thesaurusKeywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
 const TEST_ROUTE_PATH = '/gcmd-thesauri-test';
 const TEST_PAGE_HTML = `<!DOCTYPE html>

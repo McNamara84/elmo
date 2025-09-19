@@ -8,7 +8,7 @@ const CURATED_KEYWORDS = [
   { free_keyword: 'Crustal Deformation Analysis' },
 ];
 
-const ROOT_DIR = path.resolve(__dirname, '../..');
+const ROOT_DIR = path.resolve(__dirname, '../../..');
 const FREE_KEYWORDS_TEMPLATE = readFileSync(path.join(ROOT_DIR, 'formgroups/freeKeywords.html'), 'utf8');
 const TEST_ROUTE_PATH = '/free-keywords-test';
 const TEST_PAGE_HTML = `<!DOCTYPE html>
