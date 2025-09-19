@@ -1,75 +1,5 @@
-import { test, expect } from '@playwright/test';
-import type { Route } from '@playwright/test';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const STATIC_BASE_URL = 'http://localhost:8080/';
-
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-
-const STATIC_ASSETS: Array<{ pattern: string; file: string; contentType: string }> = [
-  {
-    pattern: '**/node_modules/bootstrap/dist/css/bootstrap.min.css',
-    file: 'node_modules/bootstrap/dist/css/bootstrap.min.css',
-    contentType: 'text/css'
-  },
-  {
-    pattern: '**/node_modules/@yaireo/tagify/dist/tagify.css',
-    file: 'node_modules/@yaireo/tagify/dist/tagify.css',
-    contentType: 'text/css'
-  },
-  {
-    pattern: '**/node_modules/jquery/dist/jquery.min.js',
-    file: 'node_modules/jquery/dist/jquery.min.js',
-    contentType: 'application/javascript'
-  },
-  {
-    pattern: '**/node_modules/jquery-ui/dist/jquery-ui.min.js',
-    file: 'node_modules/jquery-ui/dist/jquery-ui.min.js',
-    contentType: 'application/javascript'
-  },
-  {
-    pattern: '**/node_modules/@yaireo/tagify/dist/tagify.js',
-    file: 'node_modules/@yaireo/tagify/dist/tagify.js',
-    contentType: 'application/javascript'
-  },
-  {
-    pattern: '**/js/roles.js',
-    file: 'js/roles.js',
-    contentType: 'application/javascript'
-  },
-  {
-    pattern: '**/js/affiliations.js',
-    file: 'js/affiliations.js',
-    contentType: 'application/javascript'
-  },
-  {
-    pattern: '**/js/checkMandatoryFields.js',
-    file: 'js/checkMandatoryFields.js',
-    contentType: 'application/javascript'
-  },
-  {
-    pattern: '**/js/autocomplete.js',
-    file: 'js/autocomplete.js',
-    contentType: 'application/javascript'
-  },
-  {
-    pattern: '**/js/eventhandlers/formgroups/contributor-organisation.js',
-    file: 'js/eventhandlers/formgroups/contributor-organisation.js',
-    contentType: 'application/javascript'
-  },
-  {
-    pattern: '**/js/eventhandlers/functions.js',
-    file: 'js/eventhandlers/functions.js',
-    contentType: 'application/javascript'
-  }
-];
-
-async function fulfillStaticAsset(route: Route, relativePath: string, contentType: string) {
-  const absolutePath = path.resolve(REPO_ROOT, relativePath);
-  const body = await fs.readFile(absolutePath);
-  await route.fulfill({ status: 200, body, contentType });
-}
+import { expect, test } from '@playwright/test';
+import { APP_BASE_URL, registerStaticAssetRoutes, SELECTORS } from '../utils';
 
 const contributorInstitutionsMarkup = String.raw`
 <div class="card mb-2">
@@ -151,7 +81,7 @@ function buildTestPageMarkup() {
   <head>
     <meta charset="utf-8">
     <title>Contributor Institutions Test Harness</title>
-    <base href="${STATIC_BASE_URL}">
+    <base href="${APP_BASE_URL}">
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="node_modules/@yaireo/tagify/dist/tagify.css">
   </head>
@@ -185,9 +115,7 @@ function buildTestPageMarkup() {
 
 test.describe('Contributor (Institutions) form group', () => {
   test.beforeEach(async ({ page }) => {
-    for (const asset of STATIC_ASSETS) {
-      await page.route(asset.pattern, route => fulfillStaticAsset(route, asset.file, asset.contentType));
-    }
+    await registerStaticAssetRoutes(page);
     await page.route('**/api/v2/vocabs/roles?type=**', async route => {
       const url = new URL(route.request().url());
       const type = url.searchParams.get('type') as keyof typeof roleFixtures | null;
@@ -215,7 +143,7 @@ test.describe('Contributor (Institutions) form group', () => {
       });
     });
 
-    await page.goto(`${STATIC_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${APP_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => {
       const roleInput: any = document.querySelector('#input-contributor-organisationrole');
@@ -235,7 +163,7 @@ test.describe('Contributor (Institutions) form group', () => {
   });
 
   test('renders contributor institution fields with accessible helpers', async ({ page }) => {
-    const formGroup = page.locator('#group-contributororganisation');
+    const formGroup = page.locator(SELECTORS.formGroups.contributorInstitutions);
     await expect(formGroup).toBeVisible();
 
     const heading = page.locator('b[data-translate="contributorInstitutions.title"]');
@@ -278,7 +206,10 @@ test.describe('Contributor (Institutions) form group', () => {
       input._tagify.addTags(['Hosting Institution', 'Software Provider']);
     });
 
-    const renderedTags = page.locator('#group-contributororganisation .tagify').first().locator('.tagify__tag');
+    const renderedTags = page
+      .locator(`${SELECTORS.formGroups.contributorInstitutions} .tagify`)
+      .first()
+      .locator('.tagify__tag');
     await expect(renderedTags).toHaveCount(2);
     await expect(renderedTags.nth(0)).toContainText('Hosting Institution');
     await expect(renderedTags.nth(1)).toContainText('Software Provider');
@@ -338,7 +269,7 @@ test.describe('Contributor (Institutions) form group', () => {
     const addButton = page.locator('#button-contributor-addorganisation');
     await addButton.click();
 
-    const rows = page.locator('#group-contributororganisation .row[contributors-row]');
+    const rows = page.locator(`${SELECTORS.formGroups.contributorInstitutions} .row[contributors-row]`);
     await expect(rows).toHaveCount(2);
 
     const firstRow = rows.nth(0);
