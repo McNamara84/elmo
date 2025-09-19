@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import type { Route } from '@playwright/test';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -64,7 +65,7 @@ const STATIC_ASSETS: Array<{ pattern: string; file: string; contentType: string 
   }
 ];
 
-async function fulfillStaticAsset(route, relativePath, contentType) {
+async function fulfillStaticAsset(route: Route, relativePath: string, contentType: string) {
   const absolutePath = path.resolve(REPO_ROOT, relativePath);
   const body = await fs.readFile(absolutePath);
   await route.fulfill({ status: 200, body, contentType });
