@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { completeMinimalDatasetForm, navigateToHome, SELECTORS } from '../utils';
 
 const SAVE_ENDPOINT = '**/save/save_data.php';
 const MOCK_XML_RESPONSE = `<?xml version="1.0" encoding="UTF-8"?>\n<dataset>Automated test dataset</dataset>`;
@@ -7,24 +8,24 @@ const CUSTOM_FILENAME = 'automated_test_dataset';
 
 test.describe('Minimal dataset save-as flow', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('');
+    await navigateToHome(page);
     await completeMinimalDatasetForm(page);
 
     const saveButton = page.locator('#button-form-save');
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
 
-    const notificationModal = page.locator('#modal-notification');
+    const notificationModal = page.locator(SELECTORS.modals.notification);
     await expect(notificationModal).toBeVisible();
     await expect(notificationModal.locator('.alert-info')).toHaveCount(1);
 
-    const saveAsModal = page.locator('#modal-saveas');
+    const saveAsModal = page.locator(SELECTORS.modals.saveAs);
     await expect(saveAsModal).toBeVisible();
   });
 
   test('saves the dataset and triggers an XML download', async ({ page }) => {
-    const saveAsModal = page.locator('#modal-saveas');
-    const notificationModal = page.locator('#modal-notification');
+    const saveAsModal = page.locator(SELECTORS.modals.saveAs);
+    const notificationModal = page.locator(SELECTORS.modals.notification);
 
     await page.fill('#input-saveas-filename', CUSTOM_FILENAME);
 
@@ -91,8 +92,8 @@ test.describe('Minimal dataset save-as flow', () => {
   });
 
   test('shows an error notification when saving the dataset fails', async ({ page }) => {
-    const saveAsModal = page.locator('#modal-saveas');
-    const notificationModal = page.locator('#modal-notification');
+    const saveAsModal = page.locator(SELECTORS.modals.saveAs);
+    const notificationModal = page.locator(SELECTORS.modals.notification);
 
     await page.fill('#input-saveas-filename', `${CUSTOM_FILENAME}_error_case`);
 
@@ -143,23 +144,3 @@ test.describe('Minimal dataset save-as flow', () => {
     await expect(saveAsModal).toBeVisible();
   });
 });
-
-async function completeMinimalDatasetForm(page: Page) {
-  await page.getByRole('textbox', { name: 'Publication Year (YYYY)*' }).fill('2025');
-  await page.getByLabel('Resource Type*').selectOption('5');
-  await page.getByLabel('Language of dataset*').selectOption('1');
-  await page.getByRole('textbox', { name: 'Title*' }).fill('A dataset');
-
-  await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
-  await page.getByRole('textbox', { name: 'Last Name*' }).fill('Alice');
-  await page.getByRole('textbox', { name: 'First Name*' }).fill('Bob');
-
-  await page.locator('#group-author tags').getByRole('textbox').fill('GFZ Helmholtz Centre for Geosciences');
-  await page.getByText('ContactPerson?').click();
-
-  await expect(page.getByRole('textbox', { name: 'Email address*' })).toBeVisible();
-  await page.getByRole('textbox', { name: 'Email address*' }).fill('example@gmail.com');
-
-  await page.getByRole('textbox', { name: 'Abstract*' }).fill('Necessary abstract');
-  await page.getByRole('textbox', { name: 'Date created*' }).fill('2025-01-01');
-}
