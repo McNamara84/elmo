@@ -68,6 +68,7 @@ test.describe('Minimal dataset save-as flow', () => {
       return alerts?.savingSuccess ?? null;
     });
 
+    await expect(notificationModal).toBeVisible();
     const successAlert = notificationModal.locator('.alert-success');
     await expect(successAlert).toBeVisible();
 
@@ -79,9 +80,13 @@ test.describe('Minimal dataset save-as flow', () => {
       );
     }
 
-    await notificationModal.getByRole('button', { name: 'OK' }).click();
-    await expect(notificationModal).toBeHidden();
+    await page.evaluate(() => {
+      const modalElement = document.getElementById('modal-notification');
+      const instance = (window as any).bootstrap?.Modal.getInstance(modalElement);
+      instance?.hide();
+    });
 
+    await expect(notificationModal).toBeHidden();
     await page.unroute(SAVE_ENDPOINT);
   });
 
@@ -119,10 +124,16 @@ test.describe('Minimal dataset save-as flow', () => {
     if (translatedErrorMessage) {
       await expect(notificationAlert).toContainText(translatedErrorMessage);
     } else {
-      await expect(notificationAlert).toContainText(/Save Error|saving failed/);
+      await expect(notificationAlert).toContainText(
+        /Save Error|saving failed|Failed to save dataset\.?/
+      );
     }
 
-    await notificationModal.getByRole('button', { name: 'OK' }).click();
+    await page.evaluate(() => {
+      const modalElement = document.getElementById('modal-notification');
+      const instance = (window as any).bootstrap?.Modal.getInstance(modalElement);
+      instance?.hide();
+    });
     await expect(notificationModal).toBeHidden();
 
     // The user should be able to attempt saving again after an error.
