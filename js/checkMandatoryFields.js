@@ -261,13 +261,30 @@ function validateAuthorInstitutionRequirements() {
         var isauthorinstitutionAffiliationFilled = affVal !== '' || hasTagifyAffiliations;
 
         // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
-        if (isauthorinstitutionAffiliationFilled) {
-            fields.authorinstitutionName.attr('required', 'required');
-            fields.authorinstitutionName.attr('aria-required', 'true');
-        } else {
-            fields.authorinstitutionName.removeAttr('required');
-            fields.authorinstitutionName.removeAttr('aria-required');
-        }
+        fields.authorinstitutionName.each(function () {
+            if (isauthorinstitutionAffiliationFilled) {
+                this.setAttribute('required', 'required');
+                this.setAttribute('aria-required', 'true');
+            } else {
+                this.removeAttribute('required');
+                this.removeAttribute('aria-required');
+            }
+        });
+
+        fields.authorinstitutionAffiliation.each(function () {
+            if (typeof window.applyTagifyAccessibilityAttributes !== 'function') {
+                return;
+            }
+
+            const tagifyInstance = this.tagify;
+            if (!tagifyInstance) {
+                return;
+            }
+
+            window.applyTagifyAccessibilityAttributes(tagifyInstance, this, {
+                isRequired: isauthorinstitutionAffiliationFilled
+            });
+        });
     });
 };
 

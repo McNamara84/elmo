@@ -31,11 +31,16 @@ describe('validateAuthorInstitutionRequirements', () => {
     delete global.jQuery;
     delete window.$;
     delete window.jQuery;
+    delete window.applyTagifyAccessibilityAttributes;
   });
 
   test('toggles required attributes based on Tagify affiliation values', () => {
     const nameInput = $('#input-authorinstitution-name');
     const affiliationInput = $('#input-authorinstitution-affiliation');
+    const applyAccessibilitySpy = jest.fn();
+
+    window.applyTagifyAccessibilityAttributes = applyAccessibilitySpy;
+    affiliationInput[0].tagify = { value: [] };
 
     expect(typeof window.validateAuthorInstitutionRequirements).toBe('function');
 
@@ -43,12 +48,22 @@ describe('validateAuthorInstitutionRequirements', () => {
     window.validateAuthorInstitutionRequirements();
     expect(nameInput.attr('required')).toBeUndefined();
     expect(nameInput.attr('aria-required')).toBeUndefined();
+    expect(nameInput[0].getAttribute('required')).toBeNull();
+    expect(nameInput[0].getAttribute('aria-required')).toBeNull();
+    expect(applyAccessibilitySpy).toHaveBeenCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+      isRequired: false
+    }));
 
     // Plain text value triggers requirement
     affiliationInput.val('Helmholtz Centre Potsdam - GFZ');
     window.validateAuthorInstitutionRequirements();
     expect(nameInput.attr('required')).toBe('required');
     expect(nameInput.attr('aria-required')).toBe('true');
+    expect(nameInput[0].getAttribute('required')).toBe('required');
+    expect(nameInput[0].getAttribute('aria-required')).toBe('true');
+    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+      isRequired: true
+    }));
 
     // Clear visible value but simulate Tagify tags
     affiliationInput.val('');
@@ -56,11 +71,21 @@ describe('validateAuthorInstitutionRequirements', () => {
     window.validateAuthorInstitutionRequirements();
     expect(nameInput.attr('required')).toBe('required');
     expect(nameInput.attr('aria-required')).toBe('true');
+    expect(nameInput[0].getAttribute('required')).toBe('required');
+    expect(nameInput[0].getAttribute('aria-required')).toBe('true');
+    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+      isRequired: true
+    }));
 
     // Remove Tagify tags -> requirement should be cleared
     affiliationInput[0].tagify.value = [];
     window.validateAuthorInstitutionRequirements();
     expect(nameInput.attr('required')).toBeUndefined();
     expect(nameInput.attr('aria-required')).toBeUndefined();
+    expect(nameInput[0].getAttribute('required')).toBeNull();
+    expect(nameInput[0].getAttribute('aria-required')).toBeNull();
+    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+      isRequired: false
+    }));
   });
 });
