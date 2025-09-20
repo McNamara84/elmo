@@ -18,7 +18,7 @@ parameters:
         analyse:
             - tests
             - vendor
-            - node_modules
+            - node_modules (?)
             - doc
             - save
             - schemas
