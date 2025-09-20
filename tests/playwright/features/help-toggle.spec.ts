@@ -5,7 +5,7 @@ async function expectClassTokens(locator: Locator, expectedPresent: string[], ex
   const classList = await locator.evaluate((element) =>
     element.className
       .split(/\s+/)
-      .map((token) => token.trim())
+      .map((token: string) => token.trim())
       .filter(Boolean)
   );
 
