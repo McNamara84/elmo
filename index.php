@@ -13,12 +13,14 @@ error_reporting(E_ALL);
 // Start output buffering
 ob_start();
 
+$baseDir = __DIR__ . '/';
+
 // First, include settings and configurations
-include_once("helper_functions.php");
+include_once $baseDir ."helper_functions.php";
 
 loadEnvVariables();
 // Second, include variables subjected to change
-include_once("choice.php");
+include_once $baseDir ."choice.php";
 
 // Include HTML components using absolute paths to ensure reliable file access
 $baseDir = __DIR__ . '/';
