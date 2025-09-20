@@ -136,7 +136,7 @@ jobs:
           PHP
 
       - name: Initialize database structure and lookup data
-        run: php -r "require 'install.php'; createDatabaseStructure($connection); insertLookupData($connection);"
+        run: php -r "require 'install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
 
       - name: Start PHP built-in web server
         run: |
