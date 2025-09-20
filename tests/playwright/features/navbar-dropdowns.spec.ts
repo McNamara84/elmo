@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { expectNavbarVisible, expectPrimaryHeading, navigateToHome, runAxeAudit, SELECTORS } from '../utils';
 
 test.describe('Navbar Dropdown Tests', () => {
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Axe audit covered in Chromium');
   test('Test Navbar Dropdown Functionality', async ({ page }) => {
     await navigateToHome(page);
 
