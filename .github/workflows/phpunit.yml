@@ -256,4 +256,9 @@ jobs:
 
       - name: Stop PHP server
         if: always()
-        run: kill $(cat server.pid)
+        run: |
+          if [ -f server.pid ]; then
+            kill "$(cat server.pid)"
+          else
+            echo "server.pid not found; PHP server was likely not started."
+          fi
