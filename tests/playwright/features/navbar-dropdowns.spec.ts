@@ -1,15 +1,19 @@
 import { test, expect } from '@playwright/test';
-import { expectNavbarVisible, navigateToHome, SELECTORS } from '../utils';
+import { expectNavbarVisible, navigateToHome, runAxeAudit, SELECTORS } from '../utils';
 
 test.describe('Navbar Dropdown Tests', () => {
   test('Test Navbar Dropdown Functionality', async ({ page }) => {
     await navigateToHome(page);
-    
+
     // Take a screenshot for debugging
     await page.screenshot({ path: 'debug-page.png', fullPage: true });
-    
+
     // Wait for page to load completely - wait for navbar
     await expectNavbarVisible(page);
+
+    await test.step('Validate accessibility of navbar in default state', async () => {
+      await runAxeAudit(page);
+    });
     
     // Test Help Dropdown
     console.log('Testing Help Dropdown...');
@@ -97,7 +101,11 @@ test.describe('Navbar Dropdown Tests', () => {
     // Additional test for more detailed dropdown behavior
     await navigateToHome(page);
     await expectNavbarVisible(page);
-    
+
+    await test.step('Validate accessibility of navbar in default state', async () => {
+      await runAxeAudit(page);
+    });
+
     // Test that clicking outside closes dropdowns
     await page.locator(SELECTORS.navigation.helpToggle).click();
     await expect(page.locator(`${SELECTORS.navigation.helpToggle} + ul.dropdown-menu.show`)).toBeVisible();
@@ -119,7 +127,11 @@ test.describe('Navbar Dropdown Tests', () => {
   test('Test dropdown accessibility', async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
-    
+
+    await test.step('Validate accessibility of navbar keyboard interaction state', async () => {
+      await runAxeAudit(page);
+    });
+
     // Test keyboard navigation
     await page.locator(SELECTORS.navigation.helpToggle).focus();
     await page.keyboard.press('Enter');
