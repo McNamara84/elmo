@@ -44,6 +44,7 @@
     },
     "require-dev": {
         "guzzlehttp/guzzle": "^7.9",
+        "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^11.5"
     },
     "autoload": {
