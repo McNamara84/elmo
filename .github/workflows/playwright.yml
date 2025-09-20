@@ -220,7 +220,7 @@ jobs:
         EOF
 
     - name: Run Playwright tests
-      run: npx playwright test --config=playwright.config.ci.ts --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/2
+      run: npx playwright test --config=playwright.config.ci.ts --workers=2 --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/2
       env:
         CI: true
 
