@@ -9,6 +9,12 @@ export async function expectNavbarVisible(page: Page) {
   await expect(page.locator(SELECTORS.navigation.navbar)).toBeVisible({ timeout: 10_000 });
 }
 
+export async function expectPrimaryHeading(page: Page) {
+  const heading = page.locator('h1');
+  await expect(heading).toHaveCount(1);
+  await expect(heading).toContainText(/ELMO/i);
+}
+
 export async function openLanguageMenu(page: Page): Promise<Locator> {
   const toggle = page.locator(SELECTORS.navigation.languageToggle);
   await toggle.click();

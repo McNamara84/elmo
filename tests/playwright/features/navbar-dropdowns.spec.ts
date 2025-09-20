@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { expectNavbarVisible, navigateToHome, runAxeAudit, SELECTORS } from '../utils';
+import { expectNavbarVisible, expectPrimaryHeading, navigateToHome, runAxeAudit, SELECTORS } from '../utils';
 
 test.describe('Navbar Dropdown Tests', () => {
   test('Test Navbar Dropdown Functionality', async ({ page }) => {
@@ -10,6 +10,7 @@ test.describe('Navbar Dropdown Tests', () => {
 
     // Wait for page to load completely - wait for navbar
     await expectNavbarVisible(page);
+    await expectPrimaryHeading(page);
 
     await test.step('Validate accessibility of navbar in default state', async () => {
       await runAxeAudit(page);
@@ -101,6 +102,7 @@ test.describe('Navbar Dropdown Tests', () => {
     // Additional test for more detailed dropdown behavior
     await navigateToHome(page);
     await expectNavbarVisible(page);
+    await expectPrimaryHeading(page);
 
     await test.step('Validate accessibility of navbar in default state', async () => {
       await runAxeAudit(page);
@@ -127,6 +129,7 @@ test.describe('Navbar Dropdown Tests', () => {
   test('Test dropdown accessibility', async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
+    await expectPrimaryHeading(page);
 
     await test.step('Validate accessibility of navbar keyboard interaction state', async () => {
       await runAxeAudit(page);
