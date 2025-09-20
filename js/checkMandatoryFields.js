@@ -245,6 +245,29 @@ function checkFunder() {
  * Validates the Author-Institution section of the form.
  * Ensures that the “Author Institution Name” field must be filled in if the “Author Institution Affiliation” field is filled in.
  */
+const scheduleAuthorInstitutionMicrotask = typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : (callback) => Promise.resolve().then(callback);
+
+function applyAuthorInstitutionNameRequirement(inputElement, shouldRequire) {
+    if (shouldRequire) {
+        inputElement.setAttribute('required', 'required');
+        inputElement.setAttribute('aria-required', 'true');
+
+        scheduleAuthorInstitutionMicrotask(function () {
+            if (
+                inputElement.hasAttribute('required') &&
+                inputElement.getAttribute('required') !== 'required'
+            ) {
+                inputElement.setAttribute('required', 'required');
+            }
+        });
+    } else {
+        inputElement.removeAttribute('required');
+        inputElement.removeAttribute('aria-required');
+    }
+}
+
 function validateAuthorInstitutionRequirements() {
     $('#group-authorinstitution').children('.row').each(function () {
         var row = $(this);
@@ -262,13 +285,7 @@ function validateAuthorInstitutionRequirements() {
 
         // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
         fields.authorinstitutionName.each(function () {
-            if (isauthorinstitutionAffiliationFilled) {
-                this.setAttribute('required', 'required');
-                this.setAttribute('aria-required', 'true');
-            } else {
-                this.removeAttribute('required');
-                this.removeAttribute('aria-required');
-            }
+            applyAuthorInstitutionNameRequirement(this, isauthorinstitutionAffiliationFilled);
         });
 
         fields.authorinstitutionAffiliation.each(function () {

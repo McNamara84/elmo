@@ -181,6 +181,7 @@ describe('affiliations.js', () => {
     expect(nameInput.hasAttribute('aria-required')).toBe(false);
 
     affiliationInput.tagify.trigger('add', { data: { value: 'Helmholtz', id: '1' } });
+    nameInput.required = true;
     await Promise.resolve();
 
     expect(nameInput.getAttribute('required')).toBe('required');

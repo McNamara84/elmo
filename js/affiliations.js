@@ -101,6 +101,25 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
 
   let requirementSyncPending = false;
 
+  function applyAuthorInstitutionNameRequirement(element, shouldRequire) {
+    if (shouldRequire) {
+      element.setAttribute('required', 'required');
+      element.setAttribute('aria-required', 'true');
+
+      scheduleMicrotask(() => {
+        if (
+          element.hasAttribute('required') &&
+          element.getAttribute('required') !== 'required'
+        ) {
+          element.setAttribute('required', 'required');
+        }
+      });
+    } else {
+      element.removeAttribute('required');
+      element.removeAttribute('aria-required');
+    }
+  }
+
   const tagify = new Tagify(inputElement[0], {
     enforceWhitelist: false,
     duplicates: false,
@@ -165,13 +184,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     const hasAffiliations = tagify.value.length > 0 || rawValue.length > 0;
 
     nameInput.each((_, element) => {
-      if (hasAffiliations) {
-        element.setAttribute('required', 'required');
-        element.setAttribute('aria-required', 'true');
-      } else {
-        element.removeAttribute('required');
-        element.removeAttribute('aria-required');
-      }
+      applyAuthorInstitutionNameRequirement(element, hasAffiliations);
     });
 
     updateTagifyAccessibilityState(hasAffiliations);

@@ -34,7 +34,9 @@ describe('validateAuthorInstitutionRequirements', () => {
     delete window.applyTagifyAccessibilityAttributes;
   });
 
-  test('toggles required attributes based on Tagify affiliation values', () => {
+  const flushMicrotasks = () => Promise.resolve();
+
+  test('toggles required attributes based on Tagify affiliation values', async () => {
     const nameInput = $('#input-authorinstitution-name');
     const affiliationInput = $('#input-authorinstitution-affiliation');
     const applyAccessibilitySpy = jest.fn();
@@ -46,6 +48,7 @@ describe('validateAuthorInstitutionRequirements', () => {
 
     // No value - should not be required
     window.validateAuthorInstitutionRequirements();
+    await flushMicrotasks();
     expect(nameInput.attr('required')).toBeUndefined();
     expect(nameInput.attr('aria-required')).toBeUndefined();
     expect(nameInput[0].getAttribute('required')).toBeNull();
@@ -57,6 +60,8 @@ describe('validateAuthorInstitutionRequirements', () => {
     // Plain text value triggers requirement
     affiliationInput.val('Helmholtz Centre Potsdam - GFZ');
     window.validateAuthorInstitutionRequirements();
+    nameInput[0].required = true;
+    await flushMicrotasks();
     expect(nameInput.attr('required')).toBe('required');
     expect(nameInput.attr('aria-required')).toBe('true');
     expect(nameInput[0].getAttribute('required')).toBe('required');
@@ -69,6 +74,8 @@ describe('validateAuthorInstitutionRequirements', () => {
     affiliationInput.val('');
     affiliationInput[0].tagify = { value: [{ value: 'Helmholtz Centre Potsdam - GFZ' }] };
     window.validateAuthorInstitutionRequirements();
+    nameInput[0].required = true;
+    await flushMicrotasks();
     expect(nameInput.attr('required')).toBe('required');
     expect(nameInput.attr('aria-required')).toBe('true');
     expect(nameInput[0].getAttribute('required')).toBe('required');
@@ -80,6 +87,7 @@ describe('validateAuthorInstitutionRequirements', () => {
     // Remove Tagify tags -> requirement should be cleared
     affiliationInput[0].tagify.value = [];
     window.validateAuthorInstitutionRequirements();
+    await flushMicrotasks();
     expect(nameInput.attr('required')).toBeUndefined();
     expect(nameInput.attr('aria-required')).toBeUndefined();
     expect(nameInput[0].getAttribute('required')).toBeNull();
