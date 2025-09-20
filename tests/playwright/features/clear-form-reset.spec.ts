@@ -2,6 +2,22 @@ import { expect, test } from '@playwright/test';
 import path from 'node:path';
 import { completeMinimalDatasetForm, REPO_ROOT, SELECTORS } from '../utils';
 
+type TagifyInputElement = HTMLInputElement & {
+  _tagify?: {
+    addTags: (tags: { value: string }[]) => void;
+    value?: Array<{ value: string }>;
+  };
+};
+
+type ElmoWindow = Window &
+  typeof globalThis & {
+    updateMapOverlay?: (rowId: string) => void;
+    deleteDrawnOverlaysForRow?: (rowId: string) => void;
+    __deletedRows?: string[];
+    __elmoMarkers?: unknown[];
+    __elmoRectangles?: unknown[];
+  };
+
 const TEST_FORM_HTML = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -326,7 +342,7 @@ test.describe('Metadata form reset', () => {
     await secondAuthorRow.locator('input[name="cpOnlineResource[]"]').fill('https://example.com/charlie');
 
     await page.evaluate(() => {
-      var input = document.getElementById('input-freekeyword');
+      const input = document.getElementById('input-freekeyword') as TagifyInputElement | null;
       if (input && input._tagify) {
         input.value = 'Ocean Data, Climate Models';
         input._tagify.addTags([{ value: 'Ocean Data' }, { value: 'Climate Models' }]);
@@ -366,21 +382,24 @@ test.describe('Metadata form reset', () => {
     await secondStcRow.locator('textarea[name="tscDescription[]"]').fill('Equatorial station');
 
     await page.evaluate(() => {
-      if (typeof window.updateMapOverlay === 'function') {
-        window.updateMapOverlay('1');
-        window.updateMapOverlay('2');
+      const elmoWindow = window as ElmoWindow;
+      if (typeof elmoWindow.updateMapOverlay === 'function') {
+        elmoWindow.updateMapOverlay('1');
+        elmoWindow.updateMapOverlay('2');
       }
-      window.__deletedRows = [];
-      var originalDelete = window.deleteDrawnOverlaysForRow;
-      window.deleteDrawnOverlaysForRow = function (rowId) {
-        window.__deletedRows.push(String(rowId));
+      elmoWindow.__deletedRows = [];
+      const originalDelete = elmoWindow.deleteDrawnOverlaysForRow;
+      elmoWindow.deleteDrawnOverlaysForRow = (rowId: string) => {
+        const rows = elmoWindow.__deletedRows ?? [];
+        rows.push(String(rowId));
+        elmoWindow.__deletedRows = rows;
         if (typeof originalDelete === 'function') {
           originalDelete(rowId);
         }
       };
-      if (typeof window.deleteDrawnOverlaysForRow === 'function') {
-        window.deleteDrawnOverlaysForRow('1');
-        window.deleteDrawnOverlaysForRow('2');
+      if (typeof elmoWindow.deleteDrawnOverlaysForRow === 'function') {
+        elmoWindow.deleteDrawnOverlaysForRow('1');
+        elmoWindow.deleteDrawnOverlaysForRow('2');
       }
     });
 
@@ -412,8 +431,13 @@ test.describe('Metadata form reset', () => {
     await expect(firstAuthorRow.locator('input[name="contacts[]"]').first()).not.toBeChecked();
 
     await page.waitForFunction(() => {
-      var input = document.getElementById('input-freekeyword');
-      return input && input._tagify && Array.isArray(input._tagify.value) && input._tagify.value.length === 0;
+      const input = document.getElementById('input-freekeyword') as TagifyInputElement | null;
+      return (
+        !!input &&
+        !!input._tagify &&
+        Array.isArray(input._tagify.value) &&
+        input._tagify.value.length === 0
+      );
     });
 
     await expect(fundingRows).toHaveCount(1);
@@ -427,15 +451,23 @@ test.describe('Metadata form reset', () => {
     await expect(firstStcRow.locator('textarea[name="tscDescription[]"]')).toHaveValue('');
     await expect(firstStcRow.locator('select[name="tscTimezone[]"]')).toHaveValue('');
 
-    const deletedRows = await page.evaluate(() => window.__deletedRows || []);
+    const deletedRows = await page.evaluate(() => {
+      const elmoWindow = window as ElmoWindow;
+      return elmoWindow.__deletedRows || [];
+    });
     if (deletedRows.length > 0) {
       expect(deletedRows).toContain('2');
     }
 
-    const overlayState = await page.evaluate(() => ({
-      markers: Array.isArray(window.__elmoMarkers) ? window.__elmoMarkers.length : 0,
-      rectangles: Array.isArray(window.__elmoRectangles) ? window.__elmoRectangles.length : 0,
-    }));
+    const overlayState = await page.evaluate(() => {
+      const elmoWindow = window as ElmoWindow;
+      return {
+        markers: Array.isArray(elmoWindow.__elmoMarkers) ? elmoWindow.__elmoMarkers.length : 0,
+        rectangles: Array.isArray(elmoWindow.__elmoRectangles)
+          ? elmoWindow.__elmoRectangles.length
+          : 0,
+      };
+    });
     expect(overlayState.markers).toBe(0);
     expect(overlayState.rectangles).toBe(0);
 
