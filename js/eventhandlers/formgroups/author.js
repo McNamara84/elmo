@@ -43,6 +43,7 @@ $(document).ready(function () {
   $("#group-author").sortable({
     items: "[data-creator-row]",
     handle: ".drag-handle",
+    cancel: "input, textarea, select, option",
     axis: "y",
     tolerance: "pointer",
     containment: "parent"
