@@ -223,6 +223,63 @@ jobs:
       env:
         CI: true
 
+    - name: Publish ELMO performance metrics
+      if: always()
+      env:
+        PLAYWRIGHT_PROJECT: ${{ matrix.browser }}
+      run: |
+        node <<'NODE'
+        const fs = require('fs');
+        const path = require('path');
+
+        const project = process.env.PLAYWRIGHT_PROJECT || 'unknown';
+        const sanitized = project.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const metricsDir = path.join(process.cwd(), 'test-results', 'performance');
+        const candidatePaths = [
+          path.join(metricsDir, `${sanitized}.json`),
+          path.join(metricsDir, `${project}.json`),
+        ];
+
+        const metricsPath = candidatePaths.find((candidate) => fs.existsSync(candidate));
+
+        if (!metricsPath) {
+          console.log(`::warning::Performance metrics not found for ${project}.`);
+          console.log(`Checked: ${candidatePaths.join(', ')}`);
+          process.exit(0);
+        }
+
+        const metrics = JSON.parse(fs.readFileSync(metricsPath, 'utf8'));
+        const loadTime = typeof metrics.totalLoadTimeMs === 'number' ? metrics.totalLoadTimeMs : undefined;
+        const navigation = metrics.navigation && typeof metrics.navigation === 'object' ? metrics.navigation : undefined;
+        const navigationDuration = navigation && typeof navigation.duration === 'number' ? navigation.duration : undefined;
+        const domContentLoaded = navigation && typeof navigation.domContentLoadedEventEnd === 'number' ? navigation.domContentLoadedEventEnd : undefined;
+
+        const formattedLoad = loadTime !== undefined ? loadTime.toFixed(0) : 'n/a';
+        const formattedDuration = navigationDuration !== undefined ? navigationDuration.toFixed(0) : 'n/a';
+        const formattedDom = domContentLoaded !== undefined ? domContentLoaded.toFixed(0) : 'n/a';
+
+        const messageParts = [`${project} ELMO fully loaded in ${formattedLoad} ms`];
+        if (formattedDuration !== 'n/a') {
+          messageParts.push(`navigation duration ${formattedDuration} ms`);
+        }
+        if (formattedDom !== 'n/a') {
+          messageParts.push(`DOMContentLoaded ${formattedDom} ms`);
+        }
+
+        console.log(`::notice title=ELMO load time::${messageParts.join(' | ')}`);
+
+        const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+        if (summaryPath) {
+          let summary = '';
+          if (!fs.existsSync(summaryPath) || fs.statSync(summaryPath).size === 0) {
+            summary += '| Browser | Fully loaded (ms) | Navigation duration (ms) | DOMContentLoaded (ms) |\n';
+            summary += '| --- | ---: | ---: | ---: |\n';
+          }
+          summary += `| ${metrics.browser || project} | ${formattedLoad} | ${formattedDuration} | ${formattedDom} |\n`;
+          fs.appendFileSync(summaryPath, summary);
+        }
+        NODE
+
     - name: Debug what the browser actually sees
       if: failure()
       run: |
