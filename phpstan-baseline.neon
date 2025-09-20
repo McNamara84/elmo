@@ -1,0 +1,271 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^PHPDoc tag @var with type array is not subtype of native type list\<string\>\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: api/index.php
+
+		-
+			message: '#^PHPDoc tag @var with type string is not subtype of native type non\-falsy\-string\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: api/index.php
+
+		-
+			message: '#^Access to an undefined property DatasetController\:\:\$logger\.$#'
+			identifier: property.notFound
+			count: 2
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Method DatasetController\:\:exportAll\(\) with return type void returns string\|null but should not return anything\.$#'
+			identifier: return.void
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Method DatasetController\:\:exportAllDownload\(\) with return type void returns string\|null but should not return anything\.$#'
+			identifier: return.void
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Method DatasetController\:\:exportBaseXml\(\) with return type void returns null but should not return anything\.$#'
+			identifier: return.void
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Method DatasetController\:\:exportResource\(\) with return type void returns null but should not return anything\.$#'
+			identifier: return.void
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Method DatasetController\:\:exportResourceDownload\(\) with return type void returns null but should not return anything\.$#'
+			identifier: return.void
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Method DatasetController\:\:handleExportAll\(\) never returns void so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Method DatasetController\:\:handleExportBaseXml\(\) invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Result of method DatasetController\:\:handleExport\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 2
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Result of method DatasetController\:\:handleExportBaseXml\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed~\(0\|0\.0\|''''\|''0''\|array\{\}\|false\|null\) and '''' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 10
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and false will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Variable \$authorXml might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Variable \$contributorsXml might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Call to static method set\(\) on an unknown class RdfNamespace\.$#'
+			identifier: class.notFound
+			count: 2
+			path: api/v2/controllers/VocabController.php
+
+		-
+			message: '#^Constant connection not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: api/v2/controllers/VocabController.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: generate_xml_files.php
+
+		-
+			message: '#^Variable \$showAuthorInstitution might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$showContributorInstitutions might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$showContributorPersons might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$showFreeKeywords might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$showFundingReference might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$showGGMsProperties might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$showGcmdThesauri might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$showMslLabs might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$showMslVocabs might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$showRelatedWork might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$showSpatialTemporalCoverage might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$connection might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$debugging_output might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$resource_id in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$showGGMsProperties might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$smtpAuth might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$smtpHost might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$smtpPassword might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$smtpPort might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$smtpSecure might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$smtpSender might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$smtpUser might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: send_xml_file.php
+
+		-
+			message: '#^Variable \$xmlSubmitAddress might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: send_xml_file.php
