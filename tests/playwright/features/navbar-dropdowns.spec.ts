@@ -90,12 +90,18 @@ test.describe('Navbar Dropdown Tests', () => {
     
     // Close Language dropdown by clicking elsewhere
     await page.locator('.navbar-brand').click();
-    
+
     // Wait for Language dropdown to close
     await expect(page.locator(`${SELECTORS.navigation.languageToggle} + ul.dropdown-menu.show`)).not.toBeVisible({ timeout: 2000 });
-    
+
     // Final verification - all dropdowns are closed
     await expect(page.locator('ul.dropdown-menu.show')).not.toBeVisible();
+
+    await test.step('Verify Save As modal heading semantics', async () => {
+      const saveAsModal = page.locator(SELECTORS.modals.saveAs);
+      await expect(saveAsModal).toHaveAttribute('aria-labelledby', 'label-saveas-modal');
+      await expect(page.locator('#label-saveas-modal')).toHaveJSProperty('tagName', 'H2');
+    });
   });
 
   test('Test individual dropdown interactions', async ({ page }) => {

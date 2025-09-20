@@ -10,7 +10,11 @@ export async function expectNavbarVisible(page: Page) {
 }
 
 export async function expectPrimaryHeading(page: Page) {
-  const heading = page.locator('h1');
+  const banner = page.locator('header[role="banner"]');
+  await expect(banner).toHaveCount(1);
+
+  const heading = banner.locator('h1');
+  await expect(page.locator('h1')).toHaveCount(1);
   await expect(heading).toHaveCount(1);
   await expect(heading).toContainText(/ELMO/i);
 }

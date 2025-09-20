@@ -41,11 +41,11 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
 </head>
 
 <body>
-  <h1 class="visually-hidden" data-translate="general.logoTitle">
-    ELMO - Enhanced Laboratory Metadata Organizer 2.0
-  </h1>
   <!-- Fixed Header -->
-  <header class="navbar navbar-primary sticky-top bg-primary flex-md-nowrap p-0 shadow">
+  <header class="navbar navbar-primary sticky-top bg-primary flex-md-nowrap p-0 shadow" role="banner">
+    <h1 class="visually-hidden" data-translate="general.logoTitle">
+      ELMO - Enhanced Laboratory Metadata Organizer 2.0
+    </h1>
     <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3 text-white" href="#" id="headtitle"
       data-translate="general.logoTitle">
       ELMO

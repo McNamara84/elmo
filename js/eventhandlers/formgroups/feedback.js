@@ -75,11 +75,6 @@ $(document).ready(function () {
             getNestedValue(translations, 'modals.feedback.success') +
             '</div>'
           );
-
-        // Auto-close modal after 3 seconds
-        setTimeout(function () {
-          $("#modal-feedback").modal("hide");
-        }, 3000);
       },
       error: function (xhr, status, error) {
         // Show error message and re-enable send button
