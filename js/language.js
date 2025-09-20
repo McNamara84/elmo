@@ -24,8 +24,22 @@ function loadTranslations(lang) {
             console.error(`Failed to load language file: ${lang}`);
             // Fallback to English if requested language is not available
             if (lang !== 'en') {
+                try {
+                    const previousPreference = localStorage.getItem('userLanguage');
+                    if (previousPreference !== 'auto') {
+                        localStorage.setItem('userLanguage', 'en');
+                    }
+                } catch (error) {
+                    console.warn('Unable to persist fallback language preference:', error);
+                }
                 return loadTranslations('en');
             }
+            try {
+                localStorage.setItem('userLanguage', 'auto');
+            } catch (error) {
+                console.warn('Unable to reset language preference after fallback failure:', error);
+            }
+            updateActiveLanguage('auto');
         });
 }
 
