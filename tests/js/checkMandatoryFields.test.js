@@ -1,9 +1,17 @@
-
 const fs = require('fs');
 const path = require('path');
 
 describe('validateAuthorInstitutionRequirements', () => {
   let $;
+  let rafCallbacks;
+
+  const runAnimationFrameQueue = async () => {
+    while (rafCallbacks.length > 0) {
+      const callback = rafCallbacks.shift();
+      callback();
+      await flushMicrotasks();
+    }
+  };
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -19,6 +27,11 @@ describe('validateAuthorInstitutionRequirements', () => {
     global.$ = global.jQuery = $;
     window.$ = $;
     window.jQuery = $;
+    rafCallbacks = [];
+    global.requestAnimationFrame = (cb) => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    };
 
     const scriptPath = path.resolve(__dirname, '../../js/checkMandatoryFields.js');
     const scriptContent = fs.readFileSync(scriptPath, 'utf8');
@@ -32,6 +45,7 @@ describe('validateAuthorInstitutionRequirements', () => {
     delete window.$;
     delete window.jQuery;
     delete window.applyTagifyAccessibilityAttributes;
+    delete global.requestAnimationFrame;
   });
 
   const flushMicrotasks = () => Promise.resolve();
@@ -62,6 +76,9 @@ describe('validateAuthorInstitutionRequirements', () => {
     window.validateAuthorInstitutionRequirements();
     nameInput[0].required = true;
     await flushMicrotasks();
+    nameInput[0].setAttribute('required', '');
+    nameInput[0].setAttribute('aria-required', '');
+    await runAnimationFrameQueue();
     expect(nameInput.attr('required')).toBe('required');
     expect(nameInput.attr('aria-required')).toBe('true');
     expect(nameInput[0].getAttribute('required')).toBe('required');
@@ -76,6 +93,9 @@ describe('validateAuthorInstitutionRequirements', () => {
     window.validateAuthorInstitutionRequirements();
     nameInput[0].required = true;
     await flushMicrotasks();
+    nameInput[0].setAttribute('required', '');
+    nameInput[0].setAttribute('aria-required', '');
+    await runAnimationFrameQueue();
     expect(nameInput.attr('required')).toBe('required');
     expect(nameInput.attr('aria-required')).toBe('true');
     expect(nameInput[0].getAttribute('required')).toBe('required');

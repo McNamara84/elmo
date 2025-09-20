@@ -249,22 +249,82 @@ const scheduleAuthorInstitutionMicrotask = typeof queueMicrotask === 'function'
     ? queueMicrotask
     : (callback) => Promise.resolve().then(callback);
 
-function applyAuthorInstitutionNameRequirement(inputElement, shouldRequire) {
-    if (shouldRequire) {
-        inputElement.setAttribute('required', 'required');
-        inputElement.setAttribute('aria-required', 'true');
+const scheduleAuthorInstitutionAnimationFrame = typeof requestAnimationFrame === 'function'
+    ? requestAnimationFrame
+    : (callback) => setTimeout(callback, 16);
 
-        scheduleAuthorInstitutionMicrotask(function () {
-            if (
-                inputElement.hasAttribute('required') &&
-                inputElement.getAttribute('required') !== 'required'
-            ) {
-                inputElement.setAttribute('required', 'required');
+const authorInstitutionAttributeObservers = new WeakMap();
+
+function registerAuthorInstitutionObserver(element, attributeName, desiredValue) {
+    let observers = authorInstitutionAttributeObservers.get(element);
+    if (!observers) {
+        observers = new Map();
+        authorInstitutionAttributeObservers.set(element, observers);
+    }
+
+    let observerState = observers.get(attributeName);
+    if (!observerState) {
+        observerState = { desiredValue, active: false };
+        const observer = new MutationObserver(() => {
+            if (!observerState.active) {
+                return;
+            }
+
+            if (element.getAttribute(attributeName) !== observerState.desiredValue) {
+                element.setAttribute(attributeName, observerState.desiredValue);
             }
         });
+
+        observer.observe(element, { attributes: true, attributeFilter: [attributeName] });
+        observerState.observer = observer;
+        observers.set(attributeName, observerState);
+    }
+
+    observerState.desiredValue = desiredValue;
+    return observerState;
+}
+
+function setAuthorInstitutionObserverActive(element, attributeName, isActive) {
+    const observers = authorInstitutionAttributeObservers.get(element);
+    if (!observers) {
+        return;
+    }
+
+    const observerState = observers.get(attributeName);
+    if (!observerState) {
+        return;
+    }
+
+    observerState.active = isActive;
+}
+
+function enforceAuthorInstitutionAttribute(element, attributeName, desiredValue) {
+    const ensureValue = () => {
+        if (element.getAttribute(attributeName) !== desiredValue) {
+            element.setAttribute(attributeName, desiredValue);
+        }
+    };
+
+    element.setAttribute(attributeName, desiredValue);
+    scheduleAuthorInstitutionMicrotask(ensureValue);
+    scheduleAuthorInstitutionAnimationFrame(() => {
+        ensureValue();
+        scheduleAuthorInstitutionMicrotask(ensureValue);
+    });
+
+    const observerState = registerAuthorInstitutionObserver(element, attributeName, desiredValue);
+    observerState.active = true;
+}
+
+function applyAuthorInstitutionNameRequirement(inputElement, shouldRequire) {
+    if (shouldRequire) {
+        enforceAuthorInstitutionAttribute(inputElement, 'required', 'required');
+        enforceAuthorInstitutionAttribute(inputElement, 'aria-required', 'true');
     } else {
         inputElement.removeAttribute('required');
         inputElement.removeAttribute('aria-required');
+        setAuthorInstitutionObserverActive(inputElement, 'required', false);
+        setAuthorInstitutionObserverActive(inputElement, 'aria-required', false);
     }
 }
 

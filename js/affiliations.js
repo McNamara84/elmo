@@ -99,24 +99,84 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     ? queueMicrotask
     : (cb) => Promise.resolve().then(cb);
 
+  const scheduleAnimationFrame = typeof requestAnimationFrame === 'function'
+    ? requestAnimationFrame
+    : (cb) => setTimeout(cb, 16);
+
+  const attributeObservers = new WeakMap();
+
+  function registerAttributeObserver(element, attributeName, desiredValue) {
+    let observers = attributeObservers.get(element);
+    if (!observers) {
+      observers = new Map();
+      attributeObservers.set(element, observers);
+    }
+
+    let observerState = observers.get(attributeName);
+    if (!observerState) {
+      observerState = { desiredValue, active: false };
+      const observer = new MutationObserver(() => {
+        if (!observerState.active) {
+          return;
+        }
+
+        if (element.getAttribute(attributeName) !== observerState.desiredValue) {
+          element.setAttribute(attributeName, observerState.desiredValue);
+        }
+      });
+
+      observer.observe(element, { attributes: true, attributeFilter: [attributeName] });
+      observerState.observer = observer;
+      observers.set(attributeName, observerState);
+    }
+
+    observerState.desiredValue = desiredValue;
+    return observerState;
+  }
+
+  function setObserverActiveState(element, attributeName, isActive) {
+    const observers = attributeObservers.get(element);
+    if (!observers) {
+      return;
+    }
+
+    const observerState = observers.get(attributeName);
+    if (!observerState) {
+      return;
+    }
+
+    observerState.active = isActive;
+  }
+
+  function enforceAttributeValue(element, attributeName, desiredValue) {
+    const ensureValue = () => {
+      if (element.getAttribute(attributeName) !== desiredValue) {
+        element.setAttribute(attributeName, desiredValue);
+      }
+    };
+
+    element.setAttribute(attributeName, desiredValue);
+    scheduleMicrotask(ensureValue);
+    scheduleAnimationFrame(() => {
+      ensureValue();
+      scheduleMicrotask(ensureValue);
+    });
+
+    const observerState = registerAttributeObserver(element, attributeName, desiredValue);
+    observerState.active = true;
+  }
+
   let requirementSyncPending = false;
 
   function applyAuthorInstitutionNameRequirement(element, shouldRequire) {
     if (shouldRequire) {
-      element.setAttribute('required', 'required');
-      element.setAttribute('aria-required', 'true');
-
-      scheduleMicrotask(() => {
-        if (
-          element.hasAttribute('required') &&
-          element.getAttribute('required') !== 'required'
-        ) {
-          element.setAttribute('required', 'required');
-        }
-      });
+      enforceAttributeValue(element, 'required', 'required');
+      enforceAttributeValue(element, 'aria-required', 'true');
     } else {
       element.removeAttribute('required');
       element.removeAttribute('aria-required');
+      setObserverActiveState(element, 'required', false);
+      setObserverActiveState(element, 'aria-required', false);
     }
   }
 
