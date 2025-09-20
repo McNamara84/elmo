@@ -71,6 +71,37 @@ describe('accessibility helpers', () => {
     expect(describedBy.split(' ').length).toBeGreaterThan(1);
   });
 
+  test('removes aria-required when the field is not mandatory', () => {
+    const input = document.getElementById('tagify-input');
+    const scope = document.querySelector('.tagify');
+    const interactiveInput = scope.querySelector('.tagify__input');
+    interactiveInput.setAttribute('aria-required', 'true');
+
+    const tagifyInstance = {
+      DOM: { scope },
+      settings: { placeholder: 'Select roles' }
+    };
+
+    applyTagifyAccessibilityAttributes(tagifyInstance, input, { isRequired: false });
+
+    expect(interactiveInput.hasAttribute('aria-required')).toBe(false);
+  });
+
+  test('does not overwrite placeholder when no candidates are provided', () => {
+    const input = document.getElementById('tagify-input');
+    const scope = document.querySelector('.tagify');
+    const interactiveInput = scope.querySelector('.tagify__input');
+    const tagifyInstance = { DOM: { scope }, settings: {} };
+
+    input.removeAttribute('placeholder');
+    input.removeAttribute('data-placeholder');
+    input.removeAttribute('data-translate-placeholder');
+
+    applyTagifyAccessibilityAttributes(tagifyInstance, input, {});
+
+    expect(interactiveInput.hasAttribute('data-placeholder')).toBe(false);
+  });
+
   test('getTooltipContainer prefers the main landmark', () => {
     const container = getTooltipContainer();
     expect(container).toBeInstanceOf(HTMLElement);

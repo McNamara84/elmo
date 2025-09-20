@@ -120,73 +120,134 @@
    *   should be referenced via `aria-describedby`.
    * @param {boolean} [options.isRequired] - Explicit required state override.
    */
-  function applyTagifyAccessibilityAttributes(tagifyInstance, inputElement, options) {
-    if (!tagifyInstance || !inputElement) {
-      return;
+  function resolveTagifyScope(tagifyInstance, inputElement) {
+    if (tagifyInstance && tagifyInstance.DOM && tagifyInstance.DOM.scope) {
+      return tagifyInstance.DOM.scope;
     }
 
-    const scope = tagifyInstance.DOM && tagifyInstance.DOM.scope
-      ? tagifyInstance.DOM.scope
-      : inputElement.parentElement;
+    return inputElement ? inputElement.parentElement : null;
+  }
 
-    if (!scope) {
-      return;
-    }
+  function findInteractiveInput(scope) {
+    return scope ? scope.querySelector('.tagify__input') : null;
+  }
 
-    const interactiveInput = scope.querySelector('.tagify__input');
-    if (!interactiveInput) {
-      return;
-    }
-
-    const label = inputElement.id
-      ? document.querySelector(`label[for="${inputElement.id}"]`)
-      : null;
-
-    const placeholderCandidates = [
+  function collectPlaceholderCandidates(tagifyInstance, inputElement, options) {
+    return [
       options && options.placeholder,
-      tagifyInstance.settings && tagifyInstance.settings.placeholder,
-      inputElement.getAttribute('placeholder'),
-      inputElement.getAttribute('data-placeholder'),
-      inputElement.getAttribute('data-translate-placeholder')
+      tagifyInstance && tagifyInstance.settings && tagifyInstance.settings.placeholder,
+      inputElement && inputElement.getAttribute('placeholder'),
+      inputElement && inputElement.getAttribute('data-placeholder'),
+      inputElement && inputElement.getAttribute('data-translate-placeholder')
     ].filter(Boolean);
+  }
 
-    const accessibleName = resolveAccessibleName(inputElement, label, placeholderCandidates);
+  function getLabelForInput(inputElement) {
+    if (!inputElement || !inputElement.id) {
+      return null;
+    }
+
+    return document.querySelector(`label[for="${inputElement.id}"]`);
+  }
+
+  function applyAccessibleNameAttributes(interactiveInput, accessibleName, label) {
+    if (!interactiveInput || !accessibleName) {
+      return;
+    }
 
     if (accessibleName.labelledby) {
+      const labelText = label && label.textContent ? label.textContent.trim() : '';
       interactiveInput.setAttribute('aria-labelledby', accessibleName.labelledby);
       interactiveInput.removeAttribute('aria-label');
-      interactiveInput.setAttribute('title', (label && label.textContent && label.textContent.trim()) || '');
-    } else if (accessibleName.labelText) {
+      interactiveInput.setAttribute('title', labelText);
+      return;
+    }
+
+    if (accessibleName.labelText) {
       interactiveInput.setAttribute('aria-label', accessibleName.labelText);
       interactiveInput.setAttribute('title', accessibleName.labelText);
       interactiveInput.removeAttribute('aria-labelledby');
     }
+  }
 
-    if (placeholderCandidates.length > 0) {
-      interactiveInput.setAttribute('data-placeholder', placeholderCandidates[0]);
+  function syncPlaceholder(interactiveInput, placeholderCandidates) {
+    if (!interactiveInput || placeholderCandidates.length === 0) {
+      return;
+    }
+
+    interactiveInput.setAttribute('data-placeholder', placeholderCandidates[0]);
+  }
+
+  function applyStaticAriaAttributes(interactiveInput) {
+    if (!interactiveInput) {
+      return;
     }
 
     interactiveInput.setAttribute('role', 'textbox');
     interactiveInput.setAttribute('aria-multiline', 'false');
     interactiveInput.setAttribute('aria-autocomplete', 'list');
     interactiveInput.setAttribute('aria-haspopup', 'listbox');
+  }
 
-    const requiredState = options && typeof options.isRequired === 'boolean'
-      ? options.isRequired
-      : inputElement.hasAttribute('required');
-
-    if (requiredState) {
-      interactiveInput.setAttribute('aria-required', 'true');
-    } else {
-      interactiveInput.removeAttribute('aria-required');
+  function determineRequiredState(inputElement, options) {
+    if (options && typeof options.isRequired === 'boolean') {
+      return options.isRequired;
     }
 
-    const describedBy = collectDescribedByIds(inputElement, scope, options && options.describedByIds);
+    return Boolean(inputElement && inputElement.hasAttribute('required'));
+  }
+
+  function applyRequiredAttribute(interactiveInput, isRequired) {
+    if (!interactiveInput) {
+      return;
+    }
+
+    if (isRequired) {
+      interactiveInput.setAttribute('aria-required', 'true');
+      return;
+    }
+
+    interactiveInput.removeAttribute('aria-required');
+  }
+
+  function updateDescribedByAttribute(interactiveInput, describedBy) {
+    if (!interactiveInput) {
+      return;
+    }
+
     if (describedBy.length > 0) {
       interactiveInput.setAttribute('aria-describedby', describedBy.join(' '));
-    } else {
-      interactiveInput.removeAttribute('aria-describedby');
+      return;
     }
+
+    interactiveInput.removeAttribute('aria-describedby');
+  }
+
+  function applyTagifyAccessibilityAttributes(tagifyInstance, inputElement, options) {
+    if (!tagifyInstance || !inputElement) {
+      return;
+    }
+
+    const scope = resolveTagifyScope(tagifyInstance, inputElement);
+    const interactiveInput = findInteractiveInput(scope);
+
+    if (!scope || !interactiveInput) {
+      return;
+    }
+
+    const label = getLabelForInput(inputElement);
+    const placeholderCandidates = collectPlaceholderCandidates(tagifyInstance, inputElement, options);
+    const accessibleName = resolveAccessibleName(inputElement, label, placeholderCandidates);
+
+    applyAccessibleNameAttributes(interactiveInput, accessibleName, label);
+    syncPlaceholder(interactiveInput, placeholderCandidates);
+    applyStaticAriaAttributes(interactiveInput);
+
+    const isRequired = determineRequiredState(inputElement, options);
+    applyRequiredAttribute(interactiveInput, isRequired);
+
+    const describedBy = collectDescribedByIds(inputElement, scope, options && options.describedByIds);
+    updateDescribedByAttribute(interactiveInput, describedBy);
   }
 
   /**

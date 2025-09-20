@@ -31,18 +31,19 @@ describe('language.js accessibility integration', () => {
     global.$ = $;
     global.jQuery = $;
 
-    $.getJSON = jest.fn(() => ({
-      then(callback) {
-        callback({
-          general: {
-            logoTitle: 'ELMO',
-            help: 'Help'
-          }
-        });
-        return { fail: jest.fn() };
-      },
-      fail: jest.fn()
-    }));
+    $.getJSON = jest.fn(() => {
+      const translations = {
+        general: {
+          logoTitle: 'ELMO',
+          help: 'Help'
+        }
+      };
+
+      const promise = Promise.resolve(translations);
+      promise.fail = jest.fn(() => promise);
+
+      return promise;
+    });
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/language.js'), 'utf8');
     window.eval(script);
