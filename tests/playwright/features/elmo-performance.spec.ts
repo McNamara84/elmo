@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -18,55 +19,127 @@ const KEY_SECTIONS = [
   '#button-form-submit',
 ];
 
-test.describe('Homepage performance', () => {
-  test('measures load time for fully rendered homepage', async ({ page }, testInfo) => {
-    const start = Date.now();
+const MEASUREMENT_RUNS = 3;
 
-    const response = await page.goto('/', {
-      waitUntil: 'domcontentloaded',
-    });
+const average = (values: Array<number | undefined>) => {
+  const valid = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+  if (valid.length === 0) {
+    return undefined;
+  }
 
-    expect(response, 'Homepage should respond successfully').not.toBeNull();
-    expect(response!.ok()).toBeTruthy();
+  return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+};
 
-    await page.waitForLoadState('networkidle');
+type NavigationTiming = {
+  startTime?: number;
+  responseEnd?: number;
+  domContentLoadedEventEnd?: number;
+  loadEventEnd?: number;
+  duration?: number;
+} | null;
 
-    for (const selector of KEY_SECTIONS) {
-      await test.step(`wait for ${selector}`, async () => {
-        await expect(page.locator(selector)).toBeVisible();
-      });
+type RunMetrics = {
+  attempt: number;
+  totalLoadTimeMs: number;
+  timestamp: string;
+  navigation: NavigationTiming;
+};
+
+const collectNavigationTiming = async (page: Page): Promise<NavigationTiming> => {
+  return page.evaluate(() => {
+    const [entry] = performance.getEntriesByType('navigation');
+    if (!entry) {
+      return null;
     }
 
-    const end = Date.now();
-    const totalLoadTimeMs = end - start;
+    const navigationEntry = entry as Record<string, unknown> | undefined;
+    if (!navigationEntry) {
+      return null;
+    }
 
-    const navigationTiming = await page.evaluate(() => {
-      const [entry] = performance.getEntriesByType('navigation');
-      if (!entry) {
-        return null;
-      }
+    const toNumberInner = (value: unknown) => (typeof value === 'number' ? value : undefined);
 
-      const navigationEntry = entry as Record<string, unknown> | undefined;
-      if (!navigationEntry) {
-        return null;
-      }
+    return {
+      startTime: toNumberInner(navigationEntry.startTime),
+      responseEnd: toNumberInner(navigationEntry.responseEnd),
+      domContentLoadedEventEnd: toNumberInner(navigationEntry.domContentLoadedEventEnd),
+      loadEventEnd: toNumberInner(navigationEntry.loadEventEnd),
+      duration: toNumberInner(navigationEntry.duration),
+    };
+  });
+};
 
-      const toNumber = (value: unknown) => (typeof value === 'number' ? value : undefined);
+test.describe('Homepage performance', () => {
+  test('measures average load time for fully rendered homepage', async ({ page }, testInfo) => {
+    const runs: RunMetrics[] = [];
 
-      return {
-        startTime: toNumber(navigationEntry.startTime),
-        responseEnd: toNumber(navigationEntry.responseEnd),
-        domContentLoadedEventEnd: toNumber(navigationEntry.domContentLoadedEventEnd),
-        loadEventEnd: toNumber(navigationEntry.loadEventEnd),
-        duration: toNumber(navigationEntry.duration),
-      };
-    });
+    for (let attempt = 1; attempt <= MEASUREMENT_RUNS; attempt += 1) {
+      const runMetrics = await test.step(`load measurement run ${attempt}`, async () => {
+        const start = Date.now();
+
+        const response = await page.goto('/', {
+          waitUntil: 'domcontentloaded',
+        });
+
+        expect(response, 'Homepage should respond successfully').not.toBeNull();
+        expect(response!.ok()).toBeTruthy();
+
+        await page.waitForLoadState('networkidle');
+
+        for (const selector of KEY_SECTIONS) {
+          await test.step(`run ${attempt}: wait for ${selector}`, async () => {
+            await expect(page.locator(selector)).toBeVisible();
+          });
+        }
+
+        const end = Date.now();
+        const totalLoadTimeMs = end - start;
+
+        const navigationTiming = await collectNavigationTiming(page);
+
+        const run: RunMetrics = {
+          attempt,
+          totalLoadTimeMs,
+          timestamp: new Date().toISOString(),
+          navigation: navigationTiming,
+        };
+
+        console.log(
+          `\n[performance] ${testInfo.project.name}: run ${attempt} fully loaded in ${totalLoadTimeMs.toFixed(0)} ms` +
+            (navigationTiming && typeof navigationTiming?.duration === 'number'
+              ? ` (navigation duration ${navigationTiming.duration.toFixed(0)} ms)`
+              : ''),
+        );
+
+        return run;
+      });
+
+      runs.push(runMetrics);
+    }
+
+    const averageLoadTimeMs = average(runs.map((run) => run.totalLoadTimeMs));
+
+    const navigationDurations = runs.map((run) => run.navigation?.duration);
+    const navigationDomContentLoaded = runs.map((run) => run.navigation?.domContentLoadedEventEnd);
+    const navigationLoadEventEnd = runs.map((run) => run.navigation?.loadEventEnd);
+    const navigationStartTimes = runs.map((run) => run.navigation?.startTime);
+    const navigationResponseEnd = runs.map((run) => run.navigation?.responseEnd);
+
+    const aggregatedNavigation = {
+      startTime: average(navigationStartTimes),
+      responseEnd: average(navigationResponseEnd),
+      duration: average(navigationDurations),
+      domContentLoadedEventEnd: average(navigationDomContentLoaded),
+      loadEventEnd: average(navigationLoadEventEnd),
+    };
 
     const metrics = {
       browser: testInfo.project.name,
-      totalLoadTimeMs,
+      totalLoadTimeMs: averageLoadTimeMs,
+      averageLoadTimeMs,
+      runs,
+      navigation: aggregatedNavigation,
       timestamp: new Date().toISOString(),
-      navigation: navigationTiming,
     };
 
     const metricsDir = path.join(process.cwd(), 'test-results', 'performance');
@@ -81,16 +154,31 @@ test.describe('Homepage performance', () => {
       contentType: 'application/json',
     });
 
+    const averageLoadDescription =
+      typeof averageLoadTimeMs === 'number' ? `${Math.round(averageLoadTimeMs)} ms` : 'n/a';
+    const descriptionParts = [`Average fully loaded in ${averageLoadDescription}`];
+    if (navigationDurations.some((value) => typeof value === 'number')) {
+      const averageNavigationDuration = average(navigationDurations);
+      const navigationDescription =
+        typeof averageNavigationDuration === 'number'
+          ? `${Math.round(averageNavigationDuration)} ms`
+          : 'n/a';
+      descriptionParts.push(`avg navigation duration ${navigationDescription}`);
+    }
+
     testInfo.annotations.push({
       type: 'performance',
-      description: `Homepage fully loaded in ${totalLoadTimeMs.toFixed(0)} ms`,
+      description: descriptionParts.join(' | '),
     });
 
-    console.log(
-      `\n[performance] ${testInfo.project.name}: fully loaded in ${totalLoadTimeMs.toFixed(0)} ms` +
-        (navigationTiming && typeof navigationTiming.duration === 'number'
-          ? ` (navigation duration ${navigationTiming.duration.toFixed(0)} ms)`
-          : ''),
-    );
+    if (typeof averageLoadTimeMs === 'number') {
+      const runBreakdown = runs
+        .map((run) => `#${run.attempt}: ${Math.round(run.totalLoadTimeMs)} ms`)
+        .join(', ');
+      console.log(
+        `\n[performance] ${testInfo.project.name}: average fully loaded in ${Math.round(averageLoadTimeMs)} ms` +
+          (runBreakdown ? ` (runs ${runBreakdown})` : ''),
+      );
+    }
   });
 });

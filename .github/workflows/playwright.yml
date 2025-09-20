@@ -260,10 +260,41 @@ jobs:
         }
 
         const metrics = JSON.parse(fs.readFileSync(metricsPath, 'utf8'));
-        const loadTime = typeof metrics.totalLoadTimeMs === 'number' ? metrics.totalLoadTimeMs : undefined;
+
+        const toNumber = (value) => (typeof value === 'number' && Number.isFinite(value) ? value : undefined);
+        const average = (values) => {
+          const valid = values.filter((value) => typeof value === 'number' && Number.isFinite(value));
+          if (valid.length === 0) {
+            return undefined;
+          }
+          return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+        };
+
+        const runs = Array.isArray(metrics.runs) ? metrics.runs : [];
+        const runLoadTimes = runs
+          .map((run) => (run && typeof run === 'object' ? toNumber(run.totalLoadTimeMs) : undefined))
+          .filter((value) => value !== undefined);
+        const runNavigationDurations = runs
+          .map((run) => {
+            const navigation = run && typeof run === 'object' ? run.navigation : undefined;
+            return navigation && typeof navigation === 'object' ? toNumber(navigation.duration) : undefined;
+          })
+          .filter((value) => value !== undefined);
+        const runDomContentLoaded = runs
+          .map((run) => {
+            const navigation = run && typeof run === 'object' ? run.navigation : undefined;
+            return navigation && typeof navigation === 'object' ? toNumber(navigation.domContentLoadedEventEnd) : undefined;
+          })
+          .filter((value) => value !== undefined);
+
         const navigation = metrics.navigation && typeof metrics.navigation === 'object' ? metrics.navigation : undefined;
-        const navigationDuration = navigation && typeof navigation.duration === 'number' ? navigation.duration : undefined;
-        const domContentLoaded = navigation && typeof navigation.domContentLoadedEventEnd === 'number' ? navigation.domContentLoadedEventEnd : undefined;
+
+        const loadTime =
+          toNumber(metrics.totalLoadTimeMs ?? metrics.averageLoadTimeMs) ?? average(runLoadTimes);
+        const navigationDuration =
+          (navigation && toNumber(navigation.duration)) ?? average(runNavigationDurations);
+        const domContentLoaded =
+          (navigation && toNumber(navigation.domContentLoadedEventEnd)) ?? average(runDomContentLoaded);
 
         const formattedLoad = loadTime !== undefined ? loadTime.toFixed(0) : 'n/a';
         const formattedDuration = navigationDuration !== undefined ? navigationDuration.toFixed(0) : 'n/a';
@@ -276,14 +307,27 @@ jobs:
         if (formattedDom !== 'n/a') {
           messageParts.push(`DOMContentLoaded ${formattedDom} ms`);
         }
+        if (runLoadTimes.length > 0) {
+          const formattedRuns = runLoadTimes
+            .map((value, index) => `run ${index + 1}: ${value.toFixed(0)} ms`)
+            .join(', ');
+          messageParts.push(`runs ${formattedRuns}`);
+        }
 
         console.log(`::notice title=ELMO load time::${messageParts.join(' | ')}`);
 
         const outputsFile = process.env.GITHUB_OUTPUT;
+        const runsSummary = runLoadTimes.length > 0
+          ? runLoadTimes.map((value, index) => `#${index + 1}: ${value.toFixed(0)} ms`).join(', ')
+          : '';
+
         if (outputsFile) {
           fs.appendFileSync(outputsFile, `load_time=${formattedLoad}\n`);
           fs.appendFileSync(outputsFile, `navigation_duration=${formattedDuration}\n`);
           fs.appendFileSync(outputsFile, `dom_content_loaded=${formattedDom}\n`);
+          if (runsSummary) {
+            fs.appendFileSync(outputsFile, `runs_summary=${runsSummary}\n`);
+          }
         }
 
         const summaryPath = process.env.GITHUB_STEP_SUMMARY;
@@ -294,6 +338,12 @@ jobs:
             summary += '| --- | ---: | ---: | ---: |\n';
           }
           summary += `| ${metrics.browser || project} | ${formattedLoad} | ${formattedDuration} | ${formattedDom} |\n`;
+          if (runLoadTimes.length > 0) {
+            const runDetails = runLoadTimes
+              .map((value, index) => `#${index + 1}: ${value.toFixed(0)} ms`)
+              .join(', ');
+            summary += `> Individual runs (${runLoadTimes.length}): ${runDetails}\n`;
+          }
           fs.appendFileSync(summaryPath, summary);
         }
         NODE
@@ -306,6 +356,7 @@ jobs:
         LOAD_TIME_MS: ${{ steps.publish_performance_metrics.outputs.load_time }}
         NAVIGATION_DURATION_MS: ${{ steps.publish_performance_metrics.outputs.navigation_duration }}
         DOM_CONTENT_LOADED_MS: ${{ steps.publish_performance_metrics.outputs.dom_content_loaded }}
+        RUNS_SUMMARY: ${{ steps.publish_performance_metrics.outputs.runs_summary }}
         PLAYWRIGHT_CONCLUSION: ${{ steps.run_playwright_tests.conclusion }}
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -314,6 +365,7 @@ jobs:
           const loadTime = process.env.LOAD_TIME_MS;
           const navigationDuration = process.env.NAVIGATION_DURATION_MS;
           const domContentLoaded = process.env.DOM_CONTENT_LOADED_MS;
+          const runsSummary = process.env.RUNS_SUMMARY || '';
           const testConclusion = (process.env.PLAYWRIGHT_CONCLUSION || '').toLowerCase();
 
           if (!loadTime) {
@@ -346,6 +398,9 @@ jobs:
           if (domContentLoaded && domContentLoaded !== 'n/a') {
             metricsLines.push(`• DOMContentLoaded: ${domContentLoaded} ms`);
           }
+          if (runsSummary) {
+            metricsLines.push(`• Runs: ${runsSummary}`);
+          }
 
           await github.rest.checks.create({
             owner,
@@ -362,6 +417,14 @@ jobs:
             },
             details_url: `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`,
           });
+
+    - name: Debug what the browser actually sees
+      if: failure()
+      run: |
+        echo "=== Debugging what the browser gets ==="
+        curl -s http://localhost:8000/ | head -50
+        echo "\n=== Testing if any HTML is returned ==="
+        curl -s http://localhost:8000/ | grep -i "html\|body\|navbar" || echo "No HTML tags found"
 
     - name: Debug what the browser actually sees
       if: failure()
