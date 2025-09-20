@@ -52,7 +52,7 @@ const collectNavigationTiming = async (page: Page): Promise<NavigationTiming> =>
       return null;
     }
 
-    const navigationEntry = entry as Record<string, unknown> | undefined;
+    const navigationEntry = entry as Partial<PerformanceNavigationTiming> | undefined;
     if (!navigationEntry) {
       return null;
     }
