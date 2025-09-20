@@ -79,7 +79,7 @@ test.describe('Theme toggle', () => {
         }
       };
 
-      window.matchMedia = (query: string) => {
+      window.matchMedia = ((query: string) => {
         const record = {
           query,
           listeners: new Set<MediaQueryListener>(),
@@ -107,8 +107,8 @@ test.describe('Theme toggle', () => {
         };
 
         records.push(record);
-        return record.list;
-      };
+        return record.list as unknown as MediaQueryList;
+      }) as typeof window.matchMedia;
 
       window.__setPrefersDark = (value: boolean) => {
         prefersDark = Boolean(value);
