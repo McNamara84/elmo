@@ -112,4 +112,12 @@ describe('author.js', () => {
     newRow.find('.removeButton').trigger('click');
     expect($('#group-author .row').length).toBe(1);
   });
+
+  test('initialisiert Sortable mit Drag-Handle-Unterstützung für Buttons', () => {
+    expect($.fn.sortable).toHaveBeenCalledTimes(1);
+    expect($.fn.sortable.mock.calls[0][0]).toMatchObject({
+      handle: '.drag-handle',
+      cancel: 'input, textarea, select, option'
+    });
+  });
 });

@@ -245,6 +245,89 @@ function checkFunder() {
  * Validates the Author-Institution section of the form.
  * Ensures that the “Author Institution Name” field must be filled in if the “Author Institution Affiliation” field is filled in.
  */
+const scheduleAuthorInstitutionMicrotask = typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : (callback) => Promise.resolve().then(callback);
+
+const scheduleAuthorInstitutionAnimationFrame = typeof requestAnimationFrame === 'function'
+    ? requestAnimationFrame
+    : (callback) => setTimeout(callback, 16);
+
+const authorInstitutionAttributeObservers = new WeakMap();
+
+function registerAuthorInstitutionObserver(element, attributeName, desiredValue) {
+    let observers = authorInstitutionAttributeObservers.get(element);
+    if (!observers) {
+        observers = new Map();
+        authorInstitutionAttributeObservers.set(element, observers);
+    }
+
+    let observerState = observers.get(attributeName);
+    if (!observerState) {
+        observerState = { desiredValue, active: false };
+        const observer = new MutationObserver(() => {
+            if (!observerState.active) {
+                return;
+            }
+
+            if (element.getAttribute(attributeName) !== observerState.desiredValue) {
+                element.setAttribute(attributeName, observerState.desiredValue);
+            }
+        });
+
+        observer.observe(element, { attributes: true, attributeFilter: [attributeName] });
+        observerState.observer = observer;
+        observers.set(attributeName, observerState);
+    }
+
+    observerState.desiredValue = desiredValue;
+    return observerState;
+}
+
+function setAuthorInstitutionObserverActive(element, attributeName, isActive) {
+    const observers = authorInstitutionAttributeObservers.get(element);
+    if (!observers) {
+        return;
+    }
+
+    const observerState = observers.get(attributeName);
+    if (!observerState) {
+        return;
+    }
+
+    observerState.active = isActive;
+}
+
+function enforceAuthorInstitutionAttribute(element, attributeName, desiredValue) {
+    const ensureValue = () => {
+        if (element.getAttribute(attributeName) !== desiredValue) {
+            element.setAttribute(attributeName, desiredValue);
+        }
+    };
+
+    element.setAttribute(attributeName, desiredValue);
+    scheduleAuthorInstitutionMicrotask(ensureValue);
+    scheduleAuthorInstitutionAnimationFrame(() => {
+        ensureValue();
+        scheduleAuthorInstitutionMicrotask(ensureValue);
+    });
+
+    const observerState = registerAuthorInstitutionObserver(element, attributeName, desiredValue);
+    observerState.active = true;
+}
+
+function applyAuthorInstitutionNameRequirement(inputElement, shouldRequire) {
+    if (shouldRequire) {
+        enforceAuthorInstitutionAttribute(inputElement, 'required', 'required');
+        enforceAuthorInstitutionAttribute(inputElement, 'aria-required', 'true');
+    } else {
+        inputElement.removeAttribute('required');
+        inputElement.removeAttribute('aria-required');
+        setAuthorInstitutionObserverActive(inputElement, 'required', false);
+        setAuthorInstitutionObserverActive(inputElement, 'aria-required', false);
+    }
+}
+
 function validateAuthorInstitutionRequirements() {
     $('#group-authorinstitution').children('.row').each(function () {
         var row = $(this);
@@ -254,16 +337,31 @@ function validateAuthorInstitutionRequirements() {
             authorinstitutionAffiliation: row.find('[id^="input-authorinstitution-affiliation"]')
         };
 
-        // Check that the “Author-Institution-Affiliation” field is filled in.
+        // Check whether the Author-Institution-Affiliation field has a visible value or Tagify tags assigned.
         var affVal = (fields.authorinstitutionAffiliation.val() || '').trim();
-        var isauthorinstitutionAffiliationFilled = affVal !== '';
+        var tagifyInstance = fields.authorinstitutionAffiliation.get(0)?.tagify;
+        var hasTagifyAffiliations = Array.isArray(tagifyInstance?.value) && tagifyInstance.value.length > 0;
+        var isauthorinstitutionAffiliationFilled = affVal !== '' || hasTagifyAffiliations;
 
         // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
-        if (isauthorinstitutionAffiliationFilled) {
-            fields.authorinstitutionName.attr('required', 'required');
-        } else {
-            fields.authorinstitutionName.removeAttr('required');
-        }
+        fields.authorinstitutionName.each(function () {
+            applyAuthorInstitutionNameRequirement(this, isauthorinstitutionAffiliationFilled);
+        });
+
+        fields.authorinstitutionAffiliation.each(function () {
+            if (typeof window.applyTagifyAccessibilityAttributes !== 'function') {
+                return;
+            }
+
+            const tagifyInstance = this.tagify;
+            if (!tagifyInstance) {
+                return;
+            }
+
+            window.applyTagifyAccessibilityAttributes(tagifyInstance, this, {
+                isRequired: isauthorinstitutionAffiliationFilled
+            });
+        });
     });
 };
 
