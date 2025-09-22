@@ -29,37 +29,16 @@ abstract class DatabaseTestCase extends TestCase
         require_once __DIR__ . '/../helper_functions.php';
         require_once __DIR__ . '/TestDatabaseSetup.php';
 
-        $initial_connection = connectDb();
-
-        
-        // call the test database analogous to elmocache
-        $dbname = 'elmotest';
-        $testUser = 'elmo_tester';
-        $testPass = 'test_password';
-        if ($initial_connection->select_db($dbname) === false) {
-            $initial_connection->query("CREATE DATABASE {$dbname}");
-            elmo_log("DB test case setup", "creating test user '$testUser' for '$dbname' ...");
-            $initial_connection->query("CREATE USER IF NOT EXISTS '$testUser'@'%' IDENTIFIED BY '$testPass'");
-            $initial_connection->query("GRANT ALL PRIVILEGES ON {$dbname}.* TO '$testUser'@'%'");
-            $initial_connection->query("FLUSH PRIVILEGES");
-            elmo_log("DB test case setup", "test user '$testUser' created and given priveleges");
-
+        global $connection;
+        if (!$connection) {
+            $connection = connectDb();
         }
-        // Cave connection as test user specifically
-        $initial_connection->close();
-        $this->connection = new mysqli(
-            'db',  // we need to specify db to run inside the container and localhost to run outside
-            $testUser,
-            $testPass,
-            $dbname
-        );
+        $this->connection = $connection;
 
-        // Check if connection is successful
-        if ($this->connection->connect_error) {
-            elmo_log("DB test case setup", "ERROR: Connection failed for test user '$testUser': " . $this->connection->connect_error);
-            throw new \Exception("Database connection failed: " . $this->connection->connect_error);
-        } else {
-            elmo_log("DB test case setup", "Connection for test user '$testUser' created and saved");
+        $dbname = 'mde2-msl-test';
+        if ($this->connection->select_db($dbname) === false) {
+            $this->connection->query("CREATE DATABASE {$dbname}");
+            $this->connection->select_db($dbname);
         }
 
         setupTestDatabase($this->connection);
