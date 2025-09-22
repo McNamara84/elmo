@@ -22,7 +22,7 @@ const mockOrcidRecord = {
                     'disambiguated-organization-identifier': 'https://ror.org/05p8bnz29'
                   }
                 },
-                'end-date': null
+                'end-date': { year: 1965 }
               }
             }
           ]
@@ -42,7 +42,7 @@ const mockOrcidRecord = {
                     'disambiguated-organization-identifier': '05rrcem69'
                   }
                 },
-                'end-date': null
+                'end-date': { year: 1937 }
               }
             }
           ]
