@@ -198,6 +198,81 @@ label.mandatory-field::after {
     height: 10px;
 }
 
+.autosave-status {
+    --autosave-indicator-color: var(--bs-secondary-color, #495057);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--bs-body-color, #212529);
+    background-color: var(--bs-tertiary-bg, #f8f9fa);
+    border: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.12));
+    border-radius: 999px;
+    min-height: 2.25rem;
+    box-shadow: var(--bs-box-shadow-sm, 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075));
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.autosave-status__indicator {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background-color: var(--autosave-indicator-color);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85);
+    flex-shrink: 0;
+}
+
+[data-bs-theme="dark"] .autosave-status {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 0.125rem 0.35rem rgba(0, 0, 0, 0.45);
+}
+
+[data-bs-theme="dark"] .autosave-status__indicator {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.4);
+}
+
+.autosave-status__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    gap: 0.125rem;
+}
+
+.autosave-status__heading {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.autosave-status--idle {
+    --autosave-indicator-color: var(--bs-secondary-color, #6c757d);
+}
+
+.autosave-status--pending {
+    --autosave-indicator-color: #fd7e14;
+}
+
+.autosave-status--saving {
+    --autosave-indicator-color: #0d6efd;
+}
+
+.autosave-status--synced {
+    --autosave-indicator-color: #198754;
+}
+
+.autosave-status--error {
+    --autosave-indicator-color: #dc3545;
+}
+
+.autosave-status--cleared {
+    --autosave-indicator-color: #6c757d;
+}
+
 .unvisible {
     display: none !important;
 }
@@ -221,7 +296,7 @@ label.mandatory-field::after {
 .con-reduce {
     color: var(--bs-con-reduce-color, #0d6efd);
 }
-  
+
 .text-feedback {
     color: var(--bs-text-feedback-color, #000000);
 }
@@ -229,12 +304,12 @@ label.mandatory-field::after {
 
 /* Style for small inline logos next to headings (e.g., ORCID, ROR) */
 .logo-icon {
-  height: 0.8em;
-  width: auto;
-  max-height: 0.8em;
-  vertical-align: middle;
-  margin-left: 0.1em;
-  display: inline-block;
-  position: relative;
-  top: -0.45em;
+    height: 0.8em;
+    width: auto;
+    max-height: 0.8em;
+    vertical-align: middle;
+    margin-left: 0.1em;
+    display: inline-block;
+    position: relative;
+    top: -0.45em;
 }
