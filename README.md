@@ -3,8 +3,8 @@
 ![jQuery 3.7](https://img.shields.io/badge/jquery-3.7-0769ad?logo=jquery)
 ![Bootstrap 5.3](https://img.shields.io/badge/bootstrap-5.3-563d7c?logo=bootstrap)
 ![OpenAPI 3.1](https://img.shields.io/badge/openapi-3.1-6BA539?logo=openapiinitiative)
-![Coverage](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Optimizer/blob/image-data/coverage.svg?raw=true)
-![JS Coverage](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Optimizer/blob/image-data-js/js-coverage.svg?raw=true)
+![Coverage](https://github.com/McNamara84/elmo/blob/image-data/coverage.svg?raw=true)
+![JS Coverage](https://github.com/McNamara84/elmo/blob/image-data-js/js-coverage.svg?raw=true)
 
 # ELMO - Enhanced Laboratory Metadata Organizer
 
@@ -38,6 +38,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
+- Autosave functionality
 
 ## Installation
 
@@ -259,7 +260,7 @@ To install them: npm install
 
 </details>
 
-## [API documentation](https://elmo.cats4future.de/api/v2/docs/index.html)
+## [API documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/)
 
 
 <details>

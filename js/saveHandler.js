@@ -126,13 +126,15 @@ class SaveHandler {
      * @param {string} formId - ID of the main form
      * @param {string} saveAsModalId - ID of the save-as modal
      * @param {string} notificationModalId - ID of the notification modal
+     * @param {import('./services/autosaveService.js').default|null} [autosaveService=null] - Autosave coordination service.
      */
-    constructor(formId, saveAsModalId, notificationModalId) {
+    constructor(formId, saveAsModalId, notificationModalId, autosaveService = null) {
         this.$form = $(`#${formId}`);
         this.modals = {
             saveAs: new bootstrap.Modal($(`#${saveAsModalId}`)[0]),
             notification: new bootstrap.Modal($(`#${notificationModalId}`)[0])
         };
+        this.autosaveService = autosaveService;
         this.initializeEventListeners();
     }
 
@@ -234,6 +236,9 @@ class SaveHandler {
      * @param {string} filename - Chosen filename
      */
     async saveAndDownload(filename) {
+        if (this.autosaveService) {
+            await this.autosaveService.flushPending();
+        }
         this.showNotification('info',
             translations.alerts.savingHeading,
             translations.alerts.savingInfo);
@@ -260,6 +265,9 @@ class SaveHandler {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
 
+            if (this.autosaveService) {
+                await this.autosaveService.markManualSave();
+            }
             this.showNotification('success',
                 translations.alerts.successHeading,
                 translations.alerts.savingSuccess);

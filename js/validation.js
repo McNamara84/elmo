@@ -6,10 +6,20 @@
 
 import SaveHandler from './saveHandler.js';
 import SubmitHandler from './submitHandler.js';
+import AutosaveService from './services/autosaveService.js';
 
 $(() => {
-  const saveHandler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
-  const submitHandler = new SubmitHandler('form-mde', 'modal-submit', 'modal-notification');
+  const autosaveService = new AutosaveService('form-mde', {
+    statusElementId: 'autosave-status',
+    statusTextId: 'autosave-status-text',
+    restoreModalId: 'modal-restore-draft',
+    restoreApplyButtonId: 'button-restore-apply',
+    restoreDismissButtonId: 'button-restore-dismiss'
+  });
+  autosaveService.start();
+
+  const saveHandler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification', autosaveService);
+  const submitHandler = new SubmitHandler('form-mde', 'modal-submit', 'modal-notification', autosaveService);
 
   // Keep track of the clicked submit button. Safari does not retain the
   // activeElement during form submission, which causes document.activeElement

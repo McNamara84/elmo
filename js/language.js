@@ -98,7 +98,22 @@ function applyTranslations() {
     // Trigger necessary UI updates
     resizeTitle();
     adjustButtons();
-    document.dispatchEvent(new Event('translationsLoaded'));
+
+    if (typeof window !== 'undefined') {
+        window.elmo = window.elmo || {};
+        window.elmo.translate = function (key) {
+            return getNestedValue(translations, key);
+        };
+        window.elmo.getTranslations = function () {
+            return translations;
+        };
+        window.elmo.translations = translations;
+    }
+
+    const translationEvent = new CustomEvent('translationsLoaded', {
+        detail: { translations }
+    });
+    document.dispatchEvent(translationEvent);
 }
 
 /**

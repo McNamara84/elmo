@@ -6,34 +6,82 @@
 
 import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
 
+const RELATED_WORK_FIELD_NAMES = new Set([
+  'relation[]',
+  'rIdentifier[]',
+  'rIdentifierType[]'
+]);
+
+function escapeSelector(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  if (typeof window.CSS !== 'undefined' && typeof window.CSS.escape === 'function') {
+    return window.CSS.escape(value);
+  }
+
+  return value.replace(/([\0-\x1F\x7F"'\\#.:;,!?+*~=<>^$\[\](){}|\/\s-])/g, '\\$1');
+}
 
 $(document).ready(function () {
+  const relatedworkGroup = $("#group-relatedwork");
 
-  $("#button-relatedwork-add").click(function () {
-    const relatedworkGroup = $("#group-relatedwork");
+  function addRelatedWorkRow() {
     const firstRelatedWorkLine = relatedworkGroup.children().first();
+    if (!firstRelatedWorkLine.length) {
+      return null;
+    }
+
     const newRelatedWorkRow = firstRelatedWorkLine.clone();
 
-    // Reset input values and remove validation classes
-    newRelatedWorkRow.find("input").val("").removeClass("is-invalid");
+    newRelatedWorkRow.find("input, select")
+      .val("")
+      .removeClass("is-invalid is-valid")
+      .removeAttr("required");
 
-    // Remove 'required' attributes so the new row doesn't force validation immediately
-    newRelatedWorkRow.find("input, select").removeAttr("required");
-
-    // Replace the help icons and format properly
     replaceHelpButtonInClonedRows(newRelatedWorkRow);
 
-    // Replace the add button in the new row with a remove button
     newRelatedWorkRow.find("#button-relatedwork-add").replaceWith(createRemoveButton());
 
-    // Append the cloned row to the form group
     relatedworkGroup.append(newRelatedWorkRow);
 
-    /**
-     * Attach click handler to the remove button of this newly added row.
-     */
     newRelatedWorkRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
     });
+
+    return newRelatedWorkRow;
+  }
+
+  $("#button-relatedwork-add").click(function () {
+    addRelatedWorkRow();
   });
-});
+
+  document.addEventListener('autosave:ensure-array-field', (event) => {
+    const { detail, target } = event || {};
+    const { name, requiredCount } = detail || {};
+
+    if (!name || !RELATED_WORK_FIELD_NAMES.has(name) || !requiredCount || requiredCount <= 1) {
+      return;
+    }
+
+    if (!relatedworkGroup.length) {
+      return;
+    }
+
+    if (target && !relatedworkGroup[0].contains(target)) {
+      return;
+    }
+
+    const selector = `[name="${escapeSelector(name)}"]`;
+    let currentCount = relatedworkGroup.find(selector).length;
+
+    while (currentCount < requiredCount) {
+      const newRow = addRelatedWorkRow();
+      if (!newRow) {
+        break;
+      }
+      currentCount = relatedworkGroup.find(selector).length;
+    }
+  });
+})
