@@ -33,8 +33,8 @@
     ],
     "support": {
         "email": "ehrmann@gfz.de",
-        "issues": "https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer/issues",
-        "docs": "https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Organizer"
+        "issues": "https://github.com/McNamara84/elmo/issues",
+        "docs": "https://github.com/McNamara84/elmo"
     },
     "require": {
         "php": "^8.2 || ^8.3 || ^8.4",
