@@ -54,7 +54,38 @@ if (isset($_GET['setting'])) {
     getSettings($_GET['setting']);
     exit;
 }
-
+/**
+ * Loads environment variables from a .env file and sets them in the PHP environment.
+ * 
+ * This function reads key-value pairs from an environment file and makes them available
+ * via getenv() and putenv(). If the specified file doesn't exist, it will attempt to
+ * use a .env.sample file as a fallback.
+ * 
+ * Boolean-like values (true, false, yes, no, 1, 0, on, off) are automatically converted
+ * to PHP boolean values and set as global variables for backward compatibility with
+ * template usage.
+ * 
+ * @param string|null $path Optional path to the environment file. If null, defaults to '.env' in the current directory.
+ * 
+ * @return bool Returns true on successful loading, false if no environment file could be found.
+ * 
+ * @throws void This function does not throw exceptions but logs errors using elmo_log().
+ * 
+ * @example
+ * // Load default .env file
+ * loadEnvVariables();
+ * 
+ * // Load specific environment file
+ * loadEnvVariables('/path/to/custom.env');
+ * 
+ * // Access loaded variables
+ * $dbHost = getenv('DB_HOST');
+ * 
+ * @see elmo_log() For error logging functionality
+ * @see getenv() For retrieving loaded environment variables
+ * 
+ * @since 1.0.0
+ */
 function loadEnvVariables($path = null) {
     // Default to .env file in the root directory if no path specified
     $path = $path ?: __DIR__ . '/.env';
