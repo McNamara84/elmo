@@ -8,10 +8,17 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 jobs:
   playwright-tests:
     runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     
     services:
       mysql:
@@ -49,7 +56,7 @@ jobs:
       run: |
         composer install --prefer-dist --no-progress --no-suggest
         composer dump-autoload -o
-        npm install
+        npm ci
 
     - name: Wait for MySQL to be ready
       run: |
@@ -140,8 +147,19 @@ jobs:
         curl -v http://localhost:8000/test.html || echo "Static file test failed"
         rm test.html
 
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          playwright-${{ runner.os }}-
+
     - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      env:
+        PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
+      run: npx playwright install --with-deps ${{ matrix.browser }}
 
     - name: Verify server is running
       run: |
@@ -202,9 +220,211 @@ jobs:
         EOF
 
     - name: Run Playwright tests
-      run: npx playwright test --config=playwright.config.ci.ts
+      id: run_playwright_tests
+      run: npx playwright test --config=playwright.config.ci.ts --workers=2 --project=${{ matrix.browser }}
       env:
         CI: true
+
+    - name: Publish ELMO performance metrics
+      id: publish_performance_metrics
+      if: always()
+      env:
+        PLAYWRIGHT_PROJECT: ${{ matrix.browser }}
+      run: |
+        node <<'NODE'
+        const fs = require('fs');
+        const path = require('path');
+
+        const project = process.env.PLAYWRIGHT_PROJECT || 'unknown';
+        const sanitized = project.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const metricsDir = path.join(process.cwd(), 'test-results', 'performance');
+        const candidatePaths = [
+          path.join(metricsDir, `${sanitized}.json`),
+          path.join(metricsDir, `${project}.json`),
+        ];
+
+        const metricsPath = candidatePaths.find((candidate) => fs.existsSync(candidate));
+
+        if (!metricsPath) {
+          console.log(`::warning::Performance metrics not found for ${project}.`);
+          console.log(`Checked: ${candidatePaths.join(', ')}`);
+
+          const outputsFile = process.env.GITHUB_OUTPUT;
+          if (outputsFile) {
+            fs.appendFileSync(outputsFile, 'load_time=n/a\n');
+            fs.appendFileSync(outputsFile, 'navigation_duration=n/a\n');
+            fs.appendFileSync(outputsFile, 'dom_content_loaded=n/a\n');
+          }
+
+          process.exit(0);
+        }
+
+        const metrics = JSON.parse(fs.readFileSync(metricsPath, 'utf8'));
+
+        const toNumber = (value) => (typeof value === 'number' && Number.isFinite(value) ? value : undefined);
+        const average = (values) => {
+          const valid = values.filter((value) => typeof value === 'number' && Number.isFinite(value));
+          if (valid.length === 0) {
+            return undefined;
+          }
+          return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+        };
+
+        const runs = Array.isArray(metrics.runs) ? metrics.runs : [];
+        const runLoadTimes = runs
+          .map((run) => (run && typeof run === 'object' ? toNumber(run.totalLoadTimeMs) : undefined))
+          .filter((value) => value !== undefined);
+        const runNavigationDurations = runs
+          .map((run) => {
+            const navigation = run && typeof run === 'object' ? run.navigation : undefined;
+            return navigation && typeof navigation === 'object' ? toNumber(navigation.duration) : undefined;
+          })
+          .filter((value) => value !== undefined);
+        const runDomContentLoaded = runs
+          .map((run) => {
+            const navigation = run && typeof run === 'object' ? run.navigation : undefined;
+            return navigation && typeof navigation === 'object' ? toNumber(navigation.domContentLoadedEventEnd) : undefined;
+          })
+          .filter((value) => value !== undefined);
+
+        const navigation = metrics.navigation && typeof metrics.navigation === 'object' ? metrics.navigation : undefined;
+
+        const loadTime =
+          toNumber(metrics.totalLoadTimeMs ?? metrics.averageLoadTimeMs) ?? average(runLoadTimes);
+        const navigationDuration =
+          (navigation && toNumber(navigation.duration)) ?? average(runNavigationDurations);
+        const domContentLoaded =
+          (navigation && toNumber(navigation.domContentLoadedEventEnd)) ?? average(runDomContentLoaded);
+
+        const formattedLoad = loadTime !== undefined ? loadTime.toFixed(0) : 'n/a';
+        const formattedDuration = navigationDuration !== undefined ? navigationDuration.toFixed(0) : 'n/a';
+        const formattedDom = domContentLoaded !== undefined ? domContentLoaded.toFixed(0) : 'n/a';
+
+        const messageParts = [`${project} ELMO fully loaded in ${formattedLoad} ms`];
+        if (formattedDuration !== 'n/a') {
+          messageParts.push(`navigation duration ${formattedDuration} ms`);
+        }
+        if (formattedDom !== 'n/a') {
+          messageParts.push(`DOMContentLoaded ${formattedDom} ms`);
+        }
+        if (runLoadTimes.length > 0) {
+          const formattedRuns = runLoadTimes
+            .map((value, index) => `run ${index + 1}: ${value.toFixed(0)} ms`)
+            .join(', ');
+          messageParts.push(`runs ${formattedRuns}`);
+        }
+
+        console.log(`::notice title=ELMO load time::${messageParts.join(' | ')}`);
+
+        const outputsFile = process.env.GITHUB_OUTPUT;
+        const runsSummary = runLoadTimes.length > 0
+          ? runLoadTimes.map((value, index) => `#${index + 1}: ${value.toFixed(0)} ms`).join(', ')
+          : '';
+
+        if (outputsFile) {
+          fs.appendFileSync(outputsFile, `load_time=${formattedLoad}\n`);
+          fs.appendFileSync(outputsFile, `navigation_duration=${formattedDuration}\n`);
+          fs.appendFileSync(outputsFile, `dom_content_loaded=${formattedDom}\n`);
+          if (runsSummary) {
+            fs.appendFileSync(outputsFile, `runs_summary=${runsSummary}\n`);
+          }
+        }
+
+        const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+        if (summaryPath) {
+          let summary = '';
+          if (!fs.existsSync(summaryPath) || fs.statSync(summaryPath).size === 0) {
+            summary += '| Browser | Fully loaded (ms) | Navigation duration (ms) | DOMContentLoaded (ms) |\n';
+            summary += '| --- | ---: | ---: | ---: |\n';
+          }
+          summary += `| ${metrics.browser || project} | ${formattedLoad} | ${formattedDuration} | ${formattedDom} |\n`;
+          if (runLoadTimes.length > 0) {
+            const runDetails = runLoadTimes
+              .map((value, index) => `#${index + 1}: ${value.toFixed(0)} ms`)
+              .join(', ');
+            summary += `> Individual runs (${runLoadTimes.length}): ${runDetails}\n`;
+          }
+          fs.appendFileSync(summaryPath, summary);
+        }
+        NODE
+
+    - name: Report ELMO load time check run
+      if: always()
+      uses: actions/github-script@v7
+      env:
+        PLAYWRIGHT_PROJECT: ${{ matrix.browser }}
+        LOAD_TIME_MS: ${{ steps.publish_performance_metrics.outputs.load_time }}
+        NAVIGATION_DURATION_MS: ${{ steps.publish_performance_metrics.outputs.navigation_duration }}
+        DOM_CONTENT_LOADED_MS: ${{ steps.publish_performance_metrics.outputs.dom_content_loaded }}
+        RUNS_SUMMARY: ${{ steps.publish_performance_metrics.outputs.runs_summary }}
+        PLAYWRIGHT_CONCLUSION: ${{ steps.run_playwright_tests.conclusion }}
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const project = process.env.PLAYWRIGHT_PROJECT || 'unknown';
+          const loadTime = process.env.LOAD_TIME_MS;
+          const navigationDuration = process.env.NAVIGATION_DURATION_MS;
+          const domContentLoaded = process.env.DOM_CONTENT_LOADED_MS;
+          const runsSummary = process.env.RUNS_SUMMARY || '';
+          const testConclusion = (process.env.PLAYWRIGHT_CONCLUSION || '').toLowerCase();
+
+          if (!loadTime) {
+            core.info(`No load time available for ${project}. Skipping check run.`);
+            return;
+          }
+
+          const conclusionMap = {
+            success: 'success',
+            failure: 'failure',
+            cancelled: 'cancelled',
+            skipped: 'skipped',
+            timed_out: 'timed_out',
+            action_required: 'action_required',
+          };
+
+          const conclusion = conclusionMap[testConclusion] || (loadTime === 'n/a' ? 'neutral' : 'success');
+
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          const headSha = context.sha;
+          const now = new Date().toISOString();
+
+          const metricsLines = [
+            `• Fully loaded: ${loadTime} ms`,
+          ];
+          if (navigationDuration && navigationDuration !== 'n/a') {
+            metricsLines.push(`• Navigation duration: ${navigationDuration} ms`);
+          }
+          if (domContentLoaded && domContentLoaded !== 'n/a') {
+            metricsLines.push(`• DOMContentLoaded: ${domContentLoaded} ms`);
+          }
+          if (runsSummary) {
+            metricsLines.push(`• Runs: ${runsSummary}`);
+          }
+
+          await github.rest.checks.create({
+            owner,
+            repo,
+            name: `playwright-tests (${project}) load time`,
+            head_sha: headSha,
+            status: 'completed',
+            started_at: now,
+            completed_at: now,
+            conclusion,
+            output: {
+              title: `ELMO fully loaded in ${loadTime} ms`,
+              summary: metricsLines.join('\n'),
+            },
+            details_url: `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`,
+          });
+
+    - name: Debug what the browser actually sees
+      if: failure()
+      run: |
+        echo "=== Debugging what the browser gets ==="
+        curl -s http://localhost:8000/ | head -50
+        echo "\n=== Testing if any HTML is returned ==="
+        curl -s http://localhost:8000/ | grep -i "html\|body\|navbar" || echo "No HTML tags found"
 
     - name: Debug what the browser actually sees
       if: failure()
@@ -218,7 +438,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: playwright-report
+        name: playwright-report-${{ matrix.browser }}
         path: playwright-report/
         retention-days: 30
 
@@ -226,7 +446,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results
+        name: test-results-${{ matrix.browser }}
         path: test-results/
         retention-days: 30
 

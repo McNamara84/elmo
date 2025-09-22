@@ -4,6 +4,10 @@
  */
 let translations = {};
 
+window.setTranslations = function setTranslations(value) {
+    translations = value || {};
+};
+
 /**
  * Loads the translation file for the specified language
  * @param {string} lang - The language code (e.g., 'en', 'de', 'fr')
@@ -20,8 +24,22 @@ function loadTranslations(lang) {
             console.error(`Failed to load language file: ${lang}`);
             // Fallback to English if requested language is not available
             if (lang !== 'en') {
+                try {
+                    const previousPreference = localStorage.getItem('userLanguage');
+                    if (previousPreference !== 'auto') {
+                        localStorage.setItem('userLanguage', 'en');
+                    }
+                } catch (error) {
+                    console.warn('Unable to persist fallback language preference:', error);
+                }
                 return loadTranslations('en');
             }
+            try {
+                localStorage.setItem('userLanguage', 'auto');
+            } catch (error) {
+                console.warn('Unable to reset language preference after fallback failure:', error);
+            }
+            updateActiveLanguage('auto');
         });
 }
 
@@ -78,7 +96,8 @@ function applyTranslations() {
             if (tooltip) {
                 tooltip.dispose();
             }
-            new bootstrap.Tooltip(element[0]);
+            const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
+            new bootstrap.Tooltip(element[0], { container: tooltipContainer });
         }
     });
 
@@ -148,14 +167,17 @@ function translatePlaceholders(container) {
     });
 }
 
+window.applyTranslations = applyTranslations;
+
 /**
  * Initializes the language handling system
  */
 $(document).ready(function () {
     // Initialize tooltips
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
     const tooltipList = [...tooltipTriggerList].map(
-        tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl)
+        tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { container: tooltipContainer })
     );
 
     // Load initial language

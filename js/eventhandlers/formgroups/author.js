@@ -43,6 +43,7 @@ $(document).ready(function () {
   $("#group-author").sortable({
     items: "[data-creator-row]",
     handle: ".drag-handle",
+    cancel: "input, textarea, select, option",
     axis: "y",
     tolerance: "pointer",
     containment: "parent"
@@ -103,8 +104,9 @@ $(document).ready(function () {
     });
 
     // Initialize Bootstrap tooltips for new row
+    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
     newAuthorRow.find('[data-bs-toggle="tooltip"]').each(function () {
-      new bootstrap.Tooltip(this);
+      new bootstrap.Tooltip(this, { container: tooltipContainer });
     });
 
     // Setup toggle behavior for contact person fields
