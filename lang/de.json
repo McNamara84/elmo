@@ -62,6 +62,11 @@
             "cleared": "Entwurf des automatischen Speicherns gelöscht."
         },
         "restore": {
+            "title": "Automatisch gespeicherten Entwurf wiederherstellen",
+            "actions": {
+                "restore": "Entwurf wiederherstellen",
+                "discard": "Entwurf verwerfen"
+            },
             "foundWithTimestamp": "Wir haben einen automatisch gespeicherten Entwurf vom {timestamp} gefunden. Möchten Sie ihn wiederherstellen?",
             "foundWithoutTimestamp": "Wir haben einen automatisch gespeicherten Entwurf aus einer früheren Sitzung gefunden. Möchten Sie ihn wiederherstellen?"
         }
