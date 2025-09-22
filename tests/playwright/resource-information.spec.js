@@ -223,10 +223,23 @@ test.describe("Resource Information Form Tests", () => {
     const doiInput = page.locator("#input-resourceinformation-doi");
     await doiInput.fill("invalid-doi");
 
+    let isValid = await doiInput.evaluate((node) => node.checkValidity());
+    expect(isValid).toBe(false);
+
     // Test valid DOI
     await doiInput.clear();
     await doiInput.fill("10.1234/valid.doi");
     await expect(doiInput).toHaveValue("10.1234/valid.doi");
+    isValid = await doiInput.evaluate((node) => node.checkValidity());
+    expect(isValid).toBe(true);
+
+    // Test DOI with special characters like angle brackets
+    await doiInput.clear();
+    const complexDOI = "10.1130/0091-7613(1993)021<0099:GAOFMT>2.3.CO;2";
+    await doiInput.fill(complexDOI);
+    await expect(doiInput).toHaveValue(complexDOI);
+    isValid = await doiInput.evaluate((node) => node.checkValidity());
+    expect(isValid).toBe(true);
 
     // Test Publication Year pattern
     const yearInput = page.locator("#input-resourceinformation-publicationyear");
