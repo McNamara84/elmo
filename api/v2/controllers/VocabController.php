@@ -68,7 +68,8 @@ class VocabController
      */
     private function validateApiKey(): bool
     {
-        global $apiKeyElmo;
+        // Get API key from environment instead of global variable
+        $apiKeyElmo = getenv('apiKeyElmo') ?: '1234-1234-1234-1234';
 
         // Get API key from header
         $providedKey = $_SERVER['HTTP_X_API_KEY'] ?? null;
