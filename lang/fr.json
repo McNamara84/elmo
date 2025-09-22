@@ -62,6 +62,11 @@
             "cleared": "Brouillon de sauvegarde automatique effacé."
         },
         "restore": {
+            "title": "Restaurer le brouillon enregistré automatiquement",
+            "actions": {
+                "restore": "Restaurer le brouillon",
+                "discard": "Supprimer le brouillon"
+            },
             "foundWithTimestamp": "Nous avons trouvé un brouillon sauvegardé automatiquement du {timestamp}. Voulez-vous le restaurer ?",
             "foundWithoutTimestamp": "Nous avons trouvé un brouillon sauvegardé automatiquement d’une session précédente. Voulez-vous le restaurer ?"
         }
