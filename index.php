@@ -20,10 +20,12 @@ include_once $baseDir ."helper_functions.php";
 
 loadEnvVariables();
 // Second, include variables subjected to change
-if (file_exists($baseDir . "choice.php")) {
-    include_once $baseDir . "choice.php";
-} else {
-    include_once $baseDir . "choice.sample.php";
+if (!getenv('CONFIG_VERSION')) { // only include them for development scenario. 
+    if (file_exists($baseDir . "choice.php")) {
+        include_once $baseDir . "choice.php";
+    } else {
+        include_once $baseDir . "choice.sample.php";
+    }
 }
 
 // Include HTML components using absolute paths to ensure reliable file access
