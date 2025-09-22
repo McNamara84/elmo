@@ -6,38 +6,103 @@
 
 import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
 
+const FUNDING_FIELD_NAMES = new Set([
+  'funder[]',
+  'funderId[]',
+  'funderidtyp[]',
+  'grantNummer[]',
+  'grantName[]',
+  'awardURI[]'
+]);
+
+function escapeSelector(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  if (typeof window.CSS !== 'undefined' && typeof window.CSS.escape === 'function') {
+    return window.CSS.escape(value);
+  }
+
+  return value.replace(/([\0-\x1F\x7F"'\\#.:;,!?+*~=<>^$\[\](){}|\/\s-])/g, '\\$1');
+}
+
 $(document).ready(function () {
-  $("#button-fundingreference-add").click(function () {
-    const fundingreferenceGroup = $("#group-fundingreference");
+  const fundingreferenceGroup = $("#group-fundingreference");
+
+  function initialiseAutocomplete(input) {
+    if (typeof setUpAutocompleteFunder === 'function' && input) {
+      setUpAutocompleteFunder(input);
+    }
+  }
+
+  function addFundingReferenceRow() {
     const firstFundingReferenceLine = fundingreferenceGroup.children().first();
+    if (!firstFundingReferenceLine.length) {
+      return null;
+    }
+
     const newFundingReferenceRow = firstFundingReferenceLine.clone();
 
-    // Clear input fields and remove validation feedback
-    newFundingReferenceRow.find("input").val("").removeClass("is-invalid");
+    newFundingReferenceRow.find("input")
+      .val("")
+      .removeClass("is-invalid is-valid");
+
     newFundingReferenceRow.find(".invalid-feedback, .valid-feedback").css("display", "");
-    // Reset required attributes
-    newFundingReferenceRow.find("input").removeAttr("required");
-    // Replace the add button with the remove button
+    newFundingReferenceRow.find("input, select").removeAttr("required");
+
     newFundingReferenceRow.find(".addFundingReference").replaceWith(createRemoveButton());
-    // Remove help buttons
+
     replaceHelpButtonInClonedRows(newFundingReferenceRow);
-    // Append the new funding reference row to the DOM
+
     fundingreferenceGroup.append(newFundingReferenceRow);
-    // Destroy autocomplete
+
     const newInput = newFundingReferenceRow.find(".inputFunder");
     if (newInput.data('ui-autocomplete')) {
       newInput.autocomplete('destroy');
     }
 
-    // Initialize autocomplete again for the new row
-    setUpAutocompleteFunder(newInput[0]);
+    initialiseAutocomplete(newInput[0]);
 
-    // Event handler for the remove button
     newFundingReferenceRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
       if (typeof checkMandatoryFields === 'function') {
         checkMandatoryFields();
       }
     });
+
+    return newFundingReferenceRow;
+  }
+
+  $("#button-fundingreference-add").click(function () {
+    addFundingReferenceRow();
+  });
+
+  document.addEventListener('autosave:ensure-array-field', (event) => {
+    const { detail, target } = event || {};
+    const { name, requiredCount } = detail || {};
+
+    if (!name || !FUNDING_FIELD_NAMES.has(name) || !requiredCount || requiredCount <= 1) {
+      return;
+    }
+
+    if (!fundingreferenceGroup.length) {
+      return;
+    }
+
+    if (target && !fundingreferenceGroup[0].contains(target)) {
+      return;
+    }
+
+    const selector = `[name="${escapeSelector(name)}"]`;
+    let currentCount = fundingreferenceGroup.find(selector).length;
+
+    while (currentCount < requiredCount) {
+      const newRow = addFundingReferenceRow();
+      if (!newRow) {
+        break;
+      }
+      currentCount = fundingreferenceGroup.find(selector).length;
+    }
   });
 });
