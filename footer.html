@@ -2,8 +2,8 @@
 <footer class="footer mt-auto py-0 fixed-bottom">
   <div class="container">
     <div class="row">
-      <div class="col d-flex align-items-center justify-content-center">
-        <div class="col-auto d-flex align-items-center justify-content-end">
+      <div class="col d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3 flex-wrap">
+        <div class="d-flex align-items-center justify-content-center flex-wrap gap-2">
           <button type="button" class="btn btn-danger m-1" data-bs-toggle="tooltip" data-translate="buttons.clear"
             id="button-form-reset" data-translate-tooltip="buttons.clearTooltip">
             Clear
@@ -27,6 +27,14 @@
             Feedback
           </button>
           <?php endif; ?>
+        </div>
+        <div class="autosave-status" id="autosave-status" role="status" aria-live="polite" aria-atomic="true" aria-labelledby="autosave-status-label autosave-status-text">
+          <span class="visually-hidden" id="autosave-status-label" data-translate="autosave.status.label">Autosave status:</span>
+          <span class="autosave-status__indicator" aria-hidden="true"></span>
+          <div class="autosave-status__text">
+            <span class="autosave-status__heading" id="autosave-status-heading" data-translate="autosave.status.heading">Autosave</span>
+            <span id="autosave-status-text">Autosave ready.</span>
+          </div>
         </div>
       </div>
     </div>
