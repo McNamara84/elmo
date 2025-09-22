@@ -56,16 +56,17 @@ Following conditions are required for installation:
 2. The XSL and ZIP extensions for PHP must be installed and enabled.
 3. Don't forget to start Apache and MySQL.
 4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
-5. Copy the content of the file `sample_helper_functions.php` into a new file `helper_functions.php` and adjust the settings for the database connection.
-6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `helper_functions.php`.
-7. Create a Google Maps JS API key and paste it into the `helper_functions.php` file as well.
-8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
-9. In this folder run `npm install` via bash.
-10. There you run `composer install`. 
-11. Access `install.html` via the browser and choose to install with or without test datasets. The database tables will be created in your database, as well as 3 test datasets, if you chose that first option.
-12. Delete `install.php` and `install.html` after successfully creating the database.
-13. The metadata editor is now accessible in the browser via `localhost/directoryname`.
-14. Adjust settings in `helper_functions.php` (see [Settings Section](#einstellungen)).
+5. Copy the content of the file `env.sample` into a new file `.env` and adjust the settings for the database connection. (skip for default)
+6. Copy the content of the file `choice.sample.php` into a new file `choice.php`. (skip for default)
+7. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `.env`.
+8. Create a Google Maps JS API key and paste it into the `.env` file as well.
+9. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
+10. In this folder run `npm install` via bash.
+11. There you run `composer install`. 
+12. Access `install.html` via the browser and choose to install with or without test datasets. Depending on your choice, the database tables will be created in your database, as well as 5 test datasets.
+13. Delete `install.php` and `install.html` after successfully creating the database.
+14. The metadata editor is now accessible in the browser via `localhost/directoryname`.
+15. Adjust settings in `.env` (see [Settings Section](#settings)).
 
 ### Installation via Docker
 1. Install [Docker](https://docs.docker.com/engine/install/).
@@ -84,10 +85,11 @@ This section outlines the automatic processes handled by the Docker environment 
 - Configures and orchestrates two primary services:
   - `db`: Built from a MariaDB image.
   - `web`: Built from the `Dockerfile`.
+- Volume mount: links file in the container and on the host filesystem.
 
 **2. `Dockerfile`** 
 - **Base Image:** Installs `php 8.4-apache` and essential dependencies, including the database client.
-- **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html`), setting appropriate ownership for the standard Apache user (`www-data`). I fyou don't want something to be copied into container, include it into .dockerignore (performance might be affected)
+- **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html`), setting appropriate ownership for the standard Apache user (`www-data`). If you don't want something to be copied into container, include it into .dockerignore (performance might be affected)
 - **Entrypoint:** Executes the `docker-entrypoint.sh` script.
 
 **3. `docker-entrypoint.sh`** 
@@ -122,10 +124,9 @@ If you encounter problems with the installation, feel free to leave an entry in 
 
   ## Installation
   </summary>
+  <details>
 
-  ### Requirements
-
-  The installation of ELMO is possible on operating systems such as recent Windows versions (e.g. Windows 10/11) and the most common Linux distributions (e.g. Ubuntu, Debian).
+    The installation of ELMO is possible on operating systems such as recent Windows versions (e.g. Windows 10/11) and the most common Linux distributions (e.g. Ubuntu, Debian).
   Following conditions are required for installation:
   - PHP ≥ 8.2 and ≤ 8.4
     - incl. a webserver able to perform PHP operations (such as Apache or Nginx)
@@ -138,22 +139,22 @@ If you encounter problems with the installation, feel free to leave an entry in 
   2. The XSL and ZIP extensions for PHP must be installed and enabled.
   3. Don't forget to start Apache and MySQL.
   4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
-  5. Copy the content of the file `sample_helper_functions.php` into a new file `helper_functions.php` and adjust the settings for the database connection.
-  6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `helper_functions.php`.
-  7. Create a Google Maps JS API key and paste it into the `helper_functions.php` file as well.
-  8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
-  9. Access `install.php` via the browser. The database tables will be created automatically in your database.
-  10. The metadata editor is now accessible in the browser via `localhost/directoryname`.
-  11. Adjust settings in `helper_functions.php` (see [Settings Section](#einstellungen)).
-
-  If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
-  
-  <details>
+  5. Copy the content of the file `env.sample` into a new file `.env` and adjust the settings for the database connection. (skip for default)
+  6. Copy the content of the file `choice.sample.php` into a new file `choice.php`. (skip for default)
+  7. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `.env`.
+  8. Create a Google Maps JS API key and paste it into the `.env` file as well.
+  9. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
+  10. In this folder run `npm install` via bash.
+  11. There you run `composer install`. 
+  12. Access `install.html` via the browser and choose to install with or without test datasets. Depending on your choice, the database tables will be created in your database, as well as 5 test datasets.
+  13. Delete `install.php` and `install.html` after successfully creating the database.
+  14. The metadata editor is now accessible in the browser via `localhost/directoryname`.
+  15. Adjust settings in `.env` (see [Settings Section](#settings)).
   <summary>
 
   ### Detailed example installation on Windows 10/11
   </summary>
-
+  <details>
   This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10/11 using PHP and MySQL. For a local development environment, localhost-based access to the server is usually sufficient.
   #### 1. Setting up the development environment
   - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP > 8.2).
@@ -171,25 +172,25 @@ If you encounter problems with the installation, feel free to leave an entry in 
     - Create a new MySQL-user for the installation: `CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';`
     - Granting rights to this user: `GRANT CREATE ON your_database.* TO 'username'@'localhost';` and save with `FLUSH PRIVILEGES;`
     - Optional: confirm the creation of the database while being logged in as the new user: `SHOW DATABASES;`
-  #### 4. Setting up the `helper_functions.php` file
+  #### 4. Setting up the `.env` file
   - Download all files from this repository into the `htdocs`or`www`folder of your webserver.
-  - Create `helper_functions.php`:
-     - Copy the entire contents of `sample_helper_functions.php` which is located in the first level of the ELMO repository and save it as `helper_functions.php` in the same directory.
+  - Create `.env`:
+     - Copy the entire contents of `.env.sample` which is located in the first level of the ELMO repository and save it as `.env` in the same directory.
   - Adjust the database connection:
-    - Open the `helper_functions.php` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
+    - Open the `.env` file with a text editor and modify the database connection settings according to your database name, user, password and host. The default MySQL user ist 'root'. Change this to the MySQL-user you just created in step 3. The host value typically remains as 'localhost'.
   #### 5. Setting up the application
   - Access the installation script in your browser as follows: `http://localhost/your_directory/install.html`. This script will automatically create the required tables in the database you specified in step 3. In addition, three test datasets are installed through `install.html` if you chose this option.
   #### 6. Delete installation files
   - Please delete `install.php` and `install.html` after successfully creating the database.
   #### 7. (Optional) Creating an API key for the automatically generated time zone selection
   - Sign up for a free API key at [timezonedb.com](https://timezonedb.com/). After registration, you should receive an email with your account data including your API key.
-  - Insert your API key in `helper_functions.php`in the according line.
+  - Insert your API key in `.env` in the according line.
   #### 8. Creating a Google Maps JS API key
   - Get a Google Maps JS API key via the [Google Cloud Console](https://console.cloud.google.com). To do this, create a project, enable the Google Maps JavaScript API and get your API key.
-  - Insert your Google Maps API key in the corresponding line in the `helper_functions.php`file. 
+  - Insert your Google Maps API key in the corresponding line in the `.env`file. 
   #### 9. Accessing the metadata editor
   - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
-  - Settings may be modified in `helper_functions.php`.
+  - Settings may be modified in `choice.php`.
   </details>
 </details> 
 
@@ -228,9 +229,17 @@ To install them: npm install
 
   ## Settings
   </summary>
+  
+  #### Choosing the version
+  ELMO is used in different research fields. Every version can be deployed out-of-the-box by providing a `CONFIG_VERSION`:
+    - **Generic ELMO** for the widest variety of research data. Represents the DataCite variables. `CONFIG_VERSION = generic`
+    - **ELMO MSL** is the generic ELMO, additionally provided with [EPOS Multi-Scale Labs](https://epos-msl.uu.nl/)
+    - **ELMO GEM** is an adaptation of ELMO for model publications on the [ICGEM](https://icgem.gfz.de). Provided with additional form groups, core form groups adjusted.
+  The `CONFIG_VERSION` can be specified inside the `docker-compose.yml`. Speecifying the `CONFIG_VERSION` makes container immutable and thus production-ready. When developing locally, you can switch the form groups in `choice.php`.
 
-  In addition to the access data for the database, other settings can also be adjusted in the `helper_functions.php` file:
-
+  For a more custom build of ELMO, a new `CONFIG_VERSION` can be added to the /envs folder and `docker-entrypoint.sh`
+  
+  #### Variables
   - `$host`: Database host.
   - `$username`: Username of the user with access to the given database.
   - `$password`: Password of database user.
@@ -330,7 +339,7 @@ To install them: npm install
 
   This field contains the title of the resource.
   - Data type: String
-  - Occurrence: 1-n, with n=$maxTitles specified in the helper_functions.php
+  - Occurrence: 1-n, with n=$maxTitles specified in the choice.php for local development and in nv files for the production setup.
   - The corresponding field in the database where the value is stored is called: `text` in the table `title`
   - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)
@@ -1098,7 +1107,7 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | **Resource Type**                         |                    1                    |                   1                   | `<resourceType>` as well as `<resourceTypeGeneral>`                                                                                                                         |
 |                            | **Version**                               |                   0-1                   |                  0-1                  | `<version>`                                                                                                                                                                 |
 |                            | **Language of Dataset**                   |                    1                    |                  0-1                  | `<language>`                                                                                                                                                                |
-|                            | **Title**                                 |   1-n (n=$maxTitles in helper_functions.php)    |                  1-n                  | `<title>`                                                                                                                                                                   |
+|                            | **Title**                                 |   1-n (n=$maxTitles in environment variables)    |                  1-n                  | `<title>`                                                                                                                                                                   |
 |                            | **Title Type**                            | 1 (if corresponding title ≠ main title) |                  0-1                  | `<titleType>`                                                                                                                                                               |
 | Licenses & Rights          |                                           |                                         |                                       |                                                                                                                                                                             |
 |                            | **Rights Title**                          |                    1                    |                  0-n                  | `<rights>`                                                                                                                                                                  |

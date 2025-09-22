@@ -1,6 +1,5 @@
 #!/bin/sh
 set -e
-
 # give www-data ownership of the xml folder every start
 chown -R www-data:www-data /var/www/html/xml
 
