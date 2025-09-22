@@ -62,6 +62,11 @@
             "cleared": "Autosave draft cleared."
         },
         "restore": {
+            "title": "Restore autosaved draft",
+            "actions": {
+                "restore": "Restore draft",
+                "discard": "Discard draft"
+            },
             "foundWithTimestamp": "We found an autosaved draft from {timestamp}. Would you like to restore it?",
             "foundWithoutTimestamp": "We found an autosaved draft from a previous session. Would you like to restore it?"
         }

@@ -32,7 +32,10 @@ class AutosaveService {
     this.boundHandleTranslationsLoaded = this.handleTranslationsLoaded.bind(this);
 
     this.restoreModal = null;
+    this.restoreHeadingElement = null;
     this.restoreDescriptionElement = null;
+    this.restoreApplyButton = null;
+    this.restoreDismissButton = null;
 
     if (typeof document !== 'undefined') {
       document.addEventListener('translationsLoaded', this.boundHandleTranslationsLoaded, { passive: true });
@@ -130,9 +133,13 @@ class AutosaveService {
 
   registerRestoreModal() {
     const modalElement = document.getElementById(this.restoreModalId);
-    if (modalElement && typeof bootstrap !== 'undefined' && typeof bootstrap.Modal === 'function') {
-      this.restoreModal = new bootstrap.Modal(modalElement, { backdrop: 'static' });
+    if (modalElement) {
+      this.restoreHeadingElement = modalElement.querySelector('#modal-restore-draft-label');
       this.restoreDescriptionElement = modalElement.querySelector('#modal-restore-draft-description');
+
+      if (typeof bootstrap !== 'undefined' && typeof bootstrap.Modal === 'function') {
+        this.restoreModal = new bootstrap.Modal(modalElement, { backdrop: 'static' });
+      }
     }
 
     const applyButton = document.getElementById(this.restoreApplyId);
@@ -140,10 +147,12 @@ class AutosaveService {
 
     if (applyButton) {
       applyButton.addEventListener('click', this.applyPendingRestore);
+      this.restoreApplyButton = applyButton;
     }
 
     if (dismissButton) {
       dismissButton.addEventListener('click', this.handleRestoreDismiss);
+      this.restoreDismissButton = dismissButton;
     }
   }
 
@@ -690,24 +699,63 @@ class AutosaveService {
 
   refreshTranslations() {
     if (this.statusLabelElement) {
-      const fallbackLabel = this.statusLabelElement.getAttribute('data-default-text') || 'Autosave status:';
+      const fallbackLabel = this.statusLabelElement.getAttribute('data-default-text')
+        || this.statusLabelElement.textContent.trim()
+        || 'Autosave status:';
       const translatedLabel = this.translate('autosave.status.label', fallbackLabel);
       this.statusLabelElement.textContent = translatedLabel;
       this.statusLabelElement.setAttribute('data-default-text', fallbackLabel);
     }
 
     if (this.statusHeadingElement) {
-      const fallbackHeading = this.statusHeadingElement.getAttribute('data-default-text') || 'Autosave';
+      const fallbackHeading = this.statusHeadingElement.getAttribute('data-default-text')
+        || this.statusHeadingElement.textContent.trim()
+        || 'Autosave';
       const translatedHeading = this.translate('autosave.status.heading', fallbackHeading);
       this.statusHeadingElement.textContent = translatedHeading;
       this.statusHeadingElement.setAttribute('data-default-text', fallbackHeading);
     }
 
-    this.updateStatus(this.currentState, this.currentDetail);
-
-    if (this.pendingRestoreRecord && this.restoreDescriptionElement) {
-      this.restoreDescriptionElement.textContent = this.getRestoreMessage(this.pendingRestoreRecord);
+    if (this.restoreHeadingElement) {
+      const fallbackRestoreHeading = this.restoreHeadingElement.getAttribute('data-default-text')
+        || this.restoreHeadingElement.textContent.trim()
+        || 'Restore autosaved draft';
+      const translatedRestoreHeading = this.translate('autosave.restore.title', fallbackRestoreHeading);
+      this.restoreHeadingElement.textContent = translatedRestoreHeading;
+      this.restoreHeadingElement.setAttribute('data-default-text', fallbackRestoreHeading);
     }
+
+    if (this.restoreApplyButton) {
+      const fallbackApply = this.restoreApplyButton.getAttribute('data-default-text')
+        || this.restoreApplyButton.textContent.trim()
+        || 'Restore draft';
+      const translatedApply = this.translate('autosave.restore.actions.restore', fallbackApply);
+      this.restoreApplyButton.textContent = translatedApply;
+      this.restoreApplyButton.setAttribute('data-default-text', fallbackApply);
+    }
+
+    if (this.restoreDismissButton) {
+      const fallbackDismiss = this.restoreDismissButton.getAttribute('data-default-text')
+        || this.restoreDismissButton.textContent.trim()
+        || 'Discard draft';
+      const translatedDismiss = this.translate('autosave.restore.actions.discard', fallbackDismiss);
+      this.restoreDismissButton.textContent = translatedDismiss;
+      this.restoreDismissButton.setAttribute('data-default-text', fallbackDismiss);
+    }
+
+    if (this.restoreDescriptionElement) {
+      const fallbackDescription = this.restoreDescriptionElement.getAttribute('data-default-text')
+        || this.restoreDescriptionElement.textContent.trim()
+        || 'We found an autosaved draft from your previous session. Would you like to restore it?';
+      const translatedDescription = this.pendingRestoreRecord
+        ? this.getRestoreMessage(this.pendingRestoreRecord)
+        : this.translate('autosave.restore.foundWithoutTimestamp', fallbackDescription);
+
+      this.restoreDescriptionElement.textContent = translatedDescription;
+      this.restoreDescriptionElement.setAttribute('data-default-text', fallbackDescription);
+    }
+
+    this.updateStatus(this.currentState, this.currentDetail);
   }
 
   handleTranslationsLoaded(event) {

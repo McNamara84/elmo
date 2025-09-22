@@ -20,10 +20,19 @@ describe('autosaveService', () => {
         </div>
       </div>
       <div id="modal-restore-draft">
-        <div id="modal-restore-draft-description"></div>
+        <div class="modal-header">
+          <h5 class="modal-title" id="modal-restore-draft-label">Restore autosaved draft</h5>
+        </div>
+        <div class="modal-body">
+          <p id="modal-restore-draft-description">
+            We found an autosaved draft from your previous session. Would you like to restore it?
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button id="button-restore-dismiss" type="button">Discard draft</button>
+          <button id="button-restore-apply" type="button">Restore draft</button>
+        </div>
       </div>
-      <button id="button-restore-apply" type="button"></button>
-      <button id="button-restore-dismiss" type="button"></button>
     `;
 
     modalInstance = { show: jest.fn(), hide: jest.fn() };
@@ -128,6 +137,84 @@ describe('autosaveService', () => {
 
     expect(document.getElementById('autosave-status-heading').textContent).toBe('Automatisches Speichern');
     expect(document.getElementById('autosave-status-label').textContent).toBe('Status des automatischen Speicherns:');
+  });
+
+  test('refreshTranslations localizes restore modal text', () => {
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft',
+      restoreApplyButtonId: 'button-restore-apply',
+      restoreDismissButtonId: 'button-restore-dismiss'
+    });
+
+    service.start();
+
+    const translations = {
+      autosave: {
+        status: {
+          label: 'Status des automatischen Speicherns:',
+          heading: 'Automatisches Speichern'
+        },
+        restore: {
+          title: 'Automatisch gespeicherten Entwurf wiederherstellen',
+          actions: {
+            restore: 'Entwurf wiederherstellen',
+            discard: 'Entwurf verwerfen'
+          },
+          foundWithoutTimestamp: 'Wir haben einen automatisch gespeicherten Entwurf gefunden. Möchten Sie ihn wiederherstellen?'
+        }
+      }
+    };
+
+    document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: { translations } }));
+
+    expect(document.getElementById('modal-restore-draft-label').textContent)
+      .toBe('Automatisch gespeicherten Entwurf wiederherstellen');
+    expect(document.getElementById('button-restore-apply').textContent).toBe('Entwurf wiederherstellen');
+    expect(document.getElementById('button-restore-dismiss').textContent).toBe('Entwurf verwerfen');
+    expect(document.getElementById('modal-restore-draft-description').textContent)
+      .toBe('Wir haben einen automatisch gespeicherten Entwurf gefunden. Möchten Sie ihn wiederherstellen?');
+  });
+
+  test('refreshTranslations keeps localized restore message with timestamp', () => {
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft',
+      restoreApplyButtonId: 'button-restore-apply',
+      restoreDismissButtonId: 'button-restore-dismiss'
+    });
+
+    service.start();
+    service.pendingRestoreRecord = { id: 'abc', updatedAt: '2024-01-01T09:30:00Z' };
+    const formatLongSpy = jest.spyOn(service, 'formatLong').mockReturnValue('1. Januar 2024, 09:30');
+
+    const translations = {
+      autosave: {
+        status: {
+          label: 'Status des automatischen Speicherns:',
+          heading: 'Automatisches Speichern'
+        },
+        restore: {
+          title: 'Automatisch gespeicherten Entwurf wiederherstellen',
+          actions: {
+            restore: 'Entwurf wiederherstellen',
+            discard: 'Entwurf verwerfen'
+          },
+          foundWithTimestamp: 'Wir haben einen automatisch gespeicherten Entwurf vom {timestamp} gefunden. Möchten Sie ihn wiederherstellen?',
+          foundWithoutTimestamp: 'Wir haben einen automatisch gespeicherten Entwurf gefunden. Möchten Sie ihn wiederherstellen?'
+        }
+      }
+    };
+
+    document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: { translations } }));
+
+    expect(document.getElementById('modal-restore-draft-description').textContent)
+      .toBe('Wir haben einen automatisch gespeicherten Entwurf vom 1. Januar 2024, 09:30 gefunden. Möchten Sie ihn wiederherstellen?');
+    formatLongSpy.mockRestore();
   });
 
   test('serializeValues preserves repeated field arrays', () => {
