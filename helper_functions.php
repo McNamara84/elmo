@@ -59,10 +59,15 @@ function loadEnvVariables($path = null) {
     // Default to .env file in the root directory if no path specified
     $path = $path ?: __DIR__ . '/.env';
     
-    // Check if file exists
     if (!file_exists($path)) {
-        elmo_log("Environment file not found: $path");
-        return false;
+        $fallbackPath = __DIR__ . '/.env.sample';
+        if (file_exists($fallbackPath)) {
+            $path = $fallbackPath;
+            elmo_log("ENV", "Using fallback environment file: .env.sample");
+        } else {
+            elmo_log("ENV", "Environment file not found: $path");
+            return false;
+        }
     }
     
     // Read file
