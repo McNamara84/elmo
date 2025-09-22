@@ -14,5 +14,5 @@ blob-report/
 playwright/.cache/
 debug-page.png
 
-#Autosave files
-storage/draft/
+# Autosave files
+storage/drafts/
