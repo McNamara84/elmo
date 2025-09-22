@@ -5,7 +5,7 @@ info:
     This is the ELMO API V2 from GFZ Data Services. The API allows management and retrieval of metadata for scientific datasets.
 
     Some useful links:
-    - [The ELMO repository](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Optimizer)
+    - [The ELMO repository](https://github.com/McNamara84/elmo)
     - [Test Server](https://env.rz-vm182.gfz.de/elmo)
     - [Legal notice](https://dataservices-cms.gfz.de/about-us/legal-notice)
 
@@ -17,18 +17,18 @@ info:
 
     ### Rate Limiting
     Rate limiting may apply to prevent abuse.
-  termsOfService: https://github.com/McNamara84/gfz-metadata-editor-msl-v2
+  termsOfService: https://github.com/McNamara84/elmo
   contact:
     name: Holger Ehrmann
     email: ehrmann@gfz.de
     url: https://env.rz-vm182.gfz.de/elmo
   license:
     name: GPL-2.0-only
-    url: https://raw.githubusercontent.com/McNamara84/gfz-metadata-editor-msl-v2/refs/heads/main/LICENSE.md
+    url: https://raw.githubusercontent.com/McNamara84/elmo/refs/heads/main/LICENSE.md
   version: 2.0.1
 externalDocs:
   description: Documentation of the API V1 at GitHub
-  url: https://github.com/McNamara84/gfz-metadata-editor-msl-v2#api-endpunkte
+  url: https://github.com/McNamara84/elmo#api-endpunkte
 servers:
   - url: https://env.rz-vm182.gfz.de/elmo/api/v2
     description: Test server
