@@ -96,15 +96,25 @@ jobs:
 
       - name: Set test environment variables
         run: |
-          DB_HOST=127.0.0.1 
-          DB_USER=test_user 
-          DB_PASSWORD=test_password 
-          DB_NAME=mde2-msl-test 
+          echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
+          echo "DB_USER=test_user" >> $GITHUB_ENV
+          echo "DB_PASSWORD=test_password" >> $GITHUB_ENV
+          echo "DB_NAME=mde2-msl-test" >> $GITHUB_ENV
 
       - name: Initialize database structure and lookup data
+        env:
+          DB_HOST: ${{ env.DB_HOST }}
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          DB_NAME: ${{ env.DB_NAME }}
         run: php -r "require 'install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
 
       - name: Start PHP built-in web server
+        env:
+          DB_HOST: ${{ env.DB_HOST }}
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          DB_NAME: ${{ env.DB_NAME }}
         run: |
           php -S localhost:8000 -t . tests/server.php 2>&1 > server.log &
           echo $! > server.pid
@@ -128,6 +138,10 @@ jobs:
       - name: Run PHPUnit tests
         env:
           API_BASE_URL: http://localhost:8000
+          DB_HOST: ${{ env.DB_HOST }}
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          DB_NAME: ${{ env.DB_NAME }}
         run: |
           vendor/bin/phpunit --configuration phpunit.xml --debug
 
