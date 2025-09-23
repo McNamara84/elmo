@@ -84,6 +84,10 @@ function elmoValidateAndFormatDataUrl(?string $dataUrl): string
     }
 
     if (!preg_match('~^[a-z][a-z0-9+\-.]*://~i', $normalizedUrl)) {
+        if (preg_match('~^[a-z][a-z0-9+\-.]*:~i', $normalizedUrl)) {
+            throw new RuntimeException('Invalid data URL provided');
+        }
+
         $normalizedUrl = 'https://' . $normalizedUrl;
     }
 
@@ -92,7 +96,12 @@ function elmoValidateAndFormatDataUrl(?string $dataUrl): string
     }
 
     $parts = parse_url($normalizedUrl);
-    if (!is_array($parts) || !isset($parts['scheme'], $parts['host']) || $parts['host'] === '') {
+    if (
+        !is_array($parts)
+        || !isset($parts['scheme'], $parts['host'])
+        || !in_array(strtolower($parts['scheme']), ['http', 'https'], true)
+        || $parts['host'] === ''
+    ) {
         throw new RuntimeException('Invalid data URL provided');
     }
 
