@@ -96,11 +96,10 @@ jobs:
 
       - name: Set test environment variables
         run: |
-          # Override just the database settings for testing
-          echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
-          echo "DB_USER=test_user" >> $GITHUB_ENV
-          echo "DB_PASSWORD=test_password" >> $GITHUB_ENV
-          echo "DB_NAME=mde2-msl-test" >> $GITHUB_ENV
+          DB_HOST=127.0.0.1 
+          DB_USER=test_user 
+          DB_PASSWORD=test_password 
+          DB_NAME=mde2-msl-test 
 
       - name: Initialize database structure and lookup data
         run: php -r "require 'install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
