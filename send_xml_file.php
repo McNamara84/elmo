@@ -87,7 +87,12 @@ function elmoValidateAndFormatDataUrl(?string $dataUrl): string
         $normalizedUrl = 'https://' . $normalizedUrl;
     }
 
-    if (!filter_var($normalizedUrl, FILTER_VALIDATE_URL, FILTER_FLAG_SCHEME_REQUIRED | FILTER_FLAG_HOST_REQUIRED)) {
+    if (filter_var($normalizedUrl, FILTER_VALIDATE_URL) === false) {
+        throw new RuntimeException('Invalid data URL provided');
+    }
+
+    $parts = parse_url($normalizedUrl);
+    if (!is_array($parts) || !isset($parts['scheme'], $parts['host']) || $parts['host'] === '') {
         throw new RuntimeException('Invalid data URL provided');
     }
 
