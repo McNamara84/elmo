@@ -33,7 +33,7 @@ async function loadLanguagePageHtml() {
   const [headerTemplate, footerTemplate, settingsTemplate] = await Promise.all([
     fs.readFile(path.join(REPO_ROOT, 'header.php'), 'utf-8'),
     fs.readFile(path.join(REPO_ROOT, 'footer.html'), 'utf-8'),
-    fs.readFile(path.join(REPO_ROOT, 'settings.php'), 'utf-8'),
+    fs.readFile(path.join(REPO_ROOT, 'choice.sample.php'), 'utf-8'),
   ]);
 
   const languageCodes = (await fs.readdir(path.join(REPO_ROOT, 'lang')))
@@ -112,7 +112,7 @@ test.describe('Language preferences', () => {
         headers: { 'content-type': 'application/json; charset=utf-8' },
       });
     });
-    await page.route('**/settings.php?*', async (route) => {
+    await page.route('**/helper_functions.php?*', async (route) => {
       await route.fulfill({
         status: 200,
         body: JSON.stringify({ apiKey: 'test', showMslLabs: false }),

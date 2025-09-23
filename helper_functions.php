@@ -23,6 +23,15 @@ function connectDb()
 // Establish the database connection
 $connection = connectDb();
 
+/**
+ * Helper function to get boolean environment variables
+ */
+function envBool($key, $default = false) {
+    $value = getenv($key);
+    if ($value === false) return $default;
+    return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+}
+
 function getSettings($setting)
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -37,7 +46,7 @@ function getSettings($setting)
         case 'all':
             echo json_encode([
                 'apiKey' => getenv('GOOGLE_MAPS_API_KEY') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx',
-                'showMslLabs' => filter_var(getenv('SHOW_MSL_LABS'), FILTER_VALIDATE_BOOLEAN)
+                'showMslLabs' => envBool('SHOW_MSL_LABS', false)
             ]);
             break;
 
@@ -45,11 +54,6 @@ function getSettings($setting)
             echo json_encode(['error' => 'Unknown setting']);
             break;
     }
-    exit;
-}
-
-if (isset($_GET['setting'])) {
-    getSettings($_GET['setting']);
     exit;
 }
 /**
