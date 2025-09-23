@@ -39,6 +39,14 @@ final class SendXmlFileTest extends TestCase
         elmoValidateAndFormatDataUrl('not a valid url');
     }
 
+    public function testValidateAndFormatDataUrlRejectsWhitespaceOnlyChanges(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Invalid data URL provided');
+
+        elmoValidateAndFormatDataUrl("example.com/data sheet");
+    }
+
     public function testCreateMailBodiesReflectsAttachments(): void
     {
         $resourceId = 42;
