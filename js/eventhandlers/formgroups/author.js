@@ -43,23 +43,25 @@ $(document).ready(function () {
   $("#group-author").sortable({
     items: "[data-creator-row]",
     handle: ".drag-handle",
+    cancel: "input, textarea, select, option",
     axis: "y",
     tolerance: "pointer",
     containment: "parent"
   });
 
-  // Store a clean clone of the original author row
-  const originalAuthorRow = $("#group-author").children().first().clone();
+  const authorGroup = $("#group-author");
 
-  /**
-   * Handles the addition of new author rows.
-   * Clones the original row, updates all IDs and labels to be unique,
-   * and initializes autocomplete, tooltips, and toggle logic.
-   * 
-   * @event click#button-author-add
-   */
-  $("#button-author-add").click(function () {
-    const authorGroup = $("#group-author");
+  // Store a clean clone of the original author row
+  const originalAuthorRow = authorGroup.children().first().clone();
+
+  function escapeSelector(value) {
+    if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+      return CSS.escape(value);
+    }
+    return value.replace(/[\0-\x1F\x7F"'\\#.:;,!?+*~=<>^$\[\](){}|\/\s-]/g, '\\$&');
+  }
+
+  function addAuthorRow() {
     const newAuthorRow = originalAuthorRow.clone();
     const uniqueSuffix = new Date().getTime();
 
@@ -102,11 +104,63 @@ $(document).ready(function () {
     });
 
     // Initialize Bootstrap tooltips for new row
+    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
     newAuthorRow.find('[data-bs-toggle="tooltip"]').each(function () {
-      new bootstrap.Tooltip(this);
+      new bootstrap.Tooltip(this, { container: tooltipContainer });
     });
 
     // Setup toggle behavior for contact person fields
     setupContactPersonToggle();
+    return newAuthorRow;
+  }
+
+  /**
+   * Handles the addition of new author rows.
+   * Clones the original row, updates all IDs and labels to be unique,
+   * and initializes autocomplete, tooltips, and toggle logic.
+   * 
+   * @event click#button-author-add
+   */
+  $("#button-author-add").click(function () {
+    addAuthorRow();
+  });
+
+  const authorFieldNames = new Set([
+    'orcids[]',
+    'familynames[]',
+    'givennames[]',
+    'personAffiliation[]',
+    'authorPersonRorIds[]',
+    'contacts[]',
+    'cpEmail[]',
+    'cpOnlineResource[]'
+  ]);
+
+  document.addEventListener('autosave:ensure-array-field', (event) => {
+    const { detail, target } = event;
+    const { name, requiredCount } = detail || {};
+
+    if (!name || !authorFieldNames.has(name) || !requiredCount || requiredCount <= 1) {
+      return;
+    }
+
+    if (!authorGroup.length) {
+      return;
+    }
+
+    if (target && !authorGroup[0].contains(target)) {
+      return;
+    }
+
+    const selector = `[name="${escapeSelector(name)}"]`;
+    let currentCount = authorGroup.find(selector).length;
+
+    while (currentCount < requiredCount) {
+      const row = addAuthorRow();
+      if (!row) {
+        break;
+      }
+      currentCount = authorGroup.find(selector).length;
+    }
   });
 });

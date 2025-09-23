@@ -10,6 +10,7 @@ require_once __DIR__ . '/../controllers/GeneralController.php';
 require_once __DIR__ . '/../controllers/VocabController.php';
 require_once __DIR__ . '/../controllers/ValidationController.php';
 require_once __DIR__ . '/../controllers/DatasetController.php';
+require_once __DIR__ . '/../controllers/DraftController.php';
 
 return [
     // General endpoints
@@ -56,5 +57,12 @@ return [
     ['GET', '/dataset/export/{id}/{scheme}', [new DatasetController(), 'exportResource']],
 
     // Export base xml for data mapping to the ICGEM metadatabase
-    ['GET', '/dataset/basexport/{id}', [new DatasetController(), 'exportBaseXml']]
+    ['GET', '/dataset/basexport/{id}', [new DatasetController(), 'exportBaseXml']],
+
+    // Draft autosave endpoints
+    ['POST', '/drafts', [new DraftController(), 'create']],
+    ['PUT', '/drafts/{id}', [new DraftController(), 'update']],
+    ['DELETE', '/drafts/{id}', [new DraftController(), 'delete']],
+    ['GET', '/drafts/session/latest', [new DraftController(), 'latestForSession']],
+    ['GET', '/drafts/{id}', [new DraftController(), 'get']]
 ];

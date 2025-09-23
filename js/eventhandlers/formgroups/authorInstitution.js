@@ -10,22 +10,22 @@ $(document).ready(function () {
   // Clone original line
   const originalAuthorInstitutionRow = $("#group-authorinstitution").children().first().clone();
 
+  /**
+   * Initialize sortable drag-and-drop behavior for author-institution rows.
+   */
+  $("#group-authorinstitution").sortable({
+    items: "[data-authorinstitution-row]",
+    handle: ".drag-handle",
+    cancel: "input, textarea, select, option",
+    axis: "y",
+    tolerance: "pointer",
+    containment: "parent"
+  });
+
   // Click handler for adding
   $("#button-authorinstitution-add").click(function () {
     const authorInstitutionGroup = $("#group-authorinstitution");
     const newRow = originalAuthorInstitutionRow.clone();
-
-
-    /**
-    * Initialize sortable drag-and-drop behavior for author-Institution rows.
-    */
-    $("#group-authorinstitution").sortable({
-      items: "[data-authorinstitution-row]",
-      handle: ".drag-handle",
-      axis: "y",
-      tolerance: "pointer",
-      containment: "parent"
-    });
 
     // Clear fields & reset validation
     newRow.find("input").val("").removeClass("is-invalid is-valid");

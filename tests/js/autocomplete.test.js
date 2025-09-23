@@ -89,12 +89,13 @@ describe('autocomplete.js', () => {
     expect(options).toEqual(['MIT License', 'Apache License 2.0', 'GPL']);
   });
 
-  test('isCurrentAffiliation utility', () => {
-    expect(window.isCurrentAffiliation({})).toBe(true);
-    expect(window.isCurrentAffiliation({ 'end-date': { year: 2020 } })).toBe(false);
+  test('normalizeRorId utility', () => {
+    expect(window.normalizeRorId('https://ror.org/05rrcem69')).toBe('https://ror.org/05rrcem69');
+    expect(window.normalizeRorId('05rrcem69')).toBe('https://ror.org/05rrcem69');
+    expect(window.normalizeRorId('')).toBe('');
   });
 
-  test('author ORCID blur fills data', async () => {
+  test('author ORCID blur fills data including past affiliations', async () => {
     const data = {
       person: {
         name: {
@@ -105,7 +106,7 @@ describe('autocomplete.js', () => {
       'activities-summary': {
         employments: {
           'affiliation-group': [
-            { summaries: [ { 'employment-summary': { organization: { name: 'Uni A', 'disambiguated-organization': { 'disambiguation-source': 'ROR', 'disambiguated-organization-identifier': '123' } } } } ] }
+            { summaries: [ { 'employment-summary': { organization: { name: 'Uni A', 'disambiguated-organization': { 'disambiguation-source': 'ROR', 'disambiguated-organization-identifier': '123' } }, 'end-date': { year: 2015 } } } ] }
           ]
         }
       }
@@ -124,6 +125,34 @@ describe('autocomplete.js', () => {
     expect($('#group-author input[name="givennames[]"]').val()).toBe('John');
     expect(affInput.tagify.value[0].value).toBe('Uni A');
     expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/123');
+  });
+
+  test('author ORCID blur clears previous data when no affiliations returned', async () => {
+    const affInput = document.getElementById('input-author-affiliation');
+    affInput.tagify = new MockTagify(affInput, {});
+    affInput.tagify.addTags([{ value: 'Existing Org' }]);
+    document.getElementById('input-author-rorid').value = 'https://ror.org/existing';
+
+    const data = {
+      person: {
+        name: {
+          'family-name': { value: 'Roe' },
+          'given-names': { value: 'Jane' }
+        }
+      },
+      'activities-summary': {}
+    };
+    fetch.mockResolvedValueOnce({ json: () => Promise.resolve(data) });
+
+    const orcidInput = $('#group-author input[name="orcids[]"]');
+    orcidInput.val('0000-0000-0000-0000').trigger('blur');
+    await flushPromises();
+
+    expect(fetch).toHaveBeenCalled();
+    expect($('#group-author input[name="familynames[]"]').val()).toBe('Roe');
+    expect($('#group-author input[name="givennames[]"]').val()).toBe('Jane');
+    expect(affInput.tagify.value).toHaveLength(0);
+    expect(document.getElementById('input-author-rorid').value).toBe('');
   });
 
   test('contributor ORCID blur fills data', async () => {

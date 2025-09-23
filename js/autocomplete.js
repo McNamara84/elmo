@@ -26,12 +26,48 @@ $(document).ready(function () {
 });
 
 /**
- * Checks if an affiliation is current based on end date
- * @param {Object} affiliation - The affiliation object from ORCID API
- * @returns {boolean} - True if the affiliation is current, false otherwise
+ * Normalizes a ROR identifier to include the canonical https scheme.
+ * @param {string} rorId - The raw ROR identifier from the ORCID payload.
+ * @returns {string} - The normalized ROR identifier.
  */
-function isCurrentAffiliation(affiliation) {
-  return !affiliation?.['end-date']?.year;
+function normalizeRorId(rorId) {
+  if (!rorId) {
+    return '';
+  }
+
+  return rorId.startsWith('https://ror.org/') ? rorId : `https://ror.org/${rorId}`;
+}
+
+/**
+ * Extracts affiliation information from an ORCID affiliation summary.
+ * This helper collects both current and past affiliations as long as they
+ * provide a ROR disambiguated organization, matching the behaviour described
+ * in the UI copy.
+ *
+ * @param {Object} affiliation - The affiliation summary from ORCID.
+ * @param {Set<string>} affiliationSet - Accumulator for affiliation names.
+ * @param {Set<string>} rorIds - Accumulator for normalized ROR identifiers.
+ */
+function collectAffiliation(affiliation, affiliationSet, rorIds) {
+  if (!affiliation?.organization) {
+    return;
+  }
+
+  const orgName = affiliation.organization.name;
+  const disambiguated = affiliation.organization['disambiguated-organization'];
+
+  if (!orgName || !disambiguated || disambiguated['disambiguation-source'] !== 'ROR') {
+    return;
+  }
+
+  const rawRorId = disambiguated['disambiguated-organization-identifier'];
+
+  if (!rawRorId) {
+    return;
+  }
+
+  affiliationSet.add(orgName);
+  rorIds.add(normalizeRorId(rawRorId));
 }
 
 /**
@@ -82,21 +118,7 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
         const rorIds = new Set();
 
         // Process an affiliation entry from ORCID data
-        const processAffiliation = (affiliation) => {
-          if (affiliation?.organization && isCurrentAffiliation(affiliation)) {
-            const orgName = affiliation.organization.name;
-            const disambiguated = affiliation.organization['disambiguated-organization'];
-            if (disambiguated &&
-              disambiguated['disambiguation-source'] === 'ROR' &&
-              disambiguated['disambiguated-organization-identifier']) {
-              const rorId = disambiguated['disambiguated-organization-identifier'];
-              if (orgName) {
-                affiliationSet.add(orgName);
-                rorIds.add(rorId.startsWith('https://ror.org/') ? rorId : `https://ror.org/${rorId}`);
-              }
-            }
-          }
-        };
+        const processAffiliation = (affiliation) => collectAffiliation(affiliation, affiliationSet, rorIds);
 
         // Process employment affiliations
         const employments = data['activities-summary']?.employments?.['affiliation-group'] || [];
@@ -126,9 +148,7 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
 
         // Fill hidden ROR ID field
         const rorIdsArray = Array.from(rorIds);
-        if (rorIdsArray.length > 0) {
-          row.find('input[id^="input-author-rorid"]').val(rorIdsArray.join(','));
-        }
+        row.find('input[id^="input-author-rorid"]').val(rorIdsArray.join(','));
       })
       .catch(error => {
         console.error('Error fetching ORCID data:', error);
@@ -182,21 +202,7 @@ $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () 
         const rorIds = new Set();
 
         // Process an affiliation entry from ORCID data
-        const processAffiliation = (affiliation) => {
-          if (affiliation?.organization && isCurrentAffiliation(affiliation)) {
-            const orgName = affiliation.organization.name;
-            const disambiguated = affiliation.organization['disambiguated-organization'];
-            if (disambiguated &&
-              disambiguated['disambiguation-source'] === 'ROR' &&
-              disambiguated['disambiguated-organization-identifier']) {
-              const rorId = disambiguated['disambiguated-organization-identifier'];
-              if (orgName) {
-                affiliationSet.add(orgName);
-                rorIds.add(rorId.startsWith('https://ror.org/') ? rorId : `https://ror.org/${rorId}`);
-              }
-            }
-          }
-        };
+        const processAffiliation = (affiliation) => collectAffiliation(affiliation, affiliationSet, rorIds);
 
         // Process employment affiliations
         const employments = data['activities-summary']?.employments?.['affiliation-group'] || [];
@@ -226,9 +232,7 @@ $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () 
 
         // Fill hidden ROR ID field
         const rorIdsArray = Array.from(rorIds);
-        if (rorIdsArray.length > 0) {
-          row.find('input[id^="input-contributor-personrorid"]').val(rorIdsArray.join(','));
-        }
+        row.find('input[id^="input-contributor-personrorid"]').val(rorIdsArray.join(','));
       })
       .catch(error => {
         console.error('Error fetching ORCID data:', error);

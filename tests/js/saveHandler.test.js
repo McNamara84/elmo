@@ -156,6 +156,35 @@ describe('saveHandler.js', () => {
     expect(modalInstances[1].hide).toHaveBeenCalled();
   });
 
+  test('saveAndDownload coordinates with autosave service', async () => {
+    const autosave = {
+      flushPending: jest.fn().mockResolvedValue(),
+      markManualSave: jest.fn().mockResolvedValue()
+    };
+    const blobSpy = jest.fn().mockResolvedValue(new Blob(['<xml/>'], { type: 'application/xml' }));
+    const revokeSpy = jest.fn();
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      blob: blobSpy
+    });
+    const originalCreate = window.URL.createObjectURL;
+    const originalRevoke = window.URL.revokeObjectURL;
+    window.URL.createObjectURL = jest.fn(() => 'blob:mock');
+    window.URL.revokeObjectURL = revokeSpy;
+
+    const handler = new SaveHandler('form-mde','modal-saveas','modal-notification', autosave);
+    await handler.saveAndDownload('dataset');
+
+    expect(autosave.flushPending).toHaveBeenCalled();
+    expect(autosave.markManualSave).toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledWith('save/save_data.php', expect.objectContaining({ method: 'POST' }));
+    expect(revokeSpy).toHaveBeenCalledWith('blob:mock');
+
+    window.URL.createObjectURL = originalCreate;
+    window.URL.revokeObjectURL = originalRevoke;
+    delete global.fetch;
+  });
+
   test('provides ES module exports', async () => {
     const mod = await import('../../js/saveHandler.js');
     expect(mod.default).toBeDefined();
