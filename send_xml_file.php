@@ -33,8 +33,10 @@ require_once __DIR__ . '/includes/submit_helpers.php';
 require_once __DIR__ . '/api/v2/controllers/DatasetController.php';
 
 if (!isset($connection) || !($connection instanceof mysqli)) {
-    /** @var mysqli $connection */
-    $connection = connectDb();
+    if (!defined('ELMO_XML_SUBMISSION_SKIP_DB_CONNECT')) {
+        /** @var mysqli $connection */
+        $connection = connectDb();
+    }
 }
 
 /** @var bool $showGGMsProperties */
@@ -63,155 +65,216 @@ require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/SMTP.php';
 
 /**
- * Handle the submission workflow and send the XML payload via email.
+ * Validate and normalize a submitted data URL.
  */
-function elmoHandleXmlSubmission(\mysqli $connection, array $smtpConfig, string $xmlSubmitAddress): void
+function elmoValidateAndFormatDataUrl(?string $dataUrl): string
 {
-    $resourceId = null;
-    $urgencyWeeks = null;
-    $dataUrl = '';
-    $debuggingOutput = '';
+    if ($dataUrl === null) {
+        return '';
+    }
 
-    ob_start();
+    $sanitizedUrl = (string)filter_var($dataUrl, FILTER_SANITIZE_URL);
+    $sanitizedUrl = trim($sanitizedUrl);
 
-    try {
-        $resourceId = saveResourceInformationAndRights($connection, $_POST);
-        saveAuthors($connection, $_POST, $resourceId);
-        saveContactPerson($connection, $_POST, $resourceId);
-        saveContributorInstitutions($connection, $_POST, $resourceId);
-        saveContributorPersons($connection, $_POST, $resourceId);
-        saveDescriptions($connection, $_POST, $resourceId);
-        saveKeywords($connection, $_POST, $resourceId);
-        saveFreeKeywords($connection, $_POST, $resourceId);
-        saveSpatialTemporalCoverage($connection, $_POST, $resourceId);
-        saveRelatedWork($connection, $_POST, $resourceId);
-        saveFundingReferences($connection, $_POST, $resourceId);
+    if ($sanitizedUrl === '') {
+        return '';
+    }
 
-        $urgencyWeeks = isset($_POST['urgency']) ? (int)$_POST['urgency'] : null;
-        $dataUrl = isset($_POST['dataUrl']) ? (string)filter_var($_POST['dataUrl'], FILTER_SANITIZE_URL) : '';
+    if (!preg_match('~^(?:f|ht)tps?://~i', $sanitizedUrl)) {
+        $sanitizedUrl = 'https://' . $sanitizedUrl;
+    }
 
-        if ($dataUrl !== '') {
-            $dataUrl = trim($dataUrl);
-            if (!preg_match('~^(?:f|ht)tps?://~i', $dataUrl)) {
-                $dataUrl = 'https://' . $dataUrl;
-            }
-            if (!filter_var($dataUrl, FILTER_VALIDATE_URL)) {
-                throw new RuntimeException('Invalid data URL provided');
-            }
-        }
+    if (!filter_var($sanitizedUrl, FILTER_VALIDATE_URL)) {
+        throw new RuntimeException('Invalid data URL provided');
+    }
 
-        $datasetController = new DatasetController();
+    return $sanitizedUrl;
+}
 
-        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
-        $baseUrl = $protocol . ($_SERVER['HTTP_HOST'] ?? 'localhost');
-        $projectPath = isset($_SERVER['PHP_SELF']) ? rtrim(dirname($_SERVER['PHP_SELF']), '/') : '';
-        $url = $baseUrl . $projectPath . '/api/v2/dataset/export/' . $resourceId . '/all';
+/**
+ * Persist submission data and gather additional metadata.
+ *
+ * @return array{resourceId:int, urgencyWeeks:?int, dataUrl:string}
+ */
+function elmoPersistSubmission(\mysqli $connection, array $postData): array
+{
+    $resourceId = saveResourceInformationAndRights($connection, $postData);
+    saveAuthors($connection, $postData, $resourceId);
+    saveContactPerson($connection, $postData, $resourceId);
+    saveContributorInstitutions($connection, $postData, $resourceId);
+    saveContributorPersons($connection, $postData, $resourceId);
+    saveDescriptions($connection, $postData, $resourceId);
+    saveKeywords($connection, $postData, $resourceId);
+    saveFreeKeywords($connection, $postData, $resourceId);
+    saveSpatialTemporalCoverage($connection, $postData, $resourceId);
+    saveRelatedWork($connection, $postData, $resourceId);
+    saveFundingReferences($connection, $postData, $resourceId);
 
-        $xmlContent = @file_get_contents($url);
-        if ($xmlContent !== false) {
-            error_log("Submit: Fetched XML via API: {$url}");
-        } else {
-            error_log("Submit: File not found via the API. URL tried: {$url}. Turning to fallback logic -- generating the file on-the-fly");
-            $xmlContent = $datasetController->envelopeXmlAsString($connection, $resourceId);
-            if ($xmlContent === false) {
-                error_log("Submit: Failed to retrieve XML content from API and in-memory. Endpoint: {$url}");
-                $xmlContent = '';
-            } else {
-                error_log("Submit: Successfully generated XML file in-memory for resource_id {$resourceId}.");
-            }
-        }
+    $urgencyWeeks = isset($postData['urgency']) ? (int)$postData['urgency'] : null;
+    $dataUrl = elmoValidateAndFormatDataUrl($postData['dataUrl'] ?? null);
 
-        if (!testGfzSmtpConnectivity($smtpConfig['host'], $smtpConfig['port'])) {
-            throw new RuntimeException('GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.');
-        }
+    return [
+        'resourceId' => $resourceId,
+        'urgencyWeeks' => $urgencyWeeks,
+        'dataUrl' => $dataUrl,
+    ];
+}
 
-        $mail = new PHPMailer(true);
-        $mail->SMTPDebug = 2;
-        $mail->Debugoutput = static function (string $str) use (&$debuggingOutput): void {
-            $debuggingOutput .= $str;
-            error_log($str);
-        };
+/**
+ * Build the API URL used to fetch the generated XML document.
+ */
+function elmoBuildApiUrl(array $serverData, int $resourceId): string
+{
+    $protocol = isset($serverData['HTTPS']) && $serverData['HTTPS'] === 'on' ? 'https://' : 'http://';
+    $host = $serverData['HTTP_HOST'] ?? 'localhost';
+    $projectPath = isset($serverData['PHP_SELF']) ? rtrim(dirname($serverData['PHP_SELF']), '/') : '';
 
-        $mail->isSMTP();
-        $mail->Host = $smtpConfig['host'];
-        $mail->Port = $smtpConfig['port'];
-        $mail->Timeout = 30;
-        $mail->SMTPKeepAlive = false;
+    return $protocol . $host . $projectPath . '/api/v2/dataset/export/' . $resourceId . '/all';
+}
 
-        $mail->SMTPAuth = $smtpConfig['auth'];
-        if ($smtpConfig['auth']) {
-            $mail->Username = $smtpConfig['user'];
-            $mail->Password = $smtpConfig['password'];
-        }
+/**
+ * Retrieve XML content via the API and fall back to on-the-fly generation if necessary.
+ */
+function elmoFetchXmlContent(
+    DatasetController $datasetController,
+    \mysqli $connection,
+    int $resourceId,
+    string $apiUrl
+): string {
+    $xmlContent = @file_get_contents($apiUrl);
+    if ($xmlContent !== false) {
+        error_log("Submit: Fetched XML via API: {$apiUrl}");
 
-        if ($smtpConfig['secure'] === 'tls') {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->SMTPAutoTLS = true;
-        } else {
-            $mail->SMTPAutoTLS = false;
-        }
+        return $xmlContent;
+    }
 
-        $mail->CharSet = 'UTF-8';
-        $mail->setFrom($smtpConfig['sender'], 'ELMO XML Submission System');
-        $mail->addAddress($xmlSubmitAddress);
-        $mail->addReplyTo($smtpConfig['sender'], 'ELMO System');
+    error_log("Submit: File not found via the API. URL tried: {$apiUrl}. Turning to fallback logic -- generating the file on-the-fly");
 
-        if (isset($_FILES['dataDescription']) && is_array($_FILES['dataDescription']) && ($_FILES['dataDescription']['error'] ?? null) === UPLOAD_ERR_OK) {
-            $uploadedFile = $_FILES['dataDescription'];
-            $fileType = mime_content_type($uploadedFile['tmp_name']);
-            $allowedTypes = [
-                'application/pdf',
-                'application/msword',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            ];
+    $xmlContent = $datasetController->envelopeXmlAsString($connection, $resourceId);
+    if ($xmlContent === false) {
+        error_log("Submit: Failed to retrieve XML content from API and in-memory. Endpoint: {$apiUrl}");
 
-            if (!in_array($fileType, $allowedTypes, true)) {
-                throw new RuntimeException('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');
-            }
+        return '';
+    }
 
-            if (($uploadedFile['size'] ?? 0) > 10 * 1024 * 1024) {
-                throw new RuntimeException('File size exceeds maximum limit of 10MB.');
-            }
+    error_log("Submit: Successfully generated XML file in-memory for resource_id {$resourceId}.");
 
-            $fileExtension = strtolower(pathinfo((string)$uploadedFile['name'], PATHINFO_EXTENSION));
+    return $xmlContent;
+}
 
-            $mail->addAttachment(
-                $uploadedFile['tmp_name'],
-                'data_description_' . $resourceId . '.' . $fileExtension
-            );
+/**
+ * Configure debugging callbacks for the mailer instance.
+ */
+function elmoSetupMailerDebugging(PHPMailer $mail, string &$debuggingOutput): void
+{
+    $mail->SMTPDebug = 2;
+    $mail->Debugoutput = static function (string $str) use (&$debuggingOutput): void {
+        $debuggingOutput .= $str;
+        error_log($str);
+    };
+}
 
-            error_log('XML Submit: Added file attachment: data_description_' . $resourceId . '.' . $fileExtension);
-        }
+/**
+ * Configure SMTP and sender information for the PHPMailer instance.
+ */
+function elmoConfigureMailer(PHPMailer $mail, array $smtpConfig, string $xmlSubmitAddress): void
+{
+    $mail->isSMTP();
+    $mail->Host = $smtpConfig['host'];
+    $mail->Port = $smtpConfig['port'];
+    $mail->Timeout = 30;
+    $mail->SMTPKeepAlive = false;
 
-        if ($xmlContent === '') {
-            throw new RuntimeException('XML content could not be generated.');
-        }
+    $mail->SMTPAuth = $smtpConfig['auth'];
+    if ($smtpConfig['auth']) {
+        $mail->Username = $smtpConfig['user'];
+        $mail->Password = $smtpConfig['password'];
+    }
 
-        $mail->addStringAttachment($xmlContent, 'metadata_' . $resourceId . '.xml');
-        error_log('XML Submit: Added XML attachment: metadata_' . $resourceId . '.xml');
+    if ($smtpConfig['secure'] === 'tls') {
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->SMTPAutoTLS = true;
+    } else {
+        $mail->SMTPAutoTLS = false;
+    }
 
-        $urgencyText = $urgencyWeeks ? $urgencyWeeks . ' weeks' : 'not specified';
-        $priorityText = getPriorityText($urgencyWeeks);
-        $dataUrlText = $dataUrl !== '' ? $dataUrl : 'not provided';
+    $mail->CharSet = 'UTF-8';
+    $mail->setFrom($smtpConfig['sender'], 'ELMO XML Submission System');
+    $mail->addAddress($xmlSubmitAddress);
+    $mail->addReplyTo($smtpConfig['sender'], 'ELMO System');
+}
 
-        $htmlBody = "
+/**
+ * Attach a user-provided data description to the mail if available.
+ */
+function elmoAttachDataDescription(PHPMailer $mail, array $filesData, int $resourceId): bool
+{
+    if (!isset($filesData['dataDescription']) || !is_array($filesData['dataDescription'])) {
+        return false;
+    }
+
+    $uploadedFile = $filesData['dataDescription'];
+    if (($uploadedFile['error'] ?? null) !== UPLOAD_ERR_OK) {
+        return false;
+    }
+
+    $fileType = mime_content_type($uploadedFile['tmp_name']);
+    $allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+
+    if (!in_array($fileType, $allowedTypes, true)) {
+        throw new RuntimeException('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');
+    }
+
+    if (($uploadedFile['size'] ?? 0) > 10 * 1024 * 1024) {
+        throw new RuntimeException('File size exceeds maximum limit of 10MB.');
+    }
+
+    $fileExtension = strtolower(pathinfo((string)$uploadedFile['name'], PATHINFO_EXTENSION));
+
+    $mail->addAttachment(
+        $uploadedFile['tmp_name'],
+        'data_description_' . $resourceId . '.' . $fileExtension
+    );
+
+    error_log('XML Submit: Added file attachment: data_description_' . $resourceId . '.' . $fileExtension);
+
+    return true;
+}
+
+/**
+ * Create the HTML and plain text mail bodies along with metadata summaries.
+ *
+ * @return array{html:string, plain:string, urgencyText:string, priorityText:string, dataUrlText:string}
+ */
+function elmoCreateMailBodies(int $resourceId, ?int $urgencyWeeks, string $dataUrl, bool $hasDescriptionAttachment): array
+{
+    $urgencyText = $urgencyWeeks ? $urgencyWeeks . ' weeks' : 'not specified';
+    $priorityText = getPriorityText($urgencyWeeks);
+    $dataUrlText = $dataUrl !== '' ? $dataUrl : 'not provided';
+
+    $htmlDataUrl = $dataUrl !== '' ? "<a href='{$dataUrl}'>{$dataUrl}</a>" : 'nicht angegeben';
+    $descriptionText = $hasDescriptionAttachment ? ' und die Datenbeschreibung' : '';
+
+    $htmlBody = "
         <h2>Neue Metadaten-Einreichung von ELMO</h2>
         <p>Hallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:</p>
         <ul>
             <li><strong>Ressource ID in ELMO Datenbank:</strong> {$resourceId}</li>
             <li><strong>Priorität:</strong> {$urgencyText} ({$priorityText})</li>
-            <li><strong>URL zu den Daten:</strong> " . ($dataUrl !== '' ? "<a href='{$dataUrl}'>{$dataUrl}</a>" : 'nicht angegeben') . "</li>
+            <li><strong>URL zu den Daten:</strong> {$htmlDataUrl}</li>
             <li><strong>Eingereicht am:</strong> " . date('d.m.Y H:i:s') . "</li>
         </ul>
-        <p>Ich habe die Metadaten" .
-            (isset($_FILES['dataDescription']) ? ' und die Datenbeschreibung' : '') .
-            " an diese E-Mail angehängt.</p>
+        <p>Ich habe die Metadaten{$descriptionText} an diese E-Mail angehängt.</p>
         <p>Und jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist <strong>{$priorityText}</strong>! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)</p>
         <hr>
         <p><small>Diese E-Mail wurde automatisch von ELMO generiert.</small></p>
         ";
 
-        $plainBody = "
+    $plainBody = "
         Neue Metadaten-Einreichung von ELMO
 
         Hallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:
@@ -221,55 +284,134 @@ function elmoHandleXmlSubmission(\mysqli $connection, array $smtpConfig, string 
         URL zu den Daten: {$dataUrlText}
         Eingereicht am: " . date('d.m.Y H:i:s') . "
 
-        Ich habe die Metadaten" .
-            (isset($_FILES['dataDescription']) ? ' und die Datenbeschreibung' : '') .
-            " an diese E-Mail angehängt.
+        Ich habe die Metadaten{$descriptionText} an diese E-Mail angehängt.
 
         Und jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist {$priorityText}! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)
 
         Diese E-Mail wurde automatisch von ELMO generiert.
         ";
 
+    return [
+        'html' => $htmlBody,
+        'plain' => $plainBody,
+        'urgencyText' => $urgencyText,
+        'priorityText' => $priorityText,
+        'dataUrlText' => $dataUrlText,
+    ];
+}
+
+/**
+ * Send a JSON response while cleaning up the output buffer.
+ */
+function elmoSendJsonResponse(array $payload, int $statusCode = 200): void
+{
+    ob_clean();
+    http_response_code($statusCode);
+    header('Content-Type: application/json');
+    echo json_encode($payload);
+}
+
+/**
+ * Handle exceptions during submission by persisting a backup and returning an error response.
+ */
+function elmoHandleSubmissionException(
+    Throwable $exception,
+    ?int $resourceId,
+    ?int $urgencyWeeks,
+    string $dataUrl,
+    string $debuggingOutput
+): void {
+    error_log('XML Submit Error: ' . $exception->getMessage());
+
+    if ($resourceId !== null) {
+        $backupFile = '/var/www/html/xml_submit_backup.txt';
+        $backupEntry = '[' . date('Y-m-d H:i:s') . "] BACKUP XML SUBMISSION\n";
+        $backupEntry .= 'Resource ID: ' . $resourceId . "\n";
+        $backupEntry .= 'Error: ' . $exception->getMessage() . "\n";
+        $backupEntry .= 'Urgency: ' . ($urgencyWeeks ?? 'not set') . "\n";
+        $backupEntry .= 'Data URL: ' . ($dataUrl !== '' ? $dataUrl : 'not provided') . "\n";
+        $backupEntry .= str_repeat('=', 80) . "\n\n";
+
+        file_put_contents($backupFile, $backupEntry, FILE_APPEND | LOCK_EX);
+        error_log('XML Submit: Backup saved to ' . $backupFile);
+    }
+
+    elmoSendJsonResponse([
+        'success' => false,
+        'message' => 'Fehler: ' . $exception->getMessage(),
+        'debug' => $debuggingOutput,
+    ], 500);
+}
+
+/**
+ * Handle the submission workflow and send the XML payload via email.
+ */
+function elmoHandleXmlSubmission(
+    \mysqli $connection,
+    array $smtpConfig,
+    string $xmlSubmitAddress,
+    ?PHPMailer $mailer = null,
+    ?array $postData = null,
+    ?array $filesData = null,
+    ?array $serverData = null
+): void
+{
+    $resourceId = null;
+    $urgencyWeeks = null;
+    $dataUrl = '';
+    $debuggingOutput = '';
+
+    ob_start();
+
+    try {
+        $postData = $postData ?? $_POST;
+        $filesData = $filesData ?? $_FILES;
+        $serverData = $serverData ?? $_SERVER;
+
+        $submissionData = elmoPersistSubmission($connection, $postData);
+        $resourceId = $submissionData['resourceId'];
+        $urgencyWeeks = $submissionData['urgencyWeeks'];
+        $dataUrl = $submissionData['dataUrl'];
+
+        $datasetController = new DatasetController();
+        $apiUrl = elmoBuildApiUrl($serverData, $resourceId);
+        $xmlContent = elmoFetchXmlContent($datasetController, $connection, $resourceId, $apiUrl);
+
+        if (!testGfzSmtpConnectivity($smtpConfig['host'], $smtpConfig['port'])) {
+            throw new RuntimeException('GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.');
+        }
+
+        if ($xmlContent === '') {
+            throw new RuntimeException('XML content could not be generated.');
+        }
+
+        $mail = $mailer ?? new PHPMailer(true);
+        elmoSetupMailerDebugging($mail, $debuggingOutput);
+        elmoConfigureMailer($mail, $smtpConfig, $xmlSubmitAddress);
+
+        $hasDescriptionAttachment = elmoAttachDataDescription($mail, $filesData, $resourceId);
+
+        $mail->addStringAttachment($xmlContent, 'metadata_' . $resourceId . '.xml');
+        error_log('XML Submit: Added XML attachment: metadata_' . $resourceId . '.xml');
+
+        $mailBodies = elmoCreateMailBodies($resourceId, $urgencyWeeks, $dataUrl, $hasDescriptionAttachment);
+
         $mail->isHTML(true);
-        $mail->Subject = 'Neue ELMO Metadaten-Einreichung (ID: ' . $resourceId . ', Priorität: ' . $priorityText . ')';
-        $mail->Body = $htmlBody;
-        $mail->AltBody = $plainBody;
+        $mail->Subject = 'Neue ELMO Metadaten-Einreichung (ID: ' . $resourceId . ', Priorität: ' . $mailBodies['priorityText'] . ')';
+        $mail->Body = $mailBodies['html'];
+        $mail->AltBody = $mailBodies['plain'];
 
         error_log('XML Submit: Sende E-Mail über GFZ SMTP an ' . $xmlSubmitAddress);
         $mail->send();
         error_log('XML Submit: E-Mail erfolgreich über GFZ SMTP versendet!');
 
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode([
+        elmoSendJsonResponse([
             'success' => true,
             'message' => 'Metadaten gespeichert und E-Mail erfolgreich versendet!',
             'resource_id' => $resourceId,
         ]);
     } catch (Throwable $e) {
-        error_log('XML Submit Error: ' . $e->getMessage());
-
-        if ($resourceId !== null) {
-            $backupFile = '/var/www/html/xml_submit_backup.txt';
-            $backupEntry = '[' . date('Y-m-d H:i:s') . "] BACKUP XML SUBMISSION\n";
-            $backupEntry .= 'Resource ID: ' . $resourceId . "\n";
-            $backupEntry .= 'Error: ' . $e->getMessage() . "\n";
-            $backupEntry .= 'Urgency: ' . ($urgencyWeeks ?? 'not set') . "\n";
-            $backupEntry .= 'Data URL: ' . ($dataUrl !== '' ? $dataUrl : 'not provided') . "\n";
-            $backupEntry .= str_repeat('=', 80) . "\n\n";
-
-            file_put_contents($backupFile, $backupEntry, FILE_APPEND | LOCK_EX);
-            error_log('XML Submit: Backup saved to ' . $backupFile);
-        }
-
-        ob_clean();
-        http_response_code(500);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => false,
-            'message' => 'Fehler: ' . $e->getMessage(),
-            'debug' => $debuggingOutput,
-        ]);
+        elmoHandleSubmissionException($e, $resourceId, $urgencyWeeks, $dataUrl, $debuggingOutput);
     } finally {
         ob_end_flush();
     }
