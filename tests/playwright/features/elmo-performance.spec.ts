@@ -92,10 +92,45 @@ test.describe('Homepage performance', () => {
           });
         }
 
+        const resourcesBeforeInteraction = await page.evaluate(() =>
+          performance.getEntriesByType('resource').map((entry) => entry.name),
+        );
+
+        expect(
+          resourcesBeforeInteraction.some((name) => name.includes('json/thesauri/')),
+        ).toBeFalsy();
+
         const end = Date.now();
         const totalLoadTimeMs = end - start;
 
         const navigationTiming = await collectNavigationTiming(page);
+
+        await test.step('verify thesaurus modal loads data on demand', async () => {
+          const openButton = page.locator('#button-sciencekeyword-open');
+          await expect(openButton).toBeVisible();
+          await openButton.click();
+
+          const modal = page.locator('#modal-sciencekeyword');
+          await expect(modal).toBeVisible();
+
+          const status = modal.locator('.thesaurus-loading-status');
+          await expect(status).toContainText(/loading/i);
+
+          await page.waitForFunction(() =>
+            performance
+              .getEntriesByType('resource')
+              .some((entry) => entry.name.includes('json/thesauri/gcmdScienceKeywords.json')),
+          );
+
+          await expect(modal.locator('#jstree-sciencekeyword .jstree-node').first()).toBeVisible();
+          await expect(status).toHaveClass(/visually-hidden/);
+
+          const closeButton = modal.locator('.modal-footer button[data-bs-dismiss="modal"], .modal-footer button.btn-primary');
+          if (await closeButton.count()) {
+            await closeButton.first().click();
+            await expect(modal).toBeHidden();
+          }
+        });
 
         const run: RunMetrics = {
           attempt,
