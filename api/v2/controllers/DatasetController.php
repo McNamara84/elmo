@@ -3,12 +3,31 @@ require_once __DIR__ . '/../../../settings.php';
 
 class DatasetController
 {
+    /**
+     * @var \mysqli
+     */
     private $connection;
 
-    public function __construct()
+    /**
+     * Optional logger instance used for diagnostic output.
+     *
+     * @var object|null
+     */
+    private $logger;
+
+    /**
+     * @param \mysqli|null $dbConnection Optional database connection instance.
+     * @param object|null   $logger       Optional PSR-3 compatible logger exposing an error method.
+     */
+    public function __construct($dbConnection = null, $logger = null)
     {
-        global $connection;
-        $this->connection = $connection;
+        if ($dbConnection === null) {
+            global $connection;
+            $dbConnection = $connection;
+        }
+
+        $this->connection = $dbConnection;
+        $this->logger = $logger;
     }
 
     /**
@@ -430,7 +449,7 @@ class DatasetController
                 'orcid' => $row['orcid'] ?? null,
                 'email' => $row['email'] ?? null,
                 'website' => $row['website'] ?? null,
-                'Affiliations' => $this->getContactPersonAffiliations($connection, $row['contact_person_id']) ?? null
+                'Affiliations' => $this->getContactPersonAffiliations($connection, $row['contact_person_id'])
             ];
             $contactPersons[] = $contactPerson;
         }
@@ -785,6 +804,8 @@ class DatasetController
         $authorsXml = $xml->addChild('Authors');
 
         foreach ($authors as $author) {
+            $authorXml = null;
+
             if (!empty($author['familyname']) || !empty($author['givenname'])) {
                 // Person
                 $authorXml = $authorsXml->addChild('AuthorPerson');
@@ -797,15 +818,17 @@ class DatasetController
                 // Institution
                 $authorXml = $authorsXml->addChild('AuthorInstitution');
                 $authorXml->addChild('institutionname', htmlspecialchars($author['institutionname']));
+            } else {
+                continue;
             }
 
-            if (!empty($author['Affiliations'])) {
+            if (!empty($author['Affiliations']) && $authorXml !== null) {
                 $affiliationsXml = $authorXml->addChild('Affiliations');
                 foreach ($author['Affiliations'] as $affiliation) {
                     $affiliationXml = $affiliationsXml->addChild('Affiliation');
                     foreach ($affiliation as $key => $value) {
                         // Skip adding <rorId> if it's empty or not set
-                        if ($key === 'rorId' && (empty($value) || $value === null)) {
+                        if ($key === 'rorId' && ($value === null || $value === '')) {
                             continue;
                         }
                         $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -872,7 +895,7 @@ class DatasetController
                             $affiliationXml = $affiliationsXml->addChild('Affiliation');
                             foreach ($affiliation as $key => $value) {
                                 // Skip adding <rorId> if it's empty or not set
-                                if ($key === 'rorId' && (empty($value) || $value === null)) {
+                                if ($key === 'rorId' && ($value === null || $value === '')) {
                                     continue;
                                 }
                                 $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -896,7 +919,7 @@ class DatasetController
                         $affiliationXml = $affiliationsXml->addChild('Affiliation');
                         foreach ($affiliation as $key => $value) {
                             // Skip adding <rorId> if it's empty or not set
-                            if ($key === 'rorId' && (empty($value) || $value === null)) {
+                            if ($key === 'rorId' && ($value === null || $value === '')) {
                                 continue;
                             }
                             $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -907,11 +930,12 @@ class DatasetController
         }
         // Contributors
         $contributors = $this->getContributors($connection, $id);
+        $contributorsXml = null;
         if (!empty($contributors['persons']) || !empty($contributors['institutions'])) {
             $contributorsXml = $xml->addChild('Contributors');
         }
         // Contributor Persons
-        if (!empty($contributors['persons'])) {
+        if (!empty($contributors['persons']) && $contributorsXml !== null) {
             $personsXml = $contributorsXml->addChild('Persons');
             foreach ($contributors['persons'] as $person) {
 
@@ -923,7 +947,7 @@ class DatasetController
                     $personXml->addChild('givenname', htmlspecialchars($person['givenname']));
                 }
 
-                if (!empty($person['orcid']) && $person['orcid'] !== '') {
+                if (isset($person['orcid']) && $person['orcid'] !== '') {
                     $personXml->addChild('orcid', htmlspecialchars($person['orcid']));
                 }
                 if (isset($person['Affiliations'])) {
@@ -932,7 +956,7 @@ class DatasetController
                         $affiliationXml = $affiliationsXml->addChild('Affiliation');
                         foreach ($affiliation as $key => $value) {
                             // Skip adding <rorId> if it's empty or not set
-                            if ($key === 'rorId' && (empty($value) || $value === null)) {
+                            if ($key === 'rorId' && ($value === null || $value === '')) {
                                 continue;
                             }
                             $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -950,7 +974,7 @@ class DatasetController
         }
 
         // Contributor Institutions
-        if (!empty($contributors['institutions'])) {
+        if (!empty($contributors['institutions']) && $contributorsXml !== null) {
             $institutionsXml = $contributorsXml->addChild('Institutions');
             foreach ($contributors['institutions'] as $institution) {
                 $institutionXml = $institutionsXml->addChild('Institution');
@@ -961,7 +985,7 @@ class DatasetController
                         $affiliationXml = $affiliationsXml->addChild('Affiliation');
                         foreach ($affiliation as $key => $value) {
                             // Skip adding <rorId> if it's empty or not set
-                            if ($key === 'rorId' && (empty($value) || $value === null)) {
+                            if ($key === 'rorId' && ($value === null || $value === '')) {
                                 continue;
                             }
                             $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -1078,19 +1102,19 @@ class DatasetController
             foreach ($fundingReferences as $reference) {
                 $referenceXml = $fundingReferencesXml->addChild('FundingReference');
                 foreach ($reference as $key => $value) {
-                    if ($key === 'funderid' && (empty($value) || $value === null)) {
+                    if ($key === 'funderid' && ($value === null || $value === '')) {
                         continue;
                     }
-                    if ($key === 'funderidtyp' && (empty($value) || $value === null)) {
+                    if ($key === 'funderidtyp' && ($value === null || $value === '')) {
                         continue;
                     }
-                    if ($key === 'grantnumber' && (empty($value) || $value === null)) {
+                    if ($key === 'grantnumber' && ($value === null || $value === '')) {
                         continue;
                     }
-                    if ($key === 'grantname' && (empty($value) || $value === null)) {
+                    if ($key === 'grantname' && ($value === null || $value === '')) {
                         continue;
                     }
-                    if ($key === 'awarduri' && (empty($value) || $value === null)) {
+                    if ($key === 'awarduri' && ($value === null || $value === '')) {
                         continue;
                     }
                     $referenceXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -1217,9 +1241,9 @@ class DatasetController
      * @param array $vars An associative array containing 'id' and 'scheme'.
      * @return void
      */
-    public function exportResourceDownload($vars)
+    public function exportResourceDownload($vars): void
     {
-        return $this->handleExport($vars, true);
+        $this->handleExport($vars, true);
     }
 
     /**
@@ -1228,9 +1252,9 @@ class DatasetController
      * @param array $vars An associative array containing 'id' and 'scheme'.
      * @return void
      */
-    public function exportResource($vars)
+    public function exportResource($vars): void
     {
-        return $this->handleExport($vars, false);
+        $this->handleExport($vars, false);
     }
 
     /**
@@ -1240,7 +1264,7 @@ class DatasetController
      * @param bool  $download If true, the resource will be downloaded; if false, it will be output directly.
      * @return void
      */
-    private function handleExport($vars, $download)
+    protected function handleExport($vars, $download)
     {
         $id = intval($vars['id']);
         $scheme = strtolower($vars['scheme']);
@@ -1290,9 +1314,9 @@ class DatasetController
      * @param array $vars An associative array containing 'id'.
      * @return void
      */
-    public function exportAllDownload($vars)
+    public function exportAllDownload($vars): void
     {
-        return $this->handleExportAll($vars, true, false);
+        $this->handleExportAll($vars, true, false);
     }
 
     /**
@@ -1301,9 +1325,9 @@ class DatasetController
      * @param array $vars An associative array containing 'id'.
      * @return void
      */
-    public function exportAll($vars)
+    public function exportAll($vars): void
     {
-        return $this->handleExportAll($vars, false, false);
+        $this->handleExportAll($vars, false, false);
     }
 
     /**
@@ -1314,7 +1338,7 @@ class DatasetController
      * @param bool  $returnAsString If true, the combined XML string is returned instead of being output.
      * @return string|void
      */
-    private function handleExportAll($vars, $download, $returnAsString = false)
+    protected function handleExportAll($vars, $download, $returnAsString = false)
     {
         $id = intval($vars['id']);
 
@@ -1373,9 +1397,7 @@ XML;
             http_response_code(400);
             echo json_encode(['error' => $e->getMessage()]);
         }
-        if (!$returnAsString) {
-            exit();
-        }
+        exit();
     }
     /**
      * this public function is used as an endpoint to get the XML in all formats. So called envelope.
@@ -1400,9 +1422,9 @@ XML;
          * @param array $vars An associative array containing at least the key 'id' (resource ID).
          * @return void
          */
-    public function exportBaseXml($vars)
+    public function exportBaseXml($vars): void
     {
-        return $this->handleExportBaseXml($vars, false);
+        $this->handleExportBaseXml($vars);
     }
     /**
      * Handles the export of the base XML for a resource and outputs it as a file download.
@@ -1422,7 +1444,7 @@ XML;
             // Get the base XML, which includes GGM properties if they exist
             $xmlString = $this->getResourceAsXml($this->connection, $id);
 
-            if ($xmlString === false || empty($xmlString)) {
+            if ($xmlString === '') {
                 // getResourceAsXml might throw an exception, or return false/empty on error
                 // This check is a fallback.
                 http_response_code(500);
