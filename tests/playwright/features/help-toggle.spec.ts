@@ -41,6 +41,9 @@ test.describe('Contextual help toggle', () => {
 
     if (browserName === 'chromium') {
       await test.step('Validate accessibility of the help controls', async () => {
+        // Audit the contextual help controls to ensure their toggles, focus
+        // handling, and ARIA attributes meet WCAG requirements before
+        // continuing with functional assertions.
         await runAxeAudit(page);
       });
     }
