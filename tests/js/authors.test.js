@@ -19,12 +19,19 @@ describe('author.js', () => {
             <label class="btn" for="checkbox-author-contactperson">Contact Person</label>
           </div>
           <div class="col p-1">
+            <input type="text" id="input-author-orcid" value="0000-0000-0000-0000" />
+            <label for="input-author-orcid">ORCID</label>
+          </div>
+          <div class="col p-1">
             <input type="text" id="input-author-lastname" value="Doe" />
+            <label for="input-author-lastname">Last name</label>
           </div>
           <div class="col p-1">
             <input type="text" id="input-author-firstname" value="John" />
+            <label for="input-author-firstname">First name</label>
           </div>
           <div class="col p-1">
+            <label for="input-author-affiliation" class="visually-hidden">Affiliation</label>
             <input type="text" id="input-author-affiliation" value="Some Affil" />
             <input type="hidden" id="input-author-rorid" value="123" />
           </div>
@@ -33,9 +40,11 @@ describe('author.js', () => {
           </div>
           <div class="col p-1 contact-person-input">
             <input type="email" id="input-contactperson-email" value="test@example.com" />
+            <label for="input-contactperson-email">Email</label>
           </div>
           <div class="col p-1 contact-person-input">
             <input type="text" id="input-contactperson-website" value="https://example.com" />
+            <label for="input-contactperson-website">Website</label>
           </div>
         </div>
       </div>
@@ -84,11 +93,23 @@ describe('author.js', () => {
     const newRow = rows.last();
 
     // IDs correctly adjusted
+    expect(newRow.find(`#input-author-orcid-${suffix}`).length).toBe(1);
+    expect(newRow.find(`#input-author-lastname-${suffix}`).length).toBe(1);
+    expect(newRow.find(`#input-author-firstname-${suffix}`).length).toBe(1);
     expect(newRow.find(`#input-author-affiliation-${suffix}`).length).toBe(1);
     expect(newRow.find(`#input-author-rorid-${suffix}`).length).toBe(1);
     expect(newRow.find(`#input-contactperson-email-${suffix}`).length).toBe(1);
     expect(newRow.find(`#input-contactperson-website-${suffix}`).length).toBe(1);
     expect(newRow.find(`#checkbox-author-contactperson-${suffix}`).length).toBe(1);
+
+    // Labels updated to match new IDs
+    expect(newRow.find(`label[for='input-author-orcid-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='input-author-lastname-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='input-author-firstname-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='input-author-affiliation-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='input-contactperson-email-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='input-contactperson-website-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='checkbox-author-contactperson-${suffix}']`).length).toBe(1);
 
     // Fields cleared
     expect(newRow.find('input').filter(function () { return this.value; }).length).toBe(0);
