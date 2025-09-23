@@ -61,7 +61,7 @@ async function loadLanguagePageHtml() {
   const maxTitlesMatch = settingsTemplate.match(/\$maxTitles\s*=\s*(\d+);/u);
   const maxTitlesValue = maxTitlesMatch ? maxTitlesMatch[1] : '2';
 
-  let footerHtml = footerTemplate
+  const footerHtml = footerTemplate
     .replace(
       /<\?php if \(\$showFeedbackLink\): \?>[\s\S]*?<\?php endif; \?>/u,
       `          <button type="button" class="btn feedback-button multi-color-blink m-2 text-feedback" id="button-feedback-openmodalfooter"
