@@ -10,6 +10,8 @@ test.describe('Descriptions Form Group', () => {
   test('renders descriptions accordion with accessible sections and help icons', async ({ page }) => {
     const header = page.locator('b[data-translate="descriptions.title"]');
     await expect(header).toBeVisible();
+    // Surface the contextual help entry so assistive technology users can
+    // discover documentation for the entire descriptions form group.
     await expect(page.locator('[data-help-section-id="help-descriptions-fg"]')).toBeVisible();
 
     const accordionButtons = page.locator('#accordion-description .accordion-button');
@@ -52,6 +54,9 @@ test.describe('Descriptions Form Group', () => {
 
     for (const config of sectionConfigs) {
       const button = accordionButtons.nth(config.index);
+      // Validate that each accordion button advertises the correct ARIA
+      // relationships so screen readers announce which panel it controls and
+      // whether it is currently expanded.
       await expect(button).toHaveAttribute('data-bs-target', config.target);
       await expect(button).toHaveAttribute('data-translate', config.translateKey);
       await expect(button).toHaveAttribute('aria-expanded', config.expanded);
@@ -66,6 +71,9 @@ test.describe('Descriptions Form Group', () => {
 
   test('allows entering descriptions data and maintains accessibility metadata', async ({ page }) => {
     const abstractField = page.locator('#input-abstract');
+    // Confirm the abstract field communicates its required status and exposes
+    // a programmatic connection to the inline help text for assistive
+    // technology users.
     await expect(abstractField).toHaveJSProperty('required', true);
     await expect(abstractField).toHaveAttribute('aria-describedby', 'abstract-help');
     await abstractField.fill('Comprehensive overview of the dataset.');
@@ -131,11 +139,15 @@ test.describe('Descriptions Form Group', () => {
 
   test('supports expanding sections via mouse and keyboard interactions', async ({ page }) => {
     const methodsButton = page.locator('button[data-bs-target="#collapse-methods"]');
+    // Verify pointer activation updates the ARIA expanded state so the button
+    // accurately reflects the visibility of its controlled panel.
     await expect(methodsButton).toHaveAttribute('aria-expanded', 'false');
     await methodsButton.click();
     await expect(methodsButton).toHaveAttribute('aria-expanded', 'true');
     await expect(page.locator('#collapse-methods')).toHaveClass(/show/);
 
+    // Confirm keyboard activation via Enter toggles the section for users who
+    // cannot rely on a pointing device.
     const technicalButton = page.locator('button[data-bs-target="#collapse-technicalinfo"]');
     await expect(technicalButton).toHaveAttribute('aria-expanded', 'false');
     await technicalButton.focus();
@@ -144,6 +156,8 @@ test.describe('Descriptions Form Group', () => {
     await expect(page.locator('#collapse-technicalinfo')).toHaveClass(/show/);
 
     const otherButton = page.locator('button[data-bs-target="#collapse-other"]');
+    // Validate that pressing Space, another standard activation key, also
+    // expands the accordion for accessibility parity.
     await expect(otherButton).toHaveAttribute('aria-expanded', 'false');
     await otherButton.focus();
     await otherButton.press(' ');
