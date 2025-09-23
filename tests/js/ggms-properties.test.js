@@ -6,7 +6,7 @@ describe('ggms-properties.js', () => {
   beforeEach(() => {
     // Create a mock DOM based on the GGMsProperties.html structure
     document.body.innerHTML = `
-      <form class="needs-validation">
+      <form class="needs-validation">        
         <!-- Mathematical Representation (not in form group but needed for tests) -->
         <select id="input-mathematical-representation">
           <option value="">Choose...</option>
@@ -211,6 +211,51 @@ describe('ggms-properties.js', () => {
       expect(window.updateReferenceSystemVisibility).toHaveBeenCalled();
       expect(window.updateSecondVariableLabel).toHaveBeenCalled();
       expect(window.updateErrorHandlingVisibility).toHaveBeenCalled();
+    });
+  });
+  describe('Mathematical Representation Change', () => {
+    test('should show ellipsoidal fields and set required attributes when "ellipsoidal harmonics" is selected', () => {
+      // Simulate selecting "ellipsoidal harmonics"
+      $('#input-mathematical-representation').val('ellipsoidal harmonics').trigger('change');
+
+      // Explicitly call the function to ensure it runs
+      window.updateReferenceSystemVisibility();
+
+      // Verify that ellipsoidal fields are visible
+      expect($('.visibility-ellipsoidal').css('display')).not.toBe('none');
+
+      // Verify that spherical fields are hidden
+      expect($('.visibility-spherical').css('display')).toBe('none');
+
+      // Check required attributes for ellipsoidal fields
+      expect($('#input-semimajor-axis').attr('required')).toBe('required');
+      expect($('#input-second-variable').attr('required')).toBe('required');
+      expect($('#input-second-variable-value').attr('required')).toBe('required');
+
+      // Check that spherical fields are not required
+      expect($('#input-radius').attr('required')).toBeUndefined();
+    });
+
+    test('should show spherical fields and set required attributes when "spherical harmonics" is selected', () => {
+      // Simulate selecting "spherical harmonics"
+      $('#input-mathematical-representation').val('spherical harmonics').trigger('change');
+
+      // Explicitly call the function to ensure it runs
+      window.updateReferenceSystemVisibility();
+
+      // Verify that spherical fields are visible
+      expect($('.visibility-spherical').css('display')).not.toBe('none');
+
+      // Verify that ellipsoidal fields are hidden
+      expect($('.visibility-ellipsoidal').css('display')).toBe('none');
+
+      // Check required attributes for spherical fields
+      expect($('#input-radius').attr('required')).toBe('required');
+
+      // Check that ellipsoidal fields are not required
+      expect($('#input-semimajor-axis').attr('required')).toBeUndefined();
+      expect($('#input-second-variable').attr('required')).toBeUndefined();
+      expect($('#input-second-variable-value').attr('required')).toBeUndefined();
     });
   });
 });

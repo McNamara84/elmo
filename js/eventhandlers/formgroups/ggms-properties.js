@@ -169,7 +169,7 @@ $(document).ready(function() {
     
     // Also listen for when the math representation dropdown is populated
     $(document).on('change', '#input-mathematical-representation', function() {
-        setTimeout(updateReferenceSystemVisibility, 100);
+        updateReferenceSystemVisibility();
     });
     
     // Initial check

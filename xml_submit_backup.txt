@@ -1,0 +1,7 @@
+[2025-09-22 16:44:40] BACKUP XML SUBMISSION
+Resource ID: 2
+Error: GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.
+Urgency: 0
+Data URL: not provided
+================================================================================
+
