@@ -103,18 +103,6 @@ parameters:
 			path: api/v2/controllers/DatasetController.php
 
 		-
-			message: '#^Call to static method set\(\) on an unknown class RdfNamespace\.$#'
-			identifier: class.notFound
-			count: 2
-			path: api/v2/controllers/VocabController.php
-
-		-
-			message: '#^Constant connection not found\.$#'
-			identifier: constant.notFound
-			count: 2
-			path: api/v2/controllers/VocabController.php
-
-		-
 			message: '#^Negated boolean expression is always false\.$#'
 			identifier: booleanNot.alwaysFalse
 			count: 1
