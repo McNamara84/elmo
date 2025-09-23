@@ -7,6 +7,17 @@ class MockTagify {
     this.settings = settings;
     this.value = [];
     this._callbacks = {};
+    this.DOM = {
+      input: document.createElement('input'),
+      scope: document.createElement('div'),
+    };
+    this.whitelist = settings?.whitelist || [];
+
+    if (settings?.placeholder) {
+      this.DOM.input.setAttribute('data-placeholder', settings.placeholder);
+    }
+
+    this.DOM.input.setAttribute('aria-busy', 'false');
     if (el && el.value) {
       this.addTags(el.value);
     }
@@ -200,9 +211,13 @@ describe('thesauri lazy loading', () => {
     delete window.fetch;
     delete global.IntersectionObserver;
     delete window.IntersectionObserver;
+    delete window.__THESAURI_MIN_STATUS_DURATION__;
+    jest.useRealTimers();
   });
 
   test('loads thesaurus data only after visibility trigger and caches the result', async () => {
+    jest.useFakeTimers();
+
     const input = document.getElementById('input-sciencekeyword');
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -219,6 +234,12 @@ describe('thesauri lazy loading', () => {
     const statusElement = document.querySelector('.thesaurus-loading-status');
     expect(statusElement).not.toBeNull();
     expect(statusElement.getAttribute('aria-live')).toBe('polite');
+    expect(statusElement.classList).not.toContain('visually-hidden');
+
+    const minDuration = window.__THESAURI_MIN_STATUS_DURATION__ || 0;
+    jest.advanceTimersByTime(minDuration);
+    await Promise.resolve();
+
     expect(statusElement.classList).toContain('visually-hidden');
 
     observerInstance.trigger({ isIntersecting: true, target: input });
@@ -227,6 +248,8 @@ describe('thesauri lazy loading', () => {
   });
 
   test('shows an error message and retries loading when footer button is activated', async () => {
+    jest.useFakeTimers();
+
     const input = document.getElementById('input-sciencekeyword');
     const footerButton = document.getElementById('footer-trigger');
 
@@ -256,7 +279,54 @@ describe('thesauri lazy loading', () => {
     await input._thesaurusInitPromise;
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    const minDuration = window.__THESAURI_MIN_STATUS_DURATION__ || 0;
+    jest.advanceTimersByTime(minDuration);
+    await Promise.resolve();
     expect(statusElement.classList).toContain('visually-hidden');
     expect(input._tagify).toBeInstanceOf(MockTagify);
+  });
+
+  test('initializes Tagify placeholders before data load and updates when translations change', async () => {
+    const input = document.getElementById('input-sciencekeyword');
+
+    expect(input._tagify).toBeInstanceOf(MockTagify);
+    expect(input._tagify.settings.placeholder).toBe('initial');
+    expect(input._tagify.DOM.input.getAttribute('data-placeholder')).toBe('initial');
+
+    global.translations.keywords.thesaurus.label = 'Updated placeholder';
+    document.dispatchEvent(new Event('translationsLoaded'));
+
+    expect(input._tagify.settings.placeholder).toBe('Updated placeholder');
+    expect(input._tagify.DOM.input.getAttribute('data-placeholder')).toBe('Updated placeholder');
+  });
+
+  test('keeps the loading status visible for a minimum duration before hiding it', async () => {
+    jest.useFakeTimers();
+
+    const input = document.getElementById('input-sciencekeyword');
+    const observerInstance = intersectionObserverMock.createdObservers[0];
+
+    observerInstance.trigger({ isIntersecting: true, target: input });
+
+    await input._thesaurusInitPromise;
+
+    const statusElement = document.querySelector('.thesaurus-loading-status');
+    expect(statusElement).not.toBeNull();
+
+    expect(statusElement.textContent).toContain('Loading');
+    expect(statusElement.classList).not.toContain('visually-hidden');
+
+    const minDuration = window.__THESAURI_MIN_STATUS_DURATION__ || 0;
+
+    jest.advanceTimersByTime(Math.max(0, minDuration - 1));
+    await Promise.resolve();
+
+    expect(statusElement.classList).not.toContain('visually-hidden');
+
+    jest.advanceTimersByTime(1);
+    await Promise.resolve();
+
+    expect(statusElement.classList).toContain('visually-hidden');
+    expect(statusElement.textContent).toBe('');
   });
 });

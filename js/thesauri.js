@@ -53,8 +53,15 @@ $(document).ready(function () {
 
     var defaultMessages = {
         loading: 'Loading thesaurus…',
-        error: 'Unable to load thesaurus. Please try again.'
+        error: 'Unable to load thesaurus. Please try again.',
+        placeholder: 'Open thesaurus to choose keywords or start typing...'
     };
+
+    var MIN_STATUS_MESSAGE_DURATION_MS = 300;
+
+    if (typeof window !== 'undefined') {
+        window.__THESAURI_MIN_STATUS_DURATION__ = MIN_STATUS_MESSAGE_DURATION_MS;
+    }
 
     function resolveMessage(key) {
         if (key === 'loading') {
@@ -63,7 +70,21 @@ $(document).ready(function () {
         if (key === 'error') {
             return translations?.keywords?.thesaurus?.error ?? defaultMessages.error;
         }
+        if (key === 'placeholder') {
+            return translations?.keywords?.thesaurus?.label ?? defaultMessages.placeholder;
+        }
         return '';
+    }
+
+    function clearPendingHide(statusElement) {
+        if (!statusElement || typeof window === 'undefined') {
+            return;
+        }
+
+        if (statusElement.__hideTimeoutId) {
+            window.clearTimeout(statusElement.__hideTimeoutId);
+            statusElement.__hideTimeoutId = null;
+        }
     }
 
     function getModalElement(config) {
@@ -104,13 +125,22 @@ $(document).ready(function () {
             return;
         }
 
+        clearPendingHide(statusElement);
+
         statusElement.classList.remove('alert-info', 'alert-danger', 'visually-hidden');
         statusElement.textContent = message;
 
         if (type === 'loading') {
             statusElement.classList.add('alert-info');
+            statusElement.dataset.statusType = 'loading';
+            statusElement.dataset.statusVisibleSince = String(Date.now());
         } else if (type === 'error') {
             statusElement.classList.add('alert-danger');
+            statusElement.dataset.statusType = 'error';
+            delete statusElement.dataset.statusVisibleSince;
+        } else {
+            statusElement.dataset.statusType = type || '';
+            delete statusElement.dataset.statusVisibleSince;
         }
 
         if (!message) {
@@ -122,9 +152,29 @@ $(document).ready(function () {
         if (!statusElement) {
             return;
         }
+
+        if (typeof window !== 'undefined') {
+            clearPendingHide(statusElement);
+
+            var visibleSince = Number(statusElement.dataset.statusVisibleSince || 0);
+            var shouldDelayHide = statusElement.dataset.statusType === 'loading' && visibleSince > 0;
+            var elapsed = shouldDelayHide ? Date.now() - visibleSince : MIN_STATUS_MESSAGE_DURATION_MS;
+
+            if (shouldDelayHide && elapsed < MIN_STATUS_MESSAGE_DURATION_MS) {
+                var remaining = MIN_STATUS_MESSAGE_DURATION_MS - elapsed;
+                statusElement.__hideTimeoutId = window.setTimeout(function () {
+                    statusElement.__hideTimeoutId = null;
+                    hideStatusElement(statusElement);
+                }, remaining);
+                return;
+            }
+        }
+
         statusElement.textContent = '';
         statusElement.classList.add('visually-hidden');
         statusElement.classList.remove('alert-info', 'alert-danger');
+        delete statusElement.dataset.statusVisibleSince;
+        delete statusElement.dataset.statusType;
     }
 
     function isElementInViewport(element) {
@@ -203,20 +253,25 @@ $(document).ready(function () {
      */
     function refreshThesaurusTagifyInstances() {
         keywordConfigurations.forEach(config => {
-            const inputElement = document.querySelector(config.inputId);
+            var inputElement = document.querySelector(config.inputId);
             if (!inputElement || !inputElement._tagify) return;
 
-            if (translations?.keywords?.thesaurus) {
-                inputElement._tagify.settings.placeholder = translations.keywords.thesaurus.label;
-                const placeholderElement = inputElement.parentElement.querySelector('.tagify__input');
-                if (placeholderElement) {
-                    placeholderElement.setAttribute('data-placeholder', translations.keywords.thesaurus.label);
+            var placeholderText = resolveMessage('placeholder');
+            inputElement._tagify.settings.placeholder = placeholderText;
+
+            if (inputElement._tagify.DOM && inputElement._tagify.DOM.input) {
+                inputElement._tagify.DOM.input.setAttribute('data-placeholder', placeholderText);
+            } else if (inputElement.parentElement) {
+                var fallbackPlaceholderElement = inputElement.parentElement.querySelector('.tagify__input');
+                if (fallbackPlaceholderElement) {
+                    fallbackPlaceholderElement.setAttribute('data-placeholder', placeholderText);
                 }
-                if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
-                    window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
-                        placeholder: translations.keywords.thesaurus.label
-                    });
-                }
+            }
+
+            if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+                window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
+                    placeholder: placeholderText
+                });
             }
         });
     }
@@ -246,6 +301,54 @@ $(document).ready(function () {
         };
 
         var state = keywordInitializationState[config.inputId];
+
+        function setTagifyBusy(tagifyInstance, isBusy) {
+            if (!tagifyInstance || !tagifyInstance.DOM || !tagifyInstance.DOM.input) {
+                return;
+            }
+
+            tagifyInstance.DOM.input.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+
+            if (tagifyInstance.DOM.scope && tagifyInstance.DOM.scope.classList) {
+                tagifyInstance.DOM.scope.classList.toggle('is-loading', Boolean(isBusy));
+            }
+        }
+
+        function ensureTagifyInstance() {
+            if (input._tagify) {
+                return input._tagify;
+            }
+
+            var placeholderText = resolveMessage('placeholder');
+            var tagifyInstance = new Tagify(input, {
+                whitelist: [],
+                enforceWhitelist: true,
+                placeholder: placeholderText,
+                dropdown: {
+                    maxItems: 50,
+                    enabled: 3,
+                    closeOnSelect: true,
+                    classname: "thesaurus-tagify",
+                },
+                editTags: false,
+            });
+
+            input._tagify = tagifyInstance;
+
+            if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+                window.applyTagifyAccessibilityAttributes(tagifyInstance, input, {
+                    placeholder: placeholderText
+                });
+            }
+
+            if (tagifyInstance.DOM && tagifyInstance.DOM.input) {
+                tagifyInstance.DOM.input.setAttribute('data-placeholder', placeholderText);
+            }
+
+            setTagifyBusy(tagifyInstance, false);
+
+            return tagifyInstance;
+        }
 
         function detachVisibilityTriggers() {
             if (state.visibilityObserver && typeof state.visibilityObserver.disconnect === 'function') {
@@ -405,25 +508,19 @@ $(document).ready(function () {
 
             buildWhitelist(filteredData);
 
-            var placeholder = translations?.keywords?.thesaurus?.label || '';
-            var thesaurusKeywordstagify = new Tagify(input, {
-                whitelist: suggestedKeywords,
-                enforceWhitelist: true,
-                placeholder: placeholder,
-                dropdown: {
-                    maxItems: 50,
-                    enabled: 3,
-                    closeOnSelect: true,
-                    classname: "thesaurus-tagify",
-                },
-                editTags: false,
-            });
-            input._tagify = thesaurusKeywordstagify;
+            var placeholder = resolveMessage('placeholder');
+            var thesaurusKeywordstagify = ensureTagifyInstance();
 
-            if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
-                window.applyTagifyAccessibilityAttributes(thesaurusKeywordstagify, input, {
-                    placeholder: placeholder
-                });
+            thesaurusKeywordstagify.settings.placeholder = placeholder;
+            thesaurusKeywordstagify.settings.whitelist = suggestedKeywords;
+            thesaurusKeywordstagify.whitelist = suggestedKeywords;
+
+            if (thesaurusKeywordstagify.DOM && thesaurusKeywordstagify.DOM.input) {
+                thesaurusKeywordstagify.DOM.input.setAttribute('data-placeholder', placeholder);
+            }
+
+            if (thesaurusKeywordstagify.dropdown && typeof thesaurusKeywordstagify.dropdown.createListHTML === 'function') {
+                thesaurusKeywordstagify.dropdown.createListHTML(suggestedKeywords);
             }
 
             var processedData = processNodes(filteredData);
@@ -483,39 +580,43 @@ $(document).ready(function () {
                 });
             }
 
-            $(config.jsTreeId).on("changed.jstree.thesaurus", function (e, data) {
-                updateSelectedKeywordsList();
+            if (!thesaurusKeywordstagify.__thesaurusListenersBound) {
+                $(config.jsTreeId).on("changed.jstree.thesaurus", function (e, data) {
+                    updateSelectedKeywordsList();
 
-                var selectedNodes = $(config.jsTreeId).jstree("get_selected", true);
-                var selectedValues = selectedNodes.map(function (node) {
-                    return data.instance.get_path(node, " > ");
+                    var selectedNodes = $(config.jsTreeId).jstree("get_selected", true);
+                    var selectedValues = selectedNodes.map(function (node) {
+                        return data.instance.get_path(node, " > ");
+                    });
+
+                    thesaurusKeywordstagify.removeAllTags();
+                    thesaurusKeywordstagify.addTags(selectedValues);
                 });
 
-                thesaurusKeywordstagify.removeAllTags();
-                thesaurusKeywordstagify.addTags(selectedValues);
-            });
+                thesaurusKeywordstagify.on('add', function (e) {
+                    var tagText = e.detail?.data?.value;
+                    if (!tagText) return;
+                    var jsTree = $(config.jsTreeId).jstree(true);
+                    if (!jsTree) return;
+                    var node = findNodeByPath(jsTree, tagText);
+                    if (node) {
+                        jsTree.select_node(node.id);
+                    }
+                });
 
-            thesaurusKeywordstagify.on('add', function (e) {
-                var tagText = e.detail?.data?.value;
-                if (!tagText) return;
-                var jsTree = $(config.jsTreeId).jstree(true);
-                if (!jsTree) return;
-                var node = findNodeByPath(jsTree, tagText);
-                if (node) {
-                    jsTree.select_node(node.id);
-                }
-            });
+                thesaurusKeywordstagify.on('remove', function (e) {
+                    var tagText = e.detail && e.detail.data ? e.detail.data.value : null;
+                    if (!tagText) return;
+                    var jsTree = $(config.jsTreeId).jstree(true);
+                    if (!jsTree) return;
+                    var node = findNodeByPath(jsTree, tagText);
+                    if (node) {
+                        jsTree.deselect_node(node.id);
+                    }
+                });
 
-            thesaurusKeywordstagify.on('remove', function (e) {
-                var tagText = e.detail && e.detail.data ? e.detail.data.value : null;
-                if (!tagText) return;
-                var jsTree = $(config.jsTreeId).jstree(true);
-                if (!jsTree) return;
-                var node = findNodeByPath(jsTree, tagText);
-                if (node) {
-                    jsTree.deselect_node(node.id);
-                }
-            });
+                thesaurusKeywordstagify.__thesaurusListenersBound = true;
+            }
 
             $(config.jsTreeId).one('ready.jstree.thesaurus', function () {
                 var jsTree = $(config.jsTreeId).jstree(true);
@@ -563,6 +664,8 @@ $(document).ready(function () {
 
             var modalElement = getModalElement(config);
             var statusElement = getOrCreateStatusElement(modalElement);
+            var tagifyInstance = ensureTagifyInstance();
+            setTagifyBusy(tagifyInstance, true);
             updateStatusElement(statusElement, 'loading', resolveMessage('loading'));
 
             var promise = fetchThesaurusData(config)
@@ -571,12 +674,14 @@ $(document).ready(function () {
                 })
                 .then(function (result) {
                     hideStatusElement(statusElement);
+                    setTagifyBusy(tagifyInstance, false);
                     detachVisibilityTriggers();
                     detachFooterButtonListeners();
                     return result;
                 })
                 .catch(function (error) {
                     updateStatusElement(statusElement, 'error', resolveMessage('error'));
+                    setTagifyBusy(tagifyInstance, false);
                     console.error('Failed to initialize thesaurus', config.jsonFile, error);
                     state.initializationPromise = null;
                     input._thesaurusInitPromise = null;
@@ -597,6 +702,8 @@ $(document).ready(function () {
         }
 
         setupLazyLoadTriggers(modalElement);
+
+        ensureTagifyInstance();
 
         input.addEventListener('focus', function () {
             ensureKeywordsInitialized();
