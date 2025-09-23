@@ -104,6 +104,9 @@ test.describe('Feedback modal interactions', () => {
     const closeButton = feedbackModal.locator('button[aria-label="Close"]');
 
     await test.step('Validate accessibility of initial feedback modal state', async () => {
+      // Execute an axe-core scan as soon as the modal opens so that heading
+      // structure, focus trapping, and form labelling issues are caught
+      // immediately.
       await runAxeAudit(page);
     });
 
@@ -136,6 +139,8 @@ test.describe('Feedback modal interactions', () => {
     await expect(feedbackForm).toHaveAttribute('aria-hidden', 'true');
     await expect(thankYouPanel).toHaveCSS('display', 'block');
     await expect(thankYouPanel).toHaveJSProperty('hidden', false);
+    // Ensure focus is returned to the confirmation panel so screen reader
+    // users immediately hear the success message.
     await expect(thankYouPanel).toBeFocused();
 
     const { color: thankYouColor, backgroundColor: thankYouBackground } =
@@ -146,6 +151,8 @@ test.describe('Feedback modal interactions', () => {
           backgroundColor: styles.backgroundColor,
         };
       });
+    // Ensure sufficient contrast between text and background colors
+    // for the thank you message.
     const contrastRatio = computeContrastRatio(
       thankYouColor,
       thankYouBackground === 'rgba(0, 0, 0, 0)' ? 'rgb(255, 255, 255)' : thankYouBackground
@@ -155,11 +162,16 @@ test.describe('Feedback modal interactions', () => {
     const successAlert = statusPanel.locator('.alert-success');
     await expect(successAlert).toBeVisible();
     await expect(successAlert).toContainText(successLabel);
+    // Validate the live region semantics so assistive technologies announce the
+    // success status in a non-disruptive way.
     await expect(statusPanel).toHaveAttribute('role', 'status');
     await expect(statusPanel).toHaveAttribute('aria-live', 'polite');
     await expect(statusPanel).toHaveAttribute('aria-atomic', 'true');
 
     await test.step('Validate accessibility of feedback modal success state', async () => {
+      // Repeat the accessibility scan once the success UI is rendered to ensure
+      // the confirmation message and focus management remain screen-reader
+      // friendly.
       await runAxeAudit(page);
     });
 
@@ -203,6 +215,9 @@ test.describe('Feedback modal interactions', () => {
     const closeButton = feedbackModal.locator('button[aria-label="Close"]');
 
     await test.step('Validate accessibility of initial feedback modal state', async () => {
+      // Verify the baseline modal markup is accessible before simulating an
+      // error path so we can isolate regressions introduced by failure
+      // handling.
       await runAxeAudit(page);
     });
 
@@ -236,17 +251,24 @@ test.describe('Feedback modal interactions', () => {
     const errorAlert = statusPanel.locator('.alert-danger');
     await expect(errorAlert).toBeVisible();
     await expect(errorAlert).toContainText(errorLabel);
+    // Confirm the error messaging uses an assertive live region and alert role
+    // so screen readers promptly announce the failure state.
     await expect(statusPanel).toHaveAttribute('role', 'alert');
     await expect(statusPanel).toHaveAttribute('aria-live', 'assertive');
     await expect(statusPanel).toHaveAttribute('aria-atomic', 'true');
 
     await expect(sendButton).toBeEnabled();
     await expect(sendButton).toHaveText(sendLabel);
+    // Ensure focus returns to the submit button so keyboard users understand
+    // they can retry the action immediately.
     await expect(sendButton).toBeFocused();
     await expect(feedbackForm).toHaveAttribute('aria-hidden', 'false');
     await expect(thankYouPanel).toHaveJSProperty('hidden', true);
 
     await test.step('Validate accessibility of feedback modal error state', async () => {
+      // Ensure the error presentation (alert role, live region updates, and
+      // focus restoration) satisfies accessibility guidelines after the failure
+      // UI is shown.
       await runAxeAudit(page);
     });
 
