@@ -25,21 +25,19 @@ $connection = connectDb();
 
 function getSettings($setting)
 {
-    global $apiKeyGoogleMaps, $showMslLabs;
-
     header('Content-Type: application/json; charset=utf-8');
 
     switch ($setting) {
         case 'apiKey':
             echo json_encode([
-                'apiKey' => $apiKeyGoogleMaps
+                'apiKey' => getenv('GOOGLE_MAPS_API_KEY') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx'
             ]);
             break;
 
         case 'all':
             echo json_encode([
-                'apiKey' => $apiKeyGoogleMaps,
-                'showMslLabs' => $showMslLabs
+                'apiKey' => getenv('GOOGLE_MAPS_API_KEY') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx',
+                'showMslLabs' => filter_var(getenv('SHOW_MSL_LABS'), FILTER_VALIDATE_BOOLEAN)
             ]);
             break;
 
@@ -128,11 +126,11 @@ function loadEnvVariables($path = null) {
             if (in_array(strtolower($value), ['true', 'false', 'yes', 'no', '1', '0', 'on', 'off'])) {
                 $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
                 
-                // Set as global PHP variable directly (for use in templates)
-                global $$name;
-                $$name = $value;
+
             }
-            
+            // Set as global PHP variable directly (for use in templates)
+            global $$name;
+            $$name = $value;
             putenv("$name=$value");
         }
     }

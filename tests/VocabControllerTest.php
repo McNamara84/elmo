@@ -11,9 +11,8 @@ class VocabControllerTest extends TestCase
 {
     private function getController(): \VocabController
     {
-        global $mslLabsUrl, $mslVocabsUrl;
-        $mslLabsUrl = 'http://example.com/labs.json';
-        $mslVocabsUrl = 'http://example.com/vocab/';
+        putenv('mslLabsUrl=http://example.com/labs.json');
+        putenv('mslVocabsUrl=http://example.com/vocab/');
         return new \VocabController();
     }
 

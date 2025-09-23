@@ -42,8 +42,9 @@ require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/SMTP.php';
 /**
  * Test GFZ SMTP connectivity
  */
-function testGfzSmtpConnectivity() {
-    global $smtpHost, $smtpPort;
+function testGfzSmtpConnectivity() { 
+    $smtpHost = getenv('smtpHost');
+    $smtpPort = getenv('smtpPort');
     
     error_log("=== GFZ SMTP Connectivity Test (XML Submit) ===");
     

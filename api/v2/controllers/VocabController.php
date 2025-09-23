@@ -35,10 +35,8 @@ class VocabController
      */
     public function __construct()
     {
-        global $mslLabsUrl;
-        global $mslVocabsUrl;
-        $this->url = $mslLabsUrl;
-        $this->mslVocabsUrl = $mslVocabsUrl;
+        $this->url = getenv('mslVocabsUrl') ?: 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
+        $this->mslVocabsUrl = getenv('mslVocabsUrl') ?: 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
     }
 
     /**
