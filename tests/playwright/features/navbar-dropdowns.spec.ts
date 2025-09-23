@@ -14,6 +14,9 @@ test.describe('Navbar Dropdown Tests', () => {
     await expectPrimaryHeading(page);
 
     await test.step('Validate accessibility of navbar in default state', async () => {
+      // Run an automated axe-core scan to ensure the navigation bar delivers a
+      // perceivable default experience (e.g. correct landmarks, contrast, and
+      // ARIA usage) before any interactions happen.
       await runAxeAudit(page);
     });
     
@@ -99,6 +102,8 @@ test.describe('Navbar Dropdown Tests', () => {
     await expect(page.locator('ul.dropdown-menu.show')).not.toBeVisible();
 
     await test.step('Verify Save As modal heading semantics', async () => {
+      // Confirm that the Save As modal exposes a programmatic name and heading
+      // relationship so screen reader users hear an accurate dialog title.
       const saveAsModal = page.locator(SELECTORS.modals.saveAs);
       await expect(saveAsModal).toHaveAttribute('aria-labelledby', 'label-saveas-modal');
       await expect(page.locator('#label-saveas-modal')).toHaveJSProperty('tagName', 'H2');
@@ -112,6 +117,8 @@ test.describe('Navbar Dropdown Tests', () => {
     await expectPrimaryHeading(page);
 
     await test.step('Validate accessibility of navbar in default state', async () => {
+      // Re-run the axe-core analysis to guarantee that DOM changes caused by
+      // opening dropdowns do not introduce new accessibility regressions.
       await runAxeAudit(page);
     });
 
@@ -139,6 +146,8 @@ test.describe('Navbar Dropdown Tests', () => {
     await expectPrimaryHeading(page);
 
     await test.step('Validate accessibility of navbar keyboard interaction state', async () => {
+      // Execute the axe-core audit while the navbar has been interacted with via
+      // keyboard to catch any focus handling or state announcement issues.
       await runAxeAudit(page);
     });
 
