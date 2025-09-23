@@ -25,15 +25,22 @@ test.describe('Dates form group', () => {
     const createdInput = page.locator(selectors.createdInput);
     const embargoInput = page.locator(selectors.embargoInput);
 
+    // Ensure every form control exposes inline help triggers so assistive
+    // technology users can discover the contextual documentation.
     await expect(page.locator(selectors.cardHelpIcon)).toBeVisible();
     await expect(page.locator(selectors.createdHelpIcon)).toBeVisible();
     await expect(page.locator(selectors.embargoHelpIcon)).toBeVisible();
 
+    // Confirm the creation date input uses semantic HTML date controls with
+    // machine-readable constraints, which improves keyboard and screen reader
+    // interaction.
     await expect(createdInput).toHaveAttribute('type', 'date');
     await expect(createdInput).toHaveJSProperty('required', true);
     await expect(createdInput).toHaveAttribute('min', '1900-01-01');
     await expect(createdInput).toHaveAttribute('max', '2100-12-31');
 
+    // Verify the visible label communicates required status and remains linked
+    // to the input so the field name is announced by assistive technology.
     const createdLabel = page.locator(selectors.createdLabel);
     await expect(createdLabel).toContainText('Date created');
     await expect(createdLabel.locator('.red-star')).toHaveText('*');
@@ -41,6 +48,8 @@ test.describe('Dates form group', () => {
     const createdFeedback = page.locator(`${selectors.createdInput} ~ .invalid-feedback`);
     await expect(createdFeedback).toBeHidden();
 
+    // Confirm the embargo date input also exposes semantic constraints so users
+    // with assistive technology receive consistent validation hints.
     await expect(embargoInput).toHaveAttribute('type', 'date');
     await expect(embargoInput).toHaveAttribute('min', '1900-01-01');
     await expect(embargoInput).toHaveAttribute('max', '2100-12-31');
