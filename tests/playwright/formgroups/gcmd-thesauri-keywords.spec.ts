@@ -364,6 +364,13 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
       });
     };
 
+    await expect
+      .poll(async () => {
+        const placeholders = await getPlaceholders();
+        return placeholders.every((value) => value.placeholder && value.dataPlaceholder);
+      })
+      .toBeTruthy();
+
     const initialPlaceholders = await getPlaceholders();
     for (const value of initialPlaceholders) {
       expect(value.placeholder).toBe('Open thesaurus to choose keywords or start typing...');
