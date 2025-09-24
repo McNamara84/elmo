@@ -42,30 +42,29 @@ db_has_tables() {
 if [ -n "${CONFIG_VERSION}" ]; then
     case "${CONFIG_VERSION}" in
     "generic")
-      echo "🔧 Using generic.env configuration"
-      cp /var/www/html/envs/generic.env /var/www/html/.env
+      echo "🔧 Using prod.elmo.env configuration"
+      cp /var/www/html/envs/prod.elmo.env /var/www/html/.env
       ;;
     "msl")
-      echo "🔧 Using msl.env configuration"
-      cp /var/www/html/envs/msl.env /var/www/html/.env
+      echo "🔧 Using prod.elmo-msl.env configuration"
+      cp /var/www/html/envs/prod.elmo-msl.env /var/www/html/.env
       ;;
     "elmogem")
-      echo "🔧 Using elmogem.env configuration"
-      cp /var/www/html/envs/elmogem.env /var/www/html/.env
+      echo "🔧 Using prod.elmo-gem.env configuration"
+      cp /var/www/html/envs/prod.elmo-gem.env /var/www/html/.env
       ;;
     "testing")
-      echo "🔧 Using testing.env configuration"
-      cp /var/www/html/envs/testing.env /var/www/html/.env
+      echo "🔧 Using prod.elmo-test.env configuration"
+      cp /var/www/html/envs/prod.elmo-test.env /var/www/html/.env
       ;;
     *)
       echo "⚠️ Invalid CONFIG_VERSION '${CONFIG_VERSION}' specified. Using generic as default configuration."
-      cp /var/www/html/envs/generic.env /var/www/html/.env
+      cp /var/www/html/envs/prod.elmo.env /var/www/html/.env
       ;;
     esac
   else
     echo "🔧 No CONFIG_VERSION specified. It is assumed, you have specified your preferences in the .env file"
         echo "Happy coding!"
-    cp /var/www/html/envs/generic.env /var/www/html/.env
 fi
 
 wait_for_db
