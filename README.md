@@ -116,7 +116,24 @@ This section outlines the automatic processes handled by the Docker environment 
     docker-compose up --build
     ```
     This rebuilds the `web` service (and any other services specified in `docker-compose.yaml` that depend on the build context), ensuring your updated project files are included in the new container image.
+* **Deploying via Portainer**
+    When deploying with Portainer, there are multiple sources of the env-variables. How to not get confused? The variables from different sources are includedstep-wise according to different priorities:
+    1. Manual input on container deployment (Portainer UI) - HIGHEST PRIORITY, recommended for keys and passwords.
+    2. stack.env (Docker Compose environment) - recommended for the variables applicable to all ELMO versions
+    3. .env file (copied by entrypoint script) - LOWEST PRIORITY, recommended for version-specific files. 
+* **Development and production environments**
+    They both are configured vie .env variables, so what's the difference? 
+    #### Dev vs Prod Environment Comparison
 
+    | Category | Dev | Prod |
+    |----------|-----|------|
+    | File name | .env | prod.elmo(-msl/-gem/-test).env |
+    | Volume mount | yes | no |
+    | Mutable container | yes | no |
+    | env-file git-tracked | no | yes |
+    | CONFIG-VERSION required | strictly | no |
+
+    CONFIG-VERSION can be provided in a Docker-compose 
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
 
