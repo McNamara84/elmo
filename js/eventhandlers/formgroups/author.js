@@ -73,7 +73,7 @@ $(document).ready(function () {
     const index = authorGroup.children().length;
 
     // 1. Reset input fields + assign new IDs
-    newAuthorRow.find("input, textarea, select").each(function () {
+    newAuthorRow.find("input, select").each(function () {
       const $el = $(this);
 
       // Make IDs unique: old ID + -<index>
