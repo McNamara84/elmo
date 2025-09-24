@@ -1,0 +1,235 @@
+{
+    "id": "082282163d4fcdd180116598c5417ecb",
+    "sessionId": "94ff975d674eb8b46d2368b8fab63ea0",
+    "updatedAt": "2025-09-24T10:32:39.693993Z",
+    "payload": {
+        "values": {
+            "doi": "",
+            "year": "",
+            "resourcetype": "12",
+            "version": "",
+            "language": "",
+            "title[]": [
+                ""
+            ],
+            "titleType[]": [
+                "1"
+            ],
+            "Rights": "1",
+            "contacts[]": [],
+            "orcids[]": [
+                ""
+            ],
+            "familynames[]": [
+                ""
+            ],
+            "givennames[]": [
+                ""
+            ],
+            "personAffiliation[]": [
+                ""
+            ],
+            "authorPersonRorIds[]": [
+                ""
+            ],
+            "cpEmail[]": [
+                ""
+            ],
+            "cpOnlineResource[]": [
+                ""
+            ],
+            "authorinstitutionName[]": [
+                ""
+            ],
+            "institutionAffiliation[]": [
+                ""
+            ],
+            "authorInstitutionRorIds[]": [
+                ""
+            ],
+            "model_type": "",
+            "mathematical_representation": "",
+            "celestial_body": "Earth",
+            "file_format": "",
+            "model_name": "",
+            "product_type": "Gravity Field",
+            "datasource_type[]": [
+                "S"
+            ],
+            "datasource_description[]": [
+                ""
+            ],
+            "datasource_details[]": [
+                ""
+            ],
+            "compensation_depth[]": [
+                ""
+            ],
+            "dName[]": [
+                ""
+            ],
+            "dIdentifier[]": [
+                ""
+            ],
+            "dIdentifierType[]": [
+                ""
+            ],
+            "satellite_platform[]": [
+                ""
+            ],
+            "tide_system": "",
+            "degree": "",
+            "errors": "",
+            "error_handling_approach": "",
+            "radius": "",
+            "semimajor_axis_a": "",
+            "second_variable": "",
+            "second_variable_value": "",
+            "earth_gravity_constant": "",
+            "staticDescription[]": [
+                ""
+            ],
+            "staticDealiasing[]": [
+                ""
+            ],
+            "staticVersion[]": [
+                ""
+            ],
+            "temporalStart[]": [
+                ""
+            ],
+            "temporalEnd[]": [
+                ""
+            ],
+            "temporalFrequencyPredef[]": [
+                ""
+            ],
+            "temporalFrequency[]": [
+                ""
+            ],
+            "temporalInstitution[]": [
+                ""
+            ],
+            "topoLayerApproach[]": [
+                ""
+            ],
+            "topoDomain[]": [
+                ""
+            ],
+            "topoApproximation[]": [
+                ""
+            ],
+            "topoDensity[]": [
+                ""
+            ],
+            "topoDensityDetails[]": [
+                ""
+            ],
+            "topoDensityCrust": "",
+            "topoDensityDetailsCrust": "",
+            "topoDensityMantle": "",
+            "topoDensityDetailsMantle": "",
+            "cbORCID[]": [
+                ""
+            ],
+            "cbPersonLastname[]": [
+                ""
+            ],
+            "cbPersonFirstname[]": [
+                ""
+            ],
+            "cbPersonRoles[]": [
+                ""
+            ],
+            "cbAffiliation[]": [
+                ""
+            ],
+            "cbpRorIds[]": [
+                ""
+            ],
+            "cbOrganisationName[]": [
+                ""
+            ],
+            "cbOrganisationRoles[]": [
+                ""
+            ],
+            "OrganisationAffiliation[]": [
+                ""
+            ],
+            "hiddenOrganisationRorId[]": [
+                ""
+            ],
+            "descriptionAbstract": "",
+            "descriptionMethods": "",
+            "descriptionTechnical": "",
+            "descriptionOther": "",
+            "gcmdScienceKeywords": "",
+            "platforms": "",
+            "instruments": "",
+            "freekeywords[]": [
+                ""
+            ],
+            "dateCreated": "",
+            "dateEmbargo": "",
+            "tscLatitudeMin[]": [
+                ""
+            ],
+            "tscLatitudeMax[]": [
+                ""
+            ],
+            "tscLongitudeMin[]": [
+                ""
+            ],
+            "tscLongitudeMax[]": [
+                ""
+            ],
+            "tscDescription[]": [
+                ""
+            ],
+            "tscDateStart[]": [
+                ""
+            ],
+            "tscTimeStart[]": [
+                ""
+            ],
+            "tscDateEnd[]": [
+                ""
+            ],
+            "tscTimeEnd[]": [
+                ""
+            ],
+            "tscTimezone[]": [
+                "+02:00"
+            ],
+            "relation[]": [
+                ""
+            ],
+            "rIdentifier[]": [
+                ""
+            ],
+            "rIdentifierType[]": [
+                ""
+            ],
+            "funder[]": [
+                ""
+            ],
+            "funderId[]": [
+                ""
+            ],
+            "funderidtyp[]": [
+                ""
+            ],
+            "grantNummer[]": [
+                ""
+            ],
+            "grantName[]": [
+                ""
+            ],
+            "awardURI[]": [
+                ""
+            ]
+        },
+        "timestamp": "2025-09-24T10:32:39.670Z"
+    },
+    "checksum": "f669c5f958483d9893d45c6b5affd2aed648a7c39adcd821d7f83cf1925940c7"
+}

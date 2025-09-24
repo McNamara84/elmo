@@ -1,0 +1,153 @@
+{
+    "id": "a3f3cf3e1251043148a9ca7234be8f31",
+    "sessionId": "f717c3f5854ca02bcf21e240b0469a01",
+    "updatedAt": "2025-09-24T10:26:31.133740Z",
+    "payload": {
+        "values": {
+            "doi": "",
+            "year": "",
+            "resourcetype": "12",
+            "version": "",
+            "language": "",
+            "title[]": [
+                ""
+            ],
+            "titleType[]": [
+                "1"
+            ],
+            "Rights": "1",
+            "contacts[]": [],
+            "orcids[]": [
+                ""
+            ],
+            "familynames[]": [
+                ""
+            ],
+            "givennames[]": [
+                ""
+            ],
+            "personAffiliation[]": [
+                ""
+            ],
+            "authorPersonRorIds[]": [
+                ""
+            ],
+            "cpEmail[]": [
+                ""
+            ],
+            "cpOnlineResource[]": [
+                ""
+            ],
+            "authorinstitutionName[]": [
+                ""
+            ],
+            "institutionAffiliation[]": [
+                ""
+            ],
+            "authorInstitutionRorIds[]": [
+                ""
+            ],
+            "cbORCID[]": [
+                ""
+            ],
+            "cbPersonLastname[]": [
+                ""
+            ],
+            "cbPersonFirstname[]": [
+                ""
+            ],
+            "cbPersonRoles[]": [
+                ""
+            ],
+            "cbAffiliation[]": [
+                ""
+            ],
+            "cbpRorIds[]": [
+                ""
+            ],
+            "cbOrganisationName[]": [
+                ""
+            ],
+            "cbOrganisationRoles[]": [
+                ""
+            ],
+            "OrganisationAffiliation[]": [
+                ""
+            ],
+            "hiddenOrganisationRorId[]": [
+                ""
+            ],
+            "descriptionAbstract": "",
+            "descriptionMethods": "",
+            "descriptionTechnical": "",
+            "descriptionOther": "",
+            "gcmdScienceKeywords": "",
+            "platforms": "",
+            "instruments": "",
+            "freekeywords[]": [
+                ""
+            ],
+            "dateCreated": "",
+            "dateEmbargo": "",
+            "tscLatitudeMin[]": [
+                ""
+            ],
+            "tscLatitudeMax[]": [
+                ""
+            ],
+            "tscLongitudeMin[]": [
+                ""
+            ],
+            "tscLongitudeMax[]": [
+                ""
+            ],
+            "tscDescription[]": [
+                ""
+            ],
+            "tscDateStart[]": [
+                ""
+            ],
+            "tscTimeStart[]": [
+                ""
+            ],
+            "tscDateEnd[]": [
+                ""
+            ],
+            "tscTimeEnd[]": [
+                ""
+            ],
+            "tscTimezone[]": [
+                "+02:00"
+            ],
+            "relation[]": [
+                ""
+            ],
+            "rIdentifier[]": [
+                ""
+            ],
+            "rIdentifierType[]": [
+                ""
+            ],
+            "funder[]": [
+                ""
+            ],
+            "funderId[]": [
+                ""
+            ],
+            "funderidtyp[]": [
+                ""
+            ],
+            "grantNummer[]": [
+                ""
+            ],
+            "grantName[]": [
+                ""
+            ],
+            "awardURI[]": [
+                ""
+            ]
+        },
+        "timestamp": "2025-09-24T10:26:31.114Z"
+    },
+    "checksum": "6756ea7fc003e4d2bcd9c0f543ded5a1c046ce67843c69a870bcb731662c7d1b"
+}

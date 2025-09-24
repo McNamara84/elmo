@@ -272,6 +272,7 @@ $(document).ready(function () {
     }, { once: true });
 
     $('#modal-platforms-datasource').on('show.bs.modal', function (e) {
+        $(this).attr('aria-hidden', 'false');
         const button = $(e.relatedTarget);
         const row = button.closest('.row');
         // Look for the platform input within this specific row
@@ -300,6 +301,7 @@ $(document).ready(function () {
     });
 
     $('#modal-platforms-datasource').on('hidden.bs.modal', function () {
+        $(this).attr('aria-hidden', 'true');
         activePlatformTagify = null;
         const jsTree = getJsTree();
         if (jsTree) {
@@ -311,8 +313,11 @@ $(document).ready(function () {
     function handleIsostasyField(row) {
         const typeSelect = row.find('select[name="datasource_type[]"]');
         const detailsSelect = row.find('select[name="datasource_details[]"]');
+        // show/hide field and not forget about aria-hidden
         const showField = typeSelect.val() === 'T' && detailsSelect.val() === 'Isostasy';
-        row.children('.visibility-datasources-compensation').toggle(showField);
+        const compensationField = row.children('.visibility-datasources-compensation');
+        compensationField.toggle(showField);
+        compensationField.attr('aria-hidden', !showField);
         adjustLayoutForIsostasy(row, showField);
     }
 
@@ -398,8 +403,9 @@ $(document).ready(function () {
 
         for (const fieldClass in config) {
             const shouldBeVisible = config[fieldClass];
-            // Use a selector that finds the direct child columns of the row
-            row.children(`.${fieldClass}`).toggle(shouldBeVisible);
+            const fieldElement = row.children(`.${fieldClass}`);
+            fieldElement.toggle(shouldBeVisible);
+            fieldElement.attr('aria-hidden', !shouldBeVisible);
         }
 
         const detailsContainer = row.children('.visibility-datasources-details');

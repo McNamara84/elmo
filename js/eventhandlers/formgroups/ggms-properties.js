@@ -50,13 +50,13 @@ function updateErrorHandlingVisibility() {
     
     if (errorsValue === 'calibrated') {
         // Show error handling field and adjust widths
-        errorHandlingField.show();
+        errorHandlingField.show().attr('aria-hidden', 'false');
         errorHandlingInput.attr('required', 'required');
         // Adjust errors field to take less space when error handling is visible
         errorsField.removeClass('col-lg-6').addClass('col-lg-2');
     } else {
         // Hide error handling field and adjust widths
-        errorHandlingField.hide();
+        errorHandlingField.hide().attr('aria-hidden', 'true');
         errorHandlingInput.removeAttr('required');
         // Expand errors field to take more space when error handling is hidden
         errorsField.removeClass('col-lg-2').addClass('col-lg-6');
@@ -77,8 +77,8 @@ function updateReferenceSystemVisibility() {
     const ellipsoidalFields = $('.visibility-ellipsoidal');
     
     // Hide all fields initially
-    sphericalFields.hide();
-    ellipsoidalFields.hide();
+    sphericalFields.hide().attr('aria-hidden', 'true');
+    ellipsoidalFields.hide().attr('aria-hidden', 'true');
     
     // Remove required attributes from conditional fields
     $('#input-radius').removeAttr('required');
@@ -108,10 +108,10 @@ function updateReferenceSystemVisibility() {
     
     // Show appropriate fields and set requirements
     if (showSpherical) {
-        sphericalFields.show();
+        sphericalFields.show().attr('aria-hidden', 'false');
         $('#input-radius').attr('required', 'required');
     } else if (showEllipsoidal) {
-        ellipsoidalFields.show();
+        ellipsoidalFields.show().attr('aria-hidden', 'false');
         $('#input-semimajor-axis').attr('required', 'required');
         $('#input-second-variable').attr('required', 'required');
         $('#input-second-variable-value').attr('required', 'required');
@@ -178,15 +178,16 @@ $(document).ready(function() {
     
     // Hide error handling approach field initially if "Choose..." is selected
     if (errorsSelect.val() === 'calibrated') {
-        errorHandlingApproachCol.show();
+        errorHandlingApproachCol.show().attr('aria-hidden', 'false');
     } else {
-        errorHandlingApproachCol.hide();
+        errorHandlingApproachCol.hide().attr('aria-hidden', 'true');
     }
     
     // Watch for changes on the errors dropdown
     errorsSelect.on('change', function() {
         const errorsValue = $(this).val();
-        errorHandlingApproachCol.toggle(errorsValue === 'calibrated');
+        const shouldShow = errorsValue === 'calibrated';
+        errorHandlingApproachCol.toggle(shouldShow).attr('aria-hidden', !shouldShow);
     });
 });
 
