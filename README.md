@@ -58,17 +58,16 @@ Following conditions are required for installation:
 2. The XSL and ZIP extensions for PHP must be installed and enabled.
 3. Don't forget to start Apache and MySQL.
 4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
-5. Copy the content of the file `env.sample` into a new file `.env` and adjust the settings for the database connection. (skip for default)
-6. Copy the content of the file `choice.sample.php` into a new file `choice.php`. (skip for default)
-7. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `.env`.
-8. Create a Google Maps JS API key and paste it into the `.env` file as well.
-9. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
-10. In this folder run `npm install` via bash.
-11. There you run `composer install`. 
-12. Access `install.html` via the browser and choose to install with or without test datasets. Depending on your choice, the database tables will be created in your database, as well as 5 test datasets.
-13. Delete `install.php` and `install.html` after successfully creating the database.
-14. The metadata editor is now accessible in the browser via `localhost/directoryname`.
-15. Adjust settings in `.env` (see [Settings Section](#settings)).
+  5. Copy the content of the file `env.sample` into a new file `.env` and adjust the settings for the database connection.
+  6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `.env`.
+  7. Create a Google Maps JS API key and paste it into the `.env` file as well.
+  8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
+  9. In this folder run `npm install` via bash.
+  10. There you run `composer install`. 
+  11. Access `install.html` via the browser and choose to install with or without test datasets. Depending on your choice, the database tables will be created in your database, as well as 5 test datasets.
+  12. Delete `install.php` and `install.html` after successfully creating the database.
+  13. The metadata editor is now accessible in the browser via `localhost/directoryname`.
+  14. Adjust settings in `.env` (see [Settings Section](#settings)). They will be represented in your test browser upon page reload.
 
 ### Installation via Docker
 1. Install [Docker](https://docs.docker.com/engine/install/).
@@ -141,17 +140,16 @@ If you encounter problems with the installation, feel free to leave an entry in 
   2. The XSL and ZIP extensions for PHP must be installed and enabled.
   3. Don't forget to start Apache and MySQL.
   4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
-  5. Copy the content of the file `env.sample` into a new file `.env` and adjust the settings for the database connection. (skip for default)
-  6. Copy the content of the file `choice.sample.php` into a new file `choice.php`. (skip for default)
-  7. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `.env`.
-  8. Create a Google Maps JS API key and paste it into the `.env` file as well.
-  9. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
-  10. In this folder run `npm install` via bash.
-  11. There you run `composer install`. 
-  12. Access `install.html` via the browser and choose to install with or without test datasets. Depending on your choice, the database tables will be created in your database, as well as 5 test datasets.
-  13. Delete `install.php` and `install.html` after successfully creating the database.
-  14. The metadata editor is now accessible in the browser via `localhost/directoryname`.
-  15. Adjust settings in `.env` (see [Settings Section](#settings)).
+  5. Copy the content of the file `env.sample` into a new file `.env` and adjust the settings for the database connection.
+  6. For the automatically generated time zone selection, create a free API key at [timezonedb.com](https://timezonedb.com/) and enter it into the newly created `.env`.
+  7. Create a Google Maps JS API key and paste it into the `.env` file as well.
+  8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
+  9. In this folder run `npm install` via bash.
+  10. There you run `composer install`. 
+  11. Access `install.html` via the browser and choose to install with or without test datasets. Depending on your choice, the database tables will be created in your database, as well as 5 test datasets.
+  12. Delete `install.php` and `install.html` after successfully creating the database.
+  13. The metadata editor is now accessible in the browser via `localhost/directoryname`.
+  14. Adjust settings in `.env` (see [Settings Section](#settings)). They will be represented in your test browser upon page reload.
   <summary>
 
   ### Detailed example installation on Windows 10/11
@@ -192,7 +190,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - Insert your Google Maps API key in the corresponding line in the `.env`file. 
   #### 9. Accessing the metadata editor
   - After the installation is complete, you should be able to access the metadata editor in your browser at `http://localhost/your_directory`.
-  - Settings may be modified in `choice.php`.
+  - Settings may be modified in `.env`.
   </details>
 </details> 
 
@@ -237,7 +235,7 @@ To install them: npm install
     - **Generic ELMO** for the widest variety of research data. Represents the DataCite variables. `CONFIG_VERSION = generic`
     - **ELMO MSL** is the generic ELMO, additionally provided with [EPOS Multi-Scale Labs](https://epos-msl.uu.nl/)
     - **ELMO GEM** is an adaptation of ELMO for model publications on the [ICGEM](https://icgem.gfz.de). Provided with additional form groups, core form groups adjusted.
-  The `CONFIG_VERSION` can be specified inside the `docker-compose.yml`. Speecifying the `CONFIG_VERSION` makes container immutable and thus production-ready. When developing locally, you can switch the form groups in `choice.php`.
+  The `CONFIG_VERSION` can be specified inside the `docker-compose.yml`. Speecifying the `CONFIG_VERSION` makes container immutable and thus production-ready. When developing locally, you can switch the form groups in `.env`.
 
   For a more custom build of ELMO, a new `CONFIG_VERSION` can be added to the /envs folder and `docker-entrypoint.sh`
   
@@ -341,7 +339,7 @@ To install them: npm install
 
   This field contains the title of the resource.
   - Data type: String
-  - Occurrence: 1-n, with n=$maxTitles specified in the choice.php for local development and in nv files for the production setup.
+  - Occurrence: 1-n, with n=$maxTitles specified in the .env-files for local development and in nv files for the production setup.
   - The corresponding field in the database where the value is stored is called: `text` in the table `title`
   - Restrictions: None
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)

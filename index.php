@@ -15,18 +15,11 @@ ob_start();
 
 $baseDir = __DIR__ . '/';
 
-// First, include settings and configurations
+// Include settings and configurations
 include_once $baseDir ."helper_functions.php";
 
 loadEnvVariables();
-// Second, include variables subjected to change
-if (!getenv('CONFIG_VERSION')) { // only include them for development scenario. 
-    if (file_exists($baseDir . "choice.php")) {
-        include_once $baseDir . "choice.php";
-    } else {
-        include_once $baseDir . "choice.sample.php";
-    }
-}
+
 
 // Provide default feature toggles when settings.php does not define them.
 // This keeps the application resilient in environments that bootstrap a minimal
