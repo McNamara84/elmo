@@ -132,10 +132,14 @@ function loadEnvVariables($path = null) {
                 
 
             }
-            // Set as global PHP variable directly (for use in templates)
-            global $$name;
-            $$name = $value;
-            putenv("$name=$value");
+
+            // Only set if not already defined (preserves Docker/Portainer variables)
+            if (getenv($name) === false) {
+                putenv("$name=$value");
+                // Also set as a global variable for backward compatibility with templates
+                global $$name;
+                $$name = $value;
+            }
         }
     }
     
