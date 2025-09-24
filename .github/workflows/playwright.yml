@@ -84,30 +84,8 @@ jobs:
         if [ ! -f .env ] && [ -f .env.sample ]; then
           cp .env.sample .env
           echo "Created .env from .env.sample"
-        elif [ ! -f .env ]; then
-          # Create a minimal .env for testing if no sample exists
-          cat << 'EOF' > .env
-          # Test environment variables
-          maxTitles=2
-          showContributorPersons=true
-          showContributorInstitutions=true
-          showGcmdThesauri=true
-          showFreeKeywords=true
-          showSpatialTemporalCoverage=true
-          showRelatedWork=true
-          showFundingReference=true
-          showAuthorInstitution=true
-          showMslLabs=false
-          showMslVocabs=false
-          showGGMsProperties=false
-          showFeedbackLink=true
-          GOOGLE_MAPS_API_KEY=test_api_key
-          MSL_LABS_URL=https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/labnames.json
-          MSL_VOCABS_URL=https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/
-          EOF
-          echo "Created minimal .env for testing"
         else
-          echo ".env already exists"
+          echo "Problems with setting env.sample as a test environment"
         fi
     - name: Set test environment variables specific to the test database
       run: |
