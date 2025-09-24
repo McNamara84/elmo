@@ -22,6 +22,12 @@ function refreshRoleTagifyInstances() {
     if (placeholderElem) {
       placeholderElem.setAttribute('data-placeholder', placeholderValue);
     }
+
+    if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+      window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
+        placeholder: placeholderValue
+      });
+    }
   });
 }
 
@@ -125,6 +131,12 @@ function initializeTagifyWithRoles(inputSelector, roles) {
     tagify.on('invalid', () => console.log('Invalid tag attempted'));
 
     input._tagify = tagify;
+
+    if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+      window.applyTagifyAccessibilityAttributes(tagify, input, {
+        placeholder: tagifyOptions.placeholder
+      });
+    }
   } catch (error) {
     console.error('Error initializing Tagify:', error);
   }

@@ -115,5 +115,8 @@ $(document).ready(function () {
   /**
    * Initialize all tooltips on the page.
    */
-  $('[data-bs-toggle="tooltip"]').tooltip();
+  const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
+  if (typeof $.fn.tooltip === 'function') {
+    $('[data-bs-toggle="tooltip"]').tooltip({ container: tooltipContainer });
+  }
 });

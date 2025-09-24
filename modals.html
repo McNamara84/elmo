@@ -109,9 +109,9 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="label-saveas-modal"data-translate="modals.save.saveAs">
+                <h2 class="modal-title fs-5" id="label-saveas-modal" data-translate="modals.save.saveAs">
                     Save as XML
-                </h1>
+                </h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
             </div>
             <div class="modal-body">
@@ -197,60 +197,64 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="label-feedbackmodal" data-translate="modals.feedback.title">Feedback</h5>
+                <h2 class="modal-title fs-5" id="label-feedbackmodal" data-translate="modals.feedback.title">Feedback</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>            
             <div class="modal-body">
-                <div id="panel-feedback-status"></div>
+                <div id="panel-feedback-status" aria-live="polite" aria-atomic="true" hidden=""></div>
                 <div id="panel-feedback-message"
                     class="feedback-message-thanks"
-                    data-translate="modals.feedback.thankYou"></div>
-
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    tabindex="-1"
+                    hidden=""
+                    data-translate="modals.feedback.thankYou">Thank you for your feedback.</div>
                 <form id="form-feedback" method="POST" action="send_feedback_mail.php">
                     <div class="mb-3">
                         <label for="input-feedback-question1" class="form-label"
-                            data-translate="modals.feedback.question1"></label>
+                            data-translate="modals.feedback.question1">Which functions of the new metadata editor do you find particularly helpful?</label>
                         <textarea class="form-control" id="input-feedback-question1" name="feedbackQuestion1" rows="3"
                             required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="input-feedback-question2" class="form-label"
-                            data-translate="modals.feedback.question2"></label>
+                            data-translate="modals.feedback.question2">Is there a particular design or user interface change that you like?</label>
                         <textarea class="form-control" id="input-feedback-question2" name="feedbackQuestion2" rows="3"
                             required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="input-feedback-question3" class="form-label"
-                            data-translate="modals.feedback.question3"></label>
+                            data-translate="modals.feedback.question3">What do you find positive about the usability of the new editor?</label>
                         <textarea class="form-control" id="input-feedback-question3" name="feedbackQuestion3" rows="3"
                             required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="input-feedback-question4" class="form-label"
-                            data-translate="modals.feedback.question4"></label>
+                            data-translate="modals.feedback.question4">Which functions of the new editor do you find difficult to use?</label>
                         <textarea class="form-control" id="input-feedback-question4" name="feedbackQuestion4" rows="3"
                             required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="input-feedback-question5" class="form-label"
-                            data-translate="modals.feedback.question5"></label>
+                            data-translate="modals.feedback.question5">Are there any aspects of the user interface that you find confusing or annoying?</label>
                         <textarea class="form-control" id="input-feedback-question5" name="feedbackQuestion5" rows="3"
                             required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="input-feedback-question6" class="form-label"
-                            data-translate="modals.feedback.question6"></label>
+                            data-translate="modals.feedback.question6">Do you miss certain functions in the new metadata editor?</label>
                         <textarea class="form-control" id="input-feedback-question6" name="feedbackQuestion6" rows="3"
                             required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="input-feedback-question7" class="form-label"
-                            data-translate="modals.feedback.question7"></label>
+                            data-translate="modals.feedback.question7">Is there a specific improvement you would like to see?</label>
                         <textarea class="form-control" id="input-feedback-question7" name="feedbackQuestion7" rows="3"
                             required></textarea>
                     </div>
-                    <button class="btn btn-primary" id="button-feedback-send" class="feedback-button-send"
-                        data-translate="modals.feedback.sendButton"></button>
+                    <button class="btn btn-primary feedback-button-send" type="submit" id="button-feedback-send"
+                        data-translate="modals.feedback.sendButton">Send feedback</button>
                 </form>
             </div>
         </div>

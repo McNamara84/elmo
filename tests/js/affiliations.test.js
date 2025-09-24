@@ -52,6 +52,11 @@ class MockTagify {
 describe('affiliations.js', () => {
   beforeEach(() => {
     document.body.innerHTML = `
+      <div data-authorinstitution-row>
+        <input id="input-authorinstitution-name" name="authorinstitutionName[]" />
+        <input id="input-authorinstitution-affiliation" name="institutionAffiliation[]" />
+        <input id="input-author-institutionrorid" name="authorInstitutionRorIds[]" />
+      </div>
       <input id="input-author-affiliation" />
       <input id="input-author-rorid" />
       <input id="input-contactperson-affiliation" />
@@ -72,7 +77,19 @@ describe('affiliations.js', () => {
     global.Tagify = MockTagify;
     global.translations = { general: { affiliation: 'affiliation' } };
 
+    window.applyTagifyAccessibilityAttributes = jest.fn();
+
     ({ autocompleteAffiliations, refreshTagifyInstances } = requireFresh('../../js/affiliations.js'));
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    delete global.Tagify;
+    delete global.$;
+    delete global.jQuery;
+    delete window.$;
+    delete window.jQuery;
+    delete window.applyTagifyAccessibilityAttributes;
   });
 
   /**
@@ -145,8 +162,45 @@ describe('affiliations.js', () => {
     refreshTagifyInstances();
 
      expect(input.tagify.settings.whitelist).toEqual([
-      { value: 'Second', id: '2', other: ['Alt2'] }
+     { value: 'Second', id: '2', other: ['Alt2'] }
     ]);
     expect(input.tagify.value[0].value).toBe('First');
+  });
+
+  /**
+   * Verifies that author institution name becomes required when affiliations are present.
+   */
+  test('author institution requirement syncs with Tagify selections', async () => {
+    const data = [ { id: '1', name: 'Helmholtz' } ];
+    autocompleteAffiliations('input-authorinstitution-affiliation', 'input-author-institutionrorid', data);
+
+    const affiliationInput = document.getElementById('input-authorinstitution-affiliation');
+    const nameInput = document.getElementById('input-authorinstitution-name');
+
+    expect(nameInput.hasAttribute('required')).toBe(false);
+    expect(nameInput.hasAttribute('aria-required')).toBe(false);
+
+    affiliationInput.tagify.trigger('add', { data: { value: 'Helmholtz', id: '1' } });
+    nameInput.required = true;
+    await Promise.resolve();
+
+    expect(nameInput.getAttribute('required')).toBe('required');
+    expect(nameInput.getAttribute('aria-required')).toBe('true');
+
+    const addCall = window.applyTagifyAccessibilityAttributes.mock.calls.at(-1);
+    expect(addCall[0]).toBe(affiliationInput.tagify);
+    expect(addCall[1]).toBe(affiliationInput);
+    expect(addCall[2]).toMatchObject({ isRequired: true });
+
+    window.applyTagifyAccessibilityAttributes.mockClear();
+
+    affiliationInput.tagify.trigger('remove');
+    await Promise.resolve();
+
+    expect(nameInput.hasAttribute('required')).toBe(false);
+    expect(nameInput.hasAttribute('aria-required')).toBe(false);
+
+    const removeCall = window.applyTagifyAccessibilityAttributes.mock.calls.at(-1);
+    expect(removeCall[2]).toMatchObject({ isRequired: false });
   });
 });
