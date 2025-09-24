@@ -86,7 +86,7 @@ jobs:
           echo "Created .env from .env.sample"
         elif [ ! -f .env ]; then
           # Create a minimal .env for testing if no sample exists
-          cat << EOF > .env
+          cat << 'EOF' > .env
           # Test environment variables
           maxTitles=2
           showContributorPersons=true
