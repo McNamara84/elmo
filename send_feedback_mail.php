@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * Script for handling feedback email submission using PHPMailer with GFZ SMTP
  */
@@ -8,7 +7,27 @@ use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
 include __DIR__ . '/settings.php';
-require_once __DIR__ . '/includes/submit_helpers.php';
+
+function testGfzSmtpConnectivity() {
+    global $smtpHost, $smtpPort;
+    
+    error_log("=== GFZ SMTP Connectivity Test ===");
+    
+    // DNS test
+    $ip = gethostbyname($smtpHost);
+    error_log("DNS Resolution: {$smtpHost} -> {$ip}");
+    
+    // Port test
+    $connection = @fsockopen($smtpHost, $smtpPort, $errno, $errstr, 10);
+    if ($connection) {
+        error_log("Port {$smtpPort} on {$smtpHost} is OPEN");
+        fclose($connection);
+        return true;
+    } else {
+        error_log("Port {$smtpPort} on {$smtpHost} is CLOSED or FILTERED. Error: {$errno} - {$errstr}");
+        return false;
+    }
+}
 
 function sendFeedbackMail(
     $feedbackQuestion1,
@@ -20,19 +39,9 @@ function sendFeedbackMail(
     $feedbackQuestion7
 ) {
     global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth;
-
-    $smtpConfig = normalizeSmtpSettings([
-        'host' => $smtpHost ?? null,
-        'port' => $smtpPort ?? null,
-        'user' => $smtpUser ?? null,
-        'password' => $smtpPassword ?? null,
-        'sender' => $smtpSender ?? null,
-        'secure' => $smtpSecure ?? null,
-        'auth' => $smtpAuth ?? null,
-    ]);
-
+    
     // Network test before sending
-    if (!testGfzSmtpConnectivity($smtpConfig['host'], $smtpConfig['port'])) {
+    if (!testGfzSmtpConnectivity()) {
         echo json_encode(['success' => false, 'message' => 'GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.']);
         return;
     }
@@ -46,32 +55,32 @@ function sendFeedbackMail(
         
         // Server settings for GFZ SMTP
         $mail->isSMTP();
-        $mail->Host = $smtpConfig['host'];
-        $mail->Port = $smtpConfig['port'];
+        $mail->Host = $smtpHost;
+        $mail->Port = $smtpPort;
         $mail->Timeout = 30;
         $mail->SMTPKeepAlive = false;
-
+        
         // Authentication for GFZ
-        $mail->SMTPAuth = $smtpConfig['auth'];
+        $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
         if ($mail->SMTPAuth) {
-            $mail->Username = $smtpConfig['user'];
-            $mail->Password = $smtpConfig['password'];
+            $mail->Username = $smtpUser;
+            $mail->Password = $smtpPassword;
         }
-
+        
         // STARTTLS for GFZ
-        if ($smtpConfig['secure'] === 'tls') {
+        if (strtolower($smtpSecure) === 'tls') {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->SMTPAutoTLS = true;
         } else {
             $mail->SMTPAutoTLS = false;
         }
-
+        
         $mail->CharSet = 'UTF-8';
-
+        
         // Email settings
-        $mail->setFrom($smtpConfig['sender'], 'ELMO Feedback System');
+        $mail->setFrom($smtpSender, 'ELMO Feedback System');
         $mail->addAddress($feedbackAddress);
-        $mail->addReplyTo($smtpConfig['sender'], 'ELMO System');
+        $mail->addReplyTo($smtpSender, 'ELMO System');
         
         $mail->isHTML(false);
         $mail->Subject = 'Neues ELMO Feedback - ' . date('d.m.Y H:i:s');
@@ -97,7 +106,7 @@ function sendFeedbackMail(
             . "Von: " . ($_SERVER['HTTP_HOST'] ?? 'ELMO System') . "\n"
             . "IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unbekannt');
         
-        error_log('Sende E-Mail über GFZ SMTP (' . $smtpConfig['host'] . ':' . $smtpConfig['port'] . ') an ' . $feedbackAddress);
+        error_log("Sende E-Mail über GFZ SMTP ({$smtpHost}:{$smtpPort}) an {$feedbackAddress}");
         $mail->send();
         error_log("E-Mail erfolgreich über GFZ SMTP versendet!");
         
@@ -107,11 +116,11 @@ function sendFeedbackMail(
         ]);
         
     } catch (Exception $e) {
-        error_log('GFZ SMTP Fehler:');
-        error_log('- Host: ' . $smtpConfig['host']);
-        error_log('- Port: ' . $smtpConfig['port']);
-        error_log('- User: ' . $smtpConfig['user']);
-        error_log('- Security: ' . $smtpConfig['secure']);
+        error_log("GFZ SMTP Fehler:");
+        error_log("- Host: {$smtpHost}");
+        error_log("- Port: {$smtpPort}");
+        error_log("- User: {$smtpUser}");
+        error_log("- Security: {$smtpSecure}");
         error_log("- PHPMailer Error: " . $mail->ErrorInfo);
         error_log("- Exception: " . $e->getMessage());
         
