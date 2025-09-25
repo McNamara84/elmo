@@ -12,10 +12,10 @@
  */
 function connectDb()
 {
-    $host = getenv('DB_HOST') ?: "db";
-    $username = getenv('DB_USER') ?: "elmo";
-    $password = getenv('DB_PASSWORD') ?: "password";
-    $database = getenv('DB_NAME') ?: "elmocache";
+    $host = getenv('DB_HOST');
+    $username = getenv('DB_USER');
+    $password = getenv('DB_PASSWORD');
+    $database = getenv('DB_NAME');
     $conn = new mysqli($host, $username, $password, $database);
     return $conn;
 }
@@ -55,6 +55,46 @@ function getSettings($setting)
             break;
     }
     exit;
+}
+
+/**
+ * Parses environment file lines into name-value pairs
+ * 
+ * @param array $lines Array of file lines
+ * @return array Array of ['name' => value] pairs
+ */
+function parseEnvLines($lines) {
+    $envVars = [];
+    
+    foreach ($lines as $line) {
+        // Skip comments
+        if (strpos(trim($line), '#') === 0) {
+            continue;
+        }
+        
+        // Parse line and set environment variable
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            $name = trim($name);
+            $value = trim($value);
+            
+            // Remove quotes if present
+            if (strpos($value, '"') === 0 && strrpos($value, '"') === strlen($value) - 1) {
+                $value = substr($value, 1, -1);
+            } elseif (strpos($value, "'") === 0 && strrpos($value, "'") === strlen($value) - 1) {
+                $value = substr($value, 1, -1);
+            }
+            
+            // Convert boolean-like values (true, false, yes, no, 1, 0)
+            if (in_array(strtolower($value), ['true', 'false', 'yes', 'no', '1', '0', 'on', 'off'])) {
+                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            }
+            
+            $envVars[$name] = $value;
+        }
+    }
+    
+    return $envVars;
 }
 /**
  * Loads environment variables from a .env file and sets them in the PHP environment.
@@ -106,40 +146,30 @@ function loadEnvVariables($path = null) {
     // Read file
     $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     
-    // Parse each line
-    foreach ($lines as $line) {
-        // Skip comments
-        if (strpos(trim($line), '#') === 0) {
-            continue;
+    // Parse lines into name-value pairs
+    $envVars = parseEnvLines($lines);
+    
+    $configVersionIsSet = getenv('CONFIG_VERSION') !== false;
+    
+    // Helper functions for setting variables
+    $insert = function($name, $value) {
+        putenv("$name=$value");
+        // Also set as a global variable for backward compatibility with templates
+        global $$name;
+        $$name = $value;
+    };
+    
+    $insertIfNotSet = function($name, $value) use ($insert) {
+        if (getenv($name) === false) {
+            $insert($name, $value);
         }
-        
-        // Parse line and set environment variable
-        if (strpos($line, '=') !== false) {
-            list($name, $value) = explode('=', $line, 2);
-            $name = trim($name);
-            $value = trim($value);
-            
-            // Remove quotes if present
-            if (strpos($value, '"') === 0 && strrpos($value, '"') === strlen($value) - 1) {
-                $value = substr($value, 1, -1);
-            } elseif (strpos($value, "'") === 0 && strrpos($value, "'") === strlen($value) - 1) {
-                $value = substr($value, 1, -1);
-            }
-            
-            // Convert boolean-like values (true, false, yes, no, 1, 0)
-            if (in_array(strtolower($value), ['true', 'false', 'yes', 'no', '1', '0', 'on', 'off'])) {
-                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
-                
-
-            }
-
-            // Only set if not already defined (preserves Docker/Portainer variables)
-            if (getenv($name) === false) {
-                putenv("$name=$value");
-                // Also set as a global variable for backward compatibility with templates
-                global $$name;
-                $$name = $value;
-            }
+    };
+    
+    foreach ($envVars as $name => $value) {
+        if ($configVersionIsSet) {
+            $insertIfNotSet($name, $value);
+        } else {
+            $insert($name, $value);
         }
     }
     
@@ -147,6 +177,6 @@ function loadEnvVariables($path = null) {
 }
 
 // Initialize logging    
-function elmo_log($prefix = "", $msg) {
+function elmo_log($msg, $prefix = "") {
     error_log("[ELMO $prefix] $msg");
 }
