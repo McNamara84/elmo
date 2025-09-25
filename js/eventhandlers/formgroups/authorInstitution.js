@@ -1,4 +1,4 @@
-/**
+  /**
  * @description Handles dynamic addition and removal of author-institution entries in the form.
  * 
  * @module authorInstitution
@@ -55,11 +55,12 @@ $(document).ready(function () {
     authorInstitutionGroup.append(newAuthorInstitutionRow);
 
     /**
-     * Initialize sortable drag-and-drop behavior for author-Institution rows.
-     */
+    * Initialize sortable drag-and-drop behavior for author-institution rows.
+   */
     $("#group-authorinstitution").sortable({
       items: "[data-authorinstitution-row]",
       handle: ".drag-handle",
+      cancel: "input, textarea, select, option",
       axis: "y",
       tolerance: "pointer",
       containment: "parent"
