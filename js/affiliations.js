@@ -282,8 +282,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     if (!isOnWhitelist) {
       closeDropdown();
     }
-    if (typeof window.checkMandatoryFields === 'function') {
-        window.checkMandatoryFields();
+    if (typeof window.validateAllMandatoryFields === 'function') {
+        window.validateAllMandatoryFields();
     }
   });
 
@@ -292,8 +292,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     updateHiddenField();
     scheduleRequirementSync();
     syncAuthorInstitutionRequirement();
-    if (typeof window.checkMandatoryFields === 'function') {
-      window.checkMandatoryFields();
+    if (typeof window.validateAllMandatoryFields === 'function') {
+      window.validateAllMandatoryFields();
     }
   });
 

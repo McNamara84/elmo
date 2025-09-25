@@ -249,7 +249,7 @@ test.describe('Contributor (Institutions) form group', () => {
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
       affiliationInput.tagify.addTags([{ value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' }]);
-      (window as any).checkMandatoryFields();
+      (window as any).validateAllMandatoryFields();
     });
 
     await expect(nameInput).toHaveAttribute('required', 'required');
@@ -258,7 +258,7 @@ test.describe('Contributor (Institutions) form group', () => {
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
       affiliationInput.tagify.removeAllTags();
-      (window as any).checkMandatoryFields();
+      (window as any).validateAllMandatoryFields();
     });
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');

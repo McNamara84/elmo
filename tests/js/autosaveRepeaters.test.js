@@ -14,7 +14,7 @@ describe('autosave repeatable form groups', () => {
     window.deleteDrawnOverlaysForRow = jest.fn();
     window.fitMapBounds = jest.fn();
     window.setUpAutocompleteFunder = jest.fn();
-    window.checkMandatoryFields = jest.fn();
+    window.validateAllMandatoryFields = jest.fn();
   });
 
   afterEach(() => {
@@ -24,7 +24,7 @@ describe('autosave repeatable form groups', () => {
     delete window.deleteDrawnOverlaysForRow;
     delete window.fitMapBounds;
     delete window.setUpAutocompleteFunder;
-    delete window.checkMandatoryFields;
+    delete window.validateAllMandatoryFields;
     delete global.$;
     delete global.jQuery;
   });
