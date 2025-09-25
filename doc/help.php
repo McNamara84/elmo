@@ -5,8 +5,8 @@
  *
  */
 
-// Include the settings.php file to access configuration variables
-include_once "../settings.php";
+// Include the helper_functions.php file to access configuration variables
+include_once "../helper_functions.php";
 
 // Include the help.html file to display the help content
 include "help.html";

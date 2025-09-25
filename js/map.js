@@ -421,8 +421,8 @@ $(document).ready(function () {
     });
   }
 
-  // Fetch the Google Maps API key from settings.php and initialize the map
-  fetch("settings.php?setting=apiKey")
+  // Fetch the Google Maps API key from helper_functions.php and initialize the map
+  fetch("helper_functions.php?setting=apiKey")
     .then((response) => {
       if (!response.ok) {
         throw new Error("Network response was not ok");

@@ -8,8 +8,8 @@ use EasyRdf\Graph;
 
 // Set Max Execution Time to 300 seconds
 ini_set('max_execution_time', 300);
-// Include settings.php so that variables are available
-require_once __DIR__ . '/../../../settings.php';
+// Include helper_functions.php so that variables are available
+require_once __DIR__ . '/../../../helper_functions.php';
 
 /**
  * Class VocabController
@@ -35,10 +35,8 @@ class VocabController
      */
     public function __construct()
     {
-        global $mslLabsUrl;
-        global $mslVocabsUrl;
-        $this->url = $mslLabsUrl;
-        $this->mslVocabsUrl = $mslVocabsUrl;
+        $this->url = getenv('mslVocabsUrl') ?: 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
+        $this->mslVocabsUrl = getenv('mslVocabsUrl') ?: 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
     }
 
     /**
@@ -68,7 +66,8 @@ class VocabController
      */
     private function validateApiKey(): bool
     {
-        global $apiKeyElmo;
+        // Get API key from environment instead of global variable
+        $apiKeyElmo = getenv('apiKeyElmo') ?: '1234-1234-1234-1234';
 
         // Get API key from header
         $providedKey = $_SERVER['HTTP_X_API_KEY'] ?? null;

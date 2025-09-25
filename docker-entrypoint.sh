@@ -1,6 +1,5 @@
 #!/bin/sh
 set -e
-
 # give www-data ownership of the xml folder every start
 chown -R www-data:www-data /var/www/html/xml
 
@@ -14,14 +13,6 @@ fi
 if [ ! -d /var/www/html/node_modules ]; then
   echo "📦  Installing Node dependencies"
   npm install --omit=dev
-fi
-
-# Ensure a settings.php exists; in production create it from settings.elmo.php,
-# so that local settings.php (dev) is not needed/overwritten.
-if [ ! -f /var/www/html/settings.php ]; then
-  echo "⚙️  No settings.php found, creating from settings.elmo.php"
-  cp /var/www/html/settings.elmo.php /var/www/html/settings.php
-  chown www-data:www-data /var/www/html/settings.php
 fi
 
 # Wait for the DB using mysqladmin ping (more reliable)
@@ -42,7 +33,39 @@ db_has_tables() {
     TABLE_COUNT=0
   fi
   [ "${TABLE_COUNT}" -gt 0 ]
+
 }
+
+# In case a stable version of container is needed, set CONFIG_VERSION to one of:
+# Copy the appropriate .env file based on CONFIG_VERSION
+# CONFIG_VERSION determines which configuration to use.
+if [ -n "${CONFIG_VERSION}" ]; then
+    case "${CONFIG_VERSION}" in
+    "generic")
+      echo "🔧 Using prod.elmo.env configuration"
+      cp /var/www/html/envs/prod.elmo.env /var/www/html/.env
+      ;;
+    "msl")
+      echo "🔧 Using prod.elmo-msl.env configuration"
+      cp /var/www/html/envs/prod.elmo-msl.env /var/www/html/.env
+      ;;
+    "elmogem")
+      echo "🔧 Using prod.elmo-gem.env configuration"
+      cp /var/www/html/envs/prod.elmo-gem.env /var/www/html/.env
+      ;;
+    "testing")
+      echo "🔧 Using prod.elmo-test.env configuration"
+      cp /var/www/html/envs/prod.elmo-test.env /var/www/html/.env
+      ;;
+    *)
+      echo "⚠️ Invalid CONFIG_VERSION '${CONFIG_VERSION}' specified. Using generic as default configuration."
+      cp /var/www/html/envs/prod.elmo.env /var/www/html/.env
+      ;;
+    esac
+  else
+    echo "🔧 No CONFIG_VERSION specified. It is assumed, you have specified your preferences in the .env file"
+        echo "Happy coding!"
+fi
 
 wait_for_db
 

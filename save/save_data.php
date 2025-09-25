@@ -7,7 +7,7 @@
  * - Generates XML files
  * - Handles both initial save requests and file downloads
  * 
- * @requires settings.php
+ * @requires helper_functions.php
  * @requires formgroups/*.php
  */
 
@@ -16,7 +16,7 @@
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Include required configuration and helper files
-    require_once __DIR__ . '/../settings.php';
+    require_once __DIR__ . '/../helper_functions.php';
     require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
     require_once __DIR__ . '/formgroups/save_authors.php';
     require_once __DIR__ . '/formgroups/save_contactperson.php';

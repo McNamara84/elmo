@@ -13,8 +13,13 @@ error_reporting(E_ALL);
 // Start output buffering
 ob_start();
 
+$baseDir = __DIR__ . '/';
+
 // Include settings and configurations
-include_once("settings.php");
+include_once $baseDir ."helper_functions.php";
+
+loadEnvVariables();
+
 
 // Provide default feature toggles when settings.php does not define them.
 // This keeps the application resilient in environments that bootstrap a minimal

@@ -15,7 +15,7 @@ ini_set('display_errors', 0);
 ob_start();
 
 // Include required files
-require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/helper_functions.php';
 require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/save/formgroups/save_authors.php';
 require_once __DIR__ . '/save/formgroups/save_contactperson.php';
@@ -42,8 +42,9 @@ require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/SMTP.php';
 /**
  * Test GFZ SMTP connectivity
  */
-function testGfzSmtpConnectivity() {
-    global $smtpHost, $smtpPort;
+function testGfzSmtpConnectivity() { 
+    $smtpHost = getenv('smtpHost');
+    $smtpPort = getenv('smtpPort');
     
     error_log("=== GFZ SMTP Connectivity Test (XML Submit) ===");
     

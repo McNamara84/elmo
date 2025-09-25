@@ -17,7 +17,7 @@ $response = [
 try {
     // Include settings and establish database connection
     // Ensure this path is correct relative to where generate_xml.php resides
-    require_once __DIR__ . '/settings.php';
+    require_once __DIR__ . '/helper_functions.php';
     
     // Include DatasetController
     require_once __DIR__ . '/api/v2/controllers/DatasetController.php';
@@ -25,7 +25,7 @@ try {
     // Get database connection
     $connection = connectDb();
     if (!$connection) {
-        throw new Exception("Failed to connect to database. Check settings.php and database availability.");
+        throw new Exception("Failed to connect to database. Check helper_functions.php and database availability.");
     }
     
     // Query all resource IDs
