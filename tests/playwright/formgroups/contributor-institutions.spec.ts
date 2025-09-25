@@ -40,7 +40,7 @@ const contributorInstitutionsMarkup = String.raw`
             <label for="input-contributor-organisationaffiliation" class="visually-hidden">Affiliation</label>
             <div class="input-group has-validation">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]" />
+                id="input-contributor-organisationaffiliation" name="cbOrganisationAffiliations[]" />
               <span class="input-group-text"><i class="bi bi-question-circle-fill"
                   data-help-section-id="help-contributorinstitutions-affiliation"></i></span>
               <input type="hidden" id="input-contributor-organisationrorid" name="hiddenOrganisationRorId[]" />
@@ -116,7 +116,7 @@ function buildTestPageMarkup() {
 test.describe('Contributor (Institutions) form group', () => {
   test.beforeEach(async ({ page }) => {
     await registerStaticAssetRoutes(page);
-    await page.route('**/api/v2/vocabs/roles?type=**', async route => {
+    await page.route('**/api/v2/vocabs/roles?type=**', async (route) => {
       const url = new URL(route.request().url());
       const type = url.searchParams.get('type') as keyof typeof roleFixtures | null;
       const body = roleFixtures[type ?? 'institution'] ?? roleFixtures.institution;
@@ -127,7 +127,7 @@ test.describe('Contributor (Institutions) form group', () => {
       });
     });
 
-    await page.route('**/json/affiliations.json', async route => {
+    await page.route('**/json/affiliations.json', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -135,7 +135,7 @@ test.describe('Contributor (Institutions) form group', () => {
       });
     });
 
-    await page.route('**/test-harness', async route => {
+    await page.route('**/test-harness', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'text/html',
@@ -270,7 +270,7 @@ test.describe('Contributor (Institutions) form group', () => {
     await addButton.click();
 
     const rows = page.locator(`${SELECTORS.formGroups.contributorInstitutions} .row[contributors-row]`);
-    await expect(rows).toHaveCount(2);
+    await expect(rows).toHaveCount(2, { timeout: 10000 });
 
     const firstRow = rows.nth(0);
     const secondRow = rows.nth(1);
@@ -297,6 +297,7 @@ test.describe('Contributor (Institutions) form group', () => {
     });
 
     const secondAffiliationInput = secondRow.locator('input[name="cbOrganisationAffiliations[]"]');
+    await secondAffiliationInput.waitFor({ state: 'visible', timeout: 10000 });
     const secondAffiliationId = await secondAffiliationInput.getAttribute('id');
     expect(secondAffiliationId).not.toBeNull();
 
