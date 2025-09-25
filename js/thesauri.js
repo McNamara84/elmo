@@ -71,6 +71,11 @@ $(document).ready(function () {
                 if (placeholderElement) {
                     placeholderElement.setAttribute('data-placeholder', translations.keywords.thesaurus.label);
                 }
+                if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+                    window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
+                        placeholder: translations.keywords.thesaurus.label
+                    });
+                }
             }
         });
     }
@@ -192,6 +197,12 @@ $(document).ready(function () {
             });
             // Explicitly assign the instance to input._tagify
             input._tagify = thesaurusKeywordstagify;
+
+            if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+                window.applyTagifyAccessibilityAttributes(thesaurusKeywordstagify, input, {
+                    placeholder: translations.keywords.thesaurus.label
+                });
+            }
 
             // Initialize jsTree
             $(config.jsTreeId).jstree({

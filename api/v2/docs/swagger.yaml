@@ -46,6 +46,8 @@ tags:
     description: Operations for data validation
   - name: dataset
     description: Operations for dataset management and export
+  - name: drafts
+    description: Operations for managing autosave drafts within a user session
 paths:
   /update/timezones:
     get:
@@ -924,6 +926,198 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /drafts:
+    post:
+      tags:
+        - drafts
+      summary: Create autosave draft
+      description: Creates a new autosave draft for the active user session and returns metadata about the stored draft.
+      operationId: createDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DraftRequest"
+      responses:
+        "201":
+          description: Draft created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DraftMetadata"
+        "422":
+          description: Invalid payload provided
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /drafts/{id}:
+    get:
+      tags:
+        - drafts
+      summary: Get autosave draft
+      description: Retrieves the autosave draft payload for the provided identifier if it belongs to the current session.
+      operationId: getDraft
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifier of the draft to retrieve
+          schema:
+            type: string
+            pattern: "^[a-f0-9]{32}$"
+      responses:
+        "200":
+          description: Draft payload returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DraftRecord"
+        "400":
+          description: Draft identifier missing or malformed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Draft belongs to another session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Draft not found for the current session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      tags:
+        - drafts
+      summary: Update autosave draft
+      description: Replaces the payload of an existing autosave draft belonging to the current session.
+      operationId: updateDraft
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifier of the draft to update
+          schema:
+            type: string
+            pattern: "^[a-f0-9]{32}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DraftRequest"
+      responses:
+        "200":
+          description: Draft updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DraftMetadata"
+        "400":
+          description: Draft identifier missing or malformed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Draft belongs to another session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Draft not found for the current session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Invalid payload provided
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags:
+        - drafts
+      summary: Delete autosave draft
+      description: Removes the specified autosave draft from the current session storage.
+      operationId: deleteDraft
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifier of the draft to delete
+          schema:
+            type: string
+            pattern: "^[a-f0-9]{32}$"
+      responses:
+        "204":
+          description: Draft deleted successfully
+        "400":
+          description: Draft identifier missing or malformed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Draft not found for the current session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /drafts/session/latest:
+    get:
+      tags:
+        - drafts
+      summary: Get latest draft for session
+      description: Returns the latest autosave draft for the active user session when available.
+      operationId: getLatestDraftForSession
+      responses:
+        "200":
+          description: Latest draft returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DraftRecord"
+        "204":
+          description: No draft stored for the current session
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -985,6 +1179,48 @@ components:
         - name
         - url
         - forSoftware
+    DraftRequest:
+      type: object
+      description: Request body for creating or updating an autosave draft.
+      properties:
+        payload:
+          type: object
+          description: Autosaved form data captured from the metadata editor.
+          additionalProperties: true
+      required:
+        - payload
+    DraftMetadata:
+      type: object
+      description: Metadata describing a persisted autosave draft.
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the draft
+          example: "4f2c1a7e2b7c4d9e8f6a1b0c2d3e4f5a"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the draft was last updated (UTC, microsecond precision)
+          example: "2024-05-18T12:34:56.123456Z"
+        checksum:
+          type: string
+          description: SHA-256 checksum of the stored payload
+          example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      required:
+        - id
+        - updatedAt
+        - checksum
+    DraftRecord:
+      allOf:
+        - $ref: "#/components/schemas/DraftMetadata"
+        - type: object
+          properties:
+            payload:
+              type: object
+              description: Autosaved form data previously submitted by the user.
+              additionalProperties: true
+          required:
+            - payload
     TimezonesUpdateResponse:
       type: object
       properties:

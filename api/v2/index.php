@@ -14,6 +14,7 @@ require_once __DIR__ . '/controllers/GeneralController.php';
 require_once __DIR__ . '/controllers/VocabController.php';
 require_once __DIR__ . '/controllers/DatasetController.php';
 require_once __DIR__ . '/controllers/ValidationController.php';
+require_once __DIR__ . '/controllers/DraftController.php';
 
 use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;

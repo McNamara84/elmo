@@ -114,4 +114,12 @@ describe('authorInstitution.js', () => {
     newRow.find('.removeButton').trigger('click');
     expect($('#group-authorinstitution .row').length).toBe(1);
   });
+
+  test('initializes sortable with accessible drag handle configuration', () => {
+    expect($.fn.sortable).toHaveBeenCalledTimes(1);
+    expect($.fn.sortable.mock.calls[0][0]).toMatchObject({
+      handle: '.drag-handle',
+      cancel: 'input, textarea, select, option'
+    });
+  });
 });

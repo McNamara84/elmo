@@ -3,6 +3,7 @@ const path = require('path');
 
 describe('darkmode.js', () => {
   let prefersDark;
+  let triggerMediaQueryChange;
 
   function loadScript() {
     let script = fs.readFileSync(
@@ -24,7 +25,45 @@ describe('darkmode.js', () => {
       </div>
     `;
     prefersDark = false;
-    window.matchMedia = jest.fn().mockImplementation(() => ({ matches: prefersDark }));
+    const listeners = new Set();
+    const mediaQueryList = {
+      media: '(prefers-color-scheme: dark)',
+      get matches() {
+        return prefersDark;
+      },
+      onchange: null,
+      addEventListener: (_type, listener) => {
+        listeners.add(listener);
+      },
+      removeEventListener: (_type, listener) => {
+        listeners.delete(listener);
+      },
+      addListener: (listener) => {
+        listeners.add(listener);
+      },
+      removeListener: (listener) => {
+        listeners.delete(listener);
+      },
+    };
+
+    window.matchMedia = jest.fn().mockImplementation(() => mediaQueryList);
+
+    triggerMediaQueryChange = (value) => {
+      prefersDark = value;
+      const event = { matches: value, media: mediaQueryList.media };
+
+      listeners.forEach((listener) => {
+        if (typeof listener === 'function') {
+          listener(event);
+        } else if (listener && typeof listener.handleEvent === 'function') {
+          listener.handleEvent(event);
+        }
+      });
+
+      if (typeof mediaQueryList.onchange === 'function') {
+        mediaQueryList.onchange(event);
+      }
+    };
     localStorage.clear();
   });
 
@@ -61,5 +100,19 @@ describe('darkmode.js', () => {
     autoItem.dispatchEvent(new Event('click', { bubbles: true }));
     expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
     expect(localStorage.getItem('theme')).toBe('dark');
+  });
+
+  test('auto mode updates when system preference changes', () => {
+    loadScript();
+    const autoItem = document.querySelector('.dropdown-item[data-bs-theme-value="auto"]');
+    autoItem.dispatchEvent(new Event('click', { bubbles: true }));
+
+    triggerMediaQueryChange(true);
+    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
+    expect(localStorage.getItem('theme')).toBe('dark');
+
+    triggerMediaQueryChange(false);
+    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light');
+    expect(localStorage.getItem('theme')).toBe('light');
   });
 });

@@ -7,9 +7,11 @@
     "jquery-ui": "^1.14.1",
     "jstree": "^3.3.17",
     "mark.js": "^8.11.1",
+    "playwright": "^1.55.0",
     "swagger-ui-dist": "^5.27.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@babel/preset-env": "^7.28.3",
     "@eslint/js": "^9.36.0",
     "@playwright/test": "^1.55.0",
