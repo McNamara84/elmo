@@ -1,0 +1,13 @@
+node_modules/
+vendor/
+coverage/
+playwright-report/
+tests/Playwright/
+tests/playwright/
+save/
+*.min.js
+*.html
+api/
+css/
+formgroups/
+doc/**/*.html
