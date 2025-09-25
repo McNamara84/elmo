@@ -10,6 +10,18 @@ $(document).ready(function () {
 
   let authorInstitutionIndex = 1; // Start index for new rows
 
+  /**
+  * Initialize sortable drag-and-drop behavior for author-institution rows.
+ */
+  $("#group-authorinstitution").sortable({
+    items: "[data-authorinstitution-row]",
+    handle: ".drag-handle",
+    cancel: "input, textarea, select, option",
+    axis: "y",
+    tolerance: "pointer",
+    containment: "parent"
+  });
+
   $("#button-authorinstitution-add").click(function () {
     const authorInstitutionGroup = $("#group-authorinstitution");
     const firstAuthorInstitutionLine = authorInstitutionGroup.children().first();
@@ -53,18 +65,6 @@ $(document).ready(function () {
 
     // Append the cloned row
     authorInstitutionGroup.append(newAuthorInstitutionRow);
-
-    /**
-    * Initialize sortable drag-and-drop behavior for author-institution rows.
-   */
-    $("#group-authorinstitution").sortable({
-      items: "[data-authorinstitution-row]",
-      handle: ".drag-handle",
-      cancel: "input, textarea, select, option",
-      axis: "y",
-      tolerance: "pointer",
-      containment: "parent"
-    });
 
     /**
      * Initialize autocomplete
