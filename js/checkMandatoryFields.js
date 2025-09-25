@@ -369,10 +369,12 @@ function validateAuthorInstitutionRequirements() {
 // Select the abstract textarea element
 const abstract = document.getElementById('input-abstract');
 
-// Add event listeners for both input (typing) and blur (leaving the field)
-['input', 'blur'].forEach(evt =>
-    abstract.addEventListener(evt, validateAbstractField)
-);
+// Add event listeners for both input (typing) and blur (leaving the field) if element exists
+if (abstract) {
+    ['input', 'blur'].forEach(evt =>
+        abstract.addEventListener(evt, validateAbstractField)
+    );
+}
 
 /**
  * Validates the abstract textarea field.
