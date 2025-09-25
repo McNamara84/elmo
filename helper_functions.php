@@ -176,7 +176,7 @@ function loadEnvVariables($path = null) {
     return true;
 }
 
-// Initialize logging    
-function elmo_log($msg, $prefix = "") {
-    error_log("[ELMO $prefix] $msg");
+function elmo_log($category, $msg, $level = "INFO") {
+    $timestamp = date('Y-m-d H:i:s');
+    error_log("[ELMO-$level] [$category] $timestamp: $msg");
 }
