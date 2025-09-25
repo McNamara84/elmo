@@ -22,7 +22,6 @@ describe('author.js', () => {
               </span>
             </div>
           </div>
-
           <!-- Lastname -->
           <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
             <input type="text" id="input-author-lastname" name="familynames[]" value="Doe" />
@@ -43,7 +42,6 @@ describe('author.js', () => {
           <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1">
             <button type="button" id="button-author-add" class="addAuthor">+</button>
           </div>
-
           <!-- Email -->
           <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 contact-person-input">
             <input type="email" id="input-contactperson-email" name="cpEmail[]" value="test@example.com" />
@@ -109,6 +107,14 @@ describe('author.js', () => {
     expect(newRow.find('#checkbox-author-contactperson-1').length).toBe(1);
     expect(newRow.find("label[for='checkbox-author-contactperson-1']").length).toBe(1);
     expect(newRow.find('.removeButton').length).toBe(1);
+    // Labels updated to match new IDs
+    expect(newRow.find(`label[for='input-author-orcid-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='input-author-lastname-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='input-author-firstname-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='input-author-affiliation-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='input-contactperson-email-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='input-contactperson-website-${suffix}']`).length).toBe(1);
+    expect(newRow.find(`label[for='checkbox-author-contactperson-${suffix}']`).length).toBe(1);
 
     // Fields cleared
     expect(newRow.find('input[type="text"], input[type="email"]').filter(function () { return $(this).val(); }).length).toBe(0);

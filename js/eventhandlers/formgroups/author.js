@@ -62,6 +62,7 @@ $(document).ready(function () {
   }
 
   function addAuthorRow() {
+
     const sourceRow = authorGroup.children().first();
     if (!sourceRow || sourceRow.length === 0) return null;
 
