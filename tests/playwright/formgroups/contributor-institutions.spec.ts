@@ -319,6 +319,14 @@ test.describe('Contributor (Institutions) form group', () => {
     const placeholderCount = await secondRow.locator('.help-placeholder').count();
     expect(placeholderCount).toBeGreaterThan(0);
 
+    const hiddenRorId = await secondRow.locator('input[name="hiddenOrganisationRorId[]"]').getAttribute('id');
+    expect(hiddenRorId).not.toBeNull();
+
+    await expect(secondRow.locator('.removeButton')).toBeVisible();
+
+    await secondRow.locator('.removeButton').click();
+    await expect(rows).toHaveCount(1);
+    await expect(addButton).toBeVisible();
 
   });
 });
