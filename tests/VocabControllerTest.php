@@ -74,4 +74,48 @@ class VocabControllerTest extends TestCase
 
         $this->assertEquals($expected, $processed);
     }
+
+    public function testGetIcgEmModelTypesEmitsConnectionErrorWhenPrepareFails(): void
+    {
+        $controller = $this->getController();
+
+        $GLOBALS['connection'] = new class {
+            public string $error = 'prepare failed';
+
+            public function prepare(string $sql)
+            {
+                return false;
+            }
+        };
+
+        ob_start();
+        $controller->getICGEMModelTypes();
+        $output = ob_get_clean();
+        unset($GLOBALS['connection']);
+
+        $this->assertIsString($output);
+        $this->assertStringContainsString('prepare failed', $output);
+    }
+
+    public function testGetMathRepresentationsEmitsConnectionErrorWhenPrepareFails(): void
+    {
+        $controller = $this->getController();
+
+        $GLOBALS['connection'] = new class {
+            public string $error = 'math prepare failed';
+
+            public function prepare(string $sql)
+            {
+                return false;
+            }
+        };
+
+        ob_start();
+        $controller->getMathRepresentations();
+        $output = ob_get_clean();
+        unset($GLOBALS['connection']);
+
+        $this->assertIsString($output);
+        $this->assertStringContainsString('math prepare failed', $output);
+    }
 }

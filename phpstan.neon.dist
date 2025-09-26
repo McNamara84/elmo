@@ -1,0 +1,26 @@
+parameters:
+    level: 5
+    paths:
+        - api
+        - api.php
+        - api_functions.php
+        - generate_xml_files.php
+        - index.php
+        - install.php
+        - send_feedback_mail.php
+        - send_xml_file.php
+    bootstrapFiles:
+        - vendor/autoload.php
+    excludePaths:
+        analyse:
+            - tests
+            - vendor
+            - node_modules (?)
+            - doc
+            - save
+            - schemas
+            - css
+            - js
+            - xml
+            - json
+            - .github
