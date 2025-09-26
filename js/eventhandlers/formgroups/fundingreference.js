@@ -66,8 +66,8 @@ $(document).ready(function () {
 
     newFundingReferenceRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
-      if (typeof checkMandatoryFields === 'function') {
-        checkMandatoryFields();
+      if (typeof validateAllMandatoryFields === 'function') {
+        validateAllMandatoryFields();
       }
     });
 

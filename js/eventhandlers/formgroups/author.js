@@ -62,63 +62,83 @@ $(document).ready(function () {
   }
 
   function addAuthorRow() {
-    const newAuthorRow = originalAuthorRow.clone();
-    const uniqueSuffix = Date.now();
+    const sourceRow = authorGroup.children().first();
+    if (!sourceRow || sourceRow.length === 0) return null;
 
-    // Reset form inputs and validation
-    newAuthorRow.find("input").val("").removeClass("is-invalid is-valid");
-    newAuthorRow.find(".invalid-feedback, .valid-feedback").css("display", "");
+    // New row by cloning the first template
+    // false = do not clone event handlers
+    const newAuthorRow = sourceRow.clone(false);
 
-    // Update all relevant field IDs to ensure uniqueness
-    [
-      "input-author-orcid",
-      "input-author-lastname",
-      "input-author-firstname",
-      "input-author-affiliation",
-      "input-author-rorid",
-      "input-contactperson-email",
-      "input-contactperson-website",
-      "checkbox-author-contactperson"
-    ].forEach(fieldId => {
-      const newId = `${fieldId}-${uniqueSuffix}`;
-      const field = newAuthorRow.find(`#${fieldId}`);
-      if (field.length) {
-        field.attr("id", newId);
+    // Each new row is assigned a sequential number (index)
+    // Example: 1 = first copy, 2 = second copy, etc.
+    const index = authorGroup.children().length;
+
+    // 1. Reset input fields + assign new IDs
+    newAuthorRow.find("input, select").each(function () {
+      const $el = $(this);
+
+      // Make IDs unique: old ID + -<index>
+      // Example: input-author-orcid → input-author-orcid-1
+      const oldId = $el.attr("id");
+      if (oldId) {
+        $el.attr("id", `${oldId}-${index}`);
       }
 
-      const labels = newAuthorRow.find(`label[for='${fieldId}']`);
-      if (labels.length) {
-        labels.attr("for", newId);
+      // Clear values
+      if ($el.is(":checkbox") || $el.is(":radio")) {
+        $el.prop("checked", false); // Deselect checkbox/radio button
+      } else {
+        $el.val(""); // Clear all other fields
+      }
+
+      // Reset validation status
+      $el.removeClass("is-invalid is-valid").removeAttr("aria-invalid");
+    });
+
+    // 2. Customize labels
+    newAuthorRow.find("label[for]").each(function () {
+      const $label = $(this);
+      const oldFor = $label.attr("for");
+      if (oldFor) {
+        // Label refers to new ID
+        $label.attr("for", `${oldFor}-${index}`);
       }
     });
 
-    // Clean cloned row
+    // 3. Reset feedback & visual elements
+    newAuthorRow.find(".invalid-feedback, .valid-feedback").css("display", "");
     newAuthorRow.find(".tagify").remove();
+    newAuthorRow.find(".row-label").hide();
+
+    // 4.Add button replaced by Remove button
     newAuthorRow.find(".addAuthor").replaceWith(createRemoveButton());
+
+    // 5. Customize help buttons
     replaceHelpButtonInClonedRows(newAuthorRow);
 
-    // Append new author row
+    // 6. Insert new row in DOM
     authorGroup.append(newAuthorRow);
 
-    // Initialize autocomplete for affiliation field
-    autocompleteAffiliations(
-      `input-author-affiliation-${uniqueSuffix}`,
-      `input-author-rorid-${uniqueSuffix}`,
-      window.affiliationsData
-    );
+    // 7. Start autocomplete for affiliations
+    const affId = `input-author-affiliation-${index}`;
+    const rorId = `input-author-rorid-${index}`;
+    if (newAuthorRow.find(`#${affId}`).length && newAuthorRow.find(`#${rorId}`).length) {
+      autocompleteAffiliations(affId, rorId, window.affiliationsData);
+    }
 
-    // Enable row removal
+    // 8. Activate Bootstrap tooltips
+    if (window.bootstrap && typeof window.bootstrap.Tooltip === "function") {
+      newAuthorRow.find('[data-bs-toggle="tooltip"]').each(function () {
+        new window.bootstrap.Tooltip(this);
+      });
+    }
+
+    // 9. Activate remove button
     newAuthorRow.on("click", ".removeButton", function () {
       $(this).closest(".row").remove();
     });
 
-    // Initialize Bootstrap tooltips for new row
-    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
-    newAuthorRow.find('[data-bs-toggle="tooltip"]').each(function () {
-      new bootstrap.Tooltip(this, { container: tooltipContainer });
-    });
-
-    // Setup toggle behavior for contact person fields
+    // 10. Re-establish contact person toggle
     setupContactPersonToggle();
     return newAuthorRow;
   }

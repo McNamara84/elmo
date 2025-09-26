@@ -333,3 +333,48 @@ label.mandatory-field::after {
     position: relative;
     top: -0.45em;
 }
+
+/* Unified rule: hide Bootstrap "valid" styles when the field is actually empty */
+.form-control:placeholder-shown.is-valid,                     /* Input fields using placeholder (e.g. text, email) */
+.was-validated .form-control:placeholder-shown:valid,
+
+.was-validated .form-select:valid:has(option[value=""]:checked), /* Select fields with empty option selected */
+.form-select.is-valid:has(option[value=""]:checked),
+
+.was-validated .form-control[type="date"]:valid:empty,        /* Date fields with no value */
+.form-control[type="date"].is-valid:empty,
+.was-validated .form-control[type="time"]:valid:empty,        /* Time fields with no value */
+.form-control[type="time"].is-valid:empty {
+  background-image: none !important;  /* remove the green checkmark icon */
+  box-shadow: none !important;        /* remove the green glow */
+  border-color: #ced4da !important;   /* reset to default Bootstrap border color */
+}
+
+
+/* Show red shadow only when the field is focused and invalid */
+textarea.is-invalid:focus,
+.input-group.is-invalid textarea:focus {
+  box-shadow: 0 0 0 0.25rem rgba(220,53,69,.25) !important; /* Red shadow for focus */
+}
+
+/* Normal invalid state: red border only, no shadow or background image */
+textarea.is-invalid,
+.input-group.is-invalid textarea {
+  border-color: #dc3545 !important; /* Red border */
+  box-shadow: none !important;      /* No shadow when not focused */
+  background-image: none !important; /* Remove any default background icons/images */
+}
+
+/* Show green shadow only when the field is focused and valid */
+textarea.is-valid:focus,
+.input-group.is-valid textarea:focus {
+  box-shadow: 0 0 0 0.25rem rgba(25,135,84,.25) !important; /* Green shadow for focus */
+}
+
+/* Normal valid state: green border only, no shadow or background image */
+textarea.is-valid,
+.input-group.is-valid textarea {
+  border-color: #198754 !important;  /* Green border */
+  box-shadow: none !important;       /* No shadow when not focused */
+  background-image: none !important; /* Remove any default background icons/images */
+}

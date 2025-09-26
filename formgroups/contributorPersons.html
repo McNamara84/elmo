@@ -13,7 +13,7 @@
             <div class="form-floating">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
                 id="input-contributor-orcid" name="cbORCID[]" 
-                pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
+                pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" placeholder=" " />
               <label for="input-contributor-orcid" data-translate="general.ORCID">ORCID</label>
               <div class="invalid-feedback" data-translate="general.orcidInvalid">Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))</div>
             </div>
@@ -28,7 +28,7 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control" id="input-contributor-lastname" pattern="^[a-zA-ZäöéüÄÖÜß \-]*$"
-                name="cbPersonLastname[]"  />
+                name="cbPersonLastname[]" placeholder=" " />
               <label for="input-contributor-lastname" data-translate="general.lastName">Last Name</label>
               <div class="invalid-feedback" data-translate="general.lastNameInvalid">Please provide a lastname. Only letters are allowed.</div>
             </div>
@@ -39,7 +39,7 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control" id="input-contributor-firstname" pattern="^[a-zA-ZäöéüÄÖÜß \-.]*$"
-                name="cbPersonFirstname[]"  />
+                name="cbPersonFirstname[]" placeholder=" " />
               <label for="input-contributor-firstname" data-translate="general.firstName">First Name</label>
               <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
             </div>

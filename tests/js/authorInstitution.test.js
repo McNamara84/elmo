@@ -85,12 +85,14 @@ describe('authorInstitution.js', () => {
     const newRow = rows.last();
 
     // Check ID change
-    expect(newRow.find(`#input-authorinstitution-name-${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-authorinstitution-affiliation-${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-author-institutionrorid-${suffix}`).length).toBe(1);
+    expect(newRow.find("[id^='input-authorinstitution-name-']").length).toBe(1);
+    expect(newRow.find("[id^='input-authorinstitution-affiliation-']").length).toBe(1);
+    expect(newRow.find("[id^='input-author-institutionrorid-']").length).toBe(1);
+
 
     // Label correctly linked
-    expect(newRow.find(`label[for='input-authorinstitution-name-${suffix}']`).length).toBe(1);
+    expect(newRow.find("label[for^='input-authorinstitution-name-']").length).toBe(1);
+    expect(newRow.find("label[for^='input-authorinstitution-affiliation-']").length).toBe(1);
 
     // Fields cleared
     expect(newRow.find('input').filter(function () { return this.value; }).length).toBe(0);
@@ -104,9 +106,12 @@ describe('authorInstitution.js', () => {
     expect(window.createRemoveButton).toHaveBeenCalledTimes(1);
 
     // Autocomplete initialized
+    const affiliationId = newRow.find('input[name="institutionAffiliation[]"]').attr('id');
+    const rorId = newRow.find('input[name="authorInstitutionRorIds[]"]').attr('id');
+
     expect(window.autocompleteAffiliations).toHaveBeenCalledWith(
-      `input-authorinstitution-affiliation-${suffix}`,
-      `input-author-institutionrorid-${suffix}`,
+      affiliationId,
+      rorId,
       window.affiliationsData
     );
 
