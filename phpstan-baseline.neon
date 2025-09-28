@@ -4,11 +4,7 @@ parameters:
 
 
 
-		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
-			count: 1
-			path: api/v2/controllers/DatasetController.php
+
 
 		-
 			message: '#^Method DatasetController\:\:exportAll\(\) with return type void returns string\|null but should not return anything\.$#'

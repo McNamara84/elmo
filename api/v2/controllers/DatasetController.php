@@ -432,7 +432,7 @@ class DatasetController
                 'orcid' => $row['orcid'] ?? null,
                 'email' => $row['email'] ?? null,
                 'website' => $row['website'] ?? null,
-                'Affiliations' => $this->getContactPersonAffiliations($connection, $row['contact_person_id']) ?? null
+                'Affiliations' => $this->getContactPersonAffiliations($connection, $row['contact_person_id'])
             ];
             $contactPersons[] = $contactPerson;
         }
