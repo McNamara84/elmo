@@ -9,65 +9,59 @@
 
 // Enable error reporting for debugging purposes.
 error_reporting(E_ALL);
-ini_set('display_errors', '1');
+ini_set('display_errors', 1);
 
 /**
- * Determine the API version from the provided server array.
+ * Retrieve the request URI from the server variables.
  *
- * @param array<string, mixed> $server
- * @return non-empty-string
+ * @var string $uri The full request URI.
  */
-function determineApiVersion(array $server): string
-{
-    $uri = isset($server['REQUEST_URI']) ? (string) $server['REQUEST_URI'] : '';
-    $uri = trim($uri);
+$uri = $_SERVER['REQUEST_URI'];
 
-    if ($uri === '') {
-        return 'v2';
-    }
+/**
+ * Split the URI into parts by '/' and trim any leading/trailing slashes.
+ *
+ * @var array $uriParts An array of URI segments.
+ */
+$uriParts = explode('/', trim($uri, '/'));
 
-    $segments = explode('/', trim($uri, '/'));
-    $uriParts = array_values(array_filter(
-        $segments,
-        static function (string $segment): bool {
-            return $segment !== '';
-        }
-    ));
+/**
+ * Find the index of 'api' in the URI segments.
+ *
+ * @var int|false $apiIndex The index of 'api' in $uriParts, or false if not found.
+ */
+$apiIndex = array_search('api', $uriParts);
 
-    $apiIndex = array_search('api', $uriParts, true);
-
-    if ($apiIndex !== false && isset($uriParts[$apiIndex + 1])) {
-        $candidate = $uriParts[$apiIndex + 1];
-
-        if (preg_match('/^v\d+$/', $candidate) === 1) {
-            return $candidate;
-        }
-    }
-
-    return 'v2';
+/**
+ * Determine the API version from the URI.
+ *
+ * If a version is specified immediately after 'api' in the URI (e.g., 'v1', 'v2'),
+ * it uses that version. Otherwise, it defaults to 'v2'.
+ *
+ * @var string $version The API version to use.
+ */
+if ($apiIndex !== false && isset($uriParts[$apiIndex + 1]) && preg_match('/^v\d+$/', $uriParts[$apiIndex + 1])) {
+    $version = $uriParts[$apiIndex + 1];
+} else {
+    // Default to v2 if no version is specified
+    $version = 'v2';
 }
 
 /**
- * Resolve and serve the API version specified in the server array.
+ * Construct the path to the version-specific index.php file.
  *
- * @param array<string, mixed> $server
+ * @var string $versionFile The file path to the version-specific index.php.
  */
-function serveApi(array $server): void
-{
-    $version = determineApiVersion($server);
-    $versionFile = __DIR__ . '/' . $version . '/index.php';
+$versionFile = __DIR__ . '/' . $version . '/index.php';
 
-    if (is_file($versionFile)) {
-        require_once $versionFile;
-
-        return;
-    }
-
+/**
+ * Check if the version-specific index.php file exists.
+ * If it does, require it to handle the request.
+ * Otherwise, send a 404 Not Found response with an error message.
+ */
+if (file_exists($versionFile)) {
+    require_once $versionFile;
+} else {
     http_response_code(404);
-    header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['error' => 'API version not found']);
-}
-
-if (!defined('ELMO_API_INDEX_INCLUDE_ONLY')) {
-    serveApi($_SERVER);
 }
