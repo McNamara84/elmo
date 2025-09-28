@@ -61,6 +61,22 @@ $(document).ready(function() {
         updateModelTypeVisibility();
     }, 500);
 
+
+    const timeVariableCheckbox = document.getElementById('checkbox-time-variable');
+    const descriptionContainer = document.getElementById('time-variable-description-container');
+
+    if (timeVariableCheckbox && descriptionContainer) {
+        timeVariableCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                descriptionContainer.classList.remove('d-none');
+            } else {
+                descriptionContainer.classList.add('d-none');
+                // Optionally clear the input when hidden
+                descriptionContainer.querySelector('input').value = '';
+            }
+        });
+    }
+
     /**
      * Toggles the visibility of density input sections based on the checkbox state.
      */

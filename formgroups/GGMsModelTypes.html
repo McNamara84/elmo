@@ -8,34 +8,21 @@
         <div class="visibility-modeltype-static d-none">
             <h6 class="mb-2">Static models special variables</h6>
             <div class="row mb-3">
+                <!-- Time-variable coefficients checkbox -->
+                <div class="col-12 p-1">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="checkbox-time-variable">
+                        <label class="form-check-label" for="checkbox-time-variable">
+                            Time-variable coefficients provided
+                        </label>
+                    </div>
+                </div>
                 <!-- Description of time-variable coefficients -->
-                <div class="col-sm-6 col-lg-8 p-1">
+                <div class="col-sm-6 col-lg-8 p-1 d-none" id="time-variable-description-container">
                     <div class="form-floating">
                         <input type="text" class="form-control" id="input-static-description" name="staticDescription[]">
                         <label for="input-static-description">
                             Description of time-variable coefficients
-                        </label>
-                    </div>
-                </div>
-                <!-- De-aliasing (TRUE/FALSE) -->
-                <div class="col-sm-2 col-lg-2 p-1">
-                    <div class="form-floating">
-                        <select class="form-select" id="select-static-dealiasing" name="staticDealiasing[]">
-                            <option selected value=""></option>
-                            <option value="true">TRUE</option>
-                            <option value="false">FALSE</option>
-                        </select>
-                        <label for="select-static-dealiasing">
-                            De-aliasing
-                        </label>
-                    </div>
-                </div>
-                <!-- Version -->
-                <div class="col-sm-2 col-lg-2 p-1">
-                    <div class="form-floating">
-                        <input type="text" class="form-control" id="input-static-version" name="staticVersion[]">
-                        <label for="input-static-version">
-                            Version
                         </label>
                     </div>
                 </div>
