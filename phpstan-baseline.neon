@@ -1,5 +1,16 @@
 parameters:
 	ignoreErrors:
+		-
+			message: '#^Method DatasetController\:\:handleExportAll\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: api/v2/controllers/DatasetController.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 1
+			path: api/v2/controllers/DatasetController.php
 
 
 
