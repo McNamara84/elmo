@@ -1221,7 +1221,8 @@ class DatasetController
      */
     public function exportResourceDownload($vars): ?string
     {
-        return $this->handleExport($vars, true);
+        $this->handleExport($vars, true);
+        return null; // This line will never be reached due to exit() in handleExport
     }
 
     /**
@@ -1232,7 +1233,8 @@ class DatasetController
      */
     public function exportResource($vars): ?string
     {
-        return $this->handleExport($vars, false);
+        $this->handleExport($vars, false);
+        return null; // This line will never be reached due to exit() in handleExport
     }
 
     /**
@@ -1314,9 +1316,9 @@ class DatasetController
      * @param array $vars     An associative array containing 'id'.
      * @param bool  $download If true, the combined XML will be downloaded; if false, it will be output directly.
      * @param bool  $returnAsString If true, the combined XML string is returned instead of being output.
-     * @return string|void
+     * @return string|null
      */
-    private function handleExportAll($vars, $download, $returnAsString = false)
+    private function handleExportAll($vars, $download, $returnAsString = false): ?string
     {
         $id = intval($vars['id']);
 
@@ -1404,7 +1406,8 @@ XML;
          */
     public function exportBaseXml($vars): ?string
     {
-        return $this->handleExportBaseXml($vars, false);
+        $this->handleExportBaseXml($vars);
+        return null; // This line will never be reached due to exit() in handleExportBaseXml
     }
     /**
      * Handles the export of the base XML for a resource and outputs it as a file download.

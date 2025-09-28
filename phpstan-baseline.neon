@@ -8,17 +8,7 @@ parameters:
 
 
 
-		-
-			message: '#^Method DatasetController\:\:handleExportAll\(\) never returns void so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: api/v2/controllers/DatasetController.php
 
-		-
-			message: '#^Method DatasetController\:\:handleExportBaseXml\(\) invoked with 2 parameters, 1 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: api/v2/controllers/DatasetController.php
 
 		-
 			message: '#^Negated boolean expression is always true\.$#'
@@ -26,17 +16,7 @@ parameters:
 			count: 1
 			path: api/v2/controllers/DatasetController.php
 
-		-
-			message: '#^Result of method DatasetController\:\:handleExport\(\) \(void\) is used\.$#'
-			identifier: method.void
-			count: 2
-			path: api/v2/controllers/DatasetController.php
 
-		-
-			message: '#^Result of method DatasetController\:\:handleExportBaseXml\(\) \(void\) is used\.$#'
-			identifier: method.void
-			count: 1
-			path: api/v2/controllers/DatasetController.php
 
 		-
 			message: '#^Strict comparison using \!\=\= between mixed~\(0\|0\.0\|''''\|''0''\|array\{\}\|false\|null\) and '''' will always evaluate to true\.$#'
