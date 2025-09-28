@@ -282,7 +282,7 @@ class DraftController
     /**
      * Persists the provided record to disk.
      *
-     * @param array $record Draft record to store.
+     * @param array<mixed> $record Draft record to store.
      * @return void
      */
     private function persistRecord(array $record): void
@@ -431,7 +431,7 @@ class DraftController
     /**
      * Computes a checksum to track payload changes.
      *
-     * @param array $payload Payload to hash.
+     * @param array<mixed> $payload Payload to hash.
      * @return string
      */
     private function checksum(array $payload): string
