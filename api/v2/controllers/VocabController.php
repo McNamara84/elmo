@@ -744,7 +744,7 @@ class VocabController
     /**
      * Recursively sorts children nodes alphabetically by their text property
      *
-     * @param array &$nodes Reference to the array of nodes to sort
+     * @param array<mixed> &$nodes Reference to the array of nodes to sort
      * @return void
      */
     private function sortChildrenRecursively(array &$nodes)
@@ -766,7 +766,7 @@ class VocabController
      * @param Graph $graph The RDF graph object containing concept data
      * @param string $conceptScheme The concept scheme identifier
      * @param string $schemeName The human-readable name of the scheme
-     * @return array The hierarchical structure of concepts
+     * @return array<mixed> The hierarchical structure of concepts
      */
     private function buildHierarchy($graph, $conceptScheme, $schemeName): array
     {
@@ -1122,7 +1122,7 @@ class VocabController
     /**
      * Fetches metadata about the latest ROR data dump from Zenodo
      *
-     * @return array An array containing:
+     * @return array<mixed> An array containing:
      *               - [0] The download URL of the data dump
      *               - [1] The filename of the ZIP archive
      * @throws Exception If metadata cannot be retrieved or is invalid
@@ -1181,7 +1181,7 @@ class VocabController
      * Processes the ROR CSV file and returns the affiliations array
      *
      * @param string $csvFileName Name of the extracted CSV file
-     * @return array Parsed affiliations data
+     * @return array<mixed> Parsed affiliations data
      * @throws Exception If the CSV file cannot be read
      */
     private function parseRorCsv(string $csvFileName): array
@@ -1233,7 +1233,7 @@ class VocabController
     /**
      * Saves the affiliations array as a JSON file
      *
-     * @param array $affiliations The affiliations data
+     * @param array<mixed> $affiliations The affiliations data
      * @return void
      * @throws Exception If the JSON cannot be saved
      */
@@ -1258,7 +1258,7 @@ class VocabController
     /**
      * Sends a success response after affiliations are updated
      *
-     * @param array $affiliations The processed affiliations
+     * @param array<mixed> $affiliations The processed affiliations
      * @return void
      */
     private function respondWithAffiliations(array $affiliations): void
