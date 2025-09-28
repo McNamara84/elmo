@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../../settings.php';
 class DatasetController
 {
     private mysqli $connection;
-    private ?object $logger;
+    private mixed $logger;
 
     public function __construct()
     {
@@ -20,7 +20,7 @@ class DatasetController
      * keyword definitions. It handles GCMD Platform, Instrument, and Science keywords,
      * as well as MSL vocabularies.
      *
-     * @return array An associative array where keys are the JSON filename bases (without extension)
+     * @return array<mixed> An associative array where keys are the JSON filename bases (without extension)
      *               and values are their corresponding lastUpdated timestamps.
      *               Format: [
      *                   'gcmdPlatformsKeywords' => 'YYYY-MM-DD',
@@ -28,6 +28,7 @@ class DatasetController
      *                   'gcmdScienceKeywords' => 'YYYY-MM-DD',
      *                   'msl-vocabularies' => 'YYYY-MM-DD'
      *               ]
+     * @return array<mixed>
      */
     private function loadThesauriData(): array
     {
@@ -59,7 +60,7 @@ class DatasetController
      * @param mysqli $connection The database connection
      * @param int    $resource_id The ID of the resource
      * 
-     * @return array An array of thesaurus keywords, each containing:
+     * @return array<mixed> An array of thesaurus keywords, each containing:
      *               - All original database fields from the Thesaurus_Keywords table
      *               
      * Example return structure:
@@ -74,6 +75,7 @@ class DatasetController
      *     ],
      *     // ... more keywords
      * ]
+     * @return array<mixed>
      */
     function getThesaurusKeywords($connection, $resource_id): array
     {
@@ -97,7 +99,7 @@ class DatasetController
      * @param string $table The name of the table.
      * @param string $idColumn The name of the ID column.
      * @param int $id The ID value to search for.
-     * @return array|null An associative array of the related data, or null if not found.
+     * @return array<mixed> An associative array of the related data, or empty array if not found.
      */
     function getRelatedData($connection, $table, $idColumn, $id): array
     {
@@ -105,7 +107,7 @@ class DatasetController
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $result = $stmt->get_result();
-        return $result->fetch_assoc();
+        return $result->fetch_assoc() ?: [];
     }
 
     /**
@@ -115,7 +117,7 @@ class DatasetController
      * @param string $table The name of the table.
      * @param string $foreignKeyColumn The name of the foreign key column.
      * @param int $id The ID value to search for.
-     * @return array An array of associative arrays containing the related data.
+     * @return array<mixed> An array of associative arrays containing the related data.
      */
     function getRelatedDataMultiple($connection, $table, $foreignKeyColumn, $id): array
     {
@@ -131,7 +133,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $author_id The ID of the author.
-     * @return array An array of affiliations for the author.
+     * @return array<mixed> An array of affiliations for the author.
      */
     function getAuthorAffiliations($connection, $author_id): array
     {
@@ -156,7 +158,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource.
-     * @return array An array of authors with their details and affiliations.
+     * @return array<mixed> An array of authors with their details and affiliations.
      */
     function getAuthors($connection, $resource_id): array
     {
@@ -204,7 +206,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource.
-     * @return array An array of titles with their types.
+     * @return array<mixed> An array of titles with their types.
      */
     function getTitles($connection, $resource_id): array
     {
@@ -225,7 +227,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource.
-     * @return array An array of descriptions.
+     * @return array<mixed> An array of descriptions.
      */
     function getDescriptions($connection, $resource_id): array
     {
@@ -244,7 +246,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $contributor_person_id The ID of the contributor person.
-     * @return array An array of affiliations for the contributor person.
+     * @return array<mixed> An array of affiliations for the contributor person.
      */
     function getContributorPersonAffiliations($connection, $contributor_person_id): array
     {
@@ -273,7 +275,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $contributor_person_id The ID of the contributor person.
-     * @return array An array of roles for the contributor person.
+     * @return array<mixed> An array of roles for the contributor person.
      */
     function getContributorPersonRoles($connection, $contributor_person_id): array
     {
@@ -301,7 +303,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $contributor_institution_id The ID of the contributor institution.
-     * @return array An array of affiliations for the contributor institution.
+     * @return array<mixed> An array of affiliations for the contributor institution.
      */
     function getContributorInstitutionAffiliations($connection, $contributor_institution_id): array
     {
@@ -331,7 +333,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $contributor_institution_id The ID of the contributor institution.
-     * @return array An array of roles for the contributor institution.
+     * @return array<mixed> An array of roles for the contributor institution.
      */
     function getContributorInstitutionRoles($connection, $contributor_institution_id): array
     {
@@ -359,7 +361,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource.
-     * @return array An array containing two sub-arrays: 'persons' and 'institutions'.
+     * @return array<mixed> An array containing two sub-arrays: 'persons' and 'institutions'.
      */
     function getContributors($connection, $resource_id): array
     {
@@ -410,7 +412,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource.
-     * @return array An array of contact persons with their details and affiliations.
+     * @return array<mixed> An array of contact persons with their details and affiliations.
      */
     function getContactPersons($connection, $resource_id): array
     {
@@ -444,7 +446,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $contact_person_id The ID of the contact person.
-     * @return array An array of affiliations for the contact person.
+     * @return array<mixed> An array of affiliations for the contact person.
      */
     function getContactPersonAffiliations($connection, $contact_person_id): array
     {
@@ -474,7 +476,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource.
-     * @return array An array of funding references.
+     * @return array<mixed> An array of funding references.
      */
     function getFundingReferences($connection, $resource_id): array
     {
@@ -493,7 +495,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource.
-     * @return array An array of related works with their identifiers, relations, and identifier types.
+     * @return array<mixed> An array of related works with their identifiers, relations, and identifier types.
      */
     function getRelatedWorks($connection, $resource_id): array
     {
@@ -524,7 +526,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource.
-     * @return array An array of spatial temporal coverage data.
+     * @return array<mixed> An array of spatial temporal coverage data.
      */
     function getSpatialTemporalCoverage($connection, $resource_id): array
     {
@@ -545,7 +547,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource.
-     * @return array An array of free keywords.
+     * @return array<mixed> An array of free keywords.
      */
     function getFreeKeywords($connection, $resource_id): array
     {
@@ -566,7 +568,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource.
-     * @return array An array of originating laboratories with their details and affiliations.
+     * @return array<mixed> An array of originating laboratories with their details and affiliations.
      */
     function getOriginatingLaboratories($connection, $resource_id): array
     {
@@ -596,7 +598,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $originating_laboratory_id The ID of the originating laboratory.
-     * @return array An array of affiliations for the originating laboratory.
+     * @return array<mixed> An array of affiliations for the originating laboratory.
      */
     function getOriginatingLaboratoryAffiliations($connection, $originating_laboratory_id): array
     {
@@ -620,7 +622,7 @@ class DatasetController
      *
      * @param mysqli $connection The database connection.
      * @param int $resource_id The ID of the resource in question.
-     * @return array An array of affiliations for the originating laboratory.
+     * @return array<mixed>|null An array of GGM data or null if not found.
      */
         private function getGGMData(mysqli $connection, int $resource_id): ?array
     {
@@ -1219,7 +1221,7 @@ class DatasetController
     /**
      * Exports a resource in the specified metadata scheme and initiates a file download.
      *
-     * @param array $vars An associative array containing 'id' and 'scheme'.
+     * @param array<mixed> $vars An associative array containing 'id' and 'scheme'.
      * @return string|null
      */
     public function exportResourceDownload(array $vars): ?string
@@ -1231,7 +1233,7 @@ class DatasetController
     /**
      * Exports a resource in the specified metadata scheme and outputs it directly.
      *
-     * @param array $vars An associative array containing 'id' and 'scheme'.
+     * @param array<mixed> $vars An associative array containing 'id' and 'scheme'.
      * @return string|null
      */
     public function exportResource(array $vars): ?string
@@ -1243,7 +1245,7 @@ class DatasetController
     /**
      * Handles the export of a resource, either by downloading it or outputting it directly.
      *
-     * @param array $vars     An associative array containing 'id' and 'scheme'.
+     * @param array<mixed> $vars     An associative array containing 'id' and 'scheme'.
      * @param bool  $download If true, the resource will be downloaded; if false, it will be output directly.
      * @return void
      */
@@ -1294,7 +1296,7 @@ class DatasetController
     /**
      * Exports all metadata schemes for a resource and initiates a file download.
      *
-     * @param array $vars An associative array containing 'id'.
+     * @param array<mixed> $vars An associative array containing 'id'.
      * @return string|null
      */
     public function exportAllDownload(array $vars): ?string
@@ -1305,7 +1307,7 @@ class DatasetController
     /**
      * Exports all metadata schemes for a resource and outputs them directly.
      *
-     * @param array $vars An associative array containing 'id'.
+     * @param array<mixed> $vars An associative array containing 'id'.
      * @return string|null
      */
     public function exportAll(array $vars): ?string
@@ -1316,7 +1318,7 @@ class DatasetController
     /**
      * Handles the export of all metadata schemes for a resource, either by downloading or outputting directly.
      *
-     * @param array $vars     An associative array containing 'id'.
+     * @param array<mixed> $vars     An associative array containing 'id'.
      * @param bool  $download If true, the combined XML will be downloaded; if false, it will be output directly.
      * @param bool  $returnAsString If true, the combined XML string is returned instead of being output.
      * @return string|null
@@ -1403,7 +1405,7 @@ XML;
          * (including GGM properties if present) for a given resource. It delegates the actual
          * export logic to handleExportBaseXml().
          *
-         * @param array $vars An associative array containing at least the key 'id' (resource ID).
+         * @param array<mixed> $vars An associative array containing at least the key 'id' (resource ID).
          * @return string|null
          */
     public function exportBaseXml(array $vars): ?string
@@ -1418,8 +1420,8 @@ XML;
      * sets appropriate headers for file download, and outputs the XML content. If XML generation fails,
      * it returns a JSON error response with HTTP 500.
      *
-     * @param array $vars An associative array containing at least the key 'id' (resource ID).
-     * @return void
+     * @param array<mixed> $vars An associative array containing at least the key 'id' (resource ID).
+     * @return string|null
      */
     public function handleExportBaseXml(array $vars): ?string
     {

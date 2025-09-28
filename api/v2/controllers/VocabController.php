@@ -48,7 +48,7 @@ class VocabController
      * and a timestamp of when the data was last updated.
      * 
      * @param mixed $data The original data to be wrapped
-     * @return array An array containing:
+     * @return array<mixed> An array containing:
      *               - 'lastUpdated' (string) The timestamp in Y-m-d H:i:s format
      *               - 'data' (mixed) The original data structure
      * 

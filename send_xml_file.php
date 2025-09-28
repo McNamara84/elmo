@@ -147,7 +147,7 @@ try {
         // Generate XML directly in-memory
         $xml_content = $datasetController->envelopeXmlAsString($connection, $resource_id);
         // check for errors
-        if ($xml_content === FALSE) {
+        if (empty($xml_content)) {
             error_log("Submit: Failed to retrieve XML content from API and in-memory. Endpoint: $url");     
         } else {
             error_log("Submit: Successfully generated XML file in-memory for resource_id $resource_id.");

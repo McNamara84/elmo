@@ -112,7 +112,7 @@ function dropTables($connection)
  * Creates the database structure by executing SQL CREATE TABLE statements.
  *
  * @param mysqli $connection The database connection object
- * @return array Status information about the operation
+ * @return array<mixed> Status information about the operation
  */
 function createDatabaseStructure($connection): array
 {
@@ -1184,7 +1184,7 @@ function insertTestResourceData($connection)
  *
  * @param mysqli $connection The database connection object
  * @param string $action The installation type (basic/complete)
- * @return array Installation status and progress information
+ * @return array<mixed> Installation status and progress information
  */
 function processInstallation($connection, $action): array
 {

@@ -35,8 +35,8 @@ class DraftController
     /**
      * Creates a new autosave draft for the active user session.
      *
-     * @param array $vars Route variables provided by the router.
-     * @param array|null $body Optional parsed request payload for testing.
+     * @param array<mixed> $vars Route variables provided by the router.
+     * @param array<mixed>|null $body Optional parsed request payload for testing.
      * @return void
      */
     public function create(array $vars = [], ?array $body = null): void
@@ -60,8 +60,8 @@ class DraftController
     /**
      * Updates an existing autosave draft belonging to the current session.
      *
-     * @param array $vars Route variables containing the draft identifier.
-     * @param array|null $body Optional parsed request payload for testing.
+     * @param array<mixed> $vars Route variables containing the draft identifier.
+     * @param array<mixed>|null $body Optional parsed request payload for testing.
      * @return void
      */
     public function update(array $vars = [], ?array $body = null): void
@@ -104,8 +104,8 @@ class DraftController
     /**
      * Retrieves the payload of the specified draft if it belongs to the session.
      *
-     * @param array $vars Route variables containing the draft identifier.
-     * @param array|null $body Optional parsed request payload (unused).
+     * @param array<mixed> $vars Route variables containing the draft identifier.
+     * @param array<mixed>|null $body Optional parsed request payload (unused).
      * @return void
      */
     public function get(array $vars = [], ?array $body = null): void
