@@ -1379,10 +1379,9 @@ XML;
             }
             http_response_code(400);
             echo json_encode(['error' => $e->getMessage()]);
-        }
-        if (!$returnAsString) {
             exit();
         }
+        return null;
     }
     /**
      * this public function is used as an endpoint to get the XML in all formats. So called envelope.
