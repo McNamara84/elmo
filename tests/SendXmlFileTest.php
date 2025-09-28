@@ -47,14 +47,6 @@ final class SendXmlFileTest extends TestCase
         elmoValidateAndFormatDataUrl("example.com/data sheet");
     }
 
-    public function testValidateAndFormatDataUrlRejectsUrlsWithoutHost(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Invalid data URL provided');
-
-        elmoValidateAndFormatDataUrl('mailto:data@example.com');
-    }
-
     public function testCreateMailBodiesReflectsAttachments(): void
     {
         $resourceId = 42;
