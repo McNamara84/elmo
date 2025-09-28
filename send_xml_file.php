@@ -88,7 +88,7 @@ function getPriorityText($weeks)
     }
 }
 
-$resource_id = null; // Initialize to null
+$resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
 
 try {
     // Save all form components
@@ -305,7 +305,7 @@ try {
     error_log("XML Submit Error: " . $e->getMessage());
     
     // Backup: Save submission details to file if email fails
-    if ($resource_id !== null) {
+    if ($resource_id !== false) {
         $backupFile = '/var/www/html/xml_submit_backup.txt';
         $backupEntry = "[" . date('Y-m-d H:i:s') . "] BACKUP XML SUBMISSION\n";
         $backupEntry .= "Resource ID: " . $resource_id . "\n";
