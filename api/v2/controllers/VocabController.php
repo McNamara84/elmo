@@ -186,8 +186,8 @@ class VocabController
         $url = 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology.rdf';
 
         // Register RDF namespaces
-        RdfNamespace::set('skos', 'http://www.w3.org/2004/02/skos/core#');
-        RdfNamespace::set('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#');
+        \EasyRdf\RdfNamespace::set('skos', 'http://www.w3.org/2004/02/skos/core#');
+        \EasyRdf\RdfNamespace::set('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#');
 
         // Load RDF data
         $graph = new Graph($url);
