@@ -53,7 +53,7 @@ class VocabController
      *               - 'data' (mixed) The original data structure
      * 
      */
-    private function addTimestampToData($data)
+    private function addTimestampToData($data): array
     {
         return [
             'lastUpdated' => date('Y-m-d H:i:s'),
@@ -133,7 +133,7 @@ class VocabController
      * @return array Processed MSL Labs data.
      * @throws Exception If fetching or decoding the data fails.
      */
-    public function fetchAndProcessMslLabs()
+    public function fetchAndProcessMslLabs(): array
     {
         $opts = [
             'http' => [
@@ -180,7 +180,7 @@ class VocabController
      * @return array Parsed CGI keywords tree
      * @throws Exception If fetching or parsing the RDF data fails
      */
-    public function fetchAndProcessCGIKeywords()
+    public function fetchAndProcessCGIKeywords(): array
     {
         // Source URL of the CGI Simple Lithology vocabulary
         $url = 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology.rdf';
@@ -276,7 +276,7 @@ class VocabController
      * @param array $item The item to process
      * @return array The processed item
      */
-    private function processItem($item)
+    private function processItem(array $item): array
     {
 
         // Synonyms as description
@@ -310,7 +310,7 @@ class VocabController
      * @param array $vars An associative array of parameters (not used anymore)
      * @return void
      */
-    public function getMslVocab($vars = [])
+    public function getMslVocab(array $vars = [])
     {
         // Validate API key before processing request
         if (!$this->validateApiKey()) {
@@ -536,7 +536,7 @@ class VocabController
      * @param array $vars An associative array of parameters.
      * @return void
      */
-    public function getRoles($vars)
+    public function getRoles(array $vars)
     {
         global $connection;
         $type = $vars['type'] ?? $_GET['type'] ?? 'all';
@@ -747,7 +747,7 @@ class VocabController
      * @param array &$nodes Reference to the array of nodes to sort
      * @return void
      */
-    private function sortChildrenRecursively(&$nodes)
+    private function sortChildrenRecursively(array &$nodes)
     {
         foreach ($nodes as &$node) {
             if (!empty($node['children'])) {
@@ -768,7 +768,7 @@ class VocabController
      * @param string $schemeName The human-readable name of the scheme
      * @return array The hierarchical structure of concepts
      */
-    private function buildHierarchy($graph, $conceptScheme, $schemeName)
+    private function buildHierarchy($graph, $conceptScheme, $schemeName): array
     {
         $hierarchy = [];
         $concepts = $graph->allOfType('skos:Concept');

@@ -48,7 +48,7 @@ require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/SMTP.php';
 /**
  * Test GFZ SMTP connectivity
  */
-function testGfzSmtpConnectivity() {
+function testGfzSmtpConnectivity(): bool {
     global $smtpHost, $smtpPort;
     
     error_log("=== GFZ SMTP Connectivity Test (XML Submit) ===");

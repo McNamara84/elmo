@@ -8,7 +8,7 @@ use PHPMailer\PHPMailer\Exception;
 require 'vendor/autoload.php';
 include __DIR__ . '/settings.php';
 
-function testGfzSmtpConnectivity() {
+function testGfzSmtpConnectivity(): bool {
     global $smtpHost, $smtpPort;
     
     error_log("=== GFZ SMTP Connectivity Test ===");
@@ -30,14 +30,14 @@ function testGfzSmtpConnectivity() {
 }
 
 function sendFeedbackMail(
-    $feedbackQuestion1,
-    $feedbackQuestion2,
-    $feedbackQuestion3,
-    $feedbackQuestion4,
-    $feedbackQuestion5,
-    $feedbackQuestion6,
-    $feedbackQuestion7
-) {
+    string $feedbackQuestion1,
+    string $feedbackQuestion2,
+    string $feedbackQuestion3,
+    string $feedbackQuestion4,
+    string $feedbackQuestion5,
+    string $feedbackQuestion6,
+    string $feedbackQuestion7
+): void {
     global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth;
     
     // Network test before sending

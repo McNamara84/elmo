@@ -38,7 +38,7 @@ class ValidationController
      *
      * @return void
      */
-    public function getPattern($vars)
+    public function getPattern(array $vars)
     {
         $type = $vars['type'] ?? null;
         if (!$type) {

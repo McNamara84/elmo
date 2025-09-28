@@ -26,7 +26,7 @@ if ($_GET['action'] == 'getCGIKeywords') {
 // Beispielaufruf: api.php?action=getChronostratKeywords
 if ($_GET['action'] == 'getChronostratKeywords') {
     // Überprüfen der Verfügbarkeit einer URL
-    function isUrlAvailable($url)
+    function isUrlAvailable(string $url): bool
     {
         $headers = @get_headers($url);
         return $headers && strpos($headers[0], '200') !== false;

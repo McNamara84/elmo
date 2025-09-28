@@ -4,7 +4,7 @@ require 'vendor/autoload.php';
 use EasyRdf\Graph;
 use EasyRdf\RdfNamespace;
 
-function fetchAndProcessCGIKeywords()
+function fetchAndProcessCGIKeywords(): array
 {
     $url = 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology.rdf';
 

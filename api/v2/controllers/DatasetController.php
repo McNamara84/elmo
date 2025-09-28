@@ -3,8 +3,8 @@ require_once __DIR__ . '/../../../settings.php';
 
 class DatasetController
 {
-    private $connection;
-    private $logger;
+    private mysqli $connection;
+    private ?object $logger;
 
     public function __construct()
     {
@@ -29,7 +29,7 @@ class DatasetController
      *                   'msl-vocabularies' => 'YYYY-MM-DD'
      *               ]
      */
-    private function loadThesauriData()
+    private function loadThesauriData(): array
     {
         $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
         $jsonDir = $baseDir . '/json/thesauri'; // Path to the 'thesauri' folder
@@ -75,7 +75,7 @@ class DatasetController
      *     // ... more keywords
      * ]
      */
-    function getThesaurusKeywords($connection, $resource_id)
+    function getThesaurusKeywords($connection, $resource_id): array
     {
         $stmt = $connection->prepare("
         SELECT tk.*
@@ -99,7 +99,7 @@ class DatasetController
      * @param int $id The ID value to search for.
      * @return array|null An associative array of the related data, or null if not found.
      */
-    function getRelatedData($connection, $table, $idColumn, $id)
+    function getRelatedData($connection, $table, $idColumn, $id): array
     {
         $stmt = $connection->prepare("SELECT * FROM $table WHERE $idColumn = ?");
         $stmt->bind_param('i', $id);
@@ -117,7 +117,7 @@ class DatasetController
      * @param int $id The ID value to search for.
      * @return array An array of associative arrays containing the related data.
      */
-    function getRelatedDataMultiple($connection, $table, $foreignKeyColumn, $id)
+    function getRelatedDataMultiple($connection, $table, $foreignKeyColumn, $id): array
     {
         $stmt = $connection->prepare("SELECT * FROM $table WHERE $foreignKeyColumn = ?");
         $stmt->bind_param('i', $id);
@@ -133,7 +133,7 @@ class DatasetController
      * @param int $author_id The ID of the author.
      * @return array An array of affiliations for the author.
      */
-    function getAuthorAffiliations($connection, $author_id)
+    function getAuthorAffiliations($connection, $author_id): array
     {
         $affiliations = [];
         $stmt = $connection->prepare("
@@ -158,7 +158,7 @@ class DatasetController
      * @param int $resource_id The ID of the resource.
      * @return array An array of authors with their details and affiliations.
      */
-    function getAuthors($connection, $resource_id)
+    function getAuthors($connection, $resource_id): array
     {
         $authors = [];
         $stmt = $connection->prepare("
@@ -206,7 +206,7 @@ class DatasetController
      * @param int $resource_id The ID of the resource.
      * @return array An array of titles with their types.
      */
-    function getTitles($connection, $resource_id)
+    function getTitles($connection, $resource_id): array
     {
         $stmt = $connection->prepare("
         SELECT t.*, tt.name as title_type_name
@@ -227,7 +227,7 @@ class DatasetController
      * @param int $resource_id The ID of the resource.
      * @return array An array of descriptions.
      */
-    function getDescriptions($connection, $resource_id)
+    function getDescriptions($connection, $resource_id): array
     {
         $stmt = $connection->prepare("
         SELECT * FROM Description
@@ -246,7 +246,7 @@ class DatasetController
      * @param int $contributor_person_id The ID of the contributor person.
      * @return array An array of affiliations for the contributor person.
      */
-    function getContributorPersonAffiliations($connection, $contributor_person_id)
+    function getContributorPersonAffiliations($connection, $contributor_person_id): array
     {
         $affiliations = [];
         $stmt = $connection->prepare("
@@ -275,7 +275,7 @@ class DatasetController
      * @param int $contributor_person_id The ID of the contributor person.
      * @return array An array of roles for the contributor person.
      */
-    function getContributorPersonRoles($connection, $contributor_person_id)
+    function getContributorPersonRoles($connection, $contributor_person_id): array
     {
         $roles = [];
         $stmt = $connection->prepare("
@@ -303,7 +303,7 @@ class DatasetController
      * @param int $contributor_institution_id The ID of the contributor institution.
      * @return array An array of affiliations for the contributor institution.
      */
-    function getContributorInstitutionAffiliations($connection, $contributor_institution_id)
+    function getContributorInstitutionAffiliations($connection, $contributor_institution_id): array
     {
         $affiliations = [];
         $stmt = $connection->prepare("
@@ -333,7 +333,7 @@ class DatasetController
      * @param int $contributor_institution_id The ID of the contributor institution.
      * @return array An array of roles for the contributor institution.
      */
-    function getContributorInstitutionRoles($connection, $contributor_institution_id)
+    function getContributorInstitutionRoles($connection, $contributor_institution_id): array
     {
         $roles = [];
         $stmt = $connection->prepare("
@@ -361,7 +361,7 @@ class DatasetController
      * @param int $resource_id The ID of the resource.
      * @return array An array containing two sub-arrays: 'persons' and 'institutions'.
      */
-    function getContributors($connection, $resource_id)
+    function getContributors($connection, $resource_id): array
     {
         $contributors = ['persons' => [], 'institutions' => []];
         $stmt = $connection->prepare("
@@ -412,7 +412,7 @@ class DatasetController
      * @param int $resource_id The ID of the resource.
      * @return array An array of contact persons with their details and affiliations.
      */
-    function getContactPersons($connection, $resource_id)
+    function getContactPersons($connection, $resource_id): array
     {
         $contactPersons = [];
         $stmt = $connection->prepare("
@@ -446,7 +446,7 @@ class DatasetController
      * @param int $contact_person_id The ID of the contact person.
      * @return array An array of affiliations for the contact person.
      */
-    function getContactPersonAffiliations($connection, $contact_person_id)
+    function getContactPersonAffiliations($connection, $contact_person_id): array
     {
         $affiliations = [];
         $stmt = $connection->prepare("
@@ -476,7 +476,7 @@ class DatasetController
      * @param int $resource_id The ID of the resource.
      * @return array An array of funding references.
      */
-    function getFundingReferences($connection, $resource_id)
+    function getFundingReferences($connection, $resource_id): array
     {
         $funding_references = $this->getRelatedDataMultiple($connection, 'Resource_has_Funding_Reference', 'Resource_resource_id', $resource_id);
         foreach ($funding_references as &$reference) {
@@ -495,7 +495,7 @@ class DatasetController
      * @param int $resource_id The ID of the resource.
      * @return array An array of related works with their identifiers, relations, and identifier types.
      */
-    function getRelatedWorks($connection, $resource_id)
+    function getRelatedWorks($connection, $resource_id): array
     {
         $stmt = $connection->prepare("
         SELECT rw.*, r.name as relation_name, it.name as identifier_type_name
@@ -526,7 +526,7 @@ class DatasetController
      * @param int $resource_id The ID of the resource.
      * @return array An array of spatial temporal coverage data.
      */
-    function getSpatialTemporalCoverage($connection, $resource_id)
+    function getSpatialTemporalCoverage($connection, $resource_id): array
     {
         $stmt = $connection->prepare("
         SELECT stc.*
@@ -547,7 +547,7 @@ class DatasetController
      * @param int $resource_id The ID of the resource.
      * @return array An array of free keywords.
      */
-    function getFreeKeywords($connection, $resource_id)
+    function getFreeKeywords($connection, $resource_id): array
     {
         $stmt = $connection->prepare("
         SELECT fk.free_keywords_id, fk.free_keyword, fk.isCurated
@@ -568,7 +568,7 @@ class DatasetController
      * @param int $resource_id The ID of the resource.
      * @return array An array of originating laboratories with their details and affiliations.
      */
-    function getOriginatingLaboratories($connection, $resource_id)
+    function getOriginatingLaboratories($connection, $resource_id): array
     {
         $laboratories = [];
         $stmt = $connection->prepare("
@@ -598,7 +598,7 @@ class DatasetController
      * @param int $originating_laboratory_id The ID of the originating laboratory.
      * @return array An array of affiliations for the originating laboratory.
      */
-    function getOriginatingLaboratoryAffiliations($connection, $originating_laboratory_id)
+    function getOriginatingLaboratoryAffiliations($connection, $originating_laboratory_id): array
     {
         $affiliations = [];
         $stmt = $connection->prepare("
@@ -693,7 +693,7 @@ class DatasetController
      * @return string The absolute path to the XML file.
      * @throws Exception If the XML directory cannot be created.
      */
-    private function generate_xml_path($id, $prefix = null)
+    private function generate_xml_path($id, ?string $prefix = null)
     {
         $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
         $outputDir = $baseDir . '/xml';
@@ -722,7 +722,7 @@ class DatasetController
      * @return string The XML representation of the resource as a string.
      * @throws Exception If the resource is not found.
      */
-    function getResourceAsXml($connection, $id, $includeGGMData = true)
+    function getResourceAsXml($connection, $id, bool $includeGGMData = true)
     {
         $stmt = $connection->prepare('SELECT * FROM Resource WHERE resource_id = ?');
         $stmt->bind_param('i', $id);
@@ -1222,7 +1222,7 @@ class DatasetController
      * @param array $vars An associative array containing 'id' and 'scheme'.
      * @return string|null
      */
-    public function exportResourceDownload($vars): ?string
+    public function exportResourceDownload(array $vars): ?string
     {
         $this->handleExport($vars, true);
         return null; // This line will never be reached due to exit() in handleExport
@@ -1234,7 +1234,7 @@ class DatasetController
      * @param array $vars An associative array containing 'id' and 'scheme'.
      * @return string|null
      */
-    public function exportResource($vars): ?string
+    public function exportResource(array $vars): ?string
     {
         $this->handleExport($vars, false);
         return null; // This line will never be reached due to exit() in handleExport
@@ -1247,7 +1247,7 @@ class DatasetController
      * @param bool  $download If true, the resource will be downloaded; if false, it will be output directly.
      * @return void
      */
-    private function handleExport($vars, $download)
+    private function handleExport(array $vars, $download)
     {
         $id = intval($vars['id']);
         $scheme = strtolower($vars['scheme']);
@@ -1297,7 +1297,7 @@ class DatasetController
      * @param array $vars An associative array containing 'id'.
      * @return string|null
      */
-    public function exportAllDownload($vars): ?string
+    public function exportAllDownload(array $vars): ?string
     {
         return $this->handleExportAll($vars, true, false);
     }
@@ -1308,7 +1308,7 @@ class DatasetController
      * @param array $vars An associative array containing 'id'.
      * @return string|null
      */
-    public function exportAll($vars): ?string
+    public function exportAll(array $vars): ?string
     {
         return $this->handleExportAll($vars, false, false);
     }
@@ -1321,7 +1321,7 @@ class DatasetController
      * @param bool  $returnAsString If true, the combined XML string is returned instead of being output.
      * @return string|null
      */
-    private function handleExportAll($vars, $download, $returnAsString = false): ?string
+    private function handleExportAll(array $vars, $download, $returnAsString = false): ?string
     {
         $id = intval($vars['id']);
 
@@ -1390,7 +1390,7 @@ XML;
      * @param mysqli $connection The database connection.
      * @param int $id The ID of the resource.
      */
-    public function envelopeXmlAsString($connection, $id)
+    public function envelopeXmlAsString($connection, $id): string
     {
         // Use the existing private function, returning the combined XML as a string.
         $vars = ['id' => $id];
@@ -1406,7 +1406,7 @@ XML;
          * @param array $vars An associative array containing at least the key 'id' (resource ID).
          * @return string|null
          */
-    public function exportBaseXml($vars): ?string
+    public function exportBaseXml(array $vars): ?string
     {
         $this->handleExportBaseXml($vars);
         return null; // This line will never be reached due to exit() in handleExportBaseXml
@@ -1421,7 +1421,7 @@ XML;
      * @param array $vars An associative array containing at least the key 'id' (resource ID).
      * @return void
      */
-    public function handleExportBaseXml(array $vars)
+    public function handleExportBaseXml(array $vars): ?string
     {
         $id = intval($vars['id']);
 

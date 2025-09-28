@@ -114,7 +114,7 @@ function dropTables($connection)
  * @param mysqli $connection The database connection object
  * @return array Status information about the operation
  */
-function createDatabaseStructure($connection)
+function createDatabaseStructure($connection): array
 {
     $tables = [
         "Resource_Type" => "CREATE TABLE IF NOT EXISTS `Resource_Type` (
@@ -1186,7 +1186,7 @@ function insertTestResourceData($connection)
  * @param string $action The installation type (basic/complete)
  * @return array Installation status and progress information
  */
-function processInstallation($connection, $action)
+function processInstallation($connection, $action): array
 {
     try {
         // Step 1: Drop existing tables
