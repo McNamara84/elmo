@@ -17,7 +17,7 @@ $baseDir = __DIR__ . '/';
 
 // Include settings and configurations
 include_once $baseDir ."helper_functions.php";
-
+elmo_log("SETUP", "Helper functions loaded, launching env insert", "DEBUG");
 loadEnvVariables();
 
 
