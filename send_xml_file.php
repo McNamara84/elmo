@@ -16,6 +16,12 @@ ob_start();
 
 // Include required files
 require_once __DIR__ . '/settings.php';
+
+// Make global variables from settings.php available
+global $connection, $showGGMsProperties, $debugging_output;
+global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
+global $xmlSubmitAddress;
+
 require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/save/formgroups/save_authors.php';
 require_once __DIR__ . '/save/formgroups/save_contactperson.php';
@@ -81,6 +87,8 @@ function getPriorityText($weeks)
             return "undefined";
     }
 }
+
+$resource_id = null; // Initialize to null
 
 try {
     // Save all form components
