@@ -73,25 +73,22 @@ function elmoValidateAndFormatDataUrl(?string $dataUrl): string
         return '';
     }
 
-    $normalizedUrl = trim($dataUrl);
+    $sanitizedUrl = (string)filter_var($dataUrl, FILTER_SANITIZE_URL);
+    $sanitizedUrl = trim($sanitizedUrl);
 
-    if ($normalizedUrl === '') {
+    if ($sanitizedUrl === '') {
         return '';
     }
 
-    if (preg_match('/\s/', $normalizedUrl)) {
+    if (!preg_match('~^(?:f|ht)tps?://~i', $sanitizedUrl)) {
+        $sanitizedUrl = 'https://' . $sanitizedUrl;
+    }
+
+    if (!filter_var($sanitizedUrl, FILTER_VALIDATE_URL)) {
         throw new RuntimeException('Invalid data URL provided');
     }
 
-    if (!preg_match('~^[a-z][a-z0-9+\-.]*://~i', $normalizedUrl)) {
-        $normalizedUrl = 'https://' . $normalizedUrl;
-    }
-
-    if (!filter_var($normalizedUrl, FILTER_VALIDATE_URL, FILTER_FLAG_SCHEME_REQUIRED | FILTER_FLAG_HOST_REQUIRED)) {
-        throw new RuntimeException('Invalid data URL provided');
-    }
-
-    return $normalizedUrl;
+    return $sanitizedUrl;
 }
 
 /**
