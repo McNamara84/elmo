@@ -787,6 +787,8 @@ class DatasetController
         $authorsXml = $xml->addChild('Authors');
 
         foreach ($authors as $author) {
+            $authorXml = null;
+            
             if (!empty($author['familyname']) || !empty($author['givenname'])) {
                 // Person
                 $authorXml = $authorsXml->addChild('AuthorPerson');
@@ -801,7 +803,7 @@ class DatasetController
                 $authorXml->addChild('institutionname', htmlspecialchars($author['institutionname']));
             }
 
-            if (!empty($author['Affiliations'])) {
+            if (!empty($author['Affiliations']) && $authorXml !== null) {
                 $affiliationsXml = $authorXml->addChild('Affiliations');
                 foreach ($author['Affiliations'] as $affiliation) {
                     $affiliationXml = $affiliationsXml->addChild('Affiliation');
@@ -909,11 +911,12 @@ class DatasetController
         }
         // Contributors
         $contributors = $this->getContributors($connection, $id);
+        $contributorsXml = null;
         if (!empty($contributors['persons']) || !empty($contributors['institutions'])) {
             $contributorsXml = $xml->addChild('Contributors');
         }
         // Contributor Persons
-        if (!empty($contributors['persons'])) {
+        if (!empty($contributors['persons']) && $contributorsXml !== null) {
             $personsXml = $contributorsXml->addChild('Persons');
             foreach ($contributors['persons'] as $person) {
 
@@ -952,7 +955,7 @@ class DatasetController
         }
 
         // Contributor Institutions
-        if (!empty($contributors['institutions'])) {
+        if (!empty($contributors['institutions']) && $contributorsXml !== null) {
             $institutionsXml = $contributorsXml->addChild('Institutions');
             foreach ($contributors['institutions'] as $institution) {
                 $institutionXml = $institutionsXml->addChild('Institution');
