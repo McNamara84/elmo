@@ -4,11 +4,13 @@ require_once __DIR__ . '/../../../settings.php';
 class DatasetController
 {
     private $connection;
+    private $logger;
 
     public function __construct()
     {
         global $connection;
         $this->connection = $connection;
+        $this->logger = null; // Optional logger, can be set later if needed
     }
 
     /**

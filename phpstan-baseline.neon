@@ -2,11 +2,7 @@ parameters:
 	ignoreErrors:
 
 
-		-
-			message: '#^Access to an undefined property DatasetController\:\:\$logger\.$#'
-			identifier: property.notFound
-			count: 2
-			path: api/v2/controllers/DatasetController.php
+
 
 		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
