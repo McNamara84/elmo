@@ -11,6 +11,11 @@ class DatasetControllerTestDouble extends DatasetController
      */
     public array $invocations = [];
 
+    public function __construct(\mysqli $connection, $logger = null)
+    {
+        parent::__construct($connection, $logger);
+    }
+
     protected function handleExport($vars, $download)
     {
         $this->invocations[] = [
