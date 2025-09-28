@@ -1217,9 +1217,9 @@ class DatasetController
      * Exports a resource in the specified metadata scheme and initiates a file download.
      *
      * @param array $vars An associative array containing 'id' and 'scheme'.
-     * @return void
+     * @return string|null
      */
-    public function exportResourceDownload($vars)
+    public function exportResourceDownload($vars): ?string
     {
         return $this->handleExport($vars, true);
     }
@@ -1228,9 +1228,9 @@ class DatasetController
      * Exports a resource in the specified metadata scheme and outputs it directly.
      *
      * @param array $vars An associative array containing 'id' and 'scheme'.
-     * @return void
+     * @return string|null
      */
-    public function exportResource($vars)
+    public function exportResource($vars): ?string
     {
         return $this->handleExport($vars, false);
     }
@@ -1290,9 +1290,9 @@ class DatasetController
      * Exports all metadata schemes for a resource and initiates a file download.
      *
      * @param array $vars An associative array containing 'id'.
-     * @return void
+     * @return string|null
      */
-    public function exportAllDownload($vars)
+    public function exportAllDownload($vars): ?string
     {
         return $this->handleExportAll($vars, true, false);
     }
@@ -1301,9 +1301,9 @@ class DatasetController
      * Exports all metadata schemes for a resource and outputs them directly.
      *
      * @param array $vars An associative array containing 'id'.
-     * @return void
+     * @return string|null
      */
-    public function exportAll($vars)
+    public function exportAll($vars): ?string
     {
         return $this->handleExportAll($vars, false, false);
     }
@@ -1400,9 +1400,9 @@ XML;
          * export logic to handleExportBaseXml().
          *
          * @param array $vars An associative array containing at least the key 'id' (resource ID).
-         * @return void
+         * @return string|null
          */
-    public function exportBaseXml($vars)
+    public function exportBaseXml($vars): ?string
     {
         return $this->handleExportBaseXml($vars, false);
     }
