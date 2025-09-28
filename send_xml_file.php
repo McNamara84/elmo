@@ -305,7 +305,7 @@ try {
     error_log("XML Submit Error: " . $e->getMessage());
     
     // Backup: Save submission details to file if email fails
-    if (isset($resource_id)) {
+    if ($resource_id !== null) {
         $backupFile = '/var/www/html/xml_submit_backup.txt';
         $backupEntry = "[" . date('Y-m-d H:i:s') . "] BACKUP XML SUBMISSION\n";
         $backupEntry .= "Resource ID: " . $resource_id . "\n";

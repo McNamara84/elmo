@@ -50,7 +50,7 @@ if ($apiIndex !== false && isset($uriParts[$apiIndex + 1]) && preg_match('/^v\d+
 /**
  * Construct the path to the version-specific index.php file.
  *
- * @var string $versionFile The file path to the version-specific index.php.
+ * @var non-falsy-string $versionFile The file path to the version-specific index.php.
  */
 $versionFile = __DIR__ . '/' . $version . '/index.php';
 
