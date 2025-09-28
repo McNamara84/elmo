@@ -24,10 +24,8 @@ try {
     
     // Get database connection
     $connection = connectDb();
-    if ($connection->connect_errno !== 0) {
-        throw new Exception(
-            "Failed to connect to database. Check settings.php and database availability. Error: " . $connection->connect_error
-        );
+    if (!$connection) {
+        throw new Exception("Failed to connect to database. Check settings.php and database availability.");
     }
     
     // Query all resource IDs
