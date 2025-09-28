@@ -130,7 +130,7 @@ class VocabController
     /**
      * Fetches MSL Labs data from a remote URL, processes it, and returns the necessary fields.
      *
-     * @return array Processed MSL Labs data.
+     * @return array<mixed> Processed MSL Labs data.
      * @throws Exception If fetching or decoding the data fails.
      */
     public function fetchAndProcessMslLabs(): array
@@ -177,7 +177,7 @@ class VocabController
      * Fetches the CGI Simple Lithology vocabulary from the official RDF source
      * and returns a hierarchical array formatted for jsTree.
      *
-     * @return array Parsed CGI keywords tree
+     * @return array<mixed> Parsed CGI keywords tree
      * @throws Exception If fetching or parsing the RDF data fails
      */
     public function fetchAndProcessCGIKeywords(): array
@@ -273,8 +273,8 @@ class VocabController
     /**
      * Processes vocabulary items recursively and transform synonyms to description.
      *
-     * @param array $item The item to process
-     * @return array The processed item
+     * @param array<mixed> $item The item to process
+     * @return array<mixed> The processed item
      */
     private function processItem(array $item): array
     {
@@ -307,7 +307,7 @@ class VocabController
     /**
      * Retrieves and updates MSL vocabulary data.
      *
-     * @param array $vars An associative array of parameters (not used anymore)
+     * @param array<mixed> $vars An associative array of parameters (not used anymore)
      * @return void
      */
     public function getMslVocab(array $vars = [])
@@ -533,7 +533,7 @@ class VocabController
     /**
      * Retrieves roles from the database based on the specified type and returns them as JSON.
      *
-     * @param array $vars An associative array of parameters.
+     * @param array<mixed> $vars An associative array of parameters.
      * @return void
      */
     public function getRoles(array $vars)
