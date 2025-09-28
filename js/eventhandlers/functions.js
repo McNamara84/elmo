@@ -1,7 +1,7 @@
 /**
  * @description Shared utility functions used by multiple form group modules
  * such as cloning rows, managing layout consistency, and updating overlay labels.
- * 
+ *
  * @module functions
  */
 
@@ -17,7 +17,7 @@ function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-wit
   if ($(".input-group-text").is(":visible")) {
     // Find all span elements with the help icon
     row.find("span.input-group-text:has(i.bi-question-circle-fill)").each(function () {
-      const helpSectionId = $(this).find('i').data('help-section-id') || '';
+      const helpSectionId = $(this).find("i").data("help-section-id") || "";
       // Replace the span with an empty div that retains the help metadata
       $(this).replaceWith(
         `<div class="input-group-text help-placeholder" data-help-section-id="${helpSectionId}" style="visibility: hidden; width: 42px; height: 38px;"></div>`
@@ -31,18 +31,18 @@ function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-wit
 }
 
 /**
-* Creates the Remove button element.
-* @returns {jQuery} A jQuery object representing the Remove button.
-*/
+ * Creates the Remove button element.
+ * @returns {jQuery} A jQuery object representing the Remove button.
+ */
 function createRemoveButton() {
   return $('<button type="button" class="btn btn-danger removeButton" style="width: 36px;" aria-label="Remove entry">-</button>');
 }
 
 /**
-* Updates the labels on the map overlays to match the current row numbering.
-*/
+ * Updates the labels on the map overlays to match the current row numbering.
+ */
 function updateOverlayLabels() {
-  if (typeof window.updateOverlayLabels === 'function') {
+  if (typeof window.updateOverlayLabels === "function") {
     window.updateOverlayLabels();
   }
 }
@@ -50,15 +50,15 @@ function updateOverlayLabels() {
 export { replaceHelpButtonInClonedRows, createRemoveButton, updateOverlayLabels };
 
 // Expose functions for both browser and Node environments
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     replaceHelpButtonInClonedRows,
     createRemoveButton,
-    updateOverlayLabels
+    updateOverlayLabels,
   };
 }
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.replaceHelpButtonInClonedRows = replaceHelpButtonInClonedRows;
   window.createRemoveButton = createRemoveButton;
   // avoid clobbering potential global updateOverlayLabels implementation

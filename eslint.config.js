@@ -63,7 +63,7 @@ module.exports = [
     },
   },
   {
-    files: ["tests/js/functions-esm.test.js"],
+    files: ["tests/js/functions-esm.test.js", "tests/js/autosaveRepeaters.test.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",

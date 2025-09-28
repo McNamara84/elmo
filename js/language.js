@@ -5,7 +5,7 @@
 let translations = {};
 
 window.setTranslations = function setTranslations(value) {
-    translations = value || {};
+  translations = value || {};
 };
 
 /**
@@ -14,33 +14,33 @@ window.setTranslations = function setTranslations(value) {
  * @returns {Promise} A promise that resolves when translations are loaded
  */
 function loadTranslations(lang) {
-    return $.getJSON(`lang/${lang}.json`)
-        .then(function (data) {
-            translations = data;
-            applyTranslations();
-            updateActiveLanguage(lang);
-        })
-        .fail(function () {
-            console.error(`Failed to load language file: ${lang}`);
-            // Fallback to English if requested language is not available
-            if (lang !== 'en') {
-                try {
-                    const previousPreference = localStorage.getItem('userLanguage');
-                    if (previousPreference !== 'auto') {
-                        localStorage.setItem('userLanguage', 'en');
-                    }
-                } catch (error) {
-                    console.warn('Unable to persist fallback language preference:', error);
-                }
-                return loadTranslations('en');
-            }
-            try {
-                localStorage.setItem('userLanguage', 'auto');
-            } catch (error) {
-                console.warn('Unable to reset language preference after fallback failure:', error);
-            }
-            updateActiveLanguage('auto');
-        });
+  return $.getJSON(`lang/${lang}.json`)
+    .then(function (data) {
+      translations = data;
+      applyTranslations();
+      updateActiveLanguage(lang);
+    })
+    .fail(function () {
+      console.error(`Failed to load language file: ${lang}`);
+      // Fallback to English if requested language is not available
+      if (lang !== "en") {
+        try {
+          const previousPreference = localStorage.getItem("userLanguage");
+          if (previousPreference !== "auto") {
+            localStorage.setItem("userLanguage", "en");
+          }
+        } catch (error) {
+          console.warn("Unable to persist fallback language preference:", error);
+        }
+        return loadTranslations("en");
+      }
+      try {
+        localStorage.setItem("userLanguage", "auto");
+      } catch (error) {
+        console.warn("Unable to reset language preference after fallback failure:", error);
+      }
+      updateActiveLanguage("auto");
+    });
 }
 
 /**
@@ -48,11 +48,11 @@ function loadTranslations(lang) {
  * @param {string} lang - The active language code
  */
 function updateActiveLanguage(lang) {
-    // Remove active class from all language options
-    $('[data-bs-language-value]').removeClass('active');
+  // Remove active class from all language options
+  $("[data-bs-language-value]").removeClass("active");
 
-    // Add active class to the selected language
-    $(`[data-bs-language-value="${lang}"]`).addClass('active');
+  // Add active class to the selected language
+  $(`[data-bs-language-value="${lang}"]`).addClass("active");
 }
 
 /**
@@ -62,77 +62,77 @@ function updateActiveLanguage(lang) {
  * @returns {*} The found value or undefined
  */
 function getNestedValue(obj, path) {
-    return path.split('.').reduce((prev, curr) => prev && prev[curr], obj);
+  return path.split(".").reduce((prev, curr) => prev && prev[curr], obj);
 }
 
 /**
  * Applies the loaded translations to all UI elements
  */
 function applyTranslations() {
-    // Set document title
-    document.title = translations.general.logoTitle;
+  // Set document title
+  document.title = translations.general.logoTitle;
 
-    // Update elements with data-translate attribute
-    $('[data-translate]').each(function () {
-        const element = $(this);
-        const translateKey = element.data('translate');
-        const translatedText = getNestedValue(translations, translateKey);
+  // Update elements with data-translate attribute
+  $("[data-translate]").each(function () {
+    const element = $(this);
+    const translateKey = element.data("translate");
+    const translatedText = getNestedValue(translations, translateKey);
 
-        if (translatedText) {
-            const icon = element.find('i.bi').prop('outerHTML');
-            element.html(icon ? `${icon} ${translatedText}` : translatedText);
-        }
-    });
-
-    // Update tooltips
-    $('[data-translate-tooltip]').each(function () {
-        const element = $(this);
-        const tooltipKey = element.data('translate-tooltip');
-        const translatedTooltip = getNestedValue(translations, tooltipKey);
-
-        if (translatedTooltip) {
-            element.attr('data-bs-original-title', translatedTooltip);
-            const tooltip = bootstrap.Tooltip.getInstance(element[0]);
-            if (tooltip) {
-                tooltip.dispose();
-            }
-            const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
-            new bootstrap.Tooltip(element[0], { container: tooltipContainer });
-        }
-    });
-
-    // Update placeholders
-    $('[data-translate-placeholder]').each(function () {
-        const element = $(this);
-        const placeholderKey = element.data('translate-placeholder');
-        const translatedPlaceholder = getNestedValue(translations, placeholderKey);
-
-        if (translatedPlaceholder) {
-            element.attr('placeholder', translatedPlaceholder);
-        }
-    });
-
-    translatePlaceholders($("#group-stc").children().first());
-
-    // Trigger necessary UI updates
-    resizeTitle();
-    adjustButtons();
-
-    if (typeof window !== 'undefined') {
-        window.elmo = window.elmo || {};
-        window.elmo.translate = function (key) {
-            return getNestedValue(translations, key);
-        };
-        window.elmo.getTranslations = function () {
-            return translations;
-        };
-        window.elmo.translations = translations;
+    if (translatedText) {
+      const icon = element.find("i.bi").prop("outerHTML");
+      element.html(icon ? `${icon} ${translatedText}` : translatedText);
     }
+  });
 
-    const translationEvent = new CustomEvent('translationsLoaded', {
-        detail: { translations }
-    });
-    document.dispatchEvent(translationEvent);
+  // Update tooltips
+  $("[data-translate-tooltip]").each(function () {
+    const element = $(this);
+    const tooltipKey = element.data("translate-tooltip");
+    const translatedTooltip = getNestedValue(translations, tooltipKey);
+
+    if (translatedTooltip) {
+      element.attr("data-bs-original-title", translatedTooltip);
+      const tooltip = bootstrap.Tooltip.getInstance(element[0]);
+      if (tooltip) {
+        tooltip.dispose();
+      }
+      const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
+      new bootstrap.Tooltip(element[0], { container: tooltipContainer });
+    }
+  });
+
+  // Update placeholders
+  $("[data-translate-placeholder]").each(function () {
+    const element = $(this);
+    const placeholderKey = element.data("translate-placeholder");
+    const translatedPlaceholder = getNestedValue(translations, placeholderKey);
+
+    if (translatedPlaceholder) {
+      element.attr("placeholder", translatedPlaceholder);
+    }
+  });
+
+  translatePlaceholders($("#group-stc").children().first());
+
+  // Trigger necessary UI updates
+  resizeTitle();
+  adjustButtons();
+
+  if (typeof window !== "undefined") {
+    window.elmo = window.elmo || {};
+    window.elmo.translate = function (key) {
+      return getNestedValue(translations, key);
+    };
+    window.elmo.getTranslations = function () {
+      return translations;
+    };
+    window.elmo.translations = translations;
+  }
+
+  const translationEvent = new CustomEvent("translationsLoaded", {
+    detail: { translations },
+  });
+  document.dispatchEvent(translationEvent);
 }
 
 /**
@@ -140,8 +140,8 @@ function applyTranslations() {
  * @param {string} lang - The language code to change to
  */
 function changeLanguage(lang) {
-    loadTranslations(lang);
-    localStorage.setItem('userLanguage', lang);
+  loadTranslations(lang);
+  localStorage.setItem("userLanguage", lang);
 }
 
 /**
@@ -149,7 +149,7 @@ function changeLanguage(lang) {
  * @returns {string} The two-letter language code
  */
 function getBrowserLanguage() {
-    return navigator.language.split('-')[0];
+  return navigator.language.split("-")[0];
 }
 
 /**
@@ -157,14 +157,14 @@ function getBrowserLanguage() {
  * @param {jQuery} container - The container element whose placeholders should be translated
  */
 function translatePlaceholders(container) {
-    container.find('[placeholder]').each(function () {
-        const placeholderKey = $(this).attr('placeholder');
-        const translatedPlaceholder = getNestedValue(translations, placeholderKey);
+  container.find("[placeholder]").each(function () {
+    const placeholderKey = $(this).attr("placeholder");
+    const translatedPlaceholder = getNestedValue(translations, placeholderKey);
 
-        if (translatedPlaceholder) {
-            $(this).attr('placeholder', translatedPlaceholder);
-        }
-    });
+    if (translatedPlaceholder) {
+      $(this).attr("placeholder", translatedPlaceholder);
+    }
+  });
 }
 
 window.applyTranslations = applyTranslations;
@@ -173,37 +173,35 @@ window.applyTranslations = applyTranslations;
  * Initializes the language handling system
  */
 $(document).ready(function () {
-    // Initialize tooltips
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
-    const tooltipList = [...tooltipTriggerList].map(
-        tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { container: tooltipContainer })
-    );
+  // Initialize tooltips
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
+  const tooltipList = [...tooltipTriggerList].map(
+    (tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl, { container: tooltipContainer })
+  );
 
-    // Load initial language
-    const savedLanguage = localStorage.getItem('userLanguage') || 'auto';
-    if (savedLanguage === 'auto') {
-        const browserLang = getBrowserLanguage();
-        loadTranslations(browserLang)
-            .catch(() => loadTranslations('en'));
+  // Load initial language
+  const savedLanguage = localStorage.getItem("userLanguage") || "auto";
+  if (savedLanguage === "auto") {
+    const browserLang = getBrowserLanguage();
+    loadTranslations(browserLang).catch(() => loadTranslations("en"));
+  } else {
+    loadTranslations(savedLanguage);
+  }
+
+  // Handle language selection
+  $("[data-bs-language-value]").click(function (e) {
+    e.preventDefault();
+    const lang = $(this).data("bs-language-value");
+
+    if (lang === "auto") {
+      // Speichern der Einstellung "auto" im localStorage
+      localStorage.setItem("userLanguage", "auto");
+      const browserLang = getBrowserLanguage();
+      // Try to load browser language, fallback to English if not available
+      loadTranslations(browserLang).catch(() => loadTranslations("en"));
     } else {
-        loadTranslations(savedLanguage);
+      changeLanguage(lang);
     }
-
-    // Handle language selection
-    $('[data-bs-language-value]').click(function (e) {
-        e.preventDefault();
-        const lang = $(this).data('bs-language-value');
-
-        if (lang === 'auto') {
-            // Speichern der Einstellung "auto" im localStorage
-            localStorage.setItem('userLanguage', 'auto');
-            const browserLang = getBrowserLanguage();
-            // Try to load browser language, fallback to English if not available
-            loadTranslations(browserLang)
-                .catch(() => loadTranslations('en'));
-        } else {
-            changeLanguage(lang);
-        }
-    });
+  });
 });

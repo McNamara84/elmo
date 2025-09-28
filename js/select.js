@@ -6,7 +6,7 @@
  * @param {string} jsonPath - Path to the timezones JSON file
  * @returns {Promise<void>}
  */
-async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezone', jsonPath = 'json/timezones.json') {
+async function initializeTimezoneDropdown(dropdownSelector = "#input-stc-timezone", jsonPath = "json/timezones.json") {
   try {
     const $dropdown = $(dropdownSelector);
     if ($dropdown.length === 0) return;
@@ -21,12 +21,14 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
         const timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
         if (timezoneName) {
-          const options = $select.find('option').get();
+          const options = $select.find("option").get();
           const date = new Date();
           const offset = -date.getTimezoneOffset();
-          const hours = Math.floor(Math.abs(offset) / 60).toString().padStart(2, '0');
-          const minutes = (Math.abs(offset) % 60).toString().padStart(2, '0');
-          const offsetStr = `${offset >= 0 ? '+' : '-'}${hours}:${minutes}`;
+          const hours = Math.floor(Math.abs(offset) / 60)
+            .toString()
+            .padStart(2, "0");
+          const minutes = (Math.abs(offset) % 60).toString().padStart(2, "0");
+          const offsetStr = `${offset >= 0 ? "+" : "-"}${hours}:${minutes}`;
 
           let bestMatch = null;
 
@@ -38,7 +40,7 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
               return optionValue;
             }
 
-            if (optionValue === offsetStr && optionText.includes(timezoneName.split('/')[0])) {
+            if (optionValue === offsetStr && optionText.includes(timezoneName.split("/")[0])) {
               bestMatch = optionValue;
               break;
             }
@@ -53,17 +55,18 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
 
         const date = new Date();
         const offset = -date.getTimezoneOffset();
-        const hours = Math.floor(Math.abs(offset) / 60).toString().padStart(2, '0');
-        const minutes = (Math.abs(offset) % 60).toString().padStart(2, '0');
-        return `${offset >= 0 ? '+' : '-'}${hours}:${minutes}`;
-
+        const hours = Math.floor(Math.abs(offset) / 60)
+          .toString()
+          .padStart(2, "0");
+        const minutes = (Math.abs(offset) % 60).toString().padStart(2, "0");
+        return `${offset >= 0 ? "+" : "-"}${hours}:${minutes}`;
       } catch (error) {
-        console.error('Error getting system timezone:', error);
+        console.error("Error getting system timezone:", error);
         return null;
       }
     }
 
-    if ($dropdown.find('option').length > 0) {
+    if ($dropdown.find("option").length > 0) {
       const systemTimezone = getSystemTimezone($dropdown);
       setTimezoneInDropdown($dropdown, systemTimezone);
       return;
@@ -79,15 +82,15 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
      */
     function extractUTCOffset(label) {
       const match = label.match(/UTC([+-]\d{2}:\d{2})/);
-      return match ? match[1] : '';
+      return match ? match[1] : "";
     }
 
     $dropdown.empty();
-    timezones.forEach(timezone => {
+    timezones.forEach((timezone) => {
       $dropdown.append(
-        $('<option>', {
+        $("<option>", {
           value: extractUTCOffset(timezone.label),
-          text: timezone.label
+          text: timezone.label,
         })
       );
     });
@@ -101,25 +104,21 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
     function setTimezoneInDropdown($select, timezoneName) {
       if (!timezoneName) return false;
 
-      const allOptions = Array.from($select.find('option'));
-      const exactMatch = allOptions.find(option =>
-        option.text.includes(`(${timezoneName})`)
-      );
+      const allOptions = Array.from($select.find("option"));
+      const exactMatch = allOptions.find((option) => option.text.includes(`(${timezoneName})`));
 
       if (exactMatch) {
-        $select.find('option').prop('selected', false);
-        $(exactMatch).prop('selected', true);
+        $select.find("option").prop("selected", false);
+        $(exactMatch).prop("selected", true);
         return true;
       }
 
-      const region = timezoneName.split('/')[0];
-      const regionMatch = allOptions.find(option =>
-        option.text.includes(`(${region}/`)
-      );
+      const region = timezoneName.split("/")[0];
+      const regionMatch = allOptions.find((option) => option.text.includes(`(${region}/`));
 
       if (regionMatch) {
-        $select.find('option').prop('selected', false);
-        $(regionMatch).prop('selected', true);
+        $select.find("option").prop("selected", false);
+        $(regionMatch).prop("selected", true);
         return true;
       }
 
@@ -130,9 +129,8 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
     if (browserTimezone) {
       setTimezoneInDropdown($dropdown, browserTimezone);
     }
-
   } catch (error) {
-    console.error('Error initializing timezone dropdown:', error);
+    console.error("Error initializing timezone dropdown:", error);
   }
 }
 
@@ -145,12 +143,15 @@ function setupResourceTypeDropdown() {
   const select = $("#input-resourceinformation-resourcetype");
   if (select.length === 0) return;
 
-  select.prop('disabled', true).empty().append(
-    $("<option>", {
-      value: "",
-      text: "Loading...",
-    })
-  );
+  select
+    .prop("disabled", true)
+    .empty()
+    .append(
+      $("<option>", {
+        value: "",
+        text: "Loading...",
+      })
+    );
 
   $.ajax({
     url: "api/v2/vocabs/resourcetypes",
@@ -187,7 +188,7 @@ function setupResourceTypeDropdown() {
       );
     },
     complete: function () {
-      select.prop('disabled', false).trigger("change");
+      select.prop("disabled", false).trigger("change");
     },
   });
 }
@@ -196,12 +197,15 @@ function setupLanguageDropdown() {
   const select = $("#input-resourceinformation-language");
   if (select.length === 0) return;
 
-  select.prop('disabled', true).empty().append(
-    $("<option>", {
-      value: "",
-      text: "Loading...",
-    })
-  );
+  select
+    .prop("disabled", true)
+    .empty()
+    .append(
+      $("<option>", {
+        value: "",
+        text: "Loading...",
+      })
+    );
 
   $.ajax({
     url: "api/v2/vocabs/languages",
@@ -238,7 +242,7 @@ function setupLanguageDropdown() {
       );
     },
     complete: function () {
-      select.prop('disabled', false);
+      select.prop("disabled", false);
     },
   });
 }
@@ -247,12 +251,15 @@ function setupTitleTypeDropdown() {
   const select = $("#input-resourceinformation-titletype");
   if (select.length === 0) return;
 
-  select.prop('disabled', true).empty().append(
-    $("<option>", {
-      value: "",
-      text: "Loading...",
-    })
-  );
+  select
+    .prop("disabled", true)
+    .empty()
+    .append(
+      $("<option>", {
+        value: "",
+        text: "Loading...",
+      })
+    );
 
   $.ajax({
     url: "api/v2/vocabs/titletypes",
@@ -301,7 +308,7 @@ function setupTitleTypeDropdown() {
       );
     },
     complete: function () {
-      select.prop('disabled', false);
+      select.prop("disabled", false);
     },
   });
 }
@@ -317,9 +324,9 @@ $(document).ready(function () {
   setupLanguageDropdown();
   setupTitleTypeDropdown();
   /**
-  * Populates the select field with ID input-rights-license with options created via an API call.
-  * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
-  */
+   * Populates the select field with ID input-rights-license with options created via an API call.
+   * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
+   */
   function setupLicenseDropdown(isSoftware) {
     $("#input-rights-license").empty();
 
@@ -346,11 +353,13 @@ $(document).ready(function () {
     }).fail(function (jqXHR, textStatus, errorThrown) {
       console.error("Fehler beim Laden der Lizenzen:", textStatus, errorThrown);
       // Fallback: Default-Option hinzufügen
-      $("#input-rights-license").append($("<option>", {
-        value: "CC-BY-4.0",
-        text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
-        selected: true,
-      }));
+      $("#input-rights-license").append(
+        $("<option>", {
+          value: "CC-BY-4.0",
+          text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
+          selected: true,
+        })
+      );
       $("#input-rights-license").trigger("change");
     });
   }
@@ -411,10 +420,10 @@ $(document).ready(function () {
         position: { my: "left bottom", at: "left top", collision: "flip" },
       })
       .autocomplete("instance")._renderItem = function (ul, item) {
-        return $("<li>")
-          .append("<div>" + item.name + "</div>")
-          .appendTo(ul);
-      };
+      return $("<li>")
+        .append("<div>" + item.name + "</div>")
+        .appendTo(ul);
+    };
   };
 
   // Populate the relation dropdown field
@@ -424,7 +433,7 @@ $(document).ready(function () {
     dataType: "json",
     beforeSend: function () {
       var select = $("#input-relatedwork-relation");
-      select.prop('disabled', true);
+      select.prop("disabled", true);
       select.empty().append(
         $("<option>", {
           value: "",
@@ -441,7 +450,7 @@ $(document).ready(function () {
         $("<option>", {
           value: "",
           text: "Choose...",
-          "data-translate": "general.choose"
+          "data-translate": "general.choose",
         })
       );
 
@@ -454,7 +463,7 @@ $(document).ready(function () {
               $("<option>", {
                 value: relation.id,
                 text: relation.name,
-                title: relation.description
+                title: relation.description,
               })
             );
           });
@@ -478,8 +487,8 @@ $(document).ready(function () {
       );
     },
     complete: function () {
-      $("#input-relatedwork-relation").prop('disabled', false);
-    }
+      $("#input-relatedwork-relation").prop("disabled", false);
+    },
   });
 
   /**
@@ -517,7 +526,6 @@ $(document).ready(function () {
   }
 });
 
-
 /**
  * Function to populate the dropdown menu of identifier types.
  * @param {string} id - The ID selector of the dropdown to populate.
@@ -530,7 +538,7 @@ function setupIdentifierTypesDropdown(id) {
     $("<option>", {
       value: "",
       text: "Choose...", // Placeholder text
-      "data-translate": "general.choose"
+      "data-translate": "general.choose",
     })
   );
 
@@ -556,7 +564,6 @@ function setupIdentifierTypesDropdown(id) {
   });
 }
 
-
 /**
  * Function to update the identifier type based on the entered identifier.
  * @param {HTMLElement} inputElement - The input element for the identifier.
@@ -568,9 +575,7 @@ const IDENTIFIER_TYPE_PRIORITY = {
 };
 
 function getIdentifierPriority(name) {
-  return IDENTIFIER_TYPE_PRIORITY.hasOwnProperty(name)
-    ? IDENTIFIER_TYPE_PRIORITY[name]
-    : 5;
+  return IDENTIFIER_TYPE_PRIORITY.hasOwnProperty(name) ? IDENTIFIER_TYPE_PRIORITY[name] : 5;
 }
 
 function updateIdentifierType(inputElement) {
@@ -606,8 +611,7 @@ function updateIdentifierType(inputElement) {
           if (matchingTypes.length > 0) {
             // Choose the best match by custom priority, then pattern length
             matchingTypes.sort((a, b) => {
-              const prioDiff =
-                getIdentifierPriority(b.name) - getIdentifierPriority(a.name);
+              const prioDiff = getIdentifierPriority(b.name) - getIdentifierPriority(a.name);
               if (prioDiff !== 0) return prioDiff;
               return b.pattern.length - a.pattern.length;
             });

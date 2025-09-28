@@ -27,7 +27,9 @@ function createJQuery() {
       element: el,
       find: (s) => $(el.querySelector(s)),
       closest: (s) => $(el.closest(s)),
-      last() { return this; },
+      last() {
+        return this;
+      },
       val(v) {
         if (v === undefined) return this.element.value;
         this.element.value = v;
@@ -88,7 +90,12 @@ describe("mappingXmlToInputFields helpers", () => {
       ctx
     );
     const lab = ctx.findLabNameById("MSL-001");
-    expect(lab).toEqual({ id: "MSL-001", name: "Max Planck Institute for Astronomy", rorid: "https://ror.org/05y42nb95", affiliation: "Max Planck Society" });
+    expect(lab).toEqual({
+      id: "MSL-001",
+      name: "Max Planck Institute for Astronomy",
+      rorid: "https://ror.org/05y42nb95",
+      affiliation: "Max Planck Society",
+    });
   });
 
   test("getNodeText returns trimmed text for relative paths", () => {
@@ -144,7 +151,7 @@ describe("mappingXmlToInputFields helpers", () => {
         </ns:fundingReferences>
       </ns:resource>`;
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
-    const resolver = (prefix) => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
+    const resolver = (prefix) => (prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null);
 
     ctx.processFunders(xmlDoc, resolver);
 
@@ -156,10 +163,12 @@ describe("mappingXmlToInputFields helpers", () => {
   });
 
   test("createLanguageMapping resolves API data and handles errors", async () => {
-    const getJSON = jest.fn(() => Promise.resolve([
-      { id: 1, code: "en", name: "English" },
-      { id: 2, code: "de", name: "German" },
-    ]));
+    const getJSON = jest.fn(() =>
+      Promise.resolve([
+        { id: 1, code: "en", name: "English" },
+        { id: 2, code: "de", name: "German" },
+      ])
+    );
     const ctx = loadMappingModule({ $: { getJSON } });
     const result = await ctx.createLanguageMapping();
     expect(getJSON).toHaveBeenCalled();
@@ -174,10 +183,12 @@ describe("mappingXmlToInputFields helpers", () => {
   });
 
   test("createTitleTypeMapping resolves API data and handles errors", async () => {
-    const getJSON = jest.fn(() => Promise.resolve([
-      { id: 1, name: "Main Title" },
-      { id: 2, name: "Alternative Title" },
-    ]));
+    const getJSON = jest.fn(() =>
+      Promise.resolve([
+        { id: 1, name: "Main Title" },
+        { id: 2, name: "Alternative Title" },
+      ])
+    );
     const ctx = loadMappingModule({ $: { getJSON } });
     const result = await ctx.createTitleTypeMapping();
     expect(getJSON).toHaveBeenCalled();

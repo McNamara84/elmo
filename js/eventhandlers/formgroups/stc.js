@@ -28,7 +28,7 @@ function escapeSelector(value) {
     return window.CSS.escape(value);
   }
 
-  return value.replace(/([\0-\x1F\x7F"'\\#.:;,!?+*~=<>^$\[\](){}|\/\s-])/g, '\\$1');
+  return value.replace(/([\\#.:;,!?+*~=<>^$()[\]{}|/\s-])/g, '\\$1');
 }
 
 $(document).ready(function () {

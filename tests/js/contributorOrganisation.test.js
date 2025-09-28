@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-describe('contributor-organisation.js', () => {
+describe("contributor-organisation.js", () => {
   let $;
   beforeEach(() => {
     document.body.innerHTML = `
@@ -32,7 +32,7 @@ describe('contributor-organisation.js', () => {
       </div>
     `;
 
-    $ = require('jquery');
+    $ = require("jquery");
     global.$ = $;
     global.jQuery = $;
 
@@ -42,14 +42,17 @@ describe('contributor-organisation.js', () => {
     global.autocompleteAffiliations = jest.fn();
     global.checkMandatoryFields = jest.fn();
 
-    window.affiliationsData = [{ id: '1', name: 'Org' }];
+    window.affiliationsData = [{ id: "1", name: "Org" }];
 
-    jest.spyOn(Date.prototype, 'getTime').mockReturnValue(42);
+    jest.spyOn(Date.prototype, "getTime").mockReturnValue(42);
 
-    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/contributor-organisation.js'), 'utf8');
-    script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
-    script = script.replace('$(document).ready(function () {', '(function () {');
-    script = script.replace(/\n\}\);\s*$/, '\n})();');
+    let script = fs.readFileSync(path.resolve(__dirname, "../../js/eventhandlers/formgroups/contributor-organisation.js"), "utf8");
+    script = script.replace(
+      "import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';",
+      "const { createRemoveButton, replaceHelpButtonInClonedRows } = window;"
+    );
+    script = script.replace("$(document).ready(function () {", "(function () {");
+    script = script.replace(/\n\}\);\s*$/, "\n})();");
     window.eval(script);
   });
 
@@ -63,35 +66,39 @@ describe('contributor-organisation.js', () => {
     delete window.affiliationsData;
   });
 
-  test('adds a new contributor organisation row with updated fields', () => {
-    $('#button-contributor-addorganisation').trigger('click');
+  test("adds a new contributor organisation row with updated fields", () => {
+    $("#button-contributor-addorganisation").trigger("click");
 
-    const rows = $('#group-contributororganisation .row');
+    const rows = $("#group-contributororganisation .row");
     expect(rows.length).toBe(2);
 
     const newRow = rows.last();
     expect(global.replaceHelpButtonInClonedRows).toHaveBeenCalled();
 
-    expect(newRow.find('#input-contributor-name42').length).toBe(1);
+    expect(newRow.find("#input-contributor-name42").length).toBe(1);
     expect(newRow.find('label[for="input-contributor-name42"]').length).toBe(1);
-    expect(newRow.find('#input-contributor-organisationrole42').length).toBe(1);
+    expect(newRow.find("#input-contributor-organisationrole42").length).toBe(1);
     expect(newRow.find('label[for="input-contributor-organisationrole42"]').length).toBe(1);
-    expect(newRow.find('#input-contributor-organisationaffiliation42').length).toBe(1);
-    expect(newRow.find('#input-contributor-organisationrorid42').length).toBe(1);
-    expect(newRow.find('.removeButton').length).toBe(1);
-    expect(newRow.find('.tagify').length).toBe(0);
-    expect(newRow.find('input#input-contributor-name42').val()).toBe('');
+    expect(newRow.find("#input-contributor-organisationaffiliation42").length).toBe(1);
+    expect(newRow.find("#input-contributor-organisationrorid42").length).toBe(1);
+    expect(newRow.find(".removeButton").length).toBe(1);
+    expect(newRow.find(".tagify").length).toBe(0);
+    expect(newRow.find("input#input-contributor-name42").val()).toBe("");
 
-    expect(global.setupRolesDropdown).toHaveBeenCalledWith(['institution', 'both'], '#input-contributor-organisationrole42');
-    expect(global.autocompleteAffiliations).toHaveBeenCalledWith('input-contributor-organisationaffiliation42', 'input-contributor-organisationrorid42', window.affiliationsData);
+    expect(global.setupRolesDropdown).toHaveBeenCalledWith(["institution", "both"], "#input-contributor-organisationrole42");
+    expect(global.autocompleteAffiliations).toHaveBeenCalledWith(
+      "input-contributor-organisationaffiliation42",
+      "input-contributor-organisationrorid42",
+      window.affiliationsData
+    );
   });
 
-  test('remove button deletes row and triggers validation', () => {
-    $('#button-contributor-addorganisation').trigger('click');
-    const newRow = $('#group-contributororganisation .row').last();
-    newRow.find('.removeButton').trigger('click');
+  test("remove button deletes row and triggers validation", () => {
+    $("#button-contributor-addorganisation").trigger("click");
+    const newRow = $("#group-contributororganisation .row").last();
+    newRow.find(".removeButton").trigger("click");
 
-    expect($('#group-contributororganisation .row').length).toBe(1);
+    expect($("#group-contributororganisation .row").length).toBe(1);
     expect(global.checkMandatoryFields).toHaveBeenCalled();
   });
 });

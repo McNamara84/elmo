@@ -5,10 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const themeDropdownItems = themeDropdown.parentElement.querySelectorAll(".dropdown-item");
-  const prefersDarkScheme =
-    typeof window.matchMedia === "function"
-      ? window.matchMedia("(prefers-color-scheme: dark)")
-      : null;
+  const prefersDarkScheme = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-color-scheme: dark)") : null;
   let autoMode = false;
   let removePreferenceListener = null;
 

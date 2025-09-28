@@ -1,22 +1,22 @@
 class AutosaveService {
   constructor(formId, options = {}) {
-    this.form = typeof formId === 'string' ? document.getElementById(formId) : formId;
-    this.statusElement = this.resolveElement(options.statusElementId || 'autosave-status', options.statusElement);
-    this.statusTextElement = this.resolveElement(options.statusTextId || 'autosave-status-text');
-    this.statusLabelElement = this.resolveElement(options.statusLabelId || 'autosave-status-label', options.statusLabelElement);
-    this.statusHeadingElement = this.resolveElement(options.statusHeadingId || 'autosave-status-heading', options.statusHeadingElement);
-    this.restoreModalId = options.restoreModalId || 'modal-restore-draft';
-    this.restoreApplyId = options.restoreApplyButtonId || 'button-restore-apply';
-    this.restoreDismissId = options.restoreDismissButtonId || 'button-restore-dismiss';
-    this.fetchImpl = options.fetch || (typeof window !== 'undefined' ? window.fetch.bind(window) : null);
+    this.form = typeof formId === "string" ? document.getElementById(formId) : formId;
+    this.statusElement = this.resolveElement(options.statusElementId || "autosave-status", options.statusElement);
+    this.statusTextElement = this.resolveElement(options.statusTextId || "autosave-status-text");
+    this.statusLabelElement = this.resolveElement(options.statusLabelId || "autosave-status-label", options.statusLabelElement);
+    this.statusHeadingElement = this.resolveElement(options.statusHeadingId || "autosave-status-heading", options.statusHeadingElement);
+    this.restoreModalId = options.restoreModalId || "modal-restore-draft";
+    this.restoreApplyId = options.restoreApplyButtonId || "button-restore-apply";
+    this.restoreDismissId = options.restoreDismissButtonId || "button-restore-dismiss";
+    this.fetchImpl = options.fetch || (typeof window !== "undefined" ? window.fetch.bind(window) : null);
     this.apiBaseUrl = this.normalizeBaseUrl(options.apiBaseUrl ?? this.detectDefaultBaseUrl());
     this.throttleMs = options.throttleMs ?? 15000;
-    this.localStorageKey = options.localStorageKey || 'elmo.autosave.draftId';
+    this.localStorageKey = options.localStorageKey || "elmo.autosave.draftId";
 
     this.translationFn = this.resolveTranslator(options.translate);
     this.activeTranslations = options.translations || null;
-    this.currentState = 'idle';
-    this.currentDetail = '';
+    this.currentState = "idle";
+    this.currentDetail = "";
 
     this.pendingTimeout = null;
     this.isSaving = false;
@@ -37,8 +37,8 @@ class AutosaveService {
     this.restoreApplyButton = null;
     this.restoreDismissButton = null;
 
-    if (typeof document !== 'undefined') {
-      document.addEventListener('translationsLoaded', this.boundHandleTranslationsLoaded, { passive: true });
+    if (typeof document !== "undefined") {
+      document.addEventListener("translationsLoaded", this.boundHandleTranslationsLoaded, { passive: true });
     }
   }
 
@@ -50,54 +50,54 @@ class AutosaveService {
   }
 
   detectDefaultBaseUrl() {
-    if (typeof document !== 'undefined') {
-      const baseTag = document.querySelector('base[href]');
-      const baseHref = baseTag ? baseTag.getAttribute('href') : null;
+    if (typeof document !== "undefined") {
+      const baseTag = document.querySelector("base[href]");
+      const baseHref = baseTag ? baseTag.getAttribute("href") : null;
 
       if (baseHref) {
-        if (/^https?:\/\//i.test(baseHref) || baseHref.startsWith('//')) {
+        if (/^https?:\/\//i.test(baseHref) || baseHref.startsWith("//")) {
           try {
-            const resolved = new URL(baseHref, typeof window !== 'undefined' ? window.location.origin : undefined);
-            return `${resolved.origin}${resolved.pathname.replace(/\/+$/, '')}/api/v2`;
+            const resolved = new URL(baseHref, typeof window !== "undefined" ? window.location.origin : undefined);
+            return `${resolved.origin}${resolved.pathname.replace(/\/+$/, "")}/api/v2`;
           } catch (error) {
             // Fall back to relative default below.
           }
         }
 
-        if (baseHref.startsWith('/')) {
-          return `${baseHref.replace(/\/+$/, '')}/api/v2`;
+        if (baseHref.startsWith("/")) {
+          return `${baseHref.replace(/\/+$/, "")}/api/v2`;
         }
 
-        if (baseHref.startsWith('./') || baseHref.startsWith('../')) {
-          return `${baseHref.replace(/\/+$/, '')}/api/v2`;
+        if (baseHref.startsWith("./") || baseHref.startsWith("../")) {
+          return `${baseHref.replace(/\/+$/, "")}/api/v2`;
         }
       }
     }
 
-    return './api/v2';
+    return "./api/v2";
   }
 
   normalizeBaseUrl(url) {
     if (!url) {
-      return '';
+      return "";
     }
 
     const trimmed = url.trim();
-    if (trimmed === '') {
-      return '';
+    if (trimmed === "") {
+      return "";
     }
 
-    const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
+    const withoutTrailingSlash = trimmed.replace(/\/+$/, "");
 
-    if (/^https?:\/\//i.test(withoutTrailingSlash) || withoutTrailingSlash.startsWith('//')) {
+    if (/^https?:\/\//i.test(withoutTrailingSlash) || withoutTrailingSlash.startsWith("//")) {
       return withoutTrailingSlash;
     }
 
-    if (withoutTrailingSlash.startsWith('/')) {
+    if (withoutTrailingSlash.startsWith("/")) {
       return withoutTrailingSlash;
     }
 
-    if (withoutTrailingSlash.startsWith('./') || withoutTrailingSlash.startsWith('../')) {
+    if (withoutTrailingSlash.startsWith("./") || withoutTrailingSlash.startsWith("../")) {
       return withoutTrailingSlash;
     }
 
@@ -105,9 +105,9 @@ class AutosaveService {
   }
 
   buildUrl(path) {
-    const safePath = String(path ?? '').replace(/^\/+/, '');
+    const safePath = String(path ?? "").replace(/^\/+/, "");
     if (!safePath) {
-      return this.apiBaseUrl || '';
+      return this.apiBaseUrl || "";
     }
 
     if (!this.apiBaseUrl) {
@@ -123,10 +123,10 @@ class AutosaveService {
     }
 
     this.registerRestoreModal();
-    this.form.addEventListener('input', this.handleInput, true);
-    this.form.addEventListener('change', this.handleInput, true);
+    this.form.addEventListener("input", this.handleInput, true);
+    this.form.addEventListener("change", this.handleInput, true);
 
-    this.updateStatus('idle');
+    this.updateStatus("idle");
     this.refreshTranslations();
     this.checkForExistingDraft();
   }
@@ -134,11 +134,11 @@ class AutosaveService {
   registerRestoreModal() {
     const modalElement = document.getElementById(this.restoreModalId);
     if (modalElement) {
-      this.restoreHeadingElement = modalElement.querySelector('#modal-restore-draft-label');
-      this.restoreDescriptionElement = modalElement.querySelector('#modal-restore-draft-description');
+      this.restoreHeadingElement = modalElement.querySelector("#modal-restore-draft-label");
+      this.restoreDescriptionElement = modalElement.querySelector("#modal-restore-draft-description");
 
-      if (typeof bootstrap !== 'undefined' && typeof bootstrap.Modal === 'function') {
-        this.restoreModal = new bootstrap.Modal(modalElement, { backdrop: 'static' });
+      if (typeof bootstrap !== "undefined" && typeof bootstrap.Modal === "function") {
+        this.restoreModal = new bootstrap.Modal(modalElement, { backdrop: "static" });
       }
     }
 
@@ -146,12 +146,12 @@ class AutosaveService {
     const dismissButton = document.getElementById(this.restoreDismissId);
 
     if (applyButton) {
-      applyButton.addEventListener('click', this.applyPendingRestore);
+      applyButton.addEventListener("click", this.applyPendingRestore);
       this.restoreApplyButton = applyButton;
     }
 
     if (dismissButton) {
-      dismissButton.addEventListener('click', this.handleRestoreDismiss);
+      dismissButton.addEventListener("click", this.handleRestoreDismiss);
       this.restoreDismissButton = dismissButton;
     }
   }
@@ -166,7 +166,7 @@ class AutosaveService {
       this.persistDraft();
     }, this.throttleMs);
 
-    this.updateStatus('pending');
+    this.updateStatus("pending");
   }
 
   async persistDraft(force = false) {
@@ -182,32 +182,30 @@ class AutosaveService {
     const payloadHash = JSON.stringify(values);
 
     if (!force && payloadHash === this.lastSavedPayloadHash) {
-      this.updateStatus('synced');
+      this.updateStatus("synced");
       return Promise.resolve();
     }
 
     const body = {
       payload: {
         values,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
 
-    const url = this.draftId
-      ? this.buildUrl(`drafts/${this.draftId}`)
-      : this.buildUrl('drafts');
-    const method = this.draftId ? 'PUT' : 'POST';
+    const url = this.draftId ? this.buildUrl(`drafts/${this.draftId}`) : this.buildUrl("drafts");
+    const method = this.draftId ? "PUT" : "POST";
 
     this.isSaving = true;
-    this.updateStatus('saving');
+    this.updateStatus("saving");
 
     const request = this.fetchImpl(url, {
       method,
-      credentials: 'include',
+      credentials: "include",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     })
       .then(async (response) => {
         if (!response.ok) {
@@ -220,10 +218,10 @@ class AutosaveService {
         this.storeDraftId(this.draftId);
         this.lastSavedPayloadHash = payloadHash;
         this.lastSavedAt = data?.updatedAt ? new Date(data.updatedAt) : new Date();
-        this.updateStatus('synced');
+        this.updateStatus("synced");
       })
       .catch((error) => {
-        this.updateStatus('error', error.message);
+        this.updateStatus("error", error.message);
       })
       .finally(() => {
         this.isSaving = false;
@@ -251,7 +249,7 @@ class AutosaveService {
   async markManualSave() {
     await this.flushPending();
     if (this.lastSavedAt) {
-      this.updateStatus('manual');
+      this.updateStatus("manual");
     }
   }
 
@@ -263,11 +261,11 @@ class AutosaveService {
     if (this.draftId) {
       try {
         await this.fetchImpl(this.buildUrl(`drafts/${this.draftId}`), {
-          method: 'DELETE',
-          credentials: 'include'
+          method: "DELETE",
+          credentials: "include",
         });
       } catch (error) {
-        this.updateStatus('error', error.message);
+        this.updateStatus("error", error.message);
         return;
       }
     }
@@ -276,7 +274,7 @@ class AutosaveService {
     this.lastSavedPayloadHash = null;
     this.lastSavedAt = null;
     this.removeStoredDraftId();
-    this.updateStatus('cleared');
+    this.updateStatus("cleared");
   }
 
   async checkForExistingDraft() {
@@ -284,14 +282,12 @@ class AutosaveService {
       return;
     }
 
-    const endpoint = this.draftId
-      ? this.buildUrl(`drafts/${this.draftId}`)
-      : this.buildUrl('drafts/session/latest');
+    const endpoint = this.draftId ? this.buildUrl(`drafts/${this.draftId}`) : this.buildUrl("drafts/session/latest");
 
     try {
       const response = await this.fetchImpl(endpoint, {
-        method: 'GET',
-        credentials: 'include'
+        method: "GET",
+        credentials: "include",
       });
 
       if (response.status === 204 || response.status === 404) {
@@ -300,7 +296,7 @@ class AutosaveService {
 
       if (!response.ok) {
         const errorMessage = await this.extractErrorMessage(response);
-        this.updateStatus('error', errorMessage || 'Unable to load autosaved draft');
+        this.updateStatus("error", errorMessage || "Unable to load autosaved draft");
         return;
       }
 
@@ -318,14 +314,14 @@ class AutosaveService {
       if (currentHash === savedHash) {
         this.lastSavedPayloadHash = savedHash;
         this.lastSavedAt = record.updatedAt ? new Date(record.updatedAt) : new Date();
-        this.updateStatus('synced');
+        this.updateStatus("synced");
         return;
       }
 
       this.pendingRestoreRecord = record;
       this.promptRestore(record);
     } catch (error) {
-      this.updateStatus('error', error.message);
+      this.updateStatus("error", error.message);
     }
   }
 
@@ -338,7 +334,7 @@ class AutosaveService {
 
     if (this.restoreModal) {
       this.restoreModal.show();
-    } else if (typeof window !== 'undefined' && window.confirm) {
+    } else if (typeof window !== "undefined" && window.confirm) {
       const accept = window.confirm(message);
       if (accept) {
         this.applyPendingRestore();
@@ -355,9 +351,7 @@ class AutosaveService {
 
     this.applyDraftValues(this.pendingRestoreRecord.payload.values || {});
     this.lastSavedPayloadHash = JSON.stringify(this.pendingRestoreRecord.payload.values || {});
-    this.lastSavedAt = this.pendingRestoreRecord.updatedAt
-      ? new Date(this.pendingRestoreRecord.updatedAt)
-      : new Date();
+    this.lastSavedAt = this.pendingRestoreRecord.updatedAt ? new Date(this.pendingRestoreRecord.updatedAt) : new Date();
     this.draftId = this.pendingRestoreRecord.id || this.draftId;
     this.storeDraftId(this.draftId);
     this.pendingRestoreRecord = null;
@@ -366,7 +360,7 @@ class AutosaveService {
       this.restoreModal.hide();
     }
 
-    this.updateStatus('synced');
+    this.updateStatus("synced");
   }
 
   handleRestoreDismiss() {
@@ -397,10 +391,10 @@ class AutosaveService {
       const value = values[element.name];
       const isArrayField = Array.isArray(value) && this.isArrayFieldName(element.name);
 
-      if (type === 'checkbox') {
+      if (type === "checkbox") {
         const expected = Array.isArray(value) ? value : [];
         element.checked = expected.includes(element.value);
-      } else if (type === 'radio') {
+      } else if (type === "radio") {
         element.checked = value === element.value;
       } else if (element.multiple) {
         const options = Array.isArray(value) ? value : [];
@@ -411,13 +405,13 @@ class AutosaveService {
         const index = arrayPositions.get(element.name) ?? 0;
         const nextValue = value[index];
         arrayPositions.set(element.name, index + 1);
-        element.value = nextValue ?? '';
+        element.value = nextValue ?? "";
       } else if (value !== undefined) {
         element.value = value;
       }
 
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-      element.dispatchEvent(new Event('change', { bubbles: true }));
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
     // Uncheck checkboxes or radios that were not part of the saved values
@@ -427,7 +421,7 @@ class AutosaveService {
       }
       const type = (element.type || element.tagName).toLowerCase();
       if (!handledNames.has(element.name)) {
-        if (type === 'checkbox' || type === 'radio') {
+        if (type === "checkbox" || type === "radio") {
           element.checked = false;
         }
       }
@@ -448,15 +442,15 @@ class AutosaveService {
       }
 
       const type = (element.type || element.tagName).toLowerCase();
-      if (['submit', 'button', 'reset', 'image'].includes(type)) {
+      if (["submit", "button", "reset", "image"].includes(type)) {
         return;
       }
 
-      if (type === 'file') {
+      if (type === "file") {
         return;
       }
 
-      if (type === 'checkbox') {
+      if (type === "checkbox") {
         const arr = Array.isArray(values[element.name]) ? values[element.name] : [];
         if (element.checked) {
           arr.push(element.value);
@@ -465,7 +459,7 @@ class AutosaveService {
         return;
       }
 
-      if (type === 'radio') {
+      if (type === "radio") {
         if (!Object.prototype.hasOwnProperty.call(values, element.name)) {
           values[element.name] = null;
         }
@@ -551,7 +545,7 @@ class AutosaveService {
   }
 
   requestArrayFieldExpansion(name, requiredCount, currentCount, referenceElement) {
-    if (typeof document === 'undefined' || typeof CustomEvent !== 'function') {
+    if (typeof document === "undefined" || typeof CustomEvent !== "function") {
       return false;
     }
 
@@ -559,18 +553,18 @@ class AutosaveService {
       name,
       requiredCount,
       currentCount: currentCount ?? 0,
-      formId: this.form ? this.form.id : null
+      formId: this.form ? this.form.id : null,
     };
 
-    const event = new CustomEvent('autosave:ensure-array-field', {
+    const event = new CustomEvent("autosave:ensure-array-field", {
       bubbles: true,
       cancelable: false,
-      detail
+      detail,
     });
 
-    if (referenceElement && typeof referenceElement.dispatchEvent === 'function') {
+    if (referenceElement && typeof referenceElement.dispatchEvent === "function") {
       referenceElement.dispatchEvent(event);
-    } else if (this.form && typeof this.form.dispatchEvent === 'function') {
+    } else if (this.form && typeof this.form.dispatchEvent === "function") {
       this.form.dispatchEvent(event);
     } else {
       document.dispatchEvent(event);
@@ -584,7 +578,7 @@ class AutosaveService {
       return null;
     }
 
-    const selectors = ['[data-autosave-add]', '.add-button'];
+    const selectors = ["[data-autosave-add]", ".add-button"];
     let current = element.parentElement;
 
     while (current && current !== this.form) {
@@ -606,87 +600,86 @@ class AutosaveService {
       return false;
     }
 
-    return element.closest('form') === this.form;
+    return element.closest("form") === this.form;
   }
 
   escapeNameForSelector(name) {
-    if (typeof name !== 'string') {
-      return '';
+    if (typeof name !== "string") {
+      return "";
     }
 
-    if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+    if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
       return CSS.escape(name);
     }
 
-    return name.replace(/([\0-\x1F\x7F"'\\#.:;,!?+*~=<>^$\[\](){}|\/\s-])/g, '\\$1');
+    return name.replace(/([\\#.:;,!?+*~=<>^$()[\]{}|/\s-])/g, "\\$1");
   }
 
-  updateStatus(state, detail = '') {
+  updateStatus(state, detail = "") {
     if (!this.statusElement) {
       return;
     }
 
-    const effectiveState = state || 'idle';
+    const effectiveState = state || "idle";
     this.currentState = effectiveState;
-    this.currentDetail = detail ?? '';
+    this.currentDetail = detail ?? "";
 
     const stateClasses = [
-      'autosave-status--idle',
-      'autosave-status--pending',
-      'autosave-status--saving',
-      'autosave-status--synced',
-      'autosave-status--error',
-      'autosave-status--cleared'
+      "autosave-status--idle",
+      "autosave-status--pending",
+      "autosave-status--saving",
+      "autosave-status--synced",
+      "autosave-status--error",
+      "autosave-status--cleared",
     ];
 
     this.statusElement.classList.remove(...stateClasses);
     this.statusElement.dataset.state = effectiveState;
-    this.statusElement.setAttribute('aria-busy', effectiveState === 'saving' ? 'true' : 'false');
+    this.statusElement.setAttribute("aria-busy", effectiveState === "saving" ? "true" : "false");
 
-    let message = '';
-    const timestamp = this.lastSavedAt instanceof Date && !Number.isNaN(this.lastSavedAt.valueOf())
-      ? this.formatTime(this.lastSavedAt)
-      : null;
+    let message = "";
+    const timestamp =
+      this.lastSavedAt instanceof Date && !Number.isNaN(this.lastSavedAt.valueOf()) ? this.formatTime(this.lastSavedAt) : null;
 
     switch (effectiveState) {
-      case 'pending':
-        message = this.translate('autosave.status.pending', 'Autosave scheduled.');
-        this.statusElement.classList.add('autosave-status--pending');
+      case "pending":
+        message = this.translate("autosave.status.pending", "Autosave scheduled.");
+        this.statusElement.classList.add("autosave-status--pending");
         break;
-      case 'saving':
-        message = this.translate('autosave.status.saving', 'Autosaving…');
-        this.statusElement.classList.add('autosave-status--saving');
+      case "saving":
+        message = this.translate("autosave.status.saving", "Autosaving…");
+        this.statusElement.classList.add("autosave-status--saving");
         break;
-      case 'synced':
+      case "synced":
         message = timestamp
-          ? this.translate('autosave.status.syncedWithTime', 'Draft saved at {time}.', { time: timestamp })
-          : this.translate('autosave.status.synced', 'Draft saved.');
-        this.statusElement.classList.add('autosave-status--synced');
+          ? this.translate("autosave.status.syncedWithTime", "Draft saved at {time}.", { time: timestamp })
+          : this.translate("autosave.status.synced", "Draft saved.");
+        this.statusElement.classList.add("autosave-status--synced");
         break;
-      case 'manual':
+      case "manual":
         message = timestamp
-          ? this.translate('autosave.status.manualWithTime', 'Saved manually at {time}.', { time: timestamp })
-          : this.translate('autosave.status.manual', 'Saved manually.');
-        this.statusElement.classList.add('autosave-status--synced');
+          ? this.translate("autosave.status.manualWithTime", "Saved manually at {time}.", { time: timestamp })
+          : this.translate("autosave.status.manual", "Saved manually.");
+        this.statusElement.classList.add("autosave-status--synced");
         break;
-      case 'error':
+      case "error":
         if (detail) {
-          message = this.translate('autosave.status.error', 'Autosave failed: {detail}', {
-            detail
+          message = this.translate("autosave.status.error", "Autosave failed: {detail}", {
+            detail,
           });
         } else {
-          message = this.translate('autosave.status.errorNoDetail', 'Autosave failed.');
+          message = this.translate("autosave.status.errorNoDetail", "Autosave failed.");
         }
-        this.statusElement.classList.add('autosave-status--error');
+        this.statusElement.classList.add("autosave-status--error");
         break;
-      case 'cleared':
-        message = this.translate('autosave.status.cleared', 'Autosave draft cleared.');
-        this.statusElement.classList.add('autosave-status--cleared');
+      case "cleared":
+        message = this.translate("autosave.status.cleared", "Autosave draft cleared.");
+        this.statusElement.classList.add("autosave-status--cleared");
         break;
-      case 'idle':
+      case "idle":
       default:
-        message = this.translate('autosave.status.idle', 'Autosave ready.');
-        this.statusElement.classList.add('autosave-status--idle');
+        message = this.translate("autosave.status.idle", "Autosave ready.");
+        this.statusElement.classList.add("autosave-status--idle");
         break;
     }
 
@@ -699,60 +692,58 @@ class AutosaveService {
 
   refreshTranslations() {
     if (this.statusLabelElement) {
-      const fallbackLabel = this.statusLabelElement.getAttribute('data-default-text')
-        || this.statusLabelElement.textContent.trim()
-        || 'Autosave status:';
-      const translatedLabel = this.translate('autosave.status.label', fallbackLabel);
+      const fallbackLabel =
+        this.statusLabelElement.getAttribute("data-default-text") || this.statusLabelElement.textContent.trim() || "Autosave status:";
+      const translatedLabel = this.translate("autosave.status.label", fallbackLabel);
       this.statusLabelElement.textContent = translatedLabel;
-      this.statusLabelElement.setAttribute('data-default-text', fallbackLabel);
+      this.statusLabelElement.setAttribute("data-default-text", fallbackLabel);
     }
 
     if (this.statusHeadingElement) {
-      const fallbackHeading = this.statusHeadingElement.getAttribute('data-default-text')
-        || this.statusHeadingElement.textContent.trim()
-        || 'Autosave';
-      const translatedHeading = this.translate('autosave.status.heading', fallbackHeading);
+      const fallbackHeading =
+        this.statusHeadingElement.getAttribute("data-default-text") || this.statusHeadingElement.textContent.trim() || "Autosave";
+      const translatedHeading = this.translate("autosave.status.heading", fallbackHeading);
       this.statusHeadingElement.textContent = translatedHeading;
-      this.statusHeadingElement.setAttribute('data-default-text', fallbackHeading);
+      this.statusHeadingElement.setAttribute("data-default-text", fallbackHeading);
     }
 
     if (this.restoreHeadingElement) {
-      const fallbackRestoreHeading = this.restoreHeadingElement.getAttribute('data-default-text')
-        || this.restoreHeadingElement.textContent.trim()
-        || 'Restore autosaved draft';
-      const translatedRestoreHeading = this.translate('autosave.restore.title', fallbackRestoreHeading);
+      const fallbackRestoreHeading =
+        this.restoreHeadingElement.getAttribute("data-default-text") ||
+        this.restoreHeadingElement.textContent.trim() ||
+        "Restore autosaved draft";
+      const translatedRestoreHeading = this.translate("autosave.restore.title", fallbackRestoreHeading);
       this.restoreHeadingElement.textContent = translatedRestoreHeading;
-      this.restoreHeadingElement.setAttribute('data-default-text', fallbackRestoreHeading);
+      this.restoreHeadingElement.setAttribute("data-default-text", fallbackRestoreHeading);
     }
 
     if (this.restoreApplyButton) {
-      const fallbackApply = this.restoreApplyButton.getAttribute('data-default-text')
-        || this.restoreApplyButton.textContent.trim()
-        || 'Restore draft';
-      const translatedApply = this.translate('autosave.restore.actions.restore', fallbackApply);
+      const fallbackApply =
+        this.restoreApplyButton.getAttribute("data-default-text") || this.restoreApplyButton.textContent.trim() || "Restore draft";
+      const translatedApply = this.translate("autosave.restore.actions.restore", fallbackApply);
       this.restoreApplyButton.textContent = translatedApply;
-      this.restoreApplyButton.setAttribute('data-default-text', fallbackApply);
+      this.restoreApplyButton.setAttribute("data-default-text", fallbackApply);
     }
 
     if (this.restoreDismissButton) {
-      const fallbackDismiss = this.restoreDismissButton.getAttribute('data-default-text')
-        || this.restoreDismissButton.textContent.trim()
-        || 'Discard draft';
-      const translatedDismiss = this.translate('autosave.restore.actions.discard', fallbackDismiss);
+      const fallbackDismiss =
+        this.restoreDismissButton.getAttribute("data-default-text") || this.restoreDismissButton.textContent.trim() || "Discard draft";
+      const translatedDismiss = this.translate("autosave.restore.actions.discard", fallbackDismiss);
       this.restoreDismissButton.textContent = translatedDismiss;
-      this.restoreDismissButton.setAttribute('data-default-text', fallbackDismiss);
+      this.restoreDismissButton.setAttribute("data-default-text", fallbackDismiss);
     }
 
     if (this.restoreDescriptionElement) {
-      const fallbackDescription = this.restoreDescriptionElement.getAttribute('data-default-text')
-        || this.restoreDescriptionElement.textContent.trim()
-        || 'We found an autosaved draft from your previous session. Would you like to restore it?';
+      const fallbackDescription =
+        this.restoreDescriptionElement.getAttribute("data-default-text") ||
+        this.restoreDescriptionElement.textContent.trim() ||
+        "We found an autosaved draft from your previous session. Would you like to restore it?";
       const translatedDescription = this.pendingRestoreRecord
         ? this.getRestoreMessage(this.pendingRestoreRecord)
-        : this.translate('autosave.restore.foundWithoutTimestamp', fallbackDescription);
+        : this.translate("autosave.restore.foundWithoutTimestamp", fallbackDescription);
 
       this.restoreDescriptionElement.textContent = translatedDescription;
-      this.restoreDescriptionElement.setAttribute('data-default-text', fallbackDescription);
+      this.restoreDescriptionElement.setAttribute("data-default-text", fallbackDescription);
     }
 
     this.updateStatus(this.currentState, this.currentDetail);
@@ -766,19 +757,17 @@ class AutosaveService {
   }
 
   resolveTranslator(candidate) {
-    if (typeof candidate === 'function') {
+    if (typeof candidate === "function") {
       return candidate;
     }
 
-    if (typeof window !== 'undefined') {
-      const elmoTranslator = window.elmo && typeof window.elmo.translate === 'function'
-        ? window.elmo.translate.bind(window.elmo)
-        : null;
+    if (typeof window !== "undefined") {
+      const elmoTranslator = window.elmo && typeof window.elmo.translate === "function" ? window.elmo.translate.bind(window.elmo) : null;
       if (elmoTranslator) {
         return elmoTranslator;
       }
 
-      if (typeof window.getNestedValue === 'function' && typeof window.translations !== 'undefined') {
+      if (typeof window.getNestedValue === "function" && typeof window.translations !== "undefined") {
         return (key) => window.getNestedValue(window.translations, key);
       }
     }
@@ -791,7 +780,7 @@ class AutosaveService {
       return undefined;
     }
 
-    return key.split('.').reduce((accumulator, segment) => {
+    return key.split(".").reduce((accumulator, segment) => {
       if (accumulator && Object.prototype.hasOwnProperty.call(accumulator, segment)) {
         return accumulator[segment];
       }
@@ -806,15 +795,15 @@ class AutosaveService {
       template = this.translationFn(key, variables, this.activeTranslations);
     }
 
-    if (template === undefined || template === null || template === '') {
+    if (template === undefined || template === null || template === "") {
       template = this.lookupTranslation(key);
     }
 
-    if (template === undefined || template === null || template === '') {
-      template = fallback ?? '';
+    if (template === undefined || template === null || template === "") {
+      template = fallback ?? "";
     }
 
-    if (typeof template !== 'string') {
+    if (typeof template !== "string") {
       return template;
     }
 
@@ -822,14 +811,14 @@ class AutosaveService {
   }
 
   interpolate(template, variables = {}) {
-    if (typeof template !== 'string') {
+    if (typeof template !== "string") {
       return template;
     }
 
     return Object.keys(variables).reduce((result, placeholder) => {
       const value = variables[placeholder];
-      const replacement = value === undefined || value === null ? '' : String(value);
-      const pattern = new RegExp(`\\{${placeholder}\\}`, 'g');
+      const replacement = value === undefined || value === null ? "" : String(value);
+      const pattern = new RegExp(`\\{${placeholder}\\}`, "g");
       return result.replace(pattern, replacement);
     }, template);
   }
@@ -840,25 +829,25 @@ class AutosaveService {
     if (timestamp) {
       const formatted = this.formatLong(timestamp);
       return this.translate(
-        'autosave.restore.foundWithTimestamp',
+        "autosave.restore.foundWithTimestamp",
         `We found an autosaved draft from ${formatted}. Would you like to restore it?`,
         { timestamp: formatted }
       );
     }
 
     return this.translate(
-      'autosave.restore.foundWithoutTimestamp',
-      'We found an autosaved draft from a previous session. Would you like to restore it?'
+      "autosave.restore.foundWithoutTimestamp",
+      "We found an autosaved draft from a previous session. Would you like to restore it?"
     );
   }
 
   isArrayFieldName(name) {
-    return typeof name === 'string' && /\[\]$/.test(name);
+    return typeof name === "string" && /\[\]$/.test(name);
   }
 
   formatTime(date) {
     try {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     } catch (error) {
       return date.toISOString();
     }
@@ -866,7 +855,7 @@ class AutosaveService {
 
   formatLong(date) {
     try {
-      return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+      return date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
     } catch (error) {
       return date.toISOString();
     }
@@ -875,7 +864,7 @@ class AutosaveService {
   extractErrorMessage(response) {
     return response.text().then((text) => {
       if (!text) {
-        return '';
+        return "";
       }
       try {
         const data = JSON.parse(text);
@@ -914,7 +903,7 @@ class AutosaveService {
   }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = AutosaveService;
 }
 

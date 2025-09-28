@@ -1,13 +1,13 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-describe('authorInstitution.js', () => {
+describe("authorInstitution.js", () => {
   let $;
   let suffix;
 
   beforeEach(() => {
     // Set fixed time
-    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z'));
+    jest.useFakeTimers().setSystemTime(new Date("2024-05-30T12:34:56Z"));
     suffix = Date.now(); // 1717072496000 in this example
 
     // Basic HTML structure for the test
@@ -41,7 +41,7 @@ describe('authorInstitution.js', () => {
     `;
 
     // Provide jQuery
-    $ = require('jquery');
+    $ = require("jquery");
     global.$ = global.jQuery = $;
     window.$ = $;
     window.jQuery = $;
@@ -49,26 +49,22 @@ describe('authorInstitution.js', () => {
     // Mock jQuery UI sortable (noop for jsdom)
     $.fn.sortable = jest.fn(() => $);
 
-
     // Set mock functions
     window.createRemoveButton = jest.fn(() => $('<button type="button" class="removeButton"></button>'));
     window.replaceHelpButtonInClonedRows = jest.fn();
     window.autocompleteAffiliations = jest.fn();
-    window.affiliationsData = [{ id: '1', name: 'Inst' }];
+    window.affiliationsData = [{ id: "1", name: "Inst" }];
 
     // Load the script to be tested
-    let script = fs.readFileSync(
-      path.resolve(__dirname, '../../js/eventhandlers/formgroups/authorInstitution.js'),
-      'utf8'
-    );
+    let script = fs.readFileSync(path.resolve(__dirname, "../../js/eventhandlers/formgroups/authorInstitution.js"), "utf8");
     // Remove ES6 import and make it immediately executable
-    script = script.replace(/^import.*$/gm, '');
-    script = script.replace('$(document).ready(function () {', '(function () {');
-    script = script.replace(/\n\s*\}\);\s*$/, '\n})();');
+    script = script.replace(/^import.*$/gm, "");
+    script = script.replace("$(document).ready(function () {", "(function () {");
+    script = script.replace(/\n\s*\}\);\s*$/, "\n})();");
     window.eval(script);
 
     // Simulate DOMContentLoaded event
-    document.dispatchEvent(new Event('DOMContentLoaded'));
+    document.dispatchEvent(new Event("DOMContentLoaded"));
   });
 
   afterEach(() => {
@@ -76,10 +72,10 @@ describe('authorInstitution.js', () => {
     jest.clearAllTimers();
   });
 
-  test('adds a new author institution row', () => {
-    $('#button-authorinstitution-add').trigger('click');
+  test("adds a new author institution row", () => {
+    $("#button-authorinstitution-add").trigger("click");
 
-    const rows = $('#group-authorinstitution .row');
+    const rows = $("#group-authorinstitution .row");
     expect(rows.length).toBe(2);
 
     const newRow = rows.last();
@@ -93,11 +89,15 @@ describe('authorInstitution.js', () => {
     expect(newRow.find(`label[for='input-authorinstitution-name-${suffix}']`).length).toBe(1);
 
     // Fields cleared
-    expect(newRow.find('input').filter(function () { return this.value; }).length).toBe(0);
+    expect(
+      newRow.find("input").filter(function () {
+        return this.value;
+      }).length
+    ).toBe(0);
 
     // Add button removed, remove button added
-    expect(newRow.find('#button-authorinstitution-add').length).toBe(0);
-    expect(newRow.find('.removeButton').length).toBe(1);
+    expect(newRow.find("#button-authorinstitution-add").length).toBe(0);
+    expect(newRow.find(".removeButton").length).toBe(1);
 
     // Helper functions called
     expect(window.replaceHelpButtonInClonedRows).toHaveBeenCalledTimes(1);
@@ -111,15 +111,15 @@ describe('authorInstitution.js', () => {
     );
 
     // Test removal
-    newRow.find('.removeButton').trigger('click');
-    expect($('#group-authorinstitution .row').length).toBe(1);
+    newRow.find(".removeButton").trigger("click");
+    expect($("#group-authorinstitution .row").length).toBe(1);
   });
 
-  test('initializes sortable with accessible drag handle configuration', () => {
+  test("initializes sortable with accessible drag handle configuration", () => {
     expect($.fn.sortable).toHaveBeenCalledTimes(1);
     expect($.fn.sortable.mock.calls[0][0]).toMatchObject({
-      handle: '.drag-handle',
-      cancel: 'input, textarea, select, option'
+      handle: ".drag-handle",
+      cancel: "input, textarea, select, option",
     });
   });
 });

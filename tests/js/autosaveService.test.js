@@ -1,12 +1,12 @@
-const { requireFresh } = require('./utils');
+const { requireFresh } = require("./utils");
 
-describe('autosaveService', () => {
+describe("autosaveService", () => {
   let AutosaveService;
   let modalInstance;
 
   beforeEach(() => {
     jest.resetModules();
-    AutosaveService = requireFresh('../../js/services/autosaveService.js');
+    AutosaveService = requireFresh("../../js/services/autosaveService.js");
     document.body.innerHTML = `
       <form id="form-mde">
         <input name="title" value="">
@@ -37,7 +37,7 @@ describe('autosaveService', () => {
 
     modalInstance = { show: jest.fn(), hide: jest.fn() };
     global.bootstrap = {
-      Modal: jest.fn(() => modalInstance)
+      Modal: jest.fn(() => modalInstance),
     };
     jest.useFakeTimers();
     window.localStorage.clear();
@@ -49,104 +49,104 @@ describe('autosaveService', () => {
     delete window.elmo;
   });
 
-  test('throttles autosave cadence before persisting', async () => {
+  test("throttles autosave cadence before persisting", async () => {
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.resolve({ id: 'abc', updatedAt: '2024-01-01T10:00:00Z' })
+      json: () => Promise.resolve({ id: "abc", updatedAt: "2024-01-01T10:00:00Z" }),
     });
 
-    const service = new AutosaveService('form-mde', {
+    const service = new AutosaveService("form-mde", {
       fetch: fetchMock,
       throttleMs: 500,
-      statusElementId: 'autosave-status',
-      statusTextId: 'autosave-status-text',
-      restoreModalId: 'modal-restore-draft'
+      statusElementId: "autosave-status",
+      statusTextId: "autosave-status-text",
+      restoreModalId: "modal-restore-draft",
     });
     service.start();
     fetchMock.mockClear();
 
     const input = document.querySelector('input[name="title"]');
-    input.value = 'First';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.value = "First";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
 
     await jest.advanceTimersByTimeAsync(400);
     expect(fetchMock).not.toHaveBeenCalled();
 
     await jest.advanceTimersByTimeAsync(200);
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts');
+    expect(fetchMock.mock.calls[0][0]).toBe("./api/v2/drafts");
     const requestArgs = fetchMock.mock.calls[0][1];
-    expect(requestArgs.method).toBe('POST');
+    expect(requestArgs.method).toBe("POST");
     const body = JSON.parse(requestArgs.body);
-    expect(body.payload.values.title).toBe('First');
+    expect(body.payload.values.title).toBe("First");
 
-    input.value = 'Second';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.value = "Second";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
     await jest.advanceTimersByTimeAsync(500);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  test('updateStatus applies semantic classes and localized messages', () => {
-    const service = new AutosaveService('form-mde', {
+  test("updateStatus applies semantic classes and localized messages", () => {
+    const service = new AutosaveService("form-mde", {
       fetch: jest.fn(),
-      statusElementId: 'autosave-status',
-      statusTextId: 'autosave-status-text'
+      statusElementId: "autosave-status",
+      statusTextId: "autosave-status-text",
     });
 
     const translations = {
       autosave: {
         status: {
-          label: 'Status des automatischen Speicherns:',
-          heading: 'Automatisches Speichern',
-          pending: 'Automatisches Speichern geplant.',
-          saving: 'Automatisches Speichern…',
-          syncedWithTime: 'Entwurf gespeichert um {time}.',
-          error: 'Automatisches Speichern fehlgeschlagen: {detail}',
-          errorNoDetail: 'Automatisches Speichern fehlgeschlagen.',
-          manual: 'Manuell gespeichert.',
-          idle: 'Automatisches Speichern bereit.'
-        }
-      }
+          label: "Status des automatischen Speicherns:",
+          heading: "Automatisches Speichern",
+          pending: "Automatisches Speichern geplant.",
+          saving: "Automatisches Speichern…",
+          syncedWithTime: "Entwurf gespeichert um {time}.",
+          error: "Automatisches Speichern fehlgeschlagen: {detail}",
+          errorNoDetail: "Automatisches Speichern fehlgeschlagen.",
+          manual: "Manuell gespeichert.",
+          idle: "Automatisches Speichern bereit.",
+        },
+      },
     };
 
-    document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: { translations } }));
+    document.dispatchEvent(new CustomEvent("translationsLoaded", { detail: { translations } }));
 
-    service.updateStatus('pending');
-    const statusElement = document.getElementById('autosave-status');
-    expect(statusElement.classList.contains('autosave-status--pending')).toBe(true);
-    expect(document.getElementById('autosave-status-text').textContent).toBe('Automatisches Speichern geplant.');
-    expect(statusElement.getAttribute('aria-busy')).toBe('false');
+    service.updateStatus("pending");
+    const statusElement = document.getElementById("autosave-status");
+    expect(statusElement.classList.contains("autosave-status--pending")).toBe(true);
+    expect(document.getElementById("autosave-status-text").textContent).toBe("Automatisches Speichern geplant.");
+    expect(statusElement.getAttribute("aria-busy")).toBe("false");
 
-    service.updateStatus('saving');
-    expect(statusElement.classList.contains('autosave-status--saving')).toBe(true);
-    expect(statusElement.getAttribute('aria-busy')).toBe('true');
+    service.updateStatus("saving");
+    expect(statusElement.classList.contains("autosave-status--saving")).toBe(true);
+    expect(statusElement.getAttribute("aria-busy")).toBe("true");
 
-    const formatSpy = jest.spyOn(service, 'formatTime').mockReturnValue('12:34');
-    service.lastSavedAt = new Date('2024-01-01T12:34:00Z');
-    service.updateStatus('synced');
-    expect(document.getElementById('autosave-status-text').textContent).toBe('Entwurf gespeichert um 12:34.');
+    const formatSpy = jest.spyOn(service, "formatTime").mockReturnValue("12:34");
+    service.lastSavedAt = new Date("2024-01-01T12:34:00Z");
+    service.updateStatus("synced");
+    expect(document.getElementById("autosave-status-text").textContent).toBe("Entwurf gespeichert um 12:34.");
     formatSpy.mockRestore();
 
-    service.updateStatus('error', 'Netzwerkfehler');
-    expect(statusElement.classList.contains('autosave-status--error')).toBe(true);
-    expect(document.getElementById('autosave-status-text').textContent).toBe('Automatisches Speichern fehlgeschlagen: Netzwerkfehler');
+    service.updateStatus("error", "Netzwerkfehler");
+    expect(statusElement.classList.contains("autosave-status--error")).toBe(true);
+    expect(document.getElementById("autosave-status-text").textContent).toBe("Automatisches Speichern fehlgeschlagen: Netzwerkfehler");
 
-    service.updateStatus('error');
-    expect(document.getElementById('autosave-status-text').textContent).toBe('Automatisches Speichern fehlgeschlagen.');
+    service.updateStatus("error");
+    expect(document.getElementById("autosave-status-text").textContent).toBe("Automatisches Speichern fehlgeschlagen.");
 
-    expect(document.getElementById('autosave-status-heading').textContent).toBe('Automatisches Speichern');
-    expect(document.getElementById('autosave-status-label').textContent).toBe('Status des automatischen Speicherns:');
+    expect(document.getElementById("autosave-status-heading").textContent).toBe("Automatisches Speichern");
+    expect(document.getElementById("autosave-status-label").textContent).toBe("Status des automatischen Speicherns:");
   });
 
-  test('refreshTranslations localizes restore modal text', () => {
-    const service = new AutosaveService('form-mde', {
+  test("refreshTranslations localizes restore modal text", () => {
+    const service = new AutosaveService("form-mde", {
       fetch: jest.fn(),
-      statusElementId: 'autosave-status',
-      statusTextId: 'autosave-status-text',
-      restoreModalId: 'modal-restore-draft',
-      restoreApplyButtonId: 'button-restore-apply',
-      restoreDismissButtonId: 'button-restore-dismiss'
+      statusElementId: "autosave-status",
+      statusTextId: "autosave-status-text",
+      restoreModalId: "modal-restore-draft",
+      restoreApplyButtonId: "button-restore-apply",
+      restoreDismissButtonId: "button-restore-dismiss",
     });
 
     service.start();
@@ -154,118 +154,126 @@ describe('autosaveService', () => {
     const translations = {
       autosave: {
         status: {
-          label: 'Status des automatischen Speicherns:',
-          heading: 'Automatisches Speichern'
+          label: "Status des automatischen Speicherns:",
+          heading: "Automatisches Speichern",
         },
         restore: {
-          title: 'Automatisch gespeicherten Entwurf wiederherstellen',
+          title: "Automatisch gespeicherten Entwurf wiederherstellen",
           actions: {
-            restore: 'Entwurf wiederherstellen',
-            discard: 'Entwurf verwerfen'
+            restore: "Entwurf wiederherstellen",
+            discard: "Entwurf verwerfen",
           },
-          foundWithoutTimestamp: 'Wir haben einen automatisch gespeicherten Entwurf gefunden. Möchten Sie ihn wiederherstellen?'
-        }
-      }
+          foundWithoutTimestamp: "Wir haben einen automatisch gespeicherten Entwurf gefunden. Möchten Sie ihn wiederherstellen?",
+        },
+      },
     };
 
-    document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: { translations } }));
+    document.dispatchEvent(new CustomEvent("translationsLoaded", { detail: { translations } }));
 
-    expect(document.getElementById('modal-restore-draft-label').textContent)
-      .toBe('Automatisch gespeicherten Entwurf wiederherstellen');
-    expect(document.getElementById('button-restore-apply').textContent).toBe('Entwurf wiederherstellen');
-    expect(document.getElementById('button-restore-dismiss').textContent).toBe('Entwurf verwerfen');
-    expect(document.getElementById('modal-restore-draft-description').textContent)
-      .toBe('Wir haben einen automatisch gespeicherten Entwurf gefunden. Möchten Sie ihn wiederherstellen?');
+    expect(document.getElementById("modal-restore-draft-label").textContent).toBe("Automatisch gespeicherten Entwurf wiederherstellen");
+    expect(document.getElementById("button-restore-apply").textContent).toBe("Entwurf wiederherstellen");
+    expect(document.getElementById("button-restore-dismiss").textContent).toBe("Entwurf verwerfen");
+    expect(document.getElementById("modal-restore-draft-description").textContent).toBe(
+      "Wir haben einen automatisch gespeicherten Entwurf gefunden. Möchten Sie ihn wiederherstellen?"
+    );
   });
 
-  test('refreshTranslations keeps localized restore message with timestamp', () => {
-    const service = new AutosaveService('form-mde', {
+  test("refreshTranslations keeps localized restore message with timestamp", () => {
+    const service = new AutosaveService("form-mde", {
       fetch: jest.fn(),
-      statusElementId: 'autosave-status',
-      statusTextId: 'autosave-status-text',
-      restoreModalId: 'modal-restore-draft',
-      restoreApplyButtonId: 'button-restore-apply',
-      restoreDismissButtonId: 'button-restore-dismiss'
+      statusElementId: "autosave-status",
+      statusTextId: "autosave-status-text",
+      restoreModalId: "modal-restore-draft",
+      restoreApplyButtonId: "button-restore-apply",
+      restoreDismissButtonId: "button-restore-dismiss",
     });
 
     service.start();
-    service.pendingRestoreRecord = { id: 'abc', updatedAt: '2024-01-01T09:30:00Z' };
-    const formatLongSpy = jest.spyOn(service, 'formatLong').mockReturnValue('1. Januar 2024, 09:30');
+    service.pendingRestoreRecord = { id: "abc", updatedAt: "2024-01-01T09:30:00Z" };
+    const formatLongSpy = jest.spyOn(service, "formatLong").mockReturnValue("1. Januar 2024, 09:30");
 
     const translations = {
       autosave: {
         status: {
-          label: 'Status des automatischen Speicherns:',
-          heading: 'Automatisches Speichern'
+          label: "Status des automatischen Speicherns:",
+          heading: "Automatisches Speichern",
         },
         restore: {
-          title: 'Automatisch gespeicherten Entwurf wiederherstellen',
+          title: "Automatisch gespeicherten Entwurf wiederherstellen",
           actions: {
-            restore: 'Entwurf wiederherstellen',
-            discard: 'Entwurf verwerfen'
+            restore: "Entwurf wiederherstellen",
+            discard: "Entwurf verwerfen",
           },
-          foundWithTimestamp: 'Wir haben einen automatisch gespeicherten Entwurf vom {timestamp} gefunden. Möchten Sie ihn wiederherstellen?',
-          foundWithoutTimestamp: 'Wir haben einen automatisch gespeicherten Entwurf gefunden. Möchten Sie ihn wiederherstellen?'
-        }
-      }
+          foundWithTimestamp:
+            "Wir haben einen automatisch gespeicherten Entwurf vom {timestamp} gefunden. Möchten Sie ihn wiederherstellen?",
+          foundWithoutTimestamp: "Wir haben einen automatisch gespeicherten Entwurf gefunden. Möchten Sie ihn wiederherstellen?",
+        },
+      },
     };
 
-    document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: { translations } }));
+    document.dispatchEvent(new CustomEvent("translationsLoaded", { detail: { translations } }));
 
-    expect(document.getElementById('modal-restore-draft-description').textContent)
-      .toBe('Wir haben einen automatisch gespeicherten Entwurf vom 1. Januar 2024, 09:30 gefunden. Möchten Sie ihn wiederherstellen?');
+    expect(document.getElementById("modal-restore-draft-description").textContent).toBe(
+      "Wir haben einen automatisch gespeicherten Entwurf vom 1. Januar 2024, 09:30 gefunden. Möchten Sie ihn wiederherstellen?"
+    );
     formatLongSpy.mockRestore();
   });
 
-  test('serializeValues preserves repeated field arrays', () => {
-    const form = document.getElementById('form-mde');
-    form.insertAdjacentHTML('beforeend', `
+  test("serializeValues preserves repeated field arrays", () => {
+    const form = document.getElementById("form-mde");
+    form.insertAdjacentHTML(
+      "beforeend",
+      `
       <input name="givennames[]" value="Ada">
       <input name="givennames[]" value="Grace">
       <input type="hidden" name="authorPersonRorIds[]" value="ror-1">
       <input type="hidden" name="authorPersonRorIds[]" value="ror-2">
-    `);
+    `
+    );
 
-    const service = new AutosaveService('form-mde', {
+    const service = new AutosaveService("form-mde", {
       fetch: jest.fn(),
-      statusElementId: 'autosave-status',
-      statusTextId: 'autosave-status-text'
+      statusElementId: "autosave-status",
+      statusTextId: "autosave-status-text",
     });
 
     const values = service.serializeValues();
-    expect(values['givennames[]']).toEqual(['Ada', 'Grace']);
-    expect(values['authorPersonRorIds[]']).toEqual(['ror-1', 'ror-2']);
+    expect(values["givennames[]"]).toEqual(["Ada", "Grace"]);
+    expect(values["authorPersonRorIds[]"]).toEqual(["ror-1", "ror-2"]);
   });
 
-  test('applyDraftValues restores repeated inputs sequentially', () => {
-    const form = document.getElementById('form-mde');
-    form.insertAdjacentHTML('beforeend', `
+  test("applyDraftValues restores repeated inputs sequentially", () => {
+    const form = document.getElementById("form-mde");
+    form.insertAdjacentHTML(
+      "beforeend",
+      `
       <input name="givennames[]" value="">
       <input name="givennames[]" value="">
       <input type="hidden" name="authorPersonRorIds[]" value="">
       <input type="hidden" name="authorPersonRorIds[]" value="">
-    `);
+    `
+    );
 
-    const service = new AutosaveService('form-mde', {
+    const service = new AutosaveService("form-mde", {
       fetch: jest.fn(),
-      statusElementId: 'autosave-status',
-      statusTextId: 'autosave-status-text'
+      statusElementId: "autosave-status",
+      statusTextId: "autosave-status-text",
     });
 
     service.applyDraftValues({
-      'givennames[]': ['Ada', 'Grace'],
-      'authorPersonRorIds[]': ['ror-1', 'ror-2']
+      "givennames[]": ["Ada", "Grace"],
+      "authorPersonRorIds[]": ["ror-1", "ror-2"],
     });
 
     const names = Array.from(form.querySelectorAll('input[name="givennames[]"]')).map((input) => input.value);
     const rorIds = Array.from(form.querySelectorAll('input[name="authorPersonRorIds[]"]')).map((input) => input.value);
 
-    expect(names).toEqual(['Ada', 'Grace']);
-    expect(rorIds).toEqual(['ror-1', 'ror-2']);
+    expect(names).toEqual(["Ada", "Grace"]);
+    expect(rorIds).toEqual(["ror-1", "ror-2"]);
   });
 
-  test('applyDraftValues requests external expansion when add button unavailable', () => {
-    const form = document.getElementById('form-mde');
+  test("applyDraftValues requests external expansion when add button unavailable", () => {
+    const form = document.getElementById("form-mde");
     form.innerHTML = `
       <div data-creator-row>
         <input name="givennames[]" value="">
@@ -274,38 +282,38 @@ describe('autosaveService', () => {
 
     const handler = (event) => {
       const { detail } = event;
-      if (!detail || detail.name !== 'givennames[]') {
+      if (!detail || detail.name !== "givennames[]") {
         return;
       }
 
       while (form.querySelectorAll('input[name="givennames[]"]').length < detail.requiredCount) {
-        const input = document.createElement('input');
-        input.name = 'givennames[]';
-        input.value = '';
+        const input = document.createElement("input");
+        input.name = "givennames[]";
+        input.value = "";
         form.appendChild(input);
       }
     };
 
-    document.addEventListener('autosave:ensure-array-field', handler);
+    document.addEventListener("autosave:ensure-array-field", handler);
 
-    const service = new AutosaveService('form-mde', {
+    const service = new AutosaveService("form-mde", {
       fetch: jest.fn(),
-      statusElementId: 'autosave-status',
-      statusTextId: 'autosave-status-text'
+      statusElementId: "autosave-status",
+      statusTextId: "autosave-status-text",
     });
 
     service.applyDraftValues({
-      'givennames[]': ['Ada', 'Grace']
+      "givennames[]": ["Ada", "Grace"],
     });
 
     const names = Array.from(form.querySelectorAll('input[name="givennames[]"]')).map((input) => input.value);
-    expect(names).toEqual(['Ada', 'Grace']);
+    expect(names).toEqual(["Ada", "Grace"]);
 
-    document.removeEventListener('autosave:ensure-array-field', handler);
+    document.removeEventListener("autosave:ensure-array-field", handler);
   });
 
-  test('applyDraftValues expands repeatable groups before restoring values', () => {
-    const form = document.getElementById('form-mde');
+  test("applyDraftValues expands repeatable groups before restoring values", () => {
+    const form = document.getElementById("form-mde");
     form.innerHTML = `
       <div class="repeatable">
         <div class="row" data-repeatable-row>
@@ -316,103 +324,104 @@ describe('autosaveService', () => {
       </div>
     `;
 
-    const repeatable = form.querySelector('.repeatable');
-    const templateRow = repeatable.querySelector('[data-repeatable-row]');
-    const addButton = repeatable.querySelector('.add-button');
+    const repeatable = form.querySelector(".repeatable");
+    const templateRow = repeatable.querySelector("[data-repeatable-row]");
+    const addButton = repeatable.querySelector(".add-button");
 
-    addButton.addEventListener('click', () => {
+    addButton.addEventListener("click", () => {
       const clone = templateRow.cloneNode(true);
-      clone.querySelectorAll('input').forEach((input) => {
-        input.value = '';
+      clone.querySelectorAll("input").forEach((input) => {
+        input.value = "";
       });
-      const cloneButton = clone.querySelector('.add-button');
+      const cloneButton = clone.querySelector(".add-button");
       if (cloneButton) {
         cloneButton.remove();
       }
       repeatable.appendChild(clone);
     });
 
-    const service = new AutosaveService('form-mde', {
+    const service = new AutosaveService("form-mde", {
       fetch: jest.fn(),
-      statusElementId: 'autosave-status',
-      statusTextId: 'autosave-status-text'
+      statusElementId: "autosave-status",
+      statusTextId: "autosave-status-text",
     });
 
     service.applyDraftValues({
-      'givennames[]': ['Ada', 'Grace'],
-      'familynames[]': ['Lovelace', 'Hopper']
+      "givennames[]": ["Ada", "Grace"],
+      "familynames[]": ["Lovelace", "Hopper"],
     });
 
-    const rows = repeatable.querySelectorAll('[data-repeatable-row]');
+    const rows = repeatable.querySelectorAll("[data-repeatable-row]");
     expect(rows).toHaveLength(2);
 
     const givenNames = Array.from(form.querySelectorAll('input[name="givennames[]"]')).map((input) => input.value);
     const familyNames = Array.from(form.querySelectorAll('input[name="familynames[]"]')).map((input) => input.value);
 
-    expect(givenNames).toEqual(['Ada', 'Grace']);
-    expect(familyNames).toEqual(['Lovelace', 'Hopper']);
+    expect(givenNames).toEqual(["Ada", "Grace"]);
+    expect(familyNames).toEqual(["Lovelace", "Hopper"]);
   });
 
-  test('restores draft when user accepts prompt', async () => {
+  test("restores draft when user accepts prompt", async () => {
     const fetchMock = jest
       .fn()
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({
-          id: 'rest-1',
-          updatedAt: '2024-01-03T08:00:00Z',
-          payload: {
-            values: {
-              title: 'Recovered dataset'
-            }
-          }
-        })
+        json: () =>
+          Promise.resolve({
+            id: "rest-1",
+            updatedAt: "2024-01-03T08:00:00Z",
+            payload: {
+              values: {
+                title: "Recovered dataset",
+              },
+            },
+          }),
       })
       .mockResolvedValue({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ id: 'rest-1', updatedAt: '2024-01-03T08:05:00Z' })
+        json: () => Promise.resolve({ id: "rest-1", updatedAt: "2024-01-03T08:05:00Z" }),
       });
 
-    const service = new AutosaveService('form-mde', {
+    const service = new AutosaveService("form-mde", {
       fetch: fetchMock,
       throttleMs: 0,
-      statusElementId: 'autosave-status',
-      statusTextId: 'autosave-status-text',
-      restoreModalId: 'modal-restore-draft'
+      statusElementId: "autosave-status",
+      statusTextId: "autosave-status-text",
+      restoreModalId: "modal-restore-draft",
     });
     service.start();
 
     await Promise.resolve();
     await Promise.resolve();
-    expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts/session/latest');
+    expect(fetchMock.mock.calls[0][0]).toBe("./api/v2/drafts/session/latest");
     expect(modalInstance.show).toHaveBeenCalled();
 
-    document.getElementById('button-restore-apply').click();
+    document.getElementById("button-restore-apply").click();
 
     const input = document.querySelector('input[name="title"]');
-    expect(input.value).toBe('Recovered dataset');
+    expect(input.value).toBe("Recovered dataset");
     expect(modalInstance.hide).toHaveBeenCalled();
-    expect(window.localStorage.getItem('elmo.autosave.draftId')).toBe('rest-1');
-    const statusText = document.getElementById('autosave-status-text').textContent;
+    expect(window.localStorage.getItem("elmo.autosave.draftId")).toBe("rest-1");
+    const statusText = document.getElementById("autosave-status-text").textContent;
     expect(statusText).toMatch(/Draft saved/);
   });
 
-  test('supports configurable API base URL', async () => {
+  test("supports configurable API base URL", async () => {
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.resolve({ id: 'custom-1', updatedAt: '2024-02-01T12:00:00Z' })
+      json: () => Promise.resolve({ id: "custom-1", updatedAt: "2024-02-01T12:00:00Z" }),
     });
 
-    const service = new AutosaveService('form-mde', {
+    const service = new AutosaveService("form-mde", {
       fetch: fetchMock,
       throttleMs: 0,
-      statusElementId: 'autosave-status',
-      statusTextId: 'autosave-status-text',
-      restoreModalId: 'modal-restore-draft',
-      apiBaseUrl: '/mde-msl/api/v2/'
+      statusElementId: "autosave-status",
+      statusTextId: "autosave-status-text",
+      restoreModalId: "modal-restore-draft",
+      apiBaseUrl: "/mde-msl/api/v2/",
     });
 
     service.start();
@@ -420,13 +429,13 @@ describe('autosaveService', () => {
     fetchMock.mockClear();
 
     const input = document.querySelector('input[name="title"]');
-    input.value = 'Configurable base path';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.value = "Configurable base path";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
 
     await jest.runOnlyPendingTimersAsync();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][0]).toBe('/mde-msl/api/v2/drafts');
-    expect(service.apiBaseUrl).toBe('/mde-msl/api/v2');
+    expect(fetchMock.mock.calls[0][0]).toBe("/mde-msl/api/v2/drafts");
+    expect(service.apiBaseUrl).toBe("/mde-msl/api/v2");
   });
 });

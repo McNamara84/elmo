@@ -32,10 +32,10 @@ $(document).ready(function () {
  */
 function normalizeRorId(rorId) {
   if (!rorId) {
-    return '';
+    return "";
   }
 
-  return rorId.startsWith('https://ror.org/') ? rorId : `https://ror.org/${rorId}`;
+  return rorId.startsWith("https://ror.org/") ? rorId : `https://ror.org/${rorId}`;
 }
 
 /**
@@ -54,13 +54,13 @@ function collectAffiliation(affiliation, affiliationSet, rorIds) {
   }
 
   const orgName = affiliation.organization.name;
-  const disambiguated = affiliation.organization['disambiguated-organization'];
+  const disambiguated = affiliation.organization["disambiguated-organization"];
 
-  if (!orgName || !disambiguated || disambiguated['disambiguation-source'] !== 'ROR') {
+  if (!orgName || !disambiguated || disambiguated["disambiguation-source"] !== "ROR") {
     return;
   }
 
-  const rawRorId = disambiguated['disambiguated-organization-identifier'];
+  const rawRorId = disambiguated["disambiguated-organization-identifier"];
 
   if (!rawRorId) {
     return;
@@ -73,18 +73,18 @@ function collectAffiliation(affiliation, affiliationSet, rorIds) {
 /**
  * Event handler for Author ORCID input fields.
  * Automatically fills in author's last name, first name, and affiliations based on their ORCID.
- * 
+ *
  * When a valid ORCID is entered and the input field loses focus:
  * 1. Fetches the author's data from the ORCID API
  * 2. Fills in their last name and first name
  * 3. Adds their current and past affiliations to the affiliations field
  * 4. Stores corresponding ROR IDs in a hidden field
- * 
+ *
  * @listens blur - Triggers when an ORCID input field loses focus
  * @requires Tagify - For handling the affiliations input field
  * @requires jQuery - For DOM manipulation
  * @requires affiliationsData - Global array containing valid affiliations data
- * 
+ *
  * @example
  * // HTML structure expected:
  * // <div data-creator-row>
@@ -95,21 +95,21 @@ function collectAffiliation(affiliation, affiliationSet, rorIds) {
  * //   <input id="input-author-rorid" />
  * // </div>
  */
-$('#group-author').on('blur', 'input[name="orcids[]"]', function () {
+$("#group-author").on("blur", 'input[name="orcids[]"]', function () {
   const orcidInput = $(this);
-  const row = orcidInput.closest('[data-creator-row]');
+  const row = orcidInput.closest("[data-creator-row]");
   const orcid = orcidInput.val();
 
   if (orcid.match(/^\d{4}-\d{4}-\d{4}-(\d{4}|\d{3}X)$/)) {
     fetch(`https://pub.orcid.org/v3.0/${orcid}/record`, {
       headers: {
-        'Accept': 'application/vnd.orcid+json'
-      }
+        Accept: "application/vnd.orcid+json",
+      },
     })
-      .then(response => response.json())
-      .then(data => {
-        const familyName = data.person?.name?.['family-name']?.value || '';
-        const givenName = data.person?.name?.['given-names']?.value || '';
+      .then((response) => response.json())
+      .then((data) => {
+        const familyName = data.person?.name?.["family-name"]?.value || "";
+        const givenName = data.person?.name?.["given-names"]?.value || "";
         row.find('input[name="familynames[]"]').val(familyName);
         row.find('input[name="givennames[]"]').val(givenName);
 
@@ -121,21 +121,21 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
         const processAffiliation = (affiliation) => collectAffiliation(affiliation, affiliationSet, rorIds);
 
         // Process employment affiliations
-        const employments = data['activities-summary']?.employments?.['affiliation-group'] || [];
-        employments.forEach(group => {
-          const employment = group.summaries?.[0]?.['employment-summary'];
+        const employments = data["activities-summary"]?.employments?.["affiliation-group"] || [];
+        employments.forEach((group) => {
+          const employment = group.summaries?.[0]?.["employment-summary"];
           processAffiliation(employment);
         });
 
         // Process education affiliations
-        const educations = data['activities-summary']?.educations?.['affiliation-group'] || [];
-        educations.forEach(group => {
-          const education = group.summaries?.[0]?.['education-summary'];
+        const educations = data["activities-summary"]?.educations?.["affiliation-group"] || [];
+        educations.forEach((group) => {
+          const education = group.summaries?.[0]?.["education-summary"];
           processAffiliation(education);
         });
 
         // Convert Set to array of objects for Tagify
-        const affiliationObjects = Array.from(affiliationSet).map(name => ({ value: name }));
+        const affiliationObjects = Array.from(affiliationSet).map((name) => ({ value: name }));
 
         // Set Tagify tags
         const affiliationInput = row.find('input[id^="input-author-affiliation"]')[0];
@@ -148,10 +148,10 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
 
         // Fill hidden ROR ID field
         const rorIdsArray = Array.from(rorIds);
-        row.find('input[id^="input-author-rorid"]').val(rorIdsArray.join(','));
+        row.find('input[id^="input-author-rorid"]').val(rorIdsArray.join(","));
       })
-      .catch(error => {
-        console.error('Error fetching ORCID data:', error);
+      .catch((error) => {
+        console.error("Error fetching ORCID data:", error);
       });
   }
 });
@@ -159,17 +159,17 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
 /**
  * Event handler for Contributor ORCID input fields.
  * Automatically fills in contributor's last name, first name, and affiliations based on their ORCID.
- * 
+ *
  * When a valid ORCID is entered and the input field loses focus:
  * 1. Fetches the contributor's data from the ORCID API
  * 2. Fills in their last name and first name
  * 3. Adds their current and past affiliations to the affiliations field
  * 4. Stores corresponding ROR IDs in a hidden field
- * 
+ *
  * @listens blur - Triggers when an ORCID input field loses focus
  * @requires Tagify - For handling the affiliations input field
  * @requires jQuery - For DOM manipulation
- * 
+ *
  * @example
  * // HTML structure expected:
  * // <input name="cbORCID[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
@@ -178,22 +178,22 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
  * // <input id="input-contributorpersons-affiliation" /> // Tagify field
  * // <input id="input-contributor-personrorid" />
  */
-$('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () {
+$("#group-contributorperson").on("blur", 'input[name="cbORCID[]"]', function () {
   const orcidInput = $(this);
-  const row = orcidInput.closest('[contributor-person-row]');
+  const row = orcidInput.closest("[contributor-person-row]");
   const orcid = orcidInput.val();
 
   if (orcid.match(/^\d{4}-\d{4}-\d{4}-(\d{4}|\d{3}X)$/)) {
     fetch(`https://pub.orcid.org/v3.0/${orcid}/record`, {
       headers: {
-        'Accept': 'application/vnd.orcid+json'
-      }
+        Accept: "application/vnd.orcid+json",
+      },
     })
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         // Fill in names
-        const familyName = data.person?.name?.['family-name']?.value || '';
-        const givenName = data.person?.name?.['given-names']?.value || '';
+        const familyName = data.person?.name?.["family-name"]?.value || "";
+        const givenName = data.person?.name?.["given-names"]?.value || "";
         row.find('input[name="cbPersonLastname[]"]').val(familyName);
         row.find('input[name="cbPersonFirstname[]"]').val(givenName);
 
@@ -205,21 +205,21 @@ $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () 
         const processAffiliation = (affiliation) => collectAffiliation(affiliation, affiliationSet, rorIds);
 
         // Process employment affiliations
-        const employments = data['activities-summary']?.employments?.['affiliation-group'] || [];
-        employments.forEach(group => {
-          const employment = group.summaries?.[0]?.['employment-summary'];
+        const employments = data["activities-summary"]?.employments?.["affiliation-group"] || [];
+        employments.forEach((group) => {
+          const employment = group.summaries?.[0]?.["employment-summary"];
           processAffiliation(employment);
         });
 
         // Process education affiliations
-        const educations = data['activities-summary']?.educations?.['affiliation-group'] || [];
-        educations.forEach(group => {
-          const education = group.summaries?.[0]?.['education-summary'];
+        const educations = data["activities-summary"]?.educations?.["affiliation-group"] || [];
+        educations.forEach((group) => {
+          const education = group.summaries?.[0]?.["education-summary"];
           processAffiliation(education);
         });
 
         // Convert Set to array of objects for Tagify
-        const affiliationObjects = Array.from(affiliationSet).map(name => ({ value: name }));
+        const affiliationObjects = Array.from(affiliationSet).map((name) => ({ value: name }));
 
         // Set Tagify tags
         const affiliationInput = row.find('input[id^="input-contributorpersons-affiliation"]')[0];
@@ -232,10 +232,10 @@ $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () 
 
         // Fill hidden ROR ID field
         const rorIdsArray = Array.from(rorIds);
-        row.find('input[id^="input-contributor-personrorid"]').val(rorIdsArray.join(','));
+        row.find('input[id^="input-contributor-personrorid"]').val(rorIdsArray.join(","));
       })
-      .catch(error => {
-        console.error('Error fetching ORCID data:', error);
+      .catch((error) => {
+        console.error("Error fetching ORCID data:", error);
       });
   }
 });

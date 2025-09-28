@@ -7,25 +7,23 @@ var organizationRoles = [];
  * Updates only the placeholder, avoiding full reinitialization.
  */
 function refreshRoleTagifyInstances() {
-  const inputs = document.querySelectorAll(
-    'input[name="cbPersonRoles[]"], input[name="cbOrganisationRoles[]"]'
-  );
+  const inputs = document.querySelectorAll('input[name="cbPersonRoles[]"], input[name="cbOrganisationRoles[]"]');
 
-  inputs.forEach(inputElement => {
+  inputs.forEach((inputElement) => {
     if (!inputElement || !inputElement._tagify) return;
 
-    const placeholderValue = translations?.general?.roleLabel || 'Select roles';
+    const placeholderValue = translations?.general?.roleLabel || "Select roles";
 
     inputElement._tagify.settings.placeholder = placeholderValue;
 
-    const placeholderElem = inputElement.parentElement.querySelector('.tagify__input');
+    const placeholderElem = inputElement.parentElement.querySelector(".tagify__input");
     if (placeholderElem) {
-      placeholderElem.setAttribute('data-placeholder', placeholderValue);
+      placeholderElem.setAttribute("data-placeholder", placeholderValue);
     }
 
-    if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+    if (typeof window.applyTagifyAccessibilityAttributes === "function") {
       window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
-        placeholder: placeholderValue
+        placeholder: placeholderValue,
       });
     }
   });
@@ -34,7 +32,7 @@ function refreshRoleTagifyInstances() {
 /**
  * Configures a dropdown field for selecting roles using Tagify.
  * Fetches roles from API if not cached, then initializes Tagify with the roles.
- * 
+ *
  * @param {string[]} roletypes - Array of role types ("person", "institution", "both")
  * @param {string} inputSelector - CSS selector for the input element
  * @returns {void}
@@ -65,18 +63,17 @@ function setupRolesDropdown(roletypes, inputSelector) {
     return;
   }
 
-  const rolePromises = roletypes.map(type =>
-    fetch(`./api/v2/vocabs/roles?type=${type}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
+  const rolePromises = roletypes.map((type) =>
+    fetch(`./api/v2/vocabs/roles?type=${type}`).then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
   );
 
   Promise.all(rolePromises)
-    .then(results => {
+    .then((results) => {
       results.forEach((roles, index) => {
         if (roletypes[index] === "person" || roletypes[index] === "both") {
           personRoles = [...new Set([...personRoles, ...roles])];
@@ -89,7 +86,7 @@ function setupRolesDropdown(roletypes, inputSelector) {
       const allRoles = results.flat();
       initializeTagifyWithRoles(inputSelector, allRoles);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error(`Error fetching roles for ${inputSelector}:`, error);
     });
 }
@@ -98,7 +95,7 @@ function setupRolesDropdown(roletypes, inputSelector) {
  * Initializes a Tagify instance for role selection on a specific input element.
  * Converts roles to strings if they are objects, sets up Tagify with options,
  * and attaches event listeners.
- * 
+ *
  * @param {string} inputSelector - CSS selector for the input element
  * @param {(string|Object)[]} roles - Array of role names or role objects
  * @returns {void}
@@ -107,9 +104,7 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   const input = document.querySelector(inputSelector);
   if (!input) return;
 
-  const roleNames = roles.map(role =>
-    typeof role === 'string' ? role : role.name
-  );
+  const roleNames = roles.map((role) => (typeof role === "string" ? role : role.name));
 
   const tagifyOptions = {
     whitelist: roleNames,
@@ -119,35 +114,35 @@ function initializeTagifyWithRoles(inputSelector, roles) {
       maxItems: 20,
       classname: "tags-look",
       enabled: 0,
-      closeOnSelect: false
+      closeOnSelect: false,
     },
     editTags: false,
-    placeholder: translations?.general?.roleLabel || "Select roles"
+    placeholder: translations?.general?.roleLabel || "Select roles",
   };
 
   try {
     const tagify = new Tagify(input, tagifyOptions);
 
-    tagify.on('invalid', () => console.log('Invalid tag attempted'));
+    tagify.on("invalid", () => console.log("Invalid tag attempted"));
 
     input._tagify = tagify;
 
-    if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+    if (typeof window.applyTagifyAccessibilityAttributes === "function") {
       window.applyTagifyAccessibilityAttributes(tagify, input, {
-        placeholder: tagifyOptions.placeholder
+        placeholder: tagifyOptions.placeholder,
       });
     }
   } catch (error) {
-    console.error('Error initializing Tagify:', error);
+    console.error("Error initializing Tagify:", error);
   }
 }
 
 // Initialize on DOM content loaded
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener("DOMContentLoaded", function () {
   // Set up initial role dropdowns
   setupRolesDropdown(["person", "both"], "#input-contributor-personrole");
   setupRolesDropdown(["institution", "both"], "#input-contributor-organisationrole");
 
   // Add listener for translation changes
-  document.addEventListener('translationsLoaded', refreshRoleTagifyInstances);
+  document.addEventListener("translationsLoaded", refreshRoleTagifyInstances);
 });

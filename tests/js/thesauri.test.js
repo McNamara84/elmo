@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 class MockTagify {
   constructor(el, settings) {
@@ -13,8 +13,8 @@ class MockTagify {
   }
   addTags(items) {
     const arr = Array.isArray(items) ? items : [items];
-    arr.forEach(item => {
-      if (typeof item === 'string') {
+    arr.forEach((item) => {
+      if (typeof item === "string") {
         this.value.push({ value: item });
       } else {
         this.value.push(item);
@@ -25,10 +25,10 @@ class MockTagify {
     this.value = [];
   }
   trigger(event, detail) {
-    if (event === 'add' && detail?.data) {
+    if (event === "add" && detail?.data) {
       this.addTags(detail.data.value || detail.data);
     }
-    if (event === 'remove') {
+    if (event === "remove") {
       this.removeAllTags();
     }
     if (this._callbacks[event]) {
@@ -37,7 +37,7 @@ class MockTagify {
   }
 }
 
-describe('thesauri.js', () => {
+describe("thesauri.js", () => {
   let $;
 
   beforeEach((done) => {
@@ -52,7 +52,7 @@ describe('thesauri.js', () => {
       <ul id="selected-keywords-platforms-ds"></ul>
     `;
 
-    $ = require('jquery');
+    $ = require("jquery");
     global.$ = $;
     global.jQuery = $;
     window.$ = $;
@@ -66,7 +66,7 @@ describe('thesauri.js', () => {
           this.data = opts.core.data;
           this.map = {};
           const build = (nodes, parent) => {
-            nodes.forEach(node => {
+            nodes.forEach((node) => {
               const n = { id: node.id, text: node.text, parent, children: [] };
               this.map[node.id] = n;
               if (node.children) {
@@ -99,30 +99,36 @@ describe('thesauri.js', () => {
           const node = this.map[id];
           if (node && !this.selected.includes(node)) {
             this.selected.push(node);
-            this.$el.trigger('changed.jstree', [{ instance: this }]);
+            this.$el.trigger("changed.jstree", [{ instance: this }]);
           }
         }
         deselect_node(id) {
           const node = this.map[id];
-          this.selected = this.selected.filter(n => n !== node);
-          this.$el.trigger('changed.jstree', [{ instance: this }]);
+          this.selected = this.selected.filter((n) => n !== node);
+          this.$el.trigger("changed.jstree", [{ instance: this }]);
         }
         search(str) {
           this.lastSearch = str;
         }
       }
-      $.fn.jstree = function(arg, arg2) {
+      $.fn.jstree = function (arg, arg2) {
         if (arg === undefined || arg === true) {
-          return this.data('jstree');
+          return this.data("jstree");
         }
-        if (typeof arg === 'string') {
-          const inst = this.data('jstree');
-          if (arg === 'get_selected') return inst.get_selected(arg2);
-          if (arg === 'deselect_node') { inst.deselect_node(arg2); return this; }
-          if (arg === 'select_node') { inst.select_node(arg2); return this; }
-        } else if (typeof arg === 'object') {
+        if (typeof arg === "string") {
+          const inst = this.data("jstree");
+          if (arg === "get_selected") return inst.get_selected(arg2);
+          if (arg === "deselect_node") {
+            inst.deselect_node(arg2);
+            return this;
+          }
+          if (arg === "select_node") {
+            inst.select_node(arg2);
+            return this;
+          }
+        } else if (typeof arg === "object") {
           const inst = new JsTreeMock(this, arg);
-          this.data('jstree', inst);
+          this.data("jstree", inst);
           return this;
         }
         return this;
@@ -130,34 +136,36 @@ describe('thesauri.js', () => {
     })($);
 
     global.Tagify = MockTagify;
-    global.translations = { keywords: { thesaurus: { label: 'initial' } } };
+    global.translations = { keywords: { thesaurus: { label: "initial" } } };
 
     $.getJSON = jest.fn((file, cb) => {
-      if (file === 'json/thesauri/gcmdPlatformsKeywords.json') {
-        cb({ data: [
-          {
-            id: 'platforms',
-            text: 'Platforms',
-            children: [
-              {
-                id: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
-                text: 'Space-based Platforms',
-                children: [ { id: 'sat', text: 'Satellite' } ]
-              },
-              { id: 'ground', text: 'Ground-based Platforms' }
-            ]
-          }
-        ] });
+      if (file === "json/thesauri/gcmdPlatformsKeywords.json") {
+        cb({
+          data: [
+            {
+              id: "platforms",
+              text: "Platforms",
+              children: [
+                {
+                  id: "https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847",
+                  text: "Space-based Platforms",
+                  children: [{ id: "sat", text: "Satellite" }],
+                },
+                { id: "ground", text: "Ground-based Platforms" },
+              ],
+            },
+          ],
+        });
       } else {
-        cb({ data: [ { id: 'root', text: 'Root', children: [ { id: 'child', text: 'Child' } ] } ] });
+        cb({ data: [{ id: "root", text: "Root", children: [{ id: "child", text: "Child" }] }] });
       }
     });
 
-    const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
+    const script = fs.readFileSync(path.resolve(__dirname, "../../js/thesauri.js"), "utf8");
     window.eval(script);
 
     $(document).ready(() => {
-      document.dispatchEvent(new Event('translationsLoaded'));
+      document.dispatchEvent(new Event("translationsLoaded"));
       done();
     });
   });
@@ -168,34 +176,33 @@ describe('thesauri.js', () => {
     delete global.translations;
   });
 
-  test('initializes Tagify and updates placeholder on translationsLoaded', () => {
-    const input = document.getElementById('input-sciencekeyword');
+  test("initializes Tagify and updates placeholder on translationsLoaded", () => {
+    const input = document.getElementById("input-sciencekeyword");
     expect(input._tagify).toBeInstanceOf(MockTagify);
-    expect(input._tagify.settings.placeholder).toBe('initial');
+    expect(input._tagify.settings.placeholder).toBe("initial");
 
-    global.translations.keywords.thesaurus.label = 'updated';
-    document.dispatchEvent(new Event('translationsLoaded'));
-    expect(input._tagify.settings.placeholder).toBe('updated');
+    global.translations.keywords.thesaurus.label = "updated";
+    document.dispatchEvent(new Event("translationsLoaded"));
+    expect(input._tagify.settings.placeholder).toBe("updated");
   });
 
-  test('syncs selections between jsTree and Tagify', () => {
-    const input = document.getElementById('input-sciencekeyword');
-    const tree = $('#jstree-sciencekeyword').jstree(true);
+  test("syncs selections between jsTree and Tagify", () => {
+    const input = document.getElementById("input-sciencekeyword");
+    const tree = $("#jstree-sciencekeyword").jstree(true);
 
     expect(input._tagify.value).toHaveLength(0);
 
-    tree.select_node('child');
-    expect(input._tagify.value[0].value).toBe('Root > Child');
-    expect($('#selected-keywords-gcmd li').text()).toContain('Root > Child');
+    tree.select_node("child");
+    expect(input._tagify.value[0].value).toBe("Root > Child");
+    expect($("#selected-keywords-gcmd li").text()).toContain("Root > Child");
 
-    tree.deselect_node('child');
+    tree.deselect_node("child");
     expect(input._tagify.value).toHaveLength(0);
 
-    input._tagify.trigger('add', { data: { value: 'Root > Child' } });
-    expect(tree.get_selected().map(n => n.id)).toEqual(['child']);
+    input._tagify.trigger("add", { data: { value: "Root > Child" } });
+    expect(tree.get_selected().map((n) => n.id)).toEqual(["child"]);
 
-    input._tagify.trigger('remove', { data: { value: 'Root > Child' } });
+    input._tagify.trigger("remove", { data: { value: "Root > Child" } });
     expect(tree.get_selected()).toHaveLength(0);
   });
-
 });

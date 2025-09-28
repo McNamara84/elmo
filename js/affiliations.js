@@ -4,7 +4,7 @@ var affiliationsData = [];
 /**
  * Refreshes all Tagify instances when translations are changed.
  * This function updates the whitelist and restores any previously selected values without destroying instances.
- * 
+ *
  * @returns {void}
  */
 function refreshTagifyInstances() {
@@ -15,10 +15,10 @@ function refreshTagifyInstances() {
     { input: "input-authorinstitution-affiliation", hidden: "input-author-institutionrorid" },
     { input: "input-contactperson-affiliation", hidden: "input-contactperson-rorid" },
     { input: "input-contributorpersons-affiliation", hidden: "input-contributor-personrorid" },
-    { input: "input-contributor-organisationaffiliation", hidden: "input-contributor-organisationrorid" }
+    { input: "input-contributor-organisationaffiliation", hidden: "input-contributor-organisationrorid" },
   ];
 
-  allPairs.forEach(pair => {
+  allPairs.forEach((pair) => {
     const inputElement = document.getElementById(pair.input);
     if (!inputElement || !inputElement.tagify) return;
 
@@ -26,25 +26,25 @@ function refreshTagifyInstances() {
     const currentValues = [...inputElement.tagify.value]; // Create a copy
 
     // Update whitelist without destroying the instance
-    inputElement.tagify.settings.whitelist = window.affiliationsData.map(item => ({
+    inputElement.tagify.settings.whitelist = window.affiliationsData.map((item) => ({
       value: item.name,
       id: item.id,
-      other: item.other
+      other: item.other,
     }));
-    inputElement.tagify.settings.dropdown.searchKeys = ['value', 'other'];
+    inputElement.tagify.settings.dropdown.searchKeys = ["value", "other"];
 
     // Update placeholder if translations are available
     if (translations?.general?.affiliation) {
       inputElement.tagify.settings.placeholder = translations.general.affiliation;
-      const placeholderElement = inputElement.parentElement.querySelector('.tagify__input');
+      const placeholderElement = inputElement.parentElement.querySelector(".tagify__input");
       if (placeholderElement) {
-        placeholderElement.setAttribute('data-placeholder', translations.general.affiliation);
+        placeholderElement.setAttribute("data-placeholder", translations.general.affiliation);
       }
     }
 
-    if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+    if (typeof window.applyTagifyAccessibilityAttributes === "function") {
       window.applyTagifyAccessibilityAttributes(inputElement.tagify, inputElement, {
-        placeholder: inputElement.tagify.settings.placeholder
+        placeholder: inputElement.tagify.settings.placeholder,
       });
     }
 
@@ -59,7 +59,7 @@ function refreshTagifyInstances() {
  */
 $.getJSON("json/affiliations.json", function (data) {
   // Globale Variable mit den Daten befüllen
-  window.affiliationsData = data;  // Explizit global verfügbar machen
+  window.affiliationsData = data; // Explizit global verfügbar machen
 
   // Initialize Tagify for existing input fields when the document is ready
   $(document).ready(function () {
@@ -67,7 +67,7 @@ $.getJSON("json/affiliations.json", function (data) {
     autocompleteAffiliations("input-authorinstitution-affiliation", "input-author-institutionrorid", affiliationsData);
     autocompleteAffiliations("input-contributorpersons-affiliation", "input-contributor-personrorid", affiliationsData);
     autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid", affiliationsData);
-    document.addEventListener('translationsLoaded', refreshTagifyInstances);
+    document.addEventListener("translationsLoaded", refreshTagifyInstances);
   });
 });
 
@@ -91,17 +91,12 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
 
   const hiddenField = $("#" + hiddenFieldId);
 
-  const placeholderValue = (typeof translations !== 'undefined' && translations.general?.affiliation)
-    ? translations.general.affiliation
-    : 'Affiliation';
+  const placeholderValue =
+    typeof translations !== "undefined" && translations.general?.affiliation ? translations.general.affiliation : "Affiliation";
 
-  const scheduleMicrotask = typeof queueMicrotask === 'function'
-    ? queueMicrotask
-    : (cb) => Promise.resolve().then(cb);
+  const scheduleMicrotask = typeof queueMicrotask === "function" ? queueMicrotask : (cb) => Promise.resolve().then(cb);
 
-  const scheduleAnimationFrame = typeof requestAnimationFrame === 'function'
-    ? requestAnimationFrame
-    : (cb) => setTimeout(cb, 16);
+  const scheduleAnimationFrame = typeof requestAnimationFrame === "function" ? requestAnimationFrame : (cb) => setTimeout(cb, 16);
 
   const attributeObservers = new WeakMap();
 
@@ -170,13 +165,13 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
 
   function applyAuthorInstitutionNameRequirement(element, shouldRequire) {
     if (shouldRequire) {
-      enforceAttributeValue(element, 'required', 'required');
-      enforceAttributeValue(element, 'aria-required', 'true');
+      enforceAttributeValue(element, "required", "required");
+      enforceAttributeValue(element, "aria-required", "true");
     } else {
-      element.removeAttribute('required');
-      element.removeAttribute('aria-required');
-      setObserverActiveState(element, 'required', false);
-      setObserverActiveState(element, 'aria-required', false);
+      element.removeAttribute("required");
+      element.removeAttribute("aria-required");
+      setObserverActiveState(element, "required", false);
+      setObserverActiveState(element, "aria-required", false);
     }
   }
 
@@ -184,31 +179,31 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     enforceWhitelist: false,
     duplicates: false,
     placeholder: placeholderValue,
-    whitelist: data.map(item => ({
+    whitelist: data.map((item) => ({
       value: item.name,
       id: item.id,
-      other: item.other
+      other: item.other,
     })),
     dropdown: {
       maxItems: 20,
       classname: "affiliation",
       enabled: 3,
       closeOnSelect: true,
-      searchKeys: ['value', 'other']
+      searchKeys: ["value", "other"],
     },
     editTags: false,
     keepInvalidTags: false,
     autoComplete: {
-      enabled: true
-    }
+      enabled: true,
+    },
   });
 
   /**
    * Updates the hidden input field with the IDs of the selected affiliations.
    */
   function updateHiddenField() {
-    const allSelectedItems = tagify.value.map(tag => tag.id || "");
-    hiddenField.val(allSelectedItems.join(','));
+    const allSelectedItems = tagify.value.map((tag) => tag.id || "");
+    hiddenField.val(allSelectedItems.join(","));
   }
 
   /**
@@ -218,10 +213,10 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
    * @param {boolean} isRequired - Whether the associated name input is required.
    */
   function updateTagifyAccessibilityState(isRequired) {
-    if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+    if (typeof window.applyTagifyAccessibilityAttributes === "function") {
       window.applyTagifyAccessibilityAttributes(tagify, inputElement[0], {
         placeholder: placeholderValue,
-        isRequired
+        isRequired,
       });
     }
   }
@@ -233,14 +228,14 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   function syncAuthorInstitutionRequirement() {
     requirementSyncPending = false;
 
-    const authorInstitutionRow = inputElement.closest('[data-authorinstitution-row]');
+    const authorInstitutionRow = inputElement.closest("[data-authorinstitution-row]");
     if (!authorInstitutionRow.length) {
       updateTagifyAccessibilityState(false);
       return;
     }
 
     const nameInput = authorInstitutionRow.find('input[name="authorinstitutionName[]"]');
-    const rawValue = (inputElement.val() || '').trim();
+    const rawValue = (inputElement.val() || "").trim();
     const hasAffiliations = tagify.value.length > 0 || rawValue.length > 0;
 
     nameInput.each((_, element) => {
@@ -278,12 +273,12 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     syncAuthorInstitutionRequirement();
 
     const selectedName = e.detail.data.value;
-    const isOnWhitelist = tagify.whitelist.some(item => item.value === selectedName);
+    const isOnWhitelist = tagify.whitelist.some((item) => item.value === selectedName);
     if (!isOnWhitelist) {
       closeDropdown();
     }
-    if (typeof window.checkMandatoryFields === 'function') {
-        window.checkMandatoryFields();
+    if (typeof window.checkMandatoryFields === "function") {
+      window.checkMandatoryFields();
     }
   });
 
@@ -292,7 +287,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     updateHiddenField();
     scheduleRequirementSync();
     syncAuthorInstitutionRequirement();
-    if (typeof window.checkMandatoryFields === 'function') {
+    if (typeof window.checkMandatoryFields === "function") {
       window.checkMandatoryFields();
     }
   });
@@ -309,6 +304,6 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
   syncAuthorInstitutionRequirement();
 }
 
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = { autocompleteAffiliations, refreshTagifyInstances };
 }

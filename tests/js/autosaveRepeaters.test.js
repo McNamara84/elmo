@@ -1,11 +1,11 @@
-import $ from 'jquery';
+import $ from "jquery";
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-describe('autosave repeatable form groups', () => {
+describe("autosave repeatable form groups", () => {
   beforeEach(() => {
     jest.resetModules();
-    document.body.innerHTML = '';
+    document.body.innerHTML = "";
     window.$ = $;
     window.jQuery = $;
     global.$ = $;
@@ -29,7 +29,7 @@ describe('autosave repeatable form groups', () => {
     delete global.jQuery;
   });
 
-  test('stc autosave expansion adds missing rows', async () => {
+  test("stc autosave expansion adds missing rows", async () => {
     document.body.innerHTML = `
       <div id="group-stc">
         <div class="row" tsc-row-id="1">
@@ -50,18 +50,18 @@ describe('autosave repeatable form groups', () => {
       </div>
     `;
 
-    await import('../../js/eventhandlers/formgroups/stc.js');
+    await import("../../js/eventhandlers/formgroups/stc.js");
     await flush();
-    $(document).triggerHandler('ready');
+    $(document).triggerHandler("ready");
     await flush();
-    const event = new CustomEvent('autosave:ensure-array-field', {
-      detail: { name: 'tscLatitudeMin[]', requiredCount: 2 },
-      bubbles: true
+    const event = new CustomEvent("autosave:ensure-array-field", {
+      detail: { name: "tscLatitudeMin[]", requiredCount: 2 },
+      bubbles: true,
     });
 
     document.querySelector('[name="tscLatitudeMin[]"]').dispatchEvent(event);
 
-    const rows = document.querySelectorAll('#group-stc [tsc-row-id]');
+    const rows = document.querySelectorAll("#group-stc [tsc-row-id]");
     expect(rows).toHaveLength(2);
     const removeButtons = document.querySelectorAll('#group-stc .removeButton[aria-label="Remove entry"]');
     expect(removeButtons.length).toBeGreaterThanOrEqual(1);
@@ -69,7 +69,7 @@ describe('autosave repeatable form groups', () => {
     expect(latInputs).toHaveLength(2);
   });
 
-  test('related work autosave expansion adds missing rows', async () => {
+  test("related work autosave expansion adds missing rows", async () => {
     document.body.innerHTML = `
       <div id="group-relatedwork">
         <div class="row">
@@ -81,25 +81,25 @@ describe('autosave repeatable form groups', () => {
       </div>
     `;
 
-    await import('../../js/eventhandlers/formgroups/relatedwork.js');
+    await import("../../js/eventhandlers/formgroups/relatedwork.js");
     await flush();
-    $(document).triggerHandler('ready');
+    $(document).triggerHandler("ready");
     await flush();
 
-    const event = new CustomEvent('autosave:ensure-array-field', {
-      detail: { name: 'rIdentifier[]', requiredCount: 3 },
-      bubbles: true
+    const event = new CustomEvent("autosave:ensure-array-field", {
+      detail: { name: "rIdentifier[]", requiredCount: 3 },
+      bubbles: true,
     });
 
     document.querySelector('[name="rIdentifier[]"]').dispatchEvent(event);
 
-    const rows = document.querySelectorAll('#group-relatedwork .row');
+    const rows = document.querySelectorAll("#group-relatedwork .row");
     expect(rows).toHaveLength(3);
     const removeButtons = document.querySelectorAll('#group-relatedwork .removeButton[aria-label="Remove entry"]');
     expect(removeButtons.length).toBeGreaterThanOrEqual(2);
   });
 
-  test('funding reference autosave expansion adds missing rows', async () => {
+  test("funding reference autosave expansion adds missing rows", async () => {
     document.body.innerHTML = `
       <div id="group-fundingreference">
         <div class="row">
@@ -114,19 +114,19 @@ describe('autosave repeatable form groups', () => {
       </div>
     `;
 
-    await import('../../js/eventhandlers/formgroups/fundingreference.js');
+    await import("../../js/eventhandlers/formgroups/fundingreference.js");
     await flush();
-    $(document).triggerHandler('ready');
+    $(document).triggerHandler("ready");
     await flush();
 
-    const event = new CustomEvent('autosave:ensure-array-field', {
-      detail: { name: 'grantName[]', requiredCount: 2 },
-      bubbles: true
+    const event = new CustomEvent("autosave:ensure-array-field", {
+      detail: { name: "grantName[]", requiredCount: 2 },
+      bubbles: true,
     });
 
     document.querySelector('[name="grantName[]"]').dispatchEvent(event);
 
-    const rows = document.querySelectorAll('#group-fundingreference .row');
+    const rows = document.querySelectorAll("#group-fundingreference .row");
     expect(rows).toHaveLength(2);
     const removeButtons = document.querySelectorAll('#group-fundingreference .removeButton[aria-label="Remove entry"]');
     expect(removeButtons.length).toBeGreaterThanOrEqual(1);

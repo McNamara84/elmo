@@ -13,9 +13,7 @@ $(document).ready(function () {
     var rowId = $currentRow.attr("tsc-row-id");
 
     // Store current row reference and ID in the modal
-    $("#modal-stc-map")
-      .data("current-row", $currentRow)
-      .data("tsc-row-id", rowId);
+    $("#modal-stc-map").data("current-row", $currentRow).data("tsc-row-id", rowId);
 
     // Adjust the map when the modal is shown
     $("#modal-stc-map").one("shown.bs.modal", function () {
@@ -77,18 +75,15 @@ $(document).ready(function () {
       drawingControl: true,
       drawingControlOptions: {
         position: google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: [
-          google.maps.drawing.OverlayType.RECTANGLE,
-          google.maps.drawing.OverlayType.MARKER
-        ]
+        drawingModes: [google.maps.drawing.OverlayType.RECTANGLE, google.maps.drawing.OverlayType.MARKER],
       },
       rectangleOptions: {
         strokeColor: "#FF0000",
         strokeOpacity: 0.8,
         strokeWeight: 2,
         fillColor: "#FF0000",
-        fillOpacity: 0.35
-      }
+        fillOpacity: 0.35,
+      },
     });
     drawingManager.setMap(map);
 
@@ -127,7 +122,7 @@ $(document).ready(function () {
       // Add marker for selected place
       searchMarker = new google.maps.Marker({
         map: map,
-        position: place.geometry.location
+        position: place.geometry.location,
       });
     });
 
@@ -137,37 +132,33 @@ $(document).ready(function () {
      *
      * @param {google.maps.Rectangle} rectangle - The completed rectangle.
      */
-    google.maps.event.addListener(
-      drawingManager,
-      "rectanglecomplete",
-      function (rectangle) {
-        var $currentRow = $("#modal-stc-map").data("current-row");
-        if (!$currentRow || !$currentRow.length) return;
+    google.maps.event.addListener(drawingManager, "rectanglecomplete", function (rectangle) {
+      var $currentRow = $("#modal-stc-map").data("current-row");
+      if (!$currentRow || !$currentRow.length) return;
 
-        var rowId = $currentRow.attr("tsc-row-id");
-        deleteDrawnOverlaysForRow(rowId);
+      var rowId = $currentRow.attr("tsc-row-id");
+      deleteDrawnOverlaysForRow(rowId);
 
-        var bounds = rectangle.getBounds();
-        var ne = bounds.getNorthEast();
-        var sw = bounds.getSouthWest();
+      var bounds = rectangle.getBounds();
+      var ne = bounds.getNorthEast();
+      var sw = bounds.getSouthWest();
 
-        $currentRow.find("[id^=input-stc-latmax]").val(ne.lat());
-        $currentRow.find("[id^=input-stc-longmax]").val(ne.lng());
-        $currentRow.find("[id^=input-stc-latmin]").val(sw.lat());
-        $currentRow.find("[id^=input-stc-longmin]").val(sw.lng());
+      $currentRow.find("[id^=input-stc-latmax]").val(ne.lat());
+      $currentRow.find("[id^=input-stc-longmax]").val(ne.lng());
+      $currentRow.find("[id^=input-stc-latmin]").val(sw.lat());
+      $currentRow.find("[id^=input-stc-longmin]").val(sw.lng());
 
-        // Get the display number based on the row's position
-        var displayNumber = $currentRow.index() + 1;
+      // Get the display number based on the row's position
+      var displayNumber = $currentRow.index() + 1;
 
-        var label = new google.maps.Marker({
-          position: bounds.getCenter(),
-          label: displayNumber.toString(),
-          map: map,
-        });
+      var label = new google.maps.Marker({
+        position: bounds.getCenter(),
+        label: displayNumber.toString(),
+        map: map,
+      });
 
-        drawnOverlays.push({ rowId: rowId, overlay: rectangle, labelOverlay: label });
-      }
-    );
+      drawnOverlays.push({ rowId: rowId, overlay: rectangle, labelOverlay: label });
+    });
 
     /**
      * Event listener for when a marker is completed.
@@ -175,41 +166,37 @@ $(document).ready(function () {
      *
      * @param {google.maps.Marker} marker - The completed marker.
      */
-    google.maps.event.addListener(
-      drawingManager,
-      "markercomplete",
-      function (marker) {
-        var $currentRow = $("#modal-stc-map").data("current-row");
-        if (!$currentRow || !$currentRow.length) return;
+    google.maps.event.addListener(drawingManager, "markercomplete", function (marker) {
+      var $currentRow = $("#modal-stc-map").data("current-row");
+      if (!$currentRow || !$currentRow.length) return;
 
-        var rowId = $currentRow.attr("tsc-row-id");
-        deleteDrawnOverlaysForRow(rowId);
+      var rowId = $currentRow.attr("tsc-row-id");
+      deleteDrawnOverlaysForRow(rowId);
 
-        var position = marker.getPosition();
-        $currentRow.find("[id^=input-stc-latmin]").val(position.lat());
-        $currentRow.find("[id^=input-stc-longmin]").val(position.lng());
-        $currentRow.find("[id^=input-stc-latmax]").val("");
-        $currentRow.find("[id^=input-stc-longmax]").val("");
+      var position = marker.getPosition();
+      $currentRow.find("[id^=input-stc-latmin]").val(position.lat());
+      $currentRow.find("[id^=input-stc-longmin]").val(position.lng());
+      $currentRow.find("[id^=input-stc-latmax]").val("");
+      $currentRow.find("[id^=input-stc-longmax]").val("");
 
-        // Get the display number based on the row's position
-        var displayNumber = $currentRow.index() + 1;
+      // Get the display number based on the row's position
+      var displayNumber = $currentRow.index() + 1;
 
-        marker.setLabel(displayNumber.toString());
-        drawnOverlays.push({ rowId: rowId, overlay: marker });
-      }
-    );
+      marker.setLabel(displayNumber.toString());
+      drawnOverlays.push({ rowId: rowId, overlay: marker });
+    });
   }
 
   /**
-  * Handles the 'shown.bs.modal' event for the STC map modal.
-  * Triggers a map resize, fits all overlays, and re-adds the search control.
-  */
+   * Handles the 'shown.bs.modal' event for the STC map modal.
+   * Triggers a map resize, fits all overlays, and re-adds the search control.
+   */
   function onStcMapModalShown() {
     google.maps.event.trigger(map, "resize");
     fitMapBounds();
 
     // Ensure search control is right-aligned and rebias
-    if (typeof searchInput !== 'undefined' && typeof searchBox !== 'undefined') {
+    if (typeof searchInput !== "undefined" && typeof searchBox !== "undefined") {
       map.controls[google.maps.ControlPosition.TOP_RIGHT].push(searchInput);
       searchBox.setBounds(map.getBounds());
     }
@@ -219,21 +206,17 @@ $(document).ready(function () {
    * Event listener for changes in the coordinate input fields.
    * Updates the map overlays based on the input values.
    */
-  $("#group-stc").on(
-    "input",
-    "[tsc-row] input[name^='tscLatitude'], [tsc-row] input[name^='tscLongitude']",
-    function () {
-      var $row = $(this).closest("[tsc-row]");
-      var currentRowId = $row.attr("tsc-row-id");
+  $("#group-stc").on("input", "[tsc-row] input[name^='tscLatitude'], [tsc-row] input[name^='tscLongitude']", function () {
+    var $row = $(this).closest("[tsc-row]");
+    var currentRowId = $row.attr("tsc-row-id");
 
-      var latMax = $row.find("[id^=input-stc-latmax]").val();
-      var lngMax = $row.find("[id^=input-stc-longmax]").val();
-      var latMin = $row.find("[id^=input-stc-latmin]").val();
-      var lngMin = $row.find("[id^=input-stc-longmin]").val();
+    var latMax = $row.find("[id^=input-stc-latmax]").val();
+    var lngMax = $row.find("[id^=input-stc-longmax]").val();
+    var latMin = $row.find("[id^=input-stc-latmin]").val();
+    var lngMin = $row.find("[id^=input-stc-longmin]").val();
 
-      updateMapOverlay(currentRowId, latMax, lngMax, latMin, lngMin);
-    }
-  );
+    updateMapOverlay(currentRowId, latMax, lngMax, latMin, lngMin);
+  });
 
   /**
    * Updates the labels on the overlays to match the current row numbering.
@@ -311,10 +294,7 @@ $(document).ready(function () {
 
       drawnOverlays.push({ rowId: currentRowId, overlay: rectangle, labelOverlay: label });
     } else if (latMin && lngMin) {
-      var position = new google.maps.LatLng(
-        parseFloat(latMin),
-        parseFloat(lngMin)
-      );
+      var position = new google.maps.LatLng(parseFloat(latMin), parseFloat(lngMin));
       var marker = new google.maps.Marker({
         position: position,
         label: displayNumber.toString(),
@@ -364,12 +344,8 @@ $(document).ready(function () {
       var sw = bounds.getSouthWest();
       var lat_buffer = (ne.lat() - sw.lat()) * 0.5;
       var lng_buffer = (ne.lng() - sw.lng()) * 0.5;
-      bounds.extend(
-        new google.maps.LatLng(ne.lat() + lat_buffer, ne.lng() + lng_buffer)
-      );
-      bounds.extend(
-        new google.maps.LatLng(sw.lat() - lat_buffer, sw.lng() - lng_buffer)
-      );
+      bounds.extend(new google.maps.LatLng(ne.lat() + lat_buffer, ne.lng() + lng_buffer));
+      bounds.extend(new google.maps.LatLng(sw.lat() - lat_buffer, sw.lng() - lng_buffer));
       map.fitBounds(bounds);
     }
   }
@@ -412,9 +388,7 @@ $(document).ready(function () {
             a.nonce = m.querySelector("script[nonce]")?.nonce || "";
             m.head.append(a);
           }));
-      d[l]
-        ? console.warn(p + " only loads once. Ignoring:", g)
-        : (d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)));
+      d[l] ? console.warn(p + " only loads once. Ignoring:", g) : (d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)));
     })({
       key: apiKey,
       v: "weekly",
@@ -443,7 +417,6 @@ $(document).ready(function () {
     .catch((error) => {
       console.error("Error fetching the API key:", error);
     });
-
 
   // Make functions globally accessible
   window.deleteDrawnOverlaysForRow = deleteDrawnOverlaysForRow;

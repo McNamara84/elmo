@@ -1,6 +1,6 @@
-const { requireFresh } = require('./utils');
+const { requireFresh } = require("./utils");
 
-describe('submitHandler.js', () => {
+describe("submitHandler.js", () => {
   let SubmitHandler;
   let validateEmbargoDate;
   let validateTemporalCoverage;
@@ -9,13 +9,12 @@ describe('submitHandler.js', () => {
   let $;
 
   function loadScript() {
-    ({ SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson } =
-      requireFresh('../../js/submitHandler.js'));
-    handler = new SubmitHandler('test-form', 'modal-submit', 'modal-notification');
+    ({ SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson } = requireFresh("../../js/submitHandler.js"));
+    handler = new SubmitHandler("test-form", "modal-submit", "modal-notification");
   }
 
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => {});
     document.body.innerHTML = `
       <form id="test-form"></form>
       <div id="modal-submit"></div>
@@ -40,27 +39,27 @@ describe('submitHandler.js', () => {
       <div id="group-author"></div>
     `;
 
-    $ = require('jquery');
+    $ = require("jquery");
     global.$ = $;
     global.jQuery = $;
 
     global.bootstrap = {
-      Modal: function() {
+      Modal: function () {
         this.show = jest.fn();
         this.hide = jest.fn();
-      }
+      },
     };
 
     global.translations = {
-      dates: { embargoDateError: 'Embargo Error' },
-      coverage: { endDateError: 'End Date Error' },
+      dates: { embargoDateError: "Embargo Error" },
+      coverage: { endDateError: "End Date Error" },
       alerts: {
-        successHeading: 'Success',
-        errorHeading: 'Error',
-        submitError: 'Submit Error',
-        validationErrorheading: 'Validation',
-        validationError: 'Invalid'
-      }
+        successHeading: "Success",
+        errorHeading: "Error",
+        submitError: "Submit Error",
+        validationErrorheading: "Validation",
+        validationError: "Invalid",
+      },
     };
 
     loadScript();
@@ -71,74 +70,74 @@ describe('submitHandler.js', () => {
     console.error.mockRestore();
   });
 
-  test('validateEmbargoDate marks invalid when embargo before creation', () => {
-    $('#input-date-created').val('2024-05-10');
-    $('#input-date-embargo').val('2024-05-01');
+  test("validateEmbargoDate marks invalid when embargo before creation", () => {
+    $("#input-date-created").val("2024-05-10");
+    $("#input-date-embargo").val("2024-05-01");
     const result = validateEmbargoDate();
     expect(result).toBe(false);
-    expect($('#input-date-embargo').hasClass('is-invalid')).toBe(true);
-    expect($('.embargo-invalid').text()).toBe('Embargo Error');
+    expect($("#input-date-embargo").hasClass("is-invalid")).toBe(true);
+    expect($(".embargo-invalid").text()).toBe("Embargo Error");
   });
 
-  test('validateTemporalCoverage marks invalid when end before start', () => {
-    $('#input-stc-datestart-row1').val('2024-05-10');
-    $('#input-stc-dateend-row1').val('2024-05-01');
-    const row = document.getElementById('row');
+  test("validateTemporalCoverage marks invalid when end before start", () => {
+    $("#input-stc-datestart-row1").val("2024-05-10");
+    $("#input-stc-dateend-row1").val("2024-05-01");
+    const row = document.getElementById("row");
     const result = validateTemporalCoverage(row);
     expect(result).toBe(false);
-    expect($('#input-stc-dateend-row1').hasClass('is-invalid')).toBe(true);
-    expect(row.querySelector('.invalid-feedback').textContent).toBe('End Date Error');
+    expect($("#input-stc-dateend-row1").hasClass("is-invalid")).toBe(true);
+    expect(row.querySelector(".invalid-feedback").textContent).toBe("End Date Error");
   });
 
-  test('toggleSubmitButton enables button when checked', () => {
-    $('#input-submit-privacycheck').prop('checked', true);
+  test("toggleSubmitButton enables button when checked", () => {
+    $("#input-submit-privacycheck").prop("checked", true);
     handler.toggleSubmitButton();
-    expect($('#button-submit-submit').prop('disabled')).toBe(false);
+    expect($("#button-submit-submit").prop("disabled")).toBe(false);
   });
 
-  test('clearFileInput resets file fields', () => {
-    const input = $('#input-submit-datadescription')[0];
-    Object.defineProperty(input, 'value', { writable: true, value: 'f.txt' });
-    $('#selected-file-name').text('f.txt');
-    $('#remove-file-btn').show();
+  test("clearFileInput resets file fields", () => {
+    const input = $("#input-submit-datadescription")[0];
+    Object.defineProperty(input, "value", { writable: true, value: "f.txt" });
+    $("#selected-file-name").text("f.txt");
+    $("#remove-file-btn").show();
     handler.clearFileInput();
-    expect($('#input-submit-datadescription').val()).toBe('');
-    expect($('#selected-file-name').text()).toBe('');
-    expect($('#remove-file-btn').css('display')).toBe('none');
+    expect($("#input-submit-datadescription").val()).toBe("");
+    expect($("#selected-file-name").text()).toBe("");
+    expect($("#remove-file-btn").css("display")).toBe("none");
   });
 
-  test('showNotification populates modal and auto hides on success', () => {
+  test("showNotification populates modal and auto hides on success", () => {
     jest.useFakeTimers();
-    handler.showNotification('success', 'Title', 'Msg');
-    expect($('#modal-notification-label').text()).toBe('Title');
-    expect($('#modal-notification-body').html()).toContain('Msg');
+    handler.showNotification("success", "Title", "Msg");
+    expect($("#modal-notification-label").text()).toBe("Title");
+    expect($("#modal-notification-body").html()).toContain("Msg");
     expect(handler.modals.notification.show).toHaveBeenCalled();
     jest.advanceTimersByTime(3000);
     expect(handler.modals.notification.hide).toHaveBeenCalled();
   });
 
-  test('handleAjaxError parses JSON response', () => {
-    const spy = jest.spyOn(handler, 'showNotification');
+  test("handleAjaxError parses JSON response", () => {
+    const spy = jest.spyOn(handler, "showNotification");
     const xhr = {
-      responseText: JSON.stringify({ message: 'server msg', debug: 'x' }),
-      getResponseHeader: () => 'application/json'
+      responseText: JSON.stringify({ message: "server msg", debug: "x" }),
+      getResponseHeader: () => "application/json",
     };
-    handler.handleAjaxError(xhr, 'parsererror', 'err');
-    expect(spy).toHaveBeenCalledWith('danger', 'Error', 'server msg');
+    handler.handleAjaxError(xhr, "parsererror", "err");
+    expect(spy).toHaveBeenCalledWith("danger", "Error", "server msg");
   });
 
-  test('handleAjaxError falls back to default on parse failure', () => {
-    const spy = jest.spyOn(handler, 'showNotification');
+  test("handleAjaxError falls back to default on parse failure", () => {
+    const spy = jest.spyOn(handler, "showNotification");
     const xhr = {
-      responseText: 'notjson',
-      getResponseHeader: () => 'text/html'
+      responseText: "notjson",
+      getResponseHeader: () => "text/html",
     };
-    handler.handleAjaxError(xhr, 'error', 'fail');
-    expect(spy).toHaveBeenCalledWith('danger', 'Error', 'Submit Error');
+    handler.handleAjaxError(xhr, "error", "fail");
+    expect(spy).toHaveBeenCalledWith("danger", "Error", "Submit Error");
   });
 
-  test('provides ES module exports', async () => {
-    const mod = await import('../../js/submitHandler.js');
+  test("provides ES module exports", async () => {
+    const mod = await import("../../js/submitHandler.js");
     expect(mod.default).toBeDefined();
     expect(mod.SubmitHandler).toBeDefined();
     expect(mod.validateEmbargoDate).toBeDefined();

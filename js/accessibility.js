@@ -56,20 +56,20 @@
   function collectDescribedByIds(inputElement, scope, additionalIds) {
     const describedBy = new Set();
 
-    const ariaDescribedBy = (inputElement.getAttribute('aria-describedby') || '').trim();
+    const ariaDescribedBy = (inputElement.getAttribute("aria-describedby") || "").trim();
     if (ariaDescribedBy) {
-      ariaDescribedBy.split(/\s+/).forEach(id => describedBy.add(id));
+      ariaDescribedBy.split(/\s+/).forEach((id) => describedBy.add(id));
     }
 
-    (additionalIds || []).forEach(id => {
+    (additionalIds || []).forEach((id) => {
       if (id) {
         describedBy.add(id);
       }
     });
 
-    const feedbackElements = scope.querySelectorAll('.invalid-feedback, .valid-feedback, .form-text');
-    feedbackElements.forEach(element => {
-      const id = ensureElementId(element, 'tagify-feedback');
+    const feedbackElements = scope.querySelectorAll(".invalid-feedback, .valid-feedback, .form-text");
+    feedbackElements.forEach((element) => {
+      const id = ensureElementId(element, "tagify-feedback");
       if (id) {
         describedBy.add(id);
       }
@@ -92,13 +92,13 @@
    */
   function resolveAccessibleName(inputElement, label, fallbackNames) {
     if (label) {
-      const labelId = ensureElementId(label, `${inputElement.id || 'tagify'}-label`);
+      const labelId = ensureElementId(label, `${inputElement.id || "tagify"}-label`);
       if (labelId) {
         return { labelledby: labelId };
       }
     }
 
-    const nameCandidate = fallbackNames.find(candidate => Boolean(candidate && candidate.trim()));
+    const nameCandidate = fallbackNames.find((candidate) => Boolean(candidate && candidate.trim()));
     if (nameCandidate) {
       return { labelText: nameCandidate.trim() };
     }
@@ -129,16 +129,16 @@
   }
 
   function findInteractiveInput(scope) {
-    return scope ? scope.querySelector('.tagify__input') : null;
+    return scope ? scope.querySelector(".tagify__input") : null;
   }
 
   function collectPlaceholderCandidates(tagifyInstance, inputElement, options) {
     return [
       options && options.placeholder,
       tagifyInstance && tagifyInstance.settings && tagifyInstance.settings.placeholder,
-      inputElement && inputElement.getAttribute('placeholder'),
-      inputElement && inputElement.getAttribute('data-placeholder'),
-      inputElement && inputElement.getAttribute('data-translate-placeholder')
+      inputElement && inputElement.getAttribute("placeholder"),
+      inputElement && inputElement.getAttribute("data-placeholder"),
+      inputElement && inputElement.getAttribute("data-translate-placeholder"),
     ].filter(Boolean);
   }
 
@@ -156,17 +156,17 @@
     }
 
     if (accessibleName.labelledby) {
-      const labelText = label && label.textContent ? label.textContent.trim() : '';
-      interactiveInput.setAttribute('aria-labelledby', accessibleName.labelledby);
-      interactiveInput.removeAttribute('aria-label');
-      interactiveInput.setAttribute('title', labelText);
+      const labelText = label && label.textContent ? label.textContent.trim() : "";
+      interactiveInput.setAttribute("aria-labelledby", accessibleName.labelledby);
+      interactiveInput.removeAttribute("aria-label");
+      interactiveInput.setAttribute("title", labelText);
       return;
     }
 
     if (accessibleName.labelText) {
-      interactiveInput.setAttribute('aria-label', accessibleName.labelText);
-      interactiveInput.setAttribute('title', accessibleName.labelText);
-      interactiveInput.removeAttribute('aria-labelledby');
+      interactiveInput.setAttribute("aria-label", accessibleName.labelText);
+      interactiveInput.setAttribute("title", accessibleName.labelText);
+      interactiveInput.removeAttribute("aria-labelledby");
     }
   }
 
@@ -175,7 +175,7 @@
       return;
     }
 
-    interactiveInput.setAttribute('data-placeholder', placeholderCandidates[0]);
+    interactiveInput.setAttribute("data-placeholder", placeholderCandidates[0]);
   }
 
   function applyStaticAriaAttributes(interactiveInput) {
@@ -183,18 +183,18 @@
       return;
     }
 
-    interactiveInput.setAttribute('role', 'textbox');
-    interactiveInput.setAttribute('aria-multiline', 'false');
-    interactiveInput.setAttribute('aria-autocomplete', 'list');
-    interactiveInput.setAttribute('aria-haspopup', 'listbox');
+    interactiveInput.setAttribute("role", "textbox");
+    interactiveInput.setAttribute("aria-multiline", "false");
+    interactiveInput.setAttribute("aria-autocomplete", "list");
+    interactiveInput.setAttribute("aria-haspopup", "listbox");
   }
 
   function determineRequiredState(inputElement, options) {
-    if (options && typeof options.isRequired === 'boolean') {
+    if (options && typeof options.isRequired === "boolean") {
       return options.isRequired;
     }
 
-    return Boolean(inputElement && inputElement.hasAttribute('required'));
+    return Boolean(inputElement && inputElement.hasAttribute("required"));
   }
 
   function applyRequiredAttribute(interactiveInput, isRequired) {
@@ -203,11 +203,11 @@
     }
 
     if (isRequired) {
-      interactiveInput.setAttribute('aria-required', 'true');
+      interactiveInput.setAttribute("aria-required", "true");
       return;
     }
 
-    interactiveInput.removeAttribute('aria-required');
+    interactiveInput.removeAttribute("aria-required");
   }
 
   function updateDescribedByAttribute(interactiveInput, describedBy) {
@@ -216,11 +216,11 @@
     }
 
     if (describedBy.length > 0) {
-      interactiveInput.setAttribute('aria-describedby', describedBy.join(' '));
+      interactiveInput.setAttribute("aria-describedby", describedBy.join(" "));
       return;
     }
 
-    interactiveInput.removeAttribute('aria-describedby');
+    interactiveInput.removeAttribute("aria-describedby");
   }
 
   function applyTagifyAccessibilityAttributes(tagifyInstance, inputElement, options) {
@@ -258,18 +258,16 @@
    * @returns {HTMLElement} The container element that should host tooltips.
    */
   function getTooltipContainer() {
-    return document.getElementById('main-content')
-      || document.querySelector('main')
-      || document.body;
+    return document.getElementById("main-content") || document.querySelector("main") || document.body;
   }
 
   window.applyTagifyAccessibilityAttributes = applyTagifyAccessibilityAttributes;
   window.getTooltipContainer = getTooltipContainer;
 })();
 
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     applyTagifyAccessibilityAttributes: window.applyTagifyAccessibilityAttributes,
-    getTooltipContainer: window.getTooltipContainer
+    getTooltipContainer: window.getTooltipContainer,
   };
 }

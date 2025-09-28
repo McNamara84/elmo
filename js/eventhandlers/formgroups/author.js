@@ -1,5 +1,10 @@
 /**
- * @description Handles dynamic addition, removal, and interaction of author rows in the form.
+ * @description Handles dynamic addition, removal,   function escapeForCSSSelector(value) {
+    if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+      return CSS.escape(value);
+    }
+    return value.replace(/[\\#.:;,!?+*~=<>^$()\[\]{}|/\s-]/g, '\\$&');
+  }teraction of author rows in the form.
  * 
  * @module author
  */
@@ -58,7 +63,7 @@ $(document).ready(function () {
     if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
       return CSS.escape(value);
     }
-    return value.replace(/[\0-\x1F\x7F"'\\#.:;,!?+*~=<>^$\[\](){}|\/\s-]/g, '\\$&');
+    return value.replace(/[\\#.:;,!?+*~=<>^$()[\]{}|/\s-]/g, '\\$&');
   }
 
   function addAuthorRow() {

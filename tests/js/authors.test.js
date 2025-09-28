@@ -1,14 +1,14 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-describe('author.js', () => {
+describe("author.js", () => {
   let $;
   let suffix;
   const fixedTime = 1717072496000; // fixed timestamp for Date.now()
 
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(new Date(fixedTime));
-    jest.spyOn(Date, 'now').mockReturnValue(fixedTime); // mock Date.now()
+    jest.spyOn(Date, "now").mockReturnValue(fixedTime); // mock Date.now()
     suffix = Date.now();
 
     document.body.innerHTML = `
@@ -50,7 +50,7 @@ describe('author.js', () => {
       </div>
     `;
 
-    $ = require('jquery');
+    $ = require("jquery");
     global.$ = global.jQuery = $;
     window.$ = $;
     window.jQuery = $;
@@ -58,24 +58,20 @@ describe('author.js', () => {
     // Mock jQuery UI sortable as No-Op in the test environment since drag-and-drop is not needed and not supported in jsdom, so that method calls do not fail.
     $.fn.sortable = jest.fn(() => $);
 
-
     // Mock functions
     window.createRemoveButton = jest.fn(() => $('<button type="button" class="removeButton"></button>'));
     window.replaceHelpButtonInClonedRows = jest.fn();
     window.autocompleteAffiliations = jest.fn();
-    window.affiliationsData = [{ id: '1', name: 'Inst' }];
+    window.affiliationsData = [{ id: "1", name: "Inst" }];
 
     // Load the script
-    let script = fs.readFileSync(
-      path.resolve(__dirname, '../../js/eventhandlers/formgroups/author.js'),
-      'utf8'
-    );
-    script = script.replace(/^import.*$/gm, '');
-    script = script.replace('$(document).ready(function () {', '(function () {');
-    script = script.replace(/\n\s*\}\);\s*$/, '\n})();');
+    let script = fs.readFileSync(path.resolve(__dirname, "../../js/eventhandlers/formgroups/author.js"), "utf8");
+    script = script.replace(/^import.*$/gm, "");
+    script = script.replace("$(document).ready(function () {", "(function () {");
+    script = script.replace(/\n\s*\}\);\s*$/, "\n})();");
     window.eval(script);
 
-    document.dispatchEvent(new Event('DOMContentLoaded'));
+    document.dispatchEvent(new Event("DOMContentLoaded"));
   });
 
   afterEach(() => {
@@ -84,10 +80,10 @@ describe('author.js', () => {
     jest.clearAllTimers();
   });
 
-  test('fügt neue Autoren-Zeile hinzu', () => {
-    $('#button-author-add').trigger('click');
+  test("fügt neue Autoren-Zeile hinzu", () => {
+    $("#button-author-add").trigger("click");
 
-    const rows = $('#group-author .row');
+    const rows = $("#group-author .row");
     expect(rows.length).toBe(2);
 
     const newRow = rows.last();
@@ -112,11 +108,15 @@ describe('author.js', () => {
     expect(newRow.find(`label[for='checkbox-author-contactperson-${suffix}']`).length).toBe(1);
 
     // Fields cleared
-    expect(newRow.find('input').filter(function () { return this.value; }).length).toBe(0);
+    expect(
+      newRow.find("input").filter(function () {
+        return this.value;
+      }).length
+    ).toBe(0);
 
     // Add button replaced by remove button
-    expect(newRow.find('#button-author-add').length).toBe(0);
-    expect(newRow.find('.removeButton').length).toBe(1);
+    expect(newRow.find("#button-author-add").length).toBe(0);
+    expect(newRow.find(".removeButton").length).toBe(1);
 
     // Helper functions called
     expect(window.replaceHelpButtonInClonedRows).toHaveBeenCalledTimes(1);
@@ -130,15 +130,15 @@ describe('author.js', () => {
     );
 
     // Test removal
-    newRow.find('.removeButton').trigger('click');
-    expect($('#group-author .row').length).toBe(1);
+    newRow.find(".removeButton").trigger("click");
+    expect($("#group-author .row").length).toBe(1);
   });
 
-  test('initialisiert Sortable mit Drag-Handle-Unterstützung für Buttons', () => {
+  test("initialisiert Sortable mit Drag-Handle-Unterstützung für Buttons", () => {
     expect($.fn.sortable).toHaveBeenCalledTimes(1);
     expect($.fn.sortable.mock.calls[0][0]).toMatchObject({
-      handle: '.drag-handle',
-      cancel: 'input, textarea, select, option'
+      handle: ".drag-handle",
+      cancel: "input, textarea, select, option",
     });
   });
 });

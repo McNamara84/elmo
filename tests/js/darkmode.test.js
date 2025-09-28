@@ -1,17 +1,14 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-describe('darkmode.js', () => {
+describe("darkmode.js", () => {
   let prefersDark;
   let triggerMediaQueryChange;
 
   function loadScript() {
-    let script = fs.readFileSync(
-      path.resolve(__dirname, '../../js/darkmode.js'),
-      'utf8'
-    );
-    script = script.replace('document.addEventListener("DOMContentLoaded", function () {', '(function () {');
-    script = script.replace(/\}\);\s*$/, '})();');
+    let script = fs.readFileSync(path.resolve(__dirname, "../../js/darkmode.js"), "utf8");
+    script = script.replace('document.addEventListener("DOMContentLoaded", function () {', "(function () {");
+    script = script.replace(/\}\);\s*$/, "})();");
     window.eval(script);
   }
 
@@ -27,7 +24,7 @@ describe('darkmode.js', () => {
     prefersDark = false;
     const listeners = new Set();
     const mediaQueryList = {
-      media: '(prefers-color-scheme: dark)',
+      media: "(prefers-color-scheme: dark)",
       get matches() {
         return prefersDark;
       },
@@ -53,66 +50,66 @@ describe('darkmode.js', () => {
       const event = { matches: value, media: mediaQueryList.media };
 
       listeners.forEach((listener) => {
-        if (typeof listener === 'function') {
+        if (typeof listener === "function") {
           listener(event);
-        } else if (listener && typeof listener.handleEvent === 'function') {
+        } else if (listener && typeof listener.handleEvent === "function") {
           listener.handleEvent(event);
         }
       });
 
-      if (typeof mediaQueryList.onchange === 'function') {
+      if (typeof mediaQueryList.onchange === "function") {
         mediaQueryList.onchange(event);
       }
     };
     localStorage.clear();
   });
 
-  test('applies stored dark theme on load', () => {
-    localStorage.setItem('theme', 'dark');
+  test("applies stored dark theme on load", () => {
+    localStorage.setItem("theme", "dark");
     loadScript();
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
-    const items = document.querySelectorAll('.dropdown-item');
-    expect(items[1].classList.contains('active')).toBe(true);
+    expect(document.documentElement.getAttribute("data-bs-theme")).toBe("dark");
+    const items = document.querySelectorAll(".dropdown-item");
+    expect(items[1].classList.contains("active")).toBe(true);
   });
 
-  test('defaults to light theme when system preference is light', () => {
+  test("defaults to light theme when system preference is light", () => {
     loadScript();
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light');
-    expect(localStorage.getItem('theme')).toBe('light');
-    const items = document.querySelectorAll('.dropdown-item');
-    expect(items[0].classList.contains('active')).toBe(true);
+    expect(document.documentElement.getAttribute("data-bs-theme")).toBe("light");
+    expect(localStorage.getItem("theme")).toBe("light");
+    const items = document.querySelectorAll(".dropdown-item");
+    expect(items[0].classList.contains("active")).toBe(true);
   });
 
-  test('clicking dark item updates theme and localStorage', () => {
+  test("clicking dark item updates theme and localStorage", () => {
     loadScript();
     const darkItem = document.querySelector('.dropdown-item[data-bs-theme-value="dark"]');
-    darkItem.dispatchEvent(new Event('click', { bubbles: true }));
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
-    expect(localStorage.getItem('theme')).toBe('dark');
-    const items = document.querySelectorAll('.dropdown-item');
-    expect(items[1].classList.contains('active')).toBe(true);
+    darkItem.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(document.documentElement.getAttribute("data-bs-theme")).toBe("dark");
+    expect(localStorage.getItem("theme")).toBe("dark");
+    const items = document.querySelectorAll(".dropdown-item");
+    expect(items[1].classList.contains("active")).toBe(true);
   });
 
-  test('clicking auto selects system preference', () => {
+  test("clicking auto selects system preference", () => {
     loadScript();
     prefersDark = true;
     const autoItem = document.querySelector('.dropdown-item[data-bs-theme-value="auto"]');
-    autoItem.dispatchEvent(new Event('click', { bubbles: true }));
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
-    expect(localStorage.getItem('theme')).toBe('dark');
+    autoItem.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(document.documentElement.getAttribute("data-bs-theme")).toBe("dark");
+    expect(localStorage.getItem("theme")).toBe("dark");
   });
 
-  test('auto mode updates when system preference changes', () => {
+  test("auto mode updates when system preference changes", () => {
     loadScript();
     const autoItem = document.querySelector('.dropdown-item[data-bs-theme-value="auto"]');
-    autoItem.dispatchEvent(new Event('click', { bubbles: true }));
+    autoItem.dispatchEvent(new Event("click", { bubbles: true }));
 
     triggerMediaQueryChange(true);
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
-    expect(localStorage.getItem('theme')).toBe('dark');
+    expect(document.documentElement.getAttribute("data-bs-theme")).toBe("dark");
+    expect(localStorage.getItem("theme")).toBe("dark");
 
     triggerMediaQueryChange(false);
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light');
-    expect(localStorage.getItem('theme')).toBe('light');
+    expect(document.documentElement.getAttribute("data-bs-theme")).toBe("light");
+    expect(localStorage.getItem("theme")).toBe("light");
   });
 });

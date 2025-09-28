@@ -85,7 +85,7 @@ async function createLicenseMapping() {
       "CC-BY-4.0": "1",
       "CC0-1.0": "2",
       "GPL-3.0-or-later": "3",
-      "MIT": "4",
+      MIT: "4",
       "Apache-2.0": "5",
       "EUPL-1.2": "6",
     };
@@ -156,9 +156,7 @@ async function createTitleTypeMapping() {
  */
 function mapTitleType(titleType, mapping = {}) {
   const key = (titleType || "").replace(/\s+/g, "");
-  const map = Object.keys(mapping).length
-    ? mapping
-    : { "": "1", MainTitle: "1", AlternativeTitle: "2", TranslatedTitle: "3" };
+  const map = Object.keys(mapping).length ? mapping : { "": "1", MainTitle: "1", AlternativeTitle: "2", TranslatedTitle: "3" };
   return map[key] || map[""] || "1";
 }
 
@@ -228,11 +226,20 @@ function processCreators(xmlDoc, resolver) {
     const givenName = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
     const familyName = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
     // Clean ORCID by removing URL prefix if present
-    const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace("https://orcid.org/", "");
+    const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace(
+      "https://orcid.org/",
+      ""
+    );
     const creatorName = getNodeText(creatorNode, "ns:creatorName", xmlDoc, resolver);
 
     // Extract affiliations, either <personAffiliation> or <affiliation> elements under the current creator node
-    const affiliationNodes = xmlDoc.evaluate("ns:personAffiliation | ns:affiliation", creatorNode, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    const affiliationNodes = xmlDoc.evaluate(
+      "ns:personAffiliation | ns:affiliation",
+      creatorNode,
+      resolver,
+      XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+      null
+    );
     const affiliations = [];
     const rorIds = [];
 
@@ -324,7 +331,6 @@ function processCreators(xmlDoc, resolver) {
   }
 }
 
-
 /**
  * Process contact persons from XML and populate the form
  * @param {Document} xmlDoc - The parsed XML document
@@ -339,7 +345,13 @@ function processContactPersons(xmlDoc) {
     return ns[prefix] || null;
   }
 
-  const contactPersonNodes = xmlDoc.evaluate("//gmd:pointOfContact/gmd:CI_ResponsibleParty", xmlDoc, nsResolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const contactPersonNodes = xmlDoc.evaluate(
+    "//gmd:pointOfContact/gmd:CI_ResponsibleParty",
+    xmlDoc,
+    nsResolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
 
   for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
     const contactPersonNode = contactPersonNodes.snapshotItem(i);
@@ -376,7 +388,9 @@ function processContactPersons(xmlDoc) {
     // Find the matching author row based on name
     let $row = $("div[data-creator-row]")
       .filter(function () {
-        return $(this).find('input[name="familynames[]"]').val() === familyName && $(this).find('input[name="givennames[]"]').val() === givenName;
+        return (
+          $(this).find('input[name="familynames[]"]').val() === familyName && $(this).find('input[name="givennames[]"]').val() === givenName
+        );
       })
       .first();
 
@@ -551,7 +565,13 @@ function getOrCreatePersonRow(index) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processContributors(xmlDoc, resolver) {
-  const contributorsNode = xmlDoc.evaluate(".//ns:contributors", xmlDoc, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  const contributorsNode = xmlDoc.evaluate(
+    ".//ns:contributors",
+    xmlDoc,
+    resolver,
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null
+  ).singleNodeValue;
 
   if (!contributorsNode) return;
 
@@ -791,7 +811,12 @@ function populateFormWithContributors(personMap, orgMap) {
       tagifyAffiliations.removeAllTags();
       tagifyAffiliations.addTags(org.affiliations.map((aff) => ({ value: aff })));
     } else {
-      console.warn("No Tagify instance found for organization affiliation input:", affiliationInput, "in row", isClonedRow ? "cloned" : "original");
+      console.warn(
+        "No Tagify instance found for organization affiliation input:",
+        affiliationInput,
+        "in row",
+        isClonedRow ? "cloned" : "original"
+      );
     }
 
     // ROR IDs - handle both original and cloned field names
@@ -963,8 +988,20 @@ function fillTemporalFields($row, temporalData) {
  * @param {Function} resolver - The namespace resolver function.
  */
 function processSpatialTemporalCoverages(xmlDoc, resolver) {
-  const geoLocationNodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const geoLocationNodes = xmlDoc.evaluate(
+    ".//ns:geoLocations/ns:geoLocation",
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+  const dateNodes = xmlDoc.evaluate(
+    '//ns:dates/ns:date[@dateType="Collected"]',
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
 
   for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
     const geoData = getGeoLocationData(geoLocationNodes.snapshotItem(i));
@@ -987,7 +1024,13 @@ function processSpatialTemporalCoverages(xmlDoc, resolver) {
  */
 function processDescriptions(xmlDoc, resolver) {
   // Get all description elements
-  const descriptionNodes = xmlDoc.evaluate(".//ns:descriptions/ns:description", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const descriptionNodes = xmlDoc.evaluate(
+    ".//ns:descriptions/ns:description",
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
 
   // Create a mapping of description types to form input IDs
   const descriptionMapping = {
@@ -1122,7 +1165,13 @@ function processKeywords(xmlDoc, resolver) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processRelatedWorks(xmlDoc, resolver) {
-  const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const identifierNodes = xmlDoc.evaluate(
+    ".//ns:relatedIdentifiers/ns:relatedIdentifier",
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -1159,7 +1208,13 @@ function processRelatedWorks(xmlDoc, resolver) {
  */
 function processFunders(xmlDoc, resolver) {
   // Fetch all fundingReference nodes
-  const funderNodes = xmlDoc.evaluate(".//ns:fundingReferences/ns:fundingReference", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const funderNodes = xmlDoc.evaluate(
+    ".//ns:fundingReferences/ns:fundingReference",
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
 
   for (let i = 0; i < funderNodes.snapshotLength; i++) {
     const funderNode = funderNodes.snapshotItem(i);
@@ -1168,7 +1223,13 @@ function processFunders(xmlDoc, resolver) {
     const funderId = getNodeText(funderNode, "ns:funderIdentifier", xmlDoc, resolver);
     const funderIdTyp = funderNode.querySelector("funderIdentifier")?.getAttribute("funderIdentifierType") || "";
     const awardTitle = getNodeText(funderNode, "ns:awardTitle", xmlDoc, resolver);
-    const awardNumberNode = xmlDoc.evaluate("ns:awardNumber", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const awardNumberNode = xmlDoc.evaluate(
+      "ns:awardNumber",
+      funderNode,
+      resolver,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue;
     const awardNumber = awardNumberNode ? awardNumberNode.textContent.trim() : "";
     const awardUri = awardNumberNode?.getAttribute("awardURI") || "";
 
