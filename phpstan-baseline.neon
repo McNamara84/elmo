@@ -10,31 +10,7 @@ parameters:
 
 
 
-		-
-			message: '#^Negated boolean expression is always true\.$#'
-			identifier: booleanNot.alwaysTrue
-			count: 1
-			path: api/v2/controllers/DatasetController.php
 
-
-
-		-
-			message: '#^Strict comparison using \!\=\= between mixed~\(0\|0\.0\|''''\|''0''\|array\{\}\|false\|null\) and '''' will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
-			count: 1
-			path: api/v2/controllers/DatasetController.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 10
-			path: api/v2/controllers/DatasetController.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between string and false will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 1
-			path: api/v2/controllers/DatasetController.php
 
 		-
 			message: '#^Variable \$authorXml might not be defined\.$#'

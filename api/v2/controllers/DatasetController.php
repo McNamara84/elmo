@@ -807,7 +807,7 @@ class DatasetController
                     $affiliationXml = $affiliationsXml->addChild('Affiliation');
                     foreach ($affiliation as $key => $value) {
                         // Skip adding <rorId> if it's empty or not set
-                        if ($key === 'rorId' && (empty($value) || $value === null)) {
+                        if ($key === 'rorId' && empty($value)) {
                             continue;
                         }
                         $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -874,7 +874,7 @@ class DatasetController
                             $affiliationXml = $affiliationsXml->addChild('Affiliation');
                             foreach ($affiliation as $key => $value) {
                                 // Skip adding <rorId> if it's empty or not set
-                                if ($key === 'rorId' && (empty($value) || $value === null)) {
+                                if ($key === 'rorId' && empty($value)) {
                                     continue;
                                 }
                                 $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -898,7 +898,7 @@ class DatasetController
                         $affiliationXml = $affiliationsXml->addChild('Affiliation');
                         foreach ($affiliation as $key => $value) {
                             // Skip adding <rorId> if it's empty or not set
-                            if ($key === 'rorId' && (empty($value) || $value === null)) {
+                            if ($key === 'rorId' && empty($value)) {
                                 continue;
                             }
                             $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -925,7 +925,7 @@ class DatasetController
                     $personXml->addChild('givenname', htmlspecialchars($person['givenname']));
                 }
 
-                if (!empty($person['orcid']) && $person['orcid'] !== '') {
+                if (!empty($person['orcid'])) {
                     $personXml->addChild('orcid', htmlspecialchars($person['orcid']));
                 }
                 if (isset($person['Affiliations'])) {
@@ -934,7 +934,7 @@ class DatasetController
                         $affiliationXml = $affiliationsXml->addChild('Affiliation');
                         foreach ($affiliation as $key => $value) {
                             // Skip adding <rorId> if it's empty or not set
-                            if ($key === 'rorId' && (empty($value) || $value === null)) {
+                            if ($key === 'rorId' && empty($value)) {
                                 continue;
                             }
                             $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -963,7 +963,7 @@ class DatasetController
                         $affiliationXml = $affiliationsXml->addChild('Affiliation');
                         foreach ($affiliation as $key => $value) {
                             // Skip adding <rorId> if it's empty or not set
-                            if ($key === 'rorId' && (empty($value) || $value === null)) {
+                            if ($key === 'rorId' && empty($value)) {
                                 continue;
                             }
                             $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -1080,19 +1080,19 @@ class DatasetController
             foreach ($fundingReferences as $reference) {
                 $referenceXml = $fundingReferencesXml->addChild('FundingReference');
                 foreach ($reference as $key => $value) {
-                    if ($key === 'funderid' && (empty($value) || $value === null)) {
+                    if ($key === 'funderid' && empty($value)) {
                         continue;
                     }
-                    if ($key === 'funderidtyp' && (empty($value) || $value === null)) {
+                    if ($key === 'funderidtyp' && empty($value)) {
                         continue;
                     }
-                    if ($key === 'grantnumber' && (empty($value) || $value === null)) {
+                    if ($key === 'grantnumber' && empty($value)) {
                         continue;
                     }
-                    if ($key === 'grantname' && (empty($value) || $value === null)) {
+                    if ($key === 'grantname' && empty($value)) {
                         continue;
                     }
-                    if ($key === 'awarduri' && (empty($value) || $value === null)) {
+                    if ($key === 'awarduri' && empty($value)) {
                         continue;
                     }
                     $referenceXml->addChild($key, htmlspecialchars($value ?? ''));
@@ -1427,9 +1427,9 @@ XML;
             // Get the base XML, which includes GGM properties if they exist
             $xmlString = $this->getResourceAsXml($this->connection, $id);
 
-            if ($xmlString === false || empty($xmlString)) {
-                // getResourceAsXml might throw an exception, or return false/empty on error
-                // This check is a fallback.
+            if (empty($xmlString)) {
+                // getResourceAsXml might throw an exception on error
+                // This check is a fallback for empty XML
                 http_response_code(500);
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode(['error' => "Failed to generate XML for resource ID: $id"]);
