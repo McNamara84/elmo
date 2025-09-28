@@ -149,28 +149,24 @@ function loadEnvVariables($path = null) {
     // Parse lines into name-value pairs
     $envVars = parseEnvLines($lines);
     
-    $configVersionIsSet = getenv('CONFIG_VERSION') !== false;
-    
-    // Helper functions for setting variables
-    $insert = function($name, $value) {
+    // List of variables that should NOT be overwritten if already set in the environment
+    $noOverwriteList = ['apiKeyElmo', 'apiKeyGoogleMaps'];
+
+    foreach ($envVars as $name => $value) {
+        // Check if the variable is in the no-overwrite list and already exists
+        if (in_array($name, $noOverwriteList) && getenv($name) !== false) {
+            // It's a protected variable that's already set, so we skip it.
+            elmo_log("ENV", "skipping overwrite for protected variable $name", "DEBUG");
+            continue;
+        }
+
+        // For all other variables, set/overwrite them.
         putenv("$name=$value");
         // Also set as a global variable for backward compatibility with templates
         global $$name;
         $$name = $value;
-    };
-    
-    $insertIfNotSet = function($name, $value) use ($insert) {
-        if (getenv($name) === false) {
-            $insert($name, $value);
-        }
-    };
-    
-    foreach ($envVars as $name => $value) {
-        if ($configVersionIsSet) {
-            $insertIfNotSet($name, $value);
-        } else {
-            $insert($name, $value);
-        }
+        // Use json_encode to handle boolean values correctly in the log
+        elmo_log("ENV", "setting $name as " . json_encode($value));
     }
     
     return true;
