@@ -14,14 +14,14 @@ ini_set('display_errors', 1);
 /**
  * Retrieve the request URI from the server variables.
  *
- * @var string $uri The full request URI.
+ * @var non-falsy-string $uri The full request URI.
  */
 $uri = $_SERVER['REQUEST_URI'];
 
 /**
  * Split the URI into parts by '/' and trim any leading/trailing slashes.
  *
- * @var array $uriParts An array of URI segments.
+ * @var list<string> $uriParts An array of URI segments.
  */
 $uriParts = explode('/', trim($uri, '/'));
 
