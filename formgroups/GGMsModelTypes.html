@@ -6,7 +6,8 @@
     <div class="card-body" id="group-modelvars">
         <!-- Static models special variables -->
         <div class="visibility-modeltype-static d-none">
-            <h6 class="mb-2">Static models special variables</h6>
+            <h5 class="mb-3">Static models special variables</h5>
+            <hr>
             <div class="row mb-3">
                 <!-- Time-variable coefficients checkbox -->
                 <div class="col-12 p-1">
@@ -18,7 +19,7 @@
                     </div>
                 </div>
                 <!-- Description of time-variable coefficients -->
-                <div class="col-sm-6 col-lg-8 p-1 d-none" id="time-variable-description-container">
+                <div class="col-sm-12 col-lg-12 p-1 d-none" id="time-variable-description-container">
                     <div class="form-floating">
                         <input type="text" class="form-control" id="input-static-description" name="staticDescription[]">
                         <label for="input-static-description">
@@ -30,7 +31,8 @@
         </div>
         <!-- Temporal models special variables -->
         <div class="visibility-modeltype-temporal d-none">
-            <h6 class="mb-2">Temporal models special variables</h6>
+            <h5 class="mb-3">Temporal models special variables</h5>
+            <hr>
             <div class="row mb-3">
                 <!-- Start date -->
                 <div class="col-sm-2 col-lg-2 p-1">
@@ -97,7 +99,8 @@
         </div>
         <!-- Topographic variables special variables -->
         <div class="visibility-modeltype-topographic d-none">
-            <h6 class="mb-2">Topographic variables special variables</h6>
+            <h5 class="mb-3">Topographic variables special variables</h5>
+            <hr>
             <div class="row">
                 <!-- Layer approach -->
                 <div class="col-sm-4 col-lg-4 p-1">
@@ -179,7 +182,7 @@
                 <div id="separate-density-container" class="d-none mt-2">
                     <!-- Crust Density Row -->
                     <div class="row">
-                        <div class="col-12 p-1"><strong>Crust</strong></div>
+                        <h6>Crust</h6>
                         <div class="col-sm-6 col-lg-3 p-1">
                             <div class="form-floating">
                                 <select class="form-select" id="select-topo-density-crust" name="topoDensityCrust">
@@ -200,7 +203,7 @@
                     </div>
                     <!-- Mantle Density Row -->
                     <div class="row mt-2">
-                        <div class="col-12 p-1"><strong>Mantle</strong></div>
+                        <h6>Mantle</h6>
                         <div class="col-sm-6 col-lg-3 p-1">
                             <div class="form-floating">
                                 <select class="form-select" id="select-topo-density-mantle" name="topoDensityMantle">
