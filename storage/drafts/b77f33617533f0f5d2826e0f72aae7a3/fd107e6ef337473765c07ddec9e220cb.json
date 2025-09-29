@@ -1,0 +1,155 @@
+{
+    "id": "fd107e6ef337473765c07ddec9e220cb",
+    "sessionId": "b77f33617533f0f5d2826e0f72aae7a3",
+    "updatedAt": "2025-09-24T10:26:08.859667Z",
+    "payload": {
+        "values": {
+            "doi": "",
+            "year": "2025",
+            "resourcetype": "5",
+            "version": "",
+            "language": "1",
+            "title[]": [
+                "A dataset"
+            ],
+            "titleType[]": [
+                "1"
+            ],
+            "Rights": "1",
+            "contacts[]": [
+                "on"
+            ],
+            "orcids[]": [
+                "0000-0002-1825-0097"
+            ],
+            "familynames[]": [
+                "Alice"
+            ],
+            "givennames[]": [
+                "Bob"
+            ],
+            "personAffiliation[]": [
+                "[{\"value\":\"GFZ Helmholtz Centre for Geosciences\",\"id\":\"https://ror.org/04z8jg394\",\"other\":[\"Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences\",\"Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ\",\"GFZ Helmholtz-Zentrum f\u00fcr Geoforschung\",\"GFZ\"]}]"
+            ],
+            "authorPersonRorIds[]": [
+                "https://ror.org/04z8jg394"
+            ],
+            "cpEmail[]": [
+                "example@gmail.com"
+            ],
+            "cpOnlineResource[]": [
+                ""
+            ],
+            "authorinstitutionName[]": [
+                ""
+            ],
+            "institutionAffiliation[]": [
+                ""
+            ],
+            "authorInstitutionRorIds[]": [
+                ""
+            ],
+            "cbORCID[]": [
+                ""
+            ],
+            "cbPersonLastname[]": [
+                ""
+            ],
+            "cbPersonFirstname[]": [
+                ""
+            ],
+            "cbPersonRoles[]": [
+                ""
+            ],
+            "cbAffiliation[]": [
+                ""
+            ],
+            "cbpRorIds[]": [
+                ""
+            ],
+            "cbOrganisationName[]": [
+                ""
+            ],
+            "cbOrganisationRoles[]": [
+                ""
+            ],
+            "OrganisationAffiliation[]": [
+                ""
+            ],
+            "hiddenOrganisationRorId[]": [
+                ""
+            ],
+            "descriptionAbstract": "Necessary abstract",
+            "descriptionMethods": "",
+            "descriptionTechnical": "",
+            "descriptionOther": "",
+            "gcmdScienceKeywords": "",
+            "platforms": "",
+            "instruments": "",
+            "freekeywords[]": [
+                ""
+            ],
+            "dateCreated": "2025-01-01",
+            "dateEmbargo": "",
+            "tscLatitudeMin[]": [
+                ""
+            ],
+            "tscLatitudeMax[]": [
+                ""
+            ],
+            "tscLongitudeMin[]": [
+                ""
+            ],
+            "tscLongitudeMax[]": [
+                ""
+            ],
+            "tscDescription[]": [
+                ""
+            ],
+            "tscDateStart[]": [
+                ""
+            ],
+            "tscTimeStart[]": [
+                ""
+            ],
+            "tscDateEnd[]": [
+                ""
+            ],
+            "tscTimeEnd[]": [
+                ""
+            ],
+            "tscTimezone[]": [
+                "+02:00"
+            ],
+            "relation[]": [
+                ""
+            ],
+            "rIdentifier[]": [
+                ""
+            ],
+            "rIdentifierType[]": [
+                ""
+            ],
+            "funder[]": [
+                ""
+            ],
+            "funderId[]": [
+                ""
+            ],
+            "funderidtyp[]": [
+                ""
+            ],
+            "grantNummer[]": [
+                ""
+            ],
+            "grantName[]": [
+                ""
+            ],
+            "awardURI[]": [
+                ""
+            ]
+        },
+        "timestamp": "2025-09-24T10:26:08.763Z"
+    },
+    "checksum": "6d715026026362f362121036673c9fe3e8652b7d703901035a27188b9a45b7bd"
+}

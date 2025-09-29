@@ -14,7 +14,7 @@ class MockTagify {
   removeAllTags() {}
 }
 
-describe('datasources.js', () => {
+describe('ggms-datasources.js', () => {
   let $;
   beforeEach(() => {
     document.body.innerHTML = `
@@ -190,7 +190,7 @@ describe('datasources.js', () => {
     });
     global.Tagify = MockTagify;
 
-    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/datasources.js'), 'utf8');
+    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-datasources.js'), 'utf8');
     script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
     script = script.replace('$(document).ready(function () {', '(function () {');
     script = script.replace(/\n\}\);$/, '\n})();');
