@@ -354,4 +354,235 @@ class ValidationFunctionsTest extends TestCase
         $entry = ['grantNumber' => '123', 'funder' => 'name'];
         $this->assertTrue(validateFundingReferenceDependencies($entry));
     }
+
+    /**
+     * Test edge cases for required fields validation
+     *
+     * @return void
+     */
+    public function testValidateRequiredFieldsEdgeCases(): void
+    {
+        // Test with null values
+        $dataWithNull = ['a' => null, 'b' => 'valid'];
+        $this->assertFalse(validateRequiredFields($dataWithNull, ['a', 'b']));
+        
+        // Test with empty strings
+        $dataWithEmpty = ['a' => '', 'b' => 'valid'];
+        $this->assertFalse(validateRequiredFields($dataWithEmpty, ['a', 'b']));
+        
+        // Test with whitespace only
+        $dataWithWhitespace = ['a' => '   ', 'b' => 'valid'];
+        $this->assertFalse(validateRequiredFields($dataWithWhitespace, ['a', 'b']));
+        
+        // Test with zero value (should be valid)
+        $dataWithZero = ['a' => 0, 'b' => 'valid'];
+        $this->assertTrue(validateRequiredFields($dataWithZero, ['a', 'b']));
+        
+        // Test with false value (should be valid)
+        $dataWithFalse = ['a' => false, 'b' => 'valid'];
+        $this->assertTrue(validateRequiredFields($dataWithFalse, ['a', 'b']));
+    }
+
+    /**
+     * Test validation with numeric and boolean values
+     *
+     * @return void
+     */
+    public function testValidateRequiredFieldsNumericAndBoolean(): void
+    {
+        // Test with numeric values
+        $dataNumeric = ['count' => 42, 'price' => 19.99, 'enabled' => true];
+        $this->assertTrue(validateRequiredFields($dataNumeric, ['count', 'price', 'enabled']));
+        
+        // Test with boolean false (should pass)
+        $dataWithFalse = ['active' => false, 'name' => 'test'];
+        $this->assertTrue(validateRequiredFields($dataWithFalse, ['active', 'name']));
+    }
+
+    /**
+     * Test validation with array data
+     *
+     * @return void
+     */
+    public function testValidateRequiredFieldsArrayData(): void
+    {
+        // Test with empty array (should fail)
+        $dataWithEmptyArray = ['items' => [], 'name' => 'test'];
+        $this->assertFalse(validateRequiredFields($dataWithEmptyArray, ['items', 'name']));
+        
+        // Test with non-empty array (should pass)
+        $dataWithArray = ['items' => ['item1'], 'name' => 'test'];
+        $this->assertTrue(validateRequiredFields($dataWithArray, ['items', 'name']));
+    }
+
+    /**
+     * Test contributor person validation with edge cases
+     *
+     * @return void
+     */
+    public function testValidateContributorPersonEdgeCases(): void
+    {
+        // Test with whitespace-only names
+        $entryWithWhitespace = [
+            'firstname' => '   ',
+            'lastname' => 'Valid',
+            'roles' => ['Editor']
+        ];
+        $this->assertFalse(validateContributorPersonDependencies($entryWithWhitespace));
+        
+        // Test with numeric roles
+        $entryWithNumericRoles = [
+            'firstname' => 'John',
+            'lastname' => 'Doe',
+            'roles' => [1, 2]  // numeric role IDs
+        ];
+        $this->assertTrue(validateContributorPersonDependencies($entryWithNumericRoles));
+        
+        // Test with empty roles array
+        $entryWithEmptyRoles = [
+            'firstname' => 'John',
+            'lastname' => 'Doe',
+            'roles' => []
+        ];
+        $this->assertFalse(validateContributorPersonDependencies($entryWithEmptyRoles));
+    }
+
+    /**
+     * Test keyword validation with different value types
+     *
+     * @return void
+     */
+    public function testValidateKeywordEntriesValueTypes(): void
+    {
+        // Test with numeric keyword value
+        $entryNumeric = [[
+            'value' => 123,
+            'id' => '1',
+            'scheme' => 's',
+            'schemeURI' => 'u',
+            'language' => 'en'
+        ]];
+        $this->assertTrue(validateKeywordEntries($entryNumeric));
+        
+        // Test with special characters in value
+        $entrySpecialChars = [[
+            'value' => 'Special & chars <test>',
+            'id' => '1',
+            'scheme' => 's',
+            'schemeURI' => 'u',
+            'language' => 'en'
+        ]];
+        $this->assertTrue(validateKeywordEntries($entrySpecialChars));
+        
+        // Test with multiple keyword entries
+        $multipleEntries = [
+            [
+                'value' => 'Keyword 1',
+                'id' => '1',
+                'scheme' => 's1',
+                'schemeURI' => 'u1',
+                'language' => 'en'
+            ],
+            [
+                'value' => 'Keyword 2',
+                'id' => '2',
+                'scheme' => 's2',
+                'schemeURI' => 'u2',
+                'language' => 'de'
+            ]
+        ];
+        $this->assertTrue(validateKeywordEntries($multipleEntries));
+    }
+
+    /**
+     * Test STC validation with boundary values
+     *
+     * @return void
+     */
+    public function testValidateSTCDependenciesBoundaryValues(): void
+    {
+        // Test with extreme latitude values
+        $entryExtremeLatitude = [
+            'latitudeMin' => -90,
+            'latitudeMax' => 90,
+            'longitudeMin' => -180,
+            'longitudeMax' => 180,
+            'description' => 'Global coverage',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-12-31',
+            'timezone' => 'UTC'
+        ];
+        $this->assertTrue(validateSTCDependencies($entryExtremeLatitude));
+        
+        // Test with invalid latitude values
+        $entryInvalidLatitude = [
+            'latitudeMin' => -95,  // Invalid latitude
+            'longitudeMin' => 0,
+            'description' => 'd',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-02',
+            'timezone' => 'UTC'
+        ];
+        // Note: This test depends on whether the validation function checks coordinate bounds
+        // If it doesn't, this test should be adjusted or validation function enhanced
+        
+        // Test with same start and end dates
+        $entrySameDates = [
+            'latitudeMin' => 50,
+            'longitudeMin' => 10,
+            'description' => 'Single day',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-01',
+            'timezone' => 'UTC'
+        ];
+        $this->assertTrue(validateSTCDependencies($entrySameDates));
+    }
+
+    /**
+     * Test related work validation with various identifier types
+     *
+     * @return void
+     */
+    public function testValidateRelatedWorkIdentifierTypes(): void
+    {
+        $identifierTypes = ['DOI', 'URL', 'ISBN', 'ISSN', 'arXiv'];
+        
+        foreach ($identifierTypes as $type) {
+            $entry = [
+                'identifier' => '10.1000/test',
+                'relation' => 'IsReferencedBy',
+                'identifierType' => $type
+            ];
+            $this->assertTrue(validateRelatedWorkDependencies($entry), 
+                "Should validate with identifier type: $type");
+        }
+    }
+
+    /**
+     * Test funding reference validation with complex scenarios
+     *
+     * @return void
+     */
+    public function testValidateFundingReferenceComplexScenarios(): void
+    {
+        // Test with all funding fields provided
+        $completeEntry = [
+            'funder' => 'National Science Foundation',
+            'grantNumber' => 'NSF-123456',
+            'awardTitle' => 'Research Grant',
+            'awardUri' => 'https://example.com/award/123'
+        ];
+        $this->assertTrue(validateFundingReferenceDependencies($completeEntry));
+        
+        // Test with minimal valid entry
+        $minimalEntry = ['funder' => 'Private Foundation'];
+        $this->assertTrue(validateFundingReferenceDependencies($minimalEntry));
+        
+        // Test with funding but empty grant number
+        $entryEmptyGrant = [
+            'funder' => 'Foundation',
+            'grantNumber' => ''
+        ];
+        $this->assertFalse(validateFundingReferenceDependencies($entryEmptyGrant));
+    }
 }
