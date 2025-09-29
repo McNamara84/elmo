@@ -69,10 +69,10 @@ $(document).ready(function() {
         timeVariableCheckbox.addEventListener('change', function () {
             if (this.checked) {
                 descriptionContainer.classList.remove('d-none');
+                descriptionContainer.setAttribute('aria-hidden', 'false');
             } else {
                 descriptionContainer.classList.add('d-none');
-                // Optionally clear the input when hidden
-                descriptionContainer.querySelector('input').value = '';
+                descriptionContainer.setAttribute('aria-hidden', 'true');
             }
         });
     }
