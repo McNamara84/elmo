@@ -333,3 +333,29 @@ label.mandatory-field::after {
     position: relative;
     top: -0.45em;
 }
+
+/*
+  Disables Bootstrap's validation coloring (green/red) for any form element
+  that has the .no-validation-style class.
+*/
+.was-validated .no-validation-style:valid,
+.was-validated .no-validation-style:invalid {
+    border-color: var(--bs-border-color);
+    background-image: none;
+}
+
+/* Prevents the label from changing color */
+.was-validated .no-validation-style:valid ~ label,
+.was-validated .no-validation-style:invalid ~ label {
+    color: inherit;
+}
+
+.was-validated .form-check-input.no-validation-style:valid:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.was-validated .no-validation-style:valid:focus,
+.was-validated .no-validation-style:invalid:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
