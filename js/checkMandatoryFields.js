@@ -420,6 +420,54 @@ function validateAbstractField() {
 
 
 
+/**
+ * This function ensures that optional input fields in the form 
+ * are only marked as valid when they actually contain a value.
+ * This prevents empty optional fields from being incorrectly 
+ * displayed with green checkmarks and borders.
+ * 
+ */
+function removeGreenCheckmarks() {
+  // Iterate through all fields with data-check-empty="true"
+  document.querySelectorAll('.form-control[data-check-empty="true"]').forEach(field => {
+    // Check if the field is empty
+    const isEmpty = field.value.trim() === "";
+
+    // Set dataset attribute to indicate empty state
+    field.dataset.empty = isEmpty ? "true" : "false";
+
+    if (isEmpty) {
+      // If empty, remove validity-related classes
+      field.classList.remove("is-valid");
+      field.classList.remove("is-invalid");
+
+      // Reset custom validity to clear validity state
+      field.setCustomValidity("");
+
+      // Remove green shadows and background image, as Bootstrap uses these
+      // to visually highlight valid fields
+      field.style.setProperty('box-shadow', 'none', 'important');
+      field.style.setProperty('background-image', 'none', 'important');
+    } else {
+      // If not empty, check validity
+      if (field.checkValidity()) {
+        // For valid value, add .is-valid
+        field.classList.add("is-valid");
+
+        // Explicitly set validity status to empty to reset errors
+        field.setCustomValidity("");
+      } else {
+        // For invalid value, remove .is-valid
+        field.classList.remove("is-valid");
+      }
+
+      // Remove inline styles set in empty state,
+      // so that default validation styles can apply again
+      field.style.removeProperty('box-shadow');
+      field.style.removeProperty('background-image');
+    }
+  });
+}
 
 /**
  * Checks and dynamically sets the 'required' attribute for input fields across various formgroups.
@@ -447,6 +495,9 @@ function validateAllMandatoryFields() {
 
     // Formgroup Autor Institution
     validateAuthorInstitutionRequirements();
+
+    // for the entire form
+    removeGreenCheckmarks();
 
 };
 
