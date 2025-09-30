@@ -334,6 +334,12 @@ label.mandatory-field::after {
     top: -0.45em;
 }
 
+/* Remove box shadow and reset border color for valid empty optional input fields */
+input.form-control[data-check-empty="true"][data-empty="true"]:valid {
+  box-shadow: none !important;
+  border-color: #ced4da !important;
+}
+
 
 /* Show red shadow only when the field is focused and invalid */
 textarea.is-invalid:focus,
