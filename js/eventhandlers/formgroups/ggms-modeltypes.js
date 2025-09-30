@@ -1,7 +1,22 @@
 $(document).ready(function() {
+    // VISIBILITY HANDLING
+    // First, the whole form group and the contents
+    
+    const modelType = $('#input-model-type').val();
 
-    /**
-     * Handles the conditional visibility of form sections based on the 'Model Type' selection.
+    function updateGroupHeader() {
+        const modelSpecificCard = $('#model-specific-card');
+        // Check if the selected value is not empty
+        if (modelType !== 'Choose...' && modelType.trim() !== '') {
+            // If a model type is selected, show the card
+            modelSpecificCard.removeClass('d-none');
+        } else {
+            // Otherwise, hide the card
+            modelSpecificCard.addClass('d-none');
+        }
+    };
+    
+    /* Handles the conditional visibility of form sections based on the 'Model Type' selection.
      * It shows or hides sections for static, temporal, or topographic models.
      */
     function updateModelTypeVisibility() {
@@ -52,31 +67,32 @@ $(document).ready(function() {
     // Set up an event handler to listen for changes on the 'Model Type' dropdown.
     // Using event delegation on the document to handle dynamically added elements.
     $(document).on('change', '#input-model-type', function() {
+        updateGroupHeader();
         updateModelTypeVisibility();
     });
 
-    // Also run the function on page load in case a value is already selected.
-    // A small delay can help ensure that dropdowns populated by APIs are ready.
-    setTimeout(function() {
-        updateModelTypeVisibility();
-    }, 500);
 
+    const modelTypeSelect = document.getElementById('input-model-type');
 
-    const timeVariableCheckbox = document.getElementById('checkbox-time-variable');
-    const descriptionContainer = document.getElementById('time-variable-description-container');
-
-    if (timeVariableCheckbox && descriptionContainer) {
-        timeVariableCheckbox.addEventListener('change', function () {
-            if (this.checked) {
-                descriptionContainer.classList.remove('d-none');
-                descriptionContainer.setAttribute('aria-hidden', 'false');
-            } else {
-                descriptionContainer.classList.add('d-none');
-                descriptionContainer.setAttribute('aria-hidden', 'true');
-            }
+    if (modelTypeSelect) {
+        // Define an observer to watch for when <option>s are added to the select.
+        const observer = new MutationObserver(function(mutationsList, observer) {
+            // Once options are added, run our visibility checks.
+            updateGroupHeader();
+            updateModelTypeVisibility();
+            // We only need this to run once, so disconnect the observer after it fires.
+            observer.disconnect();
         });
-    }
 
+        // Start observing the select element for changes to its child nodes.
+        observer.observe(modelTypeSelect, { childList: true });
+    }
+    // Initial call to set the correct visibility on page load.
+    updateGroupHeader();
+    updateModelTypeVisibility();
+
+
+    // SEPARATE DENSITY FOR CRUST AND MANTLE
     /**
      * Toggles the visibility of density input sections based on the checkbox state.
      */
@@ -93,13 +109,13 @@ $(document).ready(function() {
             separateDensity.addClass('d-none');
         }
     }
-
     // Add event listener for the checkbox
     separateDensityCheckbox.on('change', toggleDensityInputs);
-
     // Initial check to set the correct visibility on page load
     toggleDensityInputs();
-        /**
+
+    // TEMPORAL FREQUENCY CHECKBOX AND CONTENT HANDLING
+    /**
      * Handles the mutual exclusivity between predefined frequency selection and custom frequency input.
      * Shows/hides and validates the custom input based on checkbox state.
      */
@@ -143,8 +159,23 @@ $(document).ready(function() {
         
         // Initialize state
         toggleCustomFrequencyInput();
-    }
-    
+    }  
     // Initialize the temporal frequency functionality
     setupTemporalFrequencyInputs();
+
+    // TIME VARIABLE CHECKBOX HANDLING
+    const timeVariableCheckbox = document.getElementById('checkbox-time-variable');
+    const descriptionContainer = document.getElementById('time-variable-description-container');
+
+    if (timeVariableCheckbox && descriptionContainer) {
+        timeVariableCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                descriptionContainer.classList.remove('d-none');
+                descriptionContainer.setAttribute('aria-hidden', 'false');
+            } else {
+                descriptionContainer.classList.add('d-none');
+                descriptionContainer.setAttribute('aria-hidden', 'true');
+            }
+        });
+    }
 });
