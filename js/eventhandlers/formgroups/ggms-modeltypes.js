@@ -6,13 +6,19 @@ $(document).ready(function() {
 
     function updateGroupHeader() {
         const modelSpecificCard = $('#model-specific-card');
-        // Check if the selected value is not empty
-        if (modelType !== 'Choose...' && modelType.trim() !== '') {
-            // If a model type is selected, show the card
+        // Get the CURRENT value from the dropdown every time the function is called.
+        const modelType = $('#input-model-type').val();
+
+        // Check if a valid model type is selected.
+        // This covers null, undefined, and empty strings ''.
+        if (modelType && modelType.toLowerCase() !== 'choose...' && modelType.toLowerCase() !== 'simulated') {
+            // If a valid model type is selected (not 'Choose...' or 'Simulated'), show the card.
             modelSpecificCard.removeClass('d-none');
+            modelSpecificCard.attr('aria-hidden', 'false');
         } else {
-            // Otherwise, hide the card
+            // Otherwise, hide the card.
             modelSpecificCard.addClass('d-none');
+            modelSpecificCard.attr('aria-hidden', 'true');
         }
     };
     
@@ -71,22 +77,6 @@ $(document).ready(function() {
         updateModelTypeVisibility();
     });
 
-
-    const modelTypeSelect = document.getElementById('input-model-type');
-
-    if (modelTypeSelect) {
-        // Define an observer to watch for when <option>s are added to the select.
-        const observer = new MutationObserver(function(mutationsList, observer) {
-            // Once options are added, run our visibility checks.
-            updateGroupHeader();
-            updateModelTypeVisibility();
-            // We only need this to run once, so disconnect the observer after it fires.
-            observer.disconnect();
-        });
-
-        // Start observing the select element for changes to its child nodes.
-        observer.observe(modelTypeSelect, { childList: true });
-    }
     // Initial call to set the correct visibility on page load.
     updateGroupHeader();
     updateModelTypeVisibility();
