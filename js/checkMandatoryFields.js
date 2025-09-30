@@ -384,16 +384,15 @@ if (abstract) {
  */
 function validateAbstractField() {
     // Trim the current value to ignore leading/trailing whitespace
+    const abstract = document.getElementById('input-abstract');
     const value = abstract.value.trim();
+    const inputGroup = abstract.closest('.input-group');
 
     // Reset validation state (remove valid/invalid classes)
     abstract.classList.remove('is-valid', 'is-invalid');
 
-    // Locate the closest input-group wrapper (contains textarea and optional help button)
-    const inputGroup = abstract.closest('.input-group');
-
     // Remove any previous feedback messages to avoid duplicates
-    const oldFeedback = inputGroup.querySelector('.invalid-feedback');
+    let oldFeedback = inputGroup.querySelector('.invalid-feedback[data-translate="descriptions.abstractInvalid"]');
     if (oldFeedback) oldFeedback.remove();
 
     if (value.length === 0) {
@@ -406,9 +405,15 @@ function validateAbstractField() {
         feedbackElem.setAttribute('data-translate', 'descriptions.abstractInvalid');
         feedbackElem.innerText = translations.descriptions.abstractInvalid;
         inputGroup.appendChild(feedbackElem);
+
+        // Set HTML5 validity so that checkValidity() also works
+        abstract.setCustomValidity(translations.descriptions.abstractInvalid);
+        return false;
     } else {
         // Otherwise, mark field as valid
         abstract.classList.add('is-valid');
+        abstract.setCustomValidity("");
+        return true;
     }
 }
 
