@@ -429,7 +429,7 @@ function validateAbstractField() {
  */
 function removeGreenCheckmarks() {
   // Iterate through all fields with data-check-empty="true"
-  document.querySelectorAll('.form-control[data-check-empty="true"]').forEach(field => {
+    document.querySelectorAll(optionalFieldsSelector).forEach(field => {
     // Check if the field is empty
     const isEmpty = field.value.trim() === "";
 
@@ -500,6 +500,39 @@ function validateAllMandatoryFields() {
     removeGreenCheckmarks();
 
 };
+
+const optionalFieldsSelector = [
+    // Resource Information
+    'input[name="doi"]',
+    'input[name="version"]',
+    // Author Person
+    'input[name="orcids[]"]',
+    'input[name="cpOnlineResource[]"]',
+    // Author Institution
+    'input[name="authorinstitutionName[]"]',
+    // Contributor  Person
+    'input[name="cbORCID[]"]',
+    'input[name="cbPersonLastname[]"]',
+    'input[name="cbPersonFirstname[]"]',
+    // Contributor  Institution
+    'input[name="cbOrganisationName[]"]',
+    // Related work
+    'input[name="relation[]"]',
+    'input[name="rIdentifier[]"]',
+    'input[name="rIdentifierType[]"]',  // it does not work with select elements
+    // Funding Reference
+    'input[name="funder[]"]',
+    'input[name="grantNummer[]"]',
+    'input[name="grantName[]"]',
+    'input[name="awardURI[]"]',
+
+
+    // Will continue tomorrow…
+
+
+    
+    'textarea#input-abstract'
+].join(', ');
 
 
 /**
