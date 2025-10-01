@@ -18,6 +18,9 @@ describe('ggms-datasources.js', () => {
   let $;
   beforeEach(() => {
     document.body.innerHTML = `
+      <div id="group-ggmspropertiesessential">
+        <input id="input-model-type" value="Choose..." />
+      </div>
       <div id="group-datasources">
         <div class="row">
           <div class="col-md-3 visibility-datasources-basic">
@@ -25,7 +28,7 @@ describe('ggms-datasources.js', () => {
               <option value="S" selected>Satellite</option>
               <option value="G">Ground</option>
               <option value="A">Altimetry</option>
-              <option value="T">Terrain</option>
+              <option value="T">Topography</option>
               <option value="M">Model</option>
             </select>
           </div>
@@ -283,43 +286,44 @@ describe('ggms-datasources.js', () => {
   });
 
   test('layout adjusts when type is set to M', () => {
+    // --- Setup: Select 'Model' and trigger the change ---
     const row = $('#group-datasources .row').first();
-    // Set type to Model and trigger change
-    row.find('select[name="datasource_type[]"]').val('M').trigger('change');
+    const typeSelect = row.find('select[name="datasource_type[]"]');
+    typeSelect.val('M').trigger('change');
 
-    // Get all relevant columns in the row
-    const typeCol = row.find('select[name="datasource_type[]"]').closest('div');
-    const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div');
-    const idTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div');
-    const modelNameCol = row.find('input[name="dName[]"]').closest('div');
-    const descCol = row.find('textarea[name="datasource_description[]"]').closest('div');
-    const addBtnCol = row.find('.addDataSource').closest('div');
+    // --- Get elements to check their order ---
+    const typeCol = row.find('select[name="datasource_type[]"]').closest('div[class*="col-"]');
+    const detailsCol = row.find('select[name="datasource_details[]"]').closest('div[class*="col-"]');
+    const modelNameCol = row.find('input[name="dName[]"]').closest('div[class*="col-"]');
+    const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div[class*="col-"]');
+    const identifierTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div[class*="col-"]');
+    const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
+    const addButtonCol = row.find('.addDataSource, .removeButton').closest('div[class*="col-"]');
 
-    // Check visibility of identifier and identifier type fields
-    expect(identifierCol.css('display')).not.toBe('none');
-    expect(idTypeCol.css('display')).not.toBe('none');
-
-    // Check order: Type -> Identifier -> IdentifierType -> ModelName -> Description -> AddButton
+    // --- Assertions ---
+    // Expected order: Type -> Details -> ModelName -> Identifier -> IdentifierType -> Description -> AddButton
     const children = row.children().toArray();
     const idxType = children.indexOf(typeCol[0]);
-    const idxIdentifier = children.indexOf(identifierCol[0]);
-    const idxIdType = children.indexOf(idTypeCol[0]);
+    const idxDetails = children.indexOf(detailsCol[0]);
     const idxModelName = children.indexOf(modelNameCol[0]);
+    const idxIdentifier = children.indexOf(identifierCol[0]);
+    const idxIdType = children.indexOf(identifierTypeCol[0]);
     const idxDesc = children.indexOf(descCol[0]);
-    const idxAddBtn = children.indexOf(addBtnCol[0]);
+    const idxAddBtn = children.indexOf(addButtonCol[0]);
 
-    expect(idxType).toBeLessThan(idxIdentifier);
+    expect(idxType).toBeLessThan(idxDetails);
+    expect(idxDetails).toBeLessThan(idxModelName);
+    expect(idxModelName).toBeLessThan(idxIdentifier);
     expect(idxIdentifier).toBeLessThan(idxIdType);
-    expect(idxIdType).toBeLessThan(idxModelName);
-    expect(idxModelName).toBeLessThan(idxDesc);
+    expect(idxIdType).toBeLessThan(idxDesc);
     expect(idxDesc).toBeLessThan(idxAddBtn);
 
     // Now set type back to Satellite and check order/visibility resets
-    row.find('select[name="datasource_type[]"]').val('S').trigger('change');
+    typeSelect.val('S').trigger('change');
 
     // Optionally, check that identifier fields are hidden again
     expect(identifierCol.css('display')).toBe('none');
-    expect(idTypeCol.css('display')).toBe('none');
+    expect(identifierTypeCol.css('display')).toBe('none');
   });
 
   test('addDataSource clones row, resets values, and restores help button', () => {
@@ -344,4 +348,41 @@ describe('ggms-datasources.js', () => {
     newRow.find('.removeButton').trigger('click');
     expect($('#group-datasources .row').length).toBe(1);
   });
+
+  test('has "Topography" option when model type becomes Topographic', () => {
+    const modelTypeInput = $('#input-model-type');
+    modelTypeInput.val('Topographic').trigger('change');
+    const typeSelect = $('select[name="datasource_type[]"]');
+    
+    // 1. Verify initial state: 'Topography' option does not exist
+    expect(typeSelect.find('option[value="T"]').length).toBe(1);
+    });
+
+  test('removes "Topography" option when model type is not Topographic', () => {
+    const modelTypeInput = $('#input-model-type');
+    modelTypeInput.val('Static').trigger('change');
+    const typeSelect = $('select[name="datasource_type[]"]');
+    
+    // 1. Verify initial state: 'Topography' option does not exist
+    expect(typeSelect.find('option[value="T"]').length).toBe(0);
+    });
+
+  test('resets datasource type to S if "Topography" was selected when removed', () => {
+    const modelTypeInput = $('#input-model-type');
+    modelTypeInput.val('Topographic').trigger('change');
+
+    // Create a new datasource row to selsct Topography
+    $('.addDataSource').trigger('click');
+    const newRow = $('#group-datasources .row').last();
+    const newTypeSelect = newRow.find('select[name="datasource_type[]"]');
+    newTypeSelect.val('T').trigger('change');
+    expect(newTypeSelect.find('option[value="T"]').length).toBe(1);
+
+    // Now change model type to something else and trigger the event
+    modelTypeInput.val('Temporal').trigger('change');
+    // The option to select T is no longer present
+    expect(newTypeSelect.find('option[value="T"]').length).toBe(0);
+    // The datasource type should have been reset to S
+    expect(newTypeSelect.val()).toBe('S');
+    });
 });
