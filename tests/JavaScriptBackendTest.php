@@ -305,6 +305,7 @@ class JavaScriptBackendTest extends TestCase
     public function testAjaxTemporalCoverageValidation(): void
     {
         // Test temporal coverage dates
+        $nextYear = (int) date('Y') + 1;
         $temporalData = [
             [
                 'startDate' => '2023-01-01',
@@ -317,14 +318,14 @@ class JavaScriptBackendTest extends TestCase
                 'timezone' => 'Europe/Berlin'
             ],
             [
-                'startDate' => '2025-01-01',  // Future date
-                'endDate' => '2025-12-31',
+                'startDate' => sprintf('%d-01-01', $nextYear),  // Future date
+                'endDate' => sprintf('%d-12-31', $nextYear),
                 'timezone' => 'UTC'
             ]
         ];
         
         $validationResults = [];
-        $currentYear = date('Y');
+        $currentYear = (int) date('Y');
         
         foreach ($temporalData as $index => $data) {
             $startTime = strtotime($data['startDate']);
