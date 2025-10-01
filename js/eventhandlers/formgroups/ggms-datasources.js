@@ -321,8 +321,8 @@ $(document).ready(function () {
     // --- Core functionality -------------------------------------------------
     /**
      * Iterates through all data source rows and updates the 'Type' dropdown.
-     * It adds or removes the 'Topography' option based on the main 'Model Type' selection.
-     * If 'Topography' is selected and the model type changes, it defaults the selection to 'Satellite'.
+     * It adds or removes the 'Elevation/Terrain' option based on the main 'Model Type' selection.
+     * If 'Elevation/Terrain' is selected and the model type changes, it defaults the selection to 'Satellite'.
      */
     function updateAllDatasourceTypeOptions() {
         const modelType = $('#input-model-type').val();
@@ -335,7 +335,7 @@ $(document).ready(function () {
 
             if (isTopoModel && !hasTopoOption) {
                 // If the model is Topographic and the option doesn't exist, add it.
-                typeSelect.append($('<option>', { value: 'T', text: 'Topography' }));
+                typeSelect.append($('<option>', { value: 'T', text: 'Elevation/Terrain' }));
             } else if (!isTopoModel && hasTopoOption) {
                 // If the model is NOT Topographic and the option exists, remove it.
                 // First, check if it's the currently selected option.
@@ -364,7 +364,7 @@ $(document).ready(function () {
 
     /**
      * Adjusts column widths when the "Compensation depth" field is shown for
-     * topography data sources so that all fields, including the add button,
+     * Elevation/Terrain data sources so that all fields, including the add button,
      * fit on a single row.
      *
      * @param {jQuery} row - The row to modify.
