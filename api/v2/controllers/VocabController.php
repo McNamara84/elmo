@@ -46,12 +46,12 @@ class VocabController
      * and a timestamp of when the data was last updated.
      * 
      * @param mixed $data The original data to be wrapped
-     * @return array An array containing:
+     * @return array<mixed> An array containing:
      *               - 'lastUpdated' (string) The timestamp in Y-m-d H:i:s format
      *               - 'data' (mixed) The original data structure
      * 
      */
-    private function addTimestampToData($data)
+    private function addTimestampToData($data): array
     {
         return [
             'lastUpdated' => date('Y-m-d H:i:s'),
@@ -129,10 +129,10 @@ class VocabController
     /**
      * Fetches MSL Labs data from a remote URL, processes it, and returns the necessary fields.
      *
-     * @return array Processed MSL Labs data.
+     * @return array<mixed> Processed MSL Labs data.
      * @throws Exception If fetching or decoding the data fails.
      */
-    public function fetchAndProcessMslLabs()
+    public function fetchAndProcessMslLabs(): array
     {
         $opts = [
             'http' => [
@@ -176,17 +176,17 @@ class VocabController
      * Fetches the CGI Simple Lithology vocabulary from the official RDF source
      * and returns a hierarchical array formatted for jsTree.
      *
-     * @return array Parsed CGI keywords tree
+     * @return array<mixed> Parsed CGI keywords tree
      * @throws Exception If fetching or parsing the RDF data fails
      */
-    public function fetchAndProcessCGIKeywords()
+    public function fetchAndProcessCGIKeywords(): array
     {
         // Source URL of the CGI Simple Lithology vocabulary
         $url = 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology.rdf';
 
         // Register RDF namespaces
-        RdfNamespace::set('skos', 'http://www.w3.org/2004/02/skos/core#');
-        RdfNamespace::set('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#');
+        \EasyRdf\RdfNamespace::set('skos', 'http://www.w3.org/2004/02/skos/core#');
+        \EasyRdf\RdfNamespace::set('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#');
 
         // Load RDF data
         $graph = new Graph($url);
@@ -272,10 +272,10 @@ class VocabController
     /**
      * Processes vocabulary items recursively and transform synonyms to description.
      *
-     * @param array $item The item to process
-     * @return array The processed item
+     * @param array<mixed> $item The item to process
+     * @return array<mixed> The processed item
      */
-    private function processItem($item)
+    private function processItem(array $item): array
     {
 
         // Synonyms as description
@@ -306,10 +306,10 @@ class VocabController
     /**
      * Retrieves and updates MSL vocabulary data.
      *
-     * @param array $vars An associative array of parameters (not used anymore)
+     * @param array<mixed> $vars An associative array of parameters (not used anymore)
      * @return void
      */
-    public function getMslVocab($vars = [])
+    public function getMslVocab(array $vars = [])
     {
         // Validate API key before processing request
         if (!$this->validateApiKey()) {
@@ -532,10 +532,10 @@ class VocabController
     /**
      * Retrieves roles from the database based on the specified type and returns them as JSON.
      *
-     * @param array $vars An associative array of parameters.
+     * @param array<mixed> $vars An associative array of parameters.
      * @return void
      */
-    public function getRoles($vars)
+    public function getRoles(array $vars)
     {
         global $connection;
         $type = $vars['type'] ?? $_GET['type'] ?? 'all';
@@ -743,10 +743,10 @@ class VocabController
     /**
      * Recursively sorts children nodes alphabetically by their text property
      *
-     * @param array &$nodes Reference to the array of nodes to sort
+     * @param array<mixed> &$nodes Reference to the array of nodes to sort
      * @return void
      */
-    private function sortChildrenRecursively(&$nodes)
+    private function sortChildrenRecursively(array &$nodes)
     {
         foreach ($nodes as &$node) {
             if (!empty($node['children'])) {
@@ -765,9 +765,9 @@ class VocabController
      * @param Graph $graph The RDF graph object containing concept data
      * @param string $conceptScheme The concept scheme identifier
      * @param string $schemeName The human-readable name of the scheme
-     * @return array The hierarchical structure of concepts
+     * @return array<mixed> The hierarchical structure of concepts
      */
-    private function buildHierarchy($graph, $conceptScheme, $schemeName)
+    private function buildHierarchy($graph, $conceptScheme, $schemeName): array
     {
         $hierarchy = [];
         $concepts = $graph->allOfType('skos:Concept');
@@ -1121,7 +1121,7 @@ class VocabController
     /**
      * Fetches metadata about the latest ROR data dump from Zenodo
      *
-     * @return array An array containing:
+     * @return array<mixed> An array containing:
      *               - [0] The download URL of the data dump
      *               - [1] The filename of the ZIP archive
      * @throws Exception If metadata cannot be retrieved or is invalid
@@ -1180,7 +1180,7 @@ class VocabController
      * Processes the ROR CSV file and returns the affiliations array
      *
      * @param string $csvFileName Name of the extracted CSV file
-     * @return array Parsed affiliations data
+     * @return array<mixed> Parsed affiliations data
      * @throws Exception If the CSV file cannot be read
      */
     private function parseRorCsv(string $csvFileName): array
@@ -1232,7 +1232,7 @@ class VocabController
     /**
      * Saves the affiliations array as a JSON file
      *
-     * @param array $affiliations The affiliations data
+     * @param array<mixed> $affiliations The affiliations data
      * @return void
      * @throws Exception If the JSON cannot be saved
      */
@@ -1257,7 +1257,7 @@ class VocabController
     /**
      * Sends a success response after affiliations are updated
      *
-     * @param array $affiliations The processed affiliations
+     * @param array<mixed> $affiliations The processed affiliations
      * @return void
      */
     private function respondWithAffiliations(array $affiliations): void
@@ -1451,7 +1451,7 @@ class VocabController
             $stmt = $connection->prepare('SELECT Model_type_id as id, name, description FROM Model_Type ORDER BY Model_type_id ASC');
 
             if (!$stmt) {
-                throw new Exception("Failed to prepare statement: " . connection->error);
+                throw new Exception("Failed to prepare statement: " . $connection->error);
             }
             
             $stmt->execute();
@@ -1485,7 +1485,7 @@ class VocabController
             $stmt = $connection->prepare('SELECT Mathematical_representation_id as id, name, description FROM Mathematical_Representation ORDER BY Mathematical_representation_id ASC');
 
             if (!$stmt) {
-                throw new Exception("Failed to prepare statement: " . connection->error);
+                throw new Exception("Failed to prepare statement: " . $connection->error);
             }
             
             $stmt->execute();

@@ -16,6 +16,12 @@ ob_start();
 
 // Include required files
 require_once __DIR__ . '/helper_functions.php';
+loadEnvVariables();
+// Make global variables from settings.php available
+global $connection, $showGGMsProperties, $debugging_output;
+global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
+global $xmlSubmitAddress;
+
 require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/save/formgroups/save_authors.php';
 require_once __DIR__ . '/save/formgroups/save_contactperson.php';
@@ -42,9 +48,8 @@ require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/SMTP.php';
 /**
  * Test GFZ SMTP connectivity
  */
-function testGfzSmtpConnectivity() { 
-    $smtpHost = getenv('smtpHost');
-    $smtpPort = getenv('smtpPort');
+function testGfzSmtpConnectivity() {
+    global $smtpHost, $smtpPort;
     
     error_log("=== GFZ SMTP Connectivity Test (XML Submit) ===");
     
@@ -82,6 +87,8 @@ function getPriorityText($weeks)
             return "undefined";
     }
 }
+
+$resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
 
 try {
     // Save all form components
@@ -140,7 +147,7 @@ try {
         // Generate XML directly in-memory
         $xml_content = $datasetController->envelopeXmlAsString($connection, $resource_id);
         // check for errors
-        if ($xml_content === FALSE) {
+        if (empty($xml_content)) {
             error_log("Submit: Failed to retrieve XML content from API and in-memory. Endpoint: $url");     
         } else {
             error_log("Submit: Successfully generated XML file in-memory for resource_id $resource_id.");
@@ -298,7 +305,7 @@ try {
     error_log("XML Submit Error: " . $e->getMessage());
     
     // Backup: Save submission details to file if email fails
-    if (isset($resource_id)) {
+    if ($resource_id !== false) {
         $backupFile = '/var/www/html/xml_submit_backup.txt';
         $backupEntry = "[" . date('Y-m-d H:i:s') . "] BACKUP XML SUBMISSION\n";
         $backupEntry .= "Resource ID: " . $resource_id . "\n";

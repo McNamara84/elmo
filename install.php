@@ -11,15 +11,15 @@
 // Include database connection
 if (!defined('INCLUDED_FROM_TEST')) {
     // Include database connection only when not called from tests
-    if (!file_exists('helper_functions.php')) {
-        $msg = 'Error: helper_functions.php not found. ' .
-            'Please copy sample_helper_functions.php to helper_functions.php and update your database credentials.';
+    $helpersPath = __DIR__ . '/helper_functions.php';
+    if (!file_exists($helpersPath)) {
+        $msg = 'Error: helper_functions.php not found. '    ;
         die(json_encode([
             'status' => 'error',
             'message' => $msg,
         ]));
     }
-    require_once 'helper_functions.php';
+    require_once 'settings.php';
 }
 
 // Check database connection
@@ -111,9 +111,9 @@ function dropTables($connection)
  * Creates the database structure by executing SQL CREATE TABLE statements.
  *
  * @param mysqli $connection The database connection object
- * @return array Status information about the operation
+ * @return array<mixed> Status information about the operation
  */
-function createDatabaseStructure($connection)
+function createDatabaseStructure($connection): array
 {
     $tables = [
         "Resource_Type" => "CREATE TABLE IF NOT EXISTS `Resource_Type` (
@@ -1183,9 +1183,9 @@ function insertTestResourceData($connection)
  *
  * @param mysqli $connection The database connection object
  * @param string $action The installation type (basic/complete)
- * @return array Installation status and progress information
+ * @return array<mixed> Installation status and progress information
  */
-function processInstallation($connection, $action)
+function processInstallation($connection, $action): array
 {
     try {
         // Step 1: Drop existing tables

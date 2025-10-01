@@ -6,9 +6,9 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
-include 'helper_functions.php';
+include __DIR__ . '/helper_functions.php';
 
-function testGfzSmtpConnectivity() {
+function testGfzSmtpConnectivity(): bool {
     $smtpHost=getenv('smtpHost');
     $smtpPort=getenv('smtpPort');
     
@@ -31,14 +31,14 @@ function testGfzSmtpConnectivity() {
 }
 
 function sendFeedbackMail(
-    $feedbackQuestion1,
-    $feedbackQuestion2,
-    $feedbackQuestion3,
-    $feedbackQuestion4,
-    $feedbackQuestion5,
-    $feedbackQuestion6,
-    $feedbackQuestion7
-) {
+    string $feedbackQuestion1,
+    string $feedbackQuestion2,
+    string $feedbackQuestion3,
+    string $feedbackQuestion4,
+    string $feedbackQuestion5,
+    string $feedbackQuestion6,
+    string $feedbackQuestion7
+): void {
     global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth;
     
     // Network test before sending

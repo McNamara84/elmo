@@ -9,7 +9,7 @@ require 'vendor/autoload.php';
 use EasyRdf\Graph;
 use EasyRdf\RdfNamespace;
 
-include 'helper_functions.php';
+include __DIR__ . '/helper_functions.php';
 include 'api_functions.php';
 
 // API-Hook für den Abruf aller CGI Simple Lithology Keywords aus der CGI Simple Lithology RDF-Datei
@@ -26,7 +26,7 @@ if ($_GET['action'] == 'getCGIKeywords') {
 // Beispielaufruf: api.php?action=getChronostratKeywords
 if ($_GET['action'] == 'getChronostratKeywords') {
     // Überprüfen der Verfügbarkeit einer URL
-    function isUrlAvailable($url)
+    function isUrlAvailable(string $url): bool
     {
         $headers = @get_headers($url);
         return $headers && strpos($headers[0], '200') !== false;

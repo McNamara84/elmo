@@ -63,7 +63,7 @@ $(document).ready(function () {
 
   function addAuthorRow() {
     const newAuthorRow = originalAuthorRow.clone();
-    const uniqueSuffix = new Date().getTime();
+    const uniqueSuffix = Date.now();
 
     // Reset form inputs and validation
     newAuthorRow.find("input").val("").removeClass("is-invalid is-valid");
@@ -71,17 +71,26 @@ $(document).ready(function () {
 
     // Update all relevant field IDs to ensure uniqueness
     [
+      "input-author-orcid",
+      "input-author-lastname",
+      "input-author-firstname",
       "input-author-affiliation",
       "input-author-rorid",
       "input-contactperson-email",
       "input-contactperson-website",
       "checkbox-author-contactperson"
     ].forEach(fieldId => {
-      newAuthorRow.find(`#${fieldId}`).attr("id", `${fieldId}-${uniqueSuffix}`);
-    });
+      const newId = `${fieldId}-${uniqueSuffix}`;
+      const field = newAuthorRow.find(`#${fieldId}`);
+      if (field.length) {
+        field.attr("id", newId);
+      }
 
-    // Update label to match new checkbox ID
-    newAuthorRow.find("label.btn").attr("for", `checkbox-author-contactperson-${uniqueSuffix}`);
+      const labels = newAuthorRow.find(`label[for='${fieldId}']`);
+      if (labels.length) {
+        labels.attr("for", newId);
+      }
+    });
 
     // Clean cloned row
     newAuthorRow.find(".tagify").remove();
