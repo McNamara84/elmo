@@ -23,7 +23,13 @@ class SafeFileExecutionTest extends TestCase
         $this->assertNotEmpty($content, 'Settings file contains content');
         $this->assertStringContainsString('<?php', $content, 'Settings file contains PHP code');
         $this->assertStringContainsString('connectDb', $content, 'Settings file contains connectDb function');
-        $this->assertStringContainsString('DB_', $content, 'Settings file contains database constants');
+        $this->assertStringContainsString('new mysqli', $content, 'Settings file creates MySQL connection');
+        $hasDbConfig = (
+            strpos($content, 'DB_') !== false ||
+            strpos($content, "getenv('DB_") !== false ||
+            strpos($content, 'getenv("DB_') !== false
+        );
+        $this->assertTrue($hasDbConfig, 'Settings file references database configuration');
     }
 
     /**
