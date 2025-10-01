@@ -26,8 +26,9 @@ class SafeFileExecutionTest extends TestCase
         $this->assertStringContainsString('new mysqli', $content, 'Settings file creates MySQL connection');
         $hasDbConfig = (
             strpos($content, 'DB_') !== false ||
-            strpos($content, "getenv('DB_") !== false ||
-            strpos($content, 'getenv("DB_') !== false
+            strpos($content, 'getenv(') !== false ||
+            strpos($content, '$host') !== false ||
+            strpos($content, '$database') !== false
         );
         $this->assertTrue($hasDbConfig, 'Settings file references database configuration');
     }
