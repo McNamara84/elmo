@@ -28,7 +28,7 @@ describe('ggms-datasources.js', () => {
               <option value="S" selected>Satellite</option>
               <option value="G">Ground</option>
               <option value="A">Altimetry</option>
-              <option value="T">Topography</option>
+              <option value="T">Elevation/Terrain</option>
               <option value="M">Model</option>
             </select>
           </div>
@@ -349,29 +349,29 @@ describe('ggms-datasources.js', () => {
     expect($('#group-datasources .row').length).toBe(1);
   });
 
-  test('has "Topography" option when model type becomes Topographic', () => {
+  test('has "Elevation/Terrain" option when model type becomes Topographic', () => {
     const modelTypeInput = $('#input-model-type');
     modelTypeInput.val('Topographic').trigger('change');
     const typeSelect = $('select[name="datasource_type[]"]');
     
-    // 1. Verify initial state: 'Topography' option does not exist
+    // 1. Verify initial state: 'Elevation/Terrain' option does not exist
     expect(typeSelect.find('option[value="T"]').length).toBe(1);
     });
 
-  test('removes "Topography" option when model type is not Topographic', () => {
+  test('removes "Elevation/Terrain" option when model type is not Topographic', () => {
     const modelTypeInput = $('#input-model-type');
     modelTypeInput.val('Static').trigger('change');
     const typeSelect = $('select[name="datasource_type[]"]');
     
-    // 1. Verify initial state: 'Topography' option does not exist
+    // 1. Verify initial state: 'Elevation/Terrain' option does not exist
     expect(typeSelect.find('option[value="T"]').length).toBe(0);
     });
 
-  test('resets datasource type to S if "Topography" was selected when removed', () => {
+  test('resets datasource type to S if "Elevation/Terrain" was selected when removed', () => {
     const modelTypeInput = $('#input-model-type');
     modelTypeInput.val('Topographic').trigger('change');
 
-    // Create a new datasource row to selsct Topography
+    // Create a new datasource row to selsct Elevation/Terrain
     $('.addDataSource').trigger('click');
     const newRow = $('#group-datasources .row').last();
     const newTypeSelect = newRow.find('select[name="datasource_type[]"]');
