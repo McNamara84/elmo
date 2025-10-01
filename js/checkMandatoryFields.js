@@ -524,8 +524,10 @@ const optionalFieldsSelector = [
     'input[name="cbPersonFirstname[]"]',
     // Contributor  Institution
     'input[name="cbOrganisationName[]"]',
+    // Originating Laboratory 
+    'select[name="laboratoryName[]"]',
     // Related work
-    'input[name="relation[]"]',
+    'select[name="relation[]"]',
     'input[name="rIdentifier[]"]',
     'select[name="rIdentifierType[]"]',  
     // Funding Reference
@@ -533,13 +535,18 @@ const optionalFieldsSelector = [
     'input[name="grantNummer[]"]',
     'input[name="grantName[]"]',
     'input[name="awardURI[]"]',
-
-
-    // Will continue tomorrow…
-
-
-    
-    'textarea#input-abstract'
+    // Spatial and Temporal Coverage
+    'input[name="tscLongitudeMax[]"]',
+    'input[name="tscLongitudeMin[]"]',
+    'textarea[name="tscDescription[]"]',
+    'input[name="tscLatitudeMin[]"]',
+    'input[name="tscLatitudeMax[]"]',
+    'input[name="tscDateStart[]"]',
+    'input[name="tscDateEnd[]"]',
+    'input[name="tscTimeStart[]"]',
+    'input[name="tscTimeEnd[]"]',
+    // Dates
+    'input[name="dateEmbargo"]'
 ].join(', ');
 
 
