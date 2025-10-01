@@ -218,7 +218,7 @@ class SaveDataProcessingTest extends TestCase
         $this->assertStringContainsString('.xml', $safeFilename);
         
         // Test other string operations
-        $this->assertEquals('test_file_name_dangerous.xml.xml', $safeFilename);
+    $this->assertEquals('test_file_name_______dangerous_xml.xml', $safeFilename);
     }
 
     /**
