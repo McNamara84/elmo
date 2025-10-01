@@ -14,10 +14,12 @@ $(document).ready(function () {
     const jsTreeId = '#jstree-platforms-datasource';
     let activePlatformTagify = null;
 
+    // CONTENTS OF THE DROPDOWNS
     const detailsOptions = {
         'G': ['Terrestrial', 'Shipborne', 'Airborne', 'Ground data computed from GGM', 'Other'],
         'A': ['Direct observations from altimetry satellites', 'Altimetric gridded datasets'],
-        'T': ['Bathymetry', 'Isostasy', 'Digital Elevation Model (DEM/DTM)', 'Density Model']
+        'T': ['Bathymetry', 'Isostasy', 'Digital Elevation Model (DEM/DTM)', 'Density Model'],
+        'M': ['Global Gravitational Model', 'Topographic gravity model']
     };
 
     const visibilityConfig = {
@@ -25,9 +27,10 @@ $(document).ready(function () {
         'G': { 'visibility-datasources-basic': true, 'visibility-datasources-details': true, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': false },
         'A': { 'visibility-datasources-basic': true, 'visibility-datasources-details': true, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': false },
         'T': { 'visibility-datasources-basic': true, 'visibility-datasources-details': true, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': false },
-        'M': { 'visibility-datasources-basic': true, 'visibility-datasources-details': false, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': true }
+        'M': { 'visibility-datasources-basic': true, 'visibility-datasources-details': true, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': true }
     };
 
+    // Keywords functionality
     // --- Helper functions -------------------------------------------------
 
     const getJsTree = () => $(jsTreeId).jstree(true);
@@ -315,6 +318,39 @@ $(document).ready(function () {
         }
     });
 
+    // --- Core functionality -------------------------------------------------
+    /**
+     * Iterates through all data source rows and updates the 'Type' dropdown.
+     * It adds or removes the 'Topography' option based on the main 'Model Type' selection.
+     * If 'Topography' is selected and the model type changes, it defaults the selection to 'Satellite'.
+     */
+    function updateAllDatasourceTypeOptions() {
+        const modelType = $('#input-model-type').val();
+        const isTopoModel = (modelType === 'Topographic');
+
+        // Iterate over each data source type dropdown
+        $('select[name="datasource_type[]"]').each(function() {
+            const typeSelect = $(this);
+            const hasTopoOption = typeSelect.find('option[value="T"]').length > 0;
+
+            if (isTopoModel && !hasTopoOption) {
+                // If the model is Topographic and the option doesn't exist, add it.
+                typeSelect.append($('<option>', { value: 'T', text: 'Topography' }));
+            } else if (!isTopoModel && hasTopoOption) {
+                // If the model is NOT Topographic and the option exists, remove it.
+                // First, check if it's the currently selected option.
+                if (typeSelect.val() === 'T') {
+                    // If it is, change the selection to a default value (e.g., 'S' for Satellite).
+                    typeSelect.val('S');
+                    // Trigger the change event to update the rest of the row's UI.
+                    typeSelect.trigger('change');
+                }
+                // Now, remove the option from the dropdown.
+                typeSelect.find('option[value="T"]').remove();
+            }
+        });
+    }
+
     function handleIsostasyField(row) {
         const typeSelect = row.find('select[name="datasource_type[]"]');
         const detailsSelect = row.find('select[name="datasource_details[]"]');
@@ -372,13 +408,17 @@ $(document).ready(function () {
 
         if (isModel) {
             // Row 1: Type | Identifier | Identifier Type
-            identifierCol.insertAfter(typeCol);
-            identifierTypeCol.insertAfter(identifierCol);
+            detailsCol.insertAfter(typeCol);
+            modelNameCol.insertAfter(detailsCol);
+
             // Row 2: Model Name | Description | Button
-            modelNameCol.insertAfter(identifierTypeCol);
-            descCol.insertAfter(modelNameCol);
+            identifierCol.insertAfter(modelNameCol);
+            identifierTypeCol.insertAfter(identifierCol);
+            descCol.insertAfter(identifierTypeCol);
             addButtonCol.insertAfter(descCol);
 
+            // Adjust column widths for the new layout
+            identifierCol.removeClass('col-md-5 col-lg-5').addClass('col-md-3 col-lg-3');
         }
         // Restore original order: Type | Description | Details | Compensation | ModelName | Identifier | IdentifierType | Satellite | AddButton
         else {
@@ -541,6 +581,10 @@ $(document).ready(function () {
     datasourceGroup.on('change', 'select[name="datasource_details[]"]', function () {
         const row = $(this).closest('.row');
         handleIsostasyField(row);
+    });
+    
+    $(document).on('change', '#input-model-type', function() {
+        updateAllDatasourceTypeOptions();
     });
 
     // --- INITIALIZATION ---
