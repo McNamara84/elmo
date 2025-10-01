@@ -35,8 +35,8 @@ class DraftController
     /**
      * Creates a new autosave draft for the active user session.
      *
-     * @param array $vars Route variables provided by the router.
-     * @param array|null $body Optional parsed request payload for testing.
+     * @param array<mixed> $vars Route variables provided by the router.
+     * @param array<mixed>|null $body Optional parsed request payload for testing.
      * @return void
      */
     public function create(array $vars = [], ?array $body = null): void
@@ -60,8 +60,8 @@ class DraftController
     /**
      * Updates an existing autosave draft belonging to the current session.
      *
-     * @param array $vars Route variables containing the draft identifier.
-     * @param array|null $body Optional parsed request payload for testing.
+     * @param array<mixed> $vars Route variables containing the draft identifier.
+     * @param array<mixed>|null $body Optional parsed request payload for testing.
      * @return void
      */
     public function update(array $vars = [], ?array $body = null): void
@@ -104,8 +104,8 @@ class DraftController
     /**
      * Retrieves the payload of the specified draft if it belongs to the session.
      *
-     * @param array $vars Route variables containing the draft identifier.
-     * @param array|null $body Optional parsed request payload (unused).
+     * @param array<mixed> $vars Route variables containing the draft identifier.
+     * @param array<mixed>|null $body Optional parsed request payload (unused).
      * @return void
      */
     public function get(array $vars = [], ?array $body = null): void
@@ -136,8 +136,8 @@ class DraftController
     /**
      * Deletes the specified draft for the current session.
      *
-     * @param array $vars Route variables containing the draft identifier.
-     * @param array|null $body Optional parsed request payload (unused).
+     * @param array<mixed> $vars Route variables containing the draft identifier.
+     * @param array<mixed>|null $body Optional parsed request payload (unused).
      * @return void
      */
     public function delete(array $vars = [], ?array $body = null): void
@@ -163,8 +163,8 @@ class DraftController
     /**
      * Returns the latest draft belonging to the current session, if available.
      *
-     * @param array $vars Route variables (unused).
-     * @param array|null $body Optional parsed request payload (unused).
+     * @param array<mixed> $vars Route variables (unused).
+     * @param array<mixed>|null $body Optional parsed request payload (unused).
      * @return void
      */
     public function latestForSession(array $vars = [], ?array $body = null): void
@@ -229,7 +229,7 @@ class DraftController
     /**
      * Reads and decodes the JSON request payload from the input stream.
      *
-     * @return array|null
+     * @return array<mixed>|null
      */
     private function readJsonBody(): ?array
     {
@@ -249,7 +249,7 @@ class DraftController
     /**
      * Validates the autosave payload structure.
      *
-     * @param array|null $data Request payload to validate.
+     * @param array<mixed>|null $data Request payload to validate.
      * @return bool
      */
     private function isValidPayload(?array $data): bool
@@ -265,8 +265,8 @@ class DraftController
      *
      * @param string $draftId Generated draft identifier.
      * @param string $sessionId Current session identifier.
-     * @param array $payload Submitted payload data.
-     * @return array
+     * @param array<mixed> $payload Submitted payload data.
+     * @return array<mixed>
      */
     private function createRecord(string $draftId, string $sessionId, array $payload): array
     {
@@ -282,7 +282,7 @@ class DraftController
     /**
      * Persists the provided record to disk.
      *
-     * @param array $record Draft record to store.
+     * @param array<mixed> $record Draft record to store.
      * @return void
      */
     private function persistRecord(array $record): void
@@ -301,7 +301,7 @@ class DraftController
      * @param string $sessionId Current session identifier.
      * @param string $draftId Draft identifier to load.
      * @param bool $forbidden Flag set to true when record belongs to another session.
-     * @return array|null
+     * @return array<mixed>|null
      */
     private function readRecord(string $sessionId, string $draftId, bool &$forbidden = false): ?array
     {
@@ -349,8 +349,8 @@ class DraftController
     /**
      * Reduces a record to the fields exposed to API consumers.
      *
-     * @param array $record Draft record to expose.
-     * @return array
+     * @param array<mixed> $record Draft record to expose.
+     * @return array<mixed>
      */
     private function exposeRecord(array $record): array
     {
@@ -365,8 +365,8 @@ class DraftController
     /**
      * Prepares metadata payload for create/update responses.
      *
-     * @param array $record Draft record to summarize.
-     * @return array
+     * @param array<mixed> $record Draft record to summarize.
+     * @return array<mixed>
      */
     private function responseMetadata(array $record): array
     {
@@ -431,7 +431,7 @@ class DraftController
     /**
      * Computes a checksum to track payload changes.
      *
-     * @param array $payload Payload to hash.
+     * @param array<mixed> $payload Payload to hash.
      * @return string
      */
     private function checksum(array $payload): string
@@ -442,7 +442,7 @@ class DraftController
     /**
      * Calculates a comparable timestamp score for a persisted record.
      *
-     * @param array $record Draft record to evaluate.
+     * @param array<mixed> $record Draft record to evaluate.
      * @param string $filePath Path to the record file used for fallbacks.
      * @return float
      */
@@ -471,9 +471,9 @@ class DraftController
     /**
      * Determines which record should win when timestamp scores are identical.
      *
-     * @param array $current Currently selected record.
-     * @param array $candidate Candidate record being evaluated.
-     * @return array
+     * @param array<mixed> $current Currently selected record.
+     * @param array<mixed> $candidate Candidate record being evaluated.
+     * @return array<mixed>
      */
     private function preferLatestRecord(array $current, array $candidate): array
     {
@@ -527,7 +527,7 @@ class DraftController
      * Sends a JSON response with the provided HTTP status code.
      *
      * @param int $status HTTP status code to send.
-     * @param array|null $payload Response payload.
+     * @param array<mixed>|null $payload Response payload.
      * @return void
      */
     private function respond(int $status, ?array $payload): void

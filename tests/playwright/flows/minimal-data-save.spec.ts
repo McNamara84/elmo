@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { completeMinimalDatasetForm, navigateToHome, SELECTORS } from '../utils';
 
 const SAVE_ENDPOINT = '**/save/save_data.php';
@@ -6,10 +6,84 @@ const MOCK_XML_RESPONSE = `<?xml version="1.0" encoding="UTF-8"?>\n<dataset>Auto
 
 const CUSTOM_FILENAME = 'automated_test_dataset';
 
+const API_DROPDOWNS = [
+  {
+    selector: '#input-resourceinformation-resourcetype',
+    description: 'Resource Type',
+    shouldBeVisible: true,
+  },
+  {
+    selector: '#input-resourceinformation-language',
+    description: 'Language',
+    shouldBeVisible: true,
+  },
+  {
+    selector: '#input-resourceinformation-titletype',
+    description: 'Title Type',
+    shouldBeVisible: false,
+  },
+  {
+    selector: '#input-rights-license',
+    description: 'License',
+    shouldBeVisible: true,
+  },
+] as const;
+
+async function expectApiDropdownsToBePopulated(page: Page) {
+  for (const dropdownConfig of API_DROPDOWNS) {
+    const { selector, description, shouldBeVisible } = dropdownConfig;
+    const dropdownLocator = page.locator(selector);
+    await expect(
+      dropdownLocator,
+      `${description} dropdown should exist in the DOM`,
+    ).not.toHaveCount(0);
+
+    const dropdown = dropdownLocator.first();
+
+    if (shouldBeVisible) {
+      await expect(dropdown, `${description} dropdown should be visible for the user`).toBeVisible();
+    }
+
+    await expect(async () => {
+      const dropdownState = await dropdown.evaluate((element) => {
+        const selectElement = element as HTMLSelectElement;
+        const options = Array.from(selectElement.options).map((option) => ({
+          value: option.value.trim(),
+          text: (option.textContent || '').trim(),
+        }));
+
+        return {
+          disabled: selectElement.disabled,
+          options,
+        };
+      });
+
+      expect(dropdownState.disabled, `${description} dropdown should be enabled`).toBeFalsy();
+
+      const meaningfulOptions = dropdownState.options.filter((option) => option.value !== '');
+      expect(
+        meaningfulOptions.length,
+        `${description} dropdown should contain selectable options loaded from the API`,
+      ).toBeGreaterThan(0);
+
+      const disallowedLabels = new Set(['Loading...', 'Error loading data']);
+      const hasDisallowedLabel = dropdownState.options.some((option) =>
+        disallowedLabels.has(option.text),
+      );
+      expect(
+        hasDisallowedLabel,
+        `${description} dropdown should not show loading or error placeholders after initialization`,
+      ).toBeFalsy();
+    }).toPass({ timeout: 10_000 });
+  }
+}
+
 test.describe('Minimal dataset save-as flow', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await completeMinimalDatasetForm(page);
+
+    await expectApiDropdownsToBePopulated(page);
 
     const saveButton = page.locator('#button-form-save');
     await expect(saveButton).toBeEnabled();
