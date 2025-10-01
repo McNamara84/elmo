@@ -428,9 +428,9 @@ function validateAbstractField() {
  * 
  */
 function removeGreenCheckmarks() {
-  // Iterate through all fields with data-check-empty="true"
-    document.querySelectorAll(optionalFieldsSelector).forEach(field => {
-    // Check if the field is empty
+  // Iterate through all fields in the optionalFieldsSelector
+  document.querySelectorAll(optionalFieldsSelector).forEach(field => {
+    // Check if the field is empty (trimmed string is empty)
     const isEmpty = field.value.trim() === "";
 
     // Set dataset attribute to indicate empty state
@@ -456,15 +456,23 @@ function removeGreenCheckmarks() {
 
         // Explicitly set validity status to empty to reset errors
         field.setCustomValidity("");
+
+        // Remove green checkmark background image (inline style) to suppress green tick
+        field.style.setProperty('background-image', 'none', 'important');
       } else {
         // For invalid value, remove .is-valid
         field.classList.remove("is-valid");
       }
 
-      // Remove inline styles set in empty state,
-      // so that default validation styles can apply again
+      // Remove inline green shadow styling to revert to Bootstrap default border behavior
       field.style.removeProperty('box-shadow');
-      field.style.removeProperty('background-image');
+
+      // Only remove background image if field is not empty (keeps none if empty)
+      if (isEmpty) {
+        field.style.setProperty('background-image', 'none', 'important');
+      } else {
+        field.style.removeProperty('background-image');
+      }
     }
   });
 }
@@ -519,7 +527,7 @@ const optionalFieldsSelector = [
     // Related work
     'input[name="relation[]"]',
     'input[name="rIdentifier[]"]',
-    'input[name="rIdentifierType[]"]',  // it does not work with select elements
+    'select[name="rIdentifierType[]"]',  
     // Funding Reference
     'input[name="funder[]"]',
     'input[name="grantNummer[]"]',

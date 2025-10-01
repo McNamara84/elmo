@@ -336,7 +336,8 @@ label.mandatory-field::after {
 
 /* Remove box shadow and reset border color for valid empty optional input fields */
 input.form-control[data-empty="true"]:valid,
-textarea.form-control[data-empty="true"]:valid {
+textarea.form-control[data-empty="true"]:valid,
+select.form-select[data-empty="true"]:valid {
   box-shadow: none !important;
   border-color: #ced4da !important;
   background-image: none !important;
