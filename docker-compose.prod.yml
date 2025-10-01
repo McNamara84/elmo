@@ -2,11 +2,9 @@ services:
   db:
     image: mariadb:11
     environment:
-      MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
-      MARIADB_DATABASE: ${DB_NAME}
-      MARIADB_USER: ${DB_USER}
-      MARIADB_PASSWORD: ${DB_PASSWORD}
       TZ: Europe/Berlin
+    env_file:
+      - stack.env
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
@@ -19,6 +17,8 @@ services:
       - "8080:80"
     environment:
       - CONFIG_VERSION=generic # Set the desired configuration version here
+    env_file:
+      - stack.env
     depends_on:
       - db
     restart: unless-stopped
@@ -40,6 +40,8 @@ services:
       - "8081:80"
     environment:
       - CONFIG_VERSION=msl # Set the desired configuration version here
+    env_file:
+      - stack.env
     depends_on:
       - db
     restart: unless-stopped
@@ -59,6 +61,8 @@ services:
     build: .
     ports:
       - "8082:80"
+    env_file:
+      - stack.env
     environment:
       - CONFIG_VERSION=elmogem # Set the desired configuration version here 
     depends_on:
