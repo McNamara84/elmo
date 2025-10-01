@@ -169,7 +169,7 @@ jobs:
           cat server.log
 
       - name: Generate coverage (PHP 8.4 push builds)
-        if: matrix.php-version == '8.4' && github.event_name == 'push'
+        if: matrix.php-version == '8.4' && github.event_name == 'pull_request' # Only for testing purposes on PRs (change this to push)
         env:
           API_BASE_URL: http://localhost:8000
         run: |
@@ -178,13 +178,13 @@ jobs:
           find . -name "*.xml" -type f | head -10
 
       - name: Prepare output directory
-        if: matrix.php-version == '8.4' && github.event_name == 'push'
+        if: matrix.php-version == '8.4' && github.event_name == 'pull_request' # Only for testing purposes on PRs (change this to push)
         run: |
           mkdir -p output
           touch output/.keep
 
       - name: Make code coverage badge
-        if: matrix.php-version == '8.4' && github.event_name == 'push'
+        if: matrix.php-version == '8.4' && github.event_name == 'pull_request' # Only for testing purposes on PRs (change this to push)
         continue-on-error: true
         uses: timkrase/phpunit-coverage-badge@v1.2.1
         with:
@@ -192,7 +192,7 @@ jobs:
           push_badge: false
 
       - name: Publish coverage badge
-        if: matrix.php-version == '8.4' && github.event_name == 'push'
+        if: matrix.php-version == '8.4' && github.event_name == 'pull_request' # Only for testing purposes on PRs (change this to push)
         continue-on-error: true
         uses: peaceiris/actions-gh-pages@v3
         with:
