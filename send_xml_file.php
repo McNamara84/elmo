@@ -27,12 +27,21 @@ if (!isset($connection)) {
 
 $smtpHost = getenv('smtpHost');
 $smtpPort = getenv('smtpPort');
+if ($smtpPort === false) {
+    // If the environment variable is not set, use a default and log a warning.
+    error_log("Warning: 'smtpPort' environment variable not set. Using default port 587.");
+    $smtpPort = 587;
+} else {
+    // If it is set, cast the string value to an integer.
+    $smtpPort = (int)$smtpPort;
+}
 $smtpUser = getenv('smtpUser');
 $smtpPassword = getenv('smtpPassword');
 $smtpSender = getenv('smtpSender');
 $xmlSubmitAddress = getenv('xmlSubmitAddress');
 $smtpSecure = getenv('smtpSecure');
 $smtpAuth = getenv('smtpAuth');
+$showGGMsProperties = getenv('showGGMsProperties');
 
 require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/save/formgroups/save_authors.php';
