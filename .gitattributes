@@ -1,0 +1,3 @@
+# Enforce Unix (LF) line endings for shell scripts to ensure
+# they are executable in Linux-based Docker containers.
+*.sh eol=lf
