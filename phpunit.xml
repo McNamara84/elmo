@@ -12,9 +12,41 @@
     <!-- Add Coverage configs -->
     <source>
         <include>
-            <directory suffix=".php">.</directory>
+            <!-- Include specific directories that contain testable code -->
+            <directory suffix=".php">./api</directory>
+            <directory suffix=".php">./save</directory>
+            <directory suffix=".php">./includes</directory>
+            
+            <!-- Include specific root-level files that are testable -->
+            <file>./api_functions.php</file>
+            <file>./generate_xml_files.php</file>
+            <file>./header.php</file>
+            <file>./index.php</file>
+            <file>./install.php</file>
+            <file>./send_feedback_mail.php</file>
+            <file>./send_xml_file.php</file>
         </include>
         <exclude>
+            <!-- Exclude test files and vendor directory -->
+            <directory>./tests</directory>
+            <directory>./vendor</directory>
+            
+            <!-- Exclude documentation -->
+            <directory>./doc</directory>
+            
+            <!-- Exclude coverage reports themselves -->
+            <directory>./coverage</directory>
+            <directory>./coverage-report</directory>
+            
+            <!-- Exclude configuration and sample files -->
+            <file>./settings.php</file>
+            <file>./settings.elmo.php</file>
+            <file>./settings.msl.php</file>
+            <file>./sample_settings.php</file>
+            <file>./sample_settings_gem.php</file>
+            <file>./sample_settings_msl.php</file>
+            
+            <!-- Exclude non-code directories -->
             <directory>./.github</directory>
             <directory>./.vscode</directory>
             <directory>./assets</directory>
@@ -23,10 +55,14 @@
             <directory>./js</directory>
             <directory>./json</directory>
             <directory>./lang</directory>
+            <directory>./logos</directory>
             <directory>./schemas</directory>
-            <directory>./tests</directory>
-            <directory>./vendor</directory>
             <directory>./xml</directory>
+            <directory>./storage</directory>
+            <directory>./e2e</directory>
+            <directory>./playwright-report</directory>
+            <directory>./test-results</directory>
+            <directory>./node_modules</directory>
         </exclude>
     </source>
 </phpunit>
