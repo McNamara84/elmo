@@ -1,0 +1,32 @@
+services:
+  db:
+  image: mariadb:11
+  environment:
+    MARIADB_ROOT_PASSWORD: password
+    MARIADB_DATABASE: elmocache
+    MARIADB_USER: elmo
+    MARIADB_PASSWORD: password
+    TZ: Europe/Berlin
+  volumes:
+    - db_data:/var/lib/mysql
+  restart: unless-stopped
+
+web:
+  build: .
+  ports:
+    - "8080:80"
+  environment:
+    CONFIG_VERSION: generic # HERE THE CHOICE IS MADE: generic, elmogem, msl or testing
+    ROOT_PASSWORD: password
+    DB_USER: elmo
+    DB_PASSWORD: password
+    DB_NAME: elmocache
+    DB_HOST: db
+    TZ: Europe/Berlin
+    INSTALL_ACTION: basic
+  depends_on:
+    - db
+  restart: unless-stopped
+
+volumes:
+  db_data:
