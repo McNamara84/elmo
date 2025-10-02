@@ -19,7 +19,7 @@ if (!defined('INCLUDED_FROM_TEST')) {
             'message' => $msg,
         ]));
     }
-    include __DIR__ . '/helper_functions.php';
+    require_once __DIR__ . '/helper_functions.php';
     loadEnvVariables();
 }
 

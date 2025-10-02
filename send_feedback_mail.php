@@ -6,7 +6,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
-include __DIR__ . '/helper_functions.php';
+include_once __DIR__ . '/helper_functions.php';
 loadEnvVariables();
 
 function testGfzSmtpConnectivity(): bool {
