@@ -20,7 +20,7 @@ loadEnvVariables();
 
 // SMTP variables from environment
 // Initialize $connection (replace with your actual DB connection logic)
-if (!isset($connection)) {
+if ($connection) {
     trigger_error('Warning: $connection is undefined. Please initialize the database connection.', E_USER_WARNING);
     // Example: $connection = new mysqli(...); // Uncomment and configure as needed
 }
