@@ -19,7 +19,8 @@ if (!defined('INCLUDED_FROM_TEST')) {
             'message' => $msg,
         ]));
     }
-    require_once 'settings.php';
+    require_once $helpersPath;
+    loadEndFiles();
 }
 
 // Check database connection
