@@ -20,7 +20,7 @@ if (!defined('INCLUDED_FROM_TEST')) {
         ]));
     }
     require_once $helpersPath;
-    loadEndFiles();
+    loadEnvVariables();
     global $connection;
 }
 
