@@ -7,11 +7,19 @@ use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
 include __DIR__ . '/helper_functions.php';
+loadEnvVariables();
 
 function testGfzSmtpConnectivity(): bool {
     $smtpHost=getenv('smtpHost');
     $smtpPort=getenv('smtpPort');
-    
+    if ($smtpPort === false) {
+        // If the environment variable is not set, use a default and log a warning.
+        error_log("Warning: 'smtpPort' environment variable not set. Using default port 587.");
+        $smtpPort = 587;
+    } else {
+        // If it is set, cast the string value to an integer.
+        $smtpPort = (int)$smtpPort;
+    }
     error_log("=== GFZ SMTP Connectivity Test ===");
     
     // DNS test
