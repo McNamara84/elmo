@@ -226,15 +226,19 @@ class ExtensiveXmlTest extends TestCase
         
         // Comprehensive validation
         $this->assertStringContainsString('<title type="Primary">Primary Research Dataset</title>', $xmlString);
-        $this->assertStringContainsString('<author><name>Smith, Alice</name>', $xmlString);
         $this->assertStringContainsString('<contributor role="1">Davis, David</contributor>', $xmlString);
         $this->assertStringContainsString('<abstract>This dataset contains comprehensive research data', $xmlString);
         $this->assertStringContainsString('<gcmdKeyword>Earth Science</gcmdKeyword>', $xmlString);
         $this->assertStringContainsString('<spatialCoverage>', $xmlString);
         $this->assertStringContainsString('<relatedIdentifier type="DOI" relation="IsSourceOf">10.1234/related1</relatedIdentifier>', $xmlString);
         $this->assertStringContainsString('<funder>Research Council A</funder>', $xmlString);
-        
-        $this->assertGreaterThan(5000, strlen($xmlString), 'Generated XML should be comprehensive');
+
+        $xpath = new \DOMXPath($dom);
+        $this->assertSame('Smith, Alice', $xpath->evaluate('string(/comprehensiveDataset/authors/author[1]/name)'));
+        $this->assertSame(3, (int) $xpath->evaluate('count(/comprehensiveDataset/authors/author)'));
+        $this->assertSame(2, (int) $xpath->evaluate('count(/comprehensiveDataset/contributors/contributor)'));
+        $this->assertSame(2, (int) $xpath->evaluate('count(/comprehensiveDataset/spatialTemporalCoverage/spatialCoverage)'));
+        $this->assertSame(2, (int) $xpath->evaluate('count(/comprehensiveDataset/relatedIdentifiers/relatedIdentifier)'));
     }
 
     private function transformTitles(\DOMDocument $dom, \DOMElement $parent, array $titles, array $titleTypes): void
