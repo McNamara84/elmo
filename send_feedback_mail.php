@@ -7,7 +7,6 @@ use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
 include __DIR__ . '/helper_functions.php';
-loadEndFiles();
 
 function testGfzSmtpConnectivity(): bool {
     $smtpHost=getenv('smtpHost');

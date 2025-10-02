@@ -17,7 +17,7 @@ ob_start();
 // Include required files
 require_once __DIR__ . '/helper_functions.php';
 loadEnvVariables();
-// Make global variables from settings.php available
+// Make global variables from helper_functions.php available
 global $connection, $showGGMsProperties, $debugging_output;
 global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
 global $xmlSubmitAddress;

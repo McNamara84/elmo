@@ -21,6 +21,7 @@ if (!defined('INCLUDED_FROM_TEST')) {
     }
     require_once $helpersPath;
     loadEndFiles();
+    global $connection;
 }
 
 // Check database connection

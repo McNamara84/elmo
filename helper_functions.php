@@ -21,6 +21,7 @@ function connectDb()
 }
 
 // Establish the database connection
+global $connection;
 $connection = connectDb();
 
 /**
