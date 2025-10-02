@@ -18,13 +18,12 @@ ob_start();
 require_once __DIR__ . '/helper_functions.php';
 loadEnvVariables();
 
-// SMTP variables from environment
-// Initialize $connection (replace with your actual DB connection logic)
-if ($connection) {
+// Safety check with connection
+if (empty($connection)) {
     trigger_error('Warning: $connection is undefined. Please initialize the database connection.', E_USER_WARNING);
-    // Example: $connection = new mysqli(...); // Uncomment and configure as needed
 }
 
+// SMTP variables from environment
 $smtpHost = getenv('smtpHost');
 $smtpPort = getenv('smtpPort');
 if ($smtpPort === false) {
