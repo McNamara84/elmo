@@ -18,6 +18,16 @@ ob_start();
 require_once __DIR__ . '/helper_functions.php';
 loadEnvVariables();
 
+// SMTP variables from environment
+$smtpHost = getenv('smtpHost');
+$smtpPort = getenv('smtpPort');
+$smtpUser = getenv('smtpUser');
+$smtpPassword = getenv('smtpPassword');
+$smtpSender = getenv('smtpSender');
+$xmlSubmitAddress = getenv('xmlSubmitAddress');
+$smtpSecure = getenv('smtpSecure');
+$smtpAuth = getenv('smtpAuth');
+
 require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/save/formgroups/save_authors.php';
 require_once __DIR__ . '/save/formgroups/save_contactperson.php';
@@ -85,6 +95,7 @@ function getPriorityText($weeks)
 }
 
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
+$debugging_output = '';
 
 try {
     // Save all form components
