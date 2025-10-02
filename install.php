@@ -21,7 +21,6 @@ if (!defined('INCLUDED_FROM_TEST')) {
     }
     include __DIR__ . '/helper_functions.php';
     loadEnvVariables();
-    global $connection;
 }
 
 // Check database connection
