@@ -3,48 +3,53 @@ const path = require('path');
 
 describe('author.js', () => {
   let $;
-  let suffix;
-  const fixedTime = 1717072496000; // fixed timestamp for Date.now()
 
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(new Date(fixedTime));
-    jest.spyOn(Date, 'now').mockReturnValue(fixedTime); // mock Date.now()
-    suffix = Date.now();
-
     document.body.innerHTML = `
       <div id="group-author">
         <div class="row" data-creator-row>
-          <div class="col p-1">
-            <input type="checkbox" id="checkbox-author-contactperson" />
-            <label class="btn" for="checkbox-author-contactperson">Contact Person</label>
+          <!-- Contact Person + ORCID -->
+          <div class="col-12 col-sm-12 col-md-5 col-lg-3 p-1">
+            <div class="input-group has-validation">
+              <input type="checkbox" id="checkbox-author-contactperson" name="contacts[]" autocomplete="off">
+              <label for="checkbox-author-contactperson">Contact Person</label>
+              <div class="form-floating flex-grow-1">
+                <input type="text" id="input-author-orcid" name="orcids[]" />
+                <label for="input-author-orcid">ORCID</label>
+              </div>
+              <span class="input-group-text">
+                <i class="bi bi-question-circle-fill"></i>
+              </span>
+            </div>
           </div>
-          <div class="col p-1">
-            <input type="text" id="input-author-orcid" value="0000-0000-0000-0000" />
-            <label for="input-author-orcid">ORCID</label>
+          <!-- Lastname -->
+          <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
+            <input type="text" id="input-author-lastname" name="familynames[]" value="Doe" />
           </div>
-          <div class="col p-1">
-            <input type="text" id="input-author-lastname" value="Doe" />
-            <label for="input-author-lastname">Last name</label>
+
+          <!-- Firstname -->
+          <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
+            <input type="text" id="input-author-firstname" name="givennames[]" value="John" />
           </div>
-          <div class="col p-1">
-            <input type="text" id="input-author-firstname" value="John" />
-            <label for="input-author-firstname">First name</label>
+
+          <!-- Affiliation -->
+          <div class="col-10 col-sm-11 col-md-10 col-lg-4 p-1">
+            <input type="text" id="input-author-affiliation" name="personAffiliation[]" value="Some Affil" />
+            <input type="hidden" id="input-author-rorid" name="authorPersonRorIds[]" value="123" />
           </div>
-          <div class="col p-1">
-            <label for="input-author-affiliation" class="visually-hidden">Affiliation</label>
-            <input type="text" id="input-author-affiliation" value="Some Affil" />
-            <input type="hidden" id="input-author-rorid" value="123" />
-          </div>
-          <div class="col p-1">
+
+          <!-- Add Button -->
+          <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1">
             <button type="button" id="button-author-add" class="addAuthor">+</button>
           </div>
-          <div class="col p-1 contact-person-input">
-            <input type="email" id="input-contactperson-email" value="test@example.com" />
-            <label for="input-contactperson-email">Email</label>
+          <!-- Email -->
+          <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 contact-person-input">
+            <input type="email" id="input-contactperson-email" name="cpEmail[]" value="test@example.com" />
           </div>
-          <div class="col p-1 contact-person-input">
-            <input type="text" id="input-contactperson-website" value="https://example.com" />
-            <label for="input-contactperson-website">Website</label>
+
+          <!-- Website -->
+          <div class="col-12 col-sm-12 col-md-6 col-lg-5 p-1 contact-person-input">
+            <input type="text" id="input-contactperson-website" name="cpOnlineResource[]" value="https://example.com" />
           </div>
         </div>
       </div>
@@ -79,7 +84,6 @@ describe('author.js', () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
     jest.restoreAllMocks();
     jest.clearAllTimers();
   });
@@ -93,30 +97,24 @@ describe('author.js', () => {
     const newRow = rows.last();
 
     // IDs correctly adjusted
-    expect(newRow.find(`#input-author-orcid-${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-author-lastname-${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-author-firstname-${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-author-affiliation-${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-author-rorid-${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-contactperson-email-${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-contactperson-website-${suffix}`).length).toBe(1);
-    expect(newRow.find(`#checkbox-author-contactperson-${suffix}`).length).toBe(1);
-
-    // Labels updated to match new IDs
-    expect(newRow.find(`label[for='input-author-orcid-${suffix}']`).length).toBe(1);
-    expect(newRow.find(`label[for='input-author-lastname-${suffix}']`).length).toBe(1);
-    expect(newRow.find(`label[for='input-author-firstname-${suffix}']`).length).toBe(1);
-    expect(newRow.find(`label[for='input-author-affiliation-${suffix}']`).length).toBe(1);
-    expect(newRow.find(`label[for='input-contactperson-email-${suffix}']`).length).toBe(1);
-    expect(newRow.find(`label[for='input-contactperson-website-${suffix}']`).length).toBe(1);
-    expect(newRow.find(`label[for='checkbox-author-contactperson-${suffix}']`).length).toBe(1);
+    expect(newRow.find('#input-author-orcid-1').length).toBe(1);
+    expect(newRow.find('#input-author-lastname-1').length).toBe(1);
+    expect(newRow.find('#input-author-firstname-1').length).toBe(1);
+    expect(newRow.find('#input-author-affiliation-1').length).toBe(1);
+    expect(newRow.find('#input-author-rorid-1').length).toBe(1);
+    expect(newRow.find('#input-contactperson-email-1').length).toBe(1);
+    expect(newRow.find('#input-contactperson-website-1').length).toBe(1);
+    expect(newRow.find('#checkbox-author-contactperson-1').length).toBe(1);
+    expect(newRow.find("label[for='checkbox-author-contactperson-1']").length).toBe(1);
+    expect(newRow.find('.removeButton').length).toBe(1);
 
     // Fields cleared
-    expect(newRow.find('input').filter(function () { return this.value; }).length).toBe(0);
+    expect(newRow.find('input[type="text"], input[type="email"]').filter(function () { return $(this).val(); }).length).toBe(0);
+    expect(newRow.find('#input-author-rorid-1').val()).toBe('');
+    expect(newRow.find('#checkbox-author-contactperson-1').prop('checked')).toBe(false);
 
     // Add button replaced by remove button
     expect(newRow.find('#button-author-add').length).toBe(0);
-    expect(newRow.find('.removeButton').length).toBe(1);
 
     // Helper functions called
     expect(window.replaceHelpButtonInClonedRows).toHaveBeenCalledTimes(1);
@@ -124,8 +122,8 @@ describe('author.js', () => {
 
     // Autocomplete initialized
     expect(window.autocompleteAffiliations).toHaveBeenCalledWith(
-      `input-author-affiliation-${suffix}`,
-      `input-author-rorid-${suffix}`,
+      'input-author-affiliation-1',
+      'input-author-rorid-1',
       window.affiliationsData
     );
 

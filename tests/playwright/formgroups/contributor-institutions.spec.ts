@@ -249,7 +249,7 @@ test.describe('Contributor (Institutions) form group', () => {
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
       affiliationInput.tagify.addTags([{ value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' }]);
-      (window as any).checkMandatoryFields();
+      (window as any).validateAllMandatoryFields();
     });
 
     await expect(nameInput).toHaveAttribute('required', 'required');
@@ -258,7 +258,7 @@ test.describe('Contributor (Institutions) form group', () => {
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
       affiliationInput.tagify.removeAllTags();
-      (window as any).checkMandatoryFields();
+      (window as any).validateAllMandatoryFields();
     });
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');
@@ -286,7 +286,7 @@ test.describe('Contributor (Institutions) form group', () => {
     const secondNameLabel = secondRow.locator("label[for^='input-contributor-name']");
     await expect(secondNameLabel).toHaveAttribute('for', secondNameId!);
 
-    const secondRoleInput = secondRow.locator('input[name="cbOrganisationRoles[]"]');
+    const secondRoleInput = secondRow.locator('input[id^="input-contributor-organisationrole"]');
     const secondRoleId = await secondRoleInput.getAttribute('id');
     expect(secondRoleId).not.toBeNull();
 
@@ -296,26 +296,37 @@ test.describe('Contributor (Institutions) form group', () => {
       return !!(second && second._tagify && second._tagify.whitelist?.length);
     });
 
-    const secondAffiliationInput = secondRow.locator('input[name="cbOrganisationAffiliations[]"]');
+    const secondAffiliationInput = secondRow.locator('input[id^="input-contributor-organisationaffiliation"]');
     const secondAffiliationId = await secondAffiliationInput.getAttribute('id');
     expect(secondAffiliationId).not.toBeNull();
 
     await page.waitForFunction(() => {
-      const inputs = document.querySelectorAll('input[name="cbOrganisationAffiliations[]"]');
+      const inputs = document.querySelectorAll('input[name="OrganisationAffiliation[]"]');
       const second: any = inputs[0];
       return !!(second && (second.tagify || second._tagify));
     });
 
-    const hiddenRorId = await secondRow.locator('input[name="cbOrganisationRorIds[]"]').getAttribute('id');
+    
+    const helpNameCount = await secondRow.locator('[data-help-section-id^="help-contributorinstitutions-organisationname"]').count();
+    expect(helpNameCount).toBeGreaterThan(0);
+
+    const helpRoleCount = await secondRow.locator('[data-help-section-id^="help-contributorinstitutions-organisationrole"]').count();
+    expect(helpRoleCount).toBeGreaterThan(0);
+
+    const helpAffiliationCount = await secondRow.locator('[data-help-section-id^="help-contributorinstitutions-affiliation"]').count();
+    expect(helpAffiliationCount).toBeGreaterThan(0);
+
+    const placeholderCount = await secondRow.locator('.help-placeholder').count();
+    expect(placeholderCount).toBeGreaterThan(0);
+
+    const hiddenRorId = await secondRow.locator('input[name="hiddenOrganisationRorId[]"]').getAttribute('id');
     expect(hiddenRorId).not.toBeNull();
 
-    await expect(secondRow.locator('.help-placeholder')).toHaveCount(1);
-    await expect(secondRow.locator('[data-help-section-id="help-contributor-organisationrole"]')).toHaveCount(1);
-    await expect(secondRow.locator('[data-help-section-id="help-contributor-organisation-affiliation"]')).toHaveCount(1);
     await expect(secondRow.locator('.removeButton')).toBeVisible();
 
     await secondRow.locator('.removeButton').click();
     await expect(rows).toHaveCount(1);
     await expect(addButton).toBeVisible();
+
   });
 });

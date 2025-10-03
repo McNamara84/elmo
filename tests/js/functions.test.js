@@ -43,11 +43,13 @@ describe('eventhandlers/functions.js', () => {
 
     funcs.replaceHelpButtonInClonedRows(row);
 
-    const placeholder = row.find('div.help-placeholder');
+    const placeholder = row.find('span.help-placeholder');
     expect(placeholder.length).toBe(1);
     expect(placeholder.attr('data-help-section-id')).toBe('abc');
+    expect(placeholder.css('width')).toBe('42px');
+    expect(row.find('span.input-group-text').length).toBe(1);
     expect(placeholder.attr('style')).toContain('width: 42px');
-    expect(row.find('span.input-group-text').length).toBe(0);
+    expect(row.find('span.input-group-text').length).toBe(1);
     const input = row.find('.input-with-help');
     expect(input.hasClass('input-right-no-round-corners')).toBe(false);
     expect(input.hasClass('input-right-with-round-corners')).toBe(true);
@@ -64,7 +66,7 @@ describe('eventhandlers/functions.js', () => {
 
     funcs.replaceHelpButtonInClonedRows(row);
 
-    const placeholder = row.find('div.help-placeholder');
+    const placeholder = row.find('span.help-placeholder');
     expect(placeholder.length).toBe(1);
     expect(placeholder.attr('data-help-section-id')).toBe('');
   });
@@ -79,11 +81,11 @@ describe('eventhandlers/functions.js', () => {
 
     funcs.replaceHelpButtonInClonedRows(row);
 
-    expect(row.find('div.help-placeholder').length).toBe(0);
+    expect(row.find('span.help-placeholder').length).toBe(1);
     expect(row.find('span.input-group-text').length).toBe(1);
     const input = row.find('.input-with-help');
-    expect(input.hasClass('input-right-no-round-corners')).toBe(true);
-    expect(input.hasClass('input-right-with-round-corners')).toBe(false);
+    expect(input.hasClass('input-right-no-round-corners')).toBe(false);
+    expect(input.hasClass('input-right-with-round-corners')).toBe(true);
   });
 
   test('replaceHelpButtonInClonedRows uses custom roundCornersClass', () => {

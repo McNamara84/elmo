@@ -3,11 +3,8 @@ const path = require('path');
 
 describe('contributor-person.js', () => {
   let $;
-  let suffix;
 
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z'));
-    suffix = Date.now();
 
     document.body.innerHTML = `
       <div id="group-contributorperson">
@@ -48,7 +45,7 @@ describe('contributor-person.js', () => {
     window.replaceHelpButtonInClonedRows = jest.fn();
     window.setupRolesDropdown = jest.fn();
     window.autocompleteAffiliations = jest.fn();
-    window.checkMandatoryFields = jest.fn();
+    window.validateAllMandatoryFields = jest.fn();
     window.affiliationsData = [{ id: '1', name: 'Aff' }];
 
     let script = fs.readFileSync(
@@ -64,8 +61,7 @@ describe('contributor-person.js', () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
-    jest.clearAllTimers();
+    jest.restoreAllMocks();
   });
 
   test('adds contributor row and sets up handlers', () => {
@@ -78,29 +74,34 @@ describe('contributor-person.js', () => {
     expect(window.replaceHelpButtonInClonedRows).toHaveBeenCalledTimes(1);
     expect(window.createRemoveButton).toHaveBeenCalledTimes(1);
 
-    expect(newRow.find(`#input-contributor-orcid${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-contributor-lastname${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-contributor-firstname${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-contributor-personrole${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-contributorpersons-affiliation${suffix}`).length).toBe(1);
-    expect(newRow.find(`#input-contributor-personrorid${suffix}`).length).toBe(1);
+    expect(newRow.find('#input-contributor-orcid-1').length).toBe(1);
+    expect(newRow.find('#input-contributor-lastname-1').length).toBe(1);
+    expect(newRow.find('#input-contributor-firstname-1').length).toBe(1);
+    expect(newRow.find('#input-contributor-personrole-1').length).toBe(1);
+    expect(newRow.find('#input-contributorpersons-affiliation-1').length).toBe(1);
+    expect(newRow.find('#input-contributor-personrorid-1').length).toBe(1);
 
     // inputs reset
-    expect(newRow.find('input').filter(function(){ return this.value; }).length).toBe(0);
+    expect(newRow.find('label[for="input-contributor-orcid-1"]').length).toBe(1);
+    expect(newRow.find('label[for="input-contributor-lastname-1"]').length).toBe(1);
+    expect(newRow.find('label[for="input-contributor-firstname-1"]').length).toBe(1);
+    expect(newRow.find('label[for="input-contributor-personrole-1"]').length).toBe(1);
+
+    expect(newRow.find('input').filter(function () { return this.value; }).length).toBe(0);
     expect(newRow.find('input[required]').length).toBe(0);
 
     expect(newRow.find('.addContributorPerson').length).toBe(0);
     expect(newRow.find('.removeButton').length).toBe(1);
 
-    expect(window.setupRolesDropdown).toHaveBeenCalledWith(['person','both'], `#input-contributor-personrole${suffix}`);
+    expect(window.setupRolesDropdown).toHaveBeenCalledWith(['person', 'both'], '#input-contributor-personrole-1');
     expect(window.autocompleteAffiliations).toHaveBeenCalledWith(
-      `input-contributorpersons-affiliation${suffix}`,
-      `input-contributor-personrorid${suffix}`,
+      'input-contributorpersons-affiliation-1',
+      'input-contributor-personrorid-1',
       window.affiliationsData
     );
 
     newRow.find('.removeButton').trigger('click');
     expect($('#group-contributorperson .row').length).toBe(1);
-    expect(window.checkMandatoryFields).toHaveBeenCalled();
+    expect(window.validateAllMandatoryFields).toHaveBeenCalled();
   });
 });

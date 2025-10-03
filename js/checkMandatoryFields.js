@@ -2,9 +2,9 @@
  * Sets up an event listener for the checkbox to dynamically validate the Contact Person section.
  */
 function setupContactPersonListener() {
-    // When the checkbox for "Contact Person" is toggled (checked/unchecked), call checkContactPerson
+    // When the checkbox for "Contact Person" is toggled (checked/unchecked), call validateContactPersonRequirements
     $('#group-author').on('change', '[id^="checkbox-author-contactperson"]', function () {
-        checkContactPerson();  // Re-run the checkContactPerson function whenever the checkbox state changes
+        validateContactPersonRequirements();  // Re-run the validateContactPersonRequirements function whenever the checkbox state changes
     });
 }
 
@@ -13,10 +13,10 @@ function setupContactPersonListener() {
  * Ensures that the "Email" field is required only if the checkbox for "Contact Person" is checked, 
  * and not required if the checkbox is unchecked.
  *
- * @function checkContactPerson
+ * @function validateContactPersonRequirements
  * @returns {void}
  */
-function checkContactPerson() {
+function validateContactPersonRequirements() {
     // Loops through each row in the "group-author" container
     $('#group-author').children('.row').each(function () {
         var row = $(this);
@@ -52,7 +52,7 @@ $(document).ready(function () {
  * Validates the Contributor Person section of the form.
  * Ensures the "Last Name", "First Name", and "Role" fields are required if any field in the row is filled.
  */
-function checkContributorPerson() {
+function validateContributorPersonRequirements	() {
     $('#group-contributorperson').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contributor Person section
@@ -84,7 +84,7 @@ function checkContributorPerson() {
  * Validates the Contributor Organisation section of the form.
  * Ensures the "Name" and "Role" fields are required if any field in the row is filled.
  */
-function checkContributorOrganisation() {
+function validateContributorOrganisationRequirements() {
     $('#group-contributororganisation').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contributor Organization section
@@ -122,7 +122,7 @@ function checkContributorOrganisation() {
  * - If a time is given in any row, all rows require timeStart and timeEnd
  */
 
-function checkCoverage() {
+function validateSpatialTemporalCoverageRequirements() {
     var group = $('#group-stc');
     var fields = ['latmin', 'latmax', 'longmin', 'longmax', 'description', 'datestart', 'timestart', 'dateend', 'timeend', 'timezone'];
     var allRows = group.find('[tsc-row]');
@@ -185,7 +185,7 @@ function checkCoverage() {
  * Validates the Related Work section of the form.
  * Ensures all fields ("Relation", "Identifier", and "Identifier Type") are required if any of them are filled.
  */
-function checkRelatedWork() {
+function validateRelatedWorkRequirements() {
     $('#group-relatedwork').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the related work section
@@ -216,7 +216,7 @@ function checkRelatedWork() {
  * Validates the Funding Reference section of the form.
  * Ensures the "Funder" field is required if either "Grant Number" or "Grant Name" fields are filled.
  */
-function checkFunder() {
+function validateFundingReferenceRequirements() {
     $('#group-fundingreference').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Funding Reference section
@@ -365,39 +365,194 @@ function validateAuthorInstitutionRequirements() {
     });
 };
 
+
+// Select the abstract textarea element
+const abstract = document.getElementById('input-abstract');
+
+// Add event listeners for both input (typing) and blur (leaving the field) if element exists
+if (abstract) {
+    ['input', 'blur'].forEach(evt =>
+        abstract.addEventListener(evt, validateAbstractField)
+    );
+}
+
+/**
+ * Validates the abstract textarea field.
+ * - Marks the field as valid if it contains text.
+ * - Marks the field as invalid if it is empty or contains only whitespace.
+ * - Appends or removes the corresponding feedback message dynamically.
+ */
+function validateAbstractField() {
+    // Trim the current value to ignore leading/trailing whitespace
+    const abstract = document.getElementById('input-abstract');
+    const value = abstract.value.trim();
+    const inputGroup = abstract.closest('.input-group');
+
+    // Reset validation state (remove valid/invalid classes)
+    abstract.classList.remove('is-valid', 'is-invalid');
+
+    // Remove any previous feedback messages to avoid duplicates
+    let oldFeedback = inputGroup.querySelector('.invalid-feedback[data-translate="descriptions.abstractInvalid"]');
+    if (oldFeedback) oldFeedback.remove();
+
+    if (value.length === 0) {
+        // If empty or whitespace-only, mark field as invalid
+        abstract.classList.add('is-invalid');
+
+        // Create a new feedback element and append it after the input group
+        const feedbackElem = document.createElement('div');
+        feedbackElem.className = 'invalid-feedback';
+        feedbackElem.setAttribute('data-translate', 'descriptions.abstractInvalid');
+        feedbackElem.innerText = translations.descriptions.abstractInvalid;
+        inputGroup.appendChild(feedbackElem);
+
+        // Set HTML5 validity so that checkValidity() also works
+        abstract.setCustomValidity(translations.descriptions.abstractInvalid);
+        return false;
+    } else {
+        // Otherwise, mark field as valid
+        abstract.classList.add('is-valid');
+        abstract.setCustomValidity("");
+        return true;
+    }
+}
+
+
+
+
+/**
+ * This function ensures that optional input fields in the form 
+ * are only marked as valid when they actually contain a value.
+ * This prevents empty optional fields from being incorrectly 
+ * displayed with green checkmarks and borders.
+ * 
+ */
+function removeGreenCheckmarks() {
+  // Iterate through all fields in the optionalFieldsSelector
+  document.querySelectorAll(optionalFieldsSelector).forEach(field => {
+    // Check if the field is empty (trimmed string is empty)
+    const isEmpty = field.value.trim() === "";
+
+    // Set dataset attribute to indicate empty state
+    field.dataset.empty = isEmpty ? "true" : "false";
+
+    if (isEmpty) {
+      // If empty, remove validity-related classes
+      field.classList.remove("is-valid");
+      field.classList.remove("is-invalid");
+
+      // Reset custom validity to clear validity state
+      field.setCustomValidity("");
+
+      // Remove green shadows and background image, as Bootstrap uses these
+      // to visually highlight valid fields
+      field.style.setProperty('box-shadow', 'none', 'important');
+      field.style.setProperty('background-image', 'none', 'important');
+    } else {
+      // If not empty, check validity
+      if (field.checkValidity()) {
+        // For valid value, add .is-valid
+        field.classList.add("is-valid");
+
+        // Explicitly set validity status to empty to reset errors
+        field.setCustomValidity("");
+
+        // Remove green checkmark background image (inline style) to suppress green tick
+        field.style.setProperty('background-image', 'none', 'important');
+      } else {
+        // For invalid value, remove .is-valid
+        field.classList.remove("is-valid");
+      }
+
+      // Remove inline green shadow styling to revert to Bootstrap default border behavior
+      field.style.removeProperty('box-shadow');
+
+      // Only remove background image if field is not empty (keeps none if empty)
+      if (isEmpty) {
+        field.style.setProperty('background-image', 'none', 'important');
+      } else {
+        field.style.removeProperty('background-image');
+      }
+    }
+  });
+}
+
 /**
  * Checks and dynamically sets the 'required' attribute for input fields across various formgroups.
  * This function ensures that mandatory fields are validated only when relevant data is provided in related fields.
  * It consolidates validation logic for multiple form groups, adjusting requirements as needed.
  */
-function checkMandatoryFields() {
+function validateAllMandatoryFields() {
     // Formgroup Contact person(s)
-    checkContactPerson();
+    validateContactPersonRequirements();
 
     // Formgroup Contributor Person
-    checkContributorPerson();
+    validateContributorPersonRequirements	();
 
     // Formgroup Contributor Organization
-    checkContributorOrganisation();
+    validateContributorOrganisationRequirements();
 
     // Formgroup Spacial and Temporal Coverage
-    checkCoverage();
+    validateSpatialTemporalCoverageRequirements();
 
     //Formgroup Related Work
-    checkRelatedWork();
+    validateRelatedWorkRequirements();
 
     // Formgroup Funding Reference
-    checkFunder();
+    validateFundingReferenceRequirements();
 
     // Formgroup Autor Institution
     validateAuthorInstitutionRequirements();
 
+    // for the entire form
+    removeGreenCheckmarks();
+
 };
+
+const optionalFieldsSelector = [
+    // Resource Information
+    'input[name="doi"]',
+    'input[name="version"]',
+    // Author Person
+    'input[name="orcids[]"]',
+    'input[name="cpOnlineResource[]"]',
+    // Author Institution
+    'input[name="authorinstitutionName[]"]',
+    // Contributor  Person
+    'input[name="cbORCID[]"]',
+    'input[name="cbPersonLastname[]"]',
+    'input[name="cbPersonFirstname[]"]',
+    // Contributor  Institution
+    'input[name="cbOrganisationName[]"]',
+    // Originating Laboratory 
+    'select[name="laboratoryName[]"]',
+    // Related work
+    'select[name="relation[]"]',
+    'input[name="rIdentifier[]"]',
+    'select[name="rIdentifierType[]"]',  
+    // Funding Reference
+    'input[name="funder[]"]',
+    'input[name="grantNummer[]"]',
+    'input[name="grantName[]"]',
+    'input[name="awardURI[]"]',
+    // Spatial and Temporal Coverage
+    'input[name="tscLongitudeMax[]"]',
+    'input[name="tscLongitudeMin[]"]',
+    'textarea[name="tscDescription[]"]',
+    'input[name="tscLatitudeMin[]"]',
+    'input[name="tscLatitudeMax[]"]',
+    'input[name="tscDateStart[]"]',
+    'input[name="tscDateEnd[]"]',
+    'input[name="tscTimeStart[]"]',
+    'input[name="tscTimeEnd[]"]',
+    // Dates
+    'input[name="dateEmbargo"]'
+].join(', ');
 
 
 /**
 * Event handler for blur events on normal input fields.
-* Triggers checkMandatoryFields() when the user leaves these fields.
+* Triggers validateAllMandatoryFields() when the user leaves these fields.
 */
 $(document).on('blur',
     'input[name^="cpLastname"], ' +
@@ -421,16 +576,17 @@ $(document).on('blur',
     'input[name="tscTimeStart[]"],' +
     'input[name="tscTimeEnd[]"],' +
     'input[name="rIdentifier[]"],' +
-    'input[name="awardURI[]"]',
+    'input[name="awardURI[]"], ' +
+    'textarea#input-abstract',
     function () {
         // Check mandatory fields when user leaves any of these input fields
-        checkMandatoryFields();
+        validateAllMandatoryFields();
     }
 );
 
 /**
  * Event handler for change events on dropdown and special input fields.
- * Triggers checkMandatoryFields() when the value of these fields changes.
+ * Triggers validateAllMandatoryFields() when the value of these fields changes.
  */
 $(document).on('change',
     'input[name^="cpAffiliation"], ' +
@@ -445,6 +601,6 @@ $(document).on('change',
     'input[name="institutionAffiliation[]"]',
     function () {
         // Check mandatory fields when any of these fields' values change
-        checkMandatoryFields();
+        validateAllMandatoryFields();
     }
 );
