@@ -362,20 +362,6 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`identifier_type_fk`)
     REFERENCES `Identifier_Type` (`identifier_type_id`));",
 
-        "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
-    `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
-    `Model_Name` VARCHAR(100) NOT NULL,
-    `Celestial_Body` VARCHAR(100) NULL,
-    `Product_Type` VARCHAR(100) NULL,
-    `Errors` VARCHAR(100) NULL,
-    `Error_Handling_Approach` TEXT NULL,
-    `Error_Description` TEXT NULL,
-    `Tide_System` VARCHAR(100) NULL,
-    `degree` INT NULL,
-    `radius` FLOAT(9,2) NULL,
-    `earth_gravity_constant` FLOAT NULL,
-    PRIMARY KEY (`GGM_Properties_id`));",
-
         "Resource_has_Related_Work" => "CREATE TABLE IF NOT EXISTS `Resource_has_Related_Work` (
     `Resource_has_Related_Work_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
@@ -523,7 +509,21 @@ function createDatabaseStructure($connection): array
     REFERENCES `Spatial_Temporal_Coverage` (`spatial_temporal_coverage_id`));",
 
     // ICGEM-specific tables to describe beautiful GGMs
-        "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
+            "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
+    `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
+    `Model_Name` VARCHAR(100) NOT NULL,
+    `Celestial_Body` VARCHAR(100) NULL,
+    `Product_Type` VARCHAR(100) NULL,
+    `Errors` VARCHAR(100) NULL,
+    `Error_Handling_Approach` TEXT NULL,
+    `Error_Description` TEXT NULL,
+    `Tide_System` VARCHAR(100) NULL,
+    `degree` INT NULL,
+    `radius` FLOAT(9,2) NULL,
+    `earth_gravity_constant` FLOAT NULL,
+    PRIMARY KEY (`GGM_Properties_id`));",
+    
+    "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
     `Resource_has_GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
     `GGM_Properties_GGM_Properties_id` INT NOT NULL,
@@ -533,12 +533,16 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`GGM_Properties_GGM_Properties_id`)
     REFERENCES `GGM_Properties` (`GGM_Properties_id`));",
     
-            "Topographic_Models_Properties" => "CREATE TABLE IF NOT EXISTS `Topographic_Models_Properties` (
+        "Topographic_Models_Properties" => "CREATE TABLE IF NOT EXISTS `Topographic_Models_Properties` (
     `topographic_model_property_id` INT NOT NULL AUTO_INCREMENT,
     `layer_approach` VARCHAR(100),
     `forward_modelling_domain` VARCHAR(100),
     `density_information` VARCHAR(100),
     `density_information_details` VARCHAR(1000),
+    `mantle_density_value` FLOAT(9,3) NULL,
+    `mantle_density_description` TEXT NULL,
+    `crust_density_value` FLOAT(9,3) NULL,
+    `crust_density_description` TEXT NULL,
     `approximation` VARCHAR(100),
     `description` TEXT NULL,
     PRIMARY KEY (`topographic_model_property_id`)
@@ -555,7 +559,7 @@ function createDatabaseStructure($connection): array
 
         "Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Temporal_Model_Properties` (
     `temporal_model_property_id` INT NOT NULL AUTO_INCREMENT,
-    `science_data_system_participation` BOOLEAN NULL,
+    `generating_institution` BOOLEAN NULL,
     `temporal_resolution_days` INT NULL,
     `start_date` DATE NULL,
     `end_date` DATE NULL,

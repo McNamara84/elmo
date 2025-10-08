@@ -702,6 +702,81 @@ class DatasetController
         }
         return $dataSources;
     }
+
+    /**
+     * Retrieves topographic model properties for a given resource.
+     *
+     * @param mysqli $connection The database connection.
+     * @param int $resource_id The ID of the resource.
+     * @return array<mixed> An array of topographic model properties.
+     */
+    function getTopographicModelProperties($connection, $resource_id): array
+    {
+        $stmt = $connection->prepare("
+            SELECT tmp.*
+            FROM Topographic_Models_Properties tmp
+            JOIN Resource_has_Topographic_Model_Properties rhtmp ON tmp.topographic_model_property_id = rhtmp.topographic_model_property_id
+            WHERE rhtmp.resource_id = ?
+        ");
+        if (!$stmt) {
+            $this->logger && $this->logger->error("Prepare failed for Topographic Model Properties: " . $connection->error);
+            return [];
+        }
+        $stmt->bind_param('i', $resource_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Retrieves temporal model properties for a given resource.
+     *
+     * @param mysqli $connection The database connection.
+     * @param int $resource_id The ID of the resource.
+     * @return array<mixed> An array of temporal model properties.
+     */
+    function getTemporalModelProperties($connection, $resource_id): array
+    {
+        $stmt = $connection->prepare("
+            SELECT tmp.*
+            FROM Temporal_Model_Properties tmp
+            JOIN Resource_has_Temporal_Model_Properties rhtmp ON tmp.temporal_model_property_id = rhtmp.temporal_model_property_id
+            WHERE rhtmp.resource_id = ?
+        ");
+        if (!$stmt) {
+            $this->logger && $this->logger->error("Prepare failed for Temporal Model Properties: " . $connection->error);
+            return [];
+        }
+        $stmt->bind_param('i', $resource_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Retrieves ellipsoidal parameters for a given resource.
+     *
+     * @param mysqli $connection The database connection.
+     * @param int $resource_id The ID of the resource.
+     * @return array<mixed> An array of ellipsoidal parameters.
+     */
+    function getEllipsoidalParameters($connection, $resource_id): array
+    {
+        $stmt = $connection->prepare("
+            SELECT ep.*
+            FROM Ellipsoidal_Parameters ep
+            JOIN Resource_has_Ellipsoidal_Parameters rhep ON ep.ellipsoidal_parameter_id = rhep.ellipsoidal_parameter_id
+            WHERE rhep.resource_id = ?
+        ");
+        if (!$stmt) {
+            $this->logger && $this->logger->error("Prepare failed for Ellipsoidal Parameters: " . $connection->error);
+            return [];
+        }
+        $stmt->bind_param('i', $resource_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
         /**
      * Generates a uniform path for the base XML file of a resource.
      *
@@ -1212,6 +1287,92 @@ class DatasetController
                 }
                 if (!empty($dataSource['M_identifier_type'])) {
                     $dataSourceXml->addChild('magneticIdentifierType', htmlspecialchars($dataSource['M_identifier_type']));
+                }
+            }
+        }
+        // Topographic Model Properties
+        $topographicProperties = $this->getTopographicModelProperties($connection, $id);
+        if ($topographicProperties) {
+            $topographicPropertiesXml = $xml->addChild('TopographicModelProperties');
+            foreach ($topographicProperties as $property) {
+                $propertyXml = $topographicPropertiesXml->addChild('TopographicProperty');
+                
+                if (!empty($property['layer_approach'])) {
+                    $propertyXml->addChild('layerApproach', htmlspecialchars($property['layer_approach']));
+                }
+                if (!empty($property['forward_modelling_domain'])) {
+                    $propertyXml->addChild('forwardModellingDomain', htmlspecialchars($property['forward_modelling_domain']));
+                }
+                if (!empty($property['density_information'])) {
+                    $propertyXml->addChild('densityInformation', htmlspecialchars($property['density_information']));
+                }
+                if (!empty($property['density_information_details'])) {
+                    $propertyXml->addChild('densityInformationDetails', htmlspecialchars($property['density_information_details']));
+                }
+                if (!empty($property['mantle_density_value'])) {
+                    $propertyXml->addChild('mantleDensityValue', htmlspecialchars($property['mantle_density_value']));
+                }
+                if (!empty($property['mantle_density_description'])) {
+                    $propertyXml->addChild('mantleDensityDescription', htmlspecialchars($property['mantle_density_description']));
+                }
+                if (!empty($property['crust_density_value'])) {
+                    $propertyXml->addChild('crustDensityValue', htmlspecialchars($property['crust_density_value']));
+                }
+                if (!empty($property['crust_density_description'])) {
+                    $propertyXml->addChild('crustDensityDescription', htmlspecialchars($property['crust_density_description']));
+                }
+                if (!empty($property['approximation'])) {
+                    $propertyXml->addChild('approximation', htmlspecialchars($property['approximation']));
+                }
+                if (!empty($property['description'])) {
+                    $propertyXml->addChild('description', htmlspecialchars($property['description']));
+                }
+            }
+        }
+
+        // Temporal Model Properties
+        $temporalProperties = $this->getTemporalModelProperties($connection, $id);
+        if ($temporalProperties) {
+            $temporalPropertiesXml = $xml->addChild('TemporalModelProperties');
+            foreach ($temporalProperties as $property) {
+                $propertyXml = $temporalPropertiesXml->addChild('TemporalProperty');
+                
+                if (isset($property['generating_institution'])) {
+                    $propertyXml->addChild('generatingInstitution', htmlspecialchars($property['generating_institution'] ? 'true' : 'false'));
+                }
+                if (!empty($property['temporal_resolution_days'])) {
+                    $propertyXml->addChild('temporalResolutionDays', htmlspecialchars($property['temporal_resolution_days']));
+                }
+                if (!empty($property['start_date'])) {
+                    $propertyXml->addChild('startDate', htmlspecialchars($property['start_date']));
+                }
+                if (!empty($property['end_date'])) {
+                    $propertyXml->addChild('endDate', htmlspecialchars($property['end_date']));
+                }
+            }
+        }
+
+        // Ellipsoidal Parameters
+        $ellipsoidalParameters = $this->getEllipsoidalParameters($connection, $id);
+        if ($ellipsoidalParameters) {
+            $ellipsoidalParametersXml = $xml->addChild('EllipsoidalParameters');
+            foreach ($ellipsoidalParameters as $parameter) {
+                $parameterXml = $ellipsoidalParametersXml->addChild('EllipsoidalParameter');
+                
+                if (!empty($parameter['semimajor_axis_a'])) {
+                    $parameterXml->addChild('semimajorAxisA', htmlspecialchars($parameter['semimajor_axis_a']));
+                }
+                if (!empty($parameter['semiminor_axis_b'])) {
+                    $parameterXml->addChild('semiminorAxisB', htmlspecialchars($parameter['semiminor_axis_b']));
+                }
+                if (!empty($parameter['flattening'])) {
+                    $parameterXml->addChild('flattening', htmlspecialchars($parameter['flattening']));
+                }
+                if (!empty($parameter['reciprocal_flattening'])) {
+                    $parameterXml->addChild('reciprocalFlattening', htmlspecialchars($parameter['reciprocal_flattening']));
+                }
+                if (!empty($parameter['description'])) {
+                    $parameterXml->addChild('description', htmlspecialchars($parameter['description']));
                 }
             }
         }
