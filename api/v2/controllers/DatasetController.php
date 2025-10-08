@@ -1254,39 +1254,39 @@ class DatasetController
                 
                 // Standardized properties (S_ prefix = Standard)
                 if (!empty($dataSource['S_value_name'])) {
-                    $dataSourceXml->addChild('standardValueName', htmlspecialchars($dataSource['S_value_name']));
+                    $dataSourceXml->addChild('SatelliteValueName', htmlspecialchars($dataSource['S_value_name']));
                 }
                 if (!empty($dataSource['S_value_uri'])) {
-                    $dataSourceXml->addChild('standardValueUri', htmlspecialchars($dataSource['S_value_uri']));
+                    $dataSourceXml->addChild('SatelliteValueUri', htmlspecialchars($dataSource['S_value_uri']));
                 }
                 if (!empty($dataSource['S_scheme_name'])) {
-                    $dataSourceXml->addChild('standardSchemeName', htmlspecialchars($dataSource['S_scheme_name']));
+                    $dataSourceXml->addChild('SatelliteSchemeName', htmlspecialchars($dataSource['S_scheme_name']));
                 }
                 if (!empty($dataSource['S_scheme_uri'])) {
-                    $dataSourceXml->addChild('standardSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']));
+                    $dataSourceXml->addChild('SatelliteSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']));
                 }
                 
                 // Domain-specific details
                 if (!empty($dataSource['G_details'])) {
-                    $dataSourceXml->addChild('gravityDetails', htmlspecialchars($dataSource['G_details']));
+                    $dataSourceXml->addChild('G_Details', htmlspecialchars($dataSource['G_details']));
                 }
                 if (!empty($dataSource['A_details'])) {
-                    $dataSourceXml->addChild('altimetryDetails', htmlspecialchars($dataSource['A_details']));
+                    $dataSourceXml->addChild('A_Details', htmlspecialchars($dataSource['A_details']));
                 }
                 if (!empty($dataSource['T_details'])) {
-                    $dataSourceXml->addChild('topographyDetails', htmlspecialchars($dataSource['T_details']));
+                    $dataSourceXml->addChild('Topography_Details', htmlspecialchars($dataSource['T_details']));
                 }
                 if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
-                    $dataSourceXml->addChild('isostasyCompensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']));
+                    $dataSourceXml->addChild('IsostasyCompensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']));
                 }
                 if (!empty($dataSource['M_details'])) {
-                    $dataSourceXml->addChild('magneticDetails', htmlspecialchars($dataSource['M_details']));
+                    $dataSourceXml->addChild('M_Details', htmlspecialchars($dataSource['M_details']));
                 }
                 if (!empty($dataSource['M_identifier'])) {
-                    $dataSourceXml->addChild('magneticIdentifier', htmlspecialchars($dataSource['M_identifier']));
+                    $dataSourceXml->addChild('M_Identifier', htmlspecialchars($dataSource['M_identifier']));
                 }
                 if (!empty($dataSource['M_identifier_type'])) {
-                    $dataSourceXml->addChild('magneticIdentifierType', htmlspecialchars($dataSource['M_identifier_type']));
+                    $dataSourceXml->addChild('M_Identifier_Type', htmlspecialchars($dataSource['M_identifier_type']));
                 }
             }
         }
