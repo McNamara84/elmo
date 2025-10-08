@@ -1090,26 +1090,46 @@ class DatasetController
             }
         }
         // Add GGM Properties to the base XML
-        if ($includeGGMData) {
-            $ggmDataForXml = $this->getGGMData($connection, $id);
-            if ($ggmDataForXml) {
-                $ggmPropertiesXml = $xml->addChild('ggm_properties');
-                if (!empty($ggmDataForXml['model_name'])) {
-                    $ggmPropertiesXml->addChild('model_name', htmlspecialchars($ggmDataForXml['model_name']));
-                }
-                if (!empty($ggmDataForXml['model_type_name'])) {
-                    $ggmPropertiesXml->addChild('model_type', htmlspecialchars($ggmDataForXml['model_type_name']));
-                }
-                if (!empty($ggmDataForXml['mathematical_representation_name'])) {
-                    $ggmPropertiesXml->addChild('mathematical_representation', htmlspecialchars($ggmDataForXml['mathematical_representation_name']));
-                }
-                if (!empty($ggmDataForXml['file_format_name'])) {
-                    $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmDataForXml['file_format_name']));
-                }
-                if (!empty($ggmDataForXml['product_type'])) {
-                    $ggmPropertiesXml->addChild('product_type', htmlspecialchars($ggmDataForXml['product_type']));
-                }
-                // Add any other GGM fields as needed
+        if ($ggmDataForXml) {
+            $ggmPropertiesXml = $xml->addChild('ggm_properties');
+            if (!empty($ggmDataForXml['model_name'])) {
+                $ggmPropertiesXml->addChild('model_name', htmlspecialchars($ggmDataForXml['model_name']));
+            }
+            if (!empty($ggmDataForXml['celestial_body'])) {
+                $ggmPropertiesXml->addChild('celestial_body', htmlspecialchars($ggmDataForXml['celestial_body']));
+            }
+            if (!empty($ggmDataForXml['product_type'])) {
+                $ggmPropertiesXml->addChild('product_type', htmlspecialchars($ggmDataForXml['product_type']));
+            }
+            if (!empty($ggmDataForXml['errors'])) {
+                $ggmPropertiesXml->addChild('errors', htmlspecialchars($ggmDataForXml['errors']));
+            }
+            if (!empty($ggmDataForXml['error_handling_approach'])) {
+                $ggmPropertiesXml->addChild('error_handling_approach', htmlspecialchars($ggmDataForXml['error_handling_approach']));
+            }
+            if (!empty($ggmDataForXml['error_description'])) {
+                $ggmPropertiesXml->addChild('error_description', htmlspecialchars($ggmDataForXml['error_description']));
+            }
+            if (!empty($ggmDataForXml['tide_system'])) {
+                $ggmPropertiesXml->addChild('tide_system', htmlspecialchars($ggmDataForXml['tide_system']));
+            }
+            if (!empty($ggmDataForXml['degree'])) {
+                $ggmPropertiesXml->addChild('degree', htmlspecialchars($ggmDataForXml['degree']));
+            }
+            if (!empty($ggmDataForXml['radius'])) {
+                $ggmPropertiesXml->addChild('radius', htmlspecialchars($ggmDataForXml['radius']));
+            }
+            if (!empty($ggmDataForXml['earth_gravity_constant'])) {
+                $ggmPropertiesXml->addChild('earth_gravity_constant', htmlspecialchars($ggmDataForXml['earth_gravity_constant']));
+            }
+            if (!empty($ggmDataForXml['model_type_name'])) {
+                $ggmPropertiesXml->addChild('model_type', htmlspecialchars($ggmDataForXml['model_type_name']));
+            }
+            if (!empty($ggmDataForXml['mathematical_representation_name'])) {
+                $ggmPropertiesXml->addChild('mathematical_representation', htmlspecialchars($ggmDataForXml['mathematical_representation_name']));
+            }
+            if (!empty($ggmDataForXml['file_format_name'])) {
+                $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmDataForXml['file_format_name']));
             }
         }
         // XML formating
