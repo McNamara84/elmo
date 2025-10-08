@@ -1119,6 +1119,7 @@ class DatasetController
             }
         }
         // Add GGM Properties to the base XML
+        $ggmDataForXml = $this->getGGMData($connection, $id);
         if ($ggmDataForXml) {
             $ggmPropertiesXml = $xml->addChild('ggm_properties');
             if (!empty($ggmDataForXml['model_name'])) {
@@ -1161,6 +1162,60 @@ class DatasetController
                 $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmDataForXml['file_format_name']));
             }
         }
+
+        // Data Sources
+        $dataSources = $this->getDataSources($connection, $id);
+        if ($dataSources) {
+            $dataSourcesXml = $xml->addChild('DataSources');
+            foreach ($dataSources as $dataSource) {
+                $dataSourceXml = $dataSourcesXml->addChild('DataSource');
+                
+                // Core identification
+                $dataSourceXml->addChild('sourceId', htmlspecialchars($dataSource['data_source_id']));
+                $dataSourceXml->addChild('sourceType', htmlspecialchars($dataSource['type']));
+                if (!empty($dataSource['description'])) {
+                    $dataSourceXml->addChild('description', htmlspecialchars($dataSource['description']));
+                }
+                
+                // Standardized properties (S_ prefix = Standard)
+                if (!empty($dataSource['S_value_name'])) {
+                    $dataSourceXml->addChild('standardValueName', htmlspecialchars($dataSource['S_value_name']));
+                }
+                if (!empty($dataSource['S_value_uri'])) {
+                    $dataSourceXml->addChild('standardValueUri', htmlspecialchars($dataSource['S_value_uri']));
+                }
+                if (!empty($dataSource['S_scheme_name'])) {
+                    $dataSourceXml->addChild('standardSchemeName', htmlspecialchars($dataSource['S_scheme_name']));
+                }
+                if (!empty($dataSource['S_scheme_uri'])) {
+                    $dataSourceXml->addChild('standardSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']));
+                }
+                
+                // Domain-specific details
+                if (!empty($dataSource['G_details'])) {
+                    $dataSourceXml->addChild('gravityDetails', htmlspecialchars($dataSource['G_details']));
+                }
+                if (!empty($dataSource['A_details'])) {
+                    $dataSourceXml->addChild('altimetryDetails', htmlspecialchars($dataSource['A_details']));
+                }
+                if (!empty($dataSource['T_details'])) {
+                    $dataSourceXml->addChild('topographyDetails', htmlspecialchars($dataSource['T_details']));
+                }
+                if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
+                    $dataSourceXml->addChild('isostasyCompensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']));
+                }
+                if (!empty($dataSource['M_details'])) {
+                    $dataSourceXml->addChild('magneticDetails', htmlspecialchars($dataSource['M_details']));
+                }
+                if (!empty($dataSource['M_identifier'])) {
+                    $dataSourceXml->addChild('magneticIdentifier', htmlspecialchars($dataSource['M_identifier']));
+                }
+                if (!empty($dataSource['M_identifier_type'])) {
+                    $dataSourceXml->addChild('magneticIdentifierType', htmlspecialchars($dataSource['M_identifier_type']));
+                }
+            }
+        }
+
         // XML formating
         $dom = dom_import_simplexml($xml)->ownerDocument;
         $dom->formatOutput = true;
