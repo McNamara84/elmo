@@ -49,7 +49,7 @@ $(document).ready(function () {
             inputId: '#input-mslkeyword',
             jsonFile: 'json/thesauri/msl-vocabularies.json',
             jsTreeId: '#jstree-mslkeyword-domain',
-            searchInputId: '#input-mslkeyword-thesaurussearch-domain',
+            searchInputId: '#input-mslkeyword-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-msl',
             rootNodeId: 'https://epos-msl.uu.nl/voc/geochemistry/1.3/'
         }
