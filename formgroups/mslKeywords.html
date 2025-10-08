@@ -45,12 +45,27 @@
             </div>
             <div class="modal-body d-flex">
                 <!-- Left Side: Keyword Selection Tree -->
-                <div id="panel-mslkeyword-thesaurus" class="w-50 pe-3 border-end">
-                    <label for="input-mslkeyword-thesaurussearch" class="visually-hidden">Search for keywords</label>
-                    <input type="text" class="form-control mb-3" id="input-mslkeyword-thesaurussearch"
-                        placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder"
-                        aria-label="Search for keywords">
-                    <div id="jstree-mslkeyword"></div>
+                <div class="w-50 pe-3 border-end d-flex flex-column">
+
+                    <!-- General Keywords -->
+                    <div class="mb-3">
+                        <label for="input-mslkeyword-thesaurussearch-general" class="form-label">General
+                            Keywords</label>
+                        <input type="text" class="form-control mb-2" id="input-mslkeyword-thesaurussearch-general"
+                            placeholder="Search general keywords..." aria-label="Search general keywords">
+                        <div id="jstree-mslkeyword-general"></div>
+                    </div>
+
+                    <!-- Domain Specific Keywords -->
+                    <div>
+                        <label for="input-mslkeyword-thesaurussearch-domain" class="form-label">Domain Specific
+                            Keywords</label>
+                        <input type="text" class="form-control mb-2" id="input-mslkeyword-thesaurussearch-domain"
+                            placeholder="Search domain-specific keywords..."
+                            aria-label="Search domain-specific keywords">
+                        <div id="jstree-mslkeyword-domain"></div>
+                    </div>
+
                 </div>
 
                 <!-- Right Side: Selected Keywords -->
@@ -58,7 +73,7 @@
                     <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
                     <ul id="selected-keywords-msl" class="list-group">
                         <!-- Selected keywords will appear here dynamically -->
-                    </ul>                    
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
