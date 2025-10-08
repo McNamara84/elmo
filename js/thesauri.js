@@ -35,12 +35,23 @@ $(document).ready(function () {
             searchInputId: '#input-instruments-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-instruments-gcmd'
         },
+
+        // MSL Keywords(general and domain specific)
         {
             inputId: '#input-mslkeyword',
             jsonFile: 'json/thesauri/msl-vocabularies.json',
-            jsTreeId: '#jstree-mslkeyword',
+            jsTreeId: '#jstree-mslkeyword-general',
             searchInputId: '#input-mslkeyword-thesaurussearch',
-            selectedKeywordsListId: 'selected-keywords-msl'
+            selectedKeywordsListId: 'selected-keywords-msl',
+            rootNodeId: 'https://epos-msl.uu.nl/voc/materials/1.3/'
+        },
+        {
+            inputId: '#input-mslkeyword',
+            jsonFile: 'json/thesauri/msl-vocabularies.json',
+            jsTreeId: '#jstree-mslkeyword-domain',
+            searchInputId: '#input-mslkeyword-thesaurussearch-domain',
+            selectedKeywordsListId: 'selected-keywords-msl',
+            rootNodeId: 'https://epos-msl.uu.nl/voc/geochemistry/1.3/'
         }
     ];
 
