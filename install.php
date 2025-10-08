@@ -369,10 +369,9 @@ function createDatabaseStructure($connection): array
     `Product_Type` VARCHAR(100) NULL,
     `Errors` VARCHAR(100) NULL,
     `Error_Handling_Approach` TEXT NULL,
+    `Error_Description` TEXT NULL,
     `Tide_System` VARCHAR(100) NULL,
-    `generating_institution` VARCHAR(200) NULL,
     `degree` INT NULL,
-    `is_normalised` BOOLEAN NULL,
     `radius` FLOAT(9,2) NULL,
     `earth_gravity_constant` FLOAT NULL,
     PRIMARY KEY (`GGM_Properties_id`));",
@@ -523,6 +522,7 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`Spatial_Temporal_Coverage_spatial_temporal_coverage_id`)
     REFERENCES `Spatial_Temporal_Coverage` (`spatial_temporal_coverage_id`));",
 
+    // ICGEM-specific tables to describe beautiful GGMs
         "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
     `Resource_has_GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
@@ -538,7 +538,7 @@ function createDatabaseStructure($connection): array
     `layer_approach` VARCHAR(100),
     `forward_modelling_domain` VARCHAR(100),
     `density_information` VARCHAR(100),
-    `density_information_details` VARCHAR(100),
+    `density_information_details` VARCHAR(1000),
     `approximation` VARCHAR(100),
     `description` TEXT NULL,
     PRIMARY KEY (`topographic_model_property_id`)
