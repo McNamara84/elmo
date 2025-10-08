@@ -625,69 +625,54 @@ class DatasetController
      * @return array<mixed>|null An array of GGM data or null if not found.
      */
         private function getGGMData(mysqli $connection, int $resource_id): ?array
-    {
-        $ggmData = [];
+        {
+            $ggmData = [];
 
-        // Get Model_Type, Mathematical_Representation, File_Format names by joining with Resource
-        $stmtResourceFKs = $connection->prepare("
-            SELECT 
-                mt.name as model_type_name, 
-                mr.name as mathematical_representation_name, 
-                ff.name as file_format_name
-            FROM Resource r
-            LEFT JOIN Model_Type mt ON r.Model_type_id = mt.Model_type_id
-            LEFT JOIN Mathematical_Representation mr ON r.Mathematical_Representation_id = mr.Mathematical_representation_id
-            LEFT JOIN File_Format ff ON r.File_format_id = ff.File_format_id
-            WHERE r.resource_id = ?
-        ");
-        if (!$stmtResourceFKs) {
-            $this->logger && $this->logger->error("Prepare failed for Resource FKs in getGGMData: " . $connection->error);
-            // Depending on strictness, you might throw an exception or return null
-            return null;
-        }
-        $stmtResourceFKs->bind_param('i', $resource_id);
-        $stmtResourceFKs->execute();
-        $resourceFksResult = $stmtResourceFKs->get_result()->fetch_assoc();
-        $stmtResourceFKs->close();
+            // Get all GGM data in one query
+            $stmt = $connection->prepare("
+                SELECT 
+                    mt.name as model_type_name, 
+                    mr.name as mathematical_representation_name, 
+                    ff.name as file_format_name,
+                    ggm.Model_Name as model_name, 
+                    ggm.Celestial_Body as celestial_body,
+                    ggm.Product_Type as product_type,
+                    ggm.Errors as errors,
+                    ggm.Error_Handling_Approach as error_handling_approach,
+                    ggm.Error_Description as error_description,
+                    ggm.Tide_System as tide_system,
+                    ggm.degree as degree,
+                    ggm.radius as radius,
+                    ggm.earth_gravity_constant as earth_gravity_constant
+                FROM Resource r
+                LEFT JOIN Model_Type mt ON r.Model_type_id = mt.Model_type_id
+                LEFT JOIN Mathematical_Representation mr ON r.Mathematical_Representation_id = mr.Mathematical_representation_id
+                LEFT JOIN File_Format ff ON r.File_format_id = ff.File_format_id
+                LEFT JOIN Resource_has_GGM_Properties rhg ON r.resource_id = rhg.Resource_resource_id
+                LEFT JOIN GGM_Properties ggm ON rhg.GGM_Properties_GGM_Properties_id = ggm.GGM_Properties_id
+                WHERE r.resource_id = ?
+            ");
+            
+            if (!$stmt) {
+                $this->logger && $this->logger->error("Prepare failed for GGM data: " . $connection->error);
+                return null;
+            }
+            
+            $stmt->bind_param('i', $resource_id);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
 
-        if ($resourceFksResult) {
-            foreach ($resourceFksResult as $key => $value) {
-                if ($value !== null) { // Only add if value is not null
-                    $ggmData[$key] = $value;
+            if ($result) {
+                foreach ($result as $key => $value) {
+                    if ($value !== null) {
+                        $ggmData[$key] = $value;
+                    }
                 }
             }
-        }
-
-        // Get Model_Name, Celestial_Body, Product_Type from GGM_Properties table
-        $stmtGGMProps = $connection->prepare("
-            SELECT 
-                ggm.Model_Name as model_name, 
-                ggm.Product_Type as product_type 
-            FROM GGM_Properties ggm
-            JOIN Resource_has_GGM_Properties rhg ON ggm.GGM_Properties_id = rhg.GGM_Properties_GGM_Properties_id
-            WHERE rhg.Resource_resource_id = ?
-        ");
-        if (!$stmtGGMProps) {
-            $this->logger && $this->logger->error("Prepare failed for GGM_Properties in getGGMData: " . $connection->error);
-            // If essential GGM props fail, but we have FKs, decide on return.
-            // For now, return what we have or null if nothing.
+            
             return !empty($ggmData) ? $ggmData : null;
         }
-        $stmtGGMProps->bind_param('i', $resource_id);
-        $stmtGGMProps->execute();
-        $ggmSpecificResult = $stmtGGMProps->get_result()->fetch_assoc();
-        $stmtGGMProps->close();
-
-        if ($ggmSpecificResult) {
-            foreach ($ggmSpecificResult as $key => $value) {
-                if ($value !== null) { // Only add if value is not null
-                    $ggmData[$key] = $value;
-                }
-            }
-        }
-        
-        return !empty($ggmData) ? $ggmData : null;
-    }
         /**
      * Generates a uniform path for the base XML file of a resource.
      *
