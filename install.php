@@ -521,6 +521,7 @@ function createDatabaseStructure($connection): array
     `degree` INT NULL,
     `radius` FLOAT(9,2) NULL,
     `earth_gravity_constant` FLOAT NULL,
+    `info_time_variable_coefficients` TEXT NULL,
     PRIMARY KEY (`GGM_Properties_id`));",
     
     "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
@@ -581,6 +582,7 @@ function createDatabaseStructure($connection): array
     `semiminor_axis_b` FLOAT (9,2) NULL,
     `flattening` FLOAT NULL,
     `reciprocal_flattening` FLOAT NULL,
+    `excentricity` FLOAT NULL,
     `description` TEXT NULL,
     PRIMARY KEY (`ellipsoidal_parameter_id`)
         );",

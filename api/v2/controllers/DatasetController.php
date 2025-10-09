@@ -643,7 +643,8 @@ class DatasetController
                 ggm.Tide_System as tide_system,
                 ggm.degree as degree,
                 ggm.radius as radius,
-                ggm.earth_gravity_constant as earth_gravity_constant
+                ggm.earth_gravity_constant as earth_gravity_constant,
+                ggm.info_time_variable_coefficients as info_time_variable_coefficients
             FROM Resource r
             LEFT JOIN Model_Type mt ON r.Model_type_id = mt.Model_type_id
             LEFT JOIN Mathematical_Representation mr ON r.Mathematical_Representation_id = mr.Mathematical_representation_id
@@ -685,10 +686,24 @@ class DatasetController
     {
         $dataSources = [];
         $stmt = $connection->prepare("
-            SELECT ds.*
-            FROM Data_Sources ds
-            JOIN Resource_has_Data_Sources rhds ON ds.data_source_id = rhds.data_source_id
-            WHERE rhds.resource_id = ?
+        SELECT 
+            ds.data_source_id as data_source_id,
+            ds.type as type,
+            ds.description as description,
+            ds.S_value_name as s_value_name,
+            ds.S_value_uri as s_value_uri,
+            ds.S_scheme_name as s_scheme_name,  
+            ds.S_scheme_uri as s_scheme_uri,
+            ds.G_details as g_details,
+            ds.A_details as a_details,
+            ds.T_details as t_details,
+            ds.T_Isostasy_compensation_depth as t_isostasy_compensation_depth,
+            ds.M_details as m_details,
+            ds.M_identifier as m_identifier,
+            ds.M_identifier_type as m_identifier_type
+        FROM Data_Sources ds
+        JOIN Resource_has_Data_Sources rhds ON ds.data_source_id = rhds.data_source_id
+        WHERE rhds.resource_id = ?
         ");
         if (!$stmt) {
             $this->logger && $this->logger->error("Prepare failed for GGM Data Sources: " . $connection->error);
@@ -713,10 +728,20 @@ class DatasetController
     function getTopographicModelProperties($connection, $resource_id): array
     {
         $stmt = $connection->prepare("
-            SELECT tmp.*
-            FROM Topographic_Models_Properties tmp
-            JOIN Resource_has_Topographic_Model_Properties rhtmp ON tmp.topographic_model_property_id = rhtmp.topographic_model_property_id
-            WHERE rhtmp.resource_id = ?
+        SELECT 
+            tmp.layer_approach,
+            tmp.forward_modelling_domain,
+            tmp.density_information,
+            tmp.density_information_details,
+            tmp.mantle_density_value,
+            tmp.mantle_density_description,
+            tmp.crust_density_value,
+            tmp.crust_density_description,
+            tmp.approximation,
+            tmp.description
+        FROM Topographic_Models_Properties tmp
+        JOIN Resource_has_Topographic_Model_Properties rhtmp ON tmp.topographic_model_property_id = rhtmp.topographic_model_property_id
+        WHERE rhtmp.resource_id = ?
         ");
         if (!$stmt) {
             $this->logger && $this->logger->error("Prepare failed for Topographic Model Properties: " . $connection->error);
@@ -738,10 +763,14 @@ class DatasetController
     function getTemporalModelProperties($connection, $resource_id): array
     {
         $stmt = $connection->prepare("
-            SELECT tmp.*
-            FROM Temporal_Model_Properties tmp
-            JOIN Resource_has_Temporal_Model_Properties rhtmp ON tmp.temporal_model_property_id = rhtmp.temporal_model_property_id
-            WHERE rhtmp.resource_id = ?
+        SELECT 
+        tmp.generating_institution,
+        tmp.temporal_resolution_days,
+        tmp.start_date,
+        tmp.end_date
+        FROM Temporal_Model_Properties tmp
+        JOIN Resource_has_Temporal_Model_Properties rhtmp ON tmp.temporal_model_property_id = rhtmp.temporal_model_property_id
+        WHERE rhtmp.resource_id = ?
         ");
         if (!$stmt) {
             $this->logger && $this->logger->error("Prepare failed for Temporal Model Properties: " . $connection->error);
@@ -763,10 +792,16 @@ class DatasetController
     function getEllipsoidalParameters($connection, $resource_id): array
     {
         $stmt = $connection->prepare("
-            SELECT ep.*
-            FROM Ellipsoidal_Parameters ep
-            JOIN Resource_has_Ellipsoidal_Parameters rhep ON ep.ellipsoidal_parameter_id = rhep.ellipsoidal_parameter_id
-            WHERE rhep.resource_id = ?
+        SELECT 
+            ep.semimajor_axis_a,
+            ep.semiminor_axis_b,
+            ep.flattening,
+            ep.reciprocal_flattening,
+            ep.description,
+            ep.excentricity
+        FROM Ellipsoidal_Parameters ep
+        JOIN Resource_has_Ellipsoidal_Parameters rhep ON ep.ellipsoidal_parameter_id = rhep.ellipsoidal_parameter_id
+        WHERE rhep.resource_id = ?
         ");
         if (!$stmt) {
             $this->logger && $this->logger->error("Prepare failed for Ellipsoidal Parameters: " . $connection->error);
