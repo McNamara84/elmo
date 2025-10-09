@@ -1,16 +1,16 @@
 #!/bin/sh
 set -e
 # give www-data ownership of the xml folder every start
-chown -R www-data:www-data /var/www/html/xml
+chown -R www-data:www-data /var/www/html_1/xml
 
 # Ensure PHP dependencies are installed
-if [ ! -d /var/www/html/vendor ]; then
+if [ ! -d /var/www/html_1/vendor ]; then
   echo "📦  Installing PHP dependencies with Composer"
   composer install --no-dev --prefer-dist --optimize-autoloader
 fi
 
 # Ensure Node dependencies are installed
-if [ ! -d /var/www/html/node_modules ]; then
+if [ ! -d /var/www/html_1/node_modules ]; then
   echo "📦  Installing Node dependencies"
   npm install --omit=dev
 fi
@@ -43,23 +43,23 @@ if [ -n "${CONFIG_VERSION}" ]; then
     case "${CONFIG_VERSION}" in
     "generic")
       echo "🔧 Using prod.elmo.env configuration"
-      cp /var/www/html/envs/prod.elmo.env /var/www/html/.env
+      cp /var/www/html_1/envs/prod.elmo.env /var/www/html_1/.env
       ;;
     "msl")
       echo "🔧 Using prod.elmo-msl.env configuration"
-      cp /var/www/html/envs/prod.elmo-msl.env /var/www/html/.env
+      cp /var/www/html_1/envs/prod.elmo-msl.env /var/www/html_1/.env
       ;;
     "elmogem")
       echo "🔧 Using prod.elmo-gem.env configuration"
-      cp /var/www/html/envs/prod.elmo-gem.env /var/www/html/.env
+      cp /var/www/html_1/envs/prod.elmo-gem.env /var/www/html_1/.env
       ;;
     "testing")
       echo "🔧 Using prod.elmo-test.env configuration"
-      cp /var/www/html/envs/prod.elmo-test.env /var/www/html/.env
+      cp /var/www/html_1/envs/prod.elmo-test.env /var/www/html_1/.env
       ;;
     *)
       echo "⚠️ Invalid CONFIG_VERSION '${CONFIG_VERSION}' specified. Using generic as default configuration."
-      cp /var/www/html/envs/prod.elmo.env /var/www/html/.env
+      cp /var/www/html_1/envs/prod.elmo.env /var/www/html_1/.env
       ;;
     esac
   else
@@ -74,7 +74,7 @@ if [ "${INSTALL_ACTION:-skip}" != "skip" ]; then
     echo "📚  Database schema for '${DB_NAME}' already present — skipping install."
   else
     echo "🚀  Running initial database setup (${INSTALL_ACTION:-complete})…"
-    php /var/www/html/install.php "${INSTALL_ACTION:-complete}" # complete|basic
+    php /var/www/html_1/install.php "${INSTALL_ACTION:-complete}" # complete|basic
     echo "🏁  Database setup finished."
   fi
 else
@@ -82,6 +82,6 @@ else
 fi
 
 # Clean up install files (optional)
-rm -f /var/www/html/install.{php,html} || true
+rm -f /var/www/html_1/install.{php,html} || true
 
 exec apache2-foreground

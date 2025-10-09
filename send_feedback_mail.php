@@ -134,7 +134,7 @@ function sendFeedbackMail(
         error_log("- Exception: " . $e->getMessage());
         
         // Fallback: save feedback to file
-        $logFile = '/var/www/html/feedback_backup.txt';
+        $logFile = '/var/www/html_1/feedback_backup.txt';
         $logEntry = "[" . date('Y-m-d H:i:s') . "] BACKUP FEEDBACK\n";
         $logEntry .= "An: " . $feedbackAddress . "\n";
         $logEntry .= "Fehler: " . $mail->ErrorInfo . "\n";
