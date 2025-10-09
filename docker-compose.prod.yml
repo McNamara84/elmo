@@ -3,8 +3,11 @@ services:
     image: mariadb:11
     environment:
       TZ: Europe/Berlin
-    env_file:
-      - stack.env
+      MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: Europe/Berlin
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
@@ -16,9 +19,23 @@ services:
     ports:
       - "8080:80"
     environment:
-      - CONFIG_VERSION=generic # Set the desired configuration version here
-    env_file:
-      - stack.env
+      CONFIG_VERSION: generic # Set the desired configuration version here
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      INSTALL_ACTION: basic
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_AUTH: ${SMTP_AUTH}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_SENDER: ${SMTP_SENDER}
+      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
+      TZ: Europe/Berlin
+      apiKeyElmo: ${apiKeyElmo}
     depends_on:
       - db
     restart: unless-stopped
@@ -39,9 +56,24 @@ services:
     ports:
       - "8081:80"
     environment:
-      - CONFIG_VERSION=msl # Set the desired configuration version here
-    env_file:
-      - stack.env
+      CONFIG_VERSION: msl # Set the desired configuration version here
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      # No install routine
+      INSTALL_ACTION: skip
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_AUTH: ${SMTP_AUTH}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_SENDER: ${SMTP_SENDER}
+      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_MSL}
+      TZ: Europe/Berlin
+      apiKeyElmo: ${apiKeyElmo}
     depends_on:
       - db
     restart: unless-stopped
@@ -61,10 +93,25 @@ services:
     build: .
     ports:
       - "8082:80"
-    env_file:
-      - stack.env
     environment:
-      - CONFIG_VERSION=elmogem # Set the desired configuration version here 
+      CONFIG_VERSION: elmogem # Set the desired configuration version here
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      # No install routine
+      INSTALL_ACTION: skip
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_AUTH: ${SMTP_AUTH}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_SENDER: ${SMTP_SENDER}
+      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
+      TZ: Europe/Berlin
+      apiKeyElmo: ${apiKeyElmo}
     depends_on:
       - db
     restart: unless-stopped

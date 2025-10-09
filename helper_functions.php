@@ -150,8 +150,26 @@ function loadEnvVariables($path = null) {
     $envVars = parseEnvLines($lines);
     
     // List of variables that should NOT be overwritten if already set in the environment
-    $noOverwriteList = ['apiKeyElmo', 'apiKeyGoogleMaps'];
-
+    $noOverwriteList = [
+        'apiKeyElmo', 
+        'apiKeyGoogleMaps',
+        'ROOT_PASSWORD',
+        'DB_USER',
+        'DB_PASSWORD',
+        'DB_NAME',
+        'SMTP_HOST',
+        'SMTP_PORT',
+        'SMTP_USER',
+        'SMTP_PASSWORD',
+        'SMTP_AUTH',
+        'SMTP_SECURE',
+        'SMTP_SENDER',
+        'FEEDBACK_ADDRESS',
+        'XML_SUBMIT_ADDRESS',
+        'ALLOWED_SENDER_DOMAINS',
+        'XML_SUBMIT_ADDRESS_MSL',
+        'XML_SUBMIT_ADDRESS_GEM'
+    ];
     foreach ($envVars as $name => $value) {
         // Check if the variable is in the no-overwrite list and already exists
         if (in_array($name, $noOverwriteList) && getenv($name) !== false) {
