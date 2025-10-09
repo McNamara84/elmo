@@ -67,30 +67,6 @@ if [ -n "${CONFIG_VERSION}" ]; then
         echo "Happy coding!"
 fi
 
-# Source the .env file to load its variables into the current shell session
-if [ -f /var/www/html/.env ]; then
-  echo "🔧 Sourcing .env file for entrypoint script..."
-  # Use 'set -a' to export all variables read from the file
-  set -a # set -o allexport. It tells the shell to automatically export any variables that are created or modified.
-  . /var/www/html/.env
-  set +a
-  echo "✅ .env file sourced."
-else
-  echo "⚠️ No .env file found to source. Using variables from Docker environment."
-fi
-
-# Logging to confirm variables are set before waiting for DB
-echo "🔍 Verifying DB connection variables before wait:"
-echo "DB_HOST: ${DB_HOST:-Not Set}"
-echo "DB_USER: ${DB_USER:-Not Set}"
-# For security, just check if the password variable exists
-if [ -n "${DB_PASSWORD}" ]; then
-    echo "DB_PASSWORD: [set]"
-else
-    echo "DB_PASSWORD: [not set]"
-fi
-
-wait_for_db
 
 # Only run installer when allowed AND schema is empty
 if [ "${INSTALL_ACTION:-skip}" != "skip" ]; then
