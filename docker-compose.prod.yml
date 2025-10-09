@@ -7,7 +7,6 @@ services:
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
-      TZ: Europe/Berlin
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
