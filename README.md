@@ -262,7 +262,7 @@ To install them: npm install
   - `$password`: Password of database user.
   - `$database`: Name of the database created.
   - `$maxTitles`: Defines the maximum number of titles that users can enter in the editor.
-  - `$apiKeyElmo`: A self-defined security key to connect cron jobs with api calls to `/update/` for refreshing the vocabularies.
+  - `$ELMOAPIKEY`: A self-defined security key to connect cron jobs with api calls to `/update/` for refreshing the vocabularies.
   - `$mslLabsUrl`: URL to the JSON file with the current list of laboratories.
   - `$showFeedbackLink`: true-> feedback function switched on, false-> feedback function switched off
   - `$smtpHost`: URL to the SMTP mail server

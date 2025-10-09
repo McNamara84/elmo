@@ -151,7 +151,7 @@ function loadEnvVariables($path = null) {
     
     // List of variables that should NOT be overwritten if already set in the environment
     $noOverwriteList = [
-        'apiKeyElmo', 
+        'ELMOAPIKEY', 
         'apiKeyGoogleMaps',
         'ROOT_PASSWORD',
         'DB_USER',

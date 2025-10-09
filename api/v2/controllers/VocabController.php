@@ -67,13 +67,13 @@ class VocabController
     private function validateApiKey(): bool
     {
         // Get API key from environment instead of global variable
-        $apiKeyElmo = getenv('apiKeyElmo') ?: '1234-1234-1234-1234';
+        $ELMOAPIKEY = getenv('ELMOAPIKEY') ?: '1234-1234-1234-1234';
 
         // Get API key from header
         $providedKey = $_SERVER['HTTP_X_API_KEY'] ?? null;
 
         // Check if key exists and matches
-        if (!$providedKey || $providedKey !== $apiKeyElmo) {
+        if (!$providedKey || $providedKey !== $ELMOAPIKEY) {
             http_response_code(401);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Invalid or missing API key']);

@@ -35,7 +35,7 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
       TZ: Europe/Berlin
-      apiKeyElmo: ${apiKeyElmo}
+      ELMOAPIKEY: ${ELMOAPIKEY}
     depends_on:
       - db
     restart: unless-stopped
@@ -73,7 +73,7 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_MSL}
       TZ: Europe/Berlin
-      apiKeyElmo: ${apiKeyElmo}
+      ELMOAPIKEY: ${ELMOAPIKEY}
     depends_on:
       - db
     restart: unless-stopped
@@ -111,7 +111,7 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
       TZ: Europe/Berlin
-      apiKeyElmo: ${apiKeyElmo}
+      ELMOAPIKEY: ${ELMOAPIKEY}
     depends_on:
       - db
     restart: unless-stopped
