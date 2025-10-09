@@ -90,7 +90,7 @@ This section outlines the automatic processes handled by the Docker environment 
 
 **2. `Dockerfile`** 
 - **Base Image:** Installs `php 8.4-apache` and essential dependencies, including the database client.
-- **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html`), setting appropriate ownership for the standard Apache user (`www-data`). If you don't want something to be copied into container, include it into .dockerignore (performance might be affected)
+- **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html_1`), setting appropriate ownership for the standard Apache user (`www-data`). If you don't want something to be copied into container, include it into .dockerignore (performance might be affected)
 - **Entrypoint:** Executes the `docker-entrypoint.sh` script.
 
 **3. `docker-entrypoint.sh`** 
