@@ -2,7 +2,6 @@ services:
   db:
     image: mariadb:11
     environment:
-      TZ: Europe/Berlin
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
@@ -19,7 +18,6 @@ services:
     ports:
       - "8080:80"
     environment:
-      CONFIG_VERSION: generic # Set the desired configuration version here
       DB_HOST: db
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -35,7 +33,10 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
       TZ: Europe/Berlin
-      ELMOAPIKEY: ${ELMOAPIKEY}
+      ELMO_API_KEY: ${ELMO_API_KEY}
+      # Flags for Standard ELMO
+      SHOW_MSL_LABS: "false"
+      SHOW_MSL_VOCABS: "false"
     depends_on:
       - db
     restart: unless-stopped
@@ -56,7 +57,6 @@ services:
     ports:
       - "8081:80"
     environment:
-      CONFIG_VERSION: msl # Set the desired configuration version here
       DB_HOST: db
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -73,7 +73,10 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_MSL}
       TZ: Europe/Berlin
-      ELMOAPIKEY: ${ELMOAPIKEY}
+      ELMO_API_KEY: ${ELMO_API_KEY}
+      # Flags for msl
+      SHOW_MSL_LABS: "true"
+      SHOW_MSL_VOCABS: "true"
     depends_on:
       - db
     restart: unless-stopped
@@ -94,7 +97,6 @@ services:
     ports:
       - "8082:80"
     environment:
-      CONFIG_VERSION: elmogem # Set the desired configuration version here
       DB_HOST: db
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -111,7 +113,11 @@ services:
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
       TZ: Europe/Berlin
-      ELMOAPIKEY: ${ELMOAPIKEY}
+      ELMO_API_KEY: ${ELMO_API_KEY}
+      # Flags for gem
+      SHOW_MSL_LABS: "false"
+      SHOW_MSL_VOCABS: "false"
+      SHOW_GGMS_PROPERTIES: "true"
     depends_on:
       - db
     restart: unless-stopped

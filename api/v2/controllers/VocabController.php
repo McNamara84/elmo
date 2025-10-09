@@ -8,8 +8,8 @@ use EasyRdf\Graph;
 
 // Set Max Execution Time to 300 seconds
 ini_set('max_execution_time', 300);
-// Include helper_functions.php so that variables are available
-require_once __DIR__ . '/../../../helper_functions.php';
+// Include settings.php so that variables are available
+require_once __DIR__ . '/../../../settings.php';
 
 /**
  * Class VocabController
@@ -35,8 +35,10 @@ class VocabController
      */
     public function __construct()
     {
-        $this->url = getenv('mslVocabsUrl') ?: 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
-        $this->mslVocabsUrl = getenv('mslVocabsUrl') ?: 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+        global $mslLabsUrl;
+        global $mslVocabsUrl;
+        $this->url = $mslLabsUrl;
+        $this->mslVocabsUrl = $mslVocabsUrl;
     }
 
     /**
@@ -66,14 +68,13 @@ class VocabController
      */
     private function validateApiKey(): bool
     {
-        // Get API key from environment instead of global variable
-        $ELMOAPIKEY = getenv('ELMOAPIKEY') ?: '1234-1234-1234-1234';
+        global $apiKeyElmo;
 
         // Get API key from header
         $providedKey = $_SERVER['HTTP_X_API_KEY'] ?? null;
 
         // Check if key exists and matches
-        if (!$providedKey || $providedKey !== $ELMOAPIKEY) {
+        if (!$providedKey || $providedKey !== $apiKeyElmo) {
             http_response_code(401);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Invalid or missing API key']);
