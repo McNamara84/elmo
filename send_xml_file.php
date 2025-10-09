@@ -15,12 +15,32 @@ ini_set('display_errors', 0);
 ob_start();
 
 // Include required files
-require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/helper_functions.php';
+loadEnvVariables();
 
-// Make global variables from settings.php available
-global $connection, $showGGMsProperties, $debugging_output;
-global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
-global $xmlSubmitAddress;
+// Safety check with connection
+if (empty($connection)) {
+    trigger_error('Warning: $connection is undefined. Please initialize the database connection.', E_USER_WARNING);
+}
+
+// SMTP variables from environment
+$smtpHost = getenv('smtpHost');
+$smtpPort = getenv('smtpPort');
+if ($smtpPort === false) {
+    // If the environment variable is not set, use a default and log a warning.
+    error_log("Warning: 'smtpPort' environment variable not set. Using default port 587.");
+    $smtpPort = 587;
+} else {
+    // If it is set, cast the string value to an integer.
+    $smtpPort = (int)$smtpPort;
+}
+$smtpUser = getenv('smtpUser');
+$smtpPassword = getenv('smtpPassword');
+$smtpSender = getenv('smtpSender');
+$xmlSubmitAddress = getenv('xmlSubmitAddress');
+$smtpSecure = getenv('smtpSecure');
+$smtpAuth = getenv('smtpAuth');
+$showGGMsProperties = getenv('showGGMsProperties');
 
 require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/save/formgroups/save_authors.php';
@@ -89,6 +109,7 @@ function getPriorityText($weeks)
 }
 
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
+$debugging_output = '';
 
 try {
     // Save all form components

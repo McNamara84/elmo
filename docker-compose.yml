@@ -6,22 +6,21 @@ services:
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
-      TZ: Europe/Berlin
+      TZ: ${TZ}
+    env_file:
+      - .env
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
 
   web:
     build: .
+    env_file:
+      - .env
     ports:
       - "8080:80"
     environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
       INSTALL_ACTION: basic
-      TZ: Europe/Berlin
     depends_on:
       - db
     restart: unless-stopped
@@ -29,7 +28,6 @@ services:
       # Mount the entire project directory for live code changes.
       # This is only for development. No way to production.
       - .:/var/www/html
-
 
 volumes:
   db_data:

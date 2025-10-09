@@ -11,23 +11,23 @@
 // Include database connection
 if (!defined('INCLUDED_FROM_TEST')) {
     // Include database connection only when not called from tests
-    $settingsPath = __DIR__ . '/settings.php';
-    if (!file_exists($settingsPath)) {
-        $msg = 'Error: settings.php not found. ' .
-            'Please copy sample_settings.php to settings.php and update your database credentials.';
+    $helpersPath = __DIR__ . '/helper_functions.php';
+    if (!file_exists($helpersPath)) {
+        $msg = 'Error: helper_functions.php not found. '    ;
         die(json_encode([
             'status' => 'error',
             'message' => $msg,
         ]));
     }
-    require_once $settingsPath;
+    require_once __DIR__ . '/helper_functions.php';
+    loadEnvVariables();
 }
 
 // Check database connection
 if (!isset($connection) || !$connection) {
     die(json_encode([
         'status' => 'error',
-        'message' => 'Error: Database connection could not be established. Please check settings.php and database availability.'
+        'message' => 'Error: Database connection could not be established. Please check helper_functions.php and database availability.'
     ]));
 }
 

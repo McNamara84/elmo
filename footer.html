@@ -90,7 +90,7 @@
 <!--jsTree-->
 <script src="node_modules/jstree/dist/jstree.min.js"></script>
 <script type="text/javascript">
-  var maxTitles = "<?php echo $maxTitles; ?>";
+  var maxTitles = "<?php echo getenv('maxTitles') ?: 5; ?>";
 </script>
 </body>
 

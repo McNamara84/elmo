@@ -13,8 +13,13 @@ error_reporting(E_ALL);
 // Start output buffering
 ob_start();
 
+$baseDir = __DIR__ . '/';
+
 // Include settings and configurations
-include_once __DIR__ . '/settings.php';
+include_once __DIR__ . "/helper_functions.php";
+elmo_log("SETUP", "Helper functions loaded, launching env insert", "DEBUG");
+loadEnvVariables();
+
 
 // Provide default feature toggles when settings.php does not define them.
 // This keeps the application resilient in environments that bootstrap a minimal

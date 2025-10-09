@@ -206,7 +206,7 @@ const googleMapsStub = String.raw`(() => {
 
 test.describe('Spatial and Temporal Coverages Form Group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route('**/settings.php?setting=apiKey', async (route) => {
+    await page.route('**/helper_functions.php?setting=apiKey', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

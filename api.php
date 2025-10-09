@@ -9,7 +9,7 @@ require 'vendor/autoload.php';
 use EasyRdf\Graph;
 use EasyRdf\RdfNamespace;
 
-include __DIR__ . '/settings.php';
+include_once __DIR__ . '/helper_functions.php';
 include 'api_functions.php';
 
 // API-Hook für den Abruf aller CGI Simple Lithology Keywords aus der CGI Simple Lithology RDF-Datei

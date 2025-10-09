@@ -17,20 +17,12 @@ $(document).ready(function () {
    * Click event handler for the "Add Title" button.
    * Adds a new title row if the maximum number of titles has not been reached.
    */
-  $("#button-resourceinformation-addtitle").click(function () {
-    /**
-     * Reference to the "Add Title" button.
-     * @type {jQuery}
-     */
-    const $addTitleBtn = $(this);
+  // ...existing code...
 
-    /**
-     * Parsed maximum titles allowed, falling back to 2 if not provided.
-     * @type {number}
-     */
+  $("#button-resourceinformation-addtitle").click(function () {
+    const $addTitleBtn = $(this);
     const maxTitles = Number(window.maxTitles) || 2;
 
-    // Check if the current number of titles is below the allowed maximum.
     if (titlesNumber >= maxTitles) return;
 
     // Clone the existing title row and reset its input fields.
@@ -59,11 +51,22 @@ $(document).ready(function () {
 
     // Populate the title type dropdown with options and remove the main title type.
     const $select = newTitleRow.find("select");
-    $select.html(window.titleTypeOptionsHtml || "");
-    if (window.mainTitleTypeId) {
-      $select.find(`option[value='${window.mainTitleTypeId}']`).remove();
-    }
-    $select.val("");
+    
+    // Wait for title type options to be available before proceeding
+    const populateSelect = () => {
+      if (window.titleTypeOptionsHtml) {
+        $select.html(window.titleTypeOptionsHtml);
+        if (window.mainTitleTypeId) {
+          $select.find(`option[value='${window.mainTitleTypeId}']`).remove();
+        }
+        $select.val("").prop('disabled', false);
+      } else {
+        // If options aren't ready yet, try again in a short while
+        setTimeout(populateSelect, 100);
+      }
+    };
+    
+    populateSelect();
 
     // Create a remove button for the new row.
     const removeBtn = $("<button/>", {
@@ -71,15 +74,25 @@ $(document).ready(function () {
       type: "button",
       class: "btn btn-danger removeTitle",
     }).css("width", "36px").click(function () {
-      // Remove the current row and decrement the titles counter.
       $(this).closest(".row").remove();
       titlesNumber--;
 
-      // Enable the "Add Title" button if below the maximum limit.
       if (titlesNumber < maxTitles) {
         $addTitleBtn.prop("disabled", false);
       }
-    });
+
+    // Replace the "Add Title" button in the cloned row with the remove button.
+    newTitleRow.find(".addTitle").replaceWith(removeBtn);
+
+    // Append the new title row to the DOM.
+    $addTitleBtn.closest(".row").parent().append(newTitleRow);
+    titlesNumber++;
+
+    // Disable the "Add Title" button if the maximum number of titles is reached.
+    if (titlesNumber >= maxTitles) {
+      $addTitleBtn.prop("disabled", true);
+    }
+  });
 
     // Replace the "Add Title" button in the cloned row with the remove button.
     newTitleRow.find(".addTitle").replaceWith(removeBtn);

@@ -18,7 +18,7 @@ final class SettingsIncludePathTest extends TestCase
         $this->assertSame(
             1,
             $matches,
-            sprintf('Expected %s to include settings.php using __DIR__', $script)
+            sprintf('Expected %s to include helper_functions.php using __DIR__', $script)
         );
     }
 
@@ -27,11 +27,15 @@ final class SettingsIncludePathTest extends TestCase
      */
     public static function scriptProvider(): array
     {
+        // This pattern looks for the construction of the absolute path,
+        // regardless of how it's included (include, require, require_once, etc.).
+        $pattern = '/__DIR__\s*\.\s*[\'\"]\/helper_functions\\.php[\'\"]/';
+
         return [
-            'api.php include' => ['api.php', '/include\s+__DIR__\s*\.\s*[\'\"]\/settings\\.php[\'\"]\s*;/'],
-            'index.php include_once' => ['index.php', '/include_once\s+__DIR__\s*\.\s*[\'\"]\/settings\\.php[\'\"]\s*;/'],
-            'install.php require_once' => ['install.php', '/\$settingsPath\s*=\s*__DIR__\s*\.\s*[\'\"]\/settings\\.php[\'\"]\s*;[\s\S]*require_once\s+\$settingsPath\s*;/'],
-            'send_feedback_mail.php include' => ['send_feedback_mail.php', '/include\s+__DIR__\s*\.\s*[\'\"]\/settings\\.php[\'\"]\s*;/'],
+            'api.php' => ['api.php', $pattern],
+            'index.php' => ['index.php', $pattern],
+            'install.php' => ['install.php', $pattern],
+            'send_feedback_mail.php' => ['send_feedback_mail.php', $pattern],
         ];
     }
 }
