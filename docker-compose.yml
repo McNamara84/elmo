@@ -27,7 +27,7 @@ services:
     volumes:
       # Mount the entire project directory for live code changes.
       # This is only for development. No way to production.
-      - .:/var/www/html_1
+      - .:/var/www/html
 
 volumes:
   db_data:
