@@ -1,5 +1,8 @@
 FROM php:8.4-apache
 
+# Set the working directory for subsequent commands
+WORKDIR /var/www/html_1
+
 # Install required packages and enable PHP extensions
 RUN apt-get update && apt-get install -y --no-install-recommends mariadb-client \
         libxml2-dev \
@@ -24,14 +27,34 @@ RUN sed -i 's|/var/www/html|/var/www/html_1|g' /etc/apache2/sites-available/000-
     && a2enmod rewrite
 
 # Add directory permissions for the new document root
-RUN echo '<Directory /var/www/html_1/>' >> /etc/apache2/apache2.conf \
-    && echo '    Options Indexes FollowSymLinks' >> /etc/apache2/apache2.conf \
-    && echo '    AllowOverride All' >> /etc/apache2/apache2.conf \
-    && echo '    Require all granted' >> /etc/apache2/apache2.conf \
-    && echo '</Directory>' >> /etc/apache2/apache2.conf
+# repeat the working directory here 
+RUN rm -f /etc/apache2/sites-available/000-default.conf \
+    && cat > /etc/apache2/sites-available/000-default.conf << 'EOF'
+<VirtualHost *:80>
+    DocumentRoot /var/www/html_1 
+    ServerName localhost
+    
+    <Directory /var/www/html_1>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+        DirectoryIndex index.php index.html
+    </Directory>
+    
+    # Enable URL rewriting for API routes
+    <Directory /var/www/html_1/api>
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^(.*)$ index.php [QSA,L]
+    </Directory>
+    
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
 
-# Set the working directory for subsequent commands
-WORKDIR /var/www/html_1
+
 
 COPY . .
 
