@@ -132,9 +132,10 @@ $(document).ready(function () {
         function loadKeywords(response) {
             const data = response.data ? response.data : response;
             var filteredData = data;
+            suggestedKeywords = [];
 
 
-            if (config.rootNodeId) {
+            if (config.rootNodes || config.rootNodeId) {
 
                 /**
                 * Recursively finds a node by ID in a nested node structure.
@@ -159,7 +160,6 @@ $(document).ready(function () {
                 }
 
                 // restrict to the specified node and its descendants
-                                // restrict to the specified node and its descendants
                 if (config.rootNodes && Array.isArray(config.rootNodes)) {
                     var collected = [];
                     config.rootNodes.forEach(function (rootId) {
