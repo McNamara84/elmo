@@ -159,12 +159,26 @@ $(document).ready(function () {
                 }
 
                 // restrict to the specified node and its descendants
-                var selectedNode = findNodeById(data, config.rootNodeId);
-                if (selectedNode) {
-                    filteredData = [selectedNode];
-                } else {
-                    console.error(`Root node with ID ${config.rootNodeId} not found in ${config.jsonFile}`);
-                    return;
+                                // restrict to the specified node and its descendants
+                if (config.rootNodes && Array.isArray(config.rootNodes)) {
+                    var collected = [];
+                    config.rootNodes.forEach(function (rootId) {
+                        var n = findNodeById(data, rootId);
+                        if (n) collected.push(n);
+                        else console.warn('root not found:', rootId, 'in', config.jsonFile);
+                    });
+                    if (collected.length === 0) {
+                        console.error('Keine gültigen rootNodes in', config.jsonFile);
+                        return;
+                    }
+                    filteredData = collected;
+                } else if (config.rootNodeId) {
+                    var sel = findNodeById(data, config.rootNodeId);
+                    if (sel) filteredData = [sel];
+                    else {
+                        console.error('Root node with ID', config.rootNodeId, 'not found in', config.jsonFile);
+                        return;
+                    }
                 }
             }
 
