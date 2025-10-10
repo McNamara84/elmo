@@ -6,20 +6,11 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
-include_once __DIR__ . '/helper_functions.php';
-loadEnvVariables();
+include __DIR__ . '/settings.php';
 
 function testGfzSmtpConnectivity(): bool {
-    $smtpHost=getenv('smtpHost');
-    $smtpPort=getenv('smtpPort');
-    if ($smtpPort === false) {
-        // If the environment variable is not set, use a default and log a warning.
-        error_log("Warning: 'smtpPort' environment variable not set. Using default port 587.");
-        $smtpPort = 587;
-    } else {
-        // If it is set, cast the string value to an integer.
-        $smtpPort = (int)$smtpPort;
-    }
+    global $smtpHost, $smtpPort;
+    
     error_log("=== GFZ SMTP Connectivity Test ===");
     
     // DNS test
@@ -134,7 +125,7 @@ function sendFeedbackMail(
         error_log("- Exception: " . $e->getMessage());
         
         // Fallback: save feedback to file
-        $logFile = '/var/www/html_1/feedback_backup.txt';
+        $logFile = '/var/www/html/feedback_backup.txt';
         $logEntry = "[" . date('Y-m-d H:i:s') . "] BACKUP FEEDBACK\n";
         $logEntry .= "An: " . $feedbackAddress . "\n";
         $logEntry .= "Fehler: " . $mail->ErrorInfo . "\n";

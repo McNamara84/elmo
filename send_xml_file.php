@@ -15,32 +15,12 @@ ini_set('display_errors', 0);
 ob_start();
 
 // Include required files
-require_once __DIR__ . '/helper_functions.php';
-loadEnvVariables();
+require_once __DIR__ . '/settings.php';
 
-// Safety check with connection
-if (empty($connection)) {
-    trigger_error('Warning: $connection is undefined. Please initialize the database connection.', E_USER_WARNING);
-}
-
-// SMTP variables from environment
-$smtpHost = getenv('smtpHost');
-$smtpPort = getenv('smtpPort');
-if ($smtpPort === false) {
-    // If the environment variable is not set, use a default and log a warning.
-    error_log("Warning: 'smtpPort' environment variable not set. Using default port 587.");
-    $smtpPort = 587;
-} else {
-    // If it is set, cast the string value to an integer.
-    $smtpPort = (int)$smtpPort;
-}
-$smtpUser = getenv('smtpUser');
-$smtpPassword = getenv('smtpPassword');
-$smtpSender = getenv('smtpSender');
-$xmlSubmitAddress = getenv('xmlSubmitAddress');
-$smtpSecure = getenv('smtpSecure');
-$smtpAuth = getenv('smtpAuth');
-$showGGMsProperties = getenv('showGGMsProperties');
+// Make global variables from settings.php available
+global $connection, $showGGMsProperties, $debugging_output;
+global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
+global $xmlSubmitAddress;
 
 require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/save/formgroups/save_authors.php';
@@ -109,7 +89,6 @@ function getPriorityText($weeks)
 }
 
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
-$debugging_output = '';
 
 try {
     // Save all form components
@@ -327,7 +306,7 @@ try {
     
     // Backup: Save submission details to file if email fails
     if ($resource_id !== false) {
-        $backupFile = '/var/www/html_1/xml_submit_backup.txt';
+        $backupFile = '/var/www/html/xml_submit_backup.txt';
         $backupEntry = "[" . date('Y-m-d H:i:s') . "] BACKUP XML SUBMISSION\n";
         $backupEntry .= "Resource ID: " . $resource_id . "\n";
         $backupEntry .= "Error: " . $e->getMessage() . "\n";

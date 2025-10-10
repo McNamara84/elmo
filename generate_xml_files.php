@@ -17,7 +17,7 @@ $response = [
 try {
     // Include settings and establish database connection
     // Ensure this path is correct relative to where generate_xml.php resides
-    require_once __DIR__ . '/helper_functions.php';
+    require_once __DIR__ . '/settings.php';
     
     // Include DatasetController
     require_once __DIR__ . '/api/v2/controllers/DatasetController.php';

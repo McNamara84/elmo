@@ -30,10 +30,10 @@ async function loadLanguagePageHtml() {
     return cachedLanguagePageHtml;
   }
 
-  const [headerTemplate, footerTemplate, envTemplate] = await Promise.all([
+  const [headerTemplate, footerTemplate, settingsTemplate] = await Promise.all([
     fs.readFile(path.join(REPO_ROOT, 'header.php'), 'utf-8'),
     fs.readFile(path.join(REPO_ROOT, 'footer.html'), 'utf-8'),
-    fs.readFile(path.join(REPO_ROOT, '.env'), 'utf-8'),
+    fs.readFile(path.join(REPO_ROOT, 'settings.php'), 'utf-8'),
   ]);
 
   const languageCodes = (await fs.readdir(path.join(REPO_ROOT, 'lang')))
@@ -58,30 +58,20 @@ async function loadLanguagePageHtml() {
     .replace(/<\?php[\s\S]*?\?>/gu, '')
     .replace(/<base href="[^"]*">/u, '<base href="./">');
 
-  // Parse .env file to extract maxTitles
-  const parseEnvValue = (content: string, key: string, defaultValue: string = '2'): string => {
-    const match = content.match(new RegExp(`^${key}\\s*=\\s*(.*)$`, 'm'));
-    return match ? match[1].trim() : defaultValue;
-  };
+  const maxTitlesMatch = settingsTemplate.match(/\$maxTitles\s*=\s*(\d+);/u);
+  const maxTitlesValue = maxTitlesMatch ? maxTitlesMatch[1] : '2';
 
-  const maxTitlesValue = parseEnvValue(envTemplate, 'maxTitles', '2');
-  const showFeedbackLink = parseEnvValue(envTemplate, 'showFeedbackLink', 'false');
-
-  // Determine if feedback button should be shown
-  const shouldShowFeedback = ['true', '1', 'yes', 'on'].includes(showFeedbackLink.toLowerCase());
-
-  const footerHtml = footerTemplate
+  let footerHtml = footerTemplate
     .replace(
       /<\?php if \(\$showFeedbackLink\): \?>[\s\S]*?<\?php endif; \?>/u,
-      shouldShowFeedback ? 
-        `          <button type="button" class="btn feedback-button multi-color-blink m-2 text-feedback" id="button-feedback-openmodalfooter"
+      `          <button type="button" class="btn feedback-button multi-color-blink m-2 text-feedback" id="button-feedback-openmodalfooter"
             data-bs-toggle="modal" data-bs-target="#modal-feedback" data-translate="feedback.button"
             data-translate-tooltip="modals.feedback.buttonTooltip">
             Feedback
-          </button>` : ''
+          </button>`,
     )
     .replace(/<\?php[\s\S]*?\?>/gu, '')
-    .replace(/var maxTitles = "[^"]*";/u, `var maxTitles = "${maxTitlesValue}";`);
+    .replace(/var maxTitles = "[^"]*";/u, `  var maxTitles = "${maxTitlesValue}";`);
 
   cachedLanguagePageHtml = `${headerHtml}
     <main id="main-content" class="container py-4">
@@ -122,7 +112,7 @@ test.describe('Language preferences', () => {
         headers: { 'content-type': 'application/json; charset=utf-8' },
       });
     });
-    await page.route('**/helper_functions.php?*', async (route) => {
+    await page.route('**/settings.php?*', async (route) => {
       await route.fulfill({
         status: 200,
         body: JSON.stringify({ apiKey: 'test', showMslLabs: false }),

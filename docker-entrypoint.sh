@@ -1,18 +1,27 @@
 #!/bin/sh
 set -e
+
 # give www-data ownership of the xml folder every start
-chown -R www-data:www-data /var/www/html_1/xml
+chown -R www-data:www-data /var/www/html/xml
 
 # Ensure PHP dependencies are installed
-if [ ! -d /var/www/html_1/vendor ]; then
+if [ ! -d /var/www/html/vendor ]; then
   echo "📦  Installing PHP dependencies with Composer"
   composer install --no-dev --prefer-dist --optimize-autoloader
 fi
 
 # Ensure Node dependencies are installed
-if [ ! -d /var/www/html_1/node_modules ]; then
+if [ ! -d /var/www/html/node_modules ]; then
   echo "📦  Installing Node dependencies"
   npm install --omit=dev
+fi
+
+# Ensure a settings.php exists; in production create it from settings.elmo.php,
+# so that local settings.php (dev) is not needed/overwritten.
+if [ ! -f /var/www/html/settings.php ]; then
+  echo "⚙️  No settings.php found, creating from settings.elmo.php"
+  cp /var/www/html/settings.elmo.php /var/www/html/settings.php
+  chown www-data:www-data /var/www/html/settings.php
 fi
 
 # Wait for the DB using mysqladmin ping (more reliable)
@@ -33,40 +42,9 @@ db_has_tables() {
     TABLE_COUNT=0
   fi
   [ "${TABLE_COUNT}" -gt 0 ]
-
 }
 
-# In case a stable version of container is needed, set CONFIG_VERSION to one of:
-# Copy the appropriate .env file based on CONFIG_VERSION
-# CONFIG_VERSION determines which configuration to use.
-if [ -n "${CONFIG_VERSION}" ]; then
-    case "${CONFIG_VERSION}" in
-    "generic")
-      echo "🔧 Using prod.elmo.env configuration"
-      cp /var/www/html_1/envs/prod.elmo.env /var/www/html_1/.env
-      ;;
-    "msl")
-      echo "🔧 Using prod.elmo-msl.env configuration"
-      cp /var/www/html_1/envs/prod.elmo-msl.env /var/www/html_1/.env
-      ;;
-    "elmogem")
-      echo "🔧 Using prod.elmo-gem.env configuration"
-      cp /var/www/html_1/envs/prod.elmo-gem.env /var/www/html_1/.env
-      ;;
-    "testing")
-      echo "🔧 Using prod.elmo-test.env configuration"
-      cp /var/www/html_1/envs/prod.elmo-test.env /var/www/html_1/.env
-      ;;
-    *)
-      echo "⚠️ Invalid CONFIG_VERSION '${CONFIG_VERSION}' specified. Using generic as default configuration."
-      cp /var/www/html_1/envs/prod.elmo.env /var/www/html_1/.env
-      ;;
-    esac
-  else
-    echo "🔧 No CONFIG_VERSION specified. It is assumed, you have specified your preferences in the .env file"
-        echo "Happy coding!"
-fi
-
+wait_for_db
 
 # Only run installer when allowed AND schema is empty
 if [ "${INSTALL_ACTION:-skip}" != "skip" ]; then
@@ -74,7 +52,7 @@ if [ "${INSTALL_ACTION:-skip}" != "skip" ]; then
     echo "📚  Database schema for '${DB_NAME}' already present — skipping install."
   else
     echo "🚀  Running initial database setup (${INSTALL_ACTION:-complete})…"
-    php /var/www/html_1/install.php "${INSTALL_ACTION:-complete}" # complete|basic
+    php /var/www/html/install.php "${INSTALL_ACTION:-complete}" # complete|basic
     echo "🏁  Database setup finished."
   fi
 else
@@ -82,6 +60,6 @@ else
 fi
 
 # Clean up install files (optional)
-rm -f /var/www/html_1/install.{php,html} || true
+rm -f /var/www/html/install.{php,html} || true
 
 exec apache2-foreground
