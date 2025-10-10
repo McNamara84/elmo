@@ -13,6 +13,26 @@ $(document).ready(function () {
  * @property {string} jsTreeId - The ID of the jsTree element associated with this input field.
  * @property {string} searchInputId - The ID of the search input field for the corresponding jsTree-modal.
  */
+
+
+    // MSL root-Listen
+    const generalRoots = [
+        'https://epos-msl.uu.nl/voc/materials/1.3/',
+        'https://epos-msl.uu.nl/voc/geologicalage/1.3/',
+        'https://epos-msl.uu.nl/voc/porefluids/1.3/',
+        'https://epos-msl.uu.nl/voc/geologicalsetting/1.3/',
+        'https://epos-msl.uu.nl/voc/subsurface/1.3/'
+    ];
+
+    const domainRoots = [
+        'https://epos-msl.uu.nl/voc/analoguemodelling/1.3/',
+        'https://epos-msl.uu.nl/voc/geochemistry/1.3/',
+        'https://epos-msl.uu.nl/voc/testbeds/1.3/',
+        'https://epos-msl.uu.nl/voc/microscopy/1.3/',
+        'https://epos-msl.uu.nl/voc/paleomagnetism/1.3/',
+        'https://epos-msl.uu.nl/voc/rockphysics/1.3/'
+    ];
+
     var keywordConfigurations = [
         {
             inputId: '#input-sciencekeyword',
@@ -43,7 +63,7 @@ $(document).ready(function () {
             jsTreeId: '#jstree-mslkeyword-general',
             searchInputId: '#input-mslkeyword-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-msl',
-            rootNodeId: 'https://epos-msl.uu.nl/voc/materials/1.3/'
+            rootNodes: generalRoots 
         },
         {
             inputId: '#input-mslkeyword',
@@ -51,7 +71,7 @@ $(document).ready(function () {
             jsTreeId: '#jstree-mslkeyword-domain',
             searchInputId: '#input-mslkeyword-thesaurussearch',
             selectedKeywordsListId: 'selected-keywords-msl',
-            rootNodeId: 'https://epos-msl.uu.nl/voc/geochemistry/1.3/'
+            rootNodes: domainRoots
         }
     ];
 
