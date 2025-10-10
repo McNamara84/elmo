@@ -15,7 +15,7 @@ $(document).ready(function () {
  */
 
 
-    // MSL root-Listen
+    // MSL root-Lists
     const generalRoots = [
         'https://epos-msl.uu.nl/voc/materials/1.3/',
         'https://epos-msl.uu.nl/voc/geologicalage/1.3/',
@@ -75,7 +75,7 @@ $(document).ready(function () {
         }
     ];
 
-    // Initialisiere nur die Konfigurationen, deren Eingabefelder existieren
+    // Initialize only those configurations whose input fields exist
     document.addEventListener('translationsLoaded', function() {
         keywordConfigurations.forEach(function (config) {
             if ($(config.inputId).length) {
