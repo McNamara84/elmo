@@ -20,6 +20,7 @@ describe('contributor-organisation.js', () => {
             <span class="input-group-text"><i class="bi bi-question-circle-fill"></i></span>
             <div class="invalid-feedback"></div>
           </div>
+          <label for="input-contributor-organisationaffiliation"></label>
           <div class="input-group has-validation aff-group">
             <input type="text" id="input-contributor-organisationaffiliation" value="aff" required />
             <span class="input-group-text"><i class="bi bi-question-circle-fill"></i></span>
@@ -40,11 +41,9 @@ describe('contributor-organisation.js', () => {
     global.replaceHelpButtonInClonedRows = jest.fn();
     global.setupRolesDropdown = jest.fn();
     global.autocompleteAffiliations = jest.fn();
-    global.checkMandatoryFields = jest.fn();
+    global.validateAllMandatoryFields = jest.fn();
 
     window.affiliationsData = [{ id: '1', name: 'Org' }];
-
-    jest.spyOn(Date.prototype, 'getTime').mockReturnValue(42);
 
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/contributor-organisation.js'), 'utf8');
     script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
@@ -59,11 +58,11 @@ describe('contributor-organisation.js', () => {
     delete global.replaceHelpButtonInClonedRows;
     delete global.setupRolesDropdown;
     delete global.autocompleteAffiliations;
-    delete global.checkMandatoryFields;
+    delete global.validateAllMandatoryFields;
     delete window.affiliationsData;
   });
 
-  test('adds a new contributor organisation row with updated fields', () => {
+  test('adds a new contributor organisation row with updated fields and IDs', () => {
     $('#button-contributor-addorganisation').trigger('click');
 
     const rows = $('#group-contributororganisation .row');
@@ -72,18 +71,27 @@ describe('contributor-organisation.js', () => {
     const newRow = rows.last();
     expect(global.replaceHelpButtonInClonedRows).toHaveBeenCalled();
 
-    expect(newRow.find('#input-contributor-name42').length).toBe(1);
-    expect(newRow.find('label[for="input-contributor-name42"]').length).toBe(1);
-    expect(newRow.find('#input-contributor-organisationrole42').length).toBe(1);
-    expect(newRow.find('label[for="input-contributor-organisationrole42"]').length).toBe(1);
-    expect(newRow.find('#input-contributor-organisationaffiliation42').length).toBe(1);
-    expect(newRow.find('#input-contributor-organisationrorid42').length).toBe(1);
+    const rowIndex = 1;
+    expect(newRow.find(`#input-contributor-name-${rowIndex}`).length).toBe(1);
+    expect(newRow.find(`label[for="input-contributor-name-${rowIndex}"]`).length).toBe(1);
+    expect(newRow.find(`#input-contributor-organisationrole-${rowIndex}`).length).toBe(1);
+    expect(newRow.find(`label[for="input-contributor-organisationrole-${rowIndex}"]`).length).toBe(1);
+    expect(newRow.find(`#input-contributor-organisationaffiliation-${rowIndex}`).length).toBe(1);
+    expect(newRow.find(`#input-contributor-organisationrorid-${rowIndex}`).length).toBe(1);
+
     expect(newRow.find('.removeButton').length).toBe(1);
     expect(newRow.find('.tagify').length).toBe(0);
-    expect(newRow.find('input#input-contributor-name42').val()).toBe('');
 
-    expect(global.setupRolesDropdown).toHaveBeenCalledWith(['institution', 'both'], '#input-contributor-organisationrole42');
-    expect(global.autocompleteAffiliations).toHaveBeenCalledWith('input-contributor-organisationaffiliation42', 'input-contributor-organisationrorid42', window.affiliationsData);
+    expect(newRow.find(`#input-contributor-name-${rowIndex}`).val()).toBe('');
+    expect(newRow.find(`#input-contributor-organisationrole-${rowIndex}`).val()).toBe('');
+    expect(newRow.find(`#input-contributor-organisationaffiliation-${rowIndex}`).val()).toBe('');
+
+    expect(global.setupRolesDropdown).toHaveBeenCalledWith(['institution', 'both'], `#input-contributor-organisationrole-${rowIndex}`);
+    expect(global.autocompleteAffiliations).toHaveBeenCalledWith(
+      `input-contributor-organisationaffiliation-${rowIndex}`,
+      `input-contributor-organisationrorid-${rowIndex}`,
+      window.affiliationsData
+    );
   });
 
   test('remove button deletes row and triggers validation', () => {
@@ -92,6 +100,6 @@ describe('contributor-organisation.js', () => {
     newRow.find('.removeButton').trigger('click');
 
     expect($('#group-contributororganisation .row').length).toBe(1);
-    expect(global.checkMandatoryFields).toHaveBeenCalled();
+    expect(global.validateAllMandatoryFields).toHaveBeenCalled();
   });
 });

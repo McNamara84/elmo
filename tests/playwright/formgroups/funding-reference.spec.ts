@@ -147,7 +147,11 @@ test.describe('Funding Reference form group', () => {
 
     const secondRow = rows.nth(1);
     await expect(secondRow.locator('.removeButton')).toBeVisible();
-    await expect(secondRow.locator('i.bi-question-circle-fill')).toHaveCount(0);
+    const placeholders = secondRow.locator('.help-placeholder i.bi-question-circle-fill');
+    await expect(placeholders).toHaveCount(4);
+    for (let idx = 0; idx < 4; idx++) {
+      await expect(placeholders.nth(idx)).not.toBeVisible();
+    }
     await expect(secondRow.locator('.help-placeholder')).toHaveCount(4);
 
     const secondFunderInput = secondRow.locator('.inputFunder');

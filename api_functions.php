@@ -4,7 +4,12 @@ require 'vendor/autoload.php';
 use EasyRdf\Graph;
 use EasyRdf\RdfNamespace;
 
-function fetchAndProcessCGIKeywords()
+/**
+ * Fetches and processes CGI keywords from the RDF source.
+ * 
+ * @return array<mixed> Processed CGI keywords data
+ */
+function fetchAndProcessCGIKeywords(): array
 {
     $url = 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology.rdf';
 

@@ -34,11 +34,11 @@ class ValidationController
     /**
      * Retrieves the regex pattern for a specified identifier type.
      *
-     * @param array $vars An associative array containing request parameters.
+     * @param array<mixed> $vars An associative array containing request parameters.
      *
      * @return void
      */
-    public function getPattern($vars)
+    public function getPattern(array $vars)
     {
         $type = $vars['type'] ?? null;
         if (!$type) {
