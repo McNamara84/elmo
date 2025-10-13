@@ -19,16 +19,27 @@ function updateHelpStatus() {
   $('.input-with-help').toggleClass('input-right-with-round-corners', status === 'help-off');
 }
 
-function loadHelpContent(sectionId) {
+function loadHelpContent(callback) {
   $.get('doc/help.php', function (data) {
-    var parser = new DOMParser();
-    var doc = parser.parseFromString(data, 'text/html');
-    var content = $(doc).find('#' + sectionId).html();
-    $('#helpModal .modal-body').html(content);
-    $('#helpModal').modal('show');
+    // Return the HTML data via callback
+    callback(data);
   }).fail(function () {
     console.error('Error loading help content.');
+    callback(null);
   });
+}
+
+function displayHelpSection(sectionId, htmlData) {
+  var parser = new DOMParser();
+  var doc = parser.parseFromString(htmlData, 'text/html');
+  var content = $(doc).find('#' + sectionId).html();
+  
+  if (!content || content.trim() === '') {
+    content = '<p>Help content not available for this section.</p>';
+  }
+  
+  $('#helpModal .modal-body').html(content);
+  $('#helpModal').modal('show');
 }
 
 function initHelp() {
@@ -44,8 +55,14 @@ function initHelp() {
   });
 
   $(document).on('click', '[data-help-section-id]', function () {
-    var sectionId = $(this).data('help-section-id');
-    window.loadHelpContent(sectionId);
+    var sectionId = $(this).attr('data-help-section-id');
+    
+    // Load HTML data and parse it here in the event handler
+    loadHelpContent(function(htmlData) {
+      if (htmlData) {
+        displayHelpSection(sectionId, htmlData);
+      }
+    });
   });
 
   document.getElementById('buttonHelp').addEventListener('click', function (event) {
