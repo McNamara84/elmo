@@ -27,6 +27,9 @@ WORKDIR /var/www/html
 
 COPY . .
 
+# Debug: Add build timestamp to verify rebuilds
+RUN echo "Build timestamp: $(date)" > build-info.txt
+
 # Install Node dependencies
 RUN npm install
 
