@@ -67,6 +67,7 @@ if [ -n "${CONFIG_VERSION}" ]; then
         echo "Happy coding!"
 fi
 
+wait_for_db
 
 # Only run installer when allowed AND schema is empty
 if [ "${INSTALL_ACTION:-skip}" != "skip" ]; then
