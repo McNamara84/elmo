@@ -133,7 +133,7 @@ $(document).ready(function () {
             selectedKeywordsList.appendChild(listItem);
         });
     }
-
+    // LOAD THE TESAURI and limit it. 
     document.addEventListener('translationsLoaded', function () {
         // Initialize the jsTree for platforms datasource
         if ($(jsTreeId).length && !$(jsTreeId).jstree(true)) {
@@ -252,7 +252,6 @@ $(document).ready(function () {
                                 closeOnSelect: true,
                                 classname: "thesaurus-tagify",
                             },
-                            editTags: false,
                         });
                         input._tagify = tagifyInstance;
                         if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
