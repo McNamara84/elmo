@@ -414,7 +414,10 @@ $(document).ready(function () {
         const addButtonCol = row.find('.addDataSource, .removeButton').closest('div[class*="col-"]');
         const detailsCol = row.find('select[name="datasource_details[]"]').closest('div[class*="col-"]');
         const compensationCol = row.find('input[name="compensation_depth[]"]').closest('div[class*="col-"]');
-        const satelliteCol = row.find('.visibility-datasources-satellite');
+        
+        // Find BOTH satellite columns separately
+        const satelliteInputCol = row.find('input[name="satellite_platform[]"]').closest('div[class*="col-"]');
+        const satelliteButtonCol = row.find('#button-datasource-platforms, [id^="button-datasource-platforms-"]').closest('div[class*="col-"]');
 
         if (isModel) {
             // Row 1: Type | Identifier | Identifier Type
@@ -430,18 +433,26 @@ $(document).ready(function () {
             // Adjust column widths for the new layout
             identifierCol.removeClass('col-md-5 col-lg-5').addClass('col-md-3 col-lg-3');
         }
-        // Restore original order: Type | Description | Details | Compensation | ModelName | Identifier | IdentifierType | Satellite | AddButton
+        // Restore original order: Type | Details | Compensation | ModelName | Identifier | IdentifierType | SatelliteInput | SatelliteButton | Description | AddButton
         else {
-            // Clear the row and stack fields in the desired order
-            row.append(typeCol);          // Type
-            row.append(detailsCol);       // Details
-            row.append(compensationCol);  // Compensation
-            row.append(modelNameCol);     // Model Name
-            row.append(identifierCol);    // Identifier
-            row.append(identifierTypeCol);// Identifier Type
-            row.append(satelliteCol);     // Satellite
-            row.append(descCol);          // Description (always after detalisation)
-            row.append(addButtonCol);     // Add Button
+            // Clear the row and append fields in the desired order
+            row.append(typeCol);              // Type
+            row.append(detailsCol);           // Details
+            row.append(compensationCol);      // Compensation
+            row.append(modelNameCol);         // Model Name
+            row.append(identifierCol);        // Identifier
+            row.append(identifierTypeCol);    // Identifier Type
+            
+            // Append BOTH satellite columns in correct order
+            if (satelliteInputCol.length > 0) {
+                row.append(satelliteInputCol);    // Satellite Input Field
+            }
+            if (satelliteButtonCol.length > 0) {
+                row.append(satelliteButtonCol);   // Satellite Button
+            }
+            
+            row.append(descCol);              // Description (always after satellite fields)
+            row.append(addButtonCol);         // Add Button
         }
     }
 
@@ -545,9 +556,26 @@ $(document).ready(function () {
         // Generate unique ID for the new platform input to avoid conflicts
         const rowCount = datasourceGroup.children('.row').length;
         const newPlatformInput = newRow.find('input[name="satellite_platform[]"]');
+        const newPlatformButton = newRow.find('button[data-bs-target="#modal-platforms-datasource"]');
+
         if (newPlatformInput.length > 0) {
-            const newId = `input-datasource-platforms-${rowCount}`;
-            newPlatformInput.attr('id', newId);
+            const newInputId = `input-datasource-platforms-${rowCount}`;
+            const newButtonId = `button-datasource-platforms-${rowCount}`;
+            
+            // Update input ID
+            newPlatformInput.attr('id', newInputId);
+            
+            // Update button ID and its data-target-input attribute
+            if (newPlatformButton.length > 0) {
+                newPlatformButton.attr('id', newButtonId);
+                newPlatformButton.attr('data-target-input', newInputId);
+            }
+            
+            // Update label's 'for' attribute to match the new input ID
+            const newLabel = newRow.find(`label[for="input-datasource-platforms"]`);
+            if (newLabel.length > 0) {
+                newLabel.attr('for', newInputId);
+            }
         }
 
         replaceHelpButtonInClonedRows(newRow);
