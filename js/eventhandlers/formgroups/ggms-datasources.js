@@ -133,6 +133,69 @@ $(document).ready(function () {
             selectedKeywordsList.appendChild(listItem);
         });
     }
+    /**
+     * Initializes a Tagify instance on a given input element for data source platforms.
+     * @param {HTMLElement} input - The input element to apply Tagify to.
+     * @returns {Tagify|null} The created Tagify instance or null if failed.
+     */
+    function setupDSTagify(input, data) {
+
+        if (!input || input._tagify || typeof Tagify === 'undefined') {
+            console.warn('Tagify is not available or already initialized on this input.');
+            return null;
+        }
+        const platformKeywordsWhitelist = [];
+
+        function buildWhitelist(nodes, parentPath = []) {
+            nodes.forEach(function (item) {
+                const textToAdd = parentPath.concat(item.text).join(' > ');
+                platformKeywordsWhitelist.push({
+                    value: textToAdd,
+                    id: item.id,
+                    scheme: item.original.scheme,
+                    schemeURI: item.original.schemeURI,
+                    language: item.original.language
+                });
+
+                if (item.children) {
+                    buildWhitelist(item.children, parentPath.concat(item.text));
+                }
+            });
+        }
+        platformKeywordsWhitelist = buildWhitelist(data);
+
+        const tagifyInstance = new Tagify(input, {
+            whitelist: platformKeywordsWhitelist, // Use the stored whitelist
+            enforceWhitelist: true,
+            placeholder: translations?.keywords?.thesaurus?.label || 'Enter keywords...',
+            dropdown: {
+                maxItems: 50,
+                enabled: 3,
+                closeOnSelect: true,
+                classname: "thesaurus-tagify",
+            },
+            editTags: false,
+            callbacks: {
+                add: function() {
+                    this.DOM.scope.style.height = 'auto';
+                },
+                remove: function() {
+                    this.DOM.scope.style.height = 'auto';
+                }
+            }
+        });
+
+        input._tagify = tagifyInstance;
+        bindTagifyEvents(tagifyInstance); // synchronise with tree here!
+        if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+            window.applyTagifyAccessibilityAttributes(tagifyInstance, input, {
+                placeholder: tagifyInstance.settings.placeholder
+            });
+        }
+
+        return 0;
+    }
+
     // LOAD THE TESAURI and limit it. 
     document.addEventListener('translationsLoaded', function () {
         // Initialize the jsTree for platforms datasource
@@ -185,7 +248,8 @@ $(document).ready(function () {
                         return node;
                     });
                 }
-
+                // list of all keywords for tagify and JSTree. 
+                // filtered data is the single source of true for both tagify and JSTree
                 const processedData = processNodes(filteredData);
 
                 // Initialize jsTree
@@ -219,49 +283,12 @@ $(document).ready(function () {
                 });
 
                 // Initialize Tagify for existing datasource platform inputs
-                const platformInputs = document.querySelectorAll('input[name="satellite_platform[]"]');
-                platformInputs.forEach((input, index) => {
-                    if (!input._tagify && typeof Tagify !== 'undefined') {
-                        // Build whitelist from the processed data
-                        const suggestedKeywords = [];
-                        function buildWhitelist(nodes, parentPath = []) {
-                            nodes.forEach(function (item) {
-                                const textToAdd = parentPath.concat(item.text).join(' > ');
-                                suggestedKeywords.push({
-                                    value: textToAdd,
-                                    id: item.id,
-                                    scheme: item.scheme,
-                                    schemeURI: item.schemeURI,
-                                    language: item.language
-                                });
-
-                                if (item.children) {
-                                    buildWhitelist(item.children, parentPath.concat(item.text));
-                                }
-                            });
-                        }
-                        buildWhitelist(filteredData);
-
-                        const tagifyInstance = new Tagify(input, {
-                            whitelist: suggestedKeywords,
-                            enforceWhitelist: true,
-                            placeholder: translations?.keywords?.thesaurus?.label || 'Enter keywords...',
-                            dropdown: {
-                                maxItems: 50,
-                                enabled: 3,
-                                closeOnSelect: true,
-                                classname: "thesaurus-tagify",
-                            },
-                        });
-                        input._tagify = tagifyInstance;
-                        if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
-                            window.applyTagifyAccessibilityAttributes(tagifyInstance, input, {
-                                placeholder: tagifyInstance.settings.placeholder
-                            });
-                        }
-                        bindTagifyEvents(tagifyInstance);
-                    }
-                });
+                const platformInputs = document.querySelectorAll('#input-datasource-platforms');
+                if (platformInputs.length > 0) {
+                    console.warn('DATA SOURCES: something went wrong with setup of tagify instances');
+                }
+                platformInputFirst = platformInputs[0];
+                setupDSTagify(platformInputFirst, filteredData);
 
                 // Set up jsTree event handlers after the tree is initialized
                 $(jsTreeId).off('changed.jstree');
@@ -586,11 +613,29 @@ $(document).ready(function () {
         restoreHelpButtons(newRow);
 
         // Initialize Tagify for the new platform input
-        const firstInput = document.querySelector('input[name="satellite_platform[]"]');
         const newInputElem = newRow.find('input[name="satellite_platform[]"]')[0];
         if (newInputElem && typeof Tagify !== 'undefined') {
-            const baseSettings = firstInput && firstInput._tagify ? { ...firstInput._tagify.settings } : {};
-            const tagifyInstance = new Tagify(newInputElem, baseSettings);
+            // 4. Replace the existing Tagify initialization logic with this:
+            const tagifyInstance = new Tagify(newInputElem, {
+                whitelist: platformKeywordsWhitelist, // Use the stored whitelist
+                enforceWhitelist: true,
+                placeholder: translations?.keywords?.thesaurus?.label || 'Enter keywords...',
+                dropdown: {
+                    maxItems: 50,
+                    enabled: 3,
+                    closeOnSelect: true,
+                    classname: "thesaurus-tagify",
+                },
+                editTags: false,
+                callbacks: {
+                    add: function() {
+                        this.DOM.scope.style.height = 'auto';
+                    },
+                    remove: function() {
+                        this.DOM.scope.style.height = 'auto';
+                    }
+                }
+            });
             newInputElem._tagify = tagifyInstance;
             if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
                 window.applyTagifyAccessibilityAttributes(tagifyInstance, newInputElem, {
