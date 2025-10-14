@@ -284,8 +284,18 @@ $(document).ready(function () {
         const button = $(e.relatedTarget);
         const row = button.closest('.row');
         // Look for the platform input within this specific row
-        const inputElem = row.find('input[name="satellite_platform[]"]')[0];
-        if (!inputElem) return;
+        const inputElem = row.find('.visibility-datasources-satellite .form-floating input[name="satellite_platform[]"]')[0];
+    
+        if (!inputElem) {
+            console.warn('Could not find platform input in row');
+            return;
+        }
+
+        const tagifyInstance = inputElem._tagify;
+        if (!tagifyInstance) {
+            console.warn('Tagify not initialized for this input');
+            return;
+        }
 
         const tagifyInstance = inputElem._tagify;
         const jsTree = getJsTree();
