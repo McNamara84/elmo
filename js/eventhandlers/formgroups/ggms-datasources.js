@@ -615,34 +615,7 @@ $(document).ready(function () {
         // Initialize Tagify for the new platform input
         const newInputElem = newRow.find('input[name="satellite_platform[]"]')[0];
         if (newInputElem && typeof Tagify !== 'undefined') {
-            // 4. Replace the existing Tagify initialization logic with this:
-            const tagifyInstance = new Tagify(newInputElem, {
-                whitelist: platformKeywordsWhitelist, // Use the stored whitelist
-                enforceWhitelist: true,
-                placeholder: translations?.keywords?.thesaurus?.label || 'Enter keywords...',
-                dropdown: {
-                    maxItems: 50,
-                    enabled: 3,
-                    closeOnSelect: true,
-                    classname: "thesaurus-tagify",
-                },
-                editTags: false,
-                callbacks: {
-                    add: function() {
-                        this.DOM.scope.style.height = 'auto';
-                    },
-                    remove: function() {
-                        this.DOM.scope.style.height = 'auto';
-                    }
-                }
-            });
-            newInputElem._tagify = tagifyInstance;
-            if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
-                window.applyTagifyAccessibilityAttributes(tagifyInstance, newInputElem, {
-                    placeholder: baseSettings.placeholder
-                });
-            }
-            bindTagifyEvents(tagifyInstance);
+            setupDSTagify(newInputElem, ???);
         }
     });
 
