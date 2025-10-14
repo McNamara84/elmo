@@ -296,8 +296,6 @@ $(document).ready(function () {
             console.warn('Tagify not initialized for this input');
             return;
         }
-
-        const tagifyInstance = inputElem._tagify;
         const jsTree = getJsTree();
         if (!jsTree) return;
 
