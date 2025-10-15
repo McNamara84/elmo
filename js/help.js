@@ -72,7 +72,7 @@ function initHelp() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { initHelp, loadHelpContent, setHelpStatus, updateHelpStatus };
+  module.exports = { initHelp, loadHelpContent, setHelpStatus, updateHelpStatus, displayHelpSection };
 }
 
 if (typeof window !== 'undefined') {
