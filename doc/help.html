@@ -1314,7 +1314,10 @@ include_once "../settings.php";
             </div>
             <hr>
             <div id="help-technical">
-                <h3>Technical</h3>
+                <h3>Characteristics of the model</h3>
+                <p>
+                    This section is fully based on the technical specifications of the model. They are provided in the model file header. According to the <a href="https://icgem.gfz-potsdam.de/docs/ICGEM-Format-2023.pdf" target="_blank" rel="noopener">ICGEM file format description</a>, these variables are required, as they are essential for the use of the model.
+                </p>
                 <div id="help-tide-system">
                     <h4>Tide system</h4>
                     <p>
@@ -1378,20 +1381,34 @@ include_once "../settings.php";
 
             <div id="help-static" class="help-section d-none">
                 <h3 data-translate="help.static.title">Static Model Help</h3>
-                <p data-translate="help.static.description">This section provides help for static models:</p>
-                <h4 data-translate="help.static.dealiasing">De-aliasing</h4>
+                <p data-translate="help.static.description">This section providesdocumentation for the variables, which are relevant for static models:</p>
+                <h4 data-translate="help.static.dealiasing">Time-variable coefficients</h4>
                 <p data-translate="help.static.dealiasing.description">
-                    a priori information about temporal variations in the Earth's gravity field caused by global mass variability in atmosphere and ocean.
+                    If some coefficients in your static models provide values for different time periods, please provide the information about it here in a free text format. 
                 </p>
             </div>
 
             <div id="help-temporal" class="help-section d-none">
                 <h3 data-translate="help.temporal.title">Temporal Model Help</h3>
-                <p data-translate="help.temporal.description">This section provides help for temporal models...</p>
-                <h4 data-translate="help.temporal.time-coverage">Start/stop date</h4>
+                <p data-translate="help.temporal.description">This section provides documentation for the variables, which are relevant for temporal models:</p>
+                <h4 data-translate="help.temporal.what-to-publish">Unit of publication</h4>
                 <p>
-                    the time frame of a model release: from the begin of release to the most recent available data.
+                    The unit of publication for temporal models is one release. The DOI number will be assigned to each release of the model. 
                 </p>
+                
+                <div id="help-temporal-time-coverage">
+                    <h4 data-translate="help.temporal.time-coverage">Start/stop date</h4>
+                    <p>
+                        The time frame of a model being published: from the begin of the release to the most recent available data.
+                    </p>
+                </div>
+                <div id="help-temporal-release-frequency">
+                    <h4 data-translate="help.temporal.time-coverage">Release frequency</h4>
+                    <p>
+                        The time period between two releases of the model. It denotes the minimal temporal changes that can be observed with the model.
+                        In case, the values in the dropdown menu do not fit your model, please choose "other" and provide the information in the additional field. Please convert the resolution to days. For example, if a new release is evailable every 3 weeks, please provide 21 days.
+                    </p>
+                </div>
             </div>
 
             <div id="help-topographic" class="help-section d-none">
@@ -1399,11 +1416,12 @@ include_once "../settings.php";
                 <p data-translate="help.topographic.description">This section provides help for topographic models...</p>
                 <h4 data-translate="help.topographic.harmonics">Approximation</h4>
                 <p>
-                    this denotes the coefficients, in which model was computed. If before the publication the model was transformed into different harmonics, this can be dented in “mathematical_representation” field in the core data model.
+                    Approximated surface in gravity inversion. Do not confuse with “mathematical_representation” field. Mathematical represenntationis derived from inversion. 
                 </p>
-                <h4 data-translate="help.topographic.density">Density information description</h4>
+                <h4 data-translate="help.topographic.density">Density</h4>
                 <p>
-                    for example, layer-specific density values can be given here
+                    Density information sources include density models, layer specific or the constant. Density information description allows you to specify your selection. The citation of density model can be provided here. If density information is layer-specific, layer-specific density values can be given here.
+                    What is more, the density information can be provided for crust and mantle separately.
                 </p>
             </div>
         <?php endif; ?>
