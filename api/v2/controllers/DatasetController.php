@@ -812,7 +812,197 @@ class DatasetController
         $result = $stmt->get_result();
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-        /**
+
+        private function insertGgmProperties(SimpleXMLElement $xml, ?array $ggmData): void
+    {
+        if ($ggmData) {
+            $ggmPropertiesXml = $xml->addChild('ggm_properties');
+            if (!empty($ggmData['model_name'])) {
+                $ggmPropertiesXml->addChild('model_name', htmlspecialchars($ggmData['model_name']));
+            }
+            if (!empty($ggmData['celestial_body'])) {
+                $ggmPropertiesXml->addChild('celestial_body', htmlspecialchars($ggmData['celestial_body']));
+            }
+            if (!empty($ggmData['product_type'])) {
+                $ggmPropertiesXml->addChild('product_type', htmlspecialchars($ggmData['product_type']));
+            }
+            if (!empty($ggmData['errors'])) {
+                $ggmPropertiesXml->addChild('errors', htmlspecialchars($ggmData['errors']));
+            }
+            if (!empty($ggmData['error_handling_approach'])) {
+                $ggmPropertiesXml->addChild('error_handling_approach', htmlspecialchars($ggmData['error_handling_approach']));
+            }
+            if (!empty($ggmData['error_description'])) {
+                $ggmPropertiesXml->addChild('error_description', htmlspecialchars($ggmData['error_description']));
+            }
+            if (!empty($ggmData['tide_system'])) {
+                $ggmPropertiesXml->addChild('tide_system', htmlspecialchars($ggmData['tide_system']));
+            }
+            if (!empty($ggmData['degree'])) {
+                $ggmPropertiesXml->addChild('degree', htmlspecialchars($ggmData['degree']));
+            }
+            if (!empty($ggmData['radius'])) {
+                $ggmPropertiesXml->addChild('radius', htmlspecialchars($ggmData['radius']));
+            }
+            if (!empty($ggmData['earth_gravity_constant'])) {
+                $ggmPropertiesXml->addChild('earth_gravity_constant', htmlspecialchars($ggmData['earth_gravity_constant']));
+            }
+            if (!empty($ggmData['model_type_name'])) {
+                $ggmPropertiesXml->addChild('model_type', htmlspecialchars($ggmData['model_type_name']));
+            }
+            if (!empty($ggmData['mathematical_representation_name'])) {
+                $ggmPropertiesXml->addChild('mathematical_representation', htmlspecialchars($ggmData['mathematical_representation_name']));
+            }
+            if (!empty($ggmData['file_format_name'])) {
+                $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmData['file_format_name']));
+            }
+        }
+    }
+
+    private function insertDataSources(SimpleXMLElement $xml, array $dataSources): void
+    {
+        if ($dataSources) {
+            $dataSourcesXml = $xml->addChild('DataSources');
+            foreach ($dataSources as $dataSource) {
+                $dataSourceXml = $dataSourcesXml->addChild('DataSource');
+                
+                // Core identification
+                $dataSourceXml->addChild('sourceId', htmlspecialchars($dataSource['data_source_id']));
+                $dataSourceXml->addChild('sourceType', htmlspecialchars($dataSource['type']));
+                if (!empty($dataSource['description'])) {
+                    $dataSourceXml->addChild('description', htmlspecialchars($dataSource['description']));
+                }
+                
+                // Standardized properties (S_ prefix = Standard)
+                if (!empty($dataSource['S_value_name'])) {
+                    $dataSourceXml->addChild('SatelliteValueName', htmlspecialchars($dataSource['S_value_name']));
+                }
+                if (!empty($dataSource['S_value_uri'])) {
+                    $dataSourceXml->addChild('SatelliteValueUri', htmlspecialchars($dataSource['S_value_uri']));
+                }
+                if (!empty($dataSource['S_scheme_name'])) {
+                    $dataSourceXml->addChild('SatelliteSchemeName', htmlspecialchars($dataSource['S_scheme_name']));
+                }
+                if (!empty($dataSource['S_scheme_uri'])) {
+                    $dataSourceXml->addChild('SatelliteSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']));
+                }
+                
+                // Domain-specific details
+                if (!empty($dataSource['G_details'])) {
+                    $dataSourceXml->addChild('G_Details', htmlspecialchars($dataSource['G_details']));
+                }
+                if (!empty($dataSource['A_details'])) {
+                    $dataSourceXml->addChild('A_Details', htmlspecialchars($dataSource['A_details']));
+                }
+                if (!empty($dataSource['T_details'])) {
+                    $dataSourceXml->addChild('Topography_Details', htmlspecialchars($dataSource['T_details']));
+                }
+                if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
+                    $dataSourceXml->addChild('IsostasyCompensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']));
+                }
+                if (!empty($dataSource['M_details'])) {
+                    $dataSourceXml->addChild('M_Details', htmlspecialchars($dataSource['M_details']));
+                }
+                if (!empty($dataSource['M_identifier'])) {
+                    $dataSourceXml->addChild('M_Identifier', htmlspecialchars($dataSource['M_identifier']));
+                }
+                if (!empty($dataSource['M_identifier_type'])) {
+                    $dataSourceXml->addChild('M_Identifier_Type', htmlspecialchars($dataSource['M_identifier_type']));
+                }
+            }
+        }
+    }
+
+    private function insertTopographicModelProperties(SimpleXMLElement $xml, array $topographicProperties): void
+    {
+        if ($topographicProperties) {
+            $topographicPropertiesXml = $xml->addChild('TopographicModelProperties');
+            foreach ($topographicProperties as $property) {
+                $propertyXml = $topographicPropertiesXml->addChild('TopographicProperty');
+                
+                if (!empty($property['layer_approach'])) {
+                    $propertyXml->addChild('layerApproach', htmlspecialchars($property['layer_approach']));
+                }
+                if (!empty($property['forward_modelling_domain'])) {
+                    $propertyXml->addChild('forwardModellingDomain', htmlspecialchars($property['forward_modelling_domain']));
+                }
+                if (!empty($property['density_information'])) {
+                    $propertyXml->addChild('densityInformation', htmlspecialchars($property['density_information']));
+                }
+                if (!empty($property['density_information_details'])) {
+                    $propertyXml->addChild('densityInformationDetails', htmlspecialchars($property['density_information_details']));
+                }
+                if (!empty($property['mantle_density_value'])) {
+                    $propertyXml->addChild('mantleDensityValue', htmlspecialchars($property['mantle_density_value']));
+                }
+                if (!empty($property['mantle_density_description'])) {
+                    $propertyXml->addChild('mantleDensityDescription', htmlspecialchars($property['mantle_density_description']));
+                }
+                if (!empty($property['crust_density_value'])) {
+                    $propertyXml->addChild('crustDensityValue', htmlspecialchars($property['crust_density_value']));
+                }
+                if (!empty($property['crust_density_description'])) {
+                    $propertyXml->addChild('crustDensityDescription', htmlspecialchars($property['crust_density_description']));
+                }
+                if (!empty($property['approximation'])) {
+                    $propertyXml->addChild('approximation', htmlspecialchars($property['approximation']));
+                }
+                if (!empty($property['description'])) {
+                    $propertyXml->addChild('description', htmlspecialchars($property['description']));
+                }
+            }
+        }
+    }
+
+    private function insertTemporalModelProperties(SimpleXMLElement $xml, array $temporalProperties): void
+    {
+        if ($temporalProperties) {
+            $temporalPropertiesXml = $xml->addChild('TemporalModelProperties');
+            foreach ($temporalProperties as $property) {
+                $propertyXml = $temporalPropertiesXml->addChild('TemporalProperty');
+                
+                if (isset($property['generating_institution'])) {
+                    $propertyXml->addChild('generatingInstitution', htmlspecialchars($property['generating_institution'] ? 'true' : 'false'));
+                }
+                if (!empty($property['temporal_resolution_days'])) {
+                    $propertyXml->addChild('temporalResolutionDays', htmlspecialchars($property['temporal_resolution_days']));
+                }
+                if (!empty($property['start_date'])) {
+                    $propertyXml->addChild('startDate', htmlspecialchars($property['start_date']));
+                }
+                if (!empty($property['end_date'])) {
+                    $propertyXml->addChild('endDate', htmlspecialchars($property['end_date']));
+                }
+            }
+        }
+    }
+
+    private function insertEllipsoidalParameters(SimpleXMLElement $xml, array $ellipsoidalParameters): void
+    {
+        if ($ellipsoidalParameters) {
+            $ellipsoidalParametersXml = $xml->addChild('EllipsoidalParameters');
+            foreach ($ellipsoidalParameters as $parameter) {
+                $parameterXml = $ellipsoidalParametersXml->addChild('EllipsoidalParameter');
+                
+                if (!empty($parameter['semimajor_axis_a'])) {
+                    $parameterXml->addChild('semimajorAxisA', htmlspecialchars($parameter['semimajor_axis_a']));
+                }
+                if (!empty($parameter['semiminor_axis_b'])) {
+                    $parameterXml->addChild('semiminorAxisB', htmlspecialchars($parameter['semiminor_axis_b']));
+                }
+                if (!empty($parameter['flattening'])) {
+                    $parameterXml->addChild('flattening', htmlspecialchars($parameter['flattening']));
+                }
+                if (!empty($parameter['reciprocal_flattening'])) {
+                    $parameterXml->addChild('reciprocalFlattening', htmlspecialchars($parameter['reciprocal_flattening']));
+                }
+                if (!empty($parameter['description'])) {
+                    $parameterXml->addChild('description', htmlspecialchars($parameter['description']));
+                }
+            }
+        }
+    }
+    /**
      * Generates a uniform path for the base XML file of a resource.
      *
      * @param int $id The identifier of the resource.
@@ -1228,189 +1418,24 @@ class DatasetController
                 }
             }
         }
-        // Add GGM Properties to the base XML
         $ggmDataForXml = $this->getGGMData($connection, $id);
-        if ($ggmDataForXml) {
-            $ggmPropertiesXml = $xml->addChild('ggm_properties');
-            if (!empty($ggmDataForXml['model_name'])) {
-                $ggmPropertiesXml->addChild('model_name', htmlspecialchars($ggmDataForXml['model_name']));
-            }
-            if (!empty($ggmDataForXml['celestial_body'])) {
-                $ggmPropertiesXml->addChild('celestial_body', htmlspecialchars($ggmDataForXml['celestial_body']));
-            }
-            if (!empty($ggmDataForXml['product_type'])) {
-                $ggmPropertiesXml->addChild('product_type', htmlspecialchars($ggmDataForXml['product_type']));
-            }
-            if (!empty($ggmDataForXml['errors'])) {
-                $ggmPropertiesXml->addChild('errors', htmlspecialchars($ggmDataForXml['errors']));
-            }
-            if (!empty($ggmDataForXml['error_handling_approach'])) {
-                $ggmPropertiesXml->addChild('error_handling_approach', htmlspecialchars($ggmDataForXml['error_handling_approach']));
-            }
-            if (!empty($ggmDataForXml['error_description'])) {
-                $ggmPropertiesXml->addChild('error_description', htmlspecialchars($ggmDataForXml['error_description']));
-            }
-            if (!empty($ggmDataForXml['tide_system'])) {
-                $ggmPropertiesXml->addChild('tide_system', htmlspecialchars($ggmDataForXml['tide_system']));
-            }
-            if (!empty($ggmDataForXml['degree'])) {
-                $ggmPropertiesXml->addChild('degree', htmlspecialchars($ggmDataForXml['degree']));
-            }
-            if (!empty($ggmDataForXml['radius'])) {
-                $ggmPropertiesXml->addChild('radius', htmlspecialchars($ggmDataForXml['radius']));
-            }
-            if (!empty($ggmDataForXml['earth_gravity_constant'])) {
-                $ggmPropertiesXml->addChild('earth_gravity_constant', htmlspecialchars($ggmDataForXml['earth_gravity_constant']));
-            }
-            if (!empty($ggmDataForXml['model_type_name'])) {
-                $ggmPropertiesXml->addChild('model_type', htmlspecialchars($ggmDataForXml['model_type_name']));
-            }
-            if (!empty($ggmDataForXml['mathematical_representation_name'])) {
-                $ggmPropertiesXml->addChild('mathematical_representation', htmlspecialchars($ggmDataForXml['mathematical_representation_name']));
-            }
-            if (!empty($ggmDataForXml['file_format_name'])) {
-                $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmDataForXml['file_format_name']));
-            }
-        }
+        $this->insertGgmProperties($xml, $ggmDataForXml);
 
         // Data Sources
         $dataSources = $this->getDataSources($connection, $id);
-        if ($dataSources) {
-            $dataSourcesXml = $xml->addChild('DataSources');
-            foreach ($dataSources as $dataSource) {
-                $dataSourceXml = $dataSourcesXml->addChild('DataSource');
-                
-                // Core identification
-                $dataSourceXml->addChild('sourceId', htmlspecialchars($dataSource['data_source_id']));
-                $dataSourceXml->addChild('sourceType', htmlspecialchars($dataSource['type']));
-                if (!empty($dataSource['description'])) {
-                    $dataSourceXml->addChild('description', htmlspecialchars($dataSource['description']));
-                }
-                
-                // Standardized properties (S_ prefix = Standard)
-                if (!empty($dataSource['S_value_name'])) {
-                    $dataSourceXml->addChild('SatelliteValueName', htmlspecialchars($dataSource['S_value_name']));
-                }
-                if (!empty($dataSource['S_value_uri'])) {
-                    $dataSourceXml->addChild('SatelliteValueUri', htmlspecialchars($dataSource['S_value_uri']));
-                }
-                if (!empty($dataSource['S_scheme_name'])) {
-                    $dataSourceXml->addChild('SatelliteSchemeName', htmlspecialchars($dataSource['S_scheme_name']));
-                }
-                if (!empty($dataSource['S_scheme_uri'])) {
-                    $dataSourceXml->addChild('SatelliteSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']));
-                }
-                
-                // Domain-specific details
-                if (!empty($dataSource['G_details'])) {
-                    $dataSourceXml->addChild('G_Details', htmlspecialchars($dataSource['G_details']));
-                }
-                if (!empty($dataSource['A_details'])) {
-                    $dataSourceXml->addChild('A_Details', htmlspecialchars($dataSource['A_details']));
-                }
-                if (!empty($dataSource['T_details'])) {
-                    $dataSourceXml->addChild('Topography_Details', htmlspecialchars($dataSource['T_details']));
-                }
-                if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
-                    $dataSourceXml->addChild('IsostasyCompensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']));
-                }
-                if (!empty($dataSource['M_details'])) {
-                    $dataSourceXml->addChild('M_Details', htmlspecialchars($dataSource['M_details']));
-                }
-                if (!empty($dataSource['M_identifier'])) {
-                    $dataSourceXml->addChild('M_Identifier', htmlspecialchars($dataSource['M_identifier']));
-                }
-                if (!empty($dataSource['M_identifier_type'])) {
-                    $dataSourceXml->addChild('M_Identifier_Type', htmlspecialchars($dataSource['M_identifier_type']));
-                }
-            }
-        }
+        $this->insertDataSources($xml, $dataSources);
+
         // Topographic Model Properties
         $topographicProperties = $this->getTopographicModelProperties($connection, $id);
-        if ($topographicProperties) {
-            $topographicPropertiesXml = $xml->addChild('TopographicModelProperties');
-            foreach ($topographicProperties as $property) {
-                $propertyXml = $topographicPropertiesXml->addChild('TopographicProperty');
-                
-                if (!empty($property['layer_approach'])) {
-                    $propertyXml->addChild('layerApproach', htmlspecialchars($property['layer_approach']));
-                }
-                if (!empty($property['forward_modelling_domain'])) {
-                    $propertyXml->addChild('forwardModellingDomain', htmlspecialchars($property['forward_modelling_domain']));
-                }
-                if (!empty($property['density_information'])) {
-                    $propertyXml->addChild('densityInformation', htmlspecialchars($property['density_information']));
-                }
-                if (!empty($property['density_information_details'])) {
-                    $propertyXml->addChild('densityInformationDetails', htmlspecialchars($property['density_information_details']));
-                }
-                if (!empty($property['mantle_density_value'])) {
-                    $propertyXml->addChild('mantleDensityValue', htmlspecialchars($property['mantle_density_value']));
-                }
-                if (!empty($property['mantle_density_description'])) {
-                    $propertyXml->addChild('mantleDensityDescription', htmlspecialchars($property['mantle_density_description']));
-                }
-                if (!empty($property['crust_density_value'])) {
-                    $propertyXml->addChild('crustDensityValue', htmlspecialchars($property['crust_density_value']));
-                }
-                if (!empty($property['crust_density_description'])) {
-                    $propertyXml->addChild('crustDensityDescription', htmlspecialchars($property['crust_density_description']));
-                }
-                if (!empty($property['approximation'])) {
-                    $propertyXml->addChild('approximation', htmlspecialchars($property['approximation']));
-                }
-                if (!empty($property['description'])) {
-                    $propertyXml->addChild('description', htmlspecialchars($property['description']));
-                }
-            }
-        }
+        $this->insertTopographicModelProperties($xml, $topographicProperties);
 
         // Temporal Model Properties
         $temporalProperties = $this->getTemporalModelProperties($connection, $id);
-        if ($temporalProperties) {
-            $temporalPropertiesXml = $xml->addChild('TemporalModelProperties');
-            foreach ($temporalProperties as $property) {
-                $propertyXml = $temporalPropertiesXml->addChild('TemporalProperty');
-                
-                if (isset($property['generating_institution'])) {
-                    $propertyXml->addChild('generatingInstitution', htmlspecialchars($property['generating_institution'] ? 'true' : 'false'));
-                }
-                if (!empty($property['temporal_resolution_days'])) {
-                    $propertyXml->addChild('temporalResolutionDays', htmlspecialchars($property['temporal_resolution_days']));
-                }
-                if (!empty($property['start_date'])) {
-                    $propertyXml->addChild('startDate', htmlspecialchars($property['start_date']));
-                }
-                if (!empty($property['end_date'])) {
-                    $propertyXml->addChild('endDate', htmlspecialchars($property['end_date']));
-                }
-            }
-        }
+        $this->insertTemporalModelProperties($xml, $temporalProperties);
 
         // Ellipsoidal Parameters
         $ellipsoidalParameters = $this->getEllipsoidalParameters($connection, $id);
-        if ($ellipsoidalParameters) {
-            $ellipsoidalParametersXml = $xml->addChild('EllipsoidalParameters');
-            foreach ($ellipsoidalParameters as $parameter) {
-                $parameterXml = $ellipsoidalParametersXml->addChild('EllipsoidalParameter');
-                
-                if (!empty($parameter['semimajor_axis_a'])) {
-                    $parameterXml->addChild('semimajorAxisA', htmlspecialchars($parameter['semimajor_axis_a']));
-                }
-                if (!empty($parameter['semiminor_axis_b'])) {
-                    $parameterXml->addChild('semiminorAxisB', htmlspecialchars($parameter['semiminor_axis_b']));
-                }
-                if (!empty($parameter['flattening'])) {
-                    $parameterXml->addChild('flattening', htmlspecialchars($parameter['flattening']));
-                }
-                if (!empty($parameter['reciprocal_flattening'])) {
-                    $parameterXml->addChild('reciprocalFlattening', htmlspecialchars($parameter['reciprocal_flattening']));
-                }
-                if (!empty($parameter['description'])) {
-                    $parameterXml->addChild('description', htmlspecialchars($parameter['description']));
-                }
-            }
-        }
+        $this->insertEllipsoidalParameters($xml, $ellipsoidalParameters);
 
         // XML formating
         $dom = dom_import_simplexml($xml)->ownerDocument;
@@ -1502,7 +1527,44 @@ class DatasetController
             return $newXml;
         }
     }
+    /**
+     * Creates an ICGEM-specific XML by extending the DataCite XML with additional properties.
+     *
+     * @param int $id The ID of the resource.
+     * @return string The combined XML as a string.
+     * @throws Exception If XML transformation or data fetching fails.
+     */
+    public function createICGEMxml(int $id): string
+    {
+        // 1. Get the base DataCite XML as a string.
+        $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
 
+        // 2. Load the DataCite XML into a SimpleXMLElement object.
+        $xml = new SimpleXMLElement($dataciteXmlString);
+
+        // 3. Add the new parent element for ICGEM-specific data.
+        $icgemSpecificXml = $xml->addChild('ICGEM_specific_variables');
+
+        // 4. Fetch all the ICGEM-specific data using existing methods.
+        $ggmData = $this->getGGMData($this->connection, $id);
+        $dataSources = $this->getDataSources($this->connection, $id);
+        $topographicProperties = $this->getTopographicModelProperties($this->connection, $id);
+        $temporalProperties = $this->getTemporalModelProperties($this->connection, $id);
+        $ellipsoidalParameters = $this->getEllipsoidalParameters($this->connection, $id);
+
+        // 5. Insert the fetched data into the new <ICGEM_specific_variables> element.
+        $this->insertGgmProperties($icgemSpecificXml, $ggmData);
+        $this->insertDataSources($icgemSpecificXml, $dataSources);
+        $this->insertTopographicModelProperties($icgemSpecificXml, $topographicProperties);
+        $this->insertTemporalModelProperties($icgemSpecificXml, $temporalProperties);
+        $this->insertEllipsoidalParameters($icgemSpecificXml, $ellipsoidalParameters);
+
+        // 6. Format and return the final XML as a string.
+        $dom = dom_import_simplexml($xml)->ownerDocument;
+        $dom->formatOutput = true;
+        return $dom->saveXML();
+    }
+    
     /**
      * Exports a resource in the specified metadata scheme and initiates a file download.
      *
