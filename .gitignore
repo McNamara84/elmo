@@ -16,3 +16,8 @@ debug-page.png
 
 # Autosave files
 storage/drafts/
+
+# Ignore all content in the xml directory...
+xml/*
+# ...but do not ignore the .gitkeep file.
+!xml/.gitkeep
