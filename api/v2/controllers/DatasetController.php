@@ -1536,30 +1536,38 @@ class DatasetController
      */
     public function createICGEMxml(int $id): string
     {
-        // 1. Get the base DataCite XML as a string.
+        // 1. Check if the resource has actual GGM data.
+        $ggmData = $this->getGGMData($this->connection, $id);
+        if (empty($ggmData) || empty($ggmData['model_name'])) {
+            // Throw an exception to be caught by the calling export function.
+            // This is a clean way to signal that the operation cannot proceed.
+            throw new Exception("Resource with ID $id does not contain GGM data required for ICGEM XML.");
+        }
+
+        // 2. Get the base DataCite XML as a string.
         $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
 
-        // 2. Load the DataCite XML into a SimpleXMLElement object.
+        // 3. Load the DataCite XML into a SimpleXMLElement object.
         $xml = new SimpleXMLElement($dataciteXmlString);
 
-        // 3. Add the new parent element for ICGEM-specific data.
-        $icgemSpecificXml = $xml->addChild('ICGEM_specific_variables');
+        // 4. Add the new parent element for ICGEM-specific data.
+        $icgemSpecificXml = $xml->addChild('icgem_metadata');
 
-        // 4. Fetch all the ICGEM-specific data using existing methods.
-        $ggmData = $this->getGGMData($this->connection, $id);
+        // 5. Fetch all the ICGEM-specific data using existing methods.
+        // We already have ggmData, so we don't need to fetch it again.
         $dataSources = $this->getDataSources($this->connection, $id);
         $topographicProperties = $this->getTopographicModelProperties($this->connection, $id);
         $temporalProperties = $this->getTemporalModelProperties($this->connection, $id);
         $ellipsoidalParameters = $this->getEllipsoidalParameters($this->connection, $id);
 
-        // 5. Insert the fetched data into the new <ICGEM_specific_variables> element.
+        // 6. Insert the fetched data into the new <icgem_metadata> element.
         $this->insertGgmProperties($icgemSpecificXml, $ggmData);
         $this->insertDataSources($icgemSpecificXml, $dataSources);
         $this->insertTopographicModelProperties($icgemSpecificXml, $topographicProperties);
         $this->insertTemporalModelProperties($icgemSpecificXml, $temporalProperties);
         $this->insertEllipsoidalParameters($icgemSpecificXml, $ellipsoidalParameters);
 
-        // 6. Format and return the final XML as a string.
+        // 7. Format and return the final XML as a string.
         $dom = dom_import_simplexml($xml)->ownerDocument;
         $dom->formatOutput = true;
         return $dom->saveXML();
@@ -1811,5 +1819,26 @@ XML;
             echo json_encode(['error' => "An error occurred: " . $e->getMessage()]);
             exit();
         }
+    }
+    /**
+     * Exports an ICGEM-specific XML for a resource and outputs it directly.
+     *
+     * @param array<mixed> $vars An associative array containing 'id'.
+     * @return void
+     */
+    public function exportICGEMxml(array $vars): void
+    {
+        $id = intval($vars['id']);
+
+        try {
+            $xmlString = $this->createICGEMxml($id);
+            header('Content-Type: application/xml; charset=utf-8');
+            echo $xmlString;
+        } catch (Exception $e) {
+            http_response_code(404); // Or 500 depending on the error
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit();
     }
 }

@@ -56,8 +56,11 @@ return [
     ['GET', '/dataset/export/{id}/{scheme}/download', [new DatasetController(), 'exportResourceDownload']],
     ['GET', '/dataset/export/{id}/{scheme}', [new DatasetController(), 'exportResource']],
 
+
     // Export base xml for data mapping to the ICGEM metadatabase
     ['GET', '/dataset/basexport/{id}', [new DatasetController(), 'exportBaseXml']],
+    ['GET', '/dataset/icgem_export/{id}', [new DatasetController(), 'exportICGEMxml']],
+
 
     // Draft autosave endpoints
     ['POST', '/drafts', [new DraftController(), 'create']],
