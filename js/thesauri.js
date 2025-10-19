@@ -437,6 +437,18 @@ $(document).ready(function () {
         });
     }
 
+    /**
+     *  
+     * generic find by path helper for a jsTree instance
+     * 
+     */
+    function findNodeByPath(jsTreeInstance, path) {
+        if (!jsTreeInstance) return null;
+        return jsTreeInstance.get_json("#", { flat: true }).find(function (n) {
+            return jsTreeInstance.get_path(n, " > ") === path;
+        });
+    }
+
     // Event listener for search input           
     // the search event is delegated to the highest level. the input will be propagated, and we can formulate the event handler at this place.
     $(document).on('input', '[id$="-thesaurussearch"]', function() {
