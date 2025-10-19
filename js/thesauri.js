@@ -406,6 +406,37 @@ $(document).ready(function () {
         }
     }
 
+    /**
+     *  
+     * helper to update selected keywords list element (shared for all trees that point to same list id)
+     * 
+     */
+    function updateSelectedKeywordsList(listId, state) {
+        var selectedKeywordsList = document.getElementById(listId);
+        if (!selectedKeywordsList) return;
+        selectedKeywordsList.innerHTML = "";
+        Array.from(state.selectedPaths).forEach(function (fullPath) {
+            let listItem = document.createElement("li");
+            listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+            listItem.textContent = fullPath;
+
+            let removeButton = document.createElement("button");
+            removeButton.classList.add("btn", "btn-sm", "btn-danger");
+            removeButton.innerHTML = "&times;";
+            removeButton.onclick = function () {
+                // remove tag from tagify -> triggers deselection in all trees via tagify remove handler
+                if (state.tagify) state.tagify.removeTag(fullPath);
+                // if tagify not present, remove from set directly
+                state.selectedPaths.delete(fullPath);
+                // update UI
+                updateSelectedKeywordsList(listId, state);
+            };
+
+            listItem.appendChild(removeButton);
+            selectedKeywordsList.appendChild(listItem);
+        });
+    }
+
     // Event listener for search input           
     // the search event is delegated to the highest level. the input will be propagated, and we can formulate the event handler at this place.
     $(document).on('input', '[id$="-thesaurussearch"]', function() {
