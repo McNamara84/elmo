@@ -75,6 +75,9 @@ $(document).ready(function () {
         }
     ];
 
+    // Shared state per inputId so multiple trees can cooperate
+    const sharedState = {};
+
     // Initialize only those configurations whose input fields exist
     document.addEventListener('translationsLoaded', function() {
         keywordConfigurations.forEach(function (config) {
