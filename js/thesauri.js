@@ -1,17 +1,22 @@
 /**
- * Initializes thesaurus input fields with data from JSON files, integrates jsTree for hierarchical 
- * navigation, and enables tag management with Tagify.
+ * Initializes all thesaurus input fields after the DOM is ready.
+ * Loads configuration for each input (Tagify + jsTree setup) and defines
+ * which thesaurus JSON and root nodes to use.
+ *
+ * Also defines MSL-specific root lists (general vs. domain) to separate vocabularies.
  */
 $(document).ready(function () {
     /**
  * Configuration array for keyword input fields.
- * Each object in the array defines the settings for a specific keyword input and associated components.
+ * Each object defines one logical input group (Tagify + jsTree + Search).
  *
  * @type {Array<Object>}
  * @property {string} inputId - The ID of the input element where keywords will be entered.
- * @property {string} jsonFile - The path to the JSON file containing the thesaurus.
+ * @property {string} jsonFile - Path to the thesaurus JSON data.
  * @property {string} jsTreeId - The ID of the jsTree element associated with this input field.
  * @property {string} searchInputId - The ID of the search input field for the corresponding jsTree-modal.
+ * @property {string} selectedKeywordsListId - ID of the shared selected-keywords list element. 
+ * @property {string} rootNodes - URIs of root nodes to limit the loaded thesaurus.
  */
 
 
