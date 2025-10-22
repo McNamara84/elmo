@@ -371,3 +371,8 @@ textarea.is-valid,
   box-shadow: none !important;       /* No shadow when not focused */
   background-image: none !important; /* Remove any default background icons/images */
 }
+
+.label-bold {
+        font-weight: bold; /* Makes the text bold */
+        color: #00589C;    /* Example of a text color */
+    }
