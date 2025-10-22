@@ -48,8 +48,8 @@ function clearInputFields() {
     $('div[data-creator-row]:first').find('input[name="authorPersonRorIds[]"]').val('');
   
     // Reset existing laboratories
-    $('#group-originatinglaboratory .row[data-laboratory-row]').not(':first').remove();
-    $('#group-originatinglaboratory .row[data-laboratory-row]:first input').val('');
+    $('#group-originatinglaboratory .row[data-laboratory-row]').find('input, select').val('');
+    $('#group-originatinglaboratory .row[data-laboratory-row] select').prop('selectedIndex', 0);
   
     // Clear Contributor Person 
     $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
