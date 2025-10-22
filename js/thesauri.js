@@ -291,6 +291,7 @@ $(document).ready(function () {
                 input._tagify = thesaurusKeywordstagify;
                 state.tagify = thesaurusKeywordstagify;
 
+                // Apply accessibility attributes if helper function is available (for ARIA/screen readers)
                 if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
                     window.applyTagifyAccessibilityAttributes(thesaurusKeywordstagify, input, {
                         placeholder: translations?.keywords?.thesaurus?.label || ''
