@@ -167,6 +167,7 @@ $(document).ready(function () {
 
             var availableNodes = ensureArray(data);
 
+            // If rootNodes/rootNodeId exist, load only those subtrees (e.g., MSL general/domain)
             if (config.rootNodes || config.rootNodeId) {
 
                 /**
