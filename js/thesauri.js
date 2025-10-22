@@ -148,6 +148,11 @@ $(document).ready(function () {
             loadKeywords(data);
         });
 
+        /**
+         * Loads and processes keyword data from a JSON file, initializing jsTree and Tagify.
+         *
+         * @param {Array<Object>} data - The keyword data array from the JSON file.
+         */
         function loadKeywords(response) {
             const data = response.data ? response.data : response;
             var filteredData = data;
