@@ -220,7 +220,7 @@
             "no": "no"
         },
         "errorHandling": "Error handling approach",
-        "errorHandlingInvalid": "Only letters, numbers and . , ( ) - are allowed.",
+        "errorHandlingInvalid": "Please describe error handling approach in a free text format.",
         "degree": "Degree",
         "degreeInvalid": "Please provide degree.",
         "referenceEllipsoid": "Reference ellipsoid: semimajor axis a",
