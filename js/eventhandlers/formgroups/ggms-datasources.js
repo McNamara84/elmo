@@ -532,13 +532,18 @@ $(document).ready(function () {
         newRow.find(".is-invalid, .is-valid").removeClass("is-invalid is-valid");
         newRow.find(".invalid-feedback").hide();
 
-        // Generate unique ID for the new platform input to avoid conflicts
+        // Generate unique IDs for all elements and update their corresponding labels
         const rowCount = datasourceGroup.children('.row').length;
-        const newPlatformInput = newRow.find('input[name="satellite_platform[]"]');
-        if (newPlatformInput.length > 0) {
-            const newId = `input-datasource-platforms-${rowCount}`;
-            newPlatformInput.attr('id', newId);
-        }
+        newRow.find('[id]').each(function() {
+            const oldId = $(this).attr('id');
+            if (!oldId) return;
+
+            const newId = `${oldId}-${rowCount}`;
+            $(this).attr('id', newId);
+
+            // Find any label associated with the old ID and update its 'for' attribute
+            newRow.find(`label[for="${oldId}"]`).attr('for', newId);
+        });
 
         replaceHelpButtonInClonedRows(newRow);
         newRow.find(".addDataSource").replaceWith(createRemoveButton());
