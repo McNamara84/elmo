@@ -51,8 +51,8 @@ function updateErrorHandlingVisibility() {
     if (errorsValue === 'calibrated') {
         // Show error handling field and adjust widths
         errorHandlingField.show().attr('aria-hidden', 'false');
-        errorHandlingInput.attr('required', 'required');
-        errorHandlingInput.attr('pattern', '.*\\S.*');
+        errorHandlingInput.attr("required", "");
+        errorHandlingInput.attr("pattern", ".*\\S.*"); // disallow only spaces input
         // Adjust errors field to take less space when error handling is visible
         errorsField.removeClass('col-lg-6').addClass('col-lg-2');
     } else {
