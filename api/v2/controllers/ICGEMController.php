@@ -11,7 +11,7 @@ class ICGEMController
         $this->connection = $connection;
         $this->logger = null; // Optional logger
     }
-        /**
+    /**
      * Retrieves GGM essential variables for a given resource id
      *
      * @param mysqli $connection The database connection.
@@ -206,6 +206,12 @@ class ICGEMController
         $result = $stmt->get_result();
         return $result->fetch_all(MYSQLI_ASSOC);
     }
+    /**
+     * Inserts GGM properties into the XML.
+     *
+     * @param SimpleXMLElement $xml The XML element to insert into.
+     * @param array<string, mixed> $ggmData The GGM data to insert.
+     */
     protected function insertGgmProperties(SimpleXMLElement $xml, ?array $ggmData): void
     {
         if ($ggmData) {
@@ -251,7 +257,12 @@ class ICGEMController
             }
         }
     }
-
+    /**
+     * Inserts data source elements into the XML.
+     *
+     * @param SimpleXMLElement $xml The XML element to insert into.
+     * @param array<int, array<string, mixed>> $dataSources The data sources to insert.
+     */
     protected function insertDataSources(SimpleXMLElement $xml, array $dataSources): void
     {
         if ($dataSources) {
@@ -306,7 +317,7 @@ class ICGEMController
         }
     }
 
-    protected function insertTopographicModelProperties(SimpleXMLElement $xml, array $topographicProperties): void
+    protected function insertTopographicModelProperties(SimpleXMLElement $xml, array<int, array<string, mixed>> $topographicProperties): void
     {
         if ($topographicProperties) {
             $topographicPropertiesXml = $xml->addChild('TopographicModelProperties');
@@ -347,7 +358,7 @@ class ICGEMController
         }
     }
 
-    protected function insertTemporalModelProperties(SimpleXMLElement $xml, array $temporalProperties): void
+    protected function insertTemporalModelProperties(SimpleXMLElement $xml, array<int, array<string, mixed>> $temporalProperties): void
     {
         if ($temporalProperties) {
             $temporalPropertiesXml = $xml->addChild('TemporalModelProperties');
@@ -370,7 +381,7 @@ class ICGEMController
         }
     }
 
-    protected function insertEllipsoidalParameters(SimpleXMLElement $xml, array $ellipsoidalParameters): void
+    protected function insertEllipsoidalParameters(SimpleXMLElement $xml, array<int, array<string, mixed>> $ellipsoidalParameters): void
     {
         if ($ellipsoidalParameters) {
             $ellipsoidalParametersXml = $xml->addChild('EllipsoidalParameters');
