@@ -417,8 +417,8 @@ function validateAbstractField() {
     }
 }
 
-const errorHandlingApproach = document.getElementById('input-error-handling-approach');
 
+const errorHandlingApproach = document.getElementById('input-error-handling-approach');
 // Add event listeners for both input (typing) and blur (leaving the field) if element exists
 if (errorHandlingApproach) {
     ['input', 'blur'].forEach(evt =>
@@ -427,24 +427,33 @@ if (errorHandlingApproach) {
 }
 /**
  * Validates the error handling approach textarea field.
- * - Returns success automatically if the field is not required.
+ * - Returns success automatically if the field is not required or not present.
  * - Marks the field as valid if it contains text and is required.
  * - Marks the field as invalid if it is required but empty or contains only whitespace.
  */
 function validateErrorHandlingApproachField() {
     const errorHandlingApproach = document.getElementById('input-error-handling-approach');
+    
     // If the field doesn't exist on this page, return success automatically
     if (!errorHandlingApproach) {
         return true;
     }
-    const value = errorHandlingApproach.value.trim();
-    const inputGroup = errorHandlingApproach.closest('.input-group');
-    const isRequired = document.getElementById('input-errors').value === 'calibrated';
-
     
+    const value = errorHandlingApproach.value
+    const inputGroup = errorHandlingApproach.closest('.input-group');
+    const errorsSelect = document.getElementById('input-errors');
+    
+    // If the errors dropdown doesn't exist either, return success
+    if (!errorsSelect) {
+        return true;
+    }
+    
+    const isRequired = errorsSelect.value === 'calibrated';
+
     // Reset validation state first
     errorHandlingApproach.classList.remove('is-valid', 'is-invalid');
-    let oldFeedback = inputGroup.querySelector('.invalid-feedback[data-translate="technical.errorHandlingInvalid"]');
+    // Look for our custom feedback message (without data-translate)
+    let oldFeedback = inputGroup.querySelector('.invalid-feedback.custom-error-handling');
     if (oldFeedback) oldFeedback.remove();
     errorHandlingApproach.setCustomValidity("");
 
@@ -453,18 +462,16 @@ function validateErrorHandlingApproachField() {
         return true;
     }
 
-
     // Field is required, so validate content
     if (value.length === 0) {
         errorHandlingApproach.classList.add('is-invalid');
 
         const feedbackElem = document.createElement('div');
-        feedbackElem.className = 'invalid-feedback';
-        feedbackElem.setAttribute('data-translate', 'technical.errorHandlingInvalid');
-        feedbackElem.innerText = translations.technical?.errorHandlingInvalid || 'Please describe the error handling approach. The field cannot be empty or contain only spaces.';
+        feedbackElem.className = 'invalid-feedback custom-error-handling';
+        feedbackElem.innerText = 'Please enter details of error handling approach as a free text';
         inputGroup.appendChild(feedbackElem);
 
-        errorHandlingApproach.setCustomValidity(translations.technical?.errorHandlingInvalid || 'Please describe the error handling approach. The field cannot be empty or contain only spaces.');
+        errorHandlingApproach.setCustomValidity('Please enter details of error handling approach as a free text');
         return false;
     } else {
         errorHandlingApproach.classList.add('is-valid');
