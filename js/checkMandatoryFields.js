@@ -629,7 +629,7 @@ const optionalFieldsSelector = [
     'select[name="topoDensityCrust"]',
     'input[name="topoDensityDetailsCrust"]',
     'select[name="topoDensityMantle"]',
-    'input[name="topoDensityDetailsMantle"]'
+    'input[name="topoDensityDetailsMantle"]',
     // GGMs Data Sources
     'select[name="datasource_details[]"]',
     'input[name="compensation_depth[]"]',
