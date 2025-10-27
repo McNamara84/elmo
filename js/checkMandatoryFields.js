@@ -433,12 +433,15 @@ if (errorHandlingApproach) {
  */
 function validateErrorHandlingApproachField() {
     const errorHandlingApproach = document.getElementById('input-error-handling-approach');
+    // If the field doesn't exist on this page, return success automatically
+    if (!errorHandlingApproach) {
+        return true;
+    }
     const value = errorHandlingApproach.value.trim();
     const inputGroup = errorHandlingApproach.closest('.input-group');
     const isRequired = document.getElementById('input-errors').value === 'calibrated';
 
-    console.log('validateErrorHandlingApproachField called, isRequired:', isRequired);
-
+    
     // Reset validation state first
     errorHandlingApproach.classList.remove('is-valid', 'is-invalid');
     let oldFeedback = inputGroup.querySelector('.invalid-feedback[data-translate="technical.errorHandlingInvalid"]');
