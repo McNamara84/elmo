@@ -609,7 +609,35 @@ const optionalFieldsSelector = [
     'input[name="tscTimeStart[]"]',
     'input[name="tscTimeEnd[]"]',
     // Dates
-    'input[name="dateEmbargo"]'
+    'input[name="dateEmbargo"]',
+    // ICGEM-related fields:
+    // GGMs Model Types - Static Models
+    'textarea[name="staticDescription[]"]',
+    // GGMs Model Types - Temporal Models
+    'input[name="temporalStart[]"]',
+    'input[name="temporalEnd[]"]',
+    'select[name="temporalFrequencyPredef[]"]',
+    'input[name="temporalFrequency[]"]',
+    'input[name="temporalInstitution"]',
+    'input[name="releaseNumber"]',
+    // GGMs Model Types - Topographic Models
+    'select[name="topoLayerApproach[]"]',
+    'select[name="topoDomain[]"]',
+    'select[name="topoApproximation[]"]',
+    'select[name="topoDensity[]"]',
+    'input[name="topoDensityDetails[]"]',
+    'select[name="topoDensityCrust"]',
+    'input[name="topoDensityDetailsCrust"]',
+    'select[name="topoDensityMantle"]',
+    'input[name="topoDensityDetailsMantle"]'
+    // GGMs Data Sources
+    'select[name="datasource_details[]"]',
+    'input[name="compensation_depth[]"]',
+    'input[name="dIdentifier[]"]',
+    'select[name="dIdentifierType[]"]',
+    'input[name="dName[]"]',
+    'textarea[name="datasource_description[]"]',
+    'input[name="satellite_platform[]"]'
 ].join(', ');
 
 
