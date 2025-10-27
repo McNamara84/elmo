@@ -439,7 +439,9 @@ class ICGEMController
         }
 
         // 2. Get the base DataCite XML as a string.
-        $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
+        // Create an instance of DatasetController to access its methods
+        $datasetController = new DatasetController();
+        $dataciteXmlString = $datasetController->transformAndSaveOrDownloadXml($id, 'datacite', false);
 
         // 3. Load the DataCite XML into a SimpleXMLElement object.
         $xml = new SimpleXMLElement($dataciteXmlString);
