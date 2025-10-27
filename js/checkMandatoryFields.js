@@ -417,6 +417,14 @@ function validateAbstractField() {
     }
 }
 
+const errorHandlingApproach = document.getElementById('input-error-handling-approach');
+
+// Add event listeners for both input (typing) and blur (leaving the field) if element exists
+if (errorHandlingApproach) {
+    ['input', 'blur'].forEach(evt =>
+        errorHandlingApproach.addEventListener(evt, validateErrorHandlingApproachField)
+    );
+}
 /**
  * Validates the error handling approach textarea field.
  * - Returns success automatically if the field is not required.
@@ -425,52 +433,42 @@ function validateAbstractField() {
  */
 function validateErrorHandlingApproachField() {
     const errorHandlingApproach = document.getElementById('input-error-handling-approach');
-    const value = errorHandlingApproach.value.trim(); // This removes all whitespace from start and end
+    const value = errorHandlingApproach.value.trim();
     const inputGroup = errorHandlingApproach.closest('.input-group');
     const isRequired = document.getElementById('input-errors').value === 'calibrated';
 
-   
+    console.log('validateErrorHandlingApproachField called, isRequired:', isRequired);
+
+    // Reset validation state first
+    errorHandlingApproach.classList.remove('is-valid', 'is-invalid');
+    let oldFeedback = inputGroup.querySelector('.invalid-feedback[data-translate="technical.errorHandlingInvalid"]');
+    if (oldFeedback) oldFeedback.remove();
+    errorHandlingApproach.setCustomValidity("");
 
     // If field is not required, return success automatically
-    if (isRequired) {
-        console.log('the field is required, performing validation');
-
-        // Field is required, so validate content
-        // value.length === 0 means it's either empty OR contains only spaces (after trim())
-        if (value.length === 0) {
-            console.log('the field is empty or contains only spaces, marking as invalid');
-            // Reset validation state (remove valid/invalid classes)
-            errorHandlingApproach.classList.remove('is-valid', 'is-invalid');
-
-            // Remove any previous feedback messages to avoid duplicates
-            let oldFeedback = inputGroup.querySelector('.invalid-feedback[data-translate="technical.errorHandlingInvalid"]');
-            if (oldFeedback) oldFeedback.remove();
-            errorHandlingApproach.setCustomValidity("");
-            // If empty or whitespace-only, mark field as invalid
-            errorHandlingApproach.classList.add('is-invalid');
-
-            // Create a new feedback element and append it after the input group
-            const feedbackElem = document.createElement('div');
-            feedbackElem.className = 'invalid-feedback';
-            feedbackElem.setAttribute('data-translate', 'technical.errorHandlingInvalid');
-            feedbackElem.innerText = translations.technical?.errorHandlingInvalid || 'Please describe the error handling approach. The field cannot be empty or contain only spaces.';
-            inputGroup.appendChild(feedbackElem);
-
-            // Set HTML5 validity so that checkValidity() also works
-            errorHandlingApproach.setCustomValidity(translations.technical?.errorHandlingInvalid || 'Please describe the error handling approach. The field cannot be empty or contain only spaces.');
-            return false;
-        } else {
-            console.log('the field contains valid text, marking as valid');
-            // Otherwise, mark field as valid
-            errorHandlingApproach.classList.add('is-valid');
-            errorHandlingApproach.setCustomValidity("");
-            return true;
-        }
+    if (!isRequired) {
+        return true;
     }
 
 
-}
+    // Field is required, so validate content
+    if (value.length === 0) {
+        errorHandlingApproach.classList.add('is-invalid');
 
+        const feedbackElem = document.createElement('div');
+        feedbackElem.className = 'invalid-feedback';
+        feedbackElem.setAttribute('data-translate', 'technical.errorHandlingInvalid');
+        feedbackElem.innerText = translations.technical?.errorHandlingInvalid || 'Please describe the error handling approach. The field cannot be empty or contain only spaces.';
+        inputGroup.appendChild(feedbackElem);
+
+        errorHandlingApproach.setCustomValidity(translations.technical?.errorHandlingInvalid || 'Please describe the error handling approach. The field cannot be empty or contain only spaces.');
+        return false;
+    } else {
+        errorHandlingApproach.classList.add('is-valid');
+        errorHandlingApproach.setCustomValidity("");
+        return true;
+    }
+}
 
 /**
  * This function ensures that optional input fields in the form 
@@ -632,7 +630,7 @@ $(document).on('blur',
     'input[name="tscTimeEnd[]"],' +
     'input[name="rIdentifier[]"],' +
     'input[name="awardURI[]"], ' +
-    'textarea#input-abstract',
+    'textarea#input-abstract' , +
     'textarea#input-error-handling-approach',
 
     function () {
@@ -655,7 +653,8 @@ $(document).on('change',
     'select[name="rIdentifierType[]"], ' +
     'select[name="timezone[]"], ' +
     'input[name="funder[]"], ' +
-    'input[name="institutionAffiliation[]"]',
+    'input[name="institutionAffiliation[]"], ' +
+    'textarea#input-error-handling-approach',
     function () {
         // Check mandatory fields when any of these fields' values change
         validateAllMandatoryFields();
