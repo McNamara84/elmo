@@ -316,8 +316,13 @@ class ICGEMController
             }
         }
     }
-
-    protected function insertTopographicModelProperties(SimpleXMLElement $xml, array<int, array<string, mixed>> $topographicProperties): void
+    /**
+     * Inserts topographic model properties into the XML.
+     *
+     * @param SimpleXMLElement $xml The XML element to insert into.
+     * @param array<string, mixed> $topographicProperties The topographic model properties to insert.
+     */
+    protected function insertTopographicModelProperties(SimpleXMLElement $xml, array $topographicProperties): void
     {
         if ($topographicProperties) {
             $topographicPropertiesXml = $xml->addChild('TopographicModelProperties');
@@ -357,8 +362,13 @@ class ICGEMController
             }
         }
     }
-
-    protected function insertTemporalModelProperties(SimpleXMLElement $xml, array<int, array<string, mixed>> $temporalProperties): void
+    /**
+     * Inserts temporal model properties into the XML.
+     *
+     * @param SimpleXMLElement $xml The XML element to insert into.
+     * @param array<string, mixed> $temporalProperties The temporal model properties to insert.
+     */
+    protected function insertTemporalModelProperties(SimpleXMLElement $xml, array $temporalProperties): void
     {
         if ($temporalProperties) {
             $temporalPropertiesXml = $xml->addChild('TemporalModelProperties');
@@ -380,8 +390,13 @@ class ICGEMController
             }
         }
     }
-
-    protected function insertEllipsoidalParameters(SimpleXMLElement $xml, array<int, array<string, mixed>> $ellipsoidalParameters): void
+    /**
+     * Inserts ellipsoidal parameters into the XML.
+     *
+     * @param SimpleXMLElement $xml The XML element to insert into.
+     * @param array<string, mixed> $ellipsoidalParameters The ellipsoidal parameters to insert.
+     */
+    protected function insertEllipsoidalParameters(SimpleXMLElement $xml, array $ellipsoidalParameters): void
     {
         if ($ellipsoidalParameters) {
             $ellipsoidalParametersXml = $xml->addChild('EllipsoidalParameters');
