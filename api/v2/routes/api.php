@@ -58,7 +58,6 @@ return [
 
 
     // Export base xml for data mapping to the ICGEM metadatabase
-    ['GET', '/dataset/basexport/{id}', [new DatasetController(), 'exportBaseXml']],
     ['GET', '/dataset/icgem_export/{id}', [new DatasetController(), 'exportICGEMxml']],
 
 
