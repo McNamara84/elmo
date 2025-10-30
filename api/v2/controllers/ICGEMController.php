@@ -433,40 +433,63 @@ class ICGEMController
         // 1. Check if the resource has actual GGM data.
         $ggmData = $this->getGGMData($this->connection, $id);
         if (empty($ggmData) || empty($ggmData['model_name'])) {
-            // Throw an exception to be caught by the calling export function.
-            // This is a clean way to signal that the operation cannot proceed.
             throw new Exception("Resource with ID $id does not contain GGM data required for ICGEM XML.");
         }
 
         // 2. Get the base DataCite XML as a string.
-        // Create an instance of DatasetController to access its methods
         $datasetController = new DatasetController();
         $dataciteXmlString = $datasetController->transformAndSaveOrDownloadXml($id, 'datacite', false);
 
-        // 3. Load the DataCite XML into a SimpleXMLElement object.
-        $xml = new SimpleXMLElement($dataciteXmlString);
+        // 3. Create the envelope root element
+        $envelope = new SimpleXMLElement('<envelope/>');
 
-        // 4. Add the new parent element for ICGEM-specific data.
-        $icgemSpecificXml = $xml->addChild('icgem_metadata');
+        // 4. Import DataCite XML as <resource> with namespace
+        $resourceXml = $envelope->addChild(
+            'resource',
+            null,
+            'http://datacite.org/schema/kernel-4'
+        );
+        $resourceXml->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+        $resourceXml->addAttribute(
+            'xsi:schemaLocation',
+            'http://datacite.org/schema/kernel-4 '
+        );
 
-        // 5. Fetch all the ICGEM-specific data using existing methods.
-        // We already have ggmData, so we don't need to fetch it again.
+        $dataciteXml = new SimpleXMLElement($dataciteXmlString);
+        foreach ($dataciteXml->children() as $child) {
+            $this->simplexmlAppend($resourceXml, $child);
+        }
+
+        // 5. Add icgem_metadata element
+        $icgemSpecificXml = $envelope->addChild('icgem_metadata');
+
+        // 6. Fetch all the ICGEM-specific data
         $dataSources = $this->getDataSources($this->connection, $id);
         $topographicProperties = $this->getTopographicModelProperties($this->connection, $id);
         $temporalProperties = $this->getTemporalModelProperties($this->connection, $id);
         $ellipsoidalParameters = $this->getEllipsoidalParameters($this->connection, $id);
 
-        // 6. Insert the fetched data into the new <icgem_metadata> element.
+        // 7. Insert the fetched data into <icgem_metadata>
         $this->insertGgmProperties($icgemSpecificXml, $ggmData);
         $this->insertDataSources($icgemSpecificXml, $dataSources);
         $this->insertTopographicModelProperties($icgemSpecificXml, $topographicProperties);
         $this->insertTemporalModelProperties($icgemSpecificXml, $temporalProperties);
         $this->insertEllipsoidalParameters($icgemSpecificXml, $ellipsoidalParameters);
 
-        // 7. Format and return the final XML as a string.
-        $dom = dom_import_simplexml($xml)->ownerDocument;
+        // 8. Format and return the final XML as a string.
+        $dom = dom_import_simplexml($envelope)->ownerDocument;
         $dom->formatOutput = true;
         return $dom->saveXML();
+    }
+
+    /**
+     * Helper to append one SimpleXMLElement to another.
+     */
+    protected function simplexmlAppend(SimpleXMLElement $to, SimpleXMLElement $from)
+    {
+        $toDom = dom_import_simplexml($to);
+        $fromDom = dom_import_simplexml($from);
+        $toDom->appendChild($toDom->ownerDocument->importNode($fromDom, true));
     }
         /**
      * Exports an ICGEM-specific XML for a resource and outputs it directly.
