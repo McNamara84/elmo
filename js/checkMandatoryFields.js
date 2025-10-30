@@ -436,6 +436,7 @@ function validateErrorHandlingApproachField() {
     
     // If the field doesn't exist on this page, return success automatically
     if (!errorHandlingApproach) {
+
         return true;
     }
     
@@ -443,12 +444,15 @@ function validateErrorHandlingApproachField() {
     const inputGroup = errorHandlingApproach.closest('.input-group');
     const errorsSelect = document.getElementById('input-errors');
     
-    // If the errors dropdown doesn't exist either, return success
-    if (!errorsSelect) {
-        return true;
-    }
     
     const isRequired = errorsSelect.value === 'calibrated';
+    // If field is not required, return success automatically
+    if (!isRequired) {
+        errorHandlingApproach.setCustomValidity("");
+        errorHandlingApproach.classList.remove('needs-validation');
+        return true;
+
+    }
 
     // Reset validation state first
     errorHandlingApproach.classList.remove('is-valid', 'is-invalid');
@@ -457,13 +461,10 @@ function validateErrorHandlingApproachField() {
     if (oldFeedback) oldFeedback.remove();
     errorHandlingApproach.setCustomValidity("");
 
-    // If field is not required, return success automatically
-    if (!isRequired) {
-        return true;
-    }
+
 
     // Field is required, so validate content
-    if (value.length === 0) {
+    if (value.trim().length === 0) {
         errorHandlingApproach.classList.add('is-invalid');
 
         const feedbackElem = document.createElement('div');
@@ -476,6 +477,7 @@ function validateErrorHandlingApproachField() {
     } else {
         errorHandlingApproach.classList.add('is-valid');
         errorHandlingApproach.setCustomValidity("");
+        console.log('value length >0');
         return true;
     }
 }
