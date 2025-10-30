@@ -485,7 +485,7 @@ class ICGEMController
     /**
      * Helper to append one SimpleXMLElement to another.
      */
-    protected function simplexmlAppend(SimpleXMLElement $to, SimpleXMLElement $from)
+    protected function simplexmlAppend(SimpleXMLElement $to, SimpleXMLElement $from): void
     {
         $toDom = dom_import_simplexml($to);
         $fromDom = dom_import_simplexml($from);
