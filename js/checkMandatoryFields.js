@@ -418,7 +418,69 @@ function validateAbstractField() {
 }
 
 
+const errorHandlingApproach = document.getElementById('input-error-handling-approach');
+// Add event listeners for both input (typing) and blur (leaving the field) if element exists
+if (errorHandlingApproach) {
+    ['input', 'blur'].forEach(evt =>
+        errorHandlingApproach.addEventListener(evt, validateErrorHandlingApproachField)
+    );
+}
+/**
+ * Validates the error handling approach textarea field.
+ * - Returns success automatically if the field is not required or not present.
+ * - Marks the field as valid if it contains text and is required.
+ * - Marks the field as invalid if it is required but empty or contains only whitespace.
+ */
+function validateErrorHandlingApproachField() {
+    const errorHandlingApproach = document.getElementById('input-error-handling-approach');
+    
+    // If the field doesn't exist on this page, return success automatically
+    if (!errorHandlingApproach) {
 
+        return true;
+    }
+    
+    const value = errorHandlingApproach.value
+    const inputGroup = errorHandlingApproach.closest('.input-group');
+    const errorsSelect = document.getElementById('input-errors');
+    
+    
+    const isRequired = errorsSelect.value === 'calibrated';
+    // If field is not required, return success automatically
+    if (!isRequired) {
+        errorHandlingApproach.setCustomValidity("");
+        errorHandlingApproach.classList.remove('needs-validation');
+        return true;
+
+    }
+
+    // Reset validation state first
+    errorHandlingApproach.classList.remove('is-valid', 'is-invalid');
+    // Look for our custom feedback message (without data-translate)
+    let oldFeedback = inputGroup.querySelector('.invalid-feedback.custom-error-handling');
+    if (oldFeedback) oldFeedback.remove();
+    errorHandlingApproach.setCustomValidity("");
+
+
+
+    // Field is required, so validate content
+    if (value.trim().length === 0) {
+        errorHandlingApproach.classList.add('is-invalid');
+
+        const feedbackElem = document.createElement('div');
+        feedbackElem.className = 'invalid-feedback custom-error-handling';
+        feedbackElem.innerText = 'Please enter details of error handling approach as a free text';
+        inputGroup.appendChild(feedbackElem);
+
+        errorHandlingApproach.setCustomValidity('Please enter details of error handling approach as a free text');
+        return false;
+    } else {
+        errorHandlingApproach.classList.add('is-valid');
+        errorHandlingApproach.setCustomValidity("");
+        console.log('value length >0');
+        return true;
+    }
+}
 
 /**
  * This function ensures that optional input fields in the form 
@@ -507,6 +569,9 @@ function validateAllMandatoryFields() {
     // for the entire form
     removeGreenCheckmarks();
 
+    // Validate error handling approach field
+    validateErrorHandlingApproachField();
+
 };
 
 const optionalFieldsSelector = [
@@ -546,7 +611,35 @@ const optionalFieldsSelector = [
     'input[name="tscTimeStart[]"]',
     'input[name="tscTimeEnd[]"]',
     // Dates
-    'input[name="dateEmbargo"]'
+    'input[name="dateEmbargo"]',
+    // ICGEM-related fields:
+    // GGMs Model Types - Static Models
+    'textarea[name="staticDescription[]"]',
+    // GGMs Model Types - Temporal Models
+    'input[name="temporalStart[]"]',
+    'input[name="temporalEnd[]"]',
+    'select[name="temporalFrequencyPredef[]"]',
+    'input[name="temporalFrequency[]"]',
+    'input[name="temporalInstitution"]',
+    'input[name="releaseNumber"]',
+    // GGMs Model Types - Topographic Models
+    'select[name="topoLayerApproach[]"]',
+    'select[name="topoDomain[]"]',
+    'select[name="topoApproximation[]"]',
+    'select[name="topoDensity[]"]',
+    'input[name="topoDensityDetails[]"]',
+    'select[name="topoDensityCrust"]',
+    'input[name="topoDensityDetailsCrust"]',
+    'select[name="topoDensityMantle"]',
+    'input[name="topoDensityDetailsMantle"]',
+    // GGMs Data Sources
+    'select[name="datasource_details[]"]',
+    'input[name="compensation_depth[]"]',
+    'input[name="dIdentifier[]"]',
+    'select[name="dIdentifierType[]"]',
+    'input[name="dName[]"]',
+    'textarea[name="datasource_description[]"]',
+    'input[name="satellite_platform[]"]'
 ].join(', ');
 
 
@@ -577,7 +670,9 @@ $(document).on('blur',
     'input[name="tscTimeEnd[]"],' +
     'input[name="rIdentifier[]"],' +
     'input[name="awardURI[]"], ' +
-    'textarea#input-abstract',
+    'textarea#input-abstract' , +
+    'textarea#input-error-handling-approach',
+
     function () {
         // Check mandatory fields when user leaves any of these input fields
         validateAllMandatoryFields();
@@ -598,7 +693,8 @@ $(document).on('change',
     'select[name="rIdentifierType[]"], ' +
     'select[name="timezone[]"], ' +
     'input[name="funder[]"], ' +
-    'input[name="institutionAffiliation[]"]',
+    'input[name="institutionAffiliation[]"], ' +
+    'textarea#input-error-handling-approach',
     function () {
         // Check mandatory fields when any of these fields' values change
         validateAllMandatoryFields();

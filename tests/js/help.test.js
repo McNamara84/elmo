@@ -65,29 +65,25 @@ describe('help.js', () => {
     expect($('#bd-help-icon').hasClass('bi-question-square-fill')).toBe(true);
   });
 
-  test('clicking help icon triggers loadHelpContent with section id', () => {
+  test('clicking help icon triggers an AJAX call', () => {
     $.get = jest.fn(() => ({ fail: jest.fn() }));
-    const spy = jest.spyOn(window, 'loadHelpContent').mockImplementation(() => {});
     $('#helpIcon').trigger('click');
-    expect(spy).toHaveBeenCalledWith('section1');
-    spy.mockRestore();
+    expect($.get).toHaveBeenCalledWith('doc/help.php', expect.any(Function));
   });
 
-  test('loadHelpContent populates modal on success', () => {
-    $.get = jest.fn((url, success) => {
-      success('<div id="sec">Content</div>');
-      return { fail: jest.fn() };
-    });
-    help.loadHelpContent('sec');
-    expect($.get).toHaveBeenCalledWith('doc/help.php', expect.any(Function));
-    expect($('#helpModal .modal-body').html()).toBe('Content');
+  test('displayHelpSection populates modal on success', () => {
+    const htmlData = '<div id="section1">Help Content</div>';
+    help.displayHelpSection('section1', htmlData);
+    expect($('#helpModal .modal-body').html()).toBe('Help Content');
     expect($.fn.modal).toHaveBeenCalledWith('show');
   });
 
-  test('loadHelpContent logs error on failure', () => {
+  test('loadHelpContent calls back with null on failure', () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     $.get = jest.fn(() => ({ fail: cb => cb() }));
-    help.loadHelpContent('sec');
+    const callback = jest.fn();
+    help.loadHelpContent(callback);
+    expect(callback).toHaveBeenCalledWith(null);
     expect(errorSpy).toHaveBeenCalledWith('Error loading help content.');
     errorSpy.mockRestore();
   });

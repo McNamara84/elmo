@@ -1,7 +1,28 @@
 $(document).ready(function() {
+    // VISIBILITY HANDLING
+    // First, the whole form group and the contents
+    
+    const modelType = $('#input-model-type').val();
 
-    /**
-     * Handles the conditional visibility of form sections based on the 'Model Type' selection.
+    function updateGroupHeader() {
+        const modelSpecificCard = $('#model-specific-card');
+        // Get the CURRENT value from the dropdown every time the function is called.
+        const modelType = $('#input-model-type').val();
+
+        // Check if a valid model type is selected.
+        // This covers null, undefined, and empty strings ''.
+        if (modelType && modelType.toLowerCase() !== 'choose...' && modelType.toLowerCase() !== 'simulated') {
+            // If a valid model type is selected (not 'Choose...' or 'Simulated'), show the card.
+            modelSpecificCard.removeClass('d-none');
+            modelSpecificCard.attr('aria-hidden', 'false');
+        } else {
+            // Otherwise, hide the card.
+            modelSpecificCard.addClass('d-none');
+            modelSpecificCard.attr('aria-hidden', 'true');
+        }
+    };
+    
+    /* Handles the conditional visibility of form sections based on the 'Model Type' selection.
      * It shows or hides sections for static, temporal, or topographic models.
      */
     function updateModelTypeVisibility() {
@@ -26,11 +47,11 @@ $(document).ready(function() {
         // Check the value and show the relevant section.
         const modelTypeLower = modelType.toLowerCase();
 
-        if (modelTypeLower.includes('static')) {
+        if (modelTypeLower === 'static') {
             staticSection.removeClass('d-none');
-        } else if (modelTypeLower.includes('temporal')) {
+        } else if (modelTypeLower === 'temporal') {
             temporalSection.removeClass('d-none');
-        } else if (modelTypeLower.includes('topographic')) {
+        } else if (modelTypeLower === 'topographic') {
             topographicSection.removeClass('d-none');
         }
         
@@ -39,11 +60,11 @@ $(document).ready(function() {
         helpButton.removeAttr('data-help-section-id');
 
         let helpSectionId = 'help-no-model-type'; // Default fallback
-        if (modelTypeLower.includes('static')) {
+        if (modelTypeLower === 'static') {
             helpSectionId = 'help-static';
-        } else if (modelTypeLower.includes('temporal')) {
+        } else if (modelTypeLower === 'temporal') {
             helpSectionId = 'help-temporal';
-        } else if (modelTypeLower.includes('topographic')) {
+        } else if (modelTypeLower === 'topographic') {
             helpSectionId = 'help-topographic';
         }
         helpButton.attr('data-help-section-id', helpSectionId);
@@ -52,15 +73,16 @@ $(document).ready(function() {
     // Set up an event handler to listen for changes on the 'Model Type' dropdown.
     // Using event delegation on the document to handle dynamically added elements.
     $(document).on('change', '#input-model-type', function() {
+        updateGroupHeader();
         updateModelTypeVisibility();
     });
 
-    // Also run the function on page load in case a value is already selected.
-    // A small delay can help ensure that dropdowns populated by APIs are ready.
-    setTimeout(function() {
-        updateModelTypeVisibility();
-    }, 500);
+    // Initial call to set the correct visibility on page load.
+    updateGroupHeader();
+    updateModelTypeVisibility();
 
+
+    // SEPARATE DENSITY FOR CRUST AND MANTLE
     /**
      * Toggles the visibility of density input sections based on the checkbox state.
      */
@@ -77,13 +99,13 @@ $(document).ready(function() {
             separateDensity.addClass('d-none');
         }
     }
-
     // Add event listener for the checkbox
     separateDensityCheckbox.on('change', toggleDensityInputs);
-
     // Initial check to set the correct visibility on page load
     toggleDensityInputs();
-        /**
+
+    // TEMPORAL FREQUENCY CHECKBOX AND CONTENT HANDLING
+    /**
      * Handles the mutual exclusivity between predefined frequency selection and custom frequency input.
      * Shows/hides and validates the custom input based on checkbox state.
      */
@@ -127,8 +149,23 @@ $(document).ready(function() {
         
         // Initialize state
         toggleCustomFrequencyInput();
-    }
-    
+    }  
     // Initialize the temporal frequency functionality
     setupTemporalFrequencyInputs();
+
+    // TIME VARIABLE CHECKBOX HANDLING
+    const timeVariableCheckbox = document.getElementById('checkbox-time-variable');
+    const descriptionContainer = document.getElementById('time-variable-description-container');
+
+    if (timeVariableCheckbox && descriptionContainer) {
+        timeVariableCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                descriptionContainer.classList.remove('d-none');
+                descriptionContainer.setAttribute('aria-hidden', 'false');
+            } else {
+                descriptionContainer.classList.add('d-none');
+                descriptionContainer.setAttribute('aria-hidden', 'true');
+            }
+        });
+    }
 });
