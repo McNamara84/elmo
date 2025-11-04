@@ -23,4 +23,26 @@ test.describe('Originating Laboratory', () => {
     const optionTexts = await options.allTextContents();
     expect(optionTexts.join(' ')).toContain(''); // includes empty default
   });
+
+  test('Selecting a lab fills hidden fields correctly', async ({ page }) => {
+    // Wait until options are loaded
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#input-originatinglaboratory-name option').length > 1
+    );
+
+    const select = page.locator('#input-originatinglaboratory-name');
+    const firstVisibleOptionValue = await select.locator('option:nth-child(2)').getAttribute('value');
+
+    // Select first actual lab
+    await select.selectOption(firstVisibleOptionValue!);
+
+    // Check that hidden fields were updated
+    const labId = await page.locator('input[name="LabId[]"]').inputValue();
+    const affiliation = await page.locator('input[name="laboratoryAffiliation[]"]').inputValue();
+    const rorId = await page.locator('input[name="laboratoryRorIds[]"]').inputValue();
+
+    expect(labId).not.toBe('');
+    expect(affiliation).not.toBe('');
+    expect(rorId).not.toBe('');
+  });
 });
