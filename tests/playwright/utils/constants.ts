@@ -28,6 +28,7 @@ export const SELECTORS = {
     fundingReference: '#group-fundingreference',
     relatedWork: '#group-relatedwork',
     spatialTemporalCoverages: '#group-stc',
+    originatingLaboratory: '#group-originatinglaboratory',
   },
 };
 

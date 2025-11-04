@@ -5,7 +5,7 @@ test.describe('Originating Laboratory', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
-    await expect(page.locator('#group-originatinglaboratory')).toBeVisible();
+    await expect(page.locator(SELECTORS.formGroups.originatingLaboratory)).toBeVisible();
   });
 
   test('Laboratory select loads options from JSON', async ({ page }) => {
