@@ -75,4 +75,16 @@ test.describe('Originating Laboratory', () => {
 
     expect(after).toBe(before - 1);
   });
+
+  test('Help button displays Originating Laboratory help modal', async ({ page }) => {
+    await enableHelp(page);
+    await page.waitForTimeout(500);
+
+    // Open help for originating laboratory
+    await page.locator('[data-help-section-id="help-originatinglaboratory-fg"]').click();
+    const modal = page.locator(SELECTORS.modals.help);
+
+    await expect(modal).toBeVisible();
+    await expect(modal.locator('.modal-body')).toContainText('Originating Laboratory');
+  });
 });
