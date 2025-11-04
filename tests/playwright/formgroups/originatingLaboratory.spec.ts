@@ -61,4 +61,18 @@ test.describe('Originating Laboratory', () => {
     const removeButtons = group.locator('.removeButton');
     await expect(removeButtons.first()).toBeVisible();
   });
+
+  test('Remove button deletes the corresponding row', async ({ page }) => {
+    const group = page.locator('#group-originatinglaboratory');
+    const addButton = page.locator('#button-originatinglaboratory-add');
+
+    await addButton.click(); // create one clone
+    const before = await group.locator('.row[data-laboratory-row]').count();
+
+    // Remove the cloned row
+    await group.locator('.removeButton').first().click();
+    const after = await group.locator('.row[data-laboratory-row]').count();
+
+    expect(after).toBe(before - 1);
+  });
 });
