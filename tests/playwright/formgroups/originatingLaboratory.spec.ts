@@ -5,13 +5,14 @@ test.describe('Originating Laboratory', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
+    await page.waitForSelector(SELECTORS.formGroups.originatingLaboratory, { state: 'visible', timeout: 10000 });
     await expect(page.locator(SELECTORS.formGroups.originatingLaboratory)).toBeVisible();
   });
 
   test('Laboratory select loads options from JSON', async ({ page }) => {
   // Warte hier auf das Laden der Optionen
   await page.waitForFunction(() =>
-    document.querySelectorAll('#input-originatinglaboratory-name option').length > 1
+    document.querySelectorAll('#input-originatinglaboratory-name option').length > 1, { timeout: 10000 }
   );
 
   const select = page.locator('#input-originatinglaboratory-name');
