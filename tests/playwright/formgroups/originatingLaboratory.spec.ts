@@ -45,4 +45,20 @@ test.describe('Originating Laboratory', () => {
     expect(affiliation).not.toBe('');
     expect(rorId).not.toBe('');
   });
+
+  test('Add Laboratory button clones a new row', async ({ page }) => {
+    const group = page.locator('#group-originatinglaboratory');
+    const addButton = page.locator('#button-originatinglaboratory-add');
+
+    const initialCount = await group.locator('.row[data-laboratory-row]').count();
+
+    await addButton.click();
+
+    const newCount = await group.locator('.row[data-laboratory-row]').count();
+    expect(newCount).toBe(initialCount + 1);
+
+    // The new row should contain a remove button
+    const removeButtons = group.locator('.removeButton');
+    await expect(removeButtons.first()).toBeVisible();
+  });
 });
