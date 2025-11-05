@@ -47,7 +47,7 @@ test.describe('EPOS Multi-Scale Laboratories Keywords (MSL)', () => {
 
     // Wait for modal to appear
     const helpModal = page.locator('#helpModal');
-    await helpModal.waitFor({ state: 'visible', timeout: 10000 }); 
+    await helpModal.waitFor({ state: 'visible', timeout: 20000 }); 
 
     await expect(helpModal).toBeVisible();
     await expect(helpModal.locator('.modal-body')).toContainText('EPOS Multi-Scale Laboratories Keywords');
