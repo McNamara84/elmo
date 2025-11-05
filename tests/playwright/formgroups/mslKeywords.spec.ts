@@ -6,6 +6,7 @@ test.describe('EPOS Multi-Scale Laboratories Keywords (MSL)', () => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
     // Explicitly wait until the input field is visible
+    await page.waitForLoadState('networkidle', { timeout: 30000 });
     await page.locator(SELECTORS.formGroups.mslkeyword).waitFor({ state: 'visible', timeout: 30000 });
     await expect(page.locator(SELECTORS.formGroups.mslkeyword)).toBeVisible({ timeout: 30000 });
   });
@@ -30,10 +31,7 @@ test.describe('EPOS Multi-Scale Laboratories Keywords (MSL)', () => {
     // Check modal title
     await expect(modal.locator('.modal-title')).toContainText('EPOS Multi-Scale Laboratories Keywords');
 
-    // Wait until the thesaurus modal is visible
-    await modal.waitFor({ state: 'visible', timeout: 10000 });
-
-    // Explicitly wait until the General tree is visible 
+    // Explicitly wait until the General tree is visible
     await modal.locator('#jstree-mslkeyword-general').waitFor({ state: 'visible', timeout: 15000 });
     await expect(modal.locator('#jstree-mslkeyword-general')).toBeVisible();
 
