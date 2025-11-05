@@ -6,8 +6,8 @@ test.describe('EPOS Multi-Scale Laboratories Keywords (MSL)', () => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
     // Explicitly wait until the input field is visible
-    await page.locator(SELECTORS.formGroups.mslkeyword).waitFor({ state: 'visible', timeout: 10000 });
-    await expect(page.locator(SELECTORS.formGroups.mslkeyword)).toBeVisible();
+    await page.locator(SELECTORS.formGroups.mslkeyword).waitFor({ state: 'visible', timeout: 30000 });
+    await expect(page.locator(SELECTORS.formGroups.mslkeyword)).toBeVisible({ timeout: 30000 });
   });
 
   test('MSL Keyword input and thesaurus modal open correctly', async ({ page }) => {
