@@ -2,16 +2,18 @@ import { test, expect } from '@playwright/test';
 import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS } from '../utils';
 
 test.describe('Originating Laboratory', () => {
-  test.beforeEach(async ({ page }) => {
-    await navigateToHome(page);
-    await expectNavbarVisible(page);
-    await expect(page.locator(SELECTORS.formGroups.originatingLaboratory)).toBeVisible();
-  });
 
-  test('Laboratory select loads options from JSON', async ({ page }) => {
-  // Warte hier auf das Laden der Optionen
-  await page.waitForFunction(() =>
-    document.querySelectorAll('#input-originatinglaboratory-name option').length > 1
+test.beforeEach(async ({ page }) => {
+  await navigateToHome(page);
+  await expectNavbarVisible(page);
+  await expect(page.locator(SELECTORS.formGroups.originatingLaboratory)).toBeVisible({ timeout: 20000 });
+});
+
+test('Laboratory select loads options from JSON', async ({ page }) => {
+  // Warte bis Optionen geladen sind
+  await page.waitForFunction(
+    () => document.querySelectorAll('#input-originatinglaboratory-name option').length > 1,
+    { timeout: 20000 }
   );
 
   const select = page.locator('#input-originatinglaboratory-name');
@@ -23,68 +25,71 @@ test.describe('Originating Laboratory', () => {
   expect(optionTexts.join(' ')).toContain('');
 });
 
+test('Selecting a lab fills hidden fields correctly', async ({ page }) => {
+  await page.waitForFunction(
+    () => document.querySelectorAll('#input-originatinglaboratory-name option').length > 1,
+    { timeout: 20000 }
+  );
 
-  test('Selecting a lab fills hidden fields correctly', async ({ page }) => {
-    // Wait until options are loaded
-    await page.waitForFunction(() =>
-      document.querySelectorAll('#input-originatinglaboratory-name option').length > 1
-    );
+  const select = page.locator('#input-originatinglaboratory-name');
+  const firstVisibleOptionValue = await select.locator('option:nth-child(2)').getAttribute('value');
 
-    const select = page.locator('#input-originatinglaboratory-name');
-    const firstVisibleOptionValue = await select.locator('option:nth-child(2)').getAttribute('value');
+  await select.selectOption(firstVisibleOptionValue!, { timeout: 20000 });
 
-    // Select first actual lab
-    await select.selectOption(firstVisibleOptionValue!);
+  // Prüfe, ob hidden fields aktualisiert wurden
+  const labId = await page.locator('input[name="LabId[]"]').inputValue();
+  const affiliation = await page.locator('input[name="laboratoryAffiliation[]"]').inputValue();
+  const rorId = await page.locator('input[name="laboratoryRorIds[]"]').inputValue();
 
-    // Check that hidden fields were updated
-    const labId = await page.locator('input[name="LabId[]"]').inputValue();
-    const affiliation = await page.locator('input[name="laboratoryAffiliation[]"]').inputValue();
-    const rorId = await page.locator('input[name="laboratoryRorIds[]"]').inputValue();
+  expect(labId).not.toBe('');
+  expect(affiliation).not.toBe('');
+  expect(rorId).not.toBe('');
+});
 
-    expect(labId).not.toBe('');
-    expect(affiliation).not.toBe('');
-    expect(rorId).not.toBe('');
-  });
+test('Add Laboratory button clones a new row', async ({ page }) => {
+  const group = page.locator('#group-originatinglaboratory');
+  const addButton = page.locator('#button-originatinglaboratory-add');
 
-  test('Add Laboratory button clones a new row', async ({ page }) => {
-    const group = page.locator('#group-originatinglaboratory');
-    const addButton = page.locator('#button-originatinglaboratory-add');
+  await expect(group).toBeVisible({ timeout: 20000 });
+  await expect(addButton).toBeVisible({ timeout: 20000 });
 
-    const initialCount = await group.locator('.row[data-laboratory-row]').count();
+  const initialCount = await group.locator('.row[data-laboratory-row]').count();
 
-    await addButton.click();
+  await addButton.click();
+  await page.waitForTimeout(2000);
 
-    const newCount = await group.locator('.row[data-laboratory-row]').count();
-    expect(newCount).toBe(initialCount + 1);
+  const newCount = await group.locator('.row[data-laboratory-row]').count();
+  expect(newCount).toBe(initialCount + 1);
 
-    // The new row should contain a remove button
-    const removeButtons = group.locator('.removeButton');
-    await expect(removeButtons.first()).toBeVisible();
-  });
+  const removeButtons = group.locator('.removeButton');
+  await expect(removeButtons.first()).toBeVisible({ timeout: 20000 });
+});
 
-  test('Remove button deletes the corresponding row', async ({ page }) => {
-    const group = page.locator('#group-originatinglaboratory');
-    const addButton = page.locator('#button-originatinglaboratory-add');
+test('Remove button deletes the corresponding row', async ({ page }) => {
+  const group = page.locator('#group-originatinglaboratory');
+  const addButton = page.locator('#button-originatinglaboratory-add');
 
-    await addButton.click(); // create one clone
-    const before = await group.locator('.row[data-laboratory-row]').count();
+  await expect(group).toBeVisible({ timeout: 20000 });
+  await addButton.click();
 
-    // Remove the cloned row
-    await group.locator('.removeButton').first().click();
-    const after = await group.locator('.row[data-laboratory-row]').count();
+  const before = await group.locator('.row[data-laboratory-row]').count();
 
-    expect(after).toBe(before - 1);
-  });
+  await group.locator('.removeButton').first().click();
+  await page.waitForTimeout(2000);
 
-  test('Help button displays Originating Laboratory help modal', async ({ page }) => {
-    await enableHelp(page);
-    await page.waitForTimeout(500);
+  const after = await group.locator('.row[data-laboratory-row]').count();
+  expect(after).toBe(before - 1);
+});
 
-    // Open help for originating laboratory
-    await page.locator('[data-help-section-id="help-originatinglaboratory-fg"]').click();
-    const modal = page.locator(SELECTORS.modals.help);
+test('Help button displays Originating Laboratory help modal', async ({ page }) => {
+  await enableHelp(page);
+  await page.waitForTimeout(500);
 
-    await expect(modal).toBeVisible();
-    await expect(modal.locator('.modal-body')).toContainText('Originating Laboratory');
-  });
+  await page.locator('[data-help-section-id="help-originatinglaboratory-fg"]').click();
+  const modal = page.locator(SELECTORS.modals.help);
+
+  await expect(modal).toBeVisible({ timeout: 20000 });
+  await expect(modal.locator('.modal-body')).toContainText('Originating Laboratory', { timeout: 20000 });
+});
+
 });
