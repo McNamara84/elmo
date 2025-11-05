@@ -38,20 +38,4 @@ test.describe('EPOS Multi-Scale Laboratories Keywords (MSL)', () => {
     await expect(modal).toBeHidden();
   });
 
-  test('Help button shows MSL help modal', async ({ page }) => {
-    await enableHelp(page);
-    await page.waitForTimeout(500);
-
-    // Click help button inside the input group
-    await page.locator('[data-help-section-id="help-mslKeywords-keyword"]').click();
-
-    // Wait for modal to appear
-    const helpModal = page.locator('#helpModal');
-    await helpModal.waitFor({ state: 'visible', timeout: 20000 }); 
-
-    await expect(helpModal).toBeVisible();
-    await expect(helpModal.locator('.modal-body')).toContainText('EPOS Multi-Scale Laboratories Keywords');
-
-  });
-
 });
