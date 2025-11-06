@@ -5,11 +5,6 @@ import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
-    await page.waitForFunction(() => {
-      const el = document.querySelector('#input-mslkeyword');
-      return el && window.getComputedStyle(el).display !== 'none';
-    }, { timeout: 15000 });
-
     await expect(page.locator('#input-mslkeyword')).toBeVisible({ timeout: 15000 });
   });
 
