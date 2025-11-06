@@ -121,7 +121,7 @@ jobs:
     - name: Start PHP built-in web server
       run: |
         echo "Starting PHP server without router script..."
-        php -S localhost:8000 -t . 2>&1 > server.log &
+        php -S localhost:8080 -t . 2>&1 > server.log &
         echo $! > server.pid
         sleep 10
         
@@ -134,17 +134,17 @@ jobs:
         ls -la app.* || echo "No app files found"
         
         echo "\nTesting server connectivity:"
-        curl -v http://localhost:8000/ || echo "Root test failed"
+        curl -v http://localhost:8080/ || echo "Root test failed"
         
         echo "\nTesting direct file access:"
-        curl -v http://localhost:8000/index.php || echo "index.php test failed"
+        curl -v http://localhost:8080/index.php || echo "index.php test failed"
         
         echo "\nServer log contents:"
         cat server.log
         
         echo "\nTesting if server serves static files:"
         echo "<html><body><h1>Test</h1></body></html>" > test.html
-        curl -v http://localhost:8000/test.html || echo "Static file test failed"
+        curl -v http://localhost:8080/test.html || echo "Static file test failed"
         rm test.html
 
     - name: Cache Playwright browsers
@@ -168,10 +168,10 @@ jobs:
         
         echo "Testing server connectivity..."
         for i in {1..10}; do
-          if curl -s http://localhost:8000/index.php > /dev/null; then
+          if curl -s http://localhost:8080/index.php > /dev/null; then
             echo "Server is responding to index.php on attempt $i"
             break
-          elif curl -s http://localhost:8000/ > /dev/null; then
+          elif curl -s http://localhost:8080/ > /dev/null; then
             echo "Server is responding to root on attempt $i"
             break
           else
@@ -183,7 +183,7 @@ jobs:
     
 
         echo "Fetching HTML content for verification..."
-        curl -s http://localhost:8000/ > page.html
+        curl -s http://localhost:8080/ > page.html
 
         if grep -q "group-mslkeywords" page.html; then
           echo "✅ MSL Keywords group found in HTML output"
@@ -198,8 +198,8 @@ jobs:
         fi
 
         echo "Final connectivity test:"
-        curl -v http://localhost:8000/index.php || echo "index.php still not reachable"
-        curl -v http://localhost:8000/ || echo "Root still not reachable"
+        curl -v http://localhost:8080/index.php || echo "index.php still not reachable"
+        curl -v http://localhost:8080/ || echo "Root still not reachable"
 
     - name: Create debugging test
       run: |
@@ -439,17 +439,17 @@ jobs:
       if: failure()
       run: |
         echo "=== Debugging what the browser gets ==="
-        curl -s http://localhost:8000/ | head -50
+        curl -s http://localhost:8080/ | head -50
         echo "\n=== Testing if any HTML is returned ==="
-        curl -s http://localhost:8000/ | grep -i "html\|body\|navbar" || echo "No HTML tags found"
+        curl -s http://localhost:8080/ | grep -i "html\|body\|navbar" || echo "No HTML tags found"
 
     - name: Debug what the browser actually sees
       if: failure()
       run: |
         echo "=== Debugging what the browser gets ==="
-        curl -s http://localhost:8000/ | head -50
+        curl -s http://localhost:8080/ | head -50
         echo "\n=== Testing if any HTML is returned ==="
-        curl -s http://localhost:8000/ | grep -i "html\|body\|navbar" || echo "No HTML tags found"
+        curl -s http://localhost:8080/ | grep -i "html\|body\|navbar" || echo "No HTML tags found"
 
     - name: Upload Playwright Report
       uses: actions/upload-artifact@v4
