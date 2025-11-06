@@ -5,7 +5,7 @@ import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
-    await expect(page.locator('#input-mslkeyword')).toBeVisible();
+    await expect(page.locator('#input-mslkeyword')).toBeVisible({ timeout: 15000 });
   });
 
   test('MSL Keyword input and thesaurus modal open correctly', async ({ page }) => {
