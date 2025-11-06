@@ -180,6 +180,23 @@ jobs:
           fi
         done
         
+    
+
+        echo "Fetching HTML content for verification..."
+        curl -s http://localhost:8000/ > page.html
+
+        if grep -q "group-mslkeywords" page.html; then
+          echo "✅ MSL Keywords group found in HTML output"
+        else
+          echo "❌ MSL Keywords group NOT found in HTML output"
+        fi
+
+        if grep -q "group-originatinglaboratory" page.html; then
+          echo "✅ Originating Laboratory group found in HTML output"
+        else
+          echo "❌ Originating Laboratory group NOT found in HTML output"
+        fi
+
         echo "Final connectivity test:"
         curl -v http://localhost:8000/index.php || echo "index.php still not reachable"
         curl -v http://localhost:8000/ || echo "Root still not reachable"
