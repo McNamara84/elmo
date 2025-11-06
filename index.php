@@ -68,12 +68,22 @@ if ($showContributorPersons) {
 if ($showContributorInstitutions) {
     include $baseDir . 'formgroups/contributorInstitutions.html';
 }
+// Debug-Log vor MSL-Labs
+error_log("Flag showMslLabs: " . ($showMslLabs ? "true" : "false"));
 if ($showMslLabs) {
+    error_log("Including formgroups/originatingLaboratory.html");
     include $baseDir . 'formgroups/originatingLaboratory.html';
+} else {
+    error_log("Skipping formgroups/originatingLaboratory.html");
 }
 include $baseDir . 'formgroups/descriptions.html';
+// Debug-Log vor MSL-Vokabular
+error_log("Flag showMslVocabs: " . ($showMslVocabs ? "true" : "false"));
 if ($showMslVocabs) {
+    error_log("Including formgroups/mslKeywords.html");
     include $baseDir . 'formgroups/mslKeywords.html';
+} else {
+    error_log("Skipping formgroups/mslKeywords.html");
 }
 if ($showGcmdThesauri) {
     include $baseDir . 'formgroups/thesaurusKeywords.html';
