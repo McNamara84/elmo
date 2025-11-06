@@ -92,25 +92,6 @@ $(document).ready(function () {
         });
     }, { once: true });
 
-    // ---- Fallback initialization for CI or slow environments ----
-    setTimeout(() => {
-        const anyTagify = keywordConfigurations.some(c => {
-            const el = document.querySelector(c.inputId);
-            return el && el._tagify;
-        });
-
-        // Only run if no tagify instances exist yet
-        if (!anyTagify) {
-            console.warn('[MSL Keywords] translationsLoaded not fired — running fallback initialization');
-            keywordConfigurations.forEach(function (config) {
-                if ($(config.inputId).length) {
-                    initializeKeywordInput(config);
-                }
-            });
-        }
-    }, 2000);
-
-
     /**
      * Refreshes all Tagify instances for thesaurus inputs when translations are changed.
      * This function updates the placeholder text for existing Tagify instances without
