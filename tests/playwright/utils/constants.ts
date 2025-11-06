@@ -29,7 +29,7 @@ export const SELECTORS = {
     relatedWork: '#group-relatedwork',
     spatialTemporalCoverages: '#group-stc',
     // originatingLaboratory: '#group-originatinglaboratory',
-    // mslkeyword: '#input-mslkeyword',
+    mslkeyword: '#input-mslkeyword',
   },
 };
 
