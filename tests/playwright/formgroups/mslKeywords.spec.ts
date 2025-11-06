@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../utils';
+import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS } from '../utils';
 
-  test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
+test.describe('EPOS Multi-Scale Laboratories Keywords (MSL)', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
@@ -20,8 +20,12 @@ import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../
     // Click thesaurus button to open modal
     await thesaurusButton.click();
 
-    // Wait for modal to appear
+    // Wait for modal to appear (Bootstrap adds .show after fade)
     await expect(modal).toBeVisible();
+    await expect(modal).toHaveClass(/show/, { timeout: 5000 });
+
+    // Extra wait for slow fade transitions (esp. Firefox/WebKit)
+    await page.waitForTimeout(300);
 
     // Check modal title
     await expect(modal.locator('.modal-title')).toContainText('EPOS Multi-Scale Laboratories Keywords');
@@ -35,7 +39,9 @@ import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../
 
     // Close modal
     await modal.locator('button.btn-primary:has-text("OK")').click();
+
+    // Wait for fade-out transition to complete
+    await page.waitForTimeout(300);
     await expect(modal).toBeHidden();
   });
-
 });
