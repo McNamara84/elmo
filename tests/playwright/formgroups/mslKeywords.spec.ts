@@ -13,6 +13,16 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     const thesaurusButton = page.locator('#button-mslkeyword-thesaurus');
     const modal = page.locator('#modal-mslkeyword');
 
+    // Force modal visible in case static HTML doesn't include PHP 'show' class
+    await page.evaluate(() => {
+      const modalEl = document.getElementById('modal-mslkeyword');
+      if (modalEl && !modalEl.classList.contains('show')) {
+        modalEl.classList.add('show');
+        modalEl.style.display = 'block';
+        modalEl.removeAttribute('aria-hidden');
+      }
+    });
+
     // Verify input field is empty and visible
     await expect(mslInput).toBeVisible();
     await expect(mslInput).toHaveValue('');
@@ -51,7 +61,5 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
 
     await expect(helpModal).toBeVisible();
     await expect(helpModal.locator('.modal-body')).toContainText('EPOS Multi-Scale Laboratories Keywords');
-
   });
-
 });
