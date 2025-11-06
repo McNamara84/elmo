@@ -1,25 +1,20 @@
 import { test, expect } from '@playwright/test';
-import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS } from '../utils';
+import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../utils';
 
   test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
-
-    await expect(page.locator('.thesaurus-tagify')).toBeVisible();
+    await expect(page.locator(SELECTORS.formGroups.mslkeyword)).toBeVisible();
   });
 
   test('MSL Keyword input and thesaurus modal open correctly', async ({ page }) => {
     const mslInput = page.locator('#input-mslkeyword');
-    const tagifyWrapper = page.locator('.thesaurus-tagify');
     const thesaurusButton = page.locator('#button-mslkeyword-thesaurus');
     const modal = page.locator('#modal-mslkeyword');
 
     // Verify input field is empty and visible
-    await expect(tagifyWrapper).toBeVisible();
-
-    await expect(mslInput).toHaveCount(1);
-
+    await expect(mslInput).toBeVisible();
     await expect(mslInput).toHaveValue('');
 
     // Click thesaurus button to open modal
