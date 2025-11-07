@@ -1,29 +1,27 @@
 import { test, expect } from '@playwright/test';
-import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS } from '../utils';
+import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../utils';
 
 test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
-
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
-
-    const thesaurusButton = page.locator('#button-mslkeyword-thesaurus');
-    await thesaurusButton.click({ timeout: 100000 });
-
-    const modal = page.locator('#modal-mslkeyword');
-    await modal.waitFor({ state: 'visible', timeout: 100000 });
-
-    const mslInput = page.locator('#input-mslkeyword');
-    await expect(mslInput).toBeVisible({ timeout: 100000 });
+    await expect(page.locator(SELECTORS.formGroups.mslkeyword)).toBeVisible();
   });
 
   test('MSL Keyword input and thesaurus modal open correctly', async ({ page }) => {
+    const mslInput = page.locator('#input-mslkeyword');
+    const thesaurusButton = page.locator('#button-mslkeyword-thesaurus');
     const modal = page.locator('#modal-mslkeyword');
-    const mslInput = modal.locator('#input-mslkeyword');
-    const searchInput = modal.locator('#input-mslkeyword-thesaurussearch');
 
-    // Verify input field is empty
+    // Verify input field is empty and visible
+    await expect(mslInput).toBeVisible();
     await expect(mslInput).toHaveValue('');
+
+    // Click thesaurus button to open modal
+    await thesaurusButton.click({ timeout: 100000});
+
+    // Wait for modal to appear
+    await expect(modal).toBeVisible();
 
     // Check modal title
     await expect(modal.locator('.modal-title')).toContainText('EPOS Multi-Scale Laboratories Keywords');
@@ -33,7 +31,7 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     await expect(modal.locator('#jstree-mslkeyword-domain')).toBeVisible();
 
     // Ensure search input is visible
-    await expect(searchInput).toBeVisible();
+    await expect(modal.locator('#input-mslkeyword-thesaurussearch')).toBeVisible();
 
     // Close modal
     await modal.locator('button.btn-primary:has-text("OK")').click();
