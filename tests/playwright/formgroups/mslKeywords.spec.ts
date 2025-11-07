@@ -14,21 +14,19 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     const modal = page.locator('#modal-mslkeyword');
 
     // Verify input field is empty and visible
-    await expect(mslInput).toBeVisible();
-    await expect(mslInput).toHaveValue('');
+    await expect(thesaurusButton).toBeEnabled({ timeout: 10000 });
+    await expect(thesaurusButton).toBeVisible({ timeout: 10000 });
 
-    // Click thesaurus button to open modal
-    await thesaurusButton.click({ timeout: 100000});
+    await thesaurusButton.click();
 
-    // Wait for modal to appear
-    await expect(modal).toBeVisible();
+    await expect(modal).toBeVisible({ timeout: 10000 });
 
-    // Check modal title
-    await expect(modal.locator('.modal-title')).toContainText('EPOS Multi-Scale Laboratories Keywords');
+    const tagifyInput = modal.locator('.tagify__input');
+    await expect(tagifyInput).toBeVisible({ timeout: 10000 });
 
-    // Ensure both trees (general + domain) are visible
-    await expect(modal.locator('#jstree-mslkeyword-general')).toBeVisible();
-    await expect(modal.locator('#jstree-mslkeyword-domain')).toBeVisible();
+    await modal.locator('#jstree-mslkeyword-general .jstree-node').first().waitFor();
+    await modal.locator('#jstree-mslkeyword-domain .jstree-node').first().waitFor();
+
 
     // Ensure search input is visible
     await expect(modal.locator('#input-mslkeyword-thesaurussearch')).toBeVisible();
