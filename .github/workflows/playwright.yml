@@ -84,28 +84,12 @@ jobs:
       run: |
         cat << EOF > settings.php
         <?php
-        // Ensure session is started and set modal flag so CI-rendered pages show the modal
-        if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-        }
-
-        // Force the MSL modal to be visible in CI/test runs
-        // Use string 'true' to match your template checks (=== 'true')
-        $_SESSION['modal-mslkeyword'] = 'true';
-
-        /**
-        * Database connection helper used by the app during tests.
-        */
         function connectDb() {
             \$host = '127.0.0.1';
             \$username = 'test_user';
             \$password = 'test_password';
             \$database = 'mde2-msl-test';
             \$conn = new mysqli(\$host, \$username, \$password, \$database);
-            if ($conn->connect_error) {
-                // In CI we prefer to fail early with a clear error
-                error_log("DB connect error: " . $conn->connect_error);
-            }
             return \$conn;
         }
         function getApiKey() {
