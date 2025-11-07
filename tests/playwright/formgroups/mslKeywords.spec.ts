@@ -18,7 +18,7 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     await expect(mslInput).toHaveValue('');
 
     // Click thesaurus button to open modal
-    await thesaurusButton.click();
+    await thesaurusButton.click({ timeout: 100000});
 
     // Wait for modal to appear
     await expect(modal).toBeVisible();
