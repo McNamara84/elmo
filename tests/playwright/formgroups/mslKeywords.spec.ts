@@ -5,7 +5,7 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
-    await expect(page.locator(SELECTORS.formGroups.mslkeyword)).toBeVisible();
+    await expect(page.locator('tags.tagify')).toBeVisible();
   });
 
   test('MSL Keyword input and thesaurus modal open correctly', async ({ page }) => {
