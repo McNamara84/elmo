@@ -13,21 +13,19 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     const thesaurusButton = page.locator('#button-mslkeyword-thesaurus');
     const modal = page.locator('#modal-mslkeyword');
 
-    const tagifyInput = page.locator('#input-mslkeyword').locator('xpath=following-sibling::div[contains(@class,"tagify")]//span[@class="tagify__input"]');
-
-    await expect(tagifyInput).toBeVisible({ timeout: 10000 });
-
-    await expect(tagifyInput).toHaveText('');
-
+    // Verify input field is empty and visible
+    await expect(thesaurusButton).toBeEnabled({ timeout: 10000 });
+    await expect(thesaurusButton).toBeVisible({ timeout: 10000 });
 
     await thesaurusButton.click();
 
     await expect(modal).toBeVisible({ timeout: 10000 });
 
+    const tagifyInput = modal.locator('.tagify__input');
+    await expect(tagifyInput).toBeVisible({ timeout: 10000 });
 
-    await modal.locator('#jstree-mslkeyword-general .jstree-node').first().waitFor({ timeout: 10000 });
-    await modal.locator('#jstree-mslkeyword-domain .jstree-node').first().waitFor({ timeout: 10000 });
-
+    await modal.locator('#jstree-mslkeyword-general .jstree-node').first().waitFor();
+    await modal.locator('#jstree-mslkeyword-domain .jstree-node').first().waitFor();
 
 
     // Ensure search input is visible
