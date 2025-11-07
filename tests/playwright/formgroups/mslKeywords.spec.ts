@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../utils';
+import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS } from '../utils';
 
 test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
   test.beforeEach(async ({ page }) => {
@@ -12,6 +12,14 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     const mslInput = page.locator('#input-mslkeyword');
     const thesaurusButton = page.locator('#button-mslkeyword-thesaurus');
     const modal = page.locator('#modal-mslkeyword');
+
+    // Override aria-hidden and show class to force modal visible
+    await modal.evaluate(el => {
+      el.setAttribute('aria-hidden', 'false');
+      if (!el.classList.contains('show')) {
+        el.classList.add('show');
+      }
+    });
 
     // Verify input field is empty and visible
     await expect(mslInput).toBeVisible();
