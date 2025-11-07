@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../utils';
+import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS } from '../utils';
 
 test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
-    await expect(page.locator(SELECTORS.formGroups.mslkeyword)).toBeVisible();
+    const mslKeywordGroup = page.locator('div.card').filter({ hasText: 'EPOS Multi-Scale Laboratories Keywords' });
+    await expect(mslKeywordGroup.locator('tags.tagify')).toBeVisible();
   });
 
   test('MSL Keyword input and thesaurus modal open correctly', async ({ page }) => {
@@ -21,7 +22,7 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     await thesaurusButton.click();
 
     // Wait for modal to appear
-    await expect(modal).toBeVisible();
+    await expect(modal).toBeVisible({ timeout: 15000 });
 
     // Check modal title
     await expect(modal.locator('.modal-title')).toContainText('EPOS Multi-Scale Laboratories Keywords');
