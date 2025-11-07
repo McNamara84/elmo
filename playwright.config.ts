@@ -1,17 +1,9 @@
 import './playwright-require.cjs';
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
+// 🌟 NEU: globalSetup aktivieren
+// Damit wird vor allen Tests deine PHP-Session initialisiert
+// (playwright-global-setup.js liegt im Projekt-Root)
 export default defineConfig({
   testDir: './tests/playwright',
   fullyParallel: true,
@@ -19,54 +11,40 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : undefined,
   reporter: 'html',
+
+  // 🌟 NEU: globalSetup hinzufügen
+  globalSetup: require.resolve('./playwright-global-setup.js'),
+
   use: {
-    // Different baseURL depending on whether running in CI or locally
-    baseURL: process.env.CI ? 'http://localhost/elmo/' : 'http://localhost:8080/',
+    // Unterschiedliche BaseURLs lokal vs. CI
+    baseURL: process.env.CI ? 'http://127.0.0.1:8000/' : 'http://localhost:8080/',
+
+    // 🌟 NEU: gespeicherten Session-State (von globalSetup) laden
+    storageState: 'playwright/.auth/session-storage.json',
+
     trace: 'on-first-retry',
   },
 
-  /* Configure projects for major browsers */
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], storageState: 'playwright/.auth/session-storage.json' },
     },
-
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: { ...devices['Desktop Firefox'], storageState: 'playwright/.auth/session-storage.json' },
     },
-
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: { ...devices['Desktop Safari'], storageState: 'playwright/.auth/session-storage.json' },
     },
-
-    /* Test against branded browsers. */
     {
       name: 'Microsoft Edge',
-      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+      use: { ...devices['Desktop Edge'], channel: 'msedge', storageState: 'playwright/.auth/session-storage.json' },
     },
     {
       name: 'Google Chrome',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+      use: { ...devices['Desktop Chrome'], channel: 'chrome', storageState: 'playwright/.auth/session-storage.json' },
     },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
   ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
 });
