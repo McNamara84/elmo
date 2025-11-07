@@ -84,6 +84,8 @@ jobs:
       run: |
         cat << EOF > settings.php
         <?php
+        session_start();
+        \$_SESSION['modal-mslkeyword'] = 'true'; // Modal für Tests sichtbar machen
         function connectDb() {
             \$host = '127.0.0.1';
             \$username = 'test_user';
@@ -107,10 +109,6 @@ jobs:
         \$maxTitles = 2;
         \$showMslLabs = true;
         \$showMslVocabs = true;
-        <?php
-          session_start();
-          $_SESSION['modal-mslkeyword'] = 'true'; // Modal für Tests sichtbar machen
-          ?>
         \$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
         \$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';        
         \$showFeedbackLink = true;
