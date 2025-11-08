@@ -13,7 +13,7 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     const thesaurusButton = page.locator('#button-mslkeyword-thesaurus');
     const modal = page.locator('#modal-mslkeyword');
 
-    // Verify input field is empty and visible
+    // Verify input field is empty and exists
     await expect(mslInput).toHaveCount(1);
     await expect(mslInput).toHaveValue('');
 
