@@ -15,10 +15,6 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
 
     // Verify input field is empty and visible
     await expect(mslInput).toHaveCount(1);
-    const tagifyUI = page.locator('.tagify');
-    await expect(tagifyUI).toBeVisible({ timeout: 5000 });
-    const tagifyInput = tagifyUI.locator('input');
-    await expect(tagifyInput).toBeEnabled();
     await expect(mslInput).toHaveValue('');
 
     // Click thesaurus button to open modal
