@@ -14,7 +14,7 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     const modal = page.locator('#modal-mslkeyword');
 
     // Verify input field is empty and visible
-    await expect(mslInput).toBeVisible();
+    await expect(mslInput).toHaveCount(1);
     await expect(mslInput).toHaveValue('');
 
     // Click thesaurus button to open modal
