@@ -26,7 +26,7 @@ $(document).ready(function () {
             data.forEach(function (lab) {
                 const option = document.createElement('option');
                 option.value = lab.name;
-                option.textContent = lab.name;
+                option.textContent = lab.name + ' (' + lab.affiliation_name + ')';
                 selectElement.appendChild(option);
             });
         });
