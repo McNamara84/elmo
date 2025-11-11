@@ -11,25 +11,25 @@
  * @requires formgroups/*.php
  */
 
+// Include required configuration and helper files so that they are accessible for testing as well
+require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
+require_once __DIR__ . '/formgroups/save_authors.php';
+require_once __DIR__ . '/formgroups/save_contactperson.php';
+require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
+require_once __DIR__ . '/formgroups/save_freekeywords.php';
+require_once __DIR__ . '/formgroups/save_contributorpersons.php';
+require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
+require_once __DIR__ . '/formgroups/save_descriptions.php';
+require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
+require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
+require_once __DIR__ . '/formgroups/save_relatedwork.php';
+require_once __DIR__ . '/formgroups/save_fundingreferences.php';
+require_once __DIR__ . '/formgroups/save_ggmsproperties.php';
 /**
  * Process form submission based on action type
  */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Include required configuration and helper files
-    require_once __DIR__ . '/../settings.php';
-    require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
-    require_once __DIR__ . '/formgroups/save_authors.php';
-    require_once __DIR__ . '/formgroups/save_contactperson.php';
-    require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
-    require_once __DIR__ . '/formgroups/save_freekeywords.php';
-    require_once __DIR__ . '/formgroups/save_contributorpersons.php';
-    require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
-    require_once __DIR__ . '/formgroups/save_descriptions.php';
-    require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
-    require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
-    require_once __DIR__ . '/formgroups/save_relatedwork.php';
-    require_once __DIR__ . '/formgroups/save_fundingreferences.php';
-    require_once __DIR__ . '/formgroups/save_ggmsproperties.php';
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_once __DIR__ . '/../settings.php'; // load settings so that it only required in the prod environment
 
     // Check if this is a resource ID request
     if (isset($_POST['get_resource_id']) && $_POST['get_resource_id'] === '1') {
