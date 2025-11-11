@@ -40,6 +40,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
     }
 
     // Saving all mandatory fields & optional fields if needed
+    $connection->begin_transaction();
     $resource_id = saveResourceInformationAndRights($connection, $_POST);
     saveAuthors($connection, $_POST, $resource_id);
     saveContactPerson($connection, $_POST, $resource_id);
@@ -71,6 +72,8 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
     if ($showGGMsProperties) {
         saveGGMsProperties($connection, $_POST, $resource_id);
     }
+
+    $connection->commit();
 
     try {
     // Logic in these lines is to enable XML save
