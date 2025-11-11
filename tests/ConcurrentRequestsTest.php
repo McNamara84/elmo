@@ -20,8 +20,7 @@ class ConcurrentRequestsTest extends DatabaseTestCase
         parent::setUp();
         
         // Create a second database connection for concurrent operations
-        require_once __DIR__ . '/../settings.php';
-        $this->connection2 = connectDb();
+        $this->connection2 = $this->connection;
         $this->connection2->select_db('mde2-msl-test');
 
         // Prepare complete POST data for first submission
