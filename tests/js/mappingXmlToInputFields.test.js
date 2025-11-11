@@ -202,7 +202,7 @@ describe("mappingXmlToInputFields helpers", () => {
       </div>`;
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
-    vm.runInContext(`labData = [{ id: 'LAB1', name: 'Lab1', rorid: 'R1', affiliation: 'Aff1' }];`, ctx);
+    vm.runInContext(`labData = [{ identifier: 'LAB1', name: 'Lab1', affiliation_ror: 'R1', affiliation_name: 'Aff1' }];`, ctx);
 
     const row = $(document.getElementById("row"));
     ctx.setLabDataInRow(row, "LAB1");
