@@ -40,8 +40,6 @@ function saveResourceInformationAndRights($connection, $postData)
         // Sanitize and prepare data
         $resourceData = prepareResourceData($postData);
 
-        // Begin transaction
-        $connection->begin_transaction();
 
         // Check for existing DOI and handle accordingly
         $resource_id = handleExistingResource($connection, $resourceData);
@@ -50,13 +48,6 @@ function saveResourceInformationAndRights($connection, $postData)
             $resource_id = createNewResource($connection, $resourceData);
         }
 
-        // Save titles
-        if (!saveTitles($connection, $resource_id, $postData['title'], $postData['titleType'])) {
-            $connection->rollback();
-            return false;
-        }
-
-        $connection->commit();
         return $resource_id;
 
     } catch (Exception $e) {
