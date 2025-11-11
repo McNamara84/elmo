@@ -84,11 +84,11 @@ describe("mappingXmlToInputFields helpers", () => {
   test("findLabNameById returns lab info from labData", () => {
     const ctx = loadMappingModule();
     vm.runInContext(
-      `labData = [{id: 'MSL-001', name: 'Max Planck Institute for Astronomy', rorid: 'https://ror.org/05y42nb95', affiliation: 'Max Planck Society'}];`,
+      `labData = [{identifier: 'MSL-001', name: 'Max Planck Institute for Astronomy', affiliation_ror: 'https://ror.org/05y42nb95', affiliation_name: 'Max Planck Society'}];`,
       ctx
     );
     const lab = ctx.findLabNameById("MSL-001");
-    expect(lab).toEqual({ id: "MSL-001", name: "Max Planck Institute for Astronomy", rorid: "https://ror.org/05y42nb95", affiliation: "Max Planck Society" });
+    expect(lab).toEqual({ identifier: "MSL-001", name: "Max Planck Institute for Astronomy", affiliation_ror: "https://ror.org/05y42nb95", affiliation_name: "Max Planck Society" });
   });
 
   test("getNodeText returns trimmed text for relative paths", () => {
