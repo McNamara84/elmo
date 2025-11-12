@@ -171,10 +171,10 @@ const MOCK_FUNDERS = [
 
 const MOCK_LABS = [
   {
-    id: 'lab-123',
+    identifier: 'lab-123',
     name: 'Sample Lab',
-    affiliation: 'GFZ German Research Centre for Geosciences',
-    rorid: 'https://ror.org/04abcd123',
+    affiliation_name: 'GFZ German Research Centre for Geosciences',
+    affiliation_ror: 'https://ror.org/04abcd123',
   },
 ];
 
