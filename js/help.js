@@ -1,4 +1,24 @@
 /**
+ * Displays the welcome modal when the page loads.
+ * The user must click "Continue" to proceed.
+ */
+document.addEventListener('DOMContentLoaded', function () {
+  const welcomeModal = document.getElementById('welcome-modal');
+  const closeButton = document.getElementById('close-welcome');
+
+  if (welcomeModal && closeButton) {
+    // Display banner when the user loads the page
+    welcomeModal.style.display = 'flex'; // Display modal in Flexbox style
+
+    // Function for closing the modal
+    closeButton.addEventListener('click', function () {
+      welcomeModal.style.display = 'none'; // Hide modal
+    });
+  }
+});
+
+
+/**
  * Handles the display and toggle of the "Help" feature.
  * Exposes functions via CommonJS for testing while still
  * initialising automatically in the browser environment.
