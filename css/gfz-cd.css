@@ -54,7 +54,7 @@
     }
 }
 
-.feedback-button.blink {
+/* .feedback-button.blink {
     animation: blink 8s infinite;
 }
 
@@ -82,6 +82,12 @@
 
 .multi-color-blink {
     animation: multi-color-blink 2s linear infinite;
+} */
+
+/* conference-button */
+.feedback-button.conference-mode {
+    background-color: #800080;
+    color: white;
 }
 
 .modal-dialog {
