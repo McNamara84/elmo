@@ -382,3 +382,52 @@ textarea.is-valid,
         font-weight: bold; /* Makes the text bold */
         color: #00589C;    /* Example of a text color */
     }
+
+
+/* These CSS classes are designed for a "Welcome" modal that contains a title, logos, and a button for user interaction. The modal overlays the screen, providing a semi-transparent background.*/
+
+.modal-overlay {
+    display: none; /* Initially hidden */
+    position: fixed; /* Fixed positioning */
+    top: 0;
+    left: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    justify-content: center; /* Centering */
+    align-items: center; /* Centering */
+    z-index: 1000; /* Display above other elements */
+}
+
+.modal-dialog-centered {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    justify-content: space-between; /* Space between elements */
+    background-color: white; /* Background color of the modal */
+    padding: 40px; /* Increased padding */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Shadow for a 3D effect */
+    max-width: 1000px; /* Increased max width */
+    width: 90%; /* Full width within the container */
+    min-height: 400px; /* Minimum height of the modal */
+}
+
+h2 {
+    margin: 0; /* Remove margin for a tight layout */
+}
+
+.logo-container {
+    display: flex; /* Flexbox for logos */
+    justify-content: center; /* Center logos */
+    margin: 20px 0; /* Vertical spacing */
+}
+
+.logo-container img {
+    width: 150px; /* Size of logos */
+    margin: 0 10px; /* Spacing between logos */
+}
+
+.button-container {
+    display: flex; /* Flexbox for button container */
+    justify-content: flex-end; /* Align button to the right */
+}
