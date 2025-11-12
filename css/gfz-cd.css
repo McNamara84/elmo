@@ -86,8 +86,8 @@
 
 /* conference-button */
 .feedback-button.conference-mode {
-    background-color: #800080;
-    color: white;
+    background-color: #800080 !important;
+    color: white
 }
 
 .modal-dialog {
