@@ -30,7 +30,13 @@ function saveResourceInformationAndRights($connection, $postData)
     // Iterates over $requiredArrayFields to check if each array field is present and not empty in $postData.
     try {
         // Validate required fields
-        $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language', 'Rights'];
+        $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
+        
+        // Only require Rights field if license form group is shown
+        global $showLicense;
+        if ($showLicense) {
+            $requiredFields[] = 'Rights';
+        }
         $requiredArrayFields = ['title', 'titleType'];
 
         if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
@@ -80,18 +86,20 @@ function prepareResourceData($postData)
     // If showLicense is false and no Rights value is provided, use CC-BY 4.0 (rights_id = 1)
     $rightsId = isset($postData['Rights']) ? (int) $postData['Rights'] : null;
     
-    if ($rightsId === null && !$showLicense) {
+    if ($rightsId === null && !$showLicense && $showGGMsProperties) {
         // Query the database to find CC-BY 4.0 rights_id
         $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = 'CC-BY-4.0'");
         $stmt->execute();
         $result = $stmt->get_result();
         if ($row = $result->fetch_assoc()) {
-            $rightsId = (int) $row['rights_id'];
+            $rightsId = $row['rights_id'];
         } else {
             // Fallback to 1 if CC-BY-4.0 not found (should be ID 1 based on install.php)
             $rightsId = 1;
             elmo_log("fallback in saving rights: default value CC-BY-4.0 not found, using ID 1");
         }
+    } else {
+        $rightsId = (int) $postData['Rights'];
     }
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
@@ -103,7 +111,7 @@ function prepareResourceData($postData)
         'version' => isset($postData['version']) && trim($postData['version']) !== ''
             ? (float) $postData['version'] : null,
         'language' => (int) $postData['language'],
-        'rights' => (int) $postData['Rights']
+        'rights' => $rightsId
     ];
 }
 
