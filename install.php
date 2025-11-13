@@ -93,9 +93,7 @@ function dropTables($connection)
         'Ellipsoidal_Parameters',
         'Resource_has_Ellipsoidal_Parameters',
         'Data_Sources',
-        'Resource_has_Data_Sources',
-        'Data_Source_has_Thesaurus_Keyword',
-        'Data_Source_has_Related_Work'
+        'Resource_has_Data_Sources'
     ];
     // Disable foreign key checks to allow dropping tables with dependencies
     mysqli_query($connection, "SET FOREIGN_KEY_CHECKS = 0;");
