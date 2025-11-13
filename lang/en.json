@@ -290,5 +290,20 @@
             "normal": "normal",
             "low": "low"
         }
-    }
+    },
+       "welcome": {
+            "title": "Welcome to ELMO 😊",
+            "paragraph1": "ELMO is the new metadata editor from GFZ Data Services, which records metadata for data publications in accordance with modern standards. This specific version was developed to describe data derived from laboratories. It includes detailed information (controlled vocabularies) that were jointly developed with the network Multi-scale Laboratories of the European Plate Observing System (EPOS ERIC).",
+            "paragraph2": "ELMO is not only a new web interface, but also contains many revised functionalities that increase the quality of metadata and the FAIRness of the data describing it, while at the same time simplifying the entry of information for researchers. For example, authors' names and institutions can be automatically entered into the form by entering the ORCID (provided that the relevant information is set to ‘public’ in the ORCID profiles – see <a href='https://e-docs.geo-leo.de/entities/publication/4e7d3804-6793-4189-8ca9-2eba9f40b99f' target='_blank'>FID GEO latest: Recommendations for using ORCID iD</a>).",
+            "paragraph3": "In addition, affiliations are selected from a drop-down menu that is linked to the ROR Registry, thus enabling unique identifiers for institutes and research funders in machine-readable form.",
+            "paragraph4": "ELMO is also available in dark and light mode and, thanks to its modular structure, is highly flexible and expandable.",
+            "paragraph5": "ELMO draws on controlled vocabularies from established sources such as GCMD Science Keywords, GCMD Platforms, and GCMD Instruments. Regular automatic updates ensure that these vocabularies are always up to date, guaranteeing the long-term quality and consistency of the metadata.",
+            "paragraph6": "The application supports multilingualism through a flexible language file system – new languages can be easily added and are automatically recognised by ELMO.",
+            "paragraph7": "Practical features such as drag-and-drop sorting of authors, marking contact persons via toggle switch, and an autosave function make working with the editor intuitive and efficient.",
+            "paragraph8": "ELMO exports metadata in valid XML files in accordance with DataCite and ISO 19115 standards – a decisive advantage for interoperability in international research contexts.",
+            "paragraph9": "Please provide your information and click the \"Submit\" button to send your metadata to the curators of GFZ Data Services. Additionally, we recommend saving a copy of the metadata on your computer for your records.",
+            "paragraph10": "For further guidance, please refer to our <a href='https://dataservices.gfz-potsdam.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
+            "button": "Continue"
+        }
+
 }

@@ -1,23 +1,29 @@
 <!-- Welcome Modal Overlay -->
 <div id="welcome-modal" class="modal-overlay">
   <div class="modal-dialog-centered text-center modal-content-box">
-    <h2 class="mb-3">Welcome to ELMO 😊</h2>
+    <h2 class="mb-3" data-translate="welcome.title"></h2>
+
     <p>
-      Welcome to ELMO – the new online metadata editor for GFZ Data Services.<br>
-      Please provide your information and click the "Submit" button to send your metadata to the curators of GFZ Data
-      Services. Additionally, we recommend saving a copy of the metadata on your computer for your records.<br><br>
-      We also recommend that you save a metadata version on your computer.<br>
-      For further guidance, please refer to our 
-      <a href="https://dataservices.gfz-potsdam.de/web/publish-data/publication-instructions" target="_blank"
-        rel="noopener noreferrer">Publication Instructions</a>.
+      <span data-translate="welcome.paragraph1"></span><br><br>
+      <span data-translate="welcome.paragraph2"></span><br><br>
+      <span data-translate="welcome.paragraph3"></span><br><br>
+      <span data-translate="welcome.paragraph4"></span><br><br>
+      <span data-translate="welcome.paragraph5"></span><br><br>
+      <span data-translate="welcome.paragraph6"></span><br><br>
+      <span data-translate="welcome.paragraph7"></span><br><br>
+      <span data-translate="welcome.paragraph8"></span><br><br>
+      <span data-translate="welcome.paragraph9"></span><br><br>
+      <span data-translate="welcome.paragraph10"></span>
     </p>
-        <div class="logo-container">
-        <?php echo $logos_html ?? ''; ?>
-        </div>
-        <div class="button-container">
-            <button id="close-welcome" class="btn btn-primary mt-3">Continue</button>
-        </div>
+
+    <div class="logo-container">
+      <?php echo $logos_html ?? ''; ?>
     </div>
+
+    <div class="button-container">
+      <button id="close-welcome" class="btn btn-primary mt-3" data-translate="welcome.button"></button>
+    </div>
+  </div>
 </div>
 
 <main id="main-content" class="container-fluid my-3 pb-5">
