@@ -5,6 +5,10 @@
 
     <p>
       <span data-translate="welcome.paragraph1"></span><br><br>
+      <!-- EXTRA TEXT (nur für MSL) -->
+      <?php if (!empty($welcomeExtraText)): ?>
+        <span data-translate="<?php echo $welcomeExtraText; ?>"></span><br><br>
+      <?php endif; ?>
       <span data-translate="welcome.paragraph2"></span><br><br>
       <span data-translate="welcome.paragraph3"></span><br><br>
       <span data-translate="welcome.paragraph4"></span><br><br>

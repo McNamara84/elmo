@@ -125,3 +125,5 @@ $logos_html = '
   <a href="https://dataservices.gfz-potsdam.de/web/" target="_blank" rel="noopener noreferrer"><img src="logos/logo-gfz-data-services.png" alt="GFZ Data Services Logo" class="logo"></a>
   <a href="https://epos-msl.uu.nl/" target="_blank" rel="noopener noreferrer"><img src="logos/MSL-logo.png" alt="MSL Logo" class="logo"></a>
 ';
+
+$welcomeExtraText = "welcome.paragraphMSL";
