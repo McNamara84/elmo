@@ -397,6 +397,8 @@ textarea.is-valid,
     justify-content: center; /* Centering */
     align-items: center; /* Centering */
     z-index: 1000; /* Display above other elements */
+    overflow-y: auto; /* Allow scrolling if modal content is too tall */
+    padding: 2rem; /* Small padding for smaller screens */
 }
 
 .modal-dialog-centered {
@@ -407,27 +409,47 @@ textarea.is-valid,
     padding: 40px; /* Increased padding */
     border-radius: 8px; /* Rounded corners */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Shadow for a 3D effect */
-    max-width: 1000px; /* Increased max width */
-    width: 90%; /* Full width within the container */
-    min-height: 400px; /* Minimum height of the modal */
+
+    /* --- Updated part below --- */
+    width: 80vw; /* Use 80% of viewport width for responsive scaling */
+    max-width: 1000px; /* Keep original max width limit */
+    max-height: 80vh; /* Prevent modal from becoming too tall */
+    height: auto; /* Let height adjust based on content */
+    overflow-y: auto; /* Scroll only modal content if necessary */
+    /* --- End of updated part --- */
 }
 
+/* Title section */
 h2 {
     margin: 0; /* Remove margin for a tight layout */
 }
 
+/* Logo container */
 .logo-container {
     display: flex; /* Flexbox for logos */
-    justify-content: center; /* Center logos */
+    justify-content: center; /* Center logos horizontally */
+    flex-wrap: wrap; /* Allow wrapping if there are many logos */
     margin: 20px 0; /* Vertical spacing */
+    gap: 1rem; /* Small gap between logos */
 }
 
+/* Individual logo images */
 .logo-container img {
-    width: 150px; /* Size of logos */
-    margin: 0 10px; /* Spacing between logos */
+    width: clamp(100px, 15vw, 150px); /* Responsive logo width */
+    height: auto; /* Keep aspect ratio */
 }
 
+/* Button container */
 .button-container {
     display: flex; /* Flexbox for button container */
     justify-content: flex-end; /* Align button to the right */
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .modal-dialog-centered {
+        width: 95vw; /* Use almost full width on small screens */
+        max-height: 90vh; /* Allow a bit more vertical space */
+        padding: 20px; /* Slightly smaller padding */
+    }
 }
