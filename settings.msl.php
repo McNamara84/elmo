@@ -47,6 +47,8 @@ $showSpatialTemporalCoverage = true;
 $showRelatedWork = true;
 // Show Funding Reference form group
 $showFundingReference = true;
+// Show license form group. if not shown defaults to CC-BY 4.0
+$showLicense = true;
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group

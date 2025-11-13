@@ -49,6 +49,8 @@ $showRelatedWork = true;
 $showFundingReference = true;
 
 $showAuthorInstitution = true;
+// Show license formgroup. if not shown defaults to CC-BY 4.0
+$showLicense = true;
 
 
 // SETTINGS FOR EPOS MSL (Defaults: ELMO Variant = false)
