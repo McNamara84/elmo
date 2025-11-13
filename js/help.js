@@ -1,20 +1,26 @@
 /**
- * Displays the welcome modal when the page loads.
+ * Displays the welcome modal only on first load of a browser session.
  * The user must click "Continue" to proceed.
  */
 document.addEventListener('DOMContentLoaded', function () {
   const welcomeModal = document.getElementById('welcome-modal');
   const closeButton = document.getElementById('close-welcome');
 
-  if (welcomeModal && closeButton) {
-    // Display banner when the user loads the page
-    welcomeModal.style.display = 'flex'; // Display modal in Flexbox style
+  if (!welcomeModal || !closeButton) return;
 
-    // Function for closing the modal
-    closeButton.addEventListener('click', function () {
-      welcomeModal.style.display = 'none'; // Hide modal
-    });
+  // Check if user has already seen the modal in this session
+  const hasSeenModal = sessionStorage.getItem('welcomeModalShown');
+
+  // Only show if not seen before
+  if (!hasSeenModal) {
+    welcomeModal.style.display = 'flex';
   }
+
+  // Close modal and remember for the session
+  closeButton.addEventListener('click', function () {
+    welcomeModal.style.display = 'none';
+    sessionStorage.setItem('welcomeModalShown', 'true');
+  });
 });
 
 
