@@ -290,5 +290,20 @@
             "normal": "normal",
             "low": "niedrig"
         }
+    },
+    "welcome": {
+        "title": "Willkommen bei ELMO 😊",
+        "paragraph1": "ELMO ist der neue Metadaten-Editor der GFZ Data Services, der Metadaten für Datenpublikationen gemäß modernen Standards erfasst.",
+        "paragraph2": "ELMO ist nicht nur eine neue Weboberfläche, sondern enthält auch zahlreiche überarbeitete Funktionen, die die Qualität der Metadaten und die FAIRness der zugehörigen Daten erhöhen – und gleichzeitig die Eingabeprozesse für Forschende vereinfachen. So können beispielsweise Autorennamen und zugehörige Institutionen automatisch anhand der ORCID ausgefüllt werden (sofern die entsprechenden Informationen im ORCID-Profil auf „öffentlich“ gesetzt sind – siehe <a href='https://e-docs.geo-leo.de/entities/publication/4e7d3804-6793-4189-8ca9-2eba9f40b99f' target='_blank'>FID GEO aktuell: Empfehlungen zur Nutzung der ORCID iD</a>).",
+        "paragraph3": "Institutionelle Zugehörigkeiten werden über ein Dropdown-Menü ausgewählt, das mit dem ROR-Register verknüpft ist und dadurch eindeutige Identifikatoren für Forschungseinrichtungen und Förderorganisationen in maschinenlesbarer Form bereitstellt.",
+        "paragraph4": "ELMO verfügt über ein hohes Maß an Barrierefreiheit und ist technisch gut auf die Umsetzung weiterer Accessibility-Funktionen vorbereitet. Zudem ist es sowohl im Dark- als auch im Light-Mode verfügbar und dank seiner modularen Struktur flexibel und erweiterbar.",
+        "paragraph5": "ELMO nutzt kontrollierte Vokabulare aus etablierten Quellen wie den GCMD Science Keywords, GCMD Platforms und GCMD Instruments. Regelmäßige automatische Aktualisierungen sorgen dafür, dass diese Vokabulare stets auf dem neuesten Stand sind und die langfristige Qualität und Konsistenz der Metadaten gewährleisten.",
+        "paragraph6": "Die Anwendung unterstützt Mehrsprachigkeit über ein flexibles Sprachdatei-System – neue Sprachen können einfach hinzugefügt werden und werden von ELMO automatisch erkannt.",
+        "paragraph7": "Praktische Funktionen wie Drag-and-Drop-Sortierung der Autor:innen, das Markieren von Kontaktpersonen per Toggle-Schalter sowie eine Autosave-Funktion machen die Arbeit mit dem Editor intuitiv und effizient.",
+        "paragraph8": "ELMO exportiert Metadaten in validen XML-Dateien gemäß den Standards DataCite und ISO 19115 - ein entscheidender Vorteil für die Interoperabilität in internationalen Forschungskontexten",
+        "paragraph9": "Bitte geben Sie Ihre Informationen ein und klicken Sie auf „Absenden“, um Ihre Metadaten an die Kurator:innen der GFZ Data Services zu übermitteln. Wir empfehlen außerdem, eine lokale Kopie der Metadaten für Ihre Unterlagen zu speichern.",
+        "paragraph10": "Weitere Hinweise finden Sie in unseren <a href='https://dataservices.gfz-potsdam.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publikationsrichtlinien</a>.",
+        "paragraphMSL": "Diese spezielle Version wurde entwickelt, um Daten aus Laboren zu beschreiben. Sie enthält detaillierte Informationen (kontrollierte Vokabulare), die gemeinsam mit dem Netzwerk der Multi-Scale Laboratories des European Plate Observing System (EPOS ERIC) entwickelt wurden.",
+        "button": "Weiter"
     }
 }
