@@ -54,6 +54,15 @@ function saveResourceInformationAndRights($connection, $postData)
             $resource_id = createNewResource($connection, $resourceData);
         }
 
+        // IMPORTANT: Always save titles after resource is created/updated
+        if (!$resource_id) {
+            return false;
+        }
+        
+        if (!saveTitles($connection, $resource_id, $postData['title'], $postData['titleType'])) {
+            return false;
+        }
+
         return $resource_id;
 
     } catch (Exception $e) {
@@ -225,6 +234,8 @@ function createNewResource($connection, $resourceData)
  */
 function saveTitles($connection, $resource_id, $titles, $titleTypes)
 {
+    error_log("saveTitles called with resource_id: $resource_id, title count: " . count($titles));
+    
     $uniqueTitles = [];
     for ($i = 0; $i < count($titles); $i++) {
         $key = $titles[$i] . '|' . $titleTypes[$i];
@@ -247,8 +258,10 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes)
             $resource_id
         );
         if (!$stmt->execute()) {
+            error_log("Failed to insert title: " . $stmt->error);
             return false;
         }
+        error_log("Successfully inserted title: " . $title['text']);
     }
 
     return true;
