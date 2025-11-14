@@ -26,11 +26,17 @@ require_once dirname(__FILE__) . '/../validation.php';
  */
 function saveResourceInformationAndRights($connection, $postData)
 {
-    // Iterates over $requiredFields to check if each field is present and not empty in $postData.
-    // Iterates over $requiredArrayFields to check if each array field is present and not empty in $postData.
+    global $showLicense;
+    
     try {
         // Validate required fields
-        $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language', 'Rights'];
+        $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
+        
+        // Only require Rights field if license form group is shown
+        if ($showLicense) {
+            $requiredFields[] = 'Rights';
+        }
+        
         $requiredArrayFields = ['title', 'titleType'];
 
         if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
@@ -65,6 +71,26 @@ function saveResourceInformationAndRights($connection, $postData)
  */
 function prepareResourceData($postData)
 {
+    global $showLicense, $connection, $showGGMsProperties;
+    
+    // If no Rights value is provided, default to CC-BY 4.0
+    $rightsId = isset($postData['Rights']) && !empty($postData['Rights']) ? (int) $postData['Rights'] : null;
+    
+    if ($rightsId === null) {
+        // Query the database to find CC-BY 4.0 rights_id
+        $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = 'CC-BY-4.0'");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $rightsId = (int) $row['rights_id'];
+        } else {
+            // Fallback to 1 if CC-BY-4.0 not found (should be ID 1 based on install.php)
+            $rightsId = 1;
+            error_log("Warning: CC-BY-4.0 license not found in database, using default ID 1");
+        }
+    } else {
+        $rightsId = (int) $postData['Rights'];
+    }
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
         'year' => (int) $postData['year'],
@@ -75,7 +101,7 @@ function prepareResourceData($postData)
         'version' => isset($postData['version']) && trim($postData['version']) !== ''
             ? (float) $postData['version'] : null,
         'language' => (int) $postData['language'],
-        'rights' => (int) $postData['Rights']
+        'rights' => (int) $rightsId
     ];
 }
 
