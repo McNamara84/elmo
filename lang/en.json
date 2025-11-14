@@ -270,7 +270,7 @@
         },
         "changelog": {
             "title": "Changelog",
-            "aboutText": "The ELMO Metadata Editor was developed in 2024 by students of the University of Applied Sciences Potsdam in cooperation with the German Research Centre for Geosciences and is released under the GNU General Public License, Version 2.",
+            "aboutText": "The foundations for the ELMO metadata editor were laid in 2024 by students at the University of Applied Sciences Potsdam in collaboration with the GFZ Helmholtz Centre for Geosciences Potsdam. The GFZ development team then continued to optimize it. The ELMO metadata editor is published under the GNU General Public License, Version 2.",
             "aboutHeading": "About ELMO - Enhanced Laboratory Metadata Organizer"
         },
         "save": {
