@@ -19,14 +19,8 @@ class ConcurrentRequestsTest extends DatabaseTestCase
     {
         parent::setUp();
         
-        // Create a REAL second database connection for concurrent operations
-        // Using the same credentials as the test database
-        $host = getenv('DB_HOST') ?: '127.0.0.1';
-        $username = getenv('DB_USER') ?: 'test_user';
-        $password = getenv('DB_PASSWORD') ?: 'test_password';
-        $database = 'mde2-msl-test';
-        
-        $this->connection2 = new \mysqli($host, $username, $password, $database);
+        // Create a REAL second database connection by reusing parent's connection logic
+        $this->connection2 = $this->setUpConnection();
         
         if ($this->connection2->connect_error) {
             $this->fail("Failed to create second database connection: " . $this->connection2->connect_error);
