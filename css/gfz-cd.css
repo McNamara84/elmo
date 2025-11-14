@@ -40,6 +40,8 @@
     z-index: 1000;
     font-size: 16px;
     transition: transform 0.5s ease-in-out;
+    background-color: #800080;
+    color: white !important;
 }
 
 @keyframes blink {
@@ -84,11 +86,6 @@
     animation: multi-color-blink 2s linear infinite;
 } */
 
-/* conference-button */
-.feedback-button.conference-mode {
-    background-color: #800080 !important;
-    color: white
-}
 
 .modal-dialog {
     max-width: 90vw;
