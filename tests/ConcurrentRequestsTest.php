@@ -19,10 +19,18 @@ class ConcurrentRequestsTest extends DatabaseTestCase
     {
         parent::setUp();
         
-        // Create a second database connection for concurrent operations
-        $this->connection2 = $this->connection;
-        $this->connection2->select_db('mde2-msl-test');
-
+        // Create a REAL second database connection for concurrent operations
+        // Using the same credentials as the test database
+        $host = getenv('DB_HOST') ?: '127.0.0.1';
+        $username = getenv('DB_USER') ?: 'test_user';
+        $password = getenv('DB_PASSWORD') ?: 'test_password';
+        $database = 'mde2-msl-test';
+        
+        $this->connection2 = new \mysqli($host, $username, $password, $database);
+        
+        if ($this->connection2->connect_error) {
+            $this->fail("Failed to create second database connection: " . $this->connection2->connect_error);
+        }
         // Prepare complete POST data for first submission
         $this->postData1 = [
             // Resource Information
@@ -112,7 +120,8 @@ class ConcurrentRequestsTest extends DatabaseTestCase
 
     protected function tearDown(): void
     {
-        if ($this->connection2) {
+        // Close only the second connection (not the shared test connection)
+        if ($this->connection2 && $this->connection2 instanceof \mysqli) {
             $this->connection2->close();
         }
         parent::tearDown();
