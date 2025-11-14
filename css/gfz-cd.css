@@ -381,71 +381,32 @@ textarea.is-valid,
     }
 
 
-/* These CSS classes are designed for a "Welcome" modal that contains a title, logos, and a button for user interaction. The modal overlays the screen, providing a semi-transparent background.*/
 
-.modal-overlay {
-    display: none; /* Initially hidden */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    justify-content: center; 
-    align-items: center;
-    z-index: 1000; /* Display above other elements */
-    overflow-y: auto;
-    padding: 2rem;
+.logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
-.modal-dialog-centered {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background-color: white;
-    padding: 40px;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-
-    /* --- Updated part below --- */
-    width: 80vw;
-    max-width: 1000px;
-    max-height: 80vh;
-    height: auto;
-    overflow-y: auto;
+.logo-center-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  pointer-events: auto;
 }
 
-/* Title section */
-h2 {
-    margin: 0; /* Remove margin for a tight layout */
+.logo-center-wrapper img {
+  pointer-events: none;
 }
 
-/* Logo container */
-.logo-container {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin: 20px 0;
-    gap: 1rem;
-}
-
-/* Individual logo images */
-.logo-container img {
-    width: clamp(100px, 15vw, 150px); 
-    height: auto;
-}
-
-/* Button container */
-.button-container {
-    display: flex; 
-    justify-content: flex-end; 
-}
-
-/* Responsive adjustments for smaller screens */
-@media (max-width: 768px) {
-    .modal-dialog-centered {
-        width: 95vw; 
-        max-height: 90vh; 
-        padding: 20px;
-    }
+@media (max-width: 767.98px) {
+  .logo,
+  .logo-center-wrapper {
+    display: none !important;
+  }
 }
