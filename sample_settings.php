@@ -119,10 +119,5 @@ function elmo_log($msg) {
     error_log('[ELMO save_data] ' . $msg);
 }
 
-// Logos for ELMO-GEN welcome screen
-$logos_html = '
-  <a href="https://www.gfz.de/" target="_blank" rel="noopener noreferrer"><img src="logos/logo-gfz.svg" alt="GFZ Logo" class="logo"></a>
-  <a href="https://dataservices.gfz-potsdam.de/web/" target="_blank" rel="noopener noreferrer"><img src="logos/logo-gfz-data-services.png" alt="GFZ Data Services Logo" class="logo"></a>
-';
 
-$welcomeExtraText = "";
+$msl_logo = '';
