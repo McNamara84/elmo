@@ -1,35 +1,3 @@
-<!-- Welcome Modal Overlay -->
-<div id="welcome-modal" class="modal-overlay">
-  <div class="modal-dialog-centered text-center modal-content-box">
-    <h2 class="mb-3" data-translate="welcome.title"></h2>
-
-    <p>
-      <span data-translate="welcome.paragraph1"></span><br><br>
-      <!-- EXTRA TEXT (nur für MSL) -->
-      <?php if (!empty($welcomeExtraText)): ?>
-        <span data-translate="<?php echo $welcomeExtraText; ?>"></span><br><br>
-      <?php endif; ?>
-      <span data-translate="welcome.paragraph2"></span><br><br>
-      <span data-translate="welcome.paragraph3"></span><br><br>
-      <span data-translate="welcome.paragraph4"></span><br><br>
-      <span data-translate="welcome.paragraph5"></span><br><br>
-      <span data-translate="welcome.paragraph6"></span><br><br>
-      <span data-translate="welcome.paragraph7"></span><br><br>
-      <span data-translate="welcome.paragraph8"></span><br><br>
-      <span data-translate="welcome.paragraph9"></span><br><br>
-      <span data-translate="welcome.paragraph10"></span>
-    </p>
-
-    <div class="logo-container">
-      <?php echo $logos_html ?? ''; ?>
-    </div>
-
-    <div class="button-container">
-      <button id="close-welcome" class="btn btn-primary mt-3" data-translate="welcome.button"></button>
-    </div>
-  </div>
-</div>
-
 <main id="main-content" class="container-fluid my-3 pb-5">
   <!-- Warning if JS is deactivated -->
   <noscript>
