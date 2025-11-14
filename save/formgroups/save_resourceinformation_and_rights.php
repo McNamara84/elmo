@@ -88,8 +88,6 @@ function prepareResourceData($postData)
             $rightsId = 1;
             error_log("Warning: CC-BY-4.0 license not found in database, using default ID 1");
         }
-    } else {
-        $rightsId = (int) $postData['Rights'];
     }
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
