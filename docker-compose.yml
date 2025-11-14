@@ -9,6 +9,7 @@ services:
       TZ: Europe/Berlin
     volumes:
       - db_data:/var/lib/mysql
+      - ./docker/db/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
     restart: unless-stopped
 
   web:
