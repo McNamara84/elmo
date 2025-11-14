@@ -22,7 +22,7 @@ abstract class DatabaseTestCase extends TestCase
      *
      * @return void
      */
-    protected function setUpConnection(): mysqli
+    protected function setUpConnection(): \mysqli
     {
         // Check if we're in GitHub Actions or GitLab CI
         $isCI = getenv('CI') !== false || getenv('GITHUB_ACTIONS') !== false;
