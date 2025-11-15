@@ -294,7 +294,9 @@ class AutosaveService {
         credentials: 'include'
       });
 
-      if (response.status === 204 || response.status === 404) {
+      if (response.status === 404) {
+        this.draftId = null;
+        this.removeStoredDraftId();  
         return;
       }
 
