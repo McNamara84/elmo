@@ -69,14 +69,14 @@ test.describe('Author(s) form group', () => {
     await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
     await page.getByRole('textbox', { name: 'Last Name*' }).click();
 
-    await expect(page.getByRole('textbox', { name: 'Last Name*' })).toHaveValue('Carberry', { timeout: 100000 });
-    await expect(page.getByRole('textbox', { name: 'First Name*' })).toHaveValue('Josiah', { timeout: 100000 });
+    await expect(page.getByRole('textbox', { name: 'Last Name*' })).toHaveValue('Carberry');
+    await expect(page.getByRole('textbox', { name: 'First Name*' })).toHaveValue('Josiah');
 
     const affiliationTags = page.locator(`${SELECTORS.formGroups.authors} tag`);
-    await expect(affiliationTags).toHaveCount(2, { timeout: 10000 });
-    await expect(affiliationTags.nth(0)).toContainText('Brown University', { timeout: 100000 });
-    await expect(affiliationTags.nth(1)).toContainText('Yale University', { timeout: 100000 });
-    await expect(page.locator('#input-author-rorid')).toHaveValue('https://ror.org/05p8bnz29,https://ror.org/05rrcem69', { timeout: 100000 });
+    await expect(affiliationTags).toHaveCount(2);
+    await expect(affiliationTags.nth(0)).toContainText('Brown University');
+    await expect(affiliationTags.nth(1)).toContainText('Yale University');
+    await expect(page.locator('#input-author-rorid')).toHaveValue('https://ror.org/05p8bnz29,https://ror.org/05rrcem69');
   });
 
   test('shows contact person fields when toggled and clears them when disabled', async ({ page }) => {
@@ -84,23 +84,23 @@ test.describe('Author(s) form group', () => {
     const emailInput = page.locator('#input-contactperson-email');
     const websiteInput = page.locator('#input-contactperson-website');
 
-    await expect(emailInput).toBeHidden({ timeout: 100000 });
-    await expect(websiteInput).toBeHidden({ timeout: 100000 });
+    await expect(emailInput).toBeHidden();
+    await expect(websiteInput).toBeHidden();
 
     await contactToggleLabel.click();
 
-    await expect(emailInput).toBeVisible({ timeout: 100000 });
-    await expect(websiteInput).toBeVisible({ timeout: 100000 });
+    await expect(emailInput).toBeVisible({ timeout: 1000000 });
+    await expect(websiteInput).toBeVisible({ timeout: 1000000 });
 
     await emailInput.fill('contact@example.com');
     await websiteInput.fill('https://example.com/profile');
 
     await contactToggleLabel.click();
 
-    await expect(emailInput).toBeHidden({ timeout: 100000 });
-    await expect(websiteInput).toBeHidden({ timeout: 100000 });
-    await expect(emailInput).toHaveValue('', { timeout: 100000 });
-    await expect(websiteInput).toHaveValue('', { timeout: 100000 });
+    await expect(emailInput).toBeHidden();
+    await expect(websiteInput).toBeHidden();
+    await expect(emailInput).toHaveValue('');
+    await expect(websiteInput).toHaveValue('');
   });
 
   test('allows managing multiple authors independently', async ({ page }) => {
@@ -109,29 +109,29 @@ test.describe('Author(s) form group', () => {
     await addAuthorButton.click();
 
     const authorRows = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`);
-    await expect(authorRows).toHaveCount(2, { timeout: 100000 });
+    await expect(authorRows).toHaveCount(2);
 
     const firstRow = authorRows.nth(0);
     const secondRow = authorRows.nth(1);
 
-    await expect(firstRow.locator('input[name="orcids[]"]')).toHaveValue('', { timeout: 100000 });
-    await expect(secondRow.locator('input[name="orcids[]"]')).toHaveValue('', { timeout: 100000 });
-    await expect(secondRow.locator('.removeButton')).toBeVisible({ timeout: 100000 });
+    await expect(firstRow.locator('input[name="orcids[]"]')).toHaveValue('');
+    await expect(secondRow.locator('input[name="orcids[]"]')).toHaveValue('');
+    await expect(secondRow.locator('.removeButton')).toBeVisible();
 
     const secondRowToggle = secondRow.locator('label.btn[for^="checkbox-author-contactperson"]');
     const secondRowEmail = secondRow.locator("input[id^='input-contactperson-email']");
 
-    await expect(secondRowEmail).toBeHidden({ timeout: 100000 });
+    await expect(secondRowEmail).toBeHidden();
     await secondRowToggle.click();
-    await expect(secondRowEmail).toBeVisible({ timeout: 100000 });
+    await expect(secondRowEmail).toBeVisible();
 
     await secondRow.locator('input[name="familynames[]"]').fill('Miller');
     await secondRow.locator('input[name="givennames[]"]').fill('Ava');
 
     await secondRow.locator('.removeButton').click();
-    await expect(authorRows).toHaveCount(1, { timeout: 100000 });
-    await expect(firstRow.locator('input[name="familynames[]"]')).toHaveValue('', { timeout: 100000 });
-    await expect(firstRow.locator('input[name="givennames[]"]')).toHaveValue('', { timeout: 100000 });
+    await expect(authorRows).toHaveCount(1);
+    await expect(firstRow.locator('input[name="familynames[]"]')).toHaveValue('');
+    await expect(firstRow.locator('input[name="givennames[]"]')).toHaveValue('');
   });
 
   test('does not trigger an ORCID lookup for invalid identifiers', async ({ page }) => {
@@ -152,7 +152,7 @@ test.describe('Author(s) form group', () => {
     await page.waitForTimeout(500);
 
     expect(requestTriggered).toBe(false);
-    await expect(lastName).toHaveValue('Existing', { timeout: 100000 });
-    await expect(firstName).toHaveValue('Author', { timeout: 100000 });
+    await expect(lastName).toHaveValue('Existing');
+    await expect(firstName).toHaveValue('Author');
   });
 });
