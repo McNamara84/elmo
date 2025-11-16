@@ -52,20 +52,6 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
     </a> -->
 
     <h1 class="visually-hidden">ELMO – GFZ Data Services' Metadata Editor 2.0</h1>
-    <a class="navbar-brand" href="#" id="headtitle" style="
-     position:absolute;
-     width:1px;
-     height:1px;
-     margin:-1px;
-     padding:0;
-     overflow:hidden;
-     clip:rect(0 0 0 0);
-     white-space:nowrap;
-     border:0;
-   ">
-  ELMO
-   </a>
-
     <a href="https://www.gfz.de/" target="_blank" rel="noopener noreferrer">
       <img src="logos/GFZ-logo.png" alt="GFZ Logo" class="logo logo-left">
     </a>
