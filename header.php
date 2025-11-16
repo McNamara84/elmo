@@ -122,8 +122,8 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
     </div>
   </header>
 
-  <!--  Subheader -->
-  <main>
+  <!-- Subheader -->
+  <section role="region" aria-label="Page subheader">
     <div class="bg-white border-bottom shadow-sm">
       <div class="container-fluid py-2 d-flex justify-content-between align-items-center">
         <span class="fs-5 fw-semibold text-dark">
@@ -132,4 +132,4 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
         <?php echo $msl_logo; ?>
       </div>
     </div>
-  </main>
+  </section>
