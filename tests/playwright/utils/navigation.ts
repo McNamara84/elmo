@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 import { SELECTORS } from './constants';
 
 export async function navigateToHome(page: Page) {
-  await page.goto('');
+  await page.goto('', { waitUntil: 'networkidle' });
 }
 
 export async function expectNavbarVisible(page: Page) {
