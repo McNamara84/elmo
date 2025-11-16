@@ -15,9 +15,9 @@ export async function completeMinimalDatasetForm(page: Page) {
     .getByRole('textbox')
     .fill('GFZ Helmholtz Centre for Geosciences');
 
-  await page.getByText('ContactPerson?').click();
+  await page.getByText('ContactPerson?').check();
 
-  const emailField = page.getByRole('textbox', { name: 'Email address*' });
+  const emailField = page.locator('input[name="cpEmail[]"]').first();
   await expect(emailField).toBeVisible();
   await emailField.fill('example@gmail.com');
 

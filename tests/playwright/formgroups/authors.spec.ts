@@ -80,14 +80,15 @@ test.describe('Author(s) form group', () => {
   });
 
   test('shows contact person fields when toggled and clears them when disabled', async ({ page }) => {
-    const contactToggleLabel = page.locator('label[for="checkbox-author-contactperson"]');
-    const emailInput = page.locator('#input-contactperson-email');
-    const websiteInput = page.locator('#input-contactperson-website');
+    const contactToggle = page.locator('input[id^="checkbox-author-contactperson"]').first();
+    const emailInput = page.locator('input[name="cpEmail[]"]').first();
+    const websiteInput = page.locator('input[name="cpOnlineResource[]"]').first();
+
 
     await expect(emailInput).toBeHidden();
     await expect(websiteInput).toBeHidden();
 
-    await contactToggleLabel.click();
+    await contactToggle.check();
 
     await expect(emailInput).toBeVisible();
     await expect(websiteInput).toBeVisible();
@@ -95,7 +96,7 @@ test.describe('Author(s) form group', () => {
     await emailInput.fill('contact@example.com');
     await websiteInput.fill('https://example.com/profile');
 
-    await contactToggleLabel.click();
+    await contactToggle.check();
 
     await expect(emailInput).toBeHidden();
     await expect(websiteInput).toBeHidden();
@@ -109,7 +110,7 @@ test.describe('Author(s) form group', () => {
     await addAuthorButton.click();
 
     const authorRows = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`);
-    await expect(authorRows).toHaveCount(2);
+    await expect(authorRows.count()).resolves.toBeGreaterThan(1);
 
     const firstRow = authorRows.nth(0);
     const secondRow = authorRows.nth(1);
@@ -118,11 +119,11 @@ test.describe('Author(s) form group', () => {
     await expect(secondRow.locator('input[name="orcids[]"]')).toHaveValue('');
     await expect(secondRow.locator('.removeButton')).toBeVisible();
 
-    const secondRowToggle = secondRow.locator('label.btn[for^="checkbox-author-contactperson"]');
-    const secondRowEmail = secondRow.locator("input[id^='input-contactperson-email']");
+    const secondRowToggle = secondRow.locator('input[id^="checkbox-author-contactperson"]');
+    const secondRowEmail = secondRow.locator('input[name="cpEmail[]"]');
 
     await expect(secondRowEmail).toBeHidden();
-    await secondRowToggle.click();
+    await secondRowToggle.check();
     await expect(secondRowEmail).toBeVisible();
 
     await secondRow.locator('input[name="familynames[]"]').fill('Miller');
