@@ -3,7 +3,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/playwright',
-  timeout: 100000,
+  timeout: 100000, 
+  expect: {
+    timeout: 15000,
+  },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -17,6 +20,8 @@ export default defineConfig({
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    actionTimeout: 15000,      // Timeout for Actions
+    navigationTimeout: 30000,  // Timeout for Navigations
   },
   projects: [
     {
