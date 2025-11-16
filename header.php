@@ -122,12 +122,14 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
     </div>
   </header>
 
-<!--  Subheader -->
-<div class="bg-white border-bottom shadow-sm">
-  <div class="container-fluid py-2 d-flex justify-content-between align-items-center">
-    <span class="fs-5 fw-semibold text-dark">
-      ELMO – GFZ Data Services' Metadata Editor 2.0
-    </span>
-    <?php echo $msl_logo; ?>
-  </div>
-</div>
+  <!--  Subheader -->
+  <main>
+    <div class="bg-white border-bottom shadow-sm">
+      <div class="container-fluid py-2 d-flex justify-content-between align-items-center">
+        <span class="fs-5 fw-semibold text-dark">
+          ELMO – GFZ Data Services' Metadata Editor 2.0
+        </span>
+        <?php echo $msl_logo; ?>
+      </div>
+    </div>
+  </main>
