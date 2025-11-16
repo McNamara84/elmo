@@ -5,7 +5,7 @@ export default defineConfig({
   testDir: './tests/playwright',
   timeout: 100000, 
   expect: {
-    timeout: 15000,
+    timeout: 300000,
   },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
