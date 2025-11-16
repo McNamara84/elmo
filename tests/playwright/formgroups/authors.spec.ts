@@ -73,7 +73,7 @@ test.describe('Author(s) form group', () => {
     await expect(page.getByRole('textbox', { name: 'First Name*' })).toHaveValue('Josiah');
 
     const affiliationTags = page.locator(`${SELECTORS.formGroups.authors} tag`);
-    await expect(affiliationTags).toHaveCount(2, { timeout: 1000000 });
+    await expect(affiliationTags).toHaveCount(2);
     await expect(affiliationTags.nth(0)).toContainText('Brown University');
     await expect(affiliationTags.nth(1)).toContainText('Yale University');
     await expect(page.locator('#input-author-rorid')).toHaveValue('https://ror.org/05p8bnz29,https://ror.org/05rrcem69');
