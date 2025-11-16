@@ -43,6 +43,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
 <body>
   <!-- Fixed Header -->
   <header class="navbar navbar-primary sticky-top bg-primary flex-md-nowrap p-0 shadow" role="banner">
+    <h1 class="visually-hidden">ELMO</h1>
     <!-- <h1 class="visually-hidden" data-translate="general.logoTitle">
       ELMO - Enhanced Laboratory Metadata Organizer 2.0
     </h1>
