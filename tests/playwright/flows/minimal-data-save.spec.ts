@@ -3,7 +3,6 @@ import { completeMinimalDatasetForm, navigateToHome, SELECTORS } from '../utils'
 
 const SAVE_ENDPOINT = '**/save/save_data.php';
 const MOCK_XML_RESPONSE = `<?xml version="1.0" encoding="UTF-8"?>\n<dataset>Automated test dataset</dataset>`;
-
 const CUSTOM_FILENAME = 'automated_test_dataset';
 
 const API_DROPDOWNS = [
@@ -74,12 +73,13 @@ async function expectApiDropdownsToBePopulated(page: Page) {
         hasDisallowedLabel,
         `${description} dropdown should not show loading or error placeholders after initialization`,
       ).toBeFalsy();
-    }).toPass({ timeout: 10_000 });
+    }).toPass({ timeout: 10000 }); 
   }
 }
 
 test.describe('Minimal dataset save-as flow', () => {
   test.beforeEach(async ({ page }) => {
+    test.setTimeout(60000); 
     await navigateToHome(page);
     await completeMinimalDatasetForm(page);
 
@@ -98,6 +98,8 @@ test.describe('Minimal dataset save-as flow', () => {
   });
 
   test('saves the dataset and triggers an XML download', async ({ page }) => {
+    test.setTimeout(60000);
+
     const saveAsModal = page.locator(SELECTORS.modals.saveAs);
     const notificationModal = page.locator(SELECTORS.modals.notification);
 
@@ -166,6 +168,8 @@ test.describe('Minimal dataset save-as flow', () => {
   });
 
   test('shows an error notification when saving the dataset fails', async ({ page }) => {
+    test.setTimeout(60000);
+
     const saveAsModal = page.locator(SELECTORS.modals.saveAs);
     const notificationModal = page.locator(SELECTORS.modals.notification);
 

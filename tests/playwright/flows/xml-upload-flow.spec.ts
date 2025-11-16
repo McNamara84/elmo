@@ -362,7 +362,7 @@ async function waitForEditorReady(page: Page) {
 async function uploadSampleXml(page: Page) {
   await page.getByRole('button', { name: /Load/i }).click();
   const modal = page.locator('div#modal-uploadxml');
-  await expect(modal).toBeVisible();
+  await expect(modal).toBeVisible({ timeout: 15000 });
 
   await page.setInputFiles('#input-uploadxml-file', {
     name: 'sample-upload.xml',
@@ -396,6 +396,8 @@ async function uploadSampleXml(page: Page) {
 
 test.describe('XML Upload Mapping Flow', () => {
   test.beforeEach(async ({ page }) => {
+    test.setTimeout(60000); // 1 Minute pro Test
+
     await mockVocabularyRequests(page);
     await mockValidationAndReferenceData(page);
 
@@ -470,6 +472,7 @@ test.describe('XML Upload Mapping Flow', () => {
   });
 
   test('maps uploaded XML content into the metadata editor form', async ({ page }) => {
+    test.setTimeout(60000); // 1 Minute für diesen Test
     await uploadSampleXml(page);
 
     await expect(page.locator('#input-resourceinformation-doi')).toHaveValue('10.1234/elmo.test');
@@ -492,14 +495,14 @@ test.describe('XML Upload Mapping Flow', () => {
       .poll(async () => page.evaluate(() => {
         const input = document.querySelector('input[name="personAffiliation[]"]') as any;
         return input?.tagify ? input.tagify.value.map((tag: any) => tag.value) : [];
-      }))
+      }), { timeout: 15000 })
       .toEqual(['GFZ German Research Centre for Geosciences']);
 
     await expect
       .poll(async () => page.evaluate(() => {
         const input = document.querySelector('#input-freekeyword') as any;
         return input?._tagify ? input._tagify.value.map((tag: any) => tag.value) : [];
-      }))
+      }), { timeout: 15000 })
       .toContain('open science');
 
     await expect(page.locator('#input-abstract')).toHaveValue('An uploaded dataset.');

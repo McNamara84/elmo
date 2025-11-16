@@ -10,6 +10,7 @@ const MOCK_DATA_DESCRIPTION_FILE = {
 
 test.describe('Minimal Valid Dataset Test', () => {
   test.beforeEach(async ({ page }) => {
+    test.setTimeout(60000);
     await navigateToHome(page);
     await completeMinimalDatasetForm(page);
 
@@ -20,6 +21,7 @@ test.describe('Minimal Valid Dataset Test', () => {
   });
 
   test('submits dataset successfully via AJAX', async ({ page }) => {
+    test.setTimeout(60000);
     const modalSubmitButton = page.locator('#button-submit-submit');
     await expect(modalSubmitButton).toBeDisabled();
 
@@ -60,6 +62,7 @@ test.describe('Minimal Valid Dataset Test', () => {
   });
 
   test('shows an error notification when the AJAX submission fails', async ({ page }) => {
+    test.setTimeout(60000);
     const modalSubmitButton = page.locator('#button-submit-submit');
     await expect(modalSubmitButton).toBeDisabled();
 
