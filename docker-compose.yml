@@ -20,6 +20,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
     depends_on:
