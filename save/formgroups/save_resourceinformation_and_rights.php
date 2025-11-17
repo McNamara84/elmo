@@ -81,22 +81,34 @@ function saveResourceInformationAndRights($connection, $postData)
 function prepareResourceData($postData)
 {
 
-    global $showLicense, $connection, $showGGMsProperties;
+    global $showLicense, $connection, $showGGMsProperties, $defaultLicense;
     
     // If showLicense is false and no Rights value is provided, use CC-BY 4.0 (rights_id = 1)
     $rightsId = isset($postData['Rights']) ? (int) $postData['Rights'] : null;
-    
+    // this part handles the assignment of license when the license form group is not shown
     if ($rightsId === null && !$showLicense) {
-        // Query the database to find CC-BY 4.0 rights_id
-        $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = 'CC-BY-4.0'");
+        // Query the database to find the default license provided in settings.php
+        $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ?");
+        $stmt->bind_param("s", $defaultLicense);
         $stmt->execute();
         $result = $stmt->get_result();
         if ($row = $result->fetch_assoc()) {
             $rightsId = $row['rights_id'];
         } else {
-            // Fallback to 1 if CC-BY-4.0 not found (should be ID 1 based on install.php)
-            $rightsId = 1;
-            elmo_log("fallback in saving rights: default value CC-BY-4.0 not found, using ID 1");
+            // Fallback: try to find CC-BY-4.0 if default license not found
+            $fallbackLicense = "CC-BY-4.0";
+            $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ?");
+            $stmt->bind_param("s", $fallbackLicense);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $rightsId = $row['rights_id'];
+                elmo_log("Default license '$defaultLicense' not found, using CC-BY-4.0 fallback");
+            } else {
+                // Final fallback to ID 1 if CC-BY-4.0 also not found
+                $rightsId = 1;
+                elmo_log("Neither default license '$defaultLicense' nor CC-BY-4.0 found, using hardcoded ID 1");
+            }
         }
     } else {
         $rightsId = (int) $postData['Rights'];
