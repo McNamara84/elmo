@@ -18,7 +18,7 @@ ob_start();
 require_once __DIR__ . '/settings.php';
 
 // Make global variables from settings.php available
-global $connection, $showGGMsProperties, $debugging_output;
+global $connection, $showGGMsProperties;
 global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
 global $xmlSubmitAddress;
 
@@ -304,18 +304,19 @@ try {
 } catch (Exception $e) {
     error_log("XML Submit Error: " . $e->getMessage());
     
-    // Backup: Save submission details to file if email fails
+    // Backup: Log submission details if email fails
     if ($resource_id !== false) {
-        $backupFile = '/var/www/html/xml_submit_backup.txt';
-        $backupEntry = "[" . date('Y-m-d H:i:s') . "] BACKUP XML SUBMISSION\n";
-        $backupEntry .= "Resource ID: " . $resource_id . "\n";
-        $backupEntry .= "Error: " . $e->getMessage() . "\n";
-        $backupEntry .= "Urgency: " . ($urgencyWeeks ?? 'not set') . "\n";
-        $backupEntry .= "Data URL: " . ($dataUrl ?: 'not provided') . "\n";
-        $backupEntry .= str_repeat("=", 80) . "\n\n";
-        
-        file_put_contents($backupFile, $backupEntry, FILE_APPEND | LOCK_EX);
-        error_log("XML Submit: Backup saved to {$backupFile}");
+        $urgencyText = $urgencyWeeks ?? 'not set';
+        $dataUrlText = $dataUrl ?: 'not provided';
+        $logMessage = "💁 FAILED XML SUBMISSION - ACTION REQUIRED \n" .
+                      "👀 Note: You can only see this message if front-end and back-end validation allowed the submission \n" .
+                      "==================================================\n" .
+                      "📄 Resource ID: {$resource_id}\n" .
+                      "⏰ Urgency: {$urgencyText}\n" .
+                      "🔗 Data URL: {$dataUrlText}\n" .
+                      "🚨 Error on submission: " . $e->getMessage() . "\n" .
+                      "==================================================";
+        error_log($logMessage);
     }
     
     // Clear any output buffers
@@ -327,7 +328,6 @@ try {
     echo json_encode([
         'success' => false,
         'message' => 'Fehler: ' . $e->getMessage(),
-        'debug' => $debugging_output
     ]);
 }
 

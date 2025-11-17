@@ -49,7 +49,8 @@ function clearInputFields() {
   
     // Reset existing laboratories
     $('#group-originatinglaboratory .row[data-laboratory-row]').not(':first').remove();
-    $('#group-originatinglaboratory .row[data-laboratory-row]:first input').val('');
+    $('#group-originatinglaboratory .row[data-laboratory-row]:first select').prop('selectedIndex', 0);
+    $('#group-originatinglaboratory .row[data-laboratory-row]:first input[type="hidden"]').val('');
   
     // Clear Contributor Person 
     $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();

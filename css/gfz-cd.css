@@ -40,6 +40,8 @@
     z-index: 1000;
     font-size: 16px;
     transition: transform 0.5s ease-in-out;
+    background-color: #800080;
+    color: white !important;
 }
 
 @keyframes blink {
@@ -54,7 +56,7 @@
     }
 }
 
-.feedback-button.blink {
+/* .feedback-button.blink {
     animation: blink 8s infinite;
 }
 
@@ -82,7 +84,8 @@
 
 .multi-color-blink {
     animation: multi-color-blink 2s linear infinite;
-}
+} */
+
 
 .modal-dialog {
     max-width: 90vw;
@@ -370,4 +373,40 @@ textarea.is-valid,
   border-color: #198754 !important;  /* Green border */
   box-shadow: none !important;       /* No shadow when not focused */
   background-image: none !important; /* Remove any default background icons/images */
+}
+
+.label-bold {
+        font-weight: bold; /* Makes the text bold */
+        color: #00589C;    /* Example of a text color */
+    }
+
+
+
+.logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-center-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.logo-center-wrapper img {
+  pointer-events: none;
+}
+
+@media (max-width: 767.98px) {
+  .logo,
+  .logo-center-wrapper {
+    display: none !important;
+  }
 }

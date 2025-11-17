@@ -55,3 +55,6 @@ config.local.*
 # Ensure essential files are not ignored
 !api/
 !save/
+
+
+xml_submit_backup.txt

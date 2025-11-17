@@ -45,12 +45,26 @@
             </div>
             <div class="modal-body d-flex">
                 <!-- Left Side: Keyword Selection Tree -->
-                <div id="panel-mslkeyword-thesaurus" class="w-50 pe-3 border-end">
-                    <label for="input-mslkeyword-thesaurussearch" class="visually-hidden">Search for keywords</label>
+                <div class="w-50 pe-3 border-end d-flex flex-column">
                     <input type="text" class="form-control mb-3" id="input-mslkeyword-thesaurussearch"
-                        placeholder="Search for keywords..." data-translate="keywords.searchPlaceholder"
-                        aria-label="Search for keywords">
-                    <div id="jstree-mslkeyword"></div>
+                        placeholder="Search for keywords..." aria-label="Search for keywords">
+
+
+                    <!-- General Keywords -->
+                    <div class="mb-3">
+                        <label for="input-mslkeyword-thesaurussearch-general" class="form-label label-bold">General
+                            Keywords</label>
+                        <div id="jstree-mslkeyword-general"></div>
+                    </div>
+
+                    <!-- Domain Specific Keywords -->
+                    <div>
+                        <label for="input-mslkeyword-thesaurussearch-domain" class="form-label label-bold">Domain
+                            Specific
+                            Keywords</label>
+                        <div id="jstree-mslkeyword-domain"></div>
+                    </div>
+
                 </div>
 
                 <!-- Right Side: Selected Keywords -->
@@ -58,7 +72,7 @@
                     <h6 data-translate="keywords.selectedKeywords">Selected Keywords</h6>
                     <ul id="selected-keywords-msl" class="list-group">
                         <!-- Selected keywords will appear here dynamically -->
-                    </ul>                    
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">

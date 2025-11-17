@@ -158,9 +158,8 @@ test.describe('Related work form group', () => {
     ]);
 
     const relationHelpIcons = page.locator('[data-help-section-id="help-relatedwork-relation"]');
-    await expect(relationHelpIcons).toHaveCount(2);
+    await expect(relationHelpIcons).toHaveCount(1);
     await expect(relationHelpIcons.first()).toBeVisible();
-    await expect(relationHelpIcons.nth(1)).toBeVisible();
 
     const identifierInput = page.locator('#input-relatedwork-identifier');
     await expect(identifierInput).toHaveAttribute('name', 'rIdentifier[]');

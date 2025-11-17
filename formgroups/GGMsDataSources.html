@@ -12,7 +12,7 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <select class="form-select input-with-help"
-                aria-label="Default select example" id="input-datasource-type" name="datasource_type[]" required>
+                id="input-datasource-type" name="datasource_type[]" required>
                 <!-- Satellite will be the default value -->
                 <option value="S" selected>Satellite</option>
                 <option value="G">Ground data</option>
@@ -63,7 +63,7 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                name="dIdentifier[]" />
+                name="dIdentifier[]" id="input-datasource-identifier"/>
               <label for="input-datasource-identifier" data-translate="dataSources.identifier">Identifier</label>
               <div class="invalid-feedback" data-translate="dataSources.identifierInvalid">Please enter a valid
                 identifier.</div>
@@ -79,7 +79,7 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <select class="form-select input-with-help input-right-no-round-corners"
-                aria-label="Identifier dropdown field" id="input-datasource-identifiertype" name="dIdentifierType[]">
+                id="input-datasource-identifiertype" name="dIdentifierType[]">
               </select>
               <label for="input-datasource-identifiertype"
                 data-translate="dataSources.identifierType">Identifier type</label>
@@ -101,7 +101,7 @@
           </div>
         </div>
         <!-- Description (free text) -->
-        <div class="col-12 col-sm-4 col-md-5 col-lg-5 p-1 visibility-datasources-basic">
+        <div class="col-10 col-sm-4 col-md-5 col-lg-5 p-1 visibility-datasources-basic">
           <div class="input-group">
             <div class="form-floating">
               <textarea class="form-control"
@@ -116,13 +116,13 @@
             <div class="form-floating">
               <div class="input-group has-validation">
                 <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                  id="input-datasource-platforms" name="satellite_platform[]" />
+                  id="input-datasource-platforms" name="satellite_platform[]" aria-label="GCMD Platforms keywords"/>
                 <span class="input-group-text"><i class="bi bi-question-circle-fill"
                     data-help-section-id="help-gcmd-platforms-keyword" aria-hidden="true"></i></span>
               </div>
             </div>
             <div class="col-auto p-2">
-              <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" aria-label="Open-search-modal"
                 data-bs-target="#modal-platforms-datasource" id="button-datasource-platforms" aria-hidden="true">
                 <i class="bi bi-diagram-3" aria-hidden="true"></i>
               </button>

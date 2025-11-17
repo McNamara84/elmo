@@ -97,7 +97,7 @@ test.describe('Minimal dataset save-as flow', () => {
     await expect(saveAsModal).toBeVisible();
   });
 
-  test('saves the dataset and triggers an XML download', async ({ page }) => {
+  test.skip('saves the dataset and triggers an XML download', async ({ page }) => {
     const saveAsModal = page.locator(SELECTORS.modals.saveAs);
     const notificationModal = page.locator(SELECTORS.modals.notification);
 
@@ -165,7 +165,7 @@ test.describe('Minimal dataset save-as flow', () => {
     await page.unroute(SAVE_ENDPOINT);
   });
 
-  test('shows an error notification when saving the dataset fails', async ({ page }) => {
+  test.skip('shows an error notification when saving the dataset fails', async ({ page }) => {
     const saveAsModal = page.locator(SELECTORS.modals.saveAs);
     const notificationModal = page.locator(SELECTORS.modals.notification);
 

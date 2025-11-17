@@ -51,13 +51,15 @@ function updateErrorHandlingVisibility() {
     if (errorsValue === 'calibrated') {
         // Show error handling field and adjust widths
         errorHandlingField.show().attr('aria-hidden', 'false');
-        errorHandlingInput.attr('required', 'required');
+        errorHandlingInput.attr("required", "");
+        errorHandlingInput.attr("pattern", ".*\\S.*"); // disallow only spaces input
         // Adjust errors field to take less space when error handling is visible
         errorsField.removeClass('col-lg-6').addClass('col-lg-2');
     } else {
         // Hide error handling field and adjust widths
         errorHandlingField.hide().attr('aria-hidden', 'true');
         errorHandlingInput.removeAttr('required');
+        errorHandlingInput.removeAttr('pattern');
         // Expand errors field to take more space when error handling is hidden
         errorsField.removeClass('col-lg-2').addClass('col-lg-6');
         // Clear the error handling field value when hidden
@@ -170,24 +172,6 @@ $(document).ready(function() {
     // Also listen for when the math representation dropdown is populated
     $(document).on('change', '#input-mathematical-representation', function() {
         updateReferenceSystemVisibility();
-    });
-    
-    // Initial check
-    const errorsSelect = $('#input-errors');
-    const errorHandlingApproachCol = $('#input-error-handling-approach').closest('.col-12');
-    
-    // Hide error handling approach field initially if "Choose..." is selected
-    if (errorsSelect.val() === 'calibrated') {
-        errorHandlingApproachCol.show().attr('aria-hidden', 'false');
-    } else {
-        errorHandlingApproachCol.hide().attr('aria-hidden', 'true');
-    }
-    
-    // Watch for changes on the errors dropdown
-    errorsSelect.on('change', function() {
-        const errorsValue = $(this).val();
-        const shouldShow = errorsValue === 'calibrated';
-        errorHandlingApproachCol.toggle(shouldShow).attr('aria-hidden', !shouldShow);
     });
 });
 
