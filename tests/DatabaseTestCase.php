@@ -108,12 +108,7 @@ protected function setUpConnection(): \mysqli
 
         // Set up database connection
         $this->connection = $this->setUpConnection();
-        
-        // Load test database setup
-        require_once __DIR__ . '/TestDatabaseSetup.php';
 
-        // Setup test database structure and lookup data
-        setupTestDatabase($this->connection);
     }
 
     /**
