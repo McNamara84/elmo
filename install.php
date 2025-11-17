@@ -21,15 +21,16 @@ if (!defined('INCLUDED_FROM_TEST')) {
         ]));
     }
     require_once $settingsPath;
+    // Check database connection. Assuming that the test methods take care of passing the connection.
+    if (!isset($connection) || !$connection) {
+        die(json_encode([
+            'status' => 'error',
+            'message' => 'Error: Database connection could not be established. Please check settings.php and database availability.'
+        ]));
+    }
 }
 
-// Check database connection
-if (!isset($connection) || !$connection) {
-    die(json_encode([
-        'status' => 'error',
-        'message' => 'Error: Database connection could not be established. Please check settings.php and database availability.'
-    ]));
-}
+
 
 /**
  * Drops all existing tables in the database.
