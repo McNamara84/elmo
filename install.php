@@ -1230,6 +1230,14 @@ function processInstallation($connection, $action): array
 // Handle AJAX requests
 if (isset($_POST['action'])) {
     header('Content-Type: application/json');
+    // Ensure connection exists
+    if (!isset($connection)) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Database connection not available.'
+        ]);
+        exit(1);
+    }
     $result = processInstallation($connection, $_POST['action']);
     echo json_encode($result);
     exit;
@@ -1238,6 +1246,11 @@ if (isset($_POST['action'])) {
 // Handle CLI requests
 if (php_sapi_name() === 'cli' && isset($argc) && $argc >= 2) {
     $action = $argv[1] ?? 'basic';
+    // Ensure connection exists
+    if (!isset($connection)) {
+        fwrite(STDERR, "Error: Database connection not available." . PHP_EOL);
+        exit(1);
+    }
     $result = processInstallation($connection, $action);
     fwrite(STDOUT, $result['message'] . PHP_EOL);
     exit($result['status'] === 'success' ? 0 : 1);
