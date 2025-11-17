@@ -1236,7 +1236,7 @@ if (isset($_POST['action'])) {
 }
 
 // Handle CLI requests
-if (php_sapi_name() === 'cli' && $argc >= 2) {
+if (php_sapi_name() === 'cli' && isset($argc) && $argc >= 2) {
     $action = $argv[1] ?? 'basic';
     $result = processInstallation($connection, $action);
     fwrite(STDOUT, $result['message'] . PHP_EOL);

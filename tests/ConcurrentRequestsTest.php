@@ -19,8 +19,25 @@ class ConcurrentRequestsTest extends DatabaseTestCase
     {
         parent::setUp();
         
-        // Create a REAL second database connection by reusing parent's connection logic
-        $this->connection2 = $this->setUpConnection();
+        // Create a REAL second database connection using the same logic as DatabaseTestCase
+        $isCI = getenv('CI') !== false || getenv('GITHUB_ACTIONS') !== false;
+        $dbname = 'mde2-msl-test';
+        
+        if ($isCI) {
+            // GitHub Actions / GitLab CI: use test_user credentials
+            $host = '127.0.0.1';
+            $username = 'test_user';
+            $password = 'test_password';
+            
+            $this->connection2 = new \mysqli($host, $username, $password, $dbname);
+        } else {
+            // Local Docker development: use elmo user
+            $host = getenv('DB_HOST') ?: 'db';
+            $username = getenv('DB_USER') ?: 'elmo';
+            $password = getenv('DB_PASSWORD') ?: 'elmo';
+            
+            $this->connection2 = new \mysqli($host, $username, $password, $dbname);
+        }
         
         if ($this->connection2->connect_error) {
             $this->fail("Failed to create second database connection: " . $this->connection2->connect_error);
