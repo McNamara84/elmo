@@ -12,19 +12,25 @@ use PHPUnit\Framework\TestCase;
 abstract class DatabaseTestCase extends TestCase
 {
     /**
-     * @var \mysqli Database connection resource.
+     * @var \mysqli|null Shared database connection across all tests in a class.
+     */
+    protected static $sharedConnection = null;
+
+    /**
+     * @var \mysqli Database connection resource for instance use.
      */
     protected $connection;
 
     /**
-     * Set up database connection for testing.
-     * Handles database creation, permissions, structure initialization, and lookup data.
-     * Uses test_user credentials for CI, elmo credentials for local Docker.
+     * Set up database connection once for all tests in the class.
+     * This runs before any test methods.
      *
-     * @return \mysqli Fully initialized database connection ready for testing
+     * @return void
      */
-    protected function setUpConnection(): \mysqli
+    public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
+        
         // Check if we're in GitHub Actions or GitLab CI
         $isCI = getenv('CI') !== false || getenv('GITHUB_ACTIONS') !== false;
         
@@ -40,7 +46,7 @@ abstract class DatabaseTestCase extends TestCase
             $conn = new \mysqli($host, $username, $password);
             
             if ($conn->connect_error) {
-                $this->fail("Failed to connect to database in CI: " . $conn->connect_error);
+                throw new \RuntimeException("Failed to connect to database in CI: " . $conn->connect_error);
             }
             
             // Create test database if it doesn't exist
@@ -58,13 +64,13 @@ abstract class DatabaseTestCase extends TestCase
             $rootConn = new \mysqli($host, 'root', $rootPassword);
             
             if ($rootConn->connect_error) {
-                $this->fail("Failed to connect as root: " . $rootConn->connect_error);
+                throw new \RuntimeException("Failed to connect as root: " . $rootConn->connect_error);
             }
             
             // Create test database if it doesn't exist
             $result = $rootConn->query("CREATE DATABASE IF NOT EXISTS `{$dbname}`");
             if (!$result) {
-                $this->fail("Failed to create database {$dbname}: " . $rootConn->error);
+                throw new \RuntimeException("Failed to create database {$dbname}: " . $rootConn->error);
             }
             
             // Grant full privileges to elmo user on test database
@@ -76,28 +82,33 @@ abstract class DatabaseTestCase extends TestCase
             $conn = new \mysqli($host, $username, $password, $dbname);
             
             if ($conn->connect_error) {
-                $this->fail("Failed to connect as {$username} to {$dbname}: " . $conn->connect_error);
+                throw new \RuntimeException("Failed to connect as {$username} to {$dbname}: " . $conn->connect_error);
             }
         }
         
+        // Store the shared connection
+        self::$sharedConnection = $conn;
+        
         // At this point, connection is established to mde2-msl-test database
         // Now populate with structure and lookup data
+        
+        // Define constant to prevent install.php from requiring settings.php
+        if (!defined('INCLUDED_FROM_TEST')) {
+            define('INCLUDED_FROM_TEST', true);
+        }
         require_once __DIR__ . '/../install.php';
         
         // Drop existing tables to ensure clean state
-        dropTables($conn);
+        dropTables(self::$sharedConnection);
         
         // Create database structure
-        $result = createDatabaseStructure($conn);
+        $result = createDatabaseStructure(self::$sharedConnection);
         if ($result['status'] === 'error') {
-            $this->fail("Failed to create database structure: " . $result['message']);
+            throw new \RuntimeException("Failed to create database structure: " . $result['message']);
         }
         
         // Insert lookup data
-        insertLookupData($conn);
-        
-        // Connection is now hot and ready!
-        return $conn;
+        insertLookupData(self::$sharedConnection);
     }
 
     /**
@@ -109,9 +120,8 @@ abstract class DatabaseTestCase extends TestCase
     {
         parent::setUp();
 
-        // Set up database connection
-        $this->connection = $this->setUpConnection();
-
+        // Use the shared connection
+        $this->connection = self::$sharedConnection;
     }
 
     /**
@@ -123,6 +133,20 @@ abstract class DatabaseTestCase extends TestCase
     {
         $this->cleanupTestData();
         parent::tearDown();
+    }
+
+    /**
+     * Close the database connection after all tests in the class.
+     *
+     * @return void
+     */
+    public static function tearDownAfterClass(): void
+    {
+        if (self::$sharedConnection !== null) {
+            self::$sharedConnection->close();
+            self::$sharedConnection = null;
+        }
+        parent::tearDownAfterClass();
     }
 
     /**
