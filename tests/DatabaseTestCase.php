@@ -54,20 +54,20 @@ protected function setUpConnection(): \mysqli
         $username = getenv('DB_USER') ?: 'elmo';
         $password = getenv('DB_PASSWORD') ?: 'elmo';
         
-        // First, connect as root to ensure database exists and grant permissions
-        $rootConn = new \mysqli($host, 'root', $rootPassword);
+        // Connect as the main user without selecting the database initially
+        $conn = new \mysqli($host, $username, $password);
         
-        if ($rootConn->connect_error) {
-            $this->fail("Failed to connect as root: " . $rootConn->connect_error);
+        if ($conn->connect_error) {
+            $this->fail("Failed to connect as {$username}: " . $conn->connect_error);
         }
         
         // Create test database if it doesn't exist
-        $rootConn->query("CREATE DATABASE IF NOT EXISTS `{$dbname}`");
+        $conn->query("CREATE DATABASE IF NOT EXISTS `{$dbname}`");
         
         // Grant full privileges to elmo user on test database
-        $rootConn->query("GRANT ALL PRIVILEGES ON `{$dbname}`.* TO '{$username}'@'%'");
-        $rootConn->query("FLUSH PRIVILEGES");
-        $rootConn->close();
+        $conn->query("GRANT ALL PRIVILEGES ON `{$dbname}`.* TO '{$username}'@'%'");
+        $conn->query("FLUSH PRIVILEGES");
+        $conn->close();
         
         // Now connect as elmo user to the test database
         $conn = new \mysqli($host, $username, $password, $dbname);
