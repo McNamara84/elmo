@@ -86,7 +86,7 @@ function prepareResourceData($postData)
     // If showLicense is false and no Rights value is provided, use CC-BY 4.0 (rights_id = 1)
     $rightsId = isset($postData['Rights']) ? (int) $postData['Rights'] : null;
     
-    if ($rightsId === null && !$showLicense && $showGGMsProperties) {
+    if ($rightsId === null && !$showLicense) {
         // Query the database to find CC-BY 4.0 rights_id
         $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = 'CC-BY-4.0'");
         $stmt->execute();
