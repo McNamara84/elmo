@@ -33,7 +33,7 @@ test.describe('Navbar Dropdown Tests', () => {
     await expect(page.locator('#buttonPrivacy')).toBeVisible();
     
     // Close Help dropdown by clicking elsewhere (navbar brand)
-    await page.locator('.navbar-brand').click();
+    await page.locator('.logo-left').click();
     
     // Wait for Help dropdown to close
     await expect(page.locator(`${SELECTORS.navigation.helpToggle} + ul.dropdown-menu.show`)).not.toBeVisible({ timeout: 2000 });
@@ -60,7 +60,7 @@ test.describe('Navbar Dropdown Tests', () => {
     await expect(page.locator('[data-bs-theme-value="dark"]')).toBeVisible();
     
     // Close Mode dropdown by clicking elsewhere
-    await page.locator('.navbar-brand').click();
+    await page.locator('.logo-left').click();
     
     // Wait for Mode dropdown to close
     await expect(page.locator('#bd-theme + ul.dropdown-menu.show')).not.toBeVisible({ timeout: 2000 });
@@ -90,7 +90,7 @@ test.describe('Navbar Dropdown Tests', () => {
     await expect(page.locator('[data-bs-language-value="fr"]')).toBeVisible();
     
     // Close Language dropdown by clicking elsewhere
-    await page.locator('.navbar-brand').click();
+    await page.locator('.logo-left').click();
 
     // Wait for Language dropdown to close
     await expect(page.locator(`${SELECTORS.navigation.languageToggle} + ul.dropdown-menu.show`)).not.toBeVisible({ timeout: 2000 });
@@ -144,6 +144,7 @@ test.describe('Navbar Dropdown Tests', () => {
 
     // Test keyboard navigation
     await page.locator(SELECTORS.navigation.helpToggle).focus();
+    await expect(page.locator(SELECTORS.navigation.helpToggle)).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page.locator(`${SELECTORS.navigation.helpToggle} + ul.dropdown-menu.show`)).toBeVisible();
     

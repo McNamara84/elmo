@@ -295,6 +295,7 @@ class AutosaveService {
       });
 
       if (response.status === 204 || response.status === 404) {
+        this.updateStatus('idle');
         return;
       }
 

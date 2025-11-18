@@ -121,3 +121,6 @@ if (isset($_GET['setting'])) {
 function elmo_log($msg) {
     error_log('[ELMO save_data] ' . $msg);
 }
+
+
+$msl_logo = '';

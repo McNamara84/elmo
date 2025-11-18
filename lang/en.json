@@ -270,7 +270,7 @@
         },
         "changelog": {
             "title": "Changelog",
-            "aboutText": "The ELMO Metadata Editor was developed in 2024 by students of the University of Applied Sciences Potsdam in cooperation with the German Research Centre for Geosciences and is released under the GNU General Public License, Version 2.",
+            "aboutText": "The foundations for the ELMO metadata editor were laid in 2024 by students at the University of Applied Sciences Potsdam in collaboration with the GFZ Helmholtz Centre for Geosciences Potsdam. The GFZ development team then continued to optimize it. The ELMO metadata editor is published under the GNU General Public License, Version 2.",
             "aboutHeading": "About ELMO - Enhanced Laboratory Metadata Organizer"
         },
         "save": {
@@ -290,5 +290,13 @@
             "normal": "normal",
             "low": "low"
         }
+    },
+    "welcome": {
+        "title": "Welcome to ELMO 😊",
+        "paragraph1": "Welcome to ELMO – the new online metadata editor for GFZ Data Services.",
+        "paragraph2": "Please provide your information and click the ´Submit´ button to send your metadata to the curators of GFZ Data Services. Additionally, we recommend saving a copy of the metadata on your computer for your records.",
+        "paragraph3": "For further guidance, please refer to our <a href='https://dataservices.gfz-potsdam.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
+        "button": "Continue"
     }
+
 }
