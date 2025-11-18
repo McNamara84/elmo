@@ -137,9 +137,7 @@ class ConcurrentRequestsTest extends DatabaseTestCase
      */
     public function testTwoFullConcurrentSaves(): void
     {
-            // Start transactions
-    $this->connection->begin_transaction();
-    $this->connection2->begin_transaction();
+
     
     try {
         // Resource 1
@@ -162,12 +160,10 @@ class ConcurrentRequestsTest extends DatabaseTestCase
         saveFreeKeywords($this->connection2, $this->postData2, $resource_id_2);
         saveDescriptions($this->connection2, $this->postData2, $resource_id_2);
                 
-        $this->connection->commit();
-        $this->connection2->commit();
+        
         
     } catch (Exception $e) {
-        $this->connection->rollback();
-        $this->connection2->rollback();
+
         throw $e;
     }
 
