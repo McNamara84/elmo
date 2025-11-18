@@ -75,8 +75,8 @@ class ConcurrentRequestsTest extends DatabaseTestCase
 
             // Free Keywords
             "freekeywords" => [
-                '[{"value":"concurrent testing"},{"value":"database transactions"}]',
-                '[{"value":"data integrity"}]'
+                '[{"value":"resource_1_keyword_1"},{"value":"resource_1_keyword_2"}]',
+                '[{"value":"resource_1_keyword_3"}]'
             ]
 
         ];
@@ -113,8 +113,8 @@ class ConcurrentRequestsTest extends DatabaseTestCase
 
             // Free Keywords
             "freekeywords" => [
-                '[{"value":"parallel processing"},{"value":"isolation levels"}]',
-                '[{"value":"ACID compliance"},{"value":"MySQL transactions"}]'
+                '[{"value":"resource_2_keyword_1"},{"value":"resource_2_keyword_2"}]',
+                '[{"value":"resource_2_keyword_3"},{"value":"resource_2_keyword_4"}]'
             ]
 
         ];
@@ -280,7 +280,7 @@ class ConcurrentRequestsTest extends DatabaseTestCase
         $keywords1 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
         $this->assertCount(3, $keywords1, "Resource 1 should have 3 free keywords");
-        $expectedKeywords1 = ["concurrent testing", "data integrity", "database transactions"];
+        $expectedKeywords1 = ["resource_1_keyword_1", "resource_1_keyword_2", "resource_1_keyword_3"];
         sort($expectedKeywords1);
         foreach ($keywords1 as $index => $row) {
             $this->assertEquals($expectedKeywords1[$index], $row["free_keyword"]);
@@ -292,7 +292,7 @@ class ConcurrentRequestsTest extends DatabaseTestCase
         $keywords2 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
         $this->assertCount(4, $keywords2, "Resource 2 should have 4 free keywords");
-        $expectedKeywords2 = ["ACID compliance", "isolation levels", "MySQL transactions", "parallel processing"];
+        $expectedKeywords2 = ["resource_2_keyword_1", "resource_2_keyword_2", "resource_2_keyword_3", "resource_2_keyword_4"];
         sort($expectedKeywords2);
         foreach ($keywords2 as $index => $row) {
             $this->assertEquals($expectedKeywords2[$index], $row["free_keyword"]);
@@ -306,13 +306,13 @@ class ConcurrentRequestsTest extends DatabaseTestCase
             WHERE rhfk.Resource_resource_id = ? AND fk.free_keyword IN (?, ?, ?, ?)
         ");
         $stmt->bind_param("issss", $resource_id_1, 
-            "parallel processing", "isolation levels", "ACID compliance", "MySQL transactions");
+            "resource_2_keyword_1", "resource_2_keyword_2", "resource_2_keyword_3", "resource_2_keyword_4");
         $stmt->execute();
         $wrongKeywords = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(0, $wrongKeywords, "Resource 1 should not have Resource 2's keywords");
 
         $stmt->bind_param("issss", $resource_id_2,
-            "concurrent testing", "database transactions", "data integrity", "");
+            "resource_1_keyword_1", "resource_1_keyword_2", "resource_1_keyword_3", "");
         $stmt->execute();
         $wrongKeywords2 = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(0, $wrongKeywords2, "Resource 2 should not have Resource 1's keywords");
