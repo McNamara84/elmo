@@ -67,16 +67,18 @@ class ConcurrentRequestsTest extends DatabaseTestCase
                 'https://ror.org/03yrm5c26',
                 'https://ror.org/02nr0ka47'
             ],
-            
-            // Descriptions
-            "descriptionAbstract" => "This is the abstract for the second concurrent test dataset. It describes different research objectives.",
-            "descriptionMethods" => "Different methodology approach using experimental design.",
+                        // Descriptions (note: saveDescriptions expects specific keys, not arrays)
+            "descriptionAbstract" => "This is the abstract for the first concurrent test dataset. It provides a comprehensive overview of the research.",
+            "descriptionMethods" => "Methods used include statistical analysis and data modeling.",
+            "descriptionTechnical" => "Technical specifications: MySQL 8.0, PHP 8.1",
+            "descriptionOther" => "Additional information about the dataset.",
 
             // Free Keywords
             "freekeywords" => [
-                '[{"value":"parallel processing"},{"value":"isolation levels"}]',
-                '[{"value":"ACID compliance"},{"value":"MySQL transactions"}]'
+                '[{"value":"concurrent testing"},{"value":"database transactions"}]',
+                '[{"value":"data integrity"}]'
             ]
+
         ];
 
         // Prepare complete POST data for second submission
@@ -104,18 +106,17 @@ class ConcurrentRequestsTest extends DatabaseTestCase
                 'https://ror.org/04m7fg108',
                 'https://ror.org/05dxps055'
             ],
-            
-            // Descriptions (note: saveDescriptions expects specific keys, not arrays)
-            "descriptionAbstract" => "This is the abstract for the first concurrent test dataset. It provides a comprehensive overview of the research.",
-            "descriptionMethods" => "Methods used include statistical analysis and data modeling.",
-            "descriptionTechnical" => "Technical specifications: MySQL 8.0, PHP 8.1",
-            "descriptionOther" => "Additional information about the dataset.",
+                        
+            // Descriptions
+            "descriptionAbstract" => "This is the abstract for the second concurrent test dataset. It describes different research objectives.",
+            "descriptionMethods" => "Different methodology approach using experimental design.",
 
             // Free Keywords
             "freekeywords" => [
-                '[{"value":"concurrent testing"},{"value":"database transactions"}]',
-                '[{"value":"data integrity"}]'
+                '[{"value":"parallel processing"},{"value":"isolation levels"}]',
+                '[{"value":"ACID compliance"},{"value":"MySQL transactions"}]'
             ]
+
         ];
     }
 
