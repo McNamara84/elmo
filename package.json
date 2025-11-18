@@ -21,5 +21,9 @@
   },
   "scripts": {
     "test": "jest"
+  },
+  "overrides": {
+    "glob": "^11.1.0",
+    "js-yaml": "^3.14.2"
   }
 }
