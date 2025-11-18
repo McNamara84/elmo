@@ -214,7 +214,25 @@ class ConcurrentRequestsTest extends DatabaseTestCase
         $this->assertEquals($this->postData2["familynames"][1], $authors2[1]["familyname"]);
         $this->assertEquals($this->postData2["givennames"][1], $authors2[1]["givenname"]);
         $this->assertEquals($this->postData2["orcids"][1], $authors2[1]["orcid"]);
-
+        /*
+        Check all the authors:
+        SELECT 
+            r.resource_id,
+            r.doi,
+            ap.familyname,
+            ap.givenname,
+            ap.orcid,
+            GROUP_CONCAT(aff.name SEPARATOR '; ') as affiliations
+        FROM Resource r
+        JOIN Resource_has_Author rha ON r.resource_id = rha.Resource_resource_id
+        JOIN Author a ON rha.Author_author_id = a.author_id
+        JOIN Author_person ap ON a.Author_Person_author_person_id = ap.author_person_id
+        LEFT JOIN Author_has_Affiliation aha ON a.author_id = aha.Author_author_id
+        LEFT JOIN Affiliation aff ON aha.Affiliation_affiliation_id = aff.affiliation_id
+        WHERE r.doi LIKE '%CONCURRENT.FULL%'
+        GROUP BY r.resource_id, r.doi, ap.author_person_id, ap.familyname, ap.givenname, ap.orcid
+        ORDER BY r.resource_id, ap.familyname;
+        */
 
 
         // Verify contact persons for Resource 1
@@ -241,6 +259,24 @@ class ConcurrentRequestsTest extends DatabaseTestCase
         $this->assertEquals($this->postData2["contactfamilyname"][0], $contacts2[0]["familyname"]);
         $this->assertEquals($this->postData2["contactemail"][0], $contacts2[0]["email"]);
 
+        /*
+        SELECT 
+            r.resource_id,
+            r.doi,
+            cp.familyname,
+            cp.givenname,
+            cp.orcid,
+            cp.email,
+            GROUP_CONCAT(aff.name SEPARATOR '; ') as affiliations
+        FROM Resource r
+        JOIN Resource_has_Contact_Person rhcp ON r.resource_id = rhcp.Resource_resource_id
+        JOIN Contact_Person cp ON rhcp.Contact_Person_contact_person_id = cp.contact_person_id
+        LEFT JOIN Contact_Person_has_Affiliation cpha ON cp.contact_person_id = cpha.Contact_Person_contact_person_id
+        LEFT JOIN Affiliation aff ON cpha.Affiliation_affiliation_id = aff.affiliation_id
+        WHERE r.doi LIKE '%CONCURRENT.FULL%'
+        GROUP BY r.resource_id, r.doi, cp.contact_person_id
+        ORDER BY r.resource_id;
+        */
 
 
         // Verify descriptions for Resource 1
