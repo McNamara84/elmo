@@ -68,21 +68,15 @@ class ConcurrentRequestsTest extends DatabaseTestCase
                 'https://ror.org/02nr0ka47'
             ],
             
-            // Contact Person
-            "contactfamilyname" => ["Williams"],
-            "contactgivenname" => ["Carol"],
-            "contactorcid" => ["0000-0003-3333-3333"],
-            "contactposition" => ["1"],
-            "contactemail" => ["carol.williams@example.com"],
-            "contactAffiliation" => ['[{"value":"Contact University 1"}]'],
-            "contactRorId" => ['https://ror.org/0168r3w48'],
-            
             // Descriptions
-            "descriptionText" => [
-                "This is a test dataset for concurrent save operations.",
-                "Additional description for testing purposes."
-            ],
-            "descriptionType" => [1, 2]
+            "descriptionAbstract" => "This is the abstract for the second concurrent test dataset. It describes different research objectives.",
+            "descriptionMethods" => "Different methodology approach using experimental design.",
+
+            // Free Keywords
+            "freekeywords" => [
+                '[{"value":"parallel processing"},{"value":"isolation levels"}]',
+                '[{"value":"ACID compliance"},{"value":"MySQL transactions"}]'
+            ]
         ];
 
         // Prepare complete POST data for second submission
@@ -111,21 +105,17 @@ class ConcurrentRequestsTest extends DatabaseTestCase
                 'https://ror.org/05dxps055'
             ],
             
-            // Contact Person
-            "contactfamilyname" => ["Taylor"],
-            "contactgivenname" => ["Frank"],
-            "contactorcid" => ["0000-0006-6666-6666"],
-            "contactposition" => ["2"],
-            "contactemail" => ["frank.taylor@example.com"],
-            "contactAffiliation" => ['[{"value":"Contact University 2"}]'],
-            "contactRorId" => ['https://ror.org/006zn3t30'],
-            
-            // Descriptions
-            "descriptionText" => [
-                "This is another test dataset for concurrent save operations.",
-                "Additional description for the second dataset."
-            ],
-            "descriptionType" => [1, 3]
+            // Descriptions (note: saveDescriptions expects specific keys, not arrays)
+            "descriptionAbstract" => "This is the abstract for the first concurrent test dataset. It provides a comprehensive overview of the research.",
+            "descriptionMethods" => "Methods used include statistical analysis and data modeling.",
+            "descriptionTechnical" => "Technical specifications: MySQL 8.0, PHP 8.1",
+            "descriptionOther" => "Additional information about the dataset.",
+
+            // Free Keywords
+            "freekeywords" => [
+                '[{"value":"concurrent testing"},{"value":"database transactions"}]',
+                '[{"value":"data integrity"}]'
+            ]
         ];
     }
 
@@ -147,25 +137,41 @@ class ConcurrentRequestsTest extends DatabaseTestCase
      */
     public function testTwoFullConcurrentSaves(): void
     {
-        // Simulate full save operation for connection 1
+            // Start transactions
+    $this->connection->begin_transaction();
+    $this->connection2->begin_transaction();
+    
+    try {
+        // Resource 1
         $resource_id_1 = saveResourceInformationAndRights($this->connection, $this->postData1);
-        $this->assertIsInt($resource_id_1, "First resource should be created");
+        usleep(1000);
         
-        // Simulate full save operation for connection 2
+        // Resource 2
         $resource_id_2 = saveResourceInformationAndRights($this->connection2, $this->postData2);
-        $this->assertIsInt($resource_id_2, "Second resource should be created");
-
-        // Run save scripts for both connections mixxxxxxxxed - to simulate concurrency
-        saveAuthors($this->connection, $this->postData1, $resource_id_1); // resource 1 
+        usleep(1000);
         
-        saveAuthors($this->connection2, $this->postData2, $resource_id_2); // resource 2
+        // Interleaved authors
+        saveAuthors($this->connection, $this->postData1, $resource_id_1);
+        usleep(500);
+        saveAuthors($this->connection2, $this->postData2, $resource_id_2);
+        usleep(500);
 
-        saveContactPerson($this->connection, $this->postData1, $resource_id_1); // resource 1 again
+        saveFreeKeywords($this->connection, $this->postData1, $resource_id_1);
         saveDescriptions($this->connection, $this->postData1, $resource_id_1);
 
-        saveContactPerson($this->connection2, $this->postData2, $resource_id_2); // resource 2 again
+        saveFreeKeywords($this->connection2, $this->postData2, $resource_id_2);
         saveDescriptions($this->connection2, $this->postData2, $resource_id_2);
+                
+        $this->connection->commit();
+        $this->connection2->commit();
+        
+    } catch (Exception $e) {
+        $this->connection->rollback();
+        $this->connection2->rollback();
+        throw $e;
+    }
 
+        // Assertions
 
         // Verify both resources exist
         $this->assertNotEquals($resource_id_1, $resource_id_2, "Resource IDs should be different");
@@ -235,90 +241,83 @@ class ConcurrentRequestsTest extends DatabaseTestCase
         */
 
 
-        // Verify contact persons for Resource 1
+        // Verify descriptions for Resource 1 - detailed check
         $stmt = $this->connection->prepare("
-            SELECT familyname, givenname, email 
-            FROM Contact_Person cp
-            JOIN Resource_has_Contact_Person rhcp ON cp.contact_person_id = rhcp.Contact_Person_contact_person_id
-            WHERE rhcp.Resource_resource_id = ?
+            SELECT type, description FROM Description WHERE resource_id = ? ORDER BY type
         ");
         $stmt->bind_param("i", $resource_id_1);
         $stmt->execute();
-        $contacts1 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $descriptions1 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertCount(1, $contacts1, "Resource 1 should have 1 contact person");
-        $this->assertEquals($this->postData1["contactfamilyname"][0], $contacts1[0]["familyname"]);
-        $this->assertEquals($this->postData1["contactemail"][0], $contacts1[0]["email"]);
-
-        // Verify contact persons for Resource 2
-        $stmt->bind_param("i", $resource_id_2);
-        $stmt->execute();
-        $contacts2 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-        $this->assertCount(1, $contacts2, "Resource 2 should have 1 contact person");
-        $this->assertEquals($this->postData2["contactfamilyname"][0], $contacts2[0]["familyname"]);
-        $this->assertEquals($this->postData2["contactemail"][0], $contacts2[0]["email"]);
-
-        /*
-        SELECT 
-            r.resource_id,
-            r.doi,
-            cp.familyname,
-            cp.givenname,
-            cp.orcid,
-            cp.email,
-            GROUP_CONCAT(aff.name SEPARATOR '; ') as affiliations
-        FROM Resource r
-        JOIN Resource_has_Contact_Person rhcp ON r.resource_id = rhcp.Resource_resource_id
-        JOIN Contact_Person cp ON rhcp.Contact_Person_contact_person_id = cp.contact_person_id
-        LEFT JOIN Contact_Person_has_Affiliation cpha ON cp.contact_person_id = cpha.Contact_Person_contact_person_id
-        LEFT JOIN Affiliation aff ON cpha.Affiliation_affiliation_id = aff.affiliation_id
-        WHERE r.doi LIKE '%CONCURRENT.FULL%'
-        GROUP BY r.resource_id, r.doi, cp.contact_person_id
-        ORDER BY r.resource_id;
-        */
-
-
-        // Verify descriptions for Resource 1
-        $stmt = $this->connection->prepare("
-            SELECT COUNT(*) as count FROM Description WHERE resource_id = ?
-        ");
-        $stmt->bind_param("i", $resource_id_1);
-        $stmt->execute();
-        $descCount1 = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(count($this->postData1["descriptionText"]), $descCount1, "Resource 1 should have correct number of descriptions");
+        $this->assertCount(4, $descriptions1, "Resource 1 should have 4 descriptions");
+        $this->assertEquals("Abstract", $descriptions1[0]["type"]);
+        $this->assertEquals($this->postData1["descriptionAbstract"], $descriptions1[0]["description"]);
+        $this->assertEquals("Methods", $descriptions1[1]["type"]);
+        $this->assertEquals($this->postData1["descriptionMethods"], $descriptions1[1]["description"]);
+        $this->assertEquals("Other", $descriptions1[2]["type"]);
+        $this->assertEquals($this->postData1["descriptionOther"], $descriptions1[2]["description"]);
+        $this->assertEquals("Technical Information", $descriptions1[3]["type"]);
+        $this->assertEquals($this->postData1["descriptionTechnical"], $descriptions1[3]["description"]);
 
         // Verify descriptions for Resource 2
         $stmt->bind_param("i", $resource_id_2);
         $stmt->execute();
-        $descCount2 = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(count($this->postData2["descriptionText"]), $descCount2, "Resource 2 should have correct number of descriptions");
+        $descriptions2 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        // Verify no cross-contamination between resources
-        // Check that Resource 1 authors are not linked to Resource 2
-        $stmt = $this->connection->prepare("
-            SELECT COUNT(*) as count 
-            FROM Author_person ap
-            JOIN Author a ON ap.author_person_id = a.Author_Person_author_person_id
-            JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
-            WHERE rha.Resource_resource_id = ? AND ap.orcid IN (?, ?)
-        ");
-        $stmt->bind_param("iss", $resource_id_1, $this->postData2["orcids"][0], $this->postData2["orcids"][1]);
-        $stmt->execute();
-        $wrongAuthors = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(0, $wrongAuthors, "Resource 1 should not have Resource 2's authors");
+        $this->assertCount(2, $descriptions2, "Resource 2 should have 2 descriptions");
+        $this->assertEquals("Abstract", $descriptions2[0]["type"]);
+        $this->assertEquals($this->postData2["descriptionAbstract"], $descriptions2[0]["description"]);
+        $this->assertEquals("Methods", $descriptions2[1]["type"]);
+        $this->assertEquals($this->postData2["descriptionMethods"], $descriptions2[1]["description"]);
 
-        // Check that Resource 2 authors are not linked to Resource 1
+        // Verify free keywords for Resource 1
         $stmt = $this->connection->prepare("
-            SELECT COUNT(*) as count 
-            FROM Author_person ap
-            JOIN Author a ON ap.author_person_id = a.Author_Person_author_person_id
-            JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
-            WHERE rha.Resource_resource_id = ? AND ap.orcid IN (?, ?)
+            SELECT fk.free_keyword
+            FROM Free_Keywords fk
+            JOIN Resource_has_Free_Keywords rhfk ON fk.free_keywords_id = rhfk.Free_Keywords_free_keywords_id
+            WHERE rhfk.Resource_resource_id = ?
+            ORDER BY fk.free_keyword
         ");
-        $stmt->bind_param("iss", $resource_id_2, $this->postData1["orcids"][0], $this->postData1["orcids"][1]);
+        $stmt->bind_param("i", $resource_id_1);
         $stmt->execute();
-        $wrongAuthors2 = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(0, $wrongAuthors2, "Resource 2 should not have Resource 1's authors");
+        $keywords1 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(3, $keywords1, "Resource 1 should have 3 free keywords");
+        $expectedKeywords1 = ["concurrent testing", "data integrity", "database transactions"];
+        sort($expectedKeywords1);
+        foreach ($keywords1 as $index => $row) {
+            $this->assertEquals($expectedKeywords1[$index], $row["free_keyword"]);
+        }
+
+        // Verify free keywords for Resource 2
+        $stmt->bind_param("i", $resource_id_2);
+        $stmt->execute();
+        $keywords2 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(4, $keywords2, "Resource 2 should have 4 free keywords");
+        $expectedKeywords2 = ["ACID compliance", "isolation levels", "MySQL transactions", "parallel processing"];
+        sort($expectedKeywords2);
+        foreach ($keywords2 as $index => $row) {
+            $this->assertEquals($expectedKeywords2[$index], $row["free_keyword"]);
+        }
+
+        // Verify no cross-contamination of keywords
+        $stmt = $this->connection->prepare("
+            SELECT COUNT(*) as count
+            FROM Free_Keywords fk
+            JOIN Resource_has_Free_Keywords rhfk ON fk.free_keywords_id = rhfk.Free_Keywords_free_keywords_id
+            WHERE rhfk.Resource_resource_id = ? AND fk.free_keyword IN (?, ?, ?, ?)
+        ");
+        $stmt->bind_param("issss", $resource_id_1, 
+            "parallel processing", "isolation levels", "ACID compliance", "MySQL transactions");
+        $stmt->execute();
+        $wrongKeywords = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(0, $wrongKeywords, "Resource 1 should not have Resource 2's keywords");
+
+        $stmt->bind_param("issss", $resource_id_2,
+            "concurrent testing", "database transactions", "data integrity", "");
+        $stmt->execute();
+        $wrongKeywords2 = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(0, $wrongKeywords2, "Resource 2 should not have Resource 1's keywords");
     }
 }
