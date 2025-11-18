@@ -1075,7 +1075,7 @@ class DatasetController extends ICGEMController
      * Transforms an XML resource using an XSLT stylesheet and either saves or downloads the result.
      *
      * @param int    $id       The identifier of the resource.
-     * @param string $format   The format to which the XML should be transformed ('dif', 'iso', 'datacite').
+     * @param string $format   The format to which the XML should be transformed ('iso' and 'datacite').
      * @param bool   $download Optional. If true, the transformed XML will be downloaded; if false, it will be returned as a string. Default is false.
      *
      * @throws Exception If the format is invalid, required files are missing, or the XSLT transformation fails.
@@ -1087,10 +1087,6 @@ class DatasetController extends ICGEMController
         $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
 
         $formatInfo = [
-            'dif' => [
-                'xsltFile' => 'MappingMapToDIF.xslt',
-                'outputPrefix' => 'dif'
-            ],
             'iso' => [
                 'xsltFile' => 'MappingMapToIso.xslt',
                 'outputPrefix' => 'iso'
@@ -1182,7 +1178,7 @@ class DatasetController extends ICGEMController
         $scheme = strtolower($vars['scheme']);
 
         // Check for valid schema formats
-        $validSchemes = ['datacite', 'iso', 'dif'];
+        $validSchemes = ['datacite', 'iso'];
         if (!in_array($scheme, $validSchemes)) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid metadata scheme. Supported schemes are: ' . implode(', ', $validSchemes)]);
@@ -1258,13 +1254,9 @@ class DatasetController extends ICGEMController
             // Retrieve all three XML formats
             $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
             $isoXml = $this->transformAndSaveOrDownloadXml($id, 'iso', false);
-            $difXml = $this->transformAndSaveOrDownloadXml($id, 'dif', false);
-
             // Remove XML declarations from individual XMLs
             $dataciteXml = preg_replace('/<\?xml[^>]+\?>/', '', $dataciteXml);
             $isoXml = preg_replace('/<\?xml[^>]+\?>/', '', $isoXml);
-            $difXml = preg_replace('/<\?xml[^>]+\?>/', '', $difXml);
-
             // Create the combined XML
             $combinedXml = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1273,7 +1265,6 @@ class DatasetController extends ICGEMController
 
     $isoXml
 
-    $difXml
 </envelope>
 XML;
 
