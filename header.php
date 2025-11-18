@@ -43,12 +43,22 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
 <body>
   <!-- Fixed Header -->
   <header class="navbar navbar-primary sticky-top bg-primary flex-md-nowrap p-0 shadow" role="banner">
-    <h1 class="visually-hidden" data-translate="general.logoTitle">
+    <!-- <h1 class="visually-hidden" data-translate="general.logoTitle">
       ELMO - Enhanced Laboratory Metadata Organizer 2.0
     </h1>
     <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3 text-white" href="#" id="headtitle"
       data-translate="general.logoTitle">
       ELMO
+    </a> -->
+
+    <h1 class="visually-hidden">ELMO – GFZ Data Services' Metadata Editor 2.0</h1>
+    <a href="https://www.gfz.de/" target="_blank" rel="noopener noreferrer">
+      <img src="logos/GFZ-logo.png" alt="GFZ Logo" class="logo logo-left">
+    </a>
+
+    <a href="https://dataservices.gfz-potsdam.de/web/" target="_blank" rel="noopener noreferrer"
+      class="logo-center-wrapper">
+      <img src="logos/GFZ_Data_Services_logo.png" alt="GFZ Data Services Logo" class="logo">
     </a>
     <div class="ms-auto d-flex align-items-center me-3 p-1">
 
@@ -112,3 +122,13 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
       </div>
     </div>
   </header>
+
+  <!-- Subheader -->
+  <section role="region" aria-label="Page subheader">
+    <div class="bg-white border-bottom shadow-sm">
+      <div class="container-fluid py-2 d-flex justify-content-between align-items-center">
+        <div class="fs-5 fw-semibold text-dark">ELMO – GFZ Data Services' Metadata Editor 2.0</div>
+        <?php echo $msl_logo; ?>
+      </div>
+    </div>
+  </section>

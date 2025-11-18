@@ -94,11 +94,7 @@ function dropTables($connection)
         'Ellipsoidal_Parameters',
         'Resource_has_Ellipsoidal_Parameters',
         'Data_Sources',
-        'Resource_has_Data_Sources',
-        'Data_Source_has_Thesaurus_Keyword',
-        'Data_Source_has_Related_Work',
-        'Model_Access_Points',
-        'Resource_has_Model_Access_Points'
+        'Resource_has_Data_Sources'
     ];
     // Disable foreign key checks to allow dropping tables with dependencies
     mysqli_query($connection, "SET FOREIGN_KEY_CHECKS = 0;");
@@ -363,21 +359,6 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`identifier_type_fk`)
     REFERENCES `Identifier_Type` (`identifier_type_id`));",
 
-        "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
-    `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
-    `Model_Name` VARCHAR(100) NOT NULL,
-    `Celestial_Body` VARCHAR(100) NULL,
-    `Product_Type` VARCHAR(100) NULL,
-    `Errors` VARCHAR(100) NULL,
-    `Error_Handling_Approach` TEXT NULL,
-    `Tide_System` VARCHAR(100) NULL,
-    `generating_institution` VARCHAR(200) NULL,
-    `degree` INT NULL,
-    `is_normalised` BOOLEAN NULL,
-    `radius` FLOAT(9,2) NULL,
-    `earth_gravity_constant` FLOAT NULL,
-    PRIMARY KEY (`GGM_Properties_id`));",
-
         "Resource_has_Related_Work" => "CREATE TABLE IF NOT EXISTS `Resource_has_Related_Work` (
     `Resource_has_Related_Work_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
@@ -524,7 +505,23 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`Spatial_Temporal_Coverage_spatial_temporal_coverage_id`)
     REFERENCES `Spatial_Temporal_Coverage` (`spatial_temporal_coverage_id`));",
 
-        "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
+    // ICGEM-specific tables to describe beautiful GGMs
+            "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
+    `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
+    `Model_Name` VARCHAR(100) NOT NULL,
+    `Celestial_Body` VARCHAR(100) NULL,
+    `Product_Type` VARCHAR(100) NULL,
+    `Errors` VARCHAR(100) NULL,
+    `Error_Handling_Approach` TEXT NULL,
+    `Error_Description` TEXT NULL,
+    `Tide_System` VARCHAR(100) NULL,
+    `degree` INT NULL,
+    `radius` FLOAT(9,2) NULL,
+    `earth_gravity_constant` FLOAT NULL,
+    `info_time_variable_coefficients` TEXT NULL,
+    PRIMARY KEY (`GGM_Properties_id`));",
+    
+    "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
     `Resource_has_GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
     `GGM_Properties_GGM_Properties_id` INT NOT NULL,
@@ -534,12 +531,16 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`GGM_Properties_GGM_Properties_id`)
     REFERENCES `GGM_Properties` (`GGM_Properties_id`));",
     
-            "Topographic_Models_Properties" => "CREATE TABLE IF NOT EXISTS `Topographic_Models_Properties` (
+        "Topographic_Models_Properties" => "CREATE TABLE IF NOT EXISTS `Topographic_Models_Properties` (
     `topographic_model_property_id` INT NOT NULL AUTO_INCREMENT,
     `layer_approach` VARCHAR(100),
     `forward_modelling_domain` VARCHAR(100),
     `density_information` VARCHAR(100),
-    `density_information_details` VARCHAR(100),
+    `density_information_details` VARCHAR(1000),
+    `mantle_density_value` FLOAT(9,3) NULL,
+    `mantle_density_description` TEXT NULL,
+    `crust_density_value` FLOAT(9,3) NULL,
+    `crust_density_description` TEXT NULL,
     `approximation` VARCHAR(100),
     `description` TEXT NULL,
     PRIMARY KEY (`topographic_model_property_id`)
@@ -556,7 +557,7 @@ function createDatabaseStructure($connection): array
 
         "Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Temporal_Model_Properties` (
     `temporal_model_property_id` INT NOT NULL AUTO_INCREMENT,
-    `science_data_system_participation` BOOLEAN NULL,
+    `generating_institution` BOOLEAN NULL,
     `temporal_resolution_days` INT NULL,
     `start_date` DATE NULL,
     `end_date` DATE NULL,
@@ -578,6 +579,7 @@ function createDatabaseStructure($connection): array
     `semiminor_axis_b` FLOAT (9,2) NULL,
     `flattening` FLOAT NULL,
     `reciprocal_flattening` FLOAT NULL,
+    `excentricity` FLOAT NULL,
     `description` TEXT NULL,
     PRIMARY KEY (`ellipsoidal_parameter_id`)
         );",
@@ -599,14 +601,13 @@ function createDatabaseStructure($connection): array
     `S_value_uri` VARCHAR(100) NULL,
     `S_scheme_name` VARCHAR(100) NULL,
     `S_scheme_uri` VARCHAR(100) NULL,
-    `G_details` VARCHAR(1000) NULL,
-    `A_details` VARCHAR(1000) NULL,
-    `T_details` VARCHAR(1000) NULL,
-    `T_identifier` VARCHAR(1000) NULL,
-    `T_identifier_type` VARCHAR(1000) NULL,
-    `M_details` VARCHAR(1000) NULL,
+    `G_details` VARCHAR(100) NULL,
+    `A_details` VARCHAR(100) NULL,
+    `T_details` VARCHAR(100) NULL,
+    `T_Isostasy_compensation_depth` INT NULL,
+    `M_details` VARCHAR(100) NULL,
     `M_identifier` VARCHAR(1000) NULL,
-    `M_identifier_type` VARCHAR(1000) NULL,
+    `M_identifier_type` VARCHAR(100) NULL,
     PRIMARY KEY (`data_source_id`)
         );",
 

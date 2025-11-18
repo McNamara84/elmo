@@ -1,16 +1,16 @@
 <?php
 require_once __DIR__ . '/../../../settings.php';
+require_once __DIR__ . '/ICGEMController.php'; // Require parent class with ICGEM-specific methods.
 
-class DatasetController
+
+class DatasetController extends ICGEMController
 {
-    private mysqli $connection;
-    private mixed $logger;
+    // private mysqli $connection;
+    // private mixed $logger;
 
-    public function __construct()
+    public function __construct() 
     {
-        global $connection;
-        $this->connection = $connection;
-        $this->logger = null; // Optional logger, can be set later if needed
+        parent::__construct(); // Constructor for this class is in ICGEMController!
     }
 
     /**
@@ -617,78 +617,8 @@ class DatasetController
         }
         return $affiliations;
     }
+
     /**
-     * Retrieves GGM essential variables for a given resource id
-     *
-     * @param mysqli $connection The database connection.
-     * @param int $resource_id The ID of the resource in question.
-     * @return array<mixed>|null An array of GGM data or null if not found.
-     */
-        private function getGGMData(mysqli $connection, int $resource_id): ?array
-    {
-        $ggmData = [];
-
-        // Get Model_Type, Mathematical_Representation, File_Format names by joining with Resource
-        $stmtResourceFKs = $connection->prepare("
-            SELECT 
-                mt.name as model_type_name, 
-                mr.name as mathematical_representation_name, 
-                ff.name as file_format_name
-            FROM Resource r
-            LEFT JOIN Model_Type mt ON r.Model_type_id = mt.Model_type_id
-            LEFT JOIN Mathematical_Representation mr ON r.Mathematical_Representation_id = mr.Mathematical_representation_id
-            LEFT JOIN File_Format ff ON r.File_format_id = ff.File_format_id
-            WHERE r.resource_id = ?
-        ");
-        if (!$stmtResourceFKs) {
-            $this->logger && $this->logger->error("Prepare failed for Resource FKs in getGGMData: " . $connection->error);
-            // Depending on strictness, you might throw an exception or return null
-            return null;
-        }
-        $stmtResourceFKs->bind_param('i', $resource_id);
-        $stmtResourceFKs->execute();
-        $resourceFksResult = $stmtResourceFKs->get_result()->fetch_assoc();
-        $stmtResourceFKs->close();
-
-        if ($resourceFksResult) {
-            foreach ($resourceFksResult as $key => $value) {
-                if ($value !== null) { // Only add if value is not null
-                    $ggmData[$key] = $value;
-                }
-            }
-        }
-
-        // Get Model_Name, Celestial_Body, Product_Type from GGM_Properties table
-        $stmtGGMProps = $connection->prepare("
-            SELECT 
-                ggm.Model_Name as model_name, 
-                ggm.Product_Type as product_type 
-            FROM GGM_Properties ggm
-            JOIN Resource_has_GGM_Properties rhg ON ggm.GGM_Properties_id = rhg.GGM_Properties_GGM_Properties_id
-            WHERE rhg.Resource_resource_id = ?
-        ");
-        if (!$stmtGGMProps) {
-            $this->logger && $this->logger->error("Prepare failed for GGM_Properties in getGGMData: " . $connection->error);
-            // If essential GGM props fail, but we have FKs, decide on return.
-            // For now, return what we have or null if nothing.
-            return !empty($ggmData) ? $ggmData : null;
-        }
-        $stmtGGMProps->bind_param('i', $resource_id);
-        $stmtGGMProps->execute();
-        $ggmSpecificResult = $stmtGGMProps->get_result()->fetch_assoc();
-        $stmtGGMProps->close();
-
-        if ($ggmSpecificResult) {
-            foreach ($ggmSpecificResult as $key => $value) {
-                if ($value !== null) { // Only add if value is not null
-                    $ggmData[$key] = $value;
-                }
-            }
-        }
-        
-        return !empty($ggmData) ? $ggmData : null;
-    }
-        /**
      * Generates a uniform path for the base XML file of a resource.
      *
      * @param int $id The identifier of the resource.
@@ -1104,29 +1034,26 @@ class DatasetController
                 }
             }
         }
-        // Add GGM Properties to the base XML
-        if ($includeGGMData) {
-            $ggmDataForXml = $this->getGGMData($connection, $id);
-            if ($ggmDataForXml) {
-                $ggmPropertiesXml = $xml->addChild('ggm_properties');
-                if (!empty($ggmDataForXml['model_name'])) {
-                    $ggmPropertiesXml->addChild('model_name', htmlspecialchars($ggmDataForXml['model_name']));
-                }
-                if (!empty($ggmDataForXml['model_type_name'])) {
-                    $ggmPropertiesXml->addChild('model_type', htmlspecialchars($ggmDataForXml['model_type_name']));
-                }
-                if (!empty($ggmDataForXml['mathematical_representation_name'])) {
-                    $ggmPropertiesXml->addChild('mathematical_representation', htmlspecialchars($ggmDataForXml['mathematical_representation_name']));
-                }
-                if (!empty($ggmDataForXml['file_format_name'])) {
-                    $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmDataForXml['file_format_name']));
-                }
-                if (!empty($ggmDataForXml['product_type'])) {
-                    $ggmPropertiesXml->addChild('product_type', htmlspecialchars($ggmDataForXml['product_type']));
-                }
-                // Add any other GGM fields as needed
-            }
-        }
+        // ICGEM specific data 
+        $ggmDataForXml = $this->getGGMData($connection, $id);
+        $this->insertGgmProperties($xml, $ggmDataForXml);
+
+        // Data Sources
+        $dataSources = $this->getDataSources($connection, $id);
+        $this->insertDataSources($xml, $dataSources);
+
+        // Topographic Model Properties
+        $topographicProperties = $this->getTopographicModelProperties($connection, $id);
+        $this->insertTopographicModelProperties($xml, $topographicProperties);
+
+        // Temporal Model Properties
+        $temporalProperties = $this->getTemporalModelProperties($connection, $id);
+        $this->insertTemporalModelProperties($xml, $temporalProperties);
+
+        // Ellipsoidal Parameters
+        $ellipsoidalParameters = $this->getEllipsoidalParameters($connection, $id);
+        $this->insertEllipsoidalParameters($xml, $ellipsoidalParameters);
+
         // XML formating
         $dom = dom_import_simplexml($xml)->ownerDocument;
         $dom->formatOutput = true;
@@ -1217,7 +1144,7 @@ class DatasetController
             return $newXml;
         }
     }
-
+    
     /**
      * Exports a resource in the specified metadata scheme and initiates a file download.
      *
@@ -1397,72 +1324,5 @@ XML;
         // Use the existing private function, returning the combined XML as a string.
         $vars = ['id' => $id];
         return $this->handleExportAll($vars, false, true);
-    }
-    /**
-         * Exports the base XML for a resource as a file download.
-         *
-         * This method serves as a public endpoint to trigger the export of the base XML
-         * (including GGM properties if present) for a given resource. It delegates the actual
-         * export logic to handleExportBaseXml().
-         *
-         * @param array<mixed> $vars An associative array containing at least the key 'id' (resource ID).
-         * @return string|null
-         */
-    public function exportBaseXml(array $vars): ?string
-    {
-        $this->handleExportBaseXml($vars);
-        return null; // This line will never be reached due to exit() in handleExportBaseXml
-    }
-    /**
-     * Handles the export of the base XML for a resource and outputs it as a file download.
-     *
-     * This method generates the base XML for the specified resource (including GGM properties if present),
-     * sets appropriate headers for file download, and outputs the XML content. If XML generation fails,
-     * it returns a JSON error response with HTTP 500.
-     *
-     * @param array<mixed> $vars An associative array containing at least the key 'id' (resource ID).
-     * @return string|null
-     */
-    public function handleExportBaseXml(array $vars): ?string
-    {
-        $id = intval($vars['id']);
-
-        try {
-            // Get the base XML, which includes GGM properties if they exist
-            $xmlString = $this->getResourceAsXml($this->connection, $id);
-
-            if (empty($xmlString)) {
-                // getResourceAsXml might throw an exception on error
-                // This check is a fallback for empty XML
-                http_response_code(500);
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['error' => "Failed to generate XML for resource ID: $id"]);
-                exit();
-            }
-
-            // Ensure no output has been sent before headers
-            if (ob_get_level()) {
-                ob_end_clean();
-            }
-
-            $filename = "resource_{$id}.xml";
-            header('Content-Type: application/xml; charset=utf-8');
-            header('Content-Disposition: attachment; filename="' . $filename . '"');
-            header('Content-Length: ' . strlen($xmlString));
-            // Optional: Caching prevention headers
-            header('Cache-Control: no-cache, no-store, must-revalidate');
-            header('Pragma: no-cache');
-            header('Expires: 0');
-
-            echo $xmlString;
-            exit();
-
-        } catch (Exception $e) {
-            // Log the exception $e->getMessage()
-            http_response_code(500);
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['error' => "An error occurred: " . $e->getMessage()]);
-            exit();
-        }
     }
 }

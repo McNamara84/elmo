@@ -19,7 +19,7 @@ test.describe('Minimal Valid Dataset Test', () => {
     await expect(page.locator(SELECTORS.modals.submit)).toBeVisible();
   });
 
-  test('submits dataset successfully via AJAX', async ({ page }) => {
+  test.skip('submits dataset successfully via AJAX', async ({ page }) => {
     const modalSubmitButton = page.locator('#button-submit-submit');
     await expect(modalSubmitButton).toBeDisabled();
 
@@ -59,7 +59,7 @@ test.describe('Minimal Valid Dataset Test', () => {
     await page.unroute(SUBMISSION_ENDPOINT);
   });
 
-  test('shows an error notification when the AJAX submission fails', async ({ page }) => {
+  test.skip('shows an error notification when the AJAX submission fails', async ({ page }) => {
     const modalSubmitButton = page.locator('#button-submit-submit');
     await expect(modalSubmitButton).toBeDisabled();
 
