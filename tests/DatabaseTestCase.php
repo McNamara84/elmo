@@ -131,7 +131,6 @@ abstract class DatabaseTestCase extends TestCase
      */
     protected function tearDown(): void
     {
-        $this->cleanupTestData();
         parent::tearDown();
     }
 
@@ -142,6 +141,8 @@ abstract class DatabaseTestCase extends TestCase
      */
     public static function tearDownAfterClass(): void
     {
+        // uncomment the next line when you are done with testing
+        //$this->cleanupTestData();
         if (self::$sharedConnection !== null) {
             self::$sharedConnection->close();
             self::$sharedConnection = null;
