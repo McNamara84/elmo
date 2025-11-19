@@ -103,11 +103,11 @@ function prepareResourceData($postData)
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
                 $rightsId = $row['rights_id'];
-                elmo_log("Default license '$defaultLicense' not found, using CC-BY-4.0 fallback");
+                error_log("Saving license. fallback activated: Default license '$defaultLicense' not found, using CC-BY-4.0 fallback");
             } else {
                 // Final fallback to ID 1 if CC-BY-4.0 also not found
                 $rightsId = 1;
-                elmo_log("Neither default license '$defaultLicense' nor CC-BY-4.0 found, using hardcoded ID 1");
+                error_log("Saving license. fallback activated: Neither default license '$defaultLicense' nor CC-BY-4.0 found, using hardcoded ID 1");
             }
         }
     } else {
