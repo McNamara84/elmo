@@ -786,7 +786,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [datacite, iso, dif]
+            enum: [datacite, iso]
       responses:
         "200":
           description: Successful operation
@@ -830,7 +830,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [datacite, iso, dif]
+            enum: [datacite, iso]
       responses:
         "200":
           description: Successful operation
