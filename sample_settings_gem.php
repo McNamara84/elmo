@@ -49,6 +49,8 @@ $showRelatedWork = true;
 $showFundingReference = true;
 // Show Author Institution form group
 $showAuthorInstitution = true;
+// Show license form group. if not shown defaults to CC-BY 4.0
+$showLicense = false;
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group

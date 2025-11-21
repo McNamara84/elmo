@@ -116,6 +116,8 @@ jobs:
         \$smtpPassword = 'test_password';
         \$smtpSender = 'test_sender@test.com';
         \$feedbackAddress = 'feedback@test.com';
+        \$showLicense = true;
+        \$showGGMsProperties = false;
         EOF
 
     - name: Initialize database structure and lookup data
