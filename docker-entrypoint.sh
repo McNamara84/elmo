@@ -46,15 +46,28 @@ db_has_tables() {
 
 wait_for_db
 
+# set the default to keep the data
+DB_INIT_MODE="${DB_INIT_MODE:-keep_data}"
+
 # Only run installer when allowed AND schema is empty
-if [ "${INSTALL_ACTION:-skip}" != "skip" ]; then
-  if db_has_tables; then
-    echo "📚  Database schema for '${DB_NAME}' already present — skipping install."
-  else
-    echo "🚀  Running initial database setup (${INSTALL_ACTION:-complete})…"
-    php /var/www/html/install.php "${INSTALL_ACTION:-complete}" # complete|basic
-    echo "🏁  Database setup finished."
+if [ "${DB_INIT_MODE}" != "skip" ]; then
+  if [ "${DB_INIT_MODE}" = "keep_data" ] && db_has_tables; then
+    echo "⛱️ INSTALL_ACTION=basic and database schema for '${DB_NAME}' already present — install.php is not called to save data."
+    continue
   fi
+  else
+    if [ "${DB_INIT_MODE}" = "keep_data" ] && ! db_has_tables; then
+      echo "You chose to keep data, but there are no tables yet. ⏳  Running initial database setup (basic)"
+      php /var/www/html/install.php basic
+    fi
+    
+    if [ "${DB_INIT_MODE}" = "drop_data" ]; then
+    echo "🚀  Running full database setup DB_INIT_MODE was set to drop_data"
+    php /var/www/html/install.php "${INSTALL_ACTION:-basic}" # complete|basic
+
+  fi
+  echo "🏁  Database setup finished."
+
 else
   echo "⏭️  INSTALL_ACTION=skip — no install attempt."
 fi
