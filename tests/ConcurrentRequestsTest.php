@@ -300,21 +300,32 @@ class ConcurrentRequestsTest extends DatabaseTestCase
 
         // Verify no cross-contamination of keywords
         $stmt = $this->connection->prepare("
-            SELECT COUNT(*) as count
-            FROM Free_Keywords fk
-            JOIN Resource_has_Free_Keywords rhfk ON fk.free_keywords_id = rhfk.Free_Keywords_free_keywords_id
-            WHERE rhfk.Resource_resource_id = ? AND fk.free_keyword IN (?, ?, ?, ?)
+            SELECT COUNT(*) as count FROM (
+                -- Keywords from Resource 2 incorrectly linked to Resource 1
+                SELECT fk.free_keywords_id
+                FROM Free_Keywords fk
+                JOIN Resource_has_Free_Keywords rhfk ON fk.free_keywords_id = rhfk.Free_Keywords_free_keywords_id
+                JOIN Resource reso ON rhfk.Resource_resource_id = reso.resource_id
+                WHERE reso.DOI = '10.5880/GFZ.TEST.CONCURRENT.FULL.001'
+                AND fk.free_keyword LIKE 'resource_2%' -- Assuming the keyword value starts with 'resource_2'
+
+                UNION
+
+                -- Keywords from Resource 1 incorrectly linked to Resource 2
+                SELECT fk.free_keywords_id
+                FROM Free_Keywords fk
+                JOIN Resource_has_Free_Keywords rhfk ON fk.free_keywords_id = rhfk.Free_Keywords_free_keywords_id
+                JOIN Resource reso ON rhfk.Resource_resource_id = reso.resource_id
+                WHERE reso.DOI = '10.5880/GFZ.TEST.CONCURRENT.FULL.002'
+                AND fk.free_keyword LIKE 'resource_1%' -- Assuming the keyword value starts with 'resource_1'
+            ) AS WrongKeywords
         ");
-        $stmt->bind_param("issss", $resource_id_1, 
-            "resource_2_keyword_1", "resource_2_keyword_2", "resource_2_keyword_3", "resource_2_keyword_4");
+
+        // Note: Prepared statements usually use placeholders (like ? or :name) for dynamic values.
+        // Since your DOIs and keyword patterns are hardcoded test values, this is fine for now.
+
         $stmt->execute();
         $wrongKeywords = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(0, $wrongKeywords, "Resource 1 should not have Resource 2's keywords");
-
-        $stmt->bind_param("issss", $resource_id_2,
-            "resource_1_keyword_1", "resource_1_keyword_2", "resource_1_keyword_3", "");
-        $stmt->execute();
-        $wrongKeywords2 = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(0, $wrongKeywords2, "Resource 2 should not have Resource 1's keywords");
+        $this->assertEquals(0, $wrongKeywords, "Resource 1 and Resource 2's keywords should not be mixed");
     }
 }
