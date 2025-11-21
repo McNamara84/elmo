@@ -4,6 +4,8 @@ settings.php
 .env
 node_modules/
 vendor/
+install.js
+install.html
 
 .DS_Store # macOS specific file
 
