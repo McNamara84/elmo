@@ -77,10 +77,8 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
 
     try {
     // Logic in these lines is to enable XML save
-    // After the resource information is written to the db,
-    // Currently, nothing transfers the information to xml format.
-    // in the meanwhile, if this lines do work,
-    // the xml file will be generated on the run
+    // After the resource information is written to the db, this code will create an xml file
+
     require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
     $datasetController = new DatasetController();
     } catch (Exception $e) {
