@@ -389,24 +389,39 @@ textarea.is-valid,
 }
 
 .logo-center-wrapper {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  pointer-events: auto;
+  flex: 1;
 }
 
-.logo-center-wrapper img {
-  pointer-events: none;
+/* Header als flex-container */
+header.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; 
+  flex-wrap: wrap; 
+  padding: 0 1rem;
 }
 
-@media (max-width: 767.98px) {
-  .logo,
-  .logo-center-wrapper {
-    display: none !important;
+/* Right alignment for legal notice / dropdowns */
+header .ms-auto.d-flex {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Make logo smaller at screen widths of 1100px or less so that nothing overlaps */
+@media (max-width: 1100px) {
+  .logo {
+    height: 35px;
+  }
+}
+
+@media (max-width: 900px) {
+  .logo {
+    height: 30px;
   }
 }
