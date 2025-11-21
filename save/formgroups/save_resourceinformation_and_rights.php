@@ -30,7 +30,13 @@ function saveResourceInformationAndRights($connection, $postData)
     // Iterates over $requiredArrayFields to check if each array field is present and not empty in $postData.
     try {
         // Validate required fields
-        $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language', 'Rights'];
+        $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
+        
+        // Only require Rights field if license form group is shown
+        global $showLicense;
+        if ($showLicense) {
+            $requiredFields[] = 'Rights';
+        }
         $requiredArrayFields = ['title', 'titleType'];
 
         if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
@@ -74,6 +80,39 @@ function saveResourceInformationAndRights($connection, $postData)
  */
 function prepareResourceData($postData)
 {
+
+    global $showLicense, $connection, $showGGMsProperties, $defaultLicense;
+    
+    // If showLicense is false and no Rights value is provided, use CC-BY 4.0 (rights_id = 1)
+    $rightsId = isset($postData['Rights']) ? (int) $postData['Rights'] : null;
+    // this part handles the assignment of license when the license form group is not shown
+    if ($rightsId === null && !$showLicense) {
+        // Query the database to find the default license provided in settings.php
+        $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ?");
+        $stmt->bind_param("s", $defaultLicense);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $rightsId = $row['rights_id'];
+        } else {
+            // Fallback: try to find CC-BY-4.0 if default license not found
+            $fallbackLicense = "CC-BY-4.0";
+            $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ?");
+            $stmt->bind_param("s", $fallbackLicense);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $rightsId = $row['rights_id'];
+                error_log("Saving license. fallback activated: Default license '$defaultLicense' not found, using CC-BY-4.0 fallback");
+            } else {
+                // Final fallback to ID 1 if CC-BY-4.0 also not found
+                $rightsId = 1;
+                error_log("Saving license. fallback activated: Neither default license '$defaultLicense' nor CC-BY-4.0 found, using hardcoded ID 1");
+            }
+        }
+    } else {
+        $rightsId = (int) $postData['Rights'];
+    }
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
         'year' => (int) $postData['year'],
@@ -84,7 +123,7 @@ function prepareResourceData($postData)
         'version' => isset($postData['version']) && trim($postData['version']) !== ''
             ? (float) $postData['version'] : null,
         'language' => (int) $postData['language'],
-        'rights' => (int) $postData['Rights']
+        'rights' => $rightsId
     ];
 }
 
