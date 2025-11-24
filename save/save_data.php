@@ -38,42 +38,47 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
         echo json_encode(['resource_id' => $resource_id]);
         exit();
     }
-
+    try{
     // Saving all mandatory fields & optional fields if needed
-    $connection->begin_transaction();
-    $resource_id = saveResourceInformationAndRights($connection, $_POST);
-    saveAuthors($connection, $_POST, $resource_id);
-    saveContactPerson($connection, $_POST, $resource_id);
-    if ($showMslLabs) {
-        saveOriginatingLaboratories($connection, $_POST, $resource_id);
-    }
-    if ($showContributorPersons) {
-        saveContributorPersons($connection, $_POST, $resource_id);
-    }
-    if ($showContributorInstitutions) {
-        saveContributorInstitutions($connection, $_POST, $resource_id);
-    }
-    saveDescriptions($connection, $_POST, $resource_id);
-    if ($showGcmdThesauri) {
-        saveKeywords($connection, $_POST, $resource_id);
-    }
-    if ($showFreeKeywords) {
-        saveFreeKeywords($connection, $_POST, $resource_id);
-    }
-    if ($showSpatialTemporalCoverage) {
-        saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
-    }
-    if ($showRelatedWork) {
-        saveRelatedWork($connection, $_POST, $resource_id);
-    }
-    if ($showFundingReference) {
-        saveFundingReferences($connection, $_POST, $resource_id);
-    }
-    if ($showGGMsProperties) {
-        saveGGMsProperties($connection, $_POST, $resource_id);
-    }
+        $connection->begin_transaction();
+        $resource_id = saveResourceInformationAndRights($connection, $_POST);
+        saveAuthors($connection, $_POST, $resource_id);
+        saveContactPerson($connection, $_POST, $resource_id);
+        if ($showMslLabs) {
+            saveOriginatingLaboratories($connection, $_POST, $resource_id);
+        }
+        if ($showContributorPersons) {
+            saveContributorPersons($connection, $_POST, $resource_id);
+        }
+        if ($showContributorInstitutions) {
+            saveContributorInstitutions($connection, $_POST, $resource_id);
+        }
+        saveDescriptions($connection, $_POST, $resource_id);
+        if ($showGcmdThesauri) {
+            saveKeywords($connection, $_POST, $resource_id);
+        }
+        if ($showFreeKeywords) {
+            saveFreeKeywords($connection, $_POST, $resource_id);
+        }
+        if ($showSpatialTemporalCoverage) {
+            saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
+        }
+        if ($showRelatedWork) {
+            saveRelatedWork($connection, $_POST, $resource_id);
+        }
+        if ($showFundingReference) {
+            saveFundingReferences($connection, $_POST, $resource_id);
+        }
+        if ($showGGMsProperties) {
+            saveGGMsProperties($connection, $_POST, $resource_id);
+        }
 
-    $connection->commit();
+        $connection->commit();
+
+    } catch (Exception $e) {
+        $connection->rollback();
+        throw $e;
+    }
 
     try {
     // Logic in these lines is to enable XML save
@@ -100,7 +105,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
         $bytesRead = @readfile($url);
 
         if ($bytesRead === false) {
-            error_log("save_data.php: readfile from URL failed. URL: $url . Falling back to direct generation for resource ID: $resource_id");
+            error_log("save_data.php: Starting a XML generation for resource ID: $resource_id . Reason: readfile from URL failed. URL: $url . ");
 
             try {
                 // The controller is already included, so we can use it.
