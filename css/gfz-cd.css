@@ -388,27 +388,21 @@ textarea.is-valid,
   object-fit: contain;
 }
 
-header.navbar {
-  display: flex;
-  align-items: center;
-  position: relative;    
-  padding: 0 1rem;
-  height: 80px;          
-}
-
 .logo-center-wrapper {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 1;
 }
 
-/* Click area only fits the logo */
-.logo-center-wrapper img {
-  display: block;
-  pointer-events: auto;
+/* Header als flex-container */
+header.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; 
+  flex-wrap: wrap; 
+  padding: 0 1rem;
 }
 
 /* Right alignment for legal notice / dropdowns */
@@ -424,42 +418,10 @@ header .ms-auto.d-flex {
   .logo {
     height: 35px;
   }
-
-  /* On mobile/tablet the center logo becomes right-aligned */
-  .logo-center-wrapper {
-    position: static;
-    transform: none;
-    margin-left: auto;
-    margin-right: 0;
-  }
 }
 
 @media (max-width: 900px) {
   .logo {
     height: 30px;
-  }
-}
-
-@media (min-width: 1400px) {
-  header.navbar {
-    padding-top: 0.7rem;
-    padding-bottom: 0.7rem;
-  }
-
-  .logo {
-    height: 77px;
-  }
-
-  .logo-left {
-    height: 48px;
-  }
-}
-
-@media (min-width: 1100px) and (max-width: 1400px) {
-  .logo-center-wrapper {
-    position: static;
-    transform: none;
-    margin-left: auto;
-    margin-right: auto;
   }
 }
