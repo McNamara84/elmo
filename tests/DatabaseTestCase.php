@@ -30,6 +30,21 @@ abstract class DatabaseTestCase extends TestCase
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
+        // Load .env file manually since we don't use vlucas/phpdotenv
+        $envFile = __DIR__ . '/../.env';
+        if (file_exists($envFile)) {
+            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
+                    [$key, $value] = explode('=', $line, 2);
+                    $key = trim($key);
+                    $value = trim($value);
+                    if (!getenv($key)) {
+                        putenv("{$key}={$value}");
+                    }
+                }
+            }
+        }
         
         // Check if we're in GitHub Actions or GitLab CI
         $isCI = getenv('CI') !== false || getenv('GITHUB_ACTIONS') !== false;
@@ -96,19 +111,6 @@ abstract class DatabaseTestCase extends TestCase
         if (!defined('INCLUDED_FROM_TEST')) {
             define('INCLUDED_FROM_TEST', true);
         }
-        require_once __DIR__ . '/../install.php';
-        
-        // Drop existing tables to ensure clean state
-        dropTables(self::$sharedConnection);
-        
-        // Create database structure
-        $result = createDatabaseStructure(self::$sharedConnection);
-        if ($result['status'] === 'error') {
-            throw new \RuntimeException("Failed to create database structure: " . $result['message']);
-        }
-        
-        // Insert lookup data
-        insertLookupData(self::$sharedConnection);
     }
 
     /**
@@ -120,10 +122,28 @@ abstract class DatabaseTestCase extends TestCase
     {
         parent::setUp();
 
-        // Use the shared connection
-        $this->connection = self::$sharedConnection;
-    }
+         // Use the shared connection
+        // Verify connection is alive and is NOT root
+        if (self::$sharedConnection === null) {
+            throw new \RuntimeException("Shared connection not initialized in setUpBeforeClass");
+        }
 
+        $this->connection = self::$sharedConnection;    
+        // Drop existing tables to ensure clean state
+        require_once __DIR__ . '/../install.php';
+        dropTables($this->connection);
+        
+        // Create database structure
+        $result = createDatabaseStructure($this->connection);
+        if ($result['status'] === 'error') {
+            throw new \RuntimeException("Failed to create database structure: " . $result['message']);
+        }
+        
+        // Insert lookup data
+        insertLookupData($this->connection);
+
+    }
+    
     /**
      * Clean up test data after each test.
      *
