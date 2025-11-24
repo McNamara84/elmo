@@ -469,7 +469,6 @@ class ConcurrentRequestsTest extends DatabaseTestCase
         $resourceId3 = $this->simulateSaveDataRequest($postData3, $this->connection, false);
         echo "✓ Created resource 3 (C): $resourceId3\n";
         
-        usleep(100); // Small delay to simulate some interleaving
         
         $resourceId4 = $this->simulateSaveDataRequest($postData4, $this->connection, false);
         echo "✓ Created resource 4 (D): $resourceId4\n";
