@@ -22,7 +22,7 @@ services:
       DB_NAME: ${DB_NAME}
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
-      DB_INIT_MODE: "keep_data""
+      DB_INIT_MODE: keep_data
     depends_on:
       - db
     restart: unless-stopped
