@@ -114,7 +114,7 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   const tagifyOptions = {
     whitelist: roleNames,
     enforceWhitelist: true,
-    maxTags: 15,
+    maxTags: 16,
     dropdown: {
       maxItems: 20,
       classname: "tags-look",
