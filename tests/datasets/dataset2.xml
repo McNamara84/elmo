@@ -238,35 +238,5 @@
 
 
     
-<DIF xmlns="http://gcmd.gsfc.nasa.gov/Aboutus/xml/dif/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://gcmd.gsfc.nasa.gov/Aboutus/xml/dif/&#10;&#9;&#9;&#9;&#9;file:///C:/xampp2/htdocs/mde-msl/schemas/GCMD/DIF.xsd">
-  <Entry_ID/>
-  <Entry_Title>A mandatory Event</Entry_Title>
-  <Data_Set_Citation>
-    <Dataset_Creator>Hernandez, Sofia</Dataset_Creator>
-    <Dataset_Title>A mandatory Event</Dataset_Title>
-    <Dataset_Release_Date>1956</Dataset_Release_Date>
-  </Data_Set_Citation>
-  <Spatial_Coverage>
-    <Southernmost_Latitude>51.8395</Southernmost_Latitude>
-    <Northernmost_Latitude>51.8395</Northernmost_Latitude>
-    <Westernmost_Longitude>38.0269</Westernmost_Longitude>
-    <Easternmost_Longitude>38.0269</Easternmost_Longitude>
-  </Spatial_Coverage>
-  <Data_Center>
-    <Data_Center_Name>
-      <Short_Name>Deutsches GeoForschungsZentrum GFZ</Short_Name>
-      <Long_Name>GFZ</Long_Name>
-    </Data_Center_Name>
-    <Personnel>
-      <Role>DATA CENTER CONTACT</Role>
-      <Last_Name>Deutsches GeoForschungsZentrum GFZ</Last_Name>
-    </Personnel>
-  </Data_Center>
-  <Summary>
-    <Abstract>Hier sind nur die Pflichtfelder ausgefüllt.</Abstract>
-  </Summary>
-  <Metadata_Name>DIF</Metadata_Name>
-  <Metadata_Version>9.9.3</Metadata_Version>
-</DIF>
 
 </envelope>

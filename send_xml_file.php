@@ -162,15 +162,6 @@ try {
     // Send email with XML attachment
     $mail = new PHPMailer(true);
 
-    // Configure debugging
-    $debugging_output = '';
-    $mail->SMTPDebug = 2; // Enable verbose debug output
-    // Capture SMTP debug output for returning to the client while still logging it
-    $mail->Debugoutput = function ($str, $level) use (&$debugging_output) {
-        $debugging_output .= $str;
-        error_log($str);
-    };
-
     // Server settings for GFZ SMTP
     $mail->isSMTP();
     $mail->Host = $smtpHost; // Direct hostname for GFZ

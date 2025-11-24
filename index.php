@@ -22,6 +22,8 @@ include_once __DIR__ . '/settings.php';
 // accessible by default.
 include_once __DIR__ . '/includes/feature_toggles.php';
 
+/** @var bool $showLicense */
+$showLicense = resolveFeatureToggle($showLicense ?? null, false);   
 /** @var bool $showAuthorInstitution */
 $showAuthorInstitution = resolveFeatureToggle($showAuthorInstitution ?? null, true);
 /** @var bool $showContributorPersons */
@@ -49,9 +51,12 @@ $showMslVocabs = resolveFeatureToggle($showMslVocabs ?? null, false);
 $baseDir = __DIR__ . '/';
 include $baseDir . 'header.php';
 include $baseDir . 'formgroups/resourceInformation.html';
-include $baseDir . 'formgroups/rights.html';
-include $baseDir . 'formgroups/authors.html';
 
+if ($showLicense) {
+    include $baseDir . 'formgroups/rights.html';
+}
+
+include $baseDir . 'formgroups/authors.html';
 
 if ($showAuthorInstitution) {
     include("formgroups/authorInstitution.html");
