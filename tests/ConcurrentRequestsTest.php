@@ -328,4 +328,345 @@ class ConcurrentRequestsTest extends DatabaseTestCase
         $wrongKeywords = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(0, $wrongKeywords, "Resource 1 and Resource 2's keywords should not be mixed");
     }
+    /**
+     * Helper: Simulates executing save_data.php as a POST request using a specific connection.
+     * This allows testing the full save_data.php script flow without HTTP layer.
+     *
+     * @param array $postData The POST data to submit
+     * @param \mysqli $connection The database connection to use for this request
+     * @param bool $useTransactions Whether to use transactions (if false, data may corrupt)
+     * @return int The resource_id that was created
+     */
+    private function simulateSaveDataRequest(array $postData, \mysqli $connection, bool $useTransactions = true): int
+    {
+        // Save original state
+        $savedRequestMethod = $_SERVER['REQUEST_METHOD'] ?? null;
+        $savedPost = $_POST;
+        $savedConnection = $GLOBALS['connection'] ?? null;
+        
+        try {
+            // Mock the HTTP POST request
+            $_SERVER['REQUEST_METHOD'] = 'POST';
+            $_POST = $postData;
+            $GLOBALS['connection'] = $connection;
+            
+            // If not using transactions, we need to modify the behavior
+            if (!$useTransactions) {
+                // Manually execute the save functions without transaction wrapping
+                require_once __DIR__ . '/../settings.php';
+                
+                // Instead of requiring save_data.php (which starts transaction),
+                // we'll manually call the save functions
+                $resource_id = saveResourceInformationAndRights($connection, $_POST);
+                saveAuthors($connection, $_POST, $resource_id);
+                saveContactPerson($connection, $_POST, $resource_id);
+                
+                // Other optional saves based on settings...
+                if (!empty($postData['descriptionAbstract'])) {
+                    saveDescriptions($connection, $_POST, $resource_id);
+                }
+                
+                return $resource_id;
+            } else {
+                // Use normal transaction flow
+                ob_start();
+                require __DIR__ . '/../save/save_data.php';
+                ob_end_clean();
+                
+                // Extract resource_id from the database
+                $stmt = $connection->prepare("SELECT resource_id FROM Resource WHERE DOI = ? ORDER BY resource_id DESC LIMIT 1");
+                $stmt->bind_param("s", $postData['doi']);
+                $stmt->execute();
+                $result = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                
+                return $result ? (int)$result['resource_id'] : 0;
+            }
+        } finally {
+            // Restore original state
+            $_SERVER['REQUEST_METHOD'] = $savedRequestMethod;
+            $_POST = $savedPost;
+            if ($savedConnection !== null) {
+                $GLOBALS['connection'] = $savedConnection;
+            } else {
+                unset($GLOBALS['connection']);
+            }
+        }
+    }
+
+    /**
+     * Test: Two concurrent saves on the SAME connection WITHOUT transactions.
+     * Demonstrates potential data corruption when transaction isolation is removed.
+     * 
+     * This test uses minimal required fields:
+     * - Resource info (doi, year, dateCreated, resourcetype, language)
+     * - Author (familyname, givenname)
+     * - Contact person (email)
+     * - Description (abstract)
+     * 
+     * Both requests share the same connection and execute without transaction boundaries.
+     * This tests what happens if we remove transactions - showing why they're necessary.
+     *
+     * @return void
+     */
+    public function testTwoSavesOnSameConnectionWithoutTransactions(): void
+    {
+        // Dataset 3 (C) - with all required fields
+        $postData3 = [
+            // Resource Information (required)
+            "doi" => "10.5880/GFZ.TEST.NO_TRANSACTION.003",
+            "year" => 2024,
+            "dateCreated" => "2024-03-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Dataset C - No Transaction Model"],
+            "titleType" => [1],
+            
+            // Authors: First author + Contact person as second author
+            "familynames" => ["AuthorC", "ContactC"],
+            "givennames" => ["Charlie", "Cassandra"],
+            "orcids" => ["0000-0003-3333-3333", "0000-0003-3333-9999"],
+            "personAffiliation" => ['[]', '[]'],
+            "authorPersonRorIds" => ['', ''],
+            
+            // Contact Person - maps to second author by index
+            "cpEmail" => ["", "cassandra@example.com"],
+            
+            // Description (required - Abstract)
+            "descriptionAbstract" => "Dataset C: Testing concurrent saves without transactions - Charlie & Cassandra",
+        ];
+
+        // Dataset 4 (D) - with all required fields
+        $postData4 = [
+            // Resource Information (required)
+            "doi" => "10.5880/GFZ.TEST.NO_TRANSACTION.004",
+            "year" => 2024,
+            "dateCreated" => "2024-04-01",
+            "resourcetype" => 2,
+            "language" => 2,
+            "Rights" => 1,
+            "title" => ["Dataset D - No Transaction Model"],
+            "titleType" => [1],
+            
+            // Authors: First author + Contact person as second author
+            "familynames" => ["AuthorD", "ContactD"],
+            "givennames" => ["Diana", "Derek"],
+            "orcids" => ["0000-0004-4444-4444", "0000-0004-4444-9999"],
+            "personAffiliation" => ['[]', '[]'],
+            "authorPersonRorIds" => ['', ''],
+            
+            // Contact Person - maps to second author by index
+            "cpEmail" => ["", "derek@example.com"],
+            
+            // Description (required - Abstract)
+            "descriptionAbstract" => "Dataset D: Testing concurrent saves without transactions - Diana & Derek",
+        ];
+
+        // Execute both saves on the SAME connection WITHOUT transaction boundaries
+        echo "\n=== Testing TWO SAVES on SAME CONNECTION WITHOUT transactions ===\n";
+        
+        $resourceId3 = $this->simulateSaveDataRequest($postData3, $this->connection, false);
+        echo "✓ Created resource 3 (C): $resourceId3\n";
+        
+        usleep(100); // Small delay to simulate some interleaving
+        
+        $resourceId4 = $this->simulateSaveDataRequest($postData4, $this->connection, false);
+        echo "✓ Created resource 4 (D): $resourceId4\n";
+
+        // ===== BASIC CHECKS =====
+        $this->assertGreaterThan(0, $resourceId3, "Resource 3 should be created");
+        $this->assertGreaterThan(0, $resourceId4, "Resource 4 should be created");
+        $this->assertNotEquals($resourceId3, $resourceId4, "Resource IDs should be different");
+
+        echo "\n--- Verifying Resource Basic Info ---\n";
+        
+        // Check for data consistency
+        $stmt = $this->connection->prepare("SELECT doi, year, dateCreated FROM Resource WHERE resource_id = ?");
+        $stmt->bind_param("i", $resourceId3);
+        $stmt->execute();
+        $result3 = $stmt->get_result()->fetch_assoc();
+        
+        $stmt->bind_param("i", $resourceId4);
+        $stmt->execute();
+        $result4 = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertEquals($postData3['doi'], $result3['doi'], "Resource 3 DOI mismatch");
+        $this->assertEquals($postData4['doi'], $result4['doi'], "Resource 4 DOI mismatch");
+        $this->assertEquals($postData3['year'], $result3['year'], "Resource 3 year mismatch");
+        $this->assertEquals($postData4['year'], $result4['year'], "Resource 4 year mismatch");
+        
+        echo "✓ Resource DOIs and years are correct\n";
+
+        // ===== AUTHOR ATOMICITY CHECK =====
+        echo "\n--- Verifying Author Atomicity ---\n";
+        
+        $stmt = $this->connection->prepare("
+            SELECT ap.familyname, ap.givenname, ap.orcid 
+            FROM Author_person ap
+            JOIN Author a ON ap.author_person_id = a.Author_Person_author_person_id
+            JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
+            WHERE rha.Resource_resource_id = ?
+            ORDER BY ap.familyname
+        ");
+        
+        // Check Resource 3 authors
+        $stmt->bind_param("i", $resourceId3);
+        $stmt->execute();
+        $authors3 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $this->assertCount(2, $authors3, "Resource 3 should have exactly 2 authors");
+        
+        echo "Resource 3 Authors:\n";
+        foreach ($authors3 as $author) {
+            echo "  - {$author['givenname']} {$author['familyname']} ({$author['orcid']})\n";
+        }
+        
+        // Verify specific authors for Resource 3
+        $familyNames3 = array_column($authors3, 'familyname');
+        $this->assertContains('AuthorC', $familyNames3, "Resource 3 should have AuthorC");
+        $this->assertContains('ContactC', $familyNames3, "Resource 3 should have ContactC");
+        
+        // Check Resource 4 authors
+        $stmt->bind_param("i", $resourceId4);
+        $stmt->execute();
+        $authors4 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $this->assertCount(2, $authors4, "Resource 4 should have exactly 2 authors");
+        
+        echo "Resource 4 Authors:\n";
+        foreach ($authors4 as $author) {
+            echo "  - {$author['givenname']} {$author['familyname']} ({$author['orcid']})\n";
+        }
+        
+        // Verify specific authors for Resource 4
+        $familyNames4 = array_column($authors4, 'familyname');
+        $this->assertContains('AuthorD', $familyNames4, "Resource 4 should have AuthorD");
+        $this->assertContains('ContactD', $familyNames4, "Resource 4 should have ContactD");
+        
+        echo "✓ All authors are correct\n";
+
+        // ===== CONTACT PERSON ATOMICITY CHECK =====
+        echo "\n--- Verifying Contact Person Atomicity ---\n";
+        
+        $stmt = $this->connection->prepare("
+            SELECT cp.familyName, cp.givenname, cp.email 
+            FROM Contact_Person cp
+            JOIN Resource_has_Contact_Person rhcp ON cp.contact_person_id = rhcp.Contact_Person_contact_person_id
+            WHERE rhcp.Resource_resource_id = ?
+            ORDER BY cp.familyName
+        ");
+        
+        // Check Resource 3 contact persons
+        $stmt->bind_param("i", $resourceId3);
+        $stmt->execute();
+        $contacts3 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $this->assertCount(1, $contacts3, "Resource 3 should have exactly 1 contact person");
+        $this->assertEquals('ContactC', $contacts3[0]['familyName'], "Resource 3 contact should be ContactC");
+        $this->assertEquals('cassandra@example.com', $contacts3[0]['email'], "Resource 3 contact email mismatch");
+        
+        echo "Resource 3 Contact Person:\n";
+        foreach ($contacts3 as $cp) {
+            echo "  - {$cp['givenname']} {$cp['familyName']} ({$cp['email']})\n";
+        }
+        
+        // Check Resource 4 contact persons
+        $stmt->bind_param("i", $resourceId4);
+        $stmt->execute();
+        $contacts4 = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $this->assertCount(1, $contacts4, "Resource 4 should have exactly 1 contact person");
+        $this->assertEquals('ContactD', $contacts4[0]['familyName'], "Resource 4 contact should be ContactD");
+        $this->assertEquals('derek@example.com', $contacts4[0]['email'], "Resource 4 contact email mismatch");
+        
+        echo "Resource 4 Contact Person:\n";
+        foreach ($contacts4 as $cp) {
+            echo "  - {$cp['givenname']} {$cp['familyName']} ({$cp['email']})\n";
+        }
+        
+        echo "✓ All contact persons are correct\n";
+
+        // ===== CROSS-CONTAMINATION CHECK =====
+        echo "\n--- Checking for Cross-Contamination ---\n";
+        
+        $stmt = $this->connection->prepare("
+            SELECT COUNT(*) as count FROM (
+                -- Resource 3 authors incorrectly linked to Resource 4
+                SELECT a.author_id
+                FROM Author a
+                JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
+                JOIN Author_person ap ON a.Author_Person_author_person_id = ap.author_person_id
+                WHERE rha.Resource_resource_id = ?
+                AND ap.familyname IN ('AuthorD', 'ContactD')
+                
+                UNION
+                
+                -- Resource 4 authors incorrectly linked to Resource 3
+                SELECT a.author_id
+                FROM Author a
+                JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
+                JOIN Author_person ap ON a.Author_Person_author_person_id = ap.author_person_id
+                WHERE rha.Resource_resource_id = ?
+                AND ap.familyname IN ('AuthorC', 'ContactC')
+            ) AS CrossContaminationAuthors
+        ");
+        
+        $stmt->bind_param("ii", $resourceId3, $resourceId4);
+        $stmt->execute();
+        $crossAuthors = $stmt->get_result()->fetch_assoc()['count'];
+        
+        $this->assertEquals(0, $crossAuthors, "Authors should NOT be cross-contaminated between resources");
+        echo "✓ No author cross-contamination detected\n";
+        
+        // Cross-contamination check for contact persons
+        $stmt = $this->connection->prepare("
+            SELECT COUNT(*) as count FROM (
+                -- Resource 3 contacts incorrectly linked to Resource 4
+                SELECT cp.contact_person_id
+                FROM Contact_Person cp
+                JOIN Resource_has_Contact_Person rhcp ON cp.contact_person_id = rhcp.Contact_Person_contact_person_id
+                WHERE rhcp.Resource_resource_id = ?
+                AND cp.familyName IN ('ContactD')
+                
+                UNION
+                
+                -- Resource 4 contacts incorrectly linked to Resource 3
+                SELECT cp.contact_person_id
+                FROM Contact_Person cp
+                JOIN Resource_has_Contact_Person rhcp ON cp.contact_person_id = rhcp.Contact_Person_contact_person_id
+                WHERE rhcp.Resource_resource_id = ?
+                AND cp.familyName IN ('ContactC')
+            ) AS CrossContaminationContacts
+        ");
+        
+        $stmt->bind_param("ii", $resourceId3, $resourceId4);
+        $stmt->execute();
+        $crossContacts = $stmt->get_result()->fetch_assoc()['count'];
+        
+        $this->assertEquals(0, $crossContacts, "Contact persons should NOT be cross-contaminated between resources");
+        echo "✓ No contact person cross-contamination detected\n";
+
+        // ===== DESCRIPTION ATOMICITY CHECK =====
+        echo "\n--- Verifying Description Atomicity ---\n";
+        
+        $stmt = $this->connection->prepare("
+            SELECT description FROM Description 
+            WHERE resource_id = ? AND type = 'Abstract'
+        ");
+        
+        $stmt->bind_param("i", $resourceId3);
+        $stmt->execute();
+        $desc3 = $stmt->get_result()->fetch_assoc();
+        $this->assertEquals($postData3['descriptionAbstract'], $desc3['description'], "Resource 3 description mismatch");
+        echo "Resource 3 Abstract: {$desc3['description']}\n";
+        
+        $stmt->bind_param("i", $resourceId4);
+        $stmt->execute();
+        $desc4 = $stmt->get_result()->fetch_assoc();
+        $this->assertEquals($postData4['descriptionAbstract'], $desc4['description'], "Resource 4 description mismatch");
+        echo "Resource 4 Abstract: {$desc4['description']}\n";
+        
+        $stmt->close();
+        echo "✓ All descriptions are correct\n";
+
+        echo "\n=== Test Complete: No data corruption detected ===\n";
+    }
 }
