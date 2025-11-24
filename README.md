@@ -78,6 +78,8 @@ Following conditions are required for installation:
 	Please mind that: 
 	- Environment variables for database setup only apply on first container startup. If volumes persist, old configs stay alive.
 	- Use `docker-compose down -v` to reset the database when updating credentials.
+  - To recreate the database structure, a special variable 'DB_INIT_MODE' is introduced. Setting it to 'keep_data' will mean that the db is reset only if no tables are found. 'drop_data' will ensure an actual database structure (see install.php), but will lose data. Setting to 'skip' skips the procedure.   
+
 6. Docker Environment Setup 🐳
 
 This section outlines the automatic processes handled by the Docker environment for ELMO. While not strictly necessary for basic usage, understanding these steps is crucial for modifying behavior or troubleshooting.
