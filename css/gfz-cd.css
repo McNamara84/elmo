@@ -403,6 +403,7 @@ header.navbar {
   justify-content: space-between; 
   flex-wrap: wrap; 
   padding: 0 1rem;
+  height: 80px;   
 }
 
 /* Right alignment for legal notice / dropdowns */
