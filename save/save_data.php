@@ -38,39 +38,60 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
         echo json_encode(['resource_id' => $resource_id]);
         exit();
     }
+    /**
+     * Existing functions dont alwys throw an exception, but sometimes just return false. This won't interrupt the save process
+     * SO, This Wrapper to convert false returns from save functions into exceptions.
+     *
+     * @param callable $callback The function to call
+     * @param mixed ...$args Arguments to pass to the function
+     * @return mixed The return value from the callback
+     * @throws Exception If the callback returns false
+     */
+    function executeSaveFunction($callback, ...$args)
+    {
+        $result = $callback(...$args);
+        
+        if ($result === false) {
+            throw new Exception("Save operation failed: " . (is_array($callback) 
+                ? $callback[1] 
+                : $callback) . " returned false");
+        }
+        
+        return $result;
+    }
     try{
     // Saving all mandatory fields & optional fields if needed
         $connection->begin_transaction();
-        $resource_id = saveResourceInformationAndRights($connection, $_POST);
-        saveAuthors($connection, $_POST, $resource_id);
-        saveContactPerson($connection, $_POST, $resource_id);
+        $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $_POST);
+        executeSaveFunction('saveAuthors', $connection, $_POST, $resource_id);
+        executeSaveFunction('saveContactPerson', $connection, $_POST, $resource_id);
         if ($showMslLabs) {
-            saveOriginatingLaboratories($connection, $_POST, $resource_id);
+            executeSaveFunction('saveOriginatingLaboratories', $connection, $_POST, $resource_id);
         }
         if ($showContributorPersons) {
-            saveContributorPersons($connection, $_POST, $resource_id);
+            executeSaveFunction('saveContributorPersons', $connection, $_POST, $resource_id);
         }
         if ($showContributorInstitutions) {
-            saveContributorInstitutions($connection, $_POST, $resource_id);
+            executeSaveFunction('saveContributorInstitutions', $connection, $_POST, $resource_id);
         }
-        saveDescriptions($connection, $_POST, $resource_id);
+        executeSaveFunction('saveDescriptions', $connection, $_POST, $resource_id);
         if ($showGcmdThesauri) {
-            saveKeywords($connection, $_POST, $resource_id);
+            executeSaveFunction('saveKeywords', $connection, $_POST, $resource_id);
         }
         if ($showFreeKeywords) {
-            saveFreeKeywords($connection, $_POST, $resource_id);
+            executeSaveFunction('saveFreeKeywords', $connection, $_POST, $resource_id);
         }
         if ($showSpatialTemporalCoverage) {
-            saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
+            executeSaveFunction('saveSpatialTemporalCoverage', $connection, $_POST, $resource_id);
         }
         if ($showRelatedWork) {
-            saveRelatedWork($connection, $_POST, $resource_id);
+            executeSaveFunction('saveRelatedWork', $connection, $_POST, $resource_id);
         }
         if ($showFundingReference) {
-            saveFundingReferences($connection, $_POST, $resource_id);
+            executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);
         }
         if ($showGGMsProperties) {
-            saveGGMsProperties($connection, $_POST, $resource_id);
+            executeSaveFunction('saveGGMsProperties', $connection, $_POST, $resource_id);
         }
 
         $connection->commit();
