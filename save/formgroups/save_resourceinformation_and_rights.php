@@ -234,7 +234,11 @@ function createNewResource($connection, $resourceData)
         $resourceData['language']
     );
 
-    $stmt->execute();
+    try { $stmt->execute();
+    } catch (Exception $e) {
+        error_log("Error creating new resource: " . $e->getMessage());
+        throw $e;
+    }
     return $stmt->insert_id;
 }
 
