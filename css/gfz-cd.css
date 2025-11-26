@@ -39,9 +39,16 @@
 .feedback-button {
     z-index: 1000;
     font-size: 16px;
-    transition: transform 0.5s ease-in-out;
     background-color: #800080;
     color: white !important;
+}
+
+.feedback-button:hover {
+    background-color: #6A006A;
+}
+
+.feedback-button:active {
+    background-color: #6A006A;
 }
 
 @keyframes blink {
