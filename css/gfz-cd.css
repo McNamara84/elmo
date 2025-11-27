@@ -39,9 +39,16 @@
 .feedback-button {
     z-index: 1000;
     font-size: 16px;
-    transition: transform 0.5s ease-in-out;
     background-color: #800080;
     color: white !important;
+}
+
+.feedback-button:hover {
+    background-color: #6A006A;
+}
+
+.feedback-button:active {
+    background-color: #6A006A;
 }
 
 @keyframes blink {
@@ -388,25 +395,78 @@ textarea.is-valid,
   object-fit: contain;
 }
 
+header.navbar {
+  display: flex;
+  align-items: center;
+  position: relative;    
+  padding: 0 1rem;
+  height: 80px;          
+}
+
 .logo-center-wrapper {
   position: absolute;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
+}
+
+/* Click area only fits the logo */
+.logo-center-wrapper img {
+  display: block;
   pointer-events: auto;
 }
 
-.logo-center-wrapper img {
-  pointer-events: none;
+/* Right alignment for legal notice / dropdowns */
+header .ms-auto.d-flex {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; 
 }
 
-@media (max-width: 767.98px) {
-  .logo,
+/* Make logo smaller at screen widths of 1100px or less so that nothing overlaps */
+@media (max-width: 1100px) {
+  .logo {
+    height: 35px;
+  }
+
+  /* On mobile/tablet the center logo becomes right-aligned */
   .logo-center-wrapper {
-    display: none !important;
+    position: static;
+    transform: none;
+    margin-left: auto;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .logo {
+    height: 30px;
+  }
+}
+
+@media (min-width: 1400px) {
+  header.navbar {
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+  }
+
+  .logo {
+    height: 77px;
+  }
+
+  .logo-left {
+    height: 48px;
+  }
+}
+
+@media (min-width: 1100px) and (max-width: 1400px) {
+  .logo-center-wrapper {
+    position: static;
+    transform: none;
+    margin-left: auto;
+    margin-right: auto;
   }
 }

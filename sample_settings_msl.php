@@ -33,6 +33,10 @@ $apiKeyTimezone = 'your_timezone_api_key';
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
 // maximale Anzahl der eingebbaren Titel
 $maxTitles = 2;
+
+// having the MSL logo in the header:
+$showMslLogo = true;
+
 // Show Contributor Persons form group
 $showContributorPersons = true;
 // Show Contributor Institutios form group
@@ -121,7 +125,3 @@ if (isset($_GET['setting'])) {
 function elmo_log($msg) {
     error_log('[ELMO save_data] ' . $msg);
 }
-
-$msl_logo = '
-  <a href="https://epos-msl.uu.nl/" target="_blank" rel="noopener noreferrer"> <img src="logos/EPOS_logo.png" alt="MSL Logo" class="logo logo-right"> </a>
-';
