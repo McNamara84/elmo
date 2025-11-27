@@ -226,8 +226,53 @@ try {
     }
 
     // Add XML attachment
-    $mail->addStringAttachment($xml_content, "metadata_" . $resource_id . ".xml");
-    error_log("XML Submit: Added XML attachment: metadata_" . $resource_id . ".xml");
+    // 1. Fetch first person author
+    try {
+        $authorQuery = $connection->prepare("
+            SELECT ap.familyname AS last_name
+            FROM Resource_has_Author rha
+            JOIN Author a ON rha.Author_author_id = a.author_id
+            JOIN Author_person ap ON a.Author_Person_author_person_id = ap.author_person_id
+            WHERE rha.Resource_resource_id = ?
+            ORDER BY ap.familyname ASC
+            LIMIT 1
+        ");
+        $authorQuery->execute([$resource_id]);
+        $result = $authorQuery->get_result();
+        $row = $result->fetch_assoc();
+        $firstAuthor = $row['last_name'] ?? 'no_author';
+    } catch (Exception $e) {
+        $firstAuthor = 'author_error';
+        error_log("Author query failed: " . $e->getMessage());
+    }
+
+    // 2. Fetch title
+    try {
+        $titleQuery = $connection->prepare("
+            SELECT `text` 
+            FROM Title 
+            WHERE Resource_resource_id = ?
+            ORDER BY title_id ASC
+            LIMIT 1
+        ");
+        $titleQuery->execute([$resource_id]);
+        $result = $titleQuery->get_result();
+        $row = $result->fetch_assoc();
+        $title = $row['text'] ?? 'no_title';
+    } catch (Exception $e) {
+        $title = 'title_error';
+        error_log("Title query failed: " . $e->getMessage());
+    }
+
+    // 3. Clean title (spaces → underscores only)
+    $cleanTitle = str_replace(' ', '_', $title);
+
+    // 4. Generate filename (Author_CleanTitle pattern)
+    $xmlFilename = "metadata{$resource_id}-{$firstAuthor}_{$cleanTitle}.xml";
+    error_log("Final XML filename: " . $xmlFilename);
+
+    $mail->addStringAttachment($xml_content, $xmlFilename);
+    error_log("XML attachment added: " . $xmlFilename);
 
     // Prepare email content
     $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
