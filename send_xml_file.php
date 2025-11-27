@@ -264,7 +264,7 @@ try {
         error_log("Title query failed: " . $e->getMessage());
     }
 
-    // 3. Clean title (spaces → underscores only)
+    // 3. Clean title
     $cleanTitle = str_replace(' ', '_', $title);
 
     // 4. Generate filename (Author_CleanTitle pattern)
