@@ -5,6 +5,8 @@ settings.php
 node_modules/
 vendor/
 install.js
+install.html
+
 .DS_Store # macOS specific file
 
 # Playwright

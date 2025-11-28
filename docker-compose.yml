@@ -23,6 +23,7 @@ services:
       ROOT_PASSWORD: ${ROOT_PASSWORD}
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
+      DB_INIT_MODE: keep_data
     depends_on:
       - db
     restart: unless-stopped

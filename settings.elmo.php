@@ -33,6 +33,10 @@ $apiKeyTimezone = getenv('TIMEZONE_API_KEY') ?: 'your_timezone_api_key';
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
 // maximale Anzahl der eingebbaren Titel
 $maxTitles = 2;
+
+// having the MSL logo in the header:
+$showMslLogo = false;
+
 // Show Contributor Persons form group
 $showContributorPersons = true;
 // Show Contributor Institutios form group
@@ -136,6 +140,3 @@ if (isset($_GET['setting'])) {
 function elmo_log($msg) {
     error_log('[ELMO save_data] ' . $msg);
 }
-
-
-$msl_logo = '';
