@@ -22,7 +22,9 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      # Database install routine
       INSTALL_ACTION: basic
+      DB_INIT_MODE: drop_data 
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
@@ -37,7 +39,6 @@ services:
       # Flags for Standard ELMO
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
-      DB_INIT_MODE: "keep_data"
     depends_on:
       - db
     restart: unless-stopped
@@ -78,7 +79,6 @@ services:
       # Flags for msl
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
-      DB_INIT_MODE: "keep_data"
     depends_on:
       - db
     restart: unless-stopped
