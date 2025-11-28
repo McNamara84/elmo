@@ -55,6 +55,9 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
             throw new Exception("Save operation failed: " . (is_array($callback) 
                 ? $callback[1] 
                 : $callback) . " returned false");
+            error_log("[💿SAVE]: Save operation failed: " . (is_array($callback) 
+                ? $callback[1] 
+                : $callback) . " returned false");
         }
         
         return $result;
@@ -62,7 +65,9 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
     try{
     // Saving all mandatory fields & optional fields if needed
         $connection->begin_transaction();
+        error_log("[💿SAVE]:Starting save process in save_data.php");
         $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $_POST);
+        error_log("[💿SAVE]:the id generated is " . $resource_id);
         executeSaveFunction('saveAuthors', $connection, $_POST, $resource_id);
         executeSaveFunction('saveContactPerson', $connection, $_POST, $resource_id);
         if ($showMslLabs) {
@@ -95,9 +100,10 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
         }
 
         $connection->commit();
-
+        error_log("[💿SAVE]: Save process completed successfully for resource ID: " . $resource_id);
     } catch (Exception $e) {
         $connection->rollback();
+        error_log("[💿SAVE]: Save process failed for resource ID: " . (isset($resource_id) ? $resource_id : 'N/A') . ". Error: " . $e->getMessage());
         throw $e;
     }
 
@@ -126,7 +132,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
         $bytesRead = @readfile($url);
 
         if ($bytesRead === false) {
-            error_log("save_data.php: Starting a XML generation for resource ID: $resource_id . Reason: readfile from URL failed. URL: $url . ");
+            error_log("[💿SAVE]: Starting a XML generation for resource ID: $resource_id . Reason: readfile from URL failed. URL: $url . ");
 
             try {
                 // The controller is already included, so we can use it.
@@ -142,7 +148,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
                     echo "Error: Could not retrieve or generate XML file.";
                 }
             } catch (Exception $e) {
-                error_log("Error in save_data.php fallback: " . $e->getMessage());
+                error_log("[💿SAVE]:XML generation inside save_data failed for resource ID: $resource_id. Error: " . $e->getMessage());
                 http_response_code(500);
                 echo "Error: XML generation inside save_data failed";
             }
