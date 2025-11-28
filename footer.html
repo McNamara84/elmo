@@ -89,9 +89,37 @@
 <script src="node_modules/@yaireo/tagify/dist/tagify.js"></script>
 <!--jsTree-->
 <script src="node_modules/jstree/dist/jstree.min.js"></script>
+<!-- Making environmental variables accessible to JS -->
 <script type="text/javascript">
   var maxTitles = "<?php echo $maxTitles; ?>";
 </script>
+<!-- Log page load event -->
+<script>
+  async function logPageLoad() {
+    try {
+      await fetch('log_page_event.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        credentials: 'include',
+        body: new URLSearchParams({
+          event: 'metadata_editor_started',
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch (err) {
+      console.warn('Failed to log page load:', err);
+    }
+  }
+  // Log when page loads
+  if (document.readyState === 'loading') {
+    // DOM still loading, wait for it
+    document.addEventListener('DOMContentLoaded', logPageLoad);
+  } else {
+    // DOM already loaded, fire immediately
+    logPageLoad();
+  }
+</script>
+
 </body>
 
 </html>
