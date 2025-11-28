@@ -393,7 +393,7 @@ $(document).ready(function () {
    */
   window.setUpAutocompleteFunder = function (inputElement) {
     let searchTimeout;
-    const MAX_RESULTS = 50; // Limit dropdown results
+    const MAX_RESULTS = 30; // Limit dropdown results
     const MIN_LENGTH = 2; // Minimum characters before search
     
     $(inputElement)
@@ -423,18 +423,18 @@ $(document).ready(function () {
               }
             }
             
-            // If we need more results, search anywhere in the name
-            if (results.length < MAX_RESULTS) {
-              const matcher = new RegExp(searchTerm, "");
-              for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
-                const itemName = fundersData[i].name.toLowerCase();
-                
-                // Skip if already in results
-                if (results.indexOf(fundersData[i]) === -1 && itemName.indexOf(searchTerm) > 0) {
-                  results.push(fundersData[i]);
-                }
+          // If we need more results, search anywhere in the name
+          if (results.length < MAX_RESULTS) {
+            for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
+              const itemName = fundersData[i].name.toLowerCase();
+              
+              // Check if this funder is NOT already in the results array
+              // AND Check if searchTerm exists anywhere in the funder name
+              if (results.indexOf(fundersData[i]) === -1 && itemName.indexOf(searchTerm) !== -1) {
+                results.push(fundersData[i]);
               }
             }
+          }
             
             response(results);
           }, 200); // 200ms debounce
