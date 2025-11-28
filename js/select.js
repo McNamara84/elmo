@@ -388,20 +388,58 @@ $(document).ready(function () {
 
   /**
    * Sets up the autocomplete functionality for funder input elements.
+   * Optimized to prevent performance issues with large datasets.
    * @param {HTMLElement} inputElement - The input element to attach autocomplete to.
    */
   window.setUpAutocompleteFunder = function (inputElement) {
+    let searchTimeout;
+    const MAX_RESULTS = 50; // Limit dropdown results
+    const MIN_LENGTH = 2; // Minimum characters before search
+    
     $(inputElement)
       .autocomplete({
         source: function (request, response) {
-          var matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
-          response(
-            $.grep(fundersData, function (item) {
-              return matcher.test(item.name);
-            })
-          );
+          // Cancel previous search if still pending
+          clearTimeout(searchTimeout);
+          
+          // Require at least MIN_LENGTH characters for search
+          if (!request.term || request.term.length < MIN_LENGTH) {
+            response([]);
+            return;
+          }
+          
+          // Debounce search: wait 300ms before executing
+          searchTimeout = setTimeout(() => {
+            // Search at start of name first (more specific), then anywhere
+            const searchTerm = $.ui.autocomplete.escapeRegex(request.term).toLowerCase();
+            const results = [];
+            
+            for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
+              const itemName = fundersData[i].name.toLowerCase();
+              
+              // Prioritize matches at the start of the name
+              if (itemName.indexOf(searchTerm) === 0) {
+                results.push(fundersData[i]);
+              }
+            }
+            
+            // If we need more results, search anywhere in the name
+            if (results.length < MAX_RESULTS) {
+              const matcher = new RegExp(searchTerm, "");
+              for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
+                const itemName = fundersData[i].name.toLowerCase();
+                
+                // Skip if already in results
+                if (results.indexOf(fundersData[i]) === -1 && itemName.indexOf(searchTerm) > 0) {
+                  results.push(fundersData[i]);
+                }
+              }
+            }
+            
+            response(results);
+          }, 200); // 200ms debounce
         },
-        minLength: 2,
+        minLength: MIN_LENGTH,
         select: function (event, ui) {
           $(this).val(ui.item.name);
           $(this).siblings(".inputFunderId").val(ui.item.crossRefId);
