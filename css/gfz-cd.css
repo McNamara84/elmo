@@ -299,6 +299,19 @@ label.mandatory-field::after {
 .autosave-status--cleared {
     --autosave-indicator-color: #6c757d;
 }
+/* Compact autosave status for xs and sm screens only */
+@media (max-width: 575px) {
+  .autosave-status--compact-mobile {
+    padding: 0.25rem 0.5rem !important;
+    min-height: 1.75rem !important;
+    font-size: 0.75rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .autosave-status--compact-mobile .autosave-status__heading {
+    display: none;
+  }
+}
 
 .unvisible {
     display: none !important;
