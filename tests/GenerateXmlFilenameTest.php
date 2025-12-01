@@ -56,5 +56,43 @@ class GenerateXmlFilenameTest extends TestCase
             'Title should be truncated to 30 characters and spaces should be replaced by underscores.'
         );
     }
+    public function testUmlautsInAuthorArePreserved(): void
+    {
+        $resource_id = 7;
+        $postData = [
+            'familynames' => ['Müller'],
+            'title'       => ['Phosphorus in soils'],
+        ];
+
+        $filename = $this->buildXmlFilename($resource_id, $postData);
+
+        $this->assertStringContainsString(
+            'Müller',
+            $filename,
+            'Umlauts in the author name should be preserved in the generated filename.'
+        );
+
+        $this->assertSame(
+            'metadata7-Müller_Phosphorus_in_soils.xml',
+            $filename,
+            'Filename with umlauts and a simple ASCII title should match the expected pattern.'
+        );
+    }
+    public function testMultipleSpacesAreConvertedToMultipleUnderscores(): void
+    {
+        $resource_id = 9;
+        $postData = [
+            'familynames' => ['Ali'],
+            'title'       => ['a b  c   d'],
+        ];
+
+        $filename = $this->buildXmlFilename($resource_id, $postData);
+
+        $this->assertSame(
+            'metadata9-Ali_a_b__c___d.xml',
+            $filename,
+            'Each space in the title should be converted to a single underscore in the filename.'
+        );
+    }
 
 }
