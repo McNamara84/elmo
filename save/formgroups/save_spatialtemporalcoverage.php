@@ -73,6 +73,15 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
  */
 function insertSpatialTemporalCoverage($connection, $stcData)
 {
+    // temporary measure before ERNIE implementation
+    // reason: the old editor can't handle Date+Timezone 
+    error_log("Starting stc insertion with data: " . print_r($stcData, true));
+    if ($stcData['timeStart'] === NULL || $stcData['timeEnd'] === NULL) {
+        error_log("Nullifying timezone due to missing timeStart or timeEnd");
+        $stcData['timezone'] = NULL;
+        error_log("Timezone after nullification: " . var_export($stcData['timezone'], true));
+    }
+    
     $stmt = $connection->prepare("INSERT INTO Spatial_Temporal_Coverage 
         (`latitudeMin`, `latitudeMax`, `longitudeMin`, `longitudeMax`, `description`, 
          `dateStart`, `dateEnd`, `timeStart`, `timeEnd`, `timezone`) 
