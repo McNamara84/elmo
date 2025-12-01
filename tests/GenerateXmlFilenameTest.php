@@ -35,4 +35,26 @@ class GenerateXmlFilenameTest extends TestCase
             'Simple file name should be generated correctly..'
         );
     }
+    public function testTitleIsTruncatedTo30Chars(): void
+    {
+        $resource_id = 5;
+        $postData = [
+            'familynames' => ['Schmidt'],
+            'title'       => ['This is a very very long title that needs to be truncated'],
+        ];
+
+        $filename = $this->buildXmlFilename($resource_id, $postData);
+
+        $expectedTitle = substr($postData['title'][0], 0, 30);
+        $expectedTitle = str_replace(' ', '_', $expectedTitle);
+
+        $expected = "metadata5-Schmidt_{$expectedTitle}.xml";
+
+        $this->assertSame(
+            $expected,
+            $filename,
+            'Title should be truncated to 30 characters and spaces should be replaced by underscores.'
+        );
+    }
+
 }
