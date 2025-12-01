@@ -3,10 +3,18 @@ namespace Tests;
 
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Test class for XML filename generation logic.
+ *
+ * This class contains several test cases to verify that the filename
+ * for XML attachments is generated correctly from POST-like data,
+ * including author name, title truncation and space handling.
+ *
+ */
 class GenerateXmlFilenameTest extends TestCase
 {
     /**
-     * Help function ONLY for testing.
+     * Helper function used only inside this test class.
      */
     private function buildXmlFilename(int $resource_id, array $postData): string
     {
@@ -19,7 +27,10 @@ class GenerateXmlFilenameTest extends TestCase
         return "metadata{$resource_id}-{$firstAuthor}_{$cleanTitle}.xml";
     }
 
-    public function testSimpleAsciiTitle(): void
+    /**
+     * Tests filename generation for a simple title.
+     */
+    public function testSimpleTitle(): void
     {
         $resource_id = 3;
         $postData = [
@@ -35,6 +46,9 @@ class GenerateXmlFilenameTest extends TestCase
             'Simple file name should be generated correctly..'
         );
     }
+    /**
+    * Tests that the title part of the filename is truncated to 30 characters.
+     */
     public function testTitleIsTruncatedTo30Chars(): void
     {
         $resource_id = 5;
@@ -56,6 +70,10 @@ class GenerateXmlFilenameTest extends TestCase
             'Title should be truncated to 30 characters and spaces should be replaced by underscores.'
         );
     }
+
+    /**
+     * Tests that umlauts in the author name are preserved in the filename.
+     */
     public function testUmlautsInAuthorArePreserved(): void
     {
         $resource_id = 7;
@@ -75,9 +93,14 @@ class GenerateXmlFilenameTest extends TestCase
         $this->assertSame(
             'metadata7-Müller_Phosphorus_in_soils.xml',
             $filename,
-            'Filename with umlauts and a simple ASCII title should match the expected pattern.'
+            'Filename with umlauts and a simple title should match the expected pattern.'
         );
     }
+
+    /**
+     * Tests that every space in the title is converted to an underscore.
+     *
+     */
     public function testMultipleSpacesAreConvertedToMultipleUnderscores(): void
     {
         $resource_id = 9;
