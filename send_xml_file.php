@@ -226,7 +226,6 @@ try {
     }
 
     // Add XML attachment
-    // 1. Fetch first person author
     try {
         $authorQuery = $connection->prepare("
             SELECT ap.familyname AS last_name
@@ -246,7 +245,6 @@ try {
         error_log("Author query failed: " . $e->getMessage());
     }
 
-    // 2. Fetch title
     try {
         $titleQuery = $connection->prepare("
             SELECT `text` 
@@ -264,10 +262,8 @@ try {
         error_log("Title query failed: " . $e->getMessage());
     }
 
-    // 3. Clean title
     $cleanTitle = str_replace(' ', '_', $title);
 
-    // 4. Generate filename (Author_CleanTitle pattern)
     $xmlFilename = "metadata{$resource_id}-{$firstAuthor}_{$cleanTitle}.xml";
     error_log("Final XML filename: " . $xmlFilename);
 
