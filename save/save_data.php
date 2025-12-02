@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once __DIR__ . '/formgroups/save_relatedwork.php';
     require_once __DIR__ . '/formgroups/save_fundingreferences.php';
     require_once __DIR__ . '/formgroups/save_ggmsproperties.php';
+    require_once __DIR__ . '/formgroups/save_datasources.php';
 
     // Check if this is a resource ID request
     if (isset($_POST['get_resource_id']) && $_POST['get_resource_id'] === '1') {
@@ -70,6 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($showGGMsProperties) {
         saveGGMsProperties($connection, $_POST, $resource_id);
+    }
+    if ($showGGMsProperties) {
+        saveDataSources($connection, $_POST, $resource_id);
     }
 
     try {
