@@ -470,3 +470,20 @@ header .ms-auto.d-flex {
     margin-right: auto;
   }
 }
+
+.footer-info {
+    background-color: #1f2731;
+    color: #ffffff;
+    font-size: 0.9rem;
+}
+
+.footer-info-nav a {
+    color: #cbd6ff; 
+    margin: 0 10px;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-info-nav a:hover {
+    color: #ffffff;
+}
