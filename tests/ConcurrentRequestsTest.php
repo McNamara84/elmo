@@ -348,40 +348,21 @@ class ConcurrentRequestsTest extends DatabaseTestCase
             // Mock the HTTP POST request
             $_SERVER['REQUEST_METHOD'] = 'POST';
             $_POST = $postData;
+            $_POST['skipXmlGeneration'] = true; // Skip XML generation for testing
             $GLOBALS['connection'] = $connection;
             
-            // If not using transactions, we need to modify the behavior
-            if (!$useTransactions) {
-                // Manually execute the save functions without transaction wrapping
-                require_once __DIR__ . '/../settings.php';
+            ob_start();
+            require __DIR__ . '/../save/save_data.php';
+            ob_end_clean();
                 
-                // Instead of requiring save_data.php (which starts transaction),
-                // we'll manually call the save functions
-                $resource_id = saveResourceInformationAndRights($connection, $_POST);
-                saveAuthors($connection, $_POST, $resource_id);
-                saveContactPerson($connection, $_POST, $resource_id);
-                
-                // Other optional saves based on settings...
-                if (!empty($postData['descriptionAbstract'])) {
-                    saveDescriptions($connection, $_POST, $resource_id);
-                }
-                
-                return $resource_id;
-            } else {
-                // Use normal transaction flow
-                ob_start();
-                require __DIR__ . '/../save/save_data.php';
-                ob_end_clean();
-                
-                // Extract resource_id from the database
-                $stmt = $connection->prepare("SELECT resource_id FROM Resource WHERE DOI = ? ORDER BY resource_id DESC LIMIT 1");
-                $stmt->bind_param("s", $postData['doi']);
-                $stmt->execute();
-                $result = $stmt->get_result()->fetch_assoc();
-                $stmt->close();
-                
-                return $result ? (int)$result['resource_id'] : 0;
-            }
+            // Extract resource_id from the database
+            $stmt = $connection->prepare("SELECT resource_id FROM Resource WHERE DOI = ? ORDER BY resource_id DESC LIMIT 1");
+            $stmt->bind_param("s", $postData['doi']);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            
+            return $result ? (int)$result['resource_id'] : 0;
         } finally {
             // Restore original state
             $_SERVER['REQUEST_METHOD'] = $savedRequestMethod;
