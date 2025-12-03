@@ -8,103 +8,533 @@ require_once __DIR__ . '/../save/formgroups/save_datasources.php';
 /**
  * Test suite for saving GGM Data Sources
  * 
- * This demonstrates how to generate realistic mock data for testing the saveDataSources function
+ * Tests the complete data source saving workflow including:
+ * - Simple types (G, A, T) with field validation
+ * - Satellite (S) type with thesaurus keyword ingestion
+ * - Multiple satellite platforms expansion
+ * - All 5 types combined in a single save operation
  */
 class SaveDataSourcesTest extends DatabaseTestCase
 {
+    // ============================================================================
+    // MOCK DATA GENERATION METHODS
+    // ============================================================================
+    
     /**
-     * Test saving a single Satellite data source
+     * Generate mock data for a single Satellite data source
+     * 
+     * @param array $platformNames Optional: custom platform names to use instead of defaults
+     * @return array PostData for satellite type
      */
-    public function testSaveSingleSatelliteDataSource(): void
+    public static function satelliteRow(array $platformNames = ['GRACE', 'GRACE-FO']): array
     {
-        $resource_id = $this->createResource('test.datasources', 'Test Data Sources');
+        $platforms = [];
         
-        // Generate mock satellite data with multiple platforms
-        $mockData = MockDataSourcesData::satelliteRow(['GRACE', 'GRACE-FO', 'GOCE']);
-        $postData = MockDataSourcesData::rowsToPostData([$mockData]);
+        // Simulate Tagify tag objects with metadata
+        foreach ($platformNames as $name) {
+            $platforms[] = [
+                'value' => "Space-based Platforms > {$name}",
+                'id' => 'gcmd_' . strtolower(str_replace('-', '_', $name)),
+                'scheme' => 'GCMD Platforms',
+                'schemeURI' => 'https://gcmd.earthdata.nasa.gov/',
+                'language' => 'en'
+            ];
+        }
         
-        // Should not throw exception
-        saveDataSources($GLOBALS['db_connection'], $postData, $resource_id);
-        
-        // Verify data was saved
-        $this->assertTrue(true);
+        return [
+            'type' => 'S',
+            'satellite_platform' => json_encode($platforms),
+            'description' => 'Space-borne gravity measurement satellites',
+            'details' => '',
+            'compensation_depth' => '',
+            'identifier' => '',
+            'identifier_type' => '',
+            'model_name' => ''
+        ];
     }
     
     /**
-     * Test saving mixed data source types
+     * Generate mock data for a Ground data source
      */
-    public function testSaveMultipleDataSourceTypes(): void
+    public static function groundRow(): array
     {
-        $resource_id = $this->createResource('test.ggm.mixed', 'Mixed Data Sources');
-        
-        // Generate realistic multi-type data
-        $rows = [
-            MockDataSourcesData::satelliteRow(['GRACE', 'GRACE-FO']),
-            MockDataSourcesData::groundRow(),
-            MockDataSourcesData::altimetryRow(),
-            MockDataSourcesData::terrainRow(1000),
-            MockDataSourcesData::modelRow('DOI')
+        return [
+            'type' => 'G',
+            'datasource_details' => 'Terrestrial gravity stations',
+            'description' => 'Land-based gravity observations',
+            'satellite_platform' => '',
+            'compensation_depth' => '',
+            'identifier' => '',
+            'identifier_type' => '',
+            'model_name' => ''
+        ];
+    }
+    
+    /**
+     * Generate mock data for an Altimetry data source
+     */
+    public static function altimetryRow(): array
+    {
+        return [
+            'type' => 'A',
+            'datasource_details' => 'Direct observations from altimetry satellites',
+            'description' => 'Satellite altimetry data',
+            'satellite_platform' => '',
+            'compensation_depth' => '',
+            'identifier' => '',
+            'identifier_type' => '',
+            'model_name' => ''
+        ];
+    }
+    
+    /**
+     * Generate mock data for a Terrain/Topography data source
+     */
+    public static function terrainRow(int $compensationDepth = 500): array
+    {
+        return [
+            'type' => 'T',
+            'datasource_details' => 'Digital Elevation Model (DEM/DTM)',
+            'compensation_depth' => (string)$compensationDepth,
+            'description' => 'Topographic data for gravity field modeling',
+            'satellite_platform' => '',
+            'identifier' => '',
+            'identifier_type' => '',
+            'model_name' => ''
+        ];
+    }
+    
+    /**
+     * Generate mock data for a Model data source
+     * 
+     * @param string $identifierType Type of identifier (DOI, URL, ISBN, etc)
+     */
+    public static function modelRow(string $identifierType = 'DOI'): array
+    {
+        return [
+            'type' => 'M',
+            'datasource_details' => 'Global Gravitational Model',
+            'dIdentifier' => '10.5880/icgem.2024.001',
+            'dIdentifierType' => $identifierType,
+            'dName' => 'ICGEM_Global_Model_2024',
+            'description' => 'Reference gravity model from ICGEM',
+            'satellite_platform' => '',
+            'compensation_depth' => ''
+        ];
+    }
+    
+    /**
+     * Convert row objects back to POST array format
+     * (This is how they come from the HTML form)
+     * 
+     * @param array $rows Array of individual row data
+     * @return array PostData in form array format
+     */
+    public static function rowsToPostData(array $rows): array
+    {
+        $postData = [
+            'datasource_type' => [],
+            'datasource_details' => [],
+            'compensation_depth' => [],
+            'satellite_platform' => [],
+            'dIdentifier' => [],
+            'dIdentifierType' => [],
+            'dName' => [],
+            'datasource_description' => []
         ];
         
-        $postData = MockDataSourcesData::rowsToPostData($rows);
+        foreach ($rows as $row) {
+            $postData['datasource_type'][] = $row['type'];
+            $postData['datasource_details'][] = $row['datasource_details'] ?? $row['details'] ?? '';
+            $postData['compensation_depth'][] = $row['compensation_depth'] ?? '';
+            $postData['satellite_platform'][] = $row['satellite_platform'] ?? '';
+            $postData['dIdentifier'][] = $row['dIdentifier'] ?? $row['identifier'] ?? '';
+            $postData['dIdentifierType'][] = $row['dIdentifierType'] ?? $row['identifier_type'] ?? '';
+            $postData['dName'][] = $row['dName'] ?? $row['model_name'] ?? '';
+            $postData['datasource_description'][] = $row['description'] ?? '';
+        }
         
-        saveDataSources($GLOBALS['db_connection'], $postData, $resource_id);
+        return $postData;
+    }
+    
+    // ============================================================================
+    // HELPER METHODS FOR DATABASE ASSERTIONS
+    // ============================================================================
+    
+    /**
+     * Get data source record from database by type and description
+     */
+    private function getDataSourceFromDb(int $resourceId, string $type, string $description): ?array
+    {
+        $sql = "SELECT ds.* FROM `Data_Sources` ds
+                JOIN `Resource_has_Data_Sources` rhds ON ds.id = rhds.data_source_id
+                WHERE rhds.resource_id = ? AND ds.type = ? AND ds.description = ?";
         
-        // Verify data was saved
-        $this->assertTrue(true);
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('iss', $resourceId, $type, $description);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        
+        return $row;
     }
     
     /**
-     * Test extracting data source rows from postData
+     * Get all data sources for a resource
      */
-    public function testExtractDataSourceRows(): void
+    private function getDataSourcesForResource(int $resourceId): array
     {
-        $mockData = MockDataSourcesData::satelliteRow(['GRACE']);
-        $postData = MockDataSourcesData::rowsToPostData([$mockData]);
+        $sql = "SELECT ds.* FROM `Data_Sources` ds
+                JOIN `Resource_has_Data_Sources` rhds ON ds.id = rhds.data_source_id
+                WHERE rhds.resource_id = ?
+                ORDER BY ds.id ASC";
         
-        $rows = extractDataSourceRows($postData);
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('i', $resourceId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
         
-        $this->assertCount(1, $rows);
-        $this->assertEquals('S', $rows[0]['type']);
-        $this->assertNotEmpty($rows[0]['satellite_platform']);
+        return $rows;
     }
     
     /**
-     * Test satellite platform expansion
+     * Get thesaurus keywords for a resource
      */
-    public function testSatellitePlatformExpansion(): void
+    private function getThesaurusKeywordsForResource(int $resourceId): array
     {
+        $sql = "SELECT tk.* FROM `Thesaurus_Keywords` tk
+                JOIN `Resource_has_Thesaurus_Keywords` rhtk ON tk.id = rhtk.thesaurus_keywords_id
+                WHERE rhtk.resource_id = ?
+                ORDER BY tk.id ASC";
+        
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('i', $resourceId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        
+        return $rows;
+    }
+    
+    /**
+     * Get related works for a resource
+     */
+    private function getRelatedWorksForResource(int $resourceId): array
+    {
+        $sql = "SELECT rw.* FROM `Related_Works` rw
+                JOIN `Resource_has_Related_Works` rhrw ON rw.id = rhrw.related_works_id
+                WHERE rhrw.resource_id = ?
+                ORDER BY rw.id ASC";
+        
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('i', $resourceId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        
+        return $rows;
+    }
+    
+    // ============================================================================
+    // TEST METHODS
+    // ============================================================================
+    
+    /**
+     * Test: Save simple Ground (G) data source
+     * Assert: Correct fields populated, type-specific fields not present
+     */
+    public function testSaveSimpleGroundDataSource(): void
+    {
+        $resource_id = $this->createResource('test.ground', 'Test Ground Data Source');
+        
+        $mockData = self::groundRow();
+        $postData = self::rowsToPostData([$mockData]);
+        
+        // Save the data source
+        saveDataSources($this->connection, $postData, $resource_id);
+        
+        // Retrieve from database
+        $dbRecord = $this->getDataSourceFromDb(
+            $resource_id,
+            'G',
+            'Land-based gravity observations'
+        );
+        
+        $this->assertNotNull($dbRecord, 'Data source should be saved');
+        $this->assertEquals('G', $dbRecord['type']);
+        $this->assertEquals('Land-based gravity observations', $dbRecord['description']);
+        $this->assertEquals('Terrestrial gravity stations', $dbRecord['G_details']);
+        
+        // Assert that non-G fields are NULL
+        $this->assertNull($dbRecord['S_value_name'], 'S_value_name should be NULL for type G');
+        $this->assertNull($dbRecord['A_details'], 'A_details should be NULL for type G');
+        $this->assertNull($dbRecord['T_details'], 'T_details should be NULL for type G');
+        $this->assertNull($dbRecord['M_details'], 'M_details should be NULL for type G');
+    }
+    
+    /**
+     * Test: Save simple Altimetry (A) data source
+     * Assert: Correct fields populated, type-specific fields not present
+     */
+    public function testSaveSimpleAltimetryDataSource(): void
+    {
+        $resource_id = $this->createResource('test.altimetry', 'Test Altimetry Data Source');
+        
+        $mockData = self::altimetryRow();
+        $postData = self::rowsToPostData([$mockData]);
+        
+        saveDataSources($this->connection, $postData, $resource_id);
+        
+        $dbRecord = $this->getDataSourceFromDb(
+            $resource_id,
+            'A',
+            'Satellite altimetry data'
+        );
+        
+        $this->assertNotNull($dbRecord);
+        $this->assertEquals('A', $dbRecord['type']);
+        $this->assertEquals('Direct observations from altimetry satellites', $dbRecord['A_details']);
+        
+        // Assert that non-A fields are NULL
+        $this->assertNull($dbRecord['G_details']);
+        $this->assertNull($dbRecord['T_details']);
+        $this->assertNull($dbRecord['M_details']);
+    }
+    
+    /**
+     * Test: Save simple Terrain (T) data source
+     * Assert: Correct fields populated including compensation_depth, type-specific fields not present
+     */
+    public function testSaveSimpleTerrainDataSource(): void
+    {
+        $resource_id = $this->createResource('test.terrain', 'Test Terrain Data Source');
+        
+        $mockData = self::terrainRow(750);
+        $postData = self::rowsToPostData([$mockData]);
+        
+        saveDataSources($this->connection, $postData, $resource_id);
+        
+        $dbRecord = $this->getDataSourceFromDb(
+            $resource_id,
+            'T',
+            'Topographic data for gravity field modeling'
+        );
+        
+        $this->assertNotNull($dbRecord);
+        $this->assertEquals('T', $dbRecord['type']);
+        $this->assertEquals('Digital Elevation Model (DEM/DTM)', $dbRecord['T_details']);
+        $this->assertEquals(750, $dbRecord['T_Isostasy_compensation_depth']);
+        
+        // Assert that non-T fields are NULL
+        $this->assertNull($dbRecord['G_details']);
+        $this->assertNull($dbRecord['A_details']);
+        $this->assertNull($dbRecord['M_details']);
+    }
+    
+    /**
+     * Test: Save single Satellite (S) data source with one platform
+     * Assert: Data source saved AND thesaurus keyword created
+     */
+    public function testSaveSingleSatelliteDataSourceWithThesaurusKeyword(): void
+    {
+        $resource_id = $this->createResource('test.satellite.single', 'Test Single Satellite');
+        
+        $mockData = self::satelliteRow(['GRACE']);
+        $postData = self::rowsToPostData([$mockData]);
+        
+        saveDataSources($this->connection, $postData, $resource_id);
+        
+        // Get data source
+        $dataSources = $this->getDataSourcesForResource($resource_id);
+        $this->assertCount(1, $dataSources, 'Should have 1 data source');
+        
+        $ds = $dataSources[0];
+        $this->assertEquals('S', $ds['type']);
+        $this->assertNull($ds['G_details']);
+        $this->assertNull($ds['A_details']);
+        $this->assertNull($ds['T_details']);
+        $this->assertNull($ds['M_details']);
+        
+        // Get thesaurus keywords
+        $keywords = $this->getThesaurusKeywordsForResource($resource_id);
+        $this->assertCount(1, $keywords, 'Should have 1 thesaurus keyword');
+        
+        $keyword = $keywords[0];
+        $this->assertStringContainsString('GRACE', $keyword['keyword_value']);
+    }
+    
+    /**
+     * Test: Save Satellite (S) data source with multiple platforms
+     * Assert: 3 data sources created AND 3 thesaurus keywords created
+     */
+    public function testSaveMultipleSatellitePlatformsExpansion(): void
+    {
+        $resource_id = $this->createResource('test.satellite.multi', 'Test Multiple Satellites');
+        
         $platforms = ['GRACE', 'GRACE-FO', 'GOCE'];
-        $mockData = MockDataSourcesData::satelliteRow($platforms);
+        $mockData = self::satelliteRow($platforms);
+        $postData = self::rowsToPostData([$mockData]);
         
-        $expandedRows = expandSatellitePlatformsToRows($mockData);
+        saveDataSources($this->connection, $postData, $resource_id);
         
-        // Should expand to 3 separate rows (one per platform)
-        $this->assertCount(count($platforms), $expandedRows);
+        // Get all data sources - should be 3 (one per platform)
+        $dataSources = $this->getDataSourcesForResource($resource_id);
+        $this->assertCount(3, $dataSources, 'Should have 3 data sources (one per platform)');
         
-        // Each expanded row should have platform_metadata
-        foreach ($expandedRows as $row) {
-            $this->assertArrayHasKey('platform_metadata', $row);
-            $this->assertNotEmpty($row['platform_metadata']);
+        // Verify all are type S
+        foreach ($dataSources as $ds) {
+            $this->assertEquals('S', $ds['type']);
+            $this->assertNotNull($ds['S_value_name']);
+        }
+        
+        // Get thesaurus keywords - should be 3 (one per platform)
+        $keywords = $this->getThesaurusKeywordsForResource($resource_id);
+        $this->assertCount(3, $keywords, 'Should have 3 thesaurus keywords');
+        
+        // Verify keywords contain platform names
+        $keywordValues = array_column($keywords, 'keyword_value');
+        foreach ($platforms as $platform) {
+            $found = false;
+            foreach ($keywordValues as $kv) {
+                if (strpos($kv, $platform) !== false) {
+                    $found = true;
+                    break;
+                }
+            }
+            $this->assertTrue($found, "Platform {$platform} should have a keyword");
         }
     }
     
     /**
-     * Example: Show how to access postData structure for debugging
+     * Test: Save Model (M) data source
+     * Assert: Data source saved AND related work created with isDerivedFrom relation
      */
-    public function testInspectPostDataStructure(): void
+    public function testSaveModelDataSourceWithRelatedWork(): void
     {
-        $postData = MockDataSourcesData::multipleDataSources();
+        $resource_id = $this->createResource('test.model', 'Test Model Data Source');
         
-        // Print structure for reference
-        echo "\n=== PostData Structure ===\n";
-        echo "Types: " . implode(', ', $postData['datasource_type']) . "\n";
-        echo "Satellite platforms (index 0): " . $postData['satellite_platform'][0] . "\n";
-        echo "Model identifier (index 2): " . $postData['dIdentifier'][2] . "\n";
+        $mockData = self::modelRow('DOI');
+        $postData = self::rowsToPostData([$mockData]);
         
-        // Decode satellite platform JSON to see the structure
-        $platforms = json_decode($postData['satellite_platform'][0], true);
-        echo "\n=== Decoded Satellite Platform Structure ===\n";
-        echo json_encode($platforms, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+        saveDataSources($this->connection, $postData, $resource_id);
+        
+        // Get data source
+        $dataSources = $this->getDataSourcesForResource($resource_id);
+        $this->assertCount(1, $dataSources, 'Should have 1 data source');
+        
+        $ds = $dataSources[0];
+        $this->assertEquals('M', $ds['type']);
+        $this->assertEquals('10.5880/icgem.2024.001', $ds['M_identifier']);
+        $this->assertEquals('DOI', $ds['M_identifier_type']);
+        $this->assertNull($ds['G_details']);
+        $this->assertNull($ds['A_details']);
+        $this->assertNull($ds['T_details']);
+        
+        // Get related works
+        $relatedWorks = $this->getRelatedWorksForResource($resource_id);
+        $this->assertCount(1, $relatedWorks, 'Should have 1 related work');
+        
+        $rw = $relatedWorks[0];
+        $this->assertEquals('10.5880/icgem.2024.001', $rw['identifier']);
+    }
+    
+    /**
+     * Test: Save all 5 types at once
+     * - 1 Ground (G)
+     * - 1 Altimetry (A)
+     * - 1 Terrain (T)
+     * - 1 Satellite (S) with 3 platforms -> expands to 3 data sources
+     * - 1 Model (M)
+     * 
+     * Assert:
+     * - Total 7 data sources (1 + 1 + 1 + 3 + 1)
+     * - 3 thesaurus keywords from satellite platforms
+     * - 1 related work from model
+     */
+    public function testSaveAllDataSourceTypesAtOnce(): void
+    {
+        $resource_id = $this->createResource('test.all.types', 'Test All Data Source Types');
+        
+        // Create rows for all 5 types
+        $rows = [
+            self::groundRow(),
+            self::altimetryRow(),
+            self::terrainRow(600),
+            self::satelliteRow(['GRACE', 'GRACE-FO', 'GOCE']),
+            self::modelRow('DOI')
+        ];
+        
+        $postData = self::rowsToPostData($rows);
+        
+        // Save all at once
+        saveDataSources($this->connection, $postData, $resource_id);
+        
+        // ========== ASSERTIONS ==========
+        
+        // 1. Check total data sources: 1G + 1A + 1T + 3S (expanded) + 1M = 7
+        $dataSources = $this->getDataSourcesForResource($resource_id);
+        $this->assertCount(7, $dataSources, 'Should have 7 total data sources');
+        
+        // 2. Verify type distribution
+        $typeCount = array_count_values(array_column($dataSources, 'type'));
+        $this->assertEquals(1, $typeCount['G'] ?? 0, 'Should have 1 Ground');
+        $this->assertEquals(1, $typeCount['A'] ?? 0, 'Should have 1 Altimetry');
+        $this->assertEquals(1, $typeCount['T'] ?? 0, 'Should have 1 Terrain');
+        $this->assertEquals(3, $typeCount['S'] ?? 0, 'Should have 3 Satellite (expanded)');
+        $this->assertEquals(1, $typeCount['M'] ?? 0, 'Should have 1 Model');
+        
+        // 3. Verify Ground type has correct fields
+        $gRecord = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'G'))[0];
+        $this->assertEquals('Terrestrial gravity stations', $gRecord['G_details']);
+        $this->assertNull($gRecord['A_details']);
+        $this->assertNull($gRecord['T_details']);
+        $this->assertNull($gRecord['M_details']);
+        
+        // 4. Verify Altimetry type has correct fields
+        $aRecord = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'A'))[0];
+        $this->assertEquals('Direct observations from altimetry satellites', $aRecord['A_details']);
+        $this->assertNull($aRecord['G_details']);
+        $this->assertNull($aRecord['T_details']);
+        $this->assertNull($aRecord['M_details']);
+        
+        // 5. Verify Terrain type has correct fields and compensation depth
+        $tRecord = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'T'))[0];
+        $this->assertEquals('Digital Elevation Model (DEM/DTM)', $tRecord['T_details']);
+        $this->assertEquals(600, $tRecord['T_Isostasy_compensation_depth']);
+        $this->assertNull($tRecord['G_details']);
+        $this->assertNull($tRecord['A_details']);
+        $this->assertNull($tRecord['M_details']);
+        
+        // 6. Verify Model type has correct fields
+        $mRecord = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'M'))[0];
+        $this->assertEquals('10.5880/icgem.2024.001', $mRecord['M_identifier']);
+        $this->assertEquals('DOI', $mRecord['M_identifier_type']);
+        $this->assertNull($mRecord['G_details']);
+        $this->assertNull($mRecord['A_details']);
+        $this->assertNull($mRecord['T_details']);
+        
+        // 7. Verify Satellite types have platform values
+        $sRecords = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'S'));
+        foreach ($sRecords as $sRecord) {
+            $this->assertNotNull($sRecord['S_value_name']);
+            $this->assertNull($sRecord['G_details']);
+            $this->assertNull($sRecord['A_details']);
+            $this->assertNull($sRecord['T_details']);
+            $this->assertNull($sRecord['M_details']);
+        }
+        
+        // 8. Verify 3 thesaurus keywords created from satellite platforms
+        $keywords = $this->getThesaurusKeywordsForResource($resource_id);
+        $this->assertCount(3, $keywords, 'Should have 3 thesaurus keywords from satellites');
+        
+        // 9. Verify 1 related work created from model
+        $relatedWorks = $this->getRelatedWorksForResource($resource_id);
+        $this->assertCount(1, $relatedWorks, 'Should have 1 related work from model');
+        $this->assertEquals('10.5880/icgem.2024.001', $relatedWorks[0]['identifier']);
     }
 }
