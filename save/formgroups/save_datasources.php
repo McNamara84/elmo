@@ -275,7 +275,125 @@ function linkResourceToDataSource(mysqli $connection, int $resourceId, int $data
 }
 
 /**
+ * Ingests satellite platform keywords as thesaurus keywords
+ * 
+ * @param mysqli $connection Database connection
+ * @param string $platformJson JSON-encoded platform keywords (from satellite_platform field)
+ * @param int $resourceId Resource ID
+ * @return void
+ * @throws Exception On database errors
+ */
+function ingestSatellitePlatformsAsKeywords(mysqli $connection, string $platformJson, int $resourceId): void
+{
+    // Parse the JSON-encoded platforms
+    if (empty($platformJson)) {
+        return;
+    }
+    
+    $platforms = json_decode($platformJson, true);
+    
+    if (!is_array($platforms)) {
+        return;
+    }
+    
+    // Process each platform keyword as a thesaurus keyword
+    foreach ($platforms as $entry) {
+        if (!is_array($entry) || empty($entry['value'])) {
+            continue;
+        }
+        
+        $value = $entry['value'];
+        $valueURI = $entry['id'] ?? null;
+        $scheme = $entry['scheme'] ?? 'GCMD Platforms';
+        $schemeURI = $entry['schemeURI'] ?? '';
+        $language = $entry['language'] ?? 'en';
+        
+        // Get or create thesaurus keyword
+        $thesaurus_keywords_id = getOrCreateThesaurusKeyword(
+            $connection,
+            $value,
+            $scheme,
+            $schemeURI,
+            $valueURI,
+            $language
+        );
+        
+        // Link to resource
+        linkResourceToThesaurusKeyword($connection, $resourceId, $thesaurus_keywords_id);
+    }
+}
+
+/**
+ * Gets or creates a thesaurus keyword (similar to save_thesauruskeywords.php)
+ * 
+ * @param mysqli $connection Database connection
+ * @param string $value Keyword value
+ * @param string $scheme Keyword scheme
+ * @param string $schemeURI Scheme URI
+ * @param string|null $valueURI Value URI
+ * @param string $language Language code
+ * @return int Thesaurus keyword ID
+ */
+function getOrCreateThesaurusKeyword(mysqli $connection, string $value, string $scheme, string $schemeURI, ?string $valueURI, string $language): int
+{
+    // Check if keyword already exists
+    $stmt = $connection->prepare("SELECT thesaurus_keywords_id FROM Thesaurus_Keywords WHERE keyword = ? LIMIT 1");
+    $stmt->bind_param("s", $value);
+    $stmt->execute();
+    $stmt->store_result();
+    
+    if ($stmt->num_rows > 0) {
+        $stmt->bind_result($thesaurus_keywords_id);
+        $stmt->fetch();
+        $stmt->close();
+        return $thesaurus_keywords_id;
+    }
+    
+    $stmt->close();
+    
+    // Insert new keyword
+    $stmt = $connection->prepare(
+        "INSERT INTO Thesaurus_Keywords (keyword, scheme, schemeURI, valueURI, language) 
+         VALUES (?, ?, ?, ?, ?)"
+    );
+    $stmt->bind_param("sssss", $value, $scheme, $schemeURI, $valueURI, $language);
+    $stmt->execute();
+    if ($stmt->errno) {
+        throw new Exception("Error inserting thesaurus keyword: " . $stmt->error);
+    }
+    
+    $thesaurus_keywords_id = $stmt->insert_id;
+    $stmt->close();
+    
+    return $thesaurus_keywords_id;
+}
+
+/**
+ * Links a resource to a thesaurus keyword
+ * 
+ * @param mysqli $connection Database connection
+ * @param int $resourceId Resource ID
+ * @param int $thesaurus_keywords_id Thesaurus keyword ID
+ * @return void
+ */
+function linkResourceToThesaurusKeyword(mysqli $connection, int $resourceId, int $thesaurus_keywords_id): void
+{
+    $stmt = $connection->prepare(
+        "INSERT INTO Resource_has_Thesaurus_Keywords 
+         (Resource_resource_id, Thesaurus_Keywords_thesaurus_keywords_id) 
+         VALUES (?, ?)"
+    );
+    $stmt->bind_param("ii", $resourceId, $thesaurus_keywords_id);
+    $stmt->execute();
+    if ($stmt->errno) {
+        throw new Exception("Error linking thesaurus keyword to resource: " . $stmt->error);
+    }
+    $stmt->close();
+}
+
+/**
  * Main orchestration function: saves all data sources for a resource
+ * and ingests satellite platforms as thesaurus keywords
  * 
  * @param mysqli $connection Database connection
  * @param array $postData Raw POST data
@@ -300,6 +418,11 @@ function saveDataSources(mysqli $connection, array $postData, int $resourceId): 
         if (!$validation['valid']) {
             $errorMsg = "Data source row " . ($index + 1) . ": " . implode('; ', $validation['errors']);
             throw new Exception($errorMsg);
+        }
+        
+        // For Satellite (S) type, ingest platforms as thesaurus keywords
+        if (trim($row['type']) === 'S' && !empty($row['satellite_platform'])) {
+            ingestSatellitePlatformsAsKeywords($connection, $row['satellite_platform'], $resourceId);
         }
         
         // Prepare for database
