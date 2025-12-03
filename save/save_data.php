@@ -113,7 +113,7 @@ function executeSaveFunction($callback, ...$args)
 }
 
 // only process requests
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
     exit();
 }
 

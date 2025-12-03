@@ -10,7 +10,6 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         'tscDescription',
         'tscDateStart',
         'tscDateEnd',
-        'tscTimezone'
     ];
 
     // Ensure arrays exist
