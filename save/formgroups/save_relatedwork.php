@@ -92,7 +92,7 @@ function getRelationId(mysqli $connection, string $relationName): ?int
  *
  * @return int|null The found identifier type ID or null if not found.
  */
-function getIdentifierTypeId($connection, $identifier_type_name)
+function getIdentifierTypeId(mysqli $connection,string $identifier_type_name): ?int
 {
     $stmt = $connection->prepare("SELECT `identifier_type_id` FROM `Identifier_Type` WHERE `name` = ?");
     $stmt->bind_param("s", $identifier_type_name);
