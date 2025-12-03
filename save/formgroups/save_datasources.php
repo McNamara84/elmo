@@ -18,6 +18,7 @@
  */
 
 require_once __DIR__ . '/save_thesauruskeywords.php';
+require_once __DIR__ . '/save_relatedwork.php';
 
 /**
  * Extracts individual data source rows from POST arrays
@@ -363,6 +364,53 @@ function ingestSatellitePlatformAsKeyword(mysqli $connection, array $platformEnt
 }
 
 /**
+ * Ingests a model data source as a related work entry
+ * 
+ * When a Model (M) type data source is saved, it's also recorded as a related work
+ * with relation type "isDerivedFrom". This creates a link between the GGM model
+ * and the source data model it was derived from.
+ * 
+ * Uses shared functions from save_relatedwork.php to maintain consistency.
+ * 
+ * @param mysqli $connection Database connection
+ * @param array $modelEntry Model data source entry with identifier and identifier_type
+ * @param int $resourceId Resource ID
+ * @return void
+ * @throws Exception On database errors
+ */
+function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $modelEntry, int $resourceId): void
+{
+    if (!is_array($modelEntry) || empty($modelEntry['identifier']) || empty($modelEntry['identifier_type'])) {
+        return;
+    }
+    
+    $identifier = trim($modelEntry['identifier']);
+    $identifierTypeName = trim($modelEntry['identifier_type']);
+    
+    // Get the relation ID for "isDerivedFrom"
+    $relationId = getRelationId($connection, 'isDerivedFrom');
+    if (!$relationId) {
+        throw new Exception("Relation 'isDerivedFrom' not found in database");
+    }
+    
+    // Get the identifier type ID
+    $identifierTypeId = getIdentifierTypeId($connection, $identifierTypeName);
+    if (!$identifierTypeId) {
+        throw new Exception("Identifier type '{$identifierTypeName}' not found in database");
+    }
+    
+    // Insert the related work entry
+    $relatedWorkId = insertRelatedWork($connection, $identifier, $relationId, $identifierTypeId);
+    if ($relatedWorkId) {
+        // Link the resource to this related work
+        linkResourceToRelatedWork($connection, $resourceId, $relatedWorkId);
+    } else {
+        throw new Exception("Failed to insert related work for model data source");
+    }
+}
+
+
+/**
  * Main orchestration function: saves all data sources for a resource
  * 
  * For Satellite (S) type rows with multiple platforms:
@@ -413,6 +461,11 @@ function saveDataSources(mysqli $connection, array $postData, int $resourceId): 
         // For Satellite (S) type, ingest platform as thesaurus keyword
         if (trim($row['type']) === 'S' && isset($row['platform_metadata'])) {
             ingestSatellitePlatformAsKeyword($connection, $row['platform_metadata'], $resourceId);
+        }
+        
+        // For Model (M) type, ingest as related work with "isDerivedFrom" relation
+        if (trim($row['type']) === 'M') {
+            ingestModelDataSourceAsRelatedWork($connection, $row, $resourceId);
         }
         
         // Prepare for database
