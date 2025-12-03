@@ -25,97 +25,30 @@ require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
 require_once __DIR__ . '/formgroups/save_relatedwork.php';
 require_once __DIR__ . '/formgroups/save_fundingreferences.php';
 require_once __DIR__ . '/formgroups/save_ggmsproperties.php';
-/**
- * Process form submission based on action type
- */
-if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once __DIR__ . '/../settings.php'; // load settings so that it only required in the prod environment
 
-    // Check if this is a resource ID request
-    if (isset($_POST['get_resource_id']) && $_POST['get_resource_id'] === '1') {
-        $resource_id = saveResourceInformationAndRights($connection, $_POST);
-        header('Content-Type: application/json');
-        echo json_encode(['resource_id' => $resource_id]);
+/**
+ * Generates and outputs XML for a dataset
+ * 
+ * Attempts to generate XML via API call first, falls back to in-memory generation if needed.
+ * If filename is provided in $_POST, triggers file download.
+ * 
+ * @param int $resource_id The resource ID to generate XML for
+ * @return void Outputs XML or error response, may exit
+ * @throws Exception If critical errors occur during XML generation
+ */
+function generateAndOutputXml($resource_id)
+{
+    global $connection;
+    
+    try {
+        require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+    } catch (Exception $e) {
+        error_log("Error accessing DatasetController: " . $e->getMessage());
+        http_response_code(500);
+        echo "Error: Could not initialize XML generator";
         exit();
     }
-    /**
-     * Existing functions dont alwys throw an exception, but sometimes just return false. This won't interrupt the save process
-     * SO, This Wrapper to convert false returns from save functions into exceptions.
-     *
-     * @param callable $callback The function to call
-     * @param mixed ...$args Arguments to pass to the function
-     * @return mixed The return value from the callback
-     * @throws Exception If the callback returns false
-     */
-    function executeSaveFunction($callback, ...$args)
-    {
-        $result = $callback(...$args);
-        
-        if ($result === false) {
-            throw new Exception("Save operation failed: " . (is_array($callback) 
-                ? $callback[1] 
-                : $callback) . " returned false");
-            error_log("[💿SAVE]: Save operation failed: " . (is_array($callback) 
-                ? $callback[1] 
-                : $callback) . " returned false");
-        }
-        
-        return $result;
-    }
-    try{
-    // Saving all mandatory fields & optional fields if needed
-        $connection->begin_transaction();
-        error_log("[💿SAVE]:Starting save process in save_data.php");
-        $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $_POST);
-        error_log("[💿SAVE]:the id generated is " . $resource_id);
-        executeSaveFunction('saveAuthors', $connection, $_POST, $resource_id);
-        executeSaveFunction('saveContactPerson', $connection, $_POST, $resource_id);
-        if ($showMslLabs) {
-            executeSaveFunction('saveOriginatingLaboratories', $connection, $_POST, $resource_id);
-        }
-        if ($showContributorPersons) {
-            executeSaveFunction('saveContributorPersons', $connection, $_POST, $resource_id);
-        }
-        if ($showContributorInstitutions) {
-            executeSaveFunction('saveContributorInstitutions', $connection, $_POST, $resource_id);
-        }
-        executeSaveFunction('saveDescriptions', $connection, $_POST, $resource_id);
-        if ($showGcmdThesauri) {
-            executeSaveFunction('saveKeywords', $connection, $_POST, $resource_id);
-        }
-        if ($showFreeKeywords) {
-            executeSaveFunction('saveFreeKeywords', $connection, $_POST, $resource_id);
-        }
-        if ($showSpatialTemporalCoverage) {
-            executeSaveFunction('saveSpatialTemporalCoverage', $connection, $_POST, $resource_id);
-        }
-        if ($showRelatedWork) {
-            executeSaveFunction('saveRelatedWork', $connection, $_POST, $resource_id);
-        }
-        if ($showFundingReference) {
-            executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);
-        }
-        if ($showGGMsProperties) {
-            executeSaveFunction('saveGGMsProperties', $connection, $_POST, $resource_id);
-        }
 
-        $connection->commit();
-        error_log("[💿SAVE]: Save process completed successfully for resource ID: " . $resource_id);
-    } catch (Exception $e) {
-        $connection->rollback();
-        error_log("[💿SAVE]: Save process failed for resource ID: " . (isset($resource_id) ? $resource_id : 'N/A') . ". Error: " . $e->getMessage());
-        throw $e;
-    }
-
-    try {
-    // Logic in these lines is to enable XML save
-    // After the resource information is written to the db, this code will create an xml file
-
-    require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
-    $datasetController = new DatasetController();
-    } catch (Exception $e) {
-        error_log("Error accessing DatasetController: function getResourceAsXml is not available. Exception: " . $e->getMessage());
-    }
     // Handle file download if requested
     if (isset($_POST['filename'])) {
         $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
@@ -125,34 +58,137 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') 
 
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
         $base_url = $protocol . $_SERVER['HTTP_HOST'];
-        $project_path = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\'); // Ensure no trailing slashes
+        $project_path = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\');
         $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
 
-        // readfile() returns the number of bytes read, or false on failure.
+        // Try API call first
         $bytesRead = @readfile($url);
 
         if ($bytesRead === false) {
-            error_log("[💿SAVE]: Starting a XML generation for resource ID: $resource_id . Reason: readfile from URL failed. URL: $url . ");
+            error_log("[💿SAVE]: readfile from URL failed. Attempting in-memory generation. Resource ID: $resource_id, URL: $url");
 
             try {
-                // The controller is already included, so we can use it.
                 $datasetController = new DatasetController();
-                // Generate XML directly in-memory
                 $xmlString = $datasetController->envelopeXmlAsString($connection, $resource_id);
 
                 if ($xmlString) {
                     echo $xmlString;
                 } else {
-                    // This part of the code will only be reached if both methods fail.
                     http_response_code(500);
                     echo "Error: Could not retrieve or generate XML file.";
                 }
             } catch (Exception $e) {
-                error_log("[💿SAVE]:XML generation inside save_data failed for resource ID: $resource_id. Error: " . $e->getMessage());
+                error_log("[💿SAVE]: XML in-memory generation failed for resource ID: $resource_id. Error: " . $e->getMessage());
                 http_response_code(500);
-                echo "Error: XML generation inside save_data failed";
+                echo "Error: XML generation failed";
             }
         }
         exit();
-    }    
+    }
+}
+
+/**
+ * Existing functions dont alwys throw an exception, but sometimes just return false. This won't interrupt the save process
+ * SO, This Wrapper to convert false returns from save functions into exceptions.
+ *
+ * @param callable $callback The function to call
+ * @param mixed ...$args Arguments to pass to the function
+ * @return mixed The return value from the callback
+ * @throws Exception If the callback returns false
+ */
+function executeSaveFunction($callback, ...$args)
+{
+    $result = $callback(...$args);
+    
+    if ($result === false) {
+        throw new Exception("Save operation failed: " . (is_array($callback) 
+            ? $callback[1] 
+            : $callback) . " returned false");
+        error_log("[💿SAVE]: Save operation failed: " . (is_array($callback) 
+            ? $callback[1] 
+            : $callback) . " returned false");
+    }
+    
+    return $result;
+}
+
+// only process requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    exit();
+}
+
+// Only load settings if connection not already injected (for testing)
+if (!isset($GLOBALS['connection']) || $GLOBALS['connection'] === null) {
+    require_once __DIR__ . '/../settings.php';
+}
+global $connection;
+
+// Check if this is a resource ID request
+if (isset($_POST['get_resource_id']) && $_POST['get_resource_id'] === '1') {
+    $resource_id = saveResourceInformationAndRights($connection, $_POST);
+    header('Content-Type: application/json');
+    echo json_encode(['resource_id' => $resource_id]);
+    exit();
+}
+
+// main line: data saving process and XML generation.
+try {
+    // Saving all mandatory fields & optional fields if needed
+    $connection->begin_transaction();
+    error_log("[💿SAVE]:Starting save process in save_data.php");
+    $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $_POST);
+    error_log("[💿SAVE]:the id generated is " . $resource_id);
+    executeSaveFunction('saveAuthors', $connection, $_POST, $resource_id);
+    executeSaveFunction('saveContactPerson', $connection, $_POST, $resource_id);
+    if ($showMslLabs) {
+        executeSaveFunction('saveOriginatingLaboratories', $connection, $_POST, $resource_id);
+    }
+    if ($showContributorPersons) {
+        executeSaveFunction('saveContributorPersons', $connection, $_POST, $resource_id);
+    }
+    if ($showContributorInstitutions) {
+        executeSaveFunction('saveContributorInstitutions', $connection, $_POST, $resource_id);
+    }
+    executeSaveFunction('saveDescriptions', $connection, $_POST, $resource_id);
+    if ($showGcmdThesauri) {
+        executeSaveFunction('saveKeywords', $connection, $_POST, $resource_id);
+    }
+    if ($showFreeKeywords) {
+        executeSaveFunction('saveFreeKeywords', $connection, $_POST, $resource_id);
+    }
+    if ($showSpatialTemporalCoverage) {
+        executeSaveFunction('saveSpatialTemporalCoverage', $connection, $_POST, $resource_id);
+    }
+    if ($showRelatedWork) {
+        executeSaveFunction('saveRelatedWork', $connection, $_POST, $resource_id);
+    }
+    if ($showFundingReference) {
+        executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);
+    }
+    if ($showGGMsProperties) {
+        executeSaveFunction('saveGGMsProperties', $connection, $_POST, $resource_id);
+    }
+
+    // Validate transaction commit
+    if (!$connection->commit()) {
+        throw new Exception("Transaction commit failed - database returned false");
+    }
+    
+    error_log("[💿SAVE]: Transaction committed successfully for resource ID: " . $resource_id);
+    
+    // ===== ONLY AFTER SUCCESSFUL COMMIT: Generate XML =====
+    try {
+        generateAndOutputXml($resource_id);
+    } catch (Exception $e) {
+        error_log("[💿SAVE]: XML generation failed after successful database commit for resource ID: " . $resource_id . ". Error: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'Data saved but XML generation failed: ' . $e->getMessage()]);
+    }
+    
+} catch (Exception $e) {
+    // Transaction or save operation failed
+    $connection->rollback();
+    error_log("[💿SAVE]: Transaction rolled back. Save process failed for resource ID: " . (isset($resource_id) ? $resource_id : 'N/A') . ". Error: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['error' => 'Save operation failed: ' . $e->getMessage()]);
 }
