@@ -275,52 +275,85 @@ function linkResourceToDataSource(mysqli $connection, int $resourceId, int $data
 }
 
 /**
- * Ingests satellite platform keywords as thesaurus keywords
+ * Expands a satellite data source row into multiple rows (one per platform keyword)
+ * Each unique platform gets its own Data_Sources entry with type=S
  * 
- * @param mysqli $connection Database connection
- * @param string $platformJson JSON-encoded platform keywords (from satellite_platform field)
- * @param int $resourceId Resource ID
- * @return void
- * @throws Exception On database errors
+ * @param array $row Original satellite data source row
+ * @return array Array of expanded rows (one per platform keyword)
  */
-function ingestSatellitePlatformsAsKeywords(mysqli $connection, string $platformJson, int $resourceId): void
+function expandSatellitePlatformsToRows(array $row): array
 {
+    $expandedRows = [];
+    
     // Parse the JSON-encoded platforms
-    if (empty($platformJson)) {
-        return;
+    if (empty($row['satellite_platform'])) {
+        return $expandedRows;
     }
     
-    $platforms = json_decode($platformJson, true);
+    $platforms = json_decode($row['satellite_platform'], true);
     
     if (!is_array($platforms)) {
-        return;
+        return $expandedRows;
     }
     
-    // Process each platform keyword as a thesaurus keyword
+    // Create a separate row for each platform keyword
     foreach ($platforms as $entry) {
         if (!is_array($entry) || empty($entry['value'])) {
             continue;
         }
         
-        $value = $entry['value'];
-        $valueURI = $entry['id'] ?? null;
-        $scheme = $entry['scheme'] ?? 'GCMD Platforms';
-        $schemeURI = $entry['schemeURI'] ?? '';
-        $language = $entry['language'] ?? 'en';
+        $platformValue = $entry['value'];
         
-        // Get or create thesaurus keyword
-        $thesaurus_keywords_id = getOrCreateThesaurusKeyword(
-            $connection,
-            $value,
-            $scheme,
-            $schemeURI,
-            $valueURI,
-            $language
-        );
-        
-        // Link to resource
-        linkResourceToThesaurusKeyword($connection, $resourceId, $thesaurus_keywords_id);
+        // Create a new row with this specific platform
+        $expandedRows[] = [
+            'type' => 'S',
+            'description' => $row['description'],  // Keep original description
+            'satellite_platform' => $platformValue,  // Single platform value
+            'platform_metadata' => $entry,  // Store full metadata for keyword ingestion
+            'details' => '',
+            'compensation_depth' => '',
+            'identifier' => '',
+            'identifier_type' => '',
+            'model_name' => ''
+        ];
     }
+    
+    return $expandedRows;
+}
+
+/**
+ * Ingests a satellite platform entry as a thesaurus keyword
+ * 
+ * @param mysqli $connection Database connection
+ * @param array $platformEntry Single platform entry with metadata
+ * @param int $resourceId Resource ID
+ * @return void
+ * @throws Exception On database errors
+ */
+function ingestSatellitePlatformAsKeyword(mysqli $connection, array $platformEntry, int $resourceId): void
+{
+    if (!is_array($platformEntry) || empty($platformEntry['value'])) {
+        return;
+    }
+    
+    $value = $platformEntry['value'];
+    $valueURI = $platformEntry['id'] ?? null;
+    $scheme = $platformEntry['scheme'] ?? 'GCMD Platforms';
+    $schemeURI = $platformEntry['schemeURI'] ?? '';
+    $language = $platformEntry['language'] ?? 'en';
+    
+    // Get or create thesaurus keyword
+    $thesaurus_keywords_id = getOrCreateThesaurusKeyword(
+        $connection,
+        $value,
+        $scheme,
+        $schemeURI,
+        $valueURI,
+        $language
+    );
+    
+    // Link to resource
+    linkResourceToThesaurusKeyword($connection, $resourceId, $thesaurus_keywords_id);
 }
 
 /**
@@ -393,7 +426,11 @@ function linkResourceToThesaurusKeyword(mysqli $connection, int $resourceId, int
 
 /**
  * Main orchestration function: saves all data sources for a resource
- * and ingests satellite platforms as thesaurus keywords
+ * 
+ * For Satellite (S) type rows with multiple platforms:
+ * - Expands into separate rows (one per platform keyword)
+ * - Each row is saved to Data_Sources with a single platform
+ * - Each platform is also ingested as a thesaurus keyword
  * 
  * @param mysqli $connection Database connection
  * @param array $postData Raw POST data
@@ -411,8 +448,23 @@ function saveDataSources(mysqli $connection, array $postData, int $resourceId): 
         return;
     }
     
-    // 2. Validate and save each row
-    foreach ($rows as $index => $row) {
+    // 2. Process each row, expanding Satellite rows if needed
+    $allRows = [];
+    foreach ($rows as $row) {
+        if (trim($row['type']) === 'S') {
+            // Expand satellite rows: one per platform keyword
+            $expandedRows = expandSatellitePlatformsToRows($row);
+            if (!empty($expandedRows)) {
+                $allRows = array_merge($allRows, $expandedRows);
+            }
+        } else {
+            // Non-satellite rows: keep as-is
+            $allRows[] = $row;
+        }
+    }
+    
+    // 3. Validate and save each row
+    foreach ($allRows as $index => $row) {
         // Validate
         $validation = validateDataSourceRow($row);
         if (!$validation['valid']) {
@@ -420,9 +472,9 @@ function saveDataSources(mysqli $connection, array $postData, int $resourceId): 
             throw new Exception($errorMsg);
         }
         
-        // For Satellite (S) type, ingest platforms as thesaurus keywords
-        if (trim($row['type']) === 'S' && !empty($row['satellite_platform'])) {
-            ingestSatellitePlatformsAsKeywords($connection, $row['satellite_platform'], $resourceId);
+        // For Satellite (S) type, ingest platform as thesaurus keyword
+        if (trim($row['type']) === 'S' && isset($row['platform_metadata'])) {
+            ingestSatellitePlatformAsKeyword($connection, $row['platform_metadata'], $resourceId);
         }
         
         // Prepare for database
