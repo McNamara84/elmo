@@ -167,7 +167,7 @@ class SaveDataSourcesTest extends DatabaseTestCase
     private function getDataSourceFromDb(int $resourceId, string $type, string $description): ?array
     {
         $sql = "SELECT ds.* FROM `Data_Sources` ds
-                JOIN `Resource_has_Data_Sources` rhds ON ds.id = rhds.data_source_id
+                JOIN `Resource_has_Data_Sources` rhds ON ds.data_source_id = rhds.data_source_id
                 WHERE rhds.resource_id = ? AND ds.type = ? AND ds.description = ?";
         
         $stmt = $this->connection->prepare($sql);
@@ -186,9 +186,9 @@ class SaveDataSourcesTest extends DatabaseTestCase
     private function getDataSourcesForResource(int $resourceId): array
     {
         $sql = "SELECT ds.* FROM `Data_Sources` ds
-                JOIN `Resource_has_Data_Sources` rhds ON ds.id = rhds.data_source_id
+                JOIN `Resource_has_Data_Sources` rhds ON ds.data_source_id = rhds.data_source_id
                 WHERE rhds.resource_id = ?
-                ORDER BY ds.id ASC";
+                ORDER BY ds.data_source_id ASC";
         
         $stmt = $this->connection->prepare($sql);
         $stmt->bind_param('i', $resourceId);
@@ -412,7 +412,7 @@ class SaveDataSourcesTest extends DatabaseTestCase
     
     /**
      * Test: Save Model (M) data source
-     * Assert: Data source saved AND related work created with isDerivedFrom relation
+     * Assert: Data source saved AND related work created with IsDerivedFrom relation
      */
     public function testSaveModelDataSourceWithRelatedWork(): void
     {

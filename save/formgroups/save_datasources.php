@@ -367,7 +367,7 @@ function ingestSatellitePlatformAsKeyword(mysqli $connection, array $platformEnt
  * Ingests a model data source as a related work entry
  * 
  * When a Model (M) type data source is saved, it's also recorded as a related work
- * with relation type "isDerivedFrom". This creates a link between the GGM model
+ * with relation type "IsDerivedFrom". This creates a link between the GGM model
  * and the source data model it was derived from.
  * 
  * Uses shared functions from save_relatedwork.php to maintain consistency.
@@ -387,10 +387,10 @@ function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $modelEntr
     $identifier = trim($modelEntry['identifier']);
     $identifierTypeName = trim($modelEntry['identifier_type']);
     
-    // Get the relation ID for "isDerivedFrom"
-    $relationId = getRelationId($connection, 'isDerivedFrom');
+    // Get the relation ID for "IsDerivedFrom"
+    $relationId = getRelationId($connection, 'IsDerivedFrom');
     if (!$relationId) {
-        throw new Exception("Relation 'isDerivedFrom' not found in database");
+        throw new Exception("Relation 'IsDerivedFrom' not found in database");
     }
     
     // Get the identifier type ID
@@ -463,7 +463,7 @@ function saveDataSources(mysqli $connection, array $postData, int $resourceId): 
             ingestSatellitePlatformAsKeyword($connection, $row['platform_metadata'], $resourceId);
         }
         
-        // For Model (M) type, ingest as related work with "isDerivedFrom" relation
+        // For Model (M) type, ingest as related work with "IsDerivedFrom" relation
         if (trim($row['type']) === 'M') {
             ingestModelDataSourceAsRelatedWork($connection, $row, $resourceId);
         }
