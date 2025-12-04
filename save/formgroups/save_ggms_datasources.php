@@ -424,7 +424,7 @@ function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $modelEntr
  * @return void
  * @throws Exception On validation or database errors
  */
-function saveDataSources(mysqli $connection, array $postData, int $resourceId): void
+function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceId): void
 {
     // 1. Extract rows from POST arrays
     $rows = extractDataSourceRows($postData);

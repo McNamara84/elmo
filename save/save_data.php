@@ -29,8 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
     require_once __DIR__ . '/formgroups/save_relatedwork.php';
     require_once __DIR__ . '/formgroups/save_fundingreferences.php';
-    require_once __DIR__ . '/formgroups/save_ggmsproperties.php';
-    require_once __DIR__ . '/formgroups/save_datasources.php';
+    // ICGEM related formgroups
+    require_once __DIR__ . '/formgroups/save_ggms_definition.php';
+    require_once __DIR__ . '/formgroups/save_ggms_properties.php';
+    require_once __DIR__ . '/formgroups/save_ggms_datasources.php';
+    require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
 
     // Check if this is a resource ID request
     if (isset($_POST['get_resource_id']) && $_POST['get_resource_id'] === '1') {
@@ -70,10 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         saveFundingReferences($connection, $_POST, $resource_id);
     }
     if ($showGGMsProperties) {
+        saveGGMsDefinition($connection, $_POST, $resource_id);
+        saveGGMsDataSources($connection, $_POST, $resource_id);
         saveGGMsProperties($connection, $_POST, $resource_id);
-    }
-    if ($showGGMsProperties) {
-        saveDataSources($connection, $_POST, $resource_id);
+        saveGGMsModelTypes($connection, $_POST, $resource_id);
     }
 
     try {

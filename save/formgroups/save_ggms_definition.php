@@ -27,7 +27,7 @@ function lookupForeignKeyId(mysqli $connection, string $table, string $idColumn,
 }
 
 /**
- * Validates the form data for GGM Essential Properties formgroup before any database action.
+ * Validates the form data for GGM Essential Definition formgroup before any database action.
  *
  * @param array $data       Posted form data
  * @param int   $resourceId Resource ID
@@ -80,20 +80,20 @@ function validateGGMData(array $data, int $resourceId): array
 }
 
 /**
- * Inserts or updates the GGM_Properties record linked to a resource.
+ * Inserts or updates the GGM_Definition record linked to a resource.
  *
  * @param mysqli $connection  Database connection
  * @param array  $data        Validated GGM data
  * @param int    $resourceId  Resource ID
  *
- * @return int  GGM_Properties_id of the inserted/updated record
+ * @return int  GGM_Definition_id of the inserted/updated record
  * @throws Exception On database errors
  */
-function upsertGGMProperties(mysqli $connection, array $data, int $resourceId): int
+function upsertGGMDefinition(mysqli $connection, array $data, int $resourceId): int
 {
     // Check existing link
-    $sql = "SELECT GGM_Properties_GGM_Properties_id
-              FROM `Resource_has_GGM_Properties`
+    $sql = "SELECT GGM_Definition_GGM_Definition_id
+              FROM `Resource_has_GGM_Definition`
              WHERE Resource_resource_id = ?";
     $stmt = $connection->prepare($sql);
     $stmt->bind_param('i', $resourceId);
@@ -104,11 +104,11 @@ function upsertGGMProperties(mysqli $connection, array $data, int $resourceId): 
 
     if ($exists) {
         // Update
-        $sql = "UPDATE `GGM_Properties` SET
+        $sql = "UPDATE `GGM_Definition` SET
                     `Model_Name`              = ?,
                     `Celestial_Body`          = ?,
                     `Product_Type`            = ?
-                WHERE `GGM_Properties_id`    = ?";
+                WHERE `GGM_Definition_id`    = ?";
         $stmt = $connection->prepare($sql);
         $stmt->bind_param(
             'sssi',
@@ -119,12 +119,12 @@ function upsertGGMProperties(mysqli $connection, array $data, int $resourceId): 
         );
         $stmt->execute();
         if ($stmt->errno) {
-            throw new Exception('Error updating GGM_Properties: ' . $stmt->error);
+            throw new Exception('Error updating GGM_Definition: ' . $stmt->error);
         }
         $stmt->close();
     } else {
         // Insert new
-        $sql = "INSERT INTO `GGM_Properties`
+        $sql = "INSERT INTO `GGM_Definition`
                     (`Model_Name`,`Celestial_Body`,`Product_Type`)
                  VALUES (?,?,?)";
         $stmt = $connection->prepare($sql);
@@ -136,20 +136,20 @@ function upsertGGMProperties(mysqli $connection, array $data, int $resourceId): 
         );
         $stmt->execute();
         if ($stmt->errno) {
-            throw new Exception('Error inserting GGM_Properties: ' . $stmt->error);
+            throw new Exception('Error inserting GGM_Definition: ' . $stmt->error);
         }
         $ggmId = $stmt->insert_id;
         $stmt->close();
 
         // Create link
-        $sql = "INSERT INTO `Resource_has_GGM_Properties`
-                    (`Resource_resource_id`,`GGM_Properties_GGM_Properties_id`)
+        $sql = "INSERT INTO `Resource_has_GGM_Definition`
+                    (`Resource_resource_id`,`GGM_Definition_GGM_Definition_id`)
                  VALUES (?,?)";
         $stmt = $connection->prepare($sql);
         $stmt->bind_param('ii', $resourceId, $ggmId);
         $stmt->execute();
         if ($stmt->errno) {
-            throw new Exception('Error linking GGM_Properties: ' . $stmt->error);
+            throw new Exception('Error linking GGM_Definition: ' . $stmt->error);
         }
         $stmt->close();
     }
@@ -192,7 +192,7 @@ function updateResourceForeignKeys(mysqli $connection, array $data, int $resourc
 }
 
 /**
- * Orchestrates validation, upsert of GGM_Properties, and Resource FK update.
+ * Orchestrates validation, upsert of GGM_Definition, and Resource FK update.
  *
  * @param mysqli $connection  Database connection
  * @param array  $postData    Posted form data
@@ -201,13 +201,13 @@ function updateResourceForeignKeys(mysqli $connection, array $data, int $resourc
  * @return bool  True on success
  * @throws Exception On any validation or database error
  */
-function saveGGMsProperties(mysqli $connection, array $postData, int $resourceId): bool
+function saveGGMsDefinition(mysqli $connection, array $postData, int $resourceId): bool
 {
     // 1) Validate
     $data = validateGGMData($postData, $resourceId);
 
-    // 2) Insert/update GGM_Properties
-    $ggmId = upsertGGMProperties($connection, $data, $resourceId);
+    // 2) Insert/update GGM_Definition
+    $ggmId = upsertGGMDefinition($connection, $data, $resourceId);
 
     // 3) Update Resource FKs
     updateResourceForeignKeys($connection, $data, $resourceId);
