@@ -80,20 +80,20 @@ function validateGGMData(array $data, int $resourceId): array
 }
 
 /**
- * Inserts or updates the GGM_Definition record linked to a resource.
+ * Inserts or updates the GGM_Properties record linked to a resource.
  *
  * @param mysqli $connection  Database connection
  * @param array  $data        Validated GGM data
  * @param int    $resourceId  Resource ID
  *
- * @return int  GGM_Definition_id of the inserted/updated record
+ * @return int  GGM_Properties_id of the inserted/updated record
  * @throws Exception On database errors
  */
 function upsertGGMDefinition(mysqli $connection, array $data, int $resourceId): int
 {
     // Check existing link
-    $sql = "SELECT GGM_Definition_GGM_Definition_id
-              FROM `Resource_has_GGM_Definition`
+    $sql = "SELECT GGM_Properties_GGM_Properties_id
+              FROM `Resource_has_GGM_Properties`
              WHERE Resource_resource_id = ?";
     $stmt = $connection->prepare($sql);
     $stmt->bind_param('i', $resourceId);
@@ -104,11 +104,11 @@ function upsertGGMDefinition(mysqli $connection, array $data, int $resourceId): 
 
     if ($exists) {
         // Update
-        $sql = "UPDATE `GGM_Definition` SET
+        $sql = "UPDATE `GGM_Properties` SET
                     `Model_Name`              = ?,
                     `Celestial_Body`          = ?,
                     `Product_Type`            = ?
-                WHERE `GGM_Definition_id`    = ?";
+                WHERE `GGM_Properties_id`    = ?";
         $stmt = $connection->prepare($sql);
         $stmt->bind_param(
             'sssi',
@@ -119,12 +119,12 @@ function upsertGGMDefinition(mysqli $connection, array $data, int $resourceId): 
         );
         $stmt->execute();
         if ($stmt->errno) {
-            throw new Exception('Error updating GGM_Definition: ' . $stmt->error);
+            throw new Exception('Error updating GGM_Properties: ' . $stmt->error);
         }
         $stmt->close();
     } else {
         // Insert new
-        $sql = "INSERT INTO `GGM_Definition`
+        $sql = "INSERT INTO `GGM_Properties`
                     (`Model_Name`,`Celestial_Body`,`Product_Type`)
                  VALUES (?,?,?)";
         $stmt = $connection->prepare($sql);
@@ -136,20 +136,20 @@ function upsertGGMDefinition(mysqli $connection, array $data, int $resourceId): 
         );
         $stmt->execute();
         if ($stmt->errno) {
-            throw new Exception('Error inserting GGM_Definition: ' . $stmt->error);
+            throw new Exception('Error inserting GGM_Properties: ' . $stmt->error);
         }
         $ggmId = $stmt->insert_id;
         $stmt->close();
 
         // Create link
-        $sql = "INSERT INTO `Resource_has_GGM_Definition`
-                    (`Resource_resource_id`,`GGM_Definition_GGM_Definition_id`)
+        $sql = "INSERT INTO `Resource_has_GGM_Properties`
+                    (`Resource_resource_id`,`GGM_Properties_GGM_Properties_id`)
                  VALUES (?,?)";
         $stmt = $connection->prepare($sql);
         $stmt->bind_param('ii', $resourceId, $ggmId);
         $stmt->execute();
         if ($stmt->errno) {
-            throw new Exception('Error linking GGM_Definition: ' . $stmt->error);
+            throw new Exception('Error linking GGM_Properties: ' . $stmt->error);
         }
         $stmt->close();
     }

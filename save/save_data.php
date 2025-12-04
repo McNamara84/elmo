@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($showGGMsProperties) {
         saveGGMsDefinition($connection, $_POST, $resource_id);
-        saveGGMsDataSources($connection, $_POST, $resource_id);
+        saveGGMsDataSources($connection,$_POST, $resource_id);
         saveGGMsProperties($connection, $_POST, $resource_id);
         saveGGMsModelTypes($connection, $_POST, $resource_id);
     }
