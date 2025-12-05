@@ -87,6 +87,22 @@ function getPriorityText($weeks)
             return "undefined";
     }
 }
+function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string
+{
+    $firstAuthor = $postData['familynames'][0];
+    $mainTitle   = $postData['title'][0];
+
+    $abbreviateTitle = substr($mainTitle, 0, 30);
+    $cleanTitle = str_replace(' ', '_', $abbreviateTitle);
+
+    $xmlFilename = "metadata{$resource_id}-{$firstAuthor}_{$cleanTitle}.xml";
+    error_log("Final XML filename: " . $xmlFilename);
+
+    $mail->addStringAttachment($xml_content, $xmlFilename);
+    error_log("XML attachment added: " . $xmlFilename);
+
+    return $xmlFilename;
+}
 
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
 
@@ -225,18 +241,7 @@ try {
         error_log("XML Submit: Added file attachment: data_description_" . $resource_id . "." . $fileExtension);
     }
 
-    // Add XML attachment
-    $firstAuthor = $_POST['familynames'][0];
-    $mainTitle = $_POST['title'][0];
-
-    $abbreviateTitle = substr($mainTitle, 0, 30);
-    $cleanTitle = str_replace(' ', '_', $abbreviateTitle);
-
-    $xmlFilename = "metadata{$resource_id}-{$firstAuthor}_{$cleanTitle}.xml";
-    error_log("Final XML filename: " . $xmlFilename);
-
-    $mail->addStringAttachment($xml_content, $xmlFilename);
-    error_log("XML attachment added: " . $xmlFilename);
+    $xmlFilename = createAndAttachXmlFile($mail, $xml_content, $resource_id, $_POST);
 
     // Prepare email content
     $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
