@@ -2,6 +2,7 @@
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
+use PHPMailer\PHPMailer\PHPMailer;
 
 require_once __DIR__ . '/../send_xml_file.php';
 
@@ -27,12 +28,15 @@ class GenerateXmlFilenameTest extends TestCase
             'title'       => ['This is a simple title'],
         ];
 
-        $filename = $this->createAndAttachXmlFile($resource_id, $postData);
+        $xmlContent = '<xml>dummy</xml>'; // Dummy XML content
+        $mail = new PHPMailer(false); // Dummy mail object
+
+        $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
 
         $this->assertSame(
             'metadata3-Mohammed_This_is_a_simple_title.xml',
             $filename,
-            'Simple file name should be generated correctly..'
+            'Simple file name should be generated correctly.'
         );
     }
     /**
