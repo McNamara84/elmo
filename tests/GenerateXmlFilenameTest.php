@@ -50,7 +50,10 @@ class GenerateXmlFilenameTest extends TestCase
             'title'       => ['This is a very very long title that needs to be truncated'],
         ];
 
-        $filename = $this->createAndAttachXmlFile($resource_id, $postData);
+        $xmlContent = '<xml>dummy</xml>'; // Dummy XML content
+        $mail = new PHPMailer(false); // Dummy mail object
+
+        $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
 
         $expectedTitle = substr($postData['title'][0], 0, 30);
         $expectedTitle = str_replace(' ', '_', $expectedTitle);
@@ -75,7 +78,10 @@ class GenerateXmlFilenameTest extends TestCase
             'title'       => ['Phosphorus in soils'],
         ];
 
-        $filename = $this->createAndAttachXmlFile($resource_id, $postData);
+        $xmlContent = '<xml>dummy</xml>'; // Dummy XML content
+        $mail = new PHPMailer(false); // Dummy mail object
+
+        $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
 
         $this->assertStringContainsString(
             'Müller',
@@ -102,7 +108,10 @@ class GenerateXmlFilenameTest extends TestCase
             'title'       => ['a b  c   d'],
         ];
 
-        $filename = $this->createAndAttachXmlFile($resource_id, $postData);
+        $xmlContent = '<xml>dummy</xml>'; // Dummy XML content
+        $mail = new PHPMailer(false); // Dummy mail object
+
+        $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
 
         $this->assertSame(
             'metadata9-Ali_a_b__c___d.xml',
