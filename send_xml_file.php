@@ -93,7 +93,12 @@ function getPriorityText($weeks)
 * @param PHPMailer $mail
 * @param string    $xml_content
 * @param int       $resource_id
-* @param array     $postData   ($_POST)
+*
+ * @param array{
+ *   familynames?: array<int, string>,
+ *   title?: array<int, string>
+ * } $postData
+ *
 * @return string   The final XML filename
 */
 function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string
