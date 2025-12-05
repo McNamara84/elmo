@@ -88,7 +88,13 @@ function getPriorityText($weeks)
     }
 }
 /**
-* Create XML filename from metadata.
+* Create XML filename from metadata and add as PHPMailer string attachment.
+*
+* @param PHPMailer $mail
+* @param string    $xml_content
+* @param int       $resource_id
+* @param array     $postData   ($_POST)
+* @return string   The final XML filename
 */
 function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string
 {
