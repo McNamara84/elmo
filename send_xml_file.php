@@ -89,8 +89,8 @@ function getPriorityText($weeks)
 }
 function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string
 {
-    $firstAuthor = $postData['familynames'][0];
-    $mainTitle   = $postData['title'][0];
+    $firstAuthor = $postData['familynames'][0] ?? 'unknown';
+    $mainTitle   = $postData['title'][0] ?? 'untitled';
 
     $abbreviateTitle = substr($mainTitle, 0, 30);
     $cleanTitle = str_replace(' ', '_', $abbreviateTitle);
