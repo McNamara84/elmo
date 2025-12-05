@@ -3,6 +3,8 @@ namespace Tests;
 
 use PHPUnit\Framework\TestCase;
 
+require_once __DIR__ . '/../send_xml_file.php';
+
 /**
  * Test class for XML filename generation logic.
  *
@@ -13,19 +15,6 @@ use PHPUnit\Framework\TestCase;
  */
 class GenerateXmlFilenameTest extends TestCase
 {
-    /**
-     * Helper function used only inside this test class.
-     */
-    private function buildXmlFilename(int $resource_id, array $postData): string
-    {
-        $firstAuthor = $postData['familynames'][0];
-        $mainTitle   = $postData['title'][0];
-
-        $abbreviateTitle = substr($mainTitle, 0, 30);
-        $cleanTitle      = str_replace(' ', '_', $abbreviateTitle);
-
-        return "metadata{$resource_id}-{$firstAuthor}_{$cleanTitle}.xml";
-    }
 
     /**
      * Tests filename generation for a simple title.
@@ -38,7 +27,7 @@ class GenerateXmlFilenameTest extends TestCase
             'title'       => ['This is a simple title'],
         ];
 
-        $filename = $this->buildXmlFilename($resource_id, $postData);
+        $filename = $this->createAndAttachXmlFile($resource_id, $postData);
 
         $this->assertSame(
             'metadata3-Mohammed_This_is_a_simple_title.xml',
@@ -57,7 +46,7 @@ class GenerateXmlFilenameTest extends TestCase
             'title'       => ['This is a very very long title that needs to be truncated'],
         ];
 
-        $filename = $this->buildXmlFilename($resource_id, $postData);
+        $filename = $this->createAndAttachXmlFile($resource_id, $postData);
 
         $expectedTitle = substr($postData['title'][0], 0, 30);
         $expectedTitle = str_replace(' ', '_', $expectedTitle);
@@ -82,7 +71,7 @@ class GenerateXmlFilenameTest extends TestCase
             'title'       => ['Phosphorus in soils'],
         ];
 
-        $filename = $this->buildXmlFilename($resource_id, $postData);
+        $filename = $this->createAndAttachXmlFile($resource_id, $postData);
 
         $this->assertStringContainsString(
             'Müller',
@@ -109,7 +98,7 @@ class GenerateXmlFilenameTest extends TestCase
             'title'       => ['a b  c   d'],
         ];
 
-        $filename = $this->buildXmlFilename($resource_id, $postData);
+        $filename = $this->createAndAttachXmlFile($resource_id, $postData);
 
         $this->assertSame(
             'metadata9-Ali_a_b__c___d.xml',
