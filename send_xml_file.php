@@ -87,14 +87,19 @@ function getPriorityText($weeks)
             return "undefined";
     }
 }
+/**
+* Create XML filename from metadata.
+*/
 function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string
 {
     $firstAuthor = $postData['familynames'][0] ?? 'unknown';
     $mainTitle   = $postData['title'][0] ?? 'untitled';
 
+    // Abbreviate + cleanup
     $abbreviateTitle = substr($mainTitle, 0, 30);
     $cleanTitle = str_replace(' ', '_', $abbreviateTitle);
 
+    // Assemble filename
     $xmlFilename = "metadata{$resource_id}-{$firstAuthor}_{$cleanTitle}.xml";
     error_log("Final XML filename: " . $xmlFilename);
 
