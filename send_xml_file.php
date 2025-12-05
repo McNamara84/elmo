@@ -90,10 +90,10 @@ function getPriorityText($weeks)
 /**
 * Create XML filename from metadata.
 */
-function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string
+function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $_POST): string
 {
-    $firstAuthor = $postData['familynames'][0] ?? 'unknown';
-    $mainTitle   = $postData['title'][0] ?? 'untitled';
+    $firstAuthor = $_POST['familynames'][0] ?? 'unknown';
+    $mainTitle   = $_POST['title'][0] ?? 'untitled';
 
     // Abbreviate + cleanup
     $abbreviateTitle = substr($mainTitle, 0, 30);
