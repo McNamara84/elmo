@@ -1066,7 +1066,7 @@ http://www.altova.com/mapforce
 											<extent>
 												<gml:TimePeriod>
 													<xsl:attribute name="gml:id">
-														<xsl:value-of select="number(*[local-name()='spatial_temporal_coverage_id' and namespace-uri()=''])"/>
+														<xsl:value-of select="concat('timePeriod-', *[local-name()='spatial_temporal_coverage_id' and namespace-uri()=''])"/>
 													</xsl:attribute>
 													<xsl:for-each select="*[local-name()='dateStart' and namespace-uri()='']">
 														<xsl:variable name="var56_cur" select="."/>
