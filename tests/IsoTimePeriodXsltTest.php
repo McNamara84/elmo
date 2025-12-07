@@ -40,15 +40,17 @@ class IsoTimePeriodXsltTest extends TestCase
     <resourceType>Dataset</resourceType>
     <publicationYear>2024</publicationYear>
     <doi>10.1234/test</doi>
-    <Spatial_Temporal_Coverage>
-        <spatial_temporal_coverage_id>42</spatial_temporal_coverage_id>
-        <dateStart>2024-01-01</dateStart>
-        <dateEnd>2024-12-31</dateEnd>
-        <westBoundLongitude>-10.0</westBoundLongitude>
-        <eastBoundLongitude>10.0</eastBoundLongitude>
-        <southBoundLatitude>-20.0</southBoundLatitude>
-        <northBoundLatitude>20.0</northBoundLatitude>
-    </Spatial_Temporal_Coverage>
+    <SpatialTemporalCoverages>
+        <SpatialTemporalCoverage>
+            <spatial_temporal_coverage_id>42</spatial_temporal_coverage_id>
+            <dateStart>2024-01-01</dateStart>
+            <dateEnd>2024-12-31</dateEnd>
+            <longitudeMin>-10.0</longitudeMin>
+            <longitudeMax>10.0</longitudeMax>
+            <latitudeMin>-20.0</latitudeMin>
+            <latitudeMax>20.0</latitudeMax>
+        </SpatialTemporalCoverage>
+    </SpatialTemporalCoverages>
 </Resource>
 XML;
 
@@ -138,24 +140,26 @@ XML;
     <resourceType>Dataset</resourceType>
     <publicationYear>2024</publicationYear>
     <doi>10.1234/test</doi>
-    <Spatial_Temporal_Coverage>
-        <spatial_temporal_coverage_id>100</spatial_temporal_coverage_id>
-        <dateStart>2024-01-01</dateStart>
-        <dateEnd>2024-06-30</dateEnd>
-        <westBoundLongitude>-10.0</westBoundLongitude>
-        <eastBoundLongitude>10.0</eastBoundLongitude>
-        <southBoundLatitude>-20.0</southBoundLatitude>
-        <northBoundLatitude>20.0</northBoundLatitude>
-    </Spatial_Temporal_Coverage>
-    <Spatial_Temporal_Coverage>
-        <spatial_temporal_coverage_id>200</spatial_temporal_coverage_id>
-        <dateStart>2024-07-01</dateStart>
-        <dateEnd>2024-12-31</dateEnd>
-        <westBoundLongitude>-10.0</westBoundLongitude>
-        <eastBoundLongitude>10.0</eastBoundLongitude>
-        <southBoundLatitude>-20.0</southBoundLatitude>
-        <northBoundLatitude>20.0</northBoundLatitude>
-    </Spatial_Temporal_Coverage>
+    <SpatialTemporalCoverages>
+        <SpatialTemporalCoverage>
+            <spatial_temporal_coverage_id>100</spatial_temporal_coverage_id>
+            <dateStart>2024-01-01</dateStart>
+            <dateEnd>2024-06-30</dateEnd>
+            <longitudeMin>-10.0</longitudeMin>
+            <longitudeMax>10.0</longitudeMax>
+            <latitudeMin>-20.0</latitudeMin>
+            <latitudeMax>20.0</latitudeMax>
+        </SpatialTemporalCoverage>
+        <SpatialTemporalCoverage>
+            <spatial_temporal_coverage_id>200</spatial_temporal_coverage_id>
+            <dateStart>2024-07-01</dateStart>
+            <dateEnd>2024-12-31</dateEnd>
+            <longitudeMin>-10.0</longitudeMin>
+            <longitudeMax>10.0</longitudeMax>
+            <latitudeMin>-20.0</latitudeMin>
+            <latitudeMax>20.0</latitudeMax>
+        </SpatialTemporalCoverage>
+    </SpatialTemporalCoverages>
 </Resource>
 XML;
 
