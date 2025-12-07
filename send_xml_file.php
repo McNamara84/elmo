@@ -1,4 +1,12 @@
 <?php
+
+
+// Guard for PHPUnit
+if (defined('PHPUNIT_RUNNING')) {
+    return;
+}
+
+
 /**
  * Script to save metadata and send it as XML via email
  * 
