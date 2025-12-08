@@ -82,3 +82,54 @@
     border-top-left-radius: 0.375rem !important;
     border-bottom-left-radius: 0.375rem !important;
 }
+
+/*  ============================================================================
+    Affiliation Dropdown Fixes (Issue #686)
+    ============================================================================
+    Prevents text overlap on slim screens for affiliation dropdowns.
+    Ensures dropdown items are readable with proper text truncation.
+    ============================================================================ */
+
+/* Affiliation dropdown items - prevent text overlap on slim screens */
+.tagify__dropdown.affiliation .tagify__dropdown__item {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100%;
+    height: auto !important;
+    min-height: 2rem;
+    line-height: 1.4;
+    padding: 0.5em 0.75em !important;
+}
+
+/* Ensure dropdown has minimum width even on slim screens */
+.tagify__dropdown.affiliation .tagify__dropdown__wrapper {
+    min-width: 250px;
+    max-width: 500px;
+}
+
+/* Minimum width for affiliation input fields on all screen sizes */
+[id*="affiliation"].tagify {
+    min-width: 200px;
+}
+
+/* Mobile optimization - improve readability on very small screens */
+@media (max-width: 576px) {
+    .tagify__dropdown.affiliation .tagify__dropdown__wrapper {
+        min-width: 200px;
+        max-width: calc(100vw - 20px);
+    }
+    
+    /* Ensure dropdown items remain readable on mobile */
+    .tagify__dropdown.affiliation .tagify__dropdown__item {
+        font-size: 0.85rem;
+        padding: 0.6em 0.75em !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+}
+
+/*  ============================================================================
+    End of Affiliation Dropdown Fixes (Issue #686)
+    ============================================================================ */
