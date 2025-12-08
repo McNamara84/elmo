@@ -7,13 +7,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 define('PHPUNIT_RUNNING', true);
 require_once __DIR__ . '/../send_xml_file.php';
 
-// Mock date() for consistent testing
-// if (!function_exists('date')) {
-//     function date($format) {
-//         return '2025-12-08_09-24-38';
-//     }
-// }
-
 /**
  * Test class for XML filename generation logic.
  *
