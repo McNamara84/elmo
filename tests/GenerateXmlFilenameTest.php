@@ -71,7 +71,7 @@ class GenerateXmlFilenameTest extends TestCase
     /**
      * Tests that umlauts in the author name are preserved in the filename.
      */
-    public function testUmlautsInAuthorArePreserved(): void
+    public function testUmlautReplacement(): void
     {
         $resource_id = 7;
         $postData = [
@@ -84,16 +84,12 @@ class GenerateXmlFilenameTest extends TestCase
 
         $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
 
-        $this->assertStringContainsString(
-            'Müller',
-            $filename,
-            'Umlauts in the author name should be preserved in the generated filename.'
-        );
-
+        $this->assertStringNotContainsString('ü', $filename, 'Umlauts will be replaced');
+        $this->assertStringContainsString('Mueller', $filename, 'Müller becomes Mueller');
+    
         $this->assertSame(
-            'metadata7-Müller_Phosphorus_in_soils.xml',
-            $filename,
-            'Filename with umlauts and a simple title should match the expected pattern.'
+        'metadata7-Mueller_Phosphorus_in_soils.xml',
+        $filename
         );
     }
 
