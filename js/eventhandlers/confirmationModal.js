@@ -25,7 +25,7 @@ function showConfirmationModal(titleKey, messageKey, cancelKey, confirmKey, onCo
     // Get translations from nested keys (e.g., "confirmations.clear.title")
     const getTranslation = (key) => {
         const keys = key.split('.');
-        let value = window.translations;
+        let value = window.elmo?.translations || {};
         for (const k of keys) {
             if (value && typeof value === 'object') {
                 value = value[k];
