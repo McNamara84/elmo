@@ -128,10 +128,11 @@
     white-space: normal !important;
 }
 
-/* Ensure dropdown has minimum width even on slim screens */
+/* Ensure dropdown has reasonable width across all screen sizes */
 .tagify__dropdown.affiliation .tagify__dropdown__wrapper {
     min-width: 250px;
-    max-width: 500px;
+    max-width: 100%;
+    width: auto;
 }
 
 /* Minimum width for affiliation input fields on all screen sizes */
