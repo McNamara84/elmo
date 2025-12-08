@@ -114,12 +114,20 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
     $firstAuthor = $postData['familynames'][0] ?? 'unknown';
     $mainTitle   = $postData['title'][0] ?? 'untitled';
 
-    // Abbreviate + cleanup
+    // Abbreviate title
     $abbreviateTitle = substr($mainTitle, 0, 30);
-    $cleanTitle = str_replace(' ', '_', $abbreviateTitle);
+
+    // Replace Umlauts
+    $umlauts = ['ä', 'ö', 'ü', 'Ä', 'Ö', 'Ü', 'ß'];
+    $ascii   = ['ae', 'oe', 'ue', 'Ae', 'Oe', 'Ue', 'ss'];
+    $firstAuthor = str_replace($umlauts, $ascii, $firstAuthor);
+    $abbreviateTitle = str_replace($umlauts, $ascii, $abbreviateTitle);
+
+    $cleanAuthor = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $firstAuthor)), '_') ?: 'unknown';
+    $cleanTitle  = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $abbreviateTitle)), '_') ?: 'untitled';
 
     // Assemble filename
-    $xmlFilename = "metadata{$resource_id}-{$firstAuthor}_{$cleanTitle}.xml";
+    $xmlFilename = "metadata{$resource_id}-{$cleanAuthor}_{$cleanTitle}.xml";
     error_log("Final XML filename: " . $xmlFilename);
 
     $mail->addStringAttachment($xml_content, $xmlFilename);
