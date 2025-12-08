@@ -205,19 +205,25 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     },
     templates: {
       dropdownItem(item) {
-        const displayText = item.value || '';
+        // Build dropdown item using Tagify's standard approach but with custom content
+        const displayText = item.mappedValue || item.value || '';
         const otherNames = item.other && Array.isArray(item.other) ? item.other.join(', ') : '';
-        const fullText = displayText + (otherNames ? ' (' + otherNames + ')' : '');
         
-        return `
-          <div class="${this.settings.classNames.dropdownItem} ${item.class || ''}" 
-               tabindex="0" 
-               role="option"
-               title="${fullText}">
-            <span class="tagify__dropdown__item__text">${displayText}</span>
-            ${otherNames ? `<small class="tagify__dropdown__item__subtext text-muted d-block text-truncate">${otherNames}</small>` : ''}
-          </div>
-        `;
+        // Build HTML with all necessary Tagify attributes for proper selection handling
+        let html = `<div ${this.getAttributes(item)}
+                         class='${this.settings.classNames.dropdownItem} ${item.class ? item.class : ""}'
+                         tabindex="0"
+                         role="option">`;
+        
+        if (otherNames) {
+          html += `<span class="tagify__dropdown__item__text">${displayText}</span>`;
+          html += `<small class="tagify__dropdown__item__subtext text-muted d-block text-truncate">${otherNames}</small>`;
+        } else {
+          html += displayText;
+        }
+        
+        html += `</div>`;
+        return html;
       }
     }
   });
