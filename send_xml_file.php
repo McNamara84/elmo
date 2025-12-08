@@ -126,8 +126,9 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
     $cleanAuthor = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $firstAuthor)), '_') ?: 'unknown';
     $cleanTitle  = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $abbreviateTitle)), '_') ?: 'untitled';
 
+    $currentDateTime = date('Y-m-d_H-i-s');
     // Assemble filename
-    $xmlFilename = "metadata{$resource_id}-{$cleanAuthor}_{$cleanTitle}.xml";
+    $xmlFilename = "metadata{$resource_id}-{$cleanAuthor}-{$cleanTitle}-{$currentDateTime}.xml";
     error_log("Final XML filename: " . $xmlFilename);
 
     $mail->addStringAttachment($xml_content, $xmlFilename);
