@@ -44,13 +44,21 @@ test.describe('Clear form confirmation dialog', () => {
     await page.reload();
     await page.waitForLoadState('networkidle');
     
-    // Wait for translations to be loaded
+    // Wait for translations to be fully loaded with all required keys
     await page.waitForFunction(() => {
-      return window.elmo && window.elmo.translations && window.elmo.translations.confirmations;
-    }, { timeout: 5000 });
+      return window.elmo && 
+             window.elmo.translations && 
+             window.elmo.translations.confirmations &&
+             window.elmo.translations.confirmations.clear &&
+             window.elmo.translations.confirmations.clear.title &&
+             window.elmo.translations.confirmations.clear.message;
+    }, { timeout: 10000 });
     
     // Click clear button
     await page.click('#button-form-reset');
+    
+    // Wait for modal to be visible
+    await expect(page.locator('#modal-confirm')).toBeVisible();
     
     // Check German translations
     await expect(page.locator('#modal-confirm-label')).toContainText(/zurücksetzen/i);
@@ -85,13 +93,21 @@ test.describe('Clear form confirmation dialog', () => {
     await page.reload();
     await page.waitForLoadState('networkidle');
     
-    // Wait for translations to be loaded
+    // Wait for translations to be fully loaded with all required keys
     await page.waitForFunction(() => {
-      return window.elmo && window.elmo.translations && window.elmo.translations.confirmations;
-    }, { timeout: 5000 });
+      return window.elmo && 
+             window.elmo.translations && 
+             window.elmo.translations.confirmations &&
+             window.elmo.translations.confirmations.clear &&
+             window.elmo.translations.confirmations.clear.title &&
+             window.elmo.translations.confirmations.clear.message;
+    }, { timeout: 10000 });
     
     // Click clear button
     await page.click('#button-form-reset');
+    
+    // Wait for modal to be visible
+    await expect(page.locator('#modal-confirm')).toBeVisible();
     
     // Check French translations
     await expect(page.locator('#modal-confirm-label')).toContainText(/Réinitialiser/i);
@@ -166,11 +182,8 @@ test.describe('Clear form confirmation dialog', () => {
     // Press Escape key
     await page.keyboard.press('Escape');
     
-    // Wait for modal animation to complete
-    await page.waitForTimeout(500);
-    
-    // Modal should be hidden
-    await expect(page.locator('#modal-confirm')).not.toBeVisible();
+    // Modal should be hidden (longer timeout for Firefox)
+    await expect(page.locator('#modal-confirm')).not.toBeVisible({ timeout: 2000 });
     
     // Data should still be present
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue(testYear);
@@ -260,15 +273,20 @@ test.describe('Clear form confirmation dialog', () => {
     await page.reload();
     await page.waitForLoadState('networkidle');
     
-    // Wait for translations to be loaded
+    // Wait for translations to be fully loaded with all required keys
     await page.waitForFunction(() => {
-      return window.elmo && window.elmo.translations && window.elmo.translations.confirmations;
-    }, { timeout: 5000 });
+      return window.elmo && 
+             window.elmo.translations && 
+             window.elmo.translations.confirmations &&
+             window.elmo.translations.confirmations.clear &&
+             window.elmo.translations.confirmations.clear.title;
+    }, { timeout: 10000 });
     
     await page.fill('#input-resourceinformation-publicationyear', testYear);
     
     // Click clear and verify English text
     await page.click('#button-form-reset');
+    await expect(page.locator('#modal-confirm')).toBeVisible();
     await expect(page.locator('#modal-confirm-label')).toContainText(/Reset/i);
     await page.click('#button-confirm-cancel');
     await page.waitForTimeout(300);
@@ -278,15 +296,20 @@ test.describe('Clear form confirmation dialog', () => {
     await page.reload();
     await page.waitForLoadState('networkidle');
     
-    // Wait for translations to be loaded again
+    // Wait for translations to be fully loaded again
     await page.waitForFunction(() => {
-      return window.elmo && window.elmo.translations && window.elmo.translations.confirmations;
-    }, { timeout: 5000 });
+      return window.elmo && 
+             window.elmo.translations && 
+             window.elmo.translations.confirmations &&
+             window.elmo.translations.confirmations.clear &&
+             window.elmo.translations.confirmations.clear.title;
+    }, { timeout: 10000 });
     
     await page.fill('#input-resourceinformation-publicationyear', testYear);
     
     // Click clear and verify German text
     await page.click('#button-form-reset');
+    await expect(page.locator('#modal-confirm')).toBeVisible();
     await expect(page.locator('#modal-confirm-label')).toContainText(/zurücksetzen/i);
     await page.click('#button-confirm-cancel');
     
