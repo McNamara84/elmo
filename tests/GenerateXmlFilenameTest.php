@@ -117,4 +117,27 @@ class GenerateXmlFilenameTest extends TestCase
         );
     }
 
+    public function testDangerousCharactersAreSanitized(): void
+    {
+        $resource_id = 10;
+        $postData = [
+            'familynames' => ['Müller/evil:script'],
+            'title'       => ['Test?titel<>"\\|*?'],
+        ];
+
+        $xmlContent = '<xml>dummy</xml>'; // Dummy XML content
+        $mail = new PHPMailer(false); // Dummy mail object
+
+        $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
+
+        $dangerous = ['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
+        foreach ($dangerous as $char) {
+        $this->assertStringNotContainsString($char, $filename, "{$char} will be removed");
+        }
+
+        $this->assertSame(
+            'metadata10-Mueller_evil_script_Test_titel__.xml',
+            $filename
+        );
+    }
 }
