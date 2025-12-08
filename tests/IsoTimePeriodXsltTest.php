@@ -112,8 +112,8 @@ XML;
                 "gml:id should follow the pattern 'timePeriod-{{number}}', got: {$gmlId}"
             );
             
-            // Verify it uses the correct ID from the input
-            $this->assertEquals('timePeriod-42', $gmlId, 'gml:id should be timePeriod-42 for the test input');
+            // Verify it uses position-based numbering (starts at 1)
+            $this->assertEquals('timePeriod-1', $gmlId, 'gml:id should be timePeriod-1 for the first (and only) STC element');
         }
     }
 
@@ -202,9 +202,9 @@ XML;
             $gmlIds[] = $gmlId;
         }
         
-        // Verify we got the expected IDs
-        $this->assertContains('timePeriod-100', $gmlIds, 'Should contain timePeriod-100');
-        $this->assertContains('timePeriod-200', $gmlIds, 'Should contain timePeriod-200');
+        // Verify we got position-based IDs (1, 2, ...)
+        $this->assertContains('timePeriod-1', $gmlIds, 'Should contain timePeriod-1 for first STC');
+        $this->assertContains('timePeriod-2', $gmlIds, 'Should contain timePeriod-2 for second STC');
     }
 
     /**
