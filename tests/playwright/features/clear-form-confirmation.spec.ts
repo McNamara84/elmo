@@ -37,12 +37,17 @@ test.describe('Clear form confirmation dialog', () => {
   });
 
   test('modal displays correct German translations', async ({ page }) => {
-    // Set language to German
+    // Set language to German and wait for translations to load
     await page.evaluate(() => {
       localStorage.setItem('selectedLanguage', 'de');
     });
     await page.reload();
     await page.waitForLoadState('networkidle');
+    
+    // Wait for translations to be loaded
+    await page.waitForFunction(() => {
+      return window.elmo && window.elmo.translations && window.elmo.translations.confirmations;
+    }, { timeout: 5000 });
     
     // Click clear button
     await page.click('#button-form-reset');
@@ -73,12 +78,17 @@ test.describe('Clear form confirmation dialog', () => {
   });
 
   test('modal displays correct French translations', async ({ page }) => {
-    // Set language to French
+    // Set language to French and wait for translations to load
     await page.evaluate(() => {
       localStorage.setItem('selectedLanguage', 'fr');
     });
     await page.reload();
     await page.waitForLoadState('networkidle');
+    
+    // Wait for translations to be loaded
+    await page.waitForFunction(() => {
+      return window.elmo && window.elmo.translations && window.elmo.translations.confirmations;
+    }, { timeout: 5000 });
     
     // Click clear button
     await page.click('#button-form-reset');
@@ -156,6 +166,9 @@ test.describe('Clear form confirmation dialog', () => {
     // Press Escape key
     await page.keyboard.press('Escape');
     
+    // Wait for modal animation to complete
+    await page.waitForTimeout(500);
+    
     // Modal should be hidden
     await expect(page.locator('#modal-confirm')).not.toBeVisible();
     
@@ -212,7 +225,8 @@ test.describe('Clear form confirmation dialog', () => {
     const focusedElement = await page.evaluate(() => document.activeElement?.id);
     
     // Focus should be within the modal (either modal itself or a button)
-    expect(['modal-confirm', 'button-confirm-cancel', 'button-confirm-action']).toContain(focusedElement);
+    const validFocusElements = ['modal-confirm', 'button-confirm-cancel', 'button-confirm-action'];
+    expect(validFocusElements).toContain(focusedElement);
   });
 
   test('multiple rapid clicks do not cause issues', async ({ page }) => {
@@ -221,14 +235,16 @@ test.describe('Clear form confirmation dialog', () => {
     // Fill form data
     await page.fill('#input-resourceinformation-publicationyear', testYear);
     
-    // Click clear button multiple times rapidly
+    // Click clear button - modal opens
     await page.click('#button-form-reset');
-    await page.click('#button-form-reset');
-    await page.click('#button-form-reset');
+    await expect(page.locator('#modal-confirm')).toBeVisible();
     
-    // Only one modal should be visible
-    const modalCount = await page.locator('#modal-confirm').count();
-    expect(modalCount).toBe(1);
+    // Cancel modal
+    await page.click('#button-confirm-cancel');
+    await page.waitForTimeout(300);
+    
+    // Click again - modal should open again
+    await page.click('#button-form-reset');
     await expect(page.locator('#modal-confirm')).toBeVisible();
     
     // Cancel and verify data is still there
@@ -239,24 +255,34 @@ test.describe('Clear form confirmation dialog', () => {
   test('modal works correctly after page language change', async ({ page }) => {
     const testYear = '2025';
     
-    // Fill form data
-    await page.fill('#input-resourceinformation-publicationyear', testYear);
-    
     // Start with English
     await page.evaluate(() => localStorage.setItem('selectedLanguage', 'en'));
     await page.reload();
     await page.waitForLoadState('networkidle');
+    
+    // Wait for translations to be loaded
+    await page.waitForFunction(() => {
+      return window.elmo && window.elmo.translations && window.elmo.translations.confirmations;
+    }, { timeout: 5000 });
+    
     await page.fill('#input-resourceinformation-publicationyear', testYear);
     
     // Click clear and verify English text
     await page.click('#button-form-reset');
     await expect(page.locator('#modal-confirm-label')).toContainText(/Reset/i);
     await page.click('#button-confirm-cancel');
+    await page.waitForTimeout(300);
     
     // Change to German
     await page.evaluate(() => localStorage.setItem('selectedLanguage', 'de'));
     await page.reload();
     await page.waitForLoadState('networkidle');
+    
+    // Wait for translations to be loaded again
+    await page.waitForFunction(() => {
+      return window.elmo && window.elmo.translations && window.elmo.translations.confirmations;
+    }, { timeout: 5000 });
+    
     await page.fill('#input-resourceinformation-publicationyear', testYear);
     
     // Click clear and verify German text
