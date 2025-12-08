@@ -194,12 +194,31 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
       classname: "affiliation",
       enabled: 3,
       closeOnSelect: true,
-      searchKeys: ['value', 'other']
+      searchKeys: ['value', 'other'],
+      position: 'all',
+      highlightFirst: true
     },
     editTags: false,
     keepInvalidTags: false,
     autoComplete: {
       enabled: true
+    },
+    templates: {
+      dropdownItem(item) {
+        const displayText = item.value || '';
+        const otherNames = item.other && Array.isArray(item.other) ? item.other.join(', ') : '';
+        const fullText = displayText + (otherNames ? ' (' + otherNames + ')' : '');
+        
+        return `
+          <div class="${this.settings.classNames.dropdownItem} ${item.class || ''}" 
+               tabindex="0" 
+               role="option"
+               title="${fullText}">
+            <span class="tagify__dropdown__item__text">${displayText}</span>
+            ${otherNames ? `<small class="tagify__dropdown__item__subtext text-muted d-block text-truncate">${otherNames}</small>` : ''}
+          </div>
+        `;
+      }
     }
   });
 

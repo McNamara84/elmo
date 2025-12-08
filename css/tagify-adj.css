@@ -102,6 +102,32 @@
     padding: 0.5em 0.75em !important;
 }
 
+/* Custom template styling for affiliation dropdown items with subtext */
+.tagify__dropdown.affiliation .tagify__dropdown__item__text {
+    display: block;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tagify__dropdown.affiliation .tagify__dropdown__item__subtext {
+    display: block;
+    font-size: 0.85em;
+    margin-top: 0.2em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.8;
+}
+
+/* Allow dropdown items with subtext to have more height */
+.tagify__dropdown.affiliation .tagify__dropdown__item:has(.tagify__dropdown__item__subtext) {
+    height: auto !important;
+    min-height: 3rem;
+    white-space: normal !important;
+}
+
 /* Ensure dropdown has minimum width even on slim screens */
 .tagify__dropdown.affiliation .tagify__dropdown__wrapper {
     min-width: 250px;
