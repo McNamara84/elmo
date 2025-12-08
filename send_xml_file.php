@@ -117,11 +117,12 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
     // Abbreviate title
     $abbreviateTitle = substr($mainTitle, 0, 30);
 
-    // Replace Umlauts
-    $umlauts = ['ä', 'ö', 'ü', 'Ä', 'Ö', 'Ü', 'ß'];
-    $ascii   = ['ae', 'oe', 'ue', 'Ae', 'Oe', 'Ue', 'ss'];
-    $firstAuthor = str_replace($umlauts, $ascii, $firstAuthor);
-    $abbreviateTitle = str_replace($umlauts, $ascii, $abbreviateTitle);
+    // Set locale for iconv
+    setlocale(LC_ALL, 'en_US.UTF-8');
+
+    // Transliteration with iconv
+    $firstAuthor = iconv('UTF-8', 'ASCII//TRANSLIT', $firstAuthor);
+    $abbreviateTitle = iconv('UTF-8', 'ASCII//TRANSLIT', $abbreviateTitle);
 
     $cleanAuthor = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $firstAuthor)), '_') ?: 'unknown';
     $cleanTitle  = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $abbreviateTitle)), '_') ?: 'untitled';
