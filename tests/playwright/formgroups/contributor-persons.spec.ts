@@ -361,10 +361,11 @@ test.describe('Contributor (Persons) form group', () => {
       return !!input?.tagify && input.tagify.whitelist?.length > 0;
     });
 
-    // Trigger dropdown programmatically with a search term
+    // Trigger dropdown programmatically with a search term that returns multiple results
+    // Using "University" as it's common and returns multiple institutions
     await page.evaluate(() => {
       const input: any = document.querySelector('#input-contributorpersons-affiliation');
-      input.tagify.dropdown.show('Fraunhofer');
+      input.tagify.dropdown.show('University');
     });
     
     // Wait for dropdown to appear
@@ -383,9 +384,10 @@ test.describe('Contributor (Persons) form group', () => {
     }
 
     // Check that dropdown items are visible and rendered
+    // We need at least 2 items to test for overlap (hence "University" search term - returns many results)
     const dropdownItems = dropdown.locator('.tagify__dropdown__item');
     const itemCount = await dropdownItems.count();
-    expect(itemCount).toBeGreaterThan(0);
+    expect(itemCount).toBeGreaterThan(1);
     await expect(dropdownItems.first()).toBeVisible();
 
     // Verify items don't overlap by checking their vertical positions
