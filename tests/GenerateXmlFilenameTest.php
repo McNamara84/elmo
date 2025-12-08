@@ -7,6 +7,13 @@ use PHPMailer\PHPMailer\PHPMailer;
 define('PHPUNIT_RUNNING', true);
 require_once __DIR__ . '/../send_xml_file.php';
 
+// Mock date() for consistent testing
+// if (!function_exists('date')) {
+//     function date($format) {
+//         return '2025-12-08_09-24-38';
+//     }
+// }
+
 /**
  * Test class for XML filename generation logic.
  *
@@ -34,10 +41,11 @@ class GenerateXmlFilenameTest extends TestCase
 
         $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
 
+        $expectedDateTime = date('Y-m-d_H-i-s');
         $this->assertSame(
-            'metadata3-Mohammed_This_is_a_simple_title.xml',
-            $filename,
-            'Simple file name should be generated correctly.'
+        "metadata3-Mohammed-This_is_a_simple_title-{$expectedDateTime}.xml",
+        $filename,
+        'Simple file name should be generated correctly.'
         );
     }
     /**
@@ -56,10 +64,9 @@ class GenerateXmlFilenameTest extends TestCase
 
         $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
 
-        $expectedTitle = substr($postData['title'][0], 0, 30);
-        $expectedTitle = str_replace(' ', '_', $expectedTitle);
-
-        $expected = "metadata5-Schmidt_{$expectedTitle}.xml";
+        $expectedDateTime = date('Y-m-d_H-i-s');
+        $expectedTitle = trim(preg_replace('/_+/', '_', str_replace(' ', '_', substr($postData['title'][0], 0, 30))), '_');
+        $expected = "metadata5-Schmidt-{$expectedTitle}-{$expectedDateTime}.xml";
 
         $this->assertSame(
             $expected,
@@ -87,8 +94,9 @@ class GenerateXmlFilenameTest extends TestCase
         $this->assertStringNotContainsString('ü', $filename, 'Umlauts will be replaced');
         $this->assertStringContainsString('Mueller', $filename, 'Müller becomes Mueller');
     
+        $expectedDateTime = date('Y-m-d_H-i-s');
         $this->assertSame(
-        'metadata7-Mueller_Phosphorus_in_soils.xml',
+        "metadata7-Mueller-Phosphorus_in_soils-{$expectedDateTime}.xml",
         $filename
         );
     }
@@ -110,10 +118,11 @@ class GenerateXmlFilenameTest extends TestCase
 
         $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
 
+        $expectedDateTime = date('Y-m-d_H-i-s');
         $this->assertSame(
-            'metadata9-Ali_a_b_c_d.xml',
-            $filename,
-            'Multiple spaces are combined into ONE underscore.'
+        "metadata9-Ali-a_b_c_d-{$expectedDateTime}.xml",
+        $filename,
+        'Multiple spaces are combined into ONE underscore.'
         );
     }
 
@@ -138,9 +147,10 @@ class GenerateXmlFilenameTest extends TestCase
         $this->assertStringNotContainsString($char, $filename, "{$char} will be removed");
         }
 
+        $expectedDateTime = date('Y-m-d_H-i-s');
         $this->assertSame(
-            'metadata10-Mueller_evil_script_Test_titel.xml',
-            $filename
+        "metadata10-Mueller_evil_script-Test_titel-{$expectedDateTime}.xml",
+        $filename
         );
     }
 }
