@@ -111,9 +111,9 @@ class GenerateXmlFilenameTest extends TestCase
         $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
 
         $this->assertSame(
-            'metadata9-Ali_a_b__c___d.xml',
+            'metadata9-Ali_a_b_c_d.xml',
             $filename,
-            'Each space in the title should be converted to a single underscore in the filename.'
+            'Multiple spaces are combined into ONE underscore.'
         );
     }
 
@@ -136,7 +136,7 @@ class GenerateXmlFilenameTest extends TestCase
         }
 
         $this->assertSame(
-            'metadata10-Mueller_evil_script_Test_titel__.xml',
+            'metadata10-Mueller_evil_script_Test_titel.xml',
             $filename
         );
     }
