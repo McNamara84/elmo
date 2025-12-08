@@ -56,16 +56,10 @@ class GenerateXmlFilenameTest extends TestCase
 
         $filename = createAndAttachXmlFile($mail, $xmlContent, $resource_id, $postData);
 
-        $expectedTitle = substr($postData['title'][0], 0, 30);
-        $expectedTitle = str_replace(' ', '_', $expectedTitle);
-
+        $expectedTitle = trim(preg_replace('/_+/', '_', str_replace(' ', '_', substr($postData['title'][0], 0, 30))), '_');
         $expected = "metadata5-Schmidt_{$expectedTitle}.xml";
 
-        $this->assertSame(
-            $expected,
-            $filename,
-            'Title should be truncated to 30 characters and spaces should be replaced by underscores.'
-        );
+        $this->assertSame($expected, $filename);
     }
 
     /**
