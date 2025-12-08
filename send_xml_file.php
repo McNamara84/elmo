@@ -117,12 +117,17 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
     // Abbreviate title
     $abbreviateTitle = substr($mainTitle, 0, 30);
 
+    // Replace German umlauts FIRST
+    $deUmlauts = ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'Ä' => 'Ae', 'Ö' => 'Oe', 'Ü' => 'Ue', 'ß' => 'ss'];
+    $firstAuthor = str_replace(array_keys($deUmlauts), array_values($deUmlauts), $firstAuthor);
+    $abbreviateTitle = str_replace(array_keys($deUmlauts), array_values($deUmlauts), $abbreviateTitle);
+
     // Set locale for iconv
     setlocale(LC_ALL, 'en_US.UTF-8');
 
     // Transliteration with iconv
-    $firstAuthor = iconv('UTF-8', 'ASCII//TRANSLIT', $firstAuthor);
-    $abbreviateTitle = iconv('UTF-8', 'ASCII//TRANSLIT', $abbreviateTitle);
+    $firstAuthor = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $firstAuthor) ?: $firstAuthor;
+    $abbreviateTitle = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $abbreviateTitle) ?: $abbreviateTitle;
 
     $cleanAuthor = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $firstAuthor)), '_') ?: 'unknown';
     $cleanTitle  = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $abbreviateTitle)), '_') ?: 'untitled';
