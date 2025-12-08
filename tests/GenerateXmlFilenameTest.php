@@ -117,6 +117,9 @@ class GenerateXmlFilenameTest extends TestCase
         );
     }
 
+    /**
+    * Tests that dangerous characters in author/title are sanitized from filename.
+    */
     public function testDangerousCharactersAreSanitized(): void
     {
         $resource_id = 10;
