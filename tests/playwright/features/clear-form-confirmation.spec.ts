@@ -39,7 +39,7 @@ test.describe('Clear form confirmation dialog', () => {
   test('modal displays correct German translations', async ({ page }) => {
     // Set language to German and wait for translations to load
     await page.evaluate(() => {
-      localStorage.setItem('selectedLanguage', 'de');
+      localStorage.setItem('userLanguage', 'de');
     });
     await page.reload();
     await page.waitForLoadState('networkidle');
@@ -70,7 +70,7 @@ test.describe('Clear form confirmation dialog', () => {
   test('modal displays correct English translations', async ({ page }) => {
     // Set language to English
     await page.evaluate(() => {
-      localStorage.setItem('selectedLanguage', 'en');
+      localStorage.setItem('userLanguage', 'en');
     });
     await page.reload();
     await page.waitForLoadState('networkidle');
@@ -88,7 +88,7 @@ test.describe('Clear form confirmation dialog', () => {
   test('modal displays correct French translations', async ({ page }) => {
     // Set language to French and wait for translations to load
     await page.evaluate(() => {
-      localStorage.setItem('selectedLanguage', 'fr');
+      localStorage.setItem('userLanguage', 'fr');
     });
     await page.reload();
     await page.waitForLoadState('networkidle');
@@ -182,8 +182,14 @@ test.describe('Clear form confirmation dialog', () => {
     // Press Escape key
     await page.keyboard.press('Escape');
     
-    // Modal should be hidden (longer timeout for Firefox)
-    await expect(page.locator('#modal-confirm')).not.toBeVisible({ timeout: 2000 });
+    // Wait for Bootstrap modal animation to complete
+    await page.waitForFunction(() => {
+      const modal = document.querySelector('#modal-confirm');
+      return !modal || !modal.classList.contains('show');
+    }, { timeout: 3000 });
+    
+    // Modal should be hidden
+    await expect(page.locator('#modal-confirm.show')).not.toBeVisible();
     
     // Data should still be present
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue(testYear);
@@ -239,7 +245,7 @@ test.describe('Clear form confirmation dialog', () => {
     
     // Focus should be within the modal (either modal itself or a button)
     const validFocusElements = ['modal-confirm', 'button-confirm-cancel', 'button-confirm-action'];
-    expect(validFocusElements).toContain(focusedElement);
+    expect(validFocusElements.includes(focusedElement)).toBeTruthy();
   });
 
   test('multiple rapid clicks do not cause issues', async ({ page }) => {
@@ -269,7 +275,7 @@ test.describe('Clear form confirmation dialog', () => {
     const testYear = '2025';
     
     // Start with English
-    await page.evaluate(() => localStorage.setItem('selectedLanguage', 'en'));
+    await page.evaluate(() => localStorage.setItem('userLanguage', 'en'));
     await page.reload();
     await page.waitForLoadState('networkidle');
     
@@ -292,7 +298,7 @@ test.describe('Clear form confirmation dialog', () => {
     await page.waitForTimeout(300);
     
     // Change to German
-    await page.evaluate(() => localStorage.setItem('selectedLanguage', 'de'));
+    await page.evaluate(() => localStorage.setItem('userLanguage', 'de'));
     await page.reload();
     await page.waitForLoadState('networkidle');
     
