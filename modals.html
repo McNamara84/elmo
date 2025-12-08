@@ -77,6 +77,26 @@
         </div>
     </div>
 </div>
+<!-- Generic Confirmation Modal -->
+<div class="modal fade" id="modal-confirm" tabindex="-1" aria-labelledby="modal-confirm-label"
+    aria-describedby="modal-confirm-description" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-confirm-label"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-confirm-description"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="button-confirm-cancel"
+                    data-bs-dismiss="modal"></button>
+                <button type="button" class="btn btn-primary" id="button-confirm-action"></button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Changelog Modal -->
 <div class="modal fade" id="modal-changelog" tabindex="-1" aria-labelledby="label-changelog-modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
