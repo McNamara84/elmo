@@ -19,6 +19,9 @@ debug-page.png
 # Autosave files
 storage/drafts/
 
+# PHPUnit logs
+test.log
+
 # Ignore all content in the xml directory...
 xml/*
 # ...but do not ignore the .gitkeep file.
