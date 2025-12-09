@@ -101,10 +101,10 @@ function executeSaveFunction($callback, ...$args)
     $result = $callback(...$args);
     
     if ($result === false) {
-        throw new Exception("Save operation failed: " . (is_array($callback) 
+        error_log("[💿SAVE]: Save operation failed: " . (is_array($callback) 
             ? $callback[1] 
             : $callback) . " returned false");
-        error_log("[💿SAVE]: Save operation failed: " . (is_array($callback) 
+        throw new Exception("Save operation failed: " . (is_array($callback) 
             ? $callback[1] 
             : $callback) . " returned false");
     }
