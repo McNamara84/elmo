@@ -93,20 +93,20 @@ function validateDataSourceRow(array $row): array
             'mustBeEmpty' => ['details', 'compensation_depth', 'identifier', 'identifier_type', 'model_name']
         ],
         'G' => [
-            'required' => ['details'],
+            'required' => [],
             'mustBeEmpty' => ['satellite_platform', 'compensation_depth', 'identifier', 'identifier_type', 'model_name']
         ],
         'A' => [
-            'required' => ['details'],
+            'required' => [],
             'mustBeEmpty' => ['satellite_platform', 'compensation_depth', 'identifier', 'identifier_type', 'model_name']
         ],
         'T' => [
-            'required' => ['details'],
+            'required' => [],
             'mustBeEmpty' => ['satellite_platform', 'identifier', 'identifier_type', 'model_name']
             // Note: compensation_depth is optional for T
         ],
         'M' => [
-            'required' => ['details', 'identifier', 'identifier_type', 'model_name'],
+            'required' => ['model_name'],
             'mustBeEmpty' => ['satellite_platform', 'compensation_depth']
         ]
     ];

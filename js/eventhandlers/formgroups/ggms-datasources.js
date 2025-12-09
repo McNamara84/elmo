@@ -30,6 +30,17 @@ $(document).ready(function () {
         'M': { 'visibility-datasources-basic': true, 'visibility-datasources-details': true, 'visibility-datasources-satellite': false, 'visibility-datasources-identifier': true }
     };
 
+    /**
+     * Defines which fields are required based on datasource type
+     */
+    const validationRules = {
+        'S': { required: ['satellite_platform'] },
+        'G': { required: [] },
+        'A': { required: [] },
+        'T': { required: [] },
+        'M': { required: ['dName'] }
+    };
+
     // Keywords functionality
     // --- Helper functions -------------------------------------------------
 
@@ -131,6 +142,36 @@ $(document).ready(function () {
 
             listItem.appendChild(removeButton);
             selectedKeywordsList.appendChild(listItem);
+        });
+    }
+
+    /**
+     * Updates required attributes on form fields based on datasource type
+     * @param {jQuery} row - The data source row to process
+     */
+    function updateRequiredAttributes(row) {
+        const typeSelect = row.find('select[name="datasource_type[]"]');
+        const selectedType = typeSelect.val();
+        const rules = validationRules[selectedType];
+
+        if (!rules) return;
+
+        // Get all input/select/textarea elements in the row
+        const allFields = row.find('input, select, textarea');
+
+        allFields.each(function() {
+            const fieldName = $(this).attr('name');
+            if (!fieldName) return;
+
+            // Extract the base field name (without [])
+            const baseFieldName = fieldName.replace('[]', '');
+
+            // Check if this field is in the required list
+            if (rules.required.includes(baseFieldName)) {
+                $(this).prop('required', true).addClass('required-field');
+            } else {
+                $(this).prop('required', false).removeClass('required-field');
+            }
         });
     }
 
@@ -477,6 +518,9 @@ $(document).ready(function () {
                 window.setupIdentifierTypesDropdown(idTypeSelect);
             }
         }
+
+        // Update required attributes based on type rules
+        updateRequiredAttributes(row);
     }
 
     /**
