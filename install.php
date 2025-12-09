@@ -374,7 +374,7 @@ function createDatabaseStructure($connection): array
    `funderid` VARCHAR(11) NULL,
    `funderidtyp` VARCHAR(25) NULL,
    `grantnumber` VARCHAR(45) NULL,
-   `grantname` VARCHAR(75) NULL,
+   `grantname` VARCHAR(500) NULL,
    `awarduri` VARCHAR(255) NULL,
     PRIMARY KEY (`funding_reference_id`));",
 
