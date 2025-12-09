@@ -221,11 +221,18 @@ XML;
         
         $xsltContent = file_get_contents($xsltPath);
         
-        // Check that the XSLT contains the concat pattern for gml:id
+        // Check that the XSLT uses position() for position-based numbering
         $this->assertStringContainsString(
-            "concat('timePeriod-'",
+            "concat('timePeriod-', position())",
             $xsltContent,
-            "XSLT should contain the pattern concat('timePeriod-', ...) for generating gml:id"
+            "XSLT should contain the pattern concat('timePeriod-', position()) for generating position-based gml:id"
+        );
+        
+        // Ensure it doesn't use the old spatial_temporal_coverage_id for gml:id
+        $this->assertStringNotContainsString(
+            "concat('timePeriod-', *[local-name()='spatial_temporal_coverage_id'",
+            $xsltContent,
+            "XSLT should not use spatial_temporal_coverage_id for gml:id (should use position() instead)"
         );
         
         // Ensure it doesn't use the old number() function for gml:id
