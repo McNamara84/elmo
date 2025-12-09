@@ -189,6 +189,17 @@ try {
     // Transaction or save operation failed
     $connection->rollback();
     error_log("[💿SAVE]: Transaction rolled back. Save process failed for resource ID: " . (isset($resource_id) ? $resource_id : 'N/A') . ". Error: " . $e->getMessage());
+    // Return error response
     http_response_code(500);
-    echo json_encode(['error' => 'Save operation failed: ' . $e->getMessage()]);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'message' => "Sorry, we encountered an error while saving your data in the database system:\n\n" .
+                     $e->getMessage() . "\n\n" .
+                     "Your data has NOT been saved in our system. Sorry for the inconvenience.\n\n" .
+                     "Please contact the data curation team at datapub@gfz.de.\n" .
+                     "In your Email, make sure to reference this Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
+                     "We will be glad to fix the issue and see your data resubmitted.\n\n" .
+                     "ELMO team"
+    ]);
 }
