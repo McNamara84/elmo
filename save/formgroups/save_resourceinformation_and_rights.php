@@ -66,9 +66,8 @@ function saveResourceInformationAndRights($connection, $postData)
         return $resource_id;
 
     } catch (Exception $e) {
-        $connection->rollback();
         error_log("Error in saveResourceInformationAndRights: " . $e->getMessage());
-        throw $e;
+        return false;
     }
 }
 
