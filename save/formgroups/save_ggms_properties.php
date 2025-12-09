@@ -69,6 +69,26 @@ function updateGGMProperties(mysqli $connection, array $data, int $ggmId): void
         throw new Exception("Failed to prepare update statement: " . $connection->error);
     }
 
+    // Convert empty strings to NULL for numeric fields
+    $numericFields = ['radius', 'earth_gravity_constant'];
+    foreach ($numericFields as $field) {
+        if (isset($data[$field]) && $data[$field] === '') {
+            $data[$field] = null;
+        } elseif (isset($data[$field]) && $data[$field] !== null) {
+            $data[$field] = floatval($data[$field]);
+        }
+    }
+
+    // Convert numeric integer fields
+    $integerFields = ['degree'];
+    foreach ($integerFields as $field) {
+        if (isset($data[$field]) && $data[$field] === '') {
+            $data[$field] = null;
+        } elseif (isset($data[$field]) && $data[$field] !== null) {
+            $data[$field] = intval($data[$field]);
+        }
+    }
+
     $stmt->bind_param(
         'sisisdi',
         $data['tide_system'],
@@ -103,6 +123,9 @@ function insertEllipsoidalParameters(mysqli $connection, array $data, int $resou
         return null;
     }
 
+    // Convert empty strings to NULL for numeric fields
+    $semimajorAxis = ($data['semimajor_axis_a'] === '') ? null : floatval($data['semimajor_axis_a']);
+    
     // Map second_variable type to database column
     $secondVarMapping = [
         'axis_b' => 'semiminor_axis_b',
@@ -113,17 +136,18 @@ function insertEllipsoidalParameters(mysqli $connection, array $data, int $resou
     // Insert new record
     if (!empty($data['second_variable'])) {
         $columnName = $secondVarMapping[$data['second_variable']];
+        $secondVarValue = ($data['second_variable_value'] === '') ? null : floatval($data['second_variable_value']);
         $sql = "INSERT INTO `Ellipsoidal_Parameters`
                     (`semimajor_axis_a`, `{$columnName}`)
                  VALUES (?, ?)";
         $stmt = $connection->prepare($sql);
-        $stmt->bind_param('dd', $data['semimajor_axis_a'], $data['second_variable_value']);
+        $stmt->bind_param('dd', $semimajorAxis, $secondVarValue);
     } else {
         $sql = "INSERT INTO `Ellipsoidal_Parameters`
                     (`semimajor_axis_a`)
                  VALUES (?)";
         $stmt = $connection->prepare($sql);
-        $stmt->bind_param('d', $data['semimajor_axis_a']);
+        $stmt->bind_param('d', $semimajorAxis);
     }
 
     if (!$stmt->execute()) {
