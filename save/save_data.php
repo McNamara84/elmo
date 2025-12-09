@@ -80,7 +80,17 @@ function generateAndOutputXml($resource_id)
             } catch (Exception $e) {
                 error_log("[💿SAVE]: XML in-memory generation failed for resource ID: $resource_id. Error: " . $e->getMessage());
                 http_response_code(500);
-                echo "Error: XML generation failed";
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => "Sorry, we encountered an error while generating an XML file with your data:\n\n" .
+                    $e->getMessage() . "\n\n" .
+                    "Your data has been saved in our system.\n\n" .
+                    "Please contact the data curation team at datapub@gfz.de.\n" .
+                    "In your Email, make sure to reference this Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
+                    "We will be glad to fix the issue and see your data resubmitted.\n\n" .
+                    "ELMO team"
+    ]);
             }
         }
         exit();
