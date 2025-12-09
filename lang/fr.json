@@ -27,6 +27,14 @@
         "cancel": "Annuler",
         "accept": "Accepter"
     },
+    "confirmations": {
+        "clear": {
+            "title": "Réinitialiser le formulaire ?",
+            "message": "Êtes-vous sûr de vouloir réinitialiser le formulaire ? Toutes les données saisies seront perdues.",
+            "cancel": "Annuler",
+            "confirm": "Réinitialiser"
+        }
+    },
     "alerts": {
         "languageWarning": "Veuillez remplir le formulaire en anglais.",
         "validationErrorheading": "Erreur de validation",

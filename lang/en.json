@@ -27,6 +27,14 @@
         "cancel": "Cancel",
         "accept": "Accept"
     },
+    "confirmations": {
+        "clear": {
+            "title": "Reset Form?",
+            "message": "Are you sure you want to reset the form? All entered data will be lost.",
+            "cancel": "Cancel",
+            "confirm": "Reset"
+        }
+    },
     "alerts": {
         "languageWarning": "Please fill out the form in english.",
         "validationErrorheading": "Validation Error",

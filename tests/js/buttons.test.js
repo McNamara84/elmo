@@ -40,6 +40,7 @@ describe('buttons.js', () => {
     $.fn.load = jest.fn(function (url, cb) { if (cb) cb(); return this; });
     $.fn.tooltip = jest.fn();
     window.clearInputFields = jest.fn();
+    window.showConfirmationModal = jest.fn();
     window.open = jest.fn();
     localStorage.clear();
   });
@@ -100,10 +101,22 @@ describe('buttons.js', () => {
     expect(window.open).not.toHaveBeenCalled();
   });
 
-  test('reset button clears inputs', () => {
+  test('reset button shows confirmation modal', () => {
     loadScript();
     $('#button-form-reset').trigger('click');
-    expect(window.clearInputFields).toHaveBeenCalled();
+    expect(window.showConfirmationModal).toHaveBeenCalledWith(
+      'confirmations.clear.title',
+      'confirmations.clear.message',
+      'confirmations.clear.cancel',
+      'confirmations.clear.confirm',
+      window.clearInputFields
+    );
+  });
+
+  test('reset button does NOT call clearInputFields immediately', () => {
+    loadScript();
+    $('#button-form-reset').trigger('click');
+    expect(window.clearInputFields).not.toHaveBeenCalled();
   });
 
   test('load button shows upload modal', () => {
