@@ -318,11 +318,13 @@ try {
     header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
-        'message' => 'Sorry, we encountered an error when sending the email:' . $e->getMessage() . '\n\n' .
-                     'Your data has been saved in our system with Resource ID: ' . ($resource_id !== false ? $resource_id : 'N/A') . '\n\n' .
-                     'Please contact the data curation team at datapub@gfz.de. In your Email, make sure to reference this Resource ID.\n\n' .
-                     'Thank you for your understanding.\n' .
-                     'ELMO team',    ]);
+        'message' => "Sorry, we encountered an error when sending the email:\n\n" . 
+                     $e->getMessage() . "\n\n" .
+                     "Your data has been saved in our system with Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
+                     "Please contact the data curation team at datapub@gfz.de. In your Email, make sure to reference this Resource ID.\n\n" .
+                     "Thank you for your understanding.\n" .
+                     "ELMO team"
+    ]);
 }
 
 // End output buffering
