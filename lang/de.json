@@ -27,6 +27,14 @@
         "cancel": "Abbrechen",
         "accept": "Übernehmen"
     },
+    "confirmations": {
+        "clear": {
+            "title": "Formular zurücksetzen?",
+            "message": "Sind Sie sicher, dass Sie das Formular zurücksetzen möchten? Alle eingegebenen Daten gehen verloren.",
+            "cancel": "Abbrechen",
+            "confirm": "Zurücksetzen"
+        }
+    },
     "alerts": {
         "languageWarning": "Bitte füllen Sie das Formular auf Englisch aus.",
         "validationErrorheading": "Validierungsfehler",
