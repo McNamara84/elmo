@@ -19,7 +19,7 @@ test.describe("Licenses and Rights", () => {
 
     // Switch resource type to Software
     const resourceType = page.locator('#input-resourceinformation-resourcetype');
-    await resourceType.selectOption('12');
+    await resourceType.selectOption('8');
     // Wait for the dropdown to update
     await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length === 4);
 
@@ -32,7 +32,7 @@ test.describe("Licenses and Rights", () => {
     expect(texts.join(' ')).not.toContain('Creative Commons Attribution 4.0');
 
     // Switch back to Dataset
-    await resourceType.selectOption('5');
+    await resourceType.selectOption('4');
     await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length > 4);
     const datasetOptions = licenseSelect.locator('option');
     const datasetCount = await datasetOptions.count();
