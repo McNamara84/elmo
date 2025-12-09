@@ -98,18 +98,21 @@ function generateAndOutputXml($resource_id)
  */
 function executeSaveFunction($callback, ...$args)
 {
-    $result = $callback(...$args);
+    $functionName = is_array($callback) ? $callback[1] : $callback;
     
-    if ($result === false) {
-        error_log("[💿SAVE]: Save operation failed: " . (is_array($callback) 
-            ? $callback[1] 
-            : $callback) . " returned false");
-        throw new Exception("Save operation failed: " . (is_array($callback) 
-            ? $callback[1] 
-            : $callback) . " returned false");
+    try {
+        $result = $callback(...$args);
+        
+        if ($result === false) {
+            error_log("[💿SAVE]: Save operation failed: " . $functionName . " returned false");
+            throw new Exception("Save operation failed: " . $functionName . " returned false");
+        }
+        
+        return $result;
+    } catch (Exception $e) {
+        error_log("[💿SAVE]: Exception in " . $functionName . ": " . $e->getMessage());
+        throw $e; // Re-throw so outer catch can handle it
     }
-    
-    return $result;
 }
 
 // only process requests
