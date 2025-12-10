@@ -80,30 +80,31 @@ function getModelTypeName(mysqli $connection, int $modelTypeId): ?string
  *
  * @param mysqli $connection  Database connection
  * @param array  $postData    Form data
- * @param int    $ggmPropertiesId       GGM_Properties_id
+ * @param int    $resourceId  Resource ID
  *
  * @return void
  * @throws Exception On database error
  */
-function saveStaticModelData(mysqli $connection, array $postData, int $ggmPropertiesId): void
+function saveStaticModelData(mysqli $connection, array $postData, int $resourceId): void
 {
     $hasTimeVariableCoefficients = isset($postData['time_variable_coefficients']) && $postData['time_variable_coefficients'];
     $description = $hasTimeVariableCoefficients && isset($postData['time_variable_description']) 
         ? $postData['time_variable_description'] 
         : null;
 
-    $sql = "UPDATE `GGM_Properties` SET
-                `info_time_variable_coefficients` = ?
-            WHERE `GGM_Properties_id` = ?";
+    // Insert new static model data
+    $sql = "INSERT INTO `Static_Model_Properties`
+                (`resource_id`, `info_time_variable_coefficients`)
+            VALUES (?, ?)";
 
     $stmt = $connection->prepare($sql);
     if (!$stmt) {
-        throw new Exception("Failed to prepare update statement: " . $connection->error);
+        throw new Exception("Failed to prepare insert statement: " . $connection->error);
     }
 
-    $stmt->bind_param('si', $description, $ggmPropertiesId);
+    $stmt->bind_param('is', $resourceId, $description);
     if (!$stmt->execute()) {
-        throw new Exception('Error updating GGM_Properties for Static model: ' . $stmt->error);
+        throw new Exception('Error inserting Static_Model_Properties: ' . $stmt->error);
     }
     $stmt->close();
 }
@@ -268,10 +269,8 @@ function insertTopographicModelProperties(mysqli $connection, array $postData, i
  */
 function saveGGMsModelTypes(mysqli $connection, array $postData, int $resourceId): bool
 {
-    // 1) Retrieve GGM_Properties_id and Model_type_id
-    $ggmData = getGGMAndModelType($connection, $resourceId);
-    $ggmPropertiesId = $ggmData['ggm_id'];
-    $modelTypeId = $ggmData['model_type_id'];
+    // 1) Retrieve Model_type_id
+    $modelTypeId = lookupForeignKeyId($connection, 'Model_Type', 'Model_type_id', 'name', $postData['model_type']);
 
     // If no model type is set, no need to save model-specific properties
     if ($modelTypeId === null) {
@@ -282,7 +281,7 @@ function saveGGMsModelTypes(mysqli $connection, array $postData, int $resourceId
     $modelTypeName = getModelTypeName($connection, $modelTypeId);
 
     if ($modelTypeName === 'Static') {
-        saveStaticModelData($connection, $postData, $ggmPropertiesId);
+        saveStaticModelData($connection, $postData, $resourceId);
     } elseif ($modelTypeName === 'Temporal') {
         insertTemporalModelProperties($connection, $postData, $resourceId);
     } elseif ($modelTypeName === 'Topographic') {
