@@ -80,20 +80,20 @@ function validateGGMData(array $data, int $resourceId): array
 }
 
 /**
- * Inserts or updates the GGM_Properties record linked to a resource.
+ * Inserts the GGM_Definition record linked to a resource.
  *
  * @param mysqli $connection  Database connection
  * @param array  $data        Validated GGM data
  * @param int    $resourceId  Resource ID
  *
- * @return int  GGM_Properties_id of the inserted/updated record
+ * @return int  GGM_Definition_id of the inserted/updated record
  * @throws Exception On database errors
  */
 function insertGGMDefinition(mysqli $connection, array $data, int $resourceId): int
 {
 
     // Insert new GGM-Properties record
-    $sql = "INSERT INTO `GGM_Properties`
+    $sql = "INSERT INTO `GGM_Definition`
                 (`Model_Name`,`Celestial_Body`,`Product_Type`)
                 VALUES (?,?,?)";
     $stmt = $connection->prepare($sql);
@@ -105,20 +105,20 @@ function insertGGMDefinition(mysqli $connection, array $data, int $resourceId): 
     );
     $stmt->execute();
     if ($stmt->errno) {
-        throw new Exception('Error inserting GGM_Properties: ' . $stmt->error);
+        throw new Exception('Error inserting GGM_Definition: ' . $stmt->error);
     }
     $ggmId = $stmt->insert_id;
     $stmt->close();
 
     // Create link
-    $sql = "INSERT INTO `Resource_has_GGM_Properties`
-                (`Resource_resource_id`,`GGM_Properties_GGM_Properties_id`)
+    $sql = "INSERT INTO `Resource_has_GGM_Definition`
+                (`Resource_resource_id`,`GGM_Definition_GGM_Definition_id`)
                 VALUES (?,?)";
     $stmt = $connection->prepare($sql);
     $stmt->bind_param('ii', $resourceId, $ggmId);
     $stmt->execute();
     if ($stmt->errno) {
-        throw new Exception('Error linking GGM_Properties: ' . $stmt->error);
+        throw new Exception('Error linking GGM_Definition: ' . $stmt->error);
     }
     $stmt->close();
 
@@ -126,41 +126,7 @@ function insertGGMDefinition(mysqli $connection, array $data, int $resourceId): 
 }
 
 /**
- * Updates the Resource table foreign keys based on lookup names.
- *
- * @param mysqli $connection  Database connection
- * @param array  $data        Validated GGM data
- * @param int    $resourceId  Resource ID
- *
- * @return void
- * @throws Exception On lookup or update errors
- */
-function updateResourceForeignKeys(mysqli $connection, array $data, int $resourceId): void
-{
-    $modelTypeId = lookupForeignKeyId($connection, 'Model_Type', 'Model_type_id', 'name', $data['model_type']);
-    $mathRepId = lookupForeignKeyId($connection, 'Mathematical_Representation', 'Mathematical_representation_id', 'name', $data['mathematical_representation']);
-    $fileFmtId = lookupForeignKeyId($connection, 'File_Format', 'File_format_id', 'name', $data['file_format']);
-
-    if (!$modelTypeId || !$mathRepId || !$fileFmtId) {
-        throw new Exception('Failed to resolve Resource foreign keys');
-    }
-
-    $sql = "UPDATE `Resource` SET
-                `Model_type_id`              = ?,
-                `Mathematical_Representation_id` = ?,
-                `File_format_id`             = ?
-             WHERE `resource_id`              = ?";
-    $stmt = $connection->prepare($sql);
-    $stmt->bind_param('iiii', $modelTypeId, $mathRepId, $fileFmtId, $resourceId);
-    $stmt->execute();
-    if ($stmt->errno) {
-        throw new Exception('Error updating Resource FKs: ' . $stmt->error);
-    }
-    $stmt->close();
-}
-
-/**
- * Orchestrates validation, insert of GGM_Definition, and Resource FK update.
+ * Saves a new GGM_Definition and links it to the resource.
  *
  * @param mysqli $connection  Database connection
  * @param array  $postData    Posted form data
@@ -171,14 +137,56 @@ function updateResourceForeignKeys(mysqli $connection, array $data, int $resourc
  */
 function saveGGMsDefinition(mysqli $connection, array $postData, int $resourceId): bool
 {
-    // 1) Validate
+    // 1) Validate the input data
     $data = validateGGMData($postData, $resourceId);
 
-    // 2) Insert/update GGM_Definition
-    $ggmId = insertGGMDefinition($connection, $data, $resourceId);
+    // 2) Resolve foreign keys for Model_Type, Mathematical_Representation, and File_Format
+    $modelTypeId = lookupForeignKeyId($connection, 'Model_Type', 'Model_type_id', 'name', $data['model_type']);
+    $mathRepId = lookupForeignKeyId($connection, 'Mathematical_Representation', 'Mathematical_representation_id', 'name', $data['mathematical_representation']);
+    $fileFmtId = lookupForeignKeyId($connection, 'File_Format', 'File_format_id', 'name', $data['file_format']);
 
-    // 3) Update Resource FKs
-    updateResourceForeignKeys($connection, $data, $resourceId);
+    if (!$modelTypeId || !$mathRepId || !$fileFmtId) {
+        throw new Exception('Failed to resolve foreign keys for Model_Type, Mathematical_Representation, or File_Format.');
+    }
+
+    // 3) Insert a new GGM_Definition
+    $sql = "INSERT INTO `GGM_Definition`
+                (`Model_Name`, `Celestial_Body`, `Product_Type`, `Model_type_id`, `Mathematical_representation_id`, `File_format_id`)
+            VALUES (?, ?, ?, ?, ?, ?)";
+    $stmt = $connection->prepare($sql);
+    if (!$stmt) {
+        throw new Exception('Failed to prepare GGM_Definition insert: ' . $connection->error);
+    }
+    $stmt->bind_param(
+        'sssiii',
+        $data['model_name'],
+        $data['celestial_body'],
+        $data['product_type'],
+        $modelTypeId,
+        $mathRepId,
+        $fileFmtId
+    );
+    $stmt->execute();
+    if ($stmt->errno) {
+        throw new Exception('Error inserting GGM_Definition: ' . $stmt->error);
+    }
+    $ggmDefinitionId = $stmt->insert_id;
+    $stmt->close();
+
+    // 4) Link the new GGM_Definition to the Resource
+    $sql = "INSERT INTO `Resource_has_GGM_Definition`
+                (`Resource_resource_id`, `GGM_Definition_GGM_Definition_id`)
+            VALUES (?, ?)";
+    $stmt = $connection->prepare($sql);
+    if (!$stmt) {
+        throw new Exception('Failed to prepare Resource_has_GGM_Definition insert: ' . $connection->error);
+    }
+    $stmt->bind_param('ii', $resourceId, $ggmDefinitionId);
+    $stmt->execute();
+    if ($stmt->errno) {
+        throw new Exception('Error linking Resource to GGM_Definition: ' . $stmt->error);
+    }
+    $stmt->close();
 
     return true;
 }
