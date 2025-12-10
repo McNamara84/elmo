@@ -3,7 +3,7 @@ namespace Tests;
 
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../save/formgroups/save_datasources.php';
+require_once __DIR__ . '/../save/formgroups/save_ggms_datasources.php';
 
 /**
  * Test suite for saving GGM Data Sources
