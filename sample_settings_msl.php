@@ -36,6 +36,8 @@ $maxTitles = 2;
 
 // having the MSL logo in the header:
 $showMslLogo = true;
+// Automatic filling of the free keywords field with, for example, “EPOS”
+$showMslFreeKeyWords = true;
 
 // Show Contributor Persons form group
 $showContributorPersons = true;
