@@ -1,95 +1,384 @@
 <?php
+
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
 
-require_once __DIR__ . '/../save/formgroups/save_ggmsproperties.php';
+require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
 
 /**
- * Test suite for saving Gravity Gradient Model properties.
+ * Test suite for saving GGM Definition
+ * 
+ * Tests the GGM Definition save workflow:
+ * - lookupForeignKeyId helper function
+ * - validateGGMData validation
+ * - saveGGMsDefinition complete flow
  */
-class SaveGGMsProperties extends DatabaseTestCase
+class SaveGGMsDefinitionTest extends DatabaseTestCase
 {
-    /**
-     * Tests saving a GGM Properties entry with all fields populated.
-     *
-     * @return void
-     */
-    public function testSaveFullGGMsProperties(): void
+    private $resourceId;
+
+    protected function setUp(): void
     {
-        $resource_id = $this->createResource('GGM.FULL', 'Test GGM Full');
-
-        $postData = [
-            "rModelType" => [1],
-            "rMathematicalRepresentation" => [1],
-            "celestial_body" => "Mars",
-            "rFileFormat" => [2],
-            "model_name" => "MARS_GGM_2024",
-            "product_type" => "gravity_field"
-        ];
-
-        saveGGMsProperties($this->connection, $postData, $resource_id);
-
-        // Fetch from DB and assert
-        $stmt = $this->connection->prepare("SELECT * FROM GGM_Properties WHERE Model_Name = ?");
-        $stmt->bind_param("s", $postData["model_name"]);
-        $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-
-        $this->assertNotNull($result, "GGM Properties entry should be saved.");
-        $this->assertEquals($postData["model_name"], $result["Model_Name"]);
-        $this->assertEquals($postData["celestial_body"], $result["Celestial_Body"]);
-        $this->assertEquals($postData["product_type"], $result["Product_Type"]);
+        parent::setUp();
+        
+        // Create a test resource
+        $this->resourceId = $this->createResource('test.ggm.definition', 'Test GGM Definition');
+        
+        // Ensure lookup tables have required data
+        $this->ensureLookupData();
     }
 
     /**
-     * Tests saving GGM Properties with only required fields.
-     *
-     * @return void
+     * Ensure all required lookup data exists in database
      */
-    public function testSaveRequiredGGMsProperties(): void
+    private function ensureLookupData(): void
     {
-        $resource_id = $this->createResource('GGM.REQUIRED', 'Test GGM Required');
+        // Ensure Model_Type records exist
+        $modelTypes = ['Static', 'Temporal', 'Topographic', 'Simulated'];
+        foreach ($modelTypes as $type) {
+            $sql = "INSERT IGNORE INTO `Model_Type` (`name`, `description`) VALUES (?, ?)";
+            $stmt = $this->connection->prepare($sql);
+            $desc = "{$type} gravity model type";
+            $stmt->bind_param('ss', $type, $desc);
+            $stmt->execute();
+            $stmt->close();
+        }
 
-        $postData = [
-            "rModelType" => [1],
-            "rMathematicalRepresentation" => [1],
-            "model_name" => "REQUIRED_ONLY_GGM"
-        ];
+        // Ensure Mathematical_Representation records exist
+        $mathReps = ['Spherical harmonics', 'Ellipsoidal harmonics'];
+        foreach ($mathReps as $rep) {
+            $sql = "INSERT IGNORE INTO `Mathematical_Representation` (`name`, `description`) VALUES (?, ?)";
+            $stmt = $this->connection->prepare($sql);
+            $desc = "{$rep} representation";
+            $stmt->bind_param('ss', $rep, $desc);
+            $stmt->execute();
+            $stmt->close();
+        }
 
-        saveGGMsProperties($this->connection, $postData, $resource_id);
+        // Ensure File_Format records exist
+        $formats = ['icgem1.0', 'icgem2.0'];
+        foreach ($formats as $fmt) {
+            $sql = "INSERT IGNORE INTO `File_Format` (`name`, `description`) VALUES (?, ?)";
+            $stmt = $this->connection->prepare($sql);
+            $desc = "{$fmt} file format";
+            $stmt->bind_param('ss', $fmt, $desc);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
 
-        $stmt = $this->connection->prepare("SELECT * FROM GGM_Properties WHERE Model_Name = ?");
-        $stmt->bind_param("s", $postData["model_name"]);
-        $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
+    // ============================================================================
+    // LOOKUP FOREIGN KEY ID TESTS
+    // ============================================================================
 
-        $this->assertNotNull($result, "GGM Properties entry with required fields should be saved.");
-        $this->assertEquals($postData["model_name"], $result["Model_Name"]);
+    /**
+     * Test: lookupForeignKeyId returns correct ID when value exists
+     */
+    public function testLookupForeignKeyIdReturnsIdWhenFound(): void
+    {
+        $id = lookupForeignKeyId(
+            $this->connection,
+            'Model_Type',
+            'Model_type_id',
+            'name',
+            'Static'
+        );
+
+        $this->assertIsInt($id);
+        $this->assertGreaterThan(0, $id);
     }
 
     /**
-     * Tests saving GGM Properties with missing required fields.
-     *
-     * @return void
+     * Test: lookupForeignKeyId returns null when value not found
      */
-    public function testSaveGGMsPropertiesMissingRequired(): void
+    public function testLookupForeignKeyIdReturnsNullWhenNotFound(): void
     {
-        $resource_id = $this->createResource('GGM.MISSING', 'Test GGM Missing');
+        $id = lookupForeignKeyId(
+            $this->connection,
+            'Model_Type',
+            'Model_type_id',
+            'name',
+            'NonExistentType'
+        );
 
-        $postData = [
-            // Missing required fields like model_name
-            "rModelType" => [1]
+        $this->assertNull($id);
+    }
+
+    // ============================================================================
+    // VALIDATION TESTS
+    // ============================================================================
+
+    /**
+     * Test: validateGGMData returns cleaned data with all valid fields
+     */
+    public function testValidateGGMDataWithAllValidFields(): void
+    {
+        $data = [
+            'model_name' => 'TEST_MODEL_2024',
+            'model_type' => 'Static',
+            'mathematical_representation' => 'Spherical harmonics',
+            'file_format' => 'icgem1.0',
+            'celestial_body' => 'Earth',
+            'product_type' => 'Gravity Field'
         ];
 
-        $result = saveGGMsProperties($this->connection, $postData, $resource_id);
+        $result = validateGGMData($data, $this->resourceId);
 
-        $this->assertFalse($result, "Saving GGM Properties with missing required fields should fail.");
+        $this->assertEquals('TEST_MODEL_2024', $result['model_name']);
+        $this->assertEquals('Static', $result['model_type']);
+        $this->assertEquals('Spherical harmonics', $result['mathematical_representation']);
+        $this->assertEquals('icgem1.0', $result['file_format']);
+        $this->assertEquals('Earth', $result['celestial_body']);
+        $this->assertEquals('Gravity Field', $result['product_type']);
+    }
 
-        // Ensure nothing was saved
-        $stmt = $this->connection->prepare("SELECT * FROM GGM_Properties WHERE Model_Name IS NULL OR Model_Name = ''");
+    /**
+     * Test: validateGGMData throws exception for invalid resource ID
+     */
+    public function testValidateGGMDataThrowsExceptionForInvalidResourceId(): void
+    {
+        $data = [
+            'model_name' => 'TEST_MODEL',
+            'model_type' => 'Static',
+            'mathematical_representation' => 'Spherical harmonics',
+            'file_format' => 'icgem1.0',
+            'celestial_body' => 'Earth'
+        ];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid resource ID');
+
+        validateGGMData($data, 0);
+    }
+
+    /**
+     * Test: validateGGMData throws exception for missing required field
+     */
+    public function testValidateGGMDataThrowsExceptionForMissingRequiredField(): void
+    {
+        $data = [
+            'model_name' => 'TEST_MODEL',
+            'model_type' => 'Static',
+            // Missing: mathematical_representation, file_format, celestial_body
+        ];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Field mathematical_representation is required');
+
+        validateGGMData($data, $this->resourceId);
+    }
+
+    /**
+     * Test: validateGGMData throws exception for model name with spaces
+     */
+    public function testValidateGGMDataThrowsExceptionForModelNameWithSpaces(): void
+    {
+        $data = [
+            'model_name' => 'TEST MODEL WITH SPACES',
+            'model_type' => 'Static',
+            'mathematical_representation' => 'Spherical harmonics',
+            'file_format' => 'icgem1.0',
+            'celestial_body' => 'Earth'
+        ];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Model name must not contain spaces');
+
+        validateGGMData($data, $this->resourceId);
+    }
+
+    /**
+     * Test: validateGGMData throws exception for invalid model type
+     */
+    public function testValidateGGMDataThrowsExceptionForInvalidModelType(): void
+    {
+        $data = [
+            'model_name' => 'TEST_MODEL',
+            'model_type' => 'InvalidType',
+            'mathematical_representation' => 'Spherical harmonics',
+            'file_format' => 'icgem1.0',
+            'celestial_body' => 'Earth'
+        ];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid value for model_type');
+
+        validateGGMData($data, $this->resourceId);
+    }
+
+    /**
+     * Test: validateGGMData throws exception for invalid celestial body
+     */
+    public function testValidateGGMDataThrowsExceptionForInvalidCelestialBody(): void
+    {
+        $data = [
+            'model_name' => 'TEST_MODEL',
+            'model_type' => 'Static',
+            'mathematical_representation' => 'Spherical harmonics',
+            'file_format' => 'icgem1.0',
+            'celestial_body' => 'Jupiter'
+        ];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid value for celestial_body');
+
+        validateGGMData($data, $this->resourceId);
+    }
+
+    // ============================================================================
+    // SAVE GGM DEFINITION TESTS
+    // ============================================================================
+
+    /**
+     * Test: saveGGMsDefinition creates new GGM_Definition with all fields
+     */
+    public function testSaveGGMsDefinitionCreatesNewRecord(): void
+    {
+        $postData = [
+            'model_name' => 'GRACE_FO_2024',
+            'model_type' => 'Static',
+            'mathematical_representation' => 'Spherical harmonics',
+            'file_format' => 'icgem1.0',
+            'celestial_body' => 'Earth',
+            'product_type' => 'Gravity Field'
+        ];
+
+        $result = saveGGMsDefinition($this->connection, $postData, $this->resourceId);
+        $this->assertTrue($result);
+
+        // Verify GGM_Definition was created
+        $sql = "SELECT * FROM `GGM_Definition` WHERE `Model_Name` = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('s', $postData['model_name']);
         $stmt->execute();
-        $this->assertEquals(0, $stmt->get_result()->num_rows, "No GGM Properties entry should be saved with missing required fields.");
+        $record = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertNotNull($record);
+        $this->assertEquals('GRACE_FO_2024', $record['Model_Name']);
+        $this->assertEquals('Earth', $record['Celestial_Body']);
+        $this->assertEquals('Gravity Field', $record['Product_Type']);
+        $this->assertNotNull($record['Model_type_id']);
+        $this->assertNotNull($record['Mathematical_representation_id']);
+        $this->assertNotNull($record['File_format_id']);
+    }
+
+    /**
+     * Test: saveGGMsDefinition creates link in Resource_has_GGM_Definition
+     */
+    public function testSaveGGMsDefinitionCreatesResourceLink(): void
+    {
+        $postData = [
+            'model_name' => 'LINKED_MODEL_2024',
+            'model_type' => 'Temporal',
+            'mathematical_representation' => 'Ellipsoidal harmonics',
+            'file_format' => 'icgem2.0',
+            'celestial_body' => 'Mars',
+            'product_type' => 'Gravity Field'
+        ];
+
+        saveGGMsDefinition($this->connection, $postData, $this->resourceId);
+
+        // Verify link was created
+        $sql = "SELECT gd.Model_Name 
+                FROM `Resource_has_GGM_Definition` rhgd
+                JOIN `GGM_Definition` gd ON rhgd.GGM_Definition_GGM_Definition_id = gd.GGM_Definition_id
+                WHERE rhgd.Resource_resource_id = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('i', $this->resourceId);
+        $stmt->execute();
+        $stmt->bind_result($modelName);
+        $stmt->fetch();
+        $stmt->close();
+
+        $this->assertEquals('LINKED_MODEL_2024', $modelName);
+    }
+
+    /**
+     * Test: saveGGMsDefinition works without optional product_type
+     */
+    public function testSaveGGMsDefinitionWithoutOptionalFields(): void
+    {
+        $postData = [
+            'model_name' => 'MINIMAL_MODEL',
+            'model_type' => 'Static',
+            'mathematical_representation' => 'Spherical harmonics',
+            'file_format' => 'icgem1.0',
+            'celestial_body' => 'Earth'
+            // product_type is optional
+        ];
+
+        $result = saveGGMsDefinition($this->connection, $postData, $this->resourceId);
+        $this->assertTrue($result);
+
+        // Verify GGM_Definition was created
+        $sql = "SELECT * FROM `GGM_Definition` WHERE `Model_Name` = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('s', $postData['model_name']);
+        $stmt->execute();
+        $record = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertNotNull($record);
+        $this->assertEquals('MINIMAL_MODEL', $record['Model_Name']);
+    }
+
+    /**
+     * Test: saveGGMsDefinition creates multiple records for same resource (no update)
+     */
+    public function testSaveGGMsDefinitionCreatesMultipleRecords(): void
+    {
+        $postData1 = [
+            'model_name' => 'FIRST_MODEL',
+            'model_type' => 'Static',
+            'mathematical_representation' => 'Spherical harmonics',
+            'file_format' => 'icgem1.0',
+            'celestial_body' => 'Earth'
+        ];
+
+        $postData2 = [
+            'model_name' => 'SECOND_MODEL',
+            'model_type' => 'Temporal',
+            'mathematical_representation' => 'Ellipsoidal harmonics',
+            'file_format' => 'icgem2.0',
+            'celestial_body' => 'Mars'
+        ];
+
+        saveGGMsDefinition($this->connection, $postData1, $this->resourceId);
+        saveGGMsDefinition($this->connection, $postData2, $this->resourceId);
+
+        // Verify both links exist
+        $sql = "SELECT COUNT(*) as count FROM `Resource_has_GGM_Definition` WHERE Resource_resource_id = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('i', $this->resourceId);
+        $stmt->execute();
+        $stmt->bind_result($count);
+        $stmt->fetch();
+        $stmt->close();
+
+        $this->assertEquals(2, $count);
+    }
+
+    /**
+     * Test: saveGGMsDefinition throws exception when foreign key lookup fails
+     */
+    public function testSaveGGMsDefinitionThrowsExceptionWhenForeignKeyLookupFails(): void
+    {
+        // Clear lookup tables to cause failure
+        $this->connection->query("DELETE FROM `Model_Type`");
+
+        $postData = [
+            'model_name' => 'WILL_FAIL',
+            'model_type' => 'Static',
+            'mathematical_representation' => 'Spherical harmonics',
+            'file_format' => 'icgem1.0',
+            'celestial_body' => 'Earth'
+        ];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to resolve foreign keys');
+
+        saveGGMsDefinition($this->connection, $postData, $this->resourceId);
     }
 }

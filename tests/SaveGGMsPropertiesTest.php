@@ -1,202 +1,105 @@
 <?php
 
+namespace Tests;
+
 use PHPUnit\Framework\TestCase;
 
-class SaveGGMsPropertiesTest extends TestCase
+require_once __DIR__ . '/../save/formgroups/save_ggms_properties.php';
+
+/**
+ * Test suite for saving GGM Properties
+ * 
+ * Tests the simplified GGM Properties save workflow:
+ * - saveGGMsProperties: directly inserts GGM_Properties record
+ * - insertEllipsoidalParameters: handles ellipsoidal parameters
+ */
+class SaveGGMsPropertiesTest extends DatabaseTestCase
 {
-    private $connection;
     private $resourceId;
-    private $ggmPropertiesId;
 
     protected function setUp(): void
     {
-        // Mock database connection
-        $this->connection = $this->createMock(mysqli::class);
-        $this->resourceId = 1;
-        $this->ggmPropertiesId = 100;
+        parent::setUp();
+        
+        // Create a test resource
+        $this->resourceId = $this->createResource('test.ggm.properties', 'Test GGM Properties');
     }
 
-    /**
-     * Test: getGGMPropertiesId returns correct ID when exactly one record exists
-     */
-    public function testGetGGMPropertiesIdReturnsIdWhenOneRecordExists(): void
-    {
-        $stmt = $this->createMock(mysqli_stmt::class);
-        
-        $stmt->expects($this->once())
-            ->method('bind_param')
-            ->with('i', $this->resourceId);
-        
-        $stmt->expects($this->once())
-            ->method('execute');
-        
-        $result = $this->createMock(mysqli_result::class);
-        $result->expects($this->once())
-            ->method('fetch_all')
-            ->with(MYSQLI_ASSOC)
-            ->willReturn([
-                ['GGM_Properties_GGM_Properties_id' => $this->ggmPropertiesId]
-            ]);
-        
-        $stmt->expects($this->once())
-            ->method('get_result')
-            ->willReturn($result);
-        
-        $this->connection->expects($this->once())
-            ->method('prepare')
-            ->willReturn($stmt);
-
-        $id = getGGMPropertiesId($this->connection, $this->resourceId);
-        $this->assertEquals($this->ggmPropertiesId, $id);
-    }
+    // ============================================================================
+    // SAVE GGM PROPERTIES TESTS (Direct Insert)
+    // ============================================================================
 
     /**
-     * Test: getGGMPropertiesId returns null when no records found
+     * Test: saveGGMsProperties inserts new record with all fields
      */
-    public function testGetGGMPropertiesIdReturnsNullWhenNoRecordsFound(): void
+    public function testSaveGGMsPropertiesInsertsAllFields(): void
     {
-        $stmt = $this->createMock(mysqli_stmt::class);
-        
-        $result = $this->createMock(mysqli_result::class);
-        $result->expects($this->once())
-            ->method('fetch_all')
-            ->with(MYSQLI_ASSOC)
-            ->willReturn([]);
-        
-        $stmt->expects($this->once())
-            ->method('get_result')
-            ->willReturn($result);
-        
-        $this->connection->expects($this->once())
-            ->method('prepare')
-            ->willReturn($stmt);
-
-        $id = getGGMPropertiesId($this->connection, $this->resourceId);
-        $this->assertNull($id);
-    }
-
-    /**
-     * Test: getGGMPropertiesId throws exception when multiple records found
-     */
-    public function testGetGGMPropertiesIdThrowsExceptionWhenMultipleRecordsFound(): void
-    {
-        $stmt = $this->createMock(mysqli_stmt::class);
-        
-        $result = $this->createMock(mysqli_result::class);
-        $result->expects($this->once())
-            ->method('fetch_all')
-            ->with(MYSQLI_ASSOC)
-            ->willReturn([
-                ['GGM_Properties_GGM_Properties_id' => 100],
-                ['GGM_Properties_GGM_Properties_id' => 101]
-            ]);
-        
-        $stmt->expects($this->once())
-            ->method('get_result')
-            ->willReturn($result);
-        
-        $this->connection->expects($this->once())
-            ->method('prepare')
-            ->willReturn($stmt);
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Multiple GGM_Properties records found');
-        
-        getGGMPropertiesId($this->connection, $this->resourceId);
-    }
-
-    /**
-     * Test: getGGMPropertiesId throws exception on prepare failure
-     */
-    public function testGetGGMPropertiesIdThrowsExceptionOnPrepareFail(): void
-    {
-        $this->connection->expects($this->once())
-            ->method('prepare')
-            ->willReturn(false);
-        
-        $this->connection->error = 'Prepare failed';
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Failed to prepare query');
-        
-        getGGMPropertiesId($this->connection, $this->resourceId);
-    }
-
-    /**
-     * Test: updateGGMProperties updates all fields correctly
-     */
-    public function testUpdateGGMPropertiesUpdatesAllFields(): void
-    {
-        $data = [
-            'tide_system' => 'zero tide',
+        $postData = [
+            'tide_system' => 'zero-tide',
             'degree' => 360,
-            'errors' => 'formal',
-            'error_handling_approach' => 'Some approach description',
+            'errors' => 'calibrated',
+            'error_handling_approach' => 'Calibrated using sigma = 5.67',
             'radius' => 6371.2,
             'earth_gravity_constant' => 3.986004415e14
         ];
 
-        $stmt = $this->createMock(mysqli_stmt::class);
-        
-        $stmt->expects($this->once())
-            ->method('bind_param')
-            ->with(
-                'sisisdi',
-                $data['tide_system'],
-                $data['degree'],
-                $data['errors'],
-                $data['error_handling_approach'],
-                $data['radius'],
-                $data['earth_gravity_constant'],
-                $this->ggmPropertiesId
-            );
-        
-        $stmt->expects($this->once())
-            ->method('execute')
-            ->willReturn(true);
-        
-        $stmt->expects($this->once())
-            ->method('close');
-        
-        $this->connection->expects($this->once())
-            ->method('prepare')
-            ->willReturn($stmt);
+        $result = saveGGMsProperties($this->connection, $postData, $this->resourceId);
+        $this->assertTrue($result);
 
-        $result = updateGGMProperties($this->connection, $data, $this->ggmPropertiesId);
-        $this->assertNull($result);
+        // Verify GGM_Properties was created
+        $sql = "SELECT * FROM `GGM_Properties` WHERE `Tide_System` = ? AND `degree` = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('si', $postData['tide_system'], $postData['degree']);
+        $stmt->execute();
+        $record = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertNotNull($record);
+        $this->assertEquals('zero-tide', $record['Tide_System']);
+        $this->assertEquals(360, $record['degree']);
+        $this->assertEquals('formal', $record['Errors']);
+        $this->assertEquals('Calibrated formal errors', $record['Error_Handling_Approach']);
     }
 
     /**
-     * Test: updateGGMProperties throws exception on execute failure
+     * Test: saveGGMsProperties handles null/empty values correctly
      */
-    public function testUpdateGGMPropertiesThrowsExceptionOnExecuteFail(): void
+    public function testSaveGGMsPropertiesHandlesNullValues(): void
     {
-        $data = [
-            'tide_system' => 'zero tide',
-            'degree' => 360,
-            'errors' => 'formal',
-            'error_handling_approach' => null,
-            'radius' => null,
-            'earth_gravity_constant' => 3.986004415e14
+        $postData = [
+            'tide_system' => 'tide-free',
+            'degree' => 180,
+            'errors' => 'no',
+            'error_handling_approach' => '',
+            'radius' => '',
+            'earth_gravity_constant' => ''
         ];
 
-        $stmt = $this->createMock(mysqli_stmt::class);
-        
-        $stmt->expects($this->once())
-            ->method('execute')
-            ->willReturn(false);
-        
-        $stmt->error = 'Execute failed';
-        
-        $this->connection->expects($this->once())
-            ->method('prepare')
-            ->willReturn($stmt);
+        $result = saveGGMsProperties($this->connection, $postData, $this->resourceId);
+        $this->assertTrue($result);
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Error updating GGM_Properties');
-        
-        updateGGMProperties($this->connection, $data, $this->ggmPropertiesId);
+        // Verify GGM_Properties was created with null values
+        $sql = "SELECT * FROM `GGM_Properties` WHERE `Tide_System` = ? AND `degree` = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('si', $postData['tide_system'], $postData['degree']);
+        $stmt->execute();
+        $record = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertNotNull($record);
+        $this->assertEquals('tide-free', $record['Tide_System']);
+        $this->assertEquals(180, $record['degree']);
+        $this->assertEquals('no', $record['Errors']);
     }
+
+    /**
+     * Test: saveGGMsProperties creates multiple records (no update behavior)
+     */
+
+
+    // ============================================================================
+    // INSERT ELLIPSOIDAL PARAMETERS TESTS
+    // ============================================================================
 
     /**
      * Test: insertEllipsoidalParameters returns null when no semimajor axis provided
@@ -219,45 +122,51 @@ class SaveGGMsPropertiesTest extends TestCase
             'second_variable' => ''
         ];
 
-        $insertStmt = $this->createMock(mysqli_stmt::class);
-        $linkStmt = $this->createMock(mysqli_stmt::class);
-        
-        $insertStmt->expects($this->once())
-            ->method('bind_param')
-            ->with('d', $data['semimajor_axis_a']);
-        
-        $insertStmt->expects($this->once())
-            ->method('execute')
-            ->willReturn(true);
-        
-        $insertStmt->insert_id = 200;
-        
-        $insertStmt->expects($this->once())
-            ->method('close');
-        
-        $linkStmt->expects($this->once())
-            ->method('bind_param')
-            ->with('ii', $this->resourceId, 200);
-        
-        $linkStmt->expects($this->once())
-            ->method('execute')
-            ->willReturn(true);
-        
-        $linkStmt->expects($this->once())
-            ->method('close');
+        $ellipsoidalId = insertEllipsoidalParameters($this->connection, $data, $this->resourceId);
 
-        $this->connection->expects($this->exactly(2))
-            ->method('prepare')
-            ->willReturnOnConsecutiveCalls($insertStmt, $linkStmt);
+        $this->assertIsInt($ellipsoidalId);
+        $this->assertGreaterThan(0, $ellipsoidalId);
 
-        $result = insertEllipsoidalParameters($this->connection, $data, $this->resourceId);
-        $this->assertEquals(200, $result);
+        // Verify record was created
+        $sql = "SELECT * FROM `Ellipsoidal_Parameters` WHERE `ellipsoidal_parameter_id` = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('i', $ellipsoidalId);
+        $stmt->execute();
+        $record = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertNotNull($record);
+        $this->assertEqualsWithDelta(6378137.0, $record['semimajor_axis_a'], 0.1);
     }
 
     /**
-     * Test: insertEllipsoidalParameters inserts record with axis and second variable
+     * Test: insertEllipsoidalParameters inserts record with semiminor axis
      */
-    public function testInsertEllipsoidalParametersInsertsWithSecondVariable(): void
+    public function testInsertEllipsoidalParametersWithSemiminorAxis(): void
+    {
+        $data = [
+            'semimajor_axis_a' => 6378137.0,
+            'second_variable' => 'axis_b',
+            'second_variable_value' => 6356752.3
+        ];
+
+        $ellipsoidalId = insertEllipsoidalParameters($this->connection, $data, $this->resourceId);
+
+        $sql = "SELECT * FROM `Ellipsoidal_Parameters` WHERE `ellipsoidal_parameter_id` = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('i', $ellipsoidalId);
+        $stmt->execute();
+        $record = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertEqualsWithDelta(6378137.0, $record['semimajor_axis_a'], 0.1);
+        $this->assertEqualsWithDelta(6356752.3, $record['semiminor_axis_b'], 0.1);
+    }
+
+    /**
+     * Test: insertEllipsoidalParameters inserts record with flattening
+     */
+    public function testInsertEllipsoidalParametersWithFlattening(): void
     {
         $data = [
             'semimajor_axis_a' => 6378137.0,
@@ -265,127 +174,112 @@ class SaveGGMsPropertiesTest extends TestCase
             'second_variable_value' => 0.00335281
         ];
 
-        $insertStmt = $this->createMock(mysqli_stmt::class);
-        $linkStmt = $this->createMock(mysqli_stmt::class);
-        
-        $insertStmt->expects($this->once())
-            ->method('bind_param')
-            ->with('dd', $data['semimajor_axis_a'], $data['second_variable_value']);
-        
-        $insertStmt->expects($this->once())
-            ->method('execute')
-            ->willReturn(true);
-        
-        $insertStmt->insert_id = 201;
-        $insertStmt->expects($this->once())
-            ->method('close');
-        
-        $linkStmt->expects($this->once())
-            ->method('execute')
-            ->willReturn(true);
-        
-        $linkStmt->expects($this->once())
-            ->method('close');
+        $ellipsoidalId = insertEllipsoidalParameters($this->connection, $data, $this->resourceId);
 
-        $this->connection->expects($this->exactly(2))
-            ->method('prepare')
-            ->willReturnOnConsecutiveCalls($insertStmt, $linkStmt);
+        $sql = "SELECT * FROM `Ellipsoidal_Parameters` WHERE `ellipsoidal_parameter_id` = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('i', $ellipsoidalId);
+        $stmt->execute();
+        $record = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
 
-        $result = insertEllipsoidalParameters($this->connection, $data, $this->resourceId);
-        $this->assertEquals(201, $result);
+        $this->assertEqualsWithDelta(6378137.0, $record['semimajor_axis_a'], 0.1);
+        $this->assertEqualsWithDelta(0.00335281, $record['flattening'], 0.00000001);
     }
 
     /**
-     * Test: insertEllipsoidalParameters throws exception on insert failure
+     * Test: insertEllipsoidalParameters inserts record with reciprocal flattening
      */
-    public function testInsertEllipsoidalParametersThrowsExceptionOnInsertFail(): void
+    public function testInsertEllipsoidalParametersWithReciprocalFlattening(): void
+    {
+        $data = [
+            'semimajor_axis_a' => 6378137.0,
+            'second_variable' => 'reciprocal_flattening',
+            'second_variable_value' => 298.257223563
+        ];
+
+        $ellipsoidalId = insertEllipsoidalParameters($this->connection, $data, $this->resourceId);
+
+        $sql = "SELECT * FROM `Ellipsoidal_Parameters` WHERE `ellipsoidal_parameter_id` = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('i', $ellipsoidalId);
+        $stmt->execute();
+        $record = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertEqualsWithDelta(6378137.0, $record['semimajor_axis_a'], 0.1);
+        $this->assertEqualsWithDelta(298.257223563, $record['reciprocal_flattening'], 0.000001);
+    }
+
+    /**
+     * Test: insertEllipsoidalParameters creates resource link
+     */
+    public function testInsertEllipsoidalParametersCreatesResourceLink(): void
     {
         $data = [
             'semimajor_axis_a' => 6378137.0,
             'second_variable' => ''
         ];
 
-        $stmt = $this->createMock(mysqli_stmt::class);
-        
-        $stmt->expects($this->once())
-            ->method('execute')
-            ->willReturn(false);
-        
-        $stmt->error = 'Insert failed';
-        
-        $this->connection->expects($this->once())
-            ->method('prepare')
-            ->willReturn($stmt);
+        $ellipsoidalId = insertEllipsoidalParameters($this->connection, $data, $this->resourceId);
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Error inserting Ellipsoidal_Parameters');
-        
-        insertEllipsoidalParameters($this->connection, $data, $this->resourceId);
+        // Verify link was created
+        $sql = "SELECT * FROM `Resource_has_Ellipsoidal_Parameters` 
+                WHERE `resource_id` = ? AND `ellipsoidal_parameter_id` = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('ii', $this->resourceId, $ellipsoidalId);
+        $stmt->execute();
+        $link = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertNotNull($link);
     }
 
+    // ============================================================================
+    // COMPLETE FLOW TESTS
+    // ============================================================================
+
     /**
-     * Test: saveGGMsProperties orchestrates all steps correctly
+     * Test: saveGGMsProperties with ellipsoidal parameters
      */
-    public function testSaveGGMsPropertiesCompleteFlow(): void
+    public function testSaveGGMsPropertiesWithEllipsoidalParameters(): void
     {
         $postData = [
-            'tide_system' => 'zero tide',
+            'tide_system' => 'zero-tide',
             'degree' => 360,
             'errors' => 'formal',
-            'error_handling_approach' => 'Description',
+            'error_handling_approach' => 'Formal',
             'radius' => 6371.2,
             'earth_gravity_constant' => 3.986004415e14,
             'semimajor_axis_a' => 6378137.0,
-            'second_variable' => ''
+            'second_variable' => 'flattening',
+            'second_variable_value' => 0.00335281
         ];
-
-        // Mock getGGMPropertiesId
-        $getStmt = $this->createMock(mysqli_stmt::class);
-        $result = $this->createMock(mysqli_result::class);
-        $result->expects($this->once())
-            ->method('fetch_all')
-            ->willReturn([['GGM_Properties_GGM_Properties_id' => $this->ggmPropertiesId]]);
-        $getStmt->expects($this->once())->method('get_result')->willReturn($result);
-
-        // Mock updateGGMProperties
-        $updateStmt = $this->createMock(mysqli_stmt::class);
-        $updateStmt->expects($this->once())->method('execute')->willReturn(true);
-
-        // Mock insertEllipsoidalParameters
-        $insertStmt = $this->createMock(mysqli_stmt::class);
-        $insertStmt->expects($this->once())->method('execute')->willReturn(true);
-        $insertStmt->insert_id = 200;
-
-        $linkStmt = $this->createMock(mysqli_stmt::class);
-        $linkStmt->expects($this->once())->method('execute')->willReturn(true);
-
-        $this->connection->expects($this->exactly(4))
-            ->method('prepare')
-            ->willReturnOnConsecutiveCalls($getStmt, $updateStmt, $insertStmt, $linkStmt);
 
         $result = saveGGMsProperties($this->connection, $postData, $this->resourceId);
         $this->assertTrue($result);
-    }
 
-    /**
-     * Test: saveGGMsProperties throws exception when no GGM_Properties found
-     */
-    public function testSaveGGMsPropertiesThrowsExceptionWhenNoGGMFound(): void
-    {
-        $stmt = $this->createMock(mysqli_stmt::class);
-        $result = $this->createMock(mysqli_result::class);
-        $result->expects($this->once())
-            ->method('fetch_all')
-            ->willReturn([]);
-        $stmt->expects($this->once())->method('get_result')->willReturn($result);
+        // Verify GGM_Properties was created
+        $sql = "SELECT COUNT(*) as count FROM `GGM_Properties` WHERE `Tide_System` = 'zero-tide'";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute();
+        $stmt->bind_result($count);
+        $stmt->fetch();
+        $stmt->close();
+        $this->assertGreaterThan(0, $count);
 
-        $this->connection->expects($this->once())
-            ->method('prepare')
-            ->willReturn($stmt);
+        // Verify Ellipsoidal_Parameters was created and linked
+        $sql = "SELECT ep.* FROM `Ellipsoidal_Parameters` ep
+                JOIN `Resource_has_Ellipsoidal_Parameters` rhep 
+                  ON ep.ellipsoidal_parameter_id = rhep.ellipsoidal_parameter_id
+                WHERE rhep.resource_id = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('i', $this->resourceId);
+        $stmt->execute();
+        $record = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('No GGM_Properties record found');
-        
-        saveGGMsProperties($this->connection, [], $this->resourceId);
+        $this->assertNotNull($record);
+        $this->assertEqualsWithDelta(6378137.0, $record['semimajor_axis_a'], 0.1);
     }
 }

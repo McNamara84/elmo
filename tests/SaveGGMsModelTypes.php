@@ -5,19 +5,19 @@ namespace Tests;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../save/formgroups/save_ggms_modeltypes.php';
+require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
 
 /**
  * Test suite for saving GGMs Model Types
  * 
  * Tests the complete model-type-specific properties workflow:
- * - Static models: time-variable coefficients info
+ * - Static models: time-variable coefficients info (saved to Static_Model_Properties)
  * - Temporal models: dates, resolution, institution
  * - Topographic models: layer approach, domain, density (single and separate crust/mantle)
  */
 class SaveGGMsModelTypesTest extends DatabaseTestCase
 {
     private $resourceId;
-    private $ggmPropertiesId;
     private $modelTypeIds = [];
 
     protected function setUp(): void
@@ -26,28 +26,6 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
         
         // Create a test resource
         $this->resourceId = $this->createResource('test.ggm.modeltypes', 'Test GGM Model Types');
-        
-        // Create GGM_Properties record
-        $sql = "INSERT INTO `GGM_Properties` 
-                (`Model_Name`, `Celestial_Body`, `Product_Type`)
-                VALUES (?, ?, ?)";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param('sss', $modelName, $body, $type);
-        $modelName = 'Test Model';
-        $body = 'Earth';
-        $type = 'Static';
-        $stmt->execute();
-        $this->ggmPropertiesId = $stmt->insert_id;
-        $stmt->close();
-        
-        // Link GGM_Properties to resource
-        $sql = "INSERT INTO `Resource_has_GGM_Properties` 
-                (`Resource_resource_id`, `GGM_Properties_GGM_Properties_id`)
-                VALUES (?, ?)";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param('ii', $this->resourceId, $this->ggmPropertiesId);
-        $stmt->execute();
-        $stmt->close();
 
         // Ensure Model_Type records exist
         $this->ensureModelTypes();
@@ -70,6 +48,7 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
             if ($stmt->fetch()) {
                 $this->modelTypeIds[$type] = $id;
             } else {
+                $stmt->close();
                 // Insert if not exists
                 $sql = "INSERT INTO `Model_Type` (`name`, `description`) VALUES (?, ?)";
                 $stmt = $this->connection->prepare($sql);
@@ -82,25 +61,12 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
         }
     }
 
-    /**
-     * Helper: Set resource model type
-     */
-    private function setResourceModelType(string $modelTypeName): void
-    {
-        $modelTypeId = $this->modelTypeIds[$modelTypeName];
-        $sql = "UPDATE `Resource` SET `Model_type_id` = ? WHERE `resource_id` = ?";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param('ii', $modelTypeId, $this->resourceId);
-        $stmt->execute();
-        $stmt->close();
-    }
-
     // ============================================================================
-    // STATIC MODEL TESTS
+    // STATIC MODEL TESTS (Using Static_Model_Properties table)
     // ============================================================================
 
     /**
-     * Test: saveStaticModelData updates GGM_Properties with time-variable coefficients
+     * Test: saveStaticModelData inserts into Static_Model_Properties with time-variable coefficients
      */
     public function testSaveStaticModelDataWithTimeVariableCoefficients(): void
     {
@@ -109,13 +75,13 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
             'time_variable_description' => 'Annual and semi-annual variations included'
         ];
 
-        saveStaticModelData($this->connection, $postData, $this->ggmPropertiesId);
+        saveStaticModelData($this->connection, $postData, $this->resourceId);
 
-        // Verify in database
-        $sql = "SELECT `info_time_variable_coefficients` FROM `GGM_Properties` 
-                WHERE `GGM_Properties_id` = ?";
+        // Verify in Static_Model_Properties table
+        $sql = "SELECT `info_time_variable_coefficients` FROM `Static_Model_Properties` 
+                WHERE `resource_id` = ?";
         $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param('i', $this->ggmPropertiesId);
+        $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
         $stmt->bind_result($description);
         $stmt->fetch();
@@ -134,12 +100,12 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
             'time_variable_description' => 'Should be ignored'
         ];
 
-        saveStaticModelData($this->connection, $postData, $this->ggmPropertiesId);
+        saveStaticModelData($this->connection, $postData, $this->resourceId);
 
-        $sql = "SELECT `info_time_variable_coefficients` FROM `GGM_Properties` 
-                WHERE `GGM_Properties_id` = ?";
+        $sql = "SELECT `info_time_variable_coefficients` FROM `Static_Model_Properties` 
+                WHERE `resource_id` = ?";
         $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param('i', $this->ggmPropertiesId);
+        $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
         $stmt->bind_result($description);
         $stmt->fetch();
@@ -157,12 +123,12 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
             'time_variable_coefficients' => '',
         ];
 
-        saveStaticModelData($this->connection, $postData, $this->ggmPropertiesId);
+        saveStaticModelData($this->connection, $postData, $this->resourceId);
 
-        $sql = "SELECT `info_time_variable_coefficients` FROM `GGM_Properties` 
-                WHERE `GGM_Properties_id` = ?";
+        $sql = "SELECT `info_time_variable_coefficients` FROM `Static_Model_Properties` 
+                WHERE `resource_id` = ?";
         $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param('i', $this->ggmPropertiesId);
+        $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
         $stmt->bind_result($description);
         $stmt->fetch();
@@ -351,6 +317,10 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
 
         $this->assertNotNull($link);
     }
+
+    // ============================================================================
+    // TOPOGRAPHIC MODEL TESTS
+    // ============================================================================
 
     /**
      * Test: insertTopographicModelProperties with separate crust and mantle densities
