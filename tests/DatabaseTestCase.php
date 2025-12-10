@@ -100,6 +100,18 @@ abstract class DatabaseTestCase extends TestCase
             'Model_Type',
             'Mathematical_Representation',
             'File_Format',
+            'Topographic_Models_Properties',
+            'Resource_has_Topographic_Model_Properties',
+            'Temporal_Model_Properties',
+            'Resource_has_Temporal_Model_Properties',
+            'Static_Model_Properties',
+            'Resource_has_Static_Model_Properties',
+            'Ellipsoidal_Parameters',
+            'Resource_has_Ellipsoidal_Parameters',
+            'Data_Sources',
+            'Resource_has_Data_Sources',
+            'GGM_Definition',
+            'Resource_has_GGM_Definition'
         ];
 
         foreach ($tables as $table) {

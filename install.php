@@ -90,6 +90,8 @@ function dropTables($connection)
         'Resource_has_Topographic_Model_Properties',
         'Temporal_Model_Properties',
         'Resource_has_Temporal_Model_Properties',
+        'Static_Model_Properties',
+        'Resource_has_Static_Model_Properties',
         'Ellipsoidal_Parameters',
         'Resource_has_Ellipsoidal_Parameters',
         'Data_Sources',
