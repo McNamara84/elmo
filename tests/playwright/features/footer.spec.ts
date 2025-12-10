@@ -9,8 +9,9 @@ test.describe('Footer Tests', () => {
     await expect(footer).toBeVisible();
 
     const legalNotice = footer.getByText('Legal Notice');
-    const dataProtection = page.locator('#buttonPrivacy');
-    const elmoGuide = page.locator('#buttonHelp');
+    const dataProtection = footer.getByText('Data Protection');
+    const elmoGuide = footer.getByText('Elmo Guide');
+
 
     // Check visibility
     await expect(legalNotice).toBeVisible();
@@ -28,8 +29,8 @@ test.describe('Footer Tests', () => {
     await page.goto('/');
 
     const legalNotice = page.getByText('Legal Notice');
-    const dataProtection = page.locator('#buttonPrivacy');
-    const elmoGuide = page.locator('#buttonHelp');
+    const dataProtection = page.getByText('Data Protection');
+    const elmoGuide = page.getByText('Elmo Guide');
 
     // Test clickability
     await expect(legalNotice).toBeVisible();
