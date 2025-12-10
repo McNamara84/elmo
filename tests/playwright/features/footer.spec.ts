@@ -23,4 +23,22 @@ test.describe('Footer Tests', () => {
     await expect(dataProtection).toHaveAttribute('href', 'doc/privacyPolicy.html');
     await expect(elmoGuide).toHaveAttribute('href', 'doc/help.html');
   });
+
+  test('Footer links are clickable', async ({ page }) => {
+    await page.goto('/');
+
+    const legalNotice = page.getByText('Legal Notice');
+    const dataProtection = page.locator('#buttonPrivacy');
+    const elmoGuide = page.locator('#buttonHelp');
+
+    // Test clickability
+    await expect(legalNotice).toBeVisible();
+    await legalNotice.click();
+
+    await expect(dataProtection).toBeVisible();
+    await dataProtection.click();
+
+    await expect(elmoGuide).toBeVisible();
+    await elmoGuide.click();
+  });
 });
