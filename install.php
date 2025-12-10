@@ -203,10 +203,7 @@ function createDatabaseStructure($connection): array
     `dateEmbargoUntil` DATE NULL,
     `Rights_rights_id` INT NOT NULL,
     `Resource_Type_resource_name_id` INT NOT NULL,
-    `Language_language_id` INT NOT NULL,
-    `Model_type_id` INT,
-    `Mathematical_Representation_id` INT,
-    `File_format_id` INT,
+    `Language_language_id` INT NOT NULL,  
     PRIMARY KEY (`resource_id`),
     FOREIGN KEY (`Rights_rights_id`)
     REFERENCES `Rights` (`rights_id`),
@@ -214,12 +211,6 @@ function createDatabaseStructure($connection): array
     REFERENCES `Resource_Type` (`resource_name_id`),
     FOREIGN KEY (`Language_language_id`)
     REFERENCES `Language` (`language_id`),
-    FOREIGN KEY (`Model_type_id`)
-    REFERENCES `Model_Type` (`Model_type_id`),
-    FOREIGN KEY (`Mathematical_Representation_id`)
-    REFERENCES `Mathematical_Representation` (`Mathematical_representation_id`),
-    FOREIGN KEY (`File_format_id`)
-    REFERENCES `File_Format` (`File_format_id`)
     );",
 
         "Title" => "CREATE TABLE IF NOT EXISTS `Title` (
