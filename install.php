@@ -93,7 +93,9 @@ function dropTables($connection)
         'Ellipsoidal_Parameters',
         'Resource_has_Ellipsoidal_Parameters',
         'Data_Sources',
-        'Resource_has_Data_Sources'
+        'Resource_has_Data_Sources',
+        'GGM_Definition',
+        'Resource_has_GGM_Definition'
     ];
     // Disable foreign key checks to allow dropping tables with dependencies
     mysqli_query($connection, "SET FOREIGN_KEY_CHECKS = 0;");
@@ -505,22 +507,46 @@ function createDatabaseStructure($connection): array
     REFERENCES `Spatial_Temporal_Coverage` (`spatial_temporal_coverage_id`));",
 
     // ICGEM-specific tables to describe beautiful GGMs
-            "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
-    `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
+            "GGM_Definition" => "CREATE TABLE IF NOT EXISTS `GGM_Definition` (
+    `GGM_Definition_id` INT NOT NULL AUTO_INCREMENT,
     `Model_Name` VARCHAR(100) NOT NULL,
     `Celestial_Body` VARCHAR(100) NULL,
     `Product_Type` VARCHAR(100) NULL,
+    `Model_type_id` INT NULL,
+    `Mathematical_representation_id` INT NULL,
+    `File_format_id` INT NULL,
+    PRIMARY KEY (`GGM_Definition_id`),
+    FOREIGN KEY (`Model_type_id`)
+    REFERENCES `Model_Type` (`Model_type_id`),
+    FOREIGN KEY (`Mathematical_representation_id`)
+    REFERENCES `Mathematical_Representation` (`Mathematical_representation_id`),
+    FOREIGN KEY (`File_format_id`)
+    REFERENCES `File_Format` (`File_format_id`)
+);",
+
+        "Resource_has_GGM_Definition" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Definition` (
+    `Resource_has_GGM_Definition_id` INT NOT NULL AUTO_INCREMENT,
+    `Resource_resource_id` INT NOT NULL,
+    `GGM_Definition_GGM_Definition_id` INT NOT NULL,
+    PRIMARY KEY (`Resource_has_GGM_Definition_id`),
+    FOREIGN KEY (`Resource_resource_id`)
+    REFERENCES `Resource` (`resource_id`),
+    FOREIGN KEY (`GGM_Definition_GGM_Definition_id`)
+    REFERENCES `GGM_Definition` (`GGM_Definition_id`)
+);",
+
+        "GGM_Properties" => "CREATE TABLE IF NOT EXISTS `GGM_Properties` (
+    `GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
     `Errors` VARCHAR(100) NULL,
     `Error_Handling_Approach` TEXT NULL,
-    `Error_Description` TEXT NULL,
     `Tide_System` VARCHAR(100) NULL,
     `degree` INT NULL,
     `radius` FLOAT(9,2) NULL,
     `earth_gravity_constant` FLOAT NULL,
-    `info_time_variable_coefficients` TEXT NULL,
-    PRIMARY KEY (`GGM_Properties_id`));",
-    
-    "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
+    PRIMARY KEY (`GGM_Properties_id`)
+);",
+
+        "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
     `Resource_has_GGM_Properties_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
     `GGM_Properties_GGM_Properties_id` INT NOT NULL,
@@ -569,7 +595,7 @@ function createDatabaseStructure($connection): array
     `temporal_model_property_id` INT NOT NULL,
     PRIMARY KEY (`resource_has_temporal_model_properties_id`),
     FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
-    FOREIGN KEY (`temporal_model_property_id`) REFERENCES `Temporal_Model_Properties`(`temporal_model_property_id`) ON DELETE CASCADE
+    FOREIGN KEY (`temporal_model_property_id`) REFERENCES `Temporal_Model_Properties`(`temporal_model_property_id`) ON DELETE RESTRICT ON UPDATE CASCADE
         );",
 
         "Ellipsoidal_Parameters" => "CREATE TABLE IF NOT EXISTS `Ellipsoidal_Parameters` (
@@ -789,6 +815,25 @@ function insertLookupData($connection)
         "Mathematical_Representation" => [
             ["name" => "Spherical harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of solid spherical harmonics, which are solutions to Laplace's equation in a spherical coordinate system. This representation is the most common for global gravity field models"],
             ["name" => "Ellipsoidal harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of ellipsoidal harmonics, which are solutions to Laplace's equation in an ellipsoidal coordinate system."]
+        ],
+        "GGM_Definition" => [
+            ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Model_type_id" => 2, "Mathematical_representation_id" => 1, "File_format_id" => 1],
+            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Model_type_id" => 3, "Mathematical_representation_id" => 1, "File_format_id" => 1]
+        ],
+
+        "GGM_Properties" => [
+            ["Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide", "degree" => 60, "radius" => null, "earth_gravity_constant" => null],
+            ["Errors" => "no", "Error_Handling_Approach" => null, "Tide_System" => "unknown", "degree" => 3660, "radius" => null, "earth_gravity_constant" => null]
+        ],
+
+        "Resource_has_GGM_Definition" => [
+            ["Resource_resource_id" => 4, "GGM_Definition_GGM_Definition_id" => 1],
+            ["Resource_resource_id" => 5, "GGM_Definition_GGM_Definition_id" => 2]
+        ],
+
+        "Resource_has_GGM_Properties" => [
+            ["Resource_resource_id" => 4, "GGM_Properties_GGM_Properties_id" => 1],
+            ["Resource_resource_id" => 5, "GGM_Properties_GGM_Properties_id" => 2]
         ]
     ];
 
@@ -994,9 +1039,24 @@ function insertTestResourceData($connection)
             ["funder" => "Ford Foundation", "funderid" => "100000016", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.11", "grantname" => "Grants database", "awarduri" => "https://www.moore.org/grants/list/GBMF3859.01"],
             ["funder" => "U.S. Department of Defense", "funderid" => "100000005", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.22", "grantname" => "Grantmaking at a glance", "awarduri" => "10.3030/892034"]
         ],
+        "GGM_Definition" => [
+            ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Model_type_id" => 2, "Mathematical_representation_id" => 1, "File_format_id" => 1],
+            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Model_type_id" => 3, "Mathematical_representation_id" => 1, "File_format_id" => 1]
+        ],
+
         "GGM_Properties" => [
-            ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 60, "Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide"],
-            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Degree" => 3660, "Errors" => "no", "Error_Handling_Approach" => null, "Tide_System" => "unknown"]
+            ["Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide", "degree" => 60, "radius" => null, "earth_gravity_constant" => null],
+            ["Errors" => "no", "Error_Handling_Approach" => null, "Tide_System" => "unknown", "degree" => 3660, "radius" => null, "earth_gravity_constant" => null]
+        ],
+
+        "Resource_has_GGM_Definition" => [
+            ["Resource_resource_id" => 4, "GGM_Definition_GGM_Definition_id" => 1],
+            ["Resource_resource_id" => 5, "GGM_Definition_GGM_Definition_id" => 2]
+        ],
+
+        "Resource_has_GGM_Properties" => [
+            ["Resource_resource_id" => 4, "GGM_Properties_GGM_Properties_id" => 1],
+            ["Resource_resource_id" => 5, "GGM_Properties_GGM_Properties_id" => 2]
         ]
     ];
 
@@ -1157,6 +1217,10 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 3, "originating_laboratory_originating_laboratory_id" => 1],
             ["Resource_resource_id" => 2, "originating_laboratory_originating_laboratory_id" => 3],
             ["Resource_resource_id" => 1, "originating_laboratory_originating_laboratory_id" => 2]
+        ],
+        "Resource_has_GGM_Definition" => [
+            ["Resource_resource_id" => 4, "GGM_Definition_GGM_Definition_id" => 1],
+            ["Resource_resource_id" => 5, "GGM_Definition_GGM_Definition_id" => 2]
         ],
         "Resource_has_GGM_Properties" => [
             ["Resource_resource_id" => 4, "GGM_Properties_GGM_Properties_id" => 1],
