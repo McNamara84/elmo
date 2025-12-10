@@ -89,70 +89,38 @@ function validateGGMData(array $data, int $resourceId): array
  * @return int  GGM_Properties_id of the inserted/updated record
  * @throws Exception On database errors
  */
-function upsertGGMDefinition(mysqli $connection, array $data, int $resourceId): int
+function insertGGMDefinition(mysqli $connection, array $data, int $resourceId): int
 {
-    // Check existing link
-    $sql = "SELECT GGM_Properties_GGM_Properties_id
-              FROM `Resource_has_GGM_Properties`
-             WHERE Resource_resource_id = ?";
+
+    // Insert new GGM-Properties record
+    $sql = "INSERT INTO `GGM_Properties`
+                (`Model_Name`,`Celestial_Body`,`Product_Type`)
+                VALUES (?,?,?)";
     $stmt = $connection->prepare($sql);
-    $stmt->bind_param('i', $resourceId);
+    $stmt->bind_param(
+        'sss',
+        $data['model_name'],
+        $data['celestial_body'],
+        $data['product_type']
+    );
     $stmt->execute();
-    $stmt->bind_result($ggmId);
-    $exists = (bool) $stmt->fetch();
+    if ($stmt->errno) {
+        throw new Exception('Error inserting GGM_Properties: ' . $stmt->error);
+    }
+    $ggmId = $stmt->insert_id;
     $stmt->close();
 
-    if ($exists) {
-        // Update
-        $sql = "UPDATE `GGM_Properties` SET
-                    `Model_Name`              = ?,
-                    `Celestial_Body`          = ?,
-                    `Product_Type`            = ?
-                WHERE `GGM_Properties_id`    = ?";
-        $stmt = $connection->prepare($sql);
-        $stmt->bind_param(
-            'sssi',
-            $data['model_name'],
-            $data['celestial_body'],
-            $data['product_type'],
-            $ggmId
-        );
-        $stmt->execute();
-        if ($stmt->errno) {
-            throw new Exception('Error updating GGM_Properties: ' . $stmt->error);
-        }
-        $stmt->close();
-    } else {
-        // Insert new
-        $sql = "INSERT INTO `GGM_Properties`
-                    (`Model_Name`,`Celestial_Body`,`Product_Type`)
-                 VALUES (?,?,?)";
-        $stmt = $connection->prepare($sql);
-        $stmt->bind_param(
-            'sss',
-            $data['model_name'],
-            $data['celestial_body'],
-            $data['product_type']
-        );
-        $stmt->execute();
-        if ($stmt->errno) {
-            throw new Exception('Error inserting GGM_Properties: ' . $stmt->error);
-        }
-        $ggmId = $stmt->insert_id;
-        $stmt->close();
-
-        // Create link
-        $sql = "INSERT INTO `Resource_has_GGM_Properties`
-                    (`Resource_resource_id`,`GGM_Properties_GGM_Properties_id`)
-                 VALUES (?,?)";
-        $stmt = $connection->prepare($sql);
-        $stmt->bind_param('ii', $resourceId, $ggmId);
-        $stmt->execute();
-        if ($stmt->errno) {
-            throw new Exception('Error linking GGM_Properties: ' . $stmt->error);
-        }
-        $stmt->close();
+    // Create link
+    $sql = "INSERT INTO `Resource_has_GGM_Properties`
+                (`Resource_resource_id`,`GGM_Properties_GGM_Properties_id`)
+                VALUES (?,?)";
+    $stmt = $connection->prepare($sql);
+    $stmt->bind_param('ii', $resourceId, $ggmId);
+    $stmt->execute();
+    if ($stmt->errno) {
+        throw new Exception('Error linking GGM_Properties: ' . $stmt->error);
     }
+    $stmt->close();
 
     return $ggmId;
 }
@@ -192,7 +160,7 @@ function updateResourceForeignKeys(mysqli $connection, array $data, int $resourc
 }
 
 /**
- * Orchestrates validation, upsert of GGM_Definition, and Resource FK update.
+ * Orchestrates validation, insert of GGM_Definition, and Resource FK update.
  *
  * @param mysqli $connection  Database connection
  * @param array  $postData    Posted form data
@@ -207,7 +175,7 @@ function saveGGMsDefinition(mysqli $connection, array $postData, int $resourceId
     $data = validateGGMData($postData, $resourceId);
 
     // 2) Insert/update GGM_Definition
-    $ggmId = upsertGGMDefinition($connection, $data, $resourceId);
+    $ggmId = insertGGMDefinition($connection, $data, $resourceId);
 
     // 3) Update Resource FKs
     updateResourceForeignKeys($connection, $data, $resourceId);
