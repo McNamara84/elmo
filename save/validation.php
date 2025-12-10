@@ -156,15 +156,6 @@ function validateKeywordEntries($keywordData, $requiredFields = ['value', 'id', 
  */
 function validateSTCDependencies($entry)
 {
-    // Validate required base fields
-    if (
-        empty($entry['latitudeMin']) || empty($entry['longitudeMin']) ||
-        empty($entry['description']) || empty($entry['dateStart']) ||
-        empty($entry['dateEnd']) || empty($entry['timezone'])
-    ) {
-        return false;
-    }
-
     // If timeStart is given, timeEnd must also be given
     if (!empty($entry['timeStart']) && empty($entry['timeEnd'])) {
         return false;

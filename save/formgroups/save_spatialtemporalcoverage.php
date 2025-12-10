@@ -3,6 +3,11 @@ require_once __DIR__ . '/../validation.php';
 
 function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
 {
+    // If no STC data provided, treat as successful (it's optional)
+    if (!isset($postData['tscLatitudeMin']) || !is_array($postData['tscLatitudeMin']) || count($postData['tscLatitudeMin']) === 0 ||
+        !isset($postData['tscDateStart']) || !is_array($postData['tscDateStart']) || count($postData['tscDateStart']) === 0 ) {
+        return true;
+    }
     // Basic array field validation
     $requiredArrayFields = [
         'tscLatitudeMin',
@@ -10,7 +15,6 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         'tscDescription',
         'tscDateStart',
         'tscDateEnd',
-        'tscTimezone'
     ];
 
     // Ensure arrays exist
