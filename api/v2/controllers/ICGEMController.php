@@ -181,6 +181,31 @@ class ICGEMController
     }
 
     /**
+     * Retrieves static model properties for a given resource.
+     *
+     * @param mysqli $connection The database connection.
+     * @param int $resource_id The ID of the resource.
+     * @return array<mixed> An array of static model properties.
+     */
+    function getStaticModelProperties(mysqli $connection, int $resource_id): array
+    {
+        $stmt = $connection->prepare("
+        SELECT 
+        static.info_time_variable_coefficients
+        FROM Static_Model_Properties static
+        JOIN Resource_has_Static_Model_Properties rhsmp ON static.static_model_property_id = rhsmp.static_model_property_id
+        WHERE rhsmp.resource_id = ?
+        ");
+        if (!$stmt) {
+            $this->logger && $this->logger->error("Prepare failed for Static Model Properties: " . $connection->error);
+            return [];
+        }
+        $stmt->bind_param('i', $resource_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+    /**
      * Retrieves ellipsoidal parameters for a given resource.
      *
      * @param mysqli $connection The database connection.
@@ -395,6 +420,26 @@ class ICGEMController
         }
     }
     /**
+     * Inserts static model properties into the XML.
+     *
+     * @param SimpleXMLElement $xml The XML element to insert into.
+     * @param array<string, mixed> $staticProperties The static model properties to insert.
+     */
+    protected function insertStaticModelProperties(SimpleXMLElement $xml, array $staticProperties): void
+    {
+        if ($staticProperties) {
+            $staticPropertiesXml = $xml->addChild('StaticModelProperties');
+            foreach ($staticProperties as $property) {
+                $propertyXml = $staticPropertiesXml->addChild('StaticProperty');
+                
+                if (isset($property['info_time_variable_coefficients'])) {
+                    $propertyXml->addChild('info_time_variable_coefficients', htmlspecialchars($property['info_time_variable_coefficients'] ? 'true' : 'false'));
+                }
+                }
+            }
+    }
+
+    /**
      * Inserts ellipsoidal parameters into the XML.
      *
      * @param SimpleXMLElement $xml The XML element to insert into.
@@ -471,6 +516,7 @@ class ICGEMController
         $dataSources = $this->getDataSources($this->connection, $id);
         $topographicProperties = $this->getTopographicModelProperties($this->connection, $id);
         $temporalProperties = $this->getTemporalModelProperties($this->connection, $id);
+        $staticProperties = $this->getStaticModelProperties($this->connection, $id);
         $ellipsoidalParameters = $this->getEllipsoidalParameters($this->connection, $id);
 
         // 7. Insert the fetched data into <icgem_metadata>
@@ -478,6 +524,7 @@ class ICGEMController
         $this->insertDataSources($icgemSpecificXml, $dataSources);
         $this->insertTopographicModelProperties($icgemSpecificXml, $topographicProperties);
         $this->insertTemporalModelProperties($icgemSpecificXml, $temporalProperties);
+        $this->insertStaticModelProperties($icgemSpecificXml, $staticProperties);
         $this->insertEllipsoidalParameters($icgemSpecificXml, $ellipsoidalParameters);
 
         // 8. Format and return the final XML as a string.
