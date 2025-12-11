@@ -36,7 +36,7 @@ class ICGEMController
                 ggm.Tide_System as tide_system,
                 ggm.degree as degree,
                 ggm.radius as radius,
-                ggm.earth_gravity_constant as earth_gravity_constant,
+                ggm.earth_gravity_constant as earth_gravity_constant
             
                 FROM Resource r
             Left JOIN Resource_has_GGM_Definition rhgd ON r.resource_id = rhgd.Resource_resource_id
@@ -45,9 +45,9 @@ class ICGEMController
             Left JOIN Resource_has_GGM_Properties rhgp ON r.resource_id = rhgp.Resource_resource_id
             LEFT JOIN GGM_Properties ggm ON rhgp.GGM_Properties_GGM_Properties_id = ggm.GGM_Properties_id
 
-            LEFT JOIN Model_Type mt ON ggm.Model_type_id = mt.Model_type_id
-            LEFT JOIN Mathematical_Representation mr ON ggm.Mathematical_Representation_id = mr.Mathematical_representation_id
-            LEFT JOIN File_Format ff ON ggm.File_format_id = ff.File_format_id
+            LEFT JOIN Model_Type mt ON def.Model_type_id = mt.Model_type_id
+            LEFT JOIN Mathematical_Representation mr ON def.Mathematical_Representation_id = mr.Mathematical_representation_id
+            LEFT JOIN File_Format ff ON def.File_format_id = ff.File_format_id
 
             WHERE r.resource_id = ?
         ");
