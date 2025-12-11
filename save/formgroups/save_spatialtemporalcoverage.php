@@ -49,7 +49,9 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         }
 
         // Prepare optional fields
-        $entry['latitudeMax'] = empty($entry['latitudeMax']) ? NULL : $entry['latitudeMax'];
+        $entry['latitudeMin']  = empty($entry['latitudeMin'])  ? NULL : $entry['latitudeMin'];
+        $entry['latitudeMax']  = empty($entry['latitudeMax'])  ? NULL : $entry['latitudeMax'];
+        $entry['longitudeMin'] = empty($entry['longitudeMin']) ? NULL : $entry['longitudeMin'];
         $entry['longitudeMax'] = empty($entry['longitudeMax']) ? NULL : $entry['longitudeMax'];
         $entry['timeStart'] = empty($entry['timeStart']) ? NULL : $entry['timeStart'];
         $entry['timeEnd'] = empty($entry['timeEnd']) ? NULL : $entry['timeEnd'];
