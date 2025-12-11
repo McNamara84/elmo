@@ -536,13 +536,7 @@ function createDatabaseStructure($connection): array
     `degree` INT NULL,
     `radius` FLOAT(9,2) NULL,
     `earth_gravity_constant` FLOAT NULL,
-    `Model_Type_id` INT NOT NULL,
-    `Mathematical_Representation_id` INT NOT NULL,
-    `File_Format_id` INT NOT NULL,
-    PRIMARY KEY (`GGM_Properties_id`),
-    FOREIGN KEY (`Model_Type_id`) REFERENCES `Model_Type` (`Model_type_id`),
-    FOREIGN KEY (`Mathematical_Representation_id`) REFERENCES `Mathematical_Representation` (`Mathematical_representation_id`),
-    FOREIGN KEY (`File_Format_id`) REFERENCES `File_Format` (`File_format_id`)
+    PRIMARY KEY (`GGM_Properties_id`)
 );",
 
         "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (

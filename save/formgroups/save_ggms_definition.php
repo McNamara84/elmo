@@ -41,7 +41,7 @@ function validateGGMData(array $data, int $resourceId): array
         throw new Exception('Invalid resource ID');
     }
     // Required fields and trimming
-    $fields = ['model_name', 'model_type', 'mathematical_representation', 'file_format', 'celestial_body'];
+    $fields = ['model_name', 'model_type', 'mathematical_representation'];
     foreach ($fields as $f) {
         if (empty($data[$f]) || !is_string($data[$f])) {
             throw new Exception("Field {$f} is required and must be a string");
@@ -50,7 +50,7 @@ function validateGGMData(array $data, int $resourceId): array
     }
 
     // Optional fields
-    $optional = ['product_type'];
+    $optional = ['product_type','file_format', 'celestial_body'];
     foreach ($optional as $f) {
         if (isset($data[$f])) {
             $data[$f] = is_string($data[$f]) ? trim($data[$f]) : $data[$f];
@@ -60,20 +60,6 @@ function validateGGMData(array $data, int $resourceId): array
     // model_name pattern
     if (!preg_match('/^[^\s]+$/', $data['model_name'])) {
         throw new Exception('Model name must not contain spaces');
-    }
-
-    // Enumerated options
-    $allowed = [
-        'model_type' => ['Static', 'Temporal', 'Topographic', 'Simulated'],
-        'mathematical_representation' => ['Spherical harmonics', 'Ellipsoidal harmonics'],
-        'file_format' => ['icgem1.0', 'icgem2.0'],
-        'celestial_body' => ['Earth', 'Moon of the Earth', 'Mars', 'Ceres', 'Venus', 'Other'],
-        'product_type' => ['Gravity Field', 'Topographic Gravity Field'],
-    ];
-    foreach ($allowed as $key => $vals) {
-        if (isset($data[$key]) && !in_array($data[$key], $vals, true)) {
-            throw new Exception("Invalid value for {$key}");
-        }
     }
 
     return $data;

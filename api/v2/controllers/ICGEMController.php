@@ -33,12 +33,10 @@ class ICGEMController
                 def.Product_Type as product_type,
                 ggm.Errors as errors,
                 ggm.Error_Handling_Approach as error_handling_approach,
-                ggm.Error_Description as error_description,
                 ggm.Tide_System as tide_system,
                 ggm.degree as degree,
                 ggm.radius as radius,
                 ggm.earth_gravity_constant as earth_gravity_constant,
-                ggm.info_time_variable_coefficients as info_time_variable_coefficients
             
                 FROM Resource r
             Left JOIN Resource_has_GGM_Definition rhgd ON r.resource_id = rhgd.Resource_resource_id
