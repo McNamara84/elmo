@@ -237,7 +237,12 @@ class SaveHandler {
      */
     async saveAndDownload(filename) {
         if (this.autosaveService) {
-            await this.autosaveService.flushPending();
+            try {
+                await this.autosaveService.flushPending();
+            } catch (error) {
+                console.warn('Autosave flush failed, continuing with save:', error);
+                // Continue with save even if autosave fails
+            }
         }
         this.showNotification('info',
             translations.alerts.savingHeading,
