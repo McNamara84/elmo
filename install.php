@@ -591,22 +591,22 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`temporal_model_property_id`) REFERENCES `Temporal_Model_Properties`(`temporal_model_property_id`) ON DELETE RESTRICT ON UPDATE CASCADE
         );",
 
-        "Static_Model_Variables" => "CREATE TABLE IF NOT EXISTS `Static_Model_Variables` (
-    `Static_Model_Variables_id` INT NOT NULL AUTO_INCREMENT,
+        "Static_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Static_Model_Properties` (
+    `static_model_property_id` INT NOT NULL AUTO_INCREMENT,
     `info_time_variable_coefficients` TEXT NULL,
     `description` TEXT NULL,
-    PRIMARY KEY (`Static_Model_Variables_id`)
+    PRIMARY KEY (`Static_Model_Properties_id`)
 );",
 
-        "Resource_has_Static_Model_Variables" => "CREATE TABLE IF NOT EXISTS `Resource_has_Static_Model_Variables` (
-    `Resource_has_Static_Model_Variables_id` INT NOT NULL AUTO_INCREMENT,
-    `Resource_resource_id` INT NOT NULL,
-    `Static_Model_Variables_Static_Model_Variables_id` INT NOT NULL,
-    PRIMARY KEY (`Resource_has_Static_Model_Variables_id`),
-    FOREIGN KEY (`Resource_resource_id`)
+        "Resource_has_Static_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_Static_Model_Properties` (
+    `Resource_has_Static_Model_Properties_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `static_model_property_id` INT NOT NULL,
+    PRIMARY KEY (`Resource_has_Static_Model_Properties_id`),
+    FOREIGN KEY (`resource_id`)
     REFERENCES `Resource` (`resource_id`),
-    FOREIGN KEY (`Static_Model_Variables_Static_Model_Variables_id`)
-    REFERENCES `Static_Model_Variables` (`Static_Model_Variables_id`)
+    FOREIGN KEY (`static_model_property_id`)
+    REFERENCES `Static_Model_Properties` (`static_model_property_id`)
 );",
 
         "Ellipsoidal_Parameters" => "CREATE TABLE IF NOT EXISTS `Ellipsoidal_Parameters` (
