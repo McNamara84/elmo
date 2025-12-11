@@ -212,7 +212,7 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`Resource_Type_resource_name_id`)
     REFERENCES `Resource_Type` (`resource_name_id`),
     FOREIGN KEY (`Language_language_id`)
-    REFERENCES `Language` (`language_id`),
+    REFERENCES `Language` (`language_id`)
     );",
 
         "Title" => "CREATE TABLE IF NOT EXISTS `Title` (
