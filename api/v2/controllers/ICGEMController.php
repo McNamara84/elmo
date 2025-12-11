@@ -28,9 +28,9 @@ class ICGEMController
                 mt.name as model_type_name, 
                 mr.name as mathematical_representation_name, 
                 ff.name as file_format_name,
-                ggm.Model_Name as model_name, 
-                ggm.Celestial_Body as celestial_body,
-                ggm.Product_Type as product_type,
+                def.Model_Name as model_name, 
+                def.Celestial_Body as celestial_body,
+                def.Product_Type as product_type,
                 ggm.Errors as errors,
                 ggm.Error_Handling_Approach as error_handling_approach,
                 ggm.Error_Description as error_description,
@@ -39,12 +39,18 @@ class ICGEMController
                 ggm.radius as radius,
                 ggm.earth_gravity_constant as earth_gravity_constant,
                 ggm.info_time_variable_coefficients as info_time_variable_coefficients
-            FROM Resource r
-            LEFT JOIN Model_Type mt ON r.Model_type_id = mt.Model_type_id
-            LEFT JOIN Mathematical_Representation mr ON r.Mathematical_Representation_id = mr.Mathematical_representation_id
-            LEFT JOIN File_Format ff ON r.File_format_id = ff.File_format_id
-            LEFT JOIN Resource_has_GGM_Properties rhg ON r.resource_id = rhg.Resource_resource_id
-            LEFT JOIN GGM_Properties ggm ON rhg.GGM_Properties_GGM_Properties_id = ggm.GGM_Properties_id
+            
+                FROM Resource r
+            Left JOIN Resource_has_GGM_Definition rhgd ON r.resource_id = rhgd.Resource_resource_id
+            LEFT JOIN GGM_Definition def ON rhgd.GGM_Definition_GGM_Definition_id = def.GGM_Definition_id
+
+            Left JOIN Resource_has_GGM_Properties rhgp ON r.resource_id = rhgp.Resource_resource_id
+            LEFT JOIN GGM_Properties ggm ON rhgp.GGM_Properties_GGM_Properties_id = ggm.GGM_Properties_id
+
+            LEFT JOIN Model_Type mt ON ggm.Model_type_id = mt.Model_type_id
+            LEFT JOIN Mathematical_Representation mr ON ggm.Mathematical_Representation_id = mr.Mathematical_representation_id
+            LEFT JOIN File_Format ff ON ggm.File_format_id = ff.File_format_id
+
             WHERE r.resource_id = ?
         ");
         
