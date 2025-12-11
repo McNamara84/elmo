@@ -31,16 +31,16 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
     for ($i = 0; $i < $len; $i++) {
         // Extract data for easier handling
         $entry = [
-            'latitudeMin' => $postData['tscLatitudeMin'][$i] ?? '',
-            'latitudeMax' => $postData['tscLatitudeMax'][$i] ?? '',
-            'longitudeMin' => $postData['tscLongitudeMin'][$i] ?? '',
-            'longitudeMax' => $postData['tscLongitudeMax'][$i] ?? '',
-            'description' => $postData['tscDescription'][$i] ?? '',
-            'dateStart' => $postData['tscDateStart'][$i] ?? '',
-            'dateEnd' => $postData['tscDateEnd'][$i] ?? '',
-            'timeStart' => $postData['tscTimeStart'][$i] ?? '',
-            'timeEnd' => $postData['tscTimeEnd'][$i] ?? '',
-            'timezone' => $postData['tscTimezone'][$i] ?? ''
+            'latitudeMin' => $postData['tscLatitudeMin'][$i] ?? NULL, // Exception in saveSpatialTemporalCoverage: Incorrect double value: '' for column `elmocache`.`Spatial_Temporal_Coverage`.`latitudeMin` at row 1, referer: https://dataservices.gfz-potsdam.de/elmo
+            'latitudeMax' => $postData['tscLatitudeMax'][$i] ?? NULL,
+            'longitudeMin' => $postData['tscLongitudeMin'][$i] ?? NULL,
+            'longitudeMax' => $postData['tscLongitudeMax'][$i] ?? NULL,
+            'description' => $postData['tscDescription'][$i] ?? NULL,
+            'dateStart' => $postData['tscDateStart'][$i] ?? NULL,
+            'dateEnd' => $postData['tscDateEnd'][$i] ?? NULL,
+            'timeStart' => $postData['tscTimeStart'][$i] ?? NULL,
+            'timeEnd' => $postData['tscTimeEnd'][$i] ?? NULL,
+            'timezone' => $postData['tscTimezone'][$i] ?? NULL
         ];
 
         if (!validateSTCDependencies($entry)) {
