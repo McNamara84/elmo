@@ -194,7 +194,7 @@ class ICGEMController
         static.info_time_variable_coefficients
         FROM Static_Model_Properties static
         JOIN Resource_has_Static_Model_Properties rhsmp ON static.static_model_property_id = rhsmp.static_model_property_id
-        WHERE rhsmp.Resource_resource_id = ?
+        WHERE rhsmp.resource_id = ?
         ");
         if (!$stmt) {
             $this->logger && $this->logger->error("Prepare failed for Static Model Properties: " . $connection->error);
