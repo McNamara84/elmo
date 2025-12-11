@@ -31,8 +31,7 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
     for ($i = 0; $i < $len; $i++) {
         // Extract data for easier handling
         $entry = [
-            'latitudeMin' => $postData['tscLatitudeMin'][$i] ?? NULL, // Exception in saveSpatialTemporalCoverage: Incorrect double value: '' for column `elmocache`.`Spatial_Temporal_Coverage`.`latitudeMin` at row 1, referer: https://dataservices.gfz-potsdam.de/elmo
-            'latitudeMax' => $postData['tscLatitudeMax'][$i] ?? NULL,
+            'latitudeMin' => $postData['tscLatitudeMin'][$i] ?? NULL,
             'longitudeMin' => $postData['tscLongitudeMin'][$i] ?? NULL,
             'longitudeMax' => $postData['tscLongitudeMax'][$i] ?? NULL,
             'description' => $postData['tscDescription'][$i] ?? NULL,
@@ -56,6 +55,9 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         $entry['timeStart'] = empty($entry['timeStart']) ? NULL : $entry['timeStart'];
         $entry['timeEnd'] = empty($entry['timeEnd']) ? NULL : $entry['timeEnd'];
 
+        if (empty($entry['latitudeMin']) || empty($entry['dateStart'])) {
+            return true;
+        }
         // Save STC entry
         $stc_id = insertSpatialTemporalCoverage($connection, $entry);
         if ($stc_id) {
