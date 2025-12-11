@@ -536,7 +536,13 @@ function createDatabaseStructure($connection): array
     `degree` INT NULL,
     `radius` FLOAT(9,2) NULL,
     `earth_gravity_constant` FLOAT NULL,
-    PRIMARY KEY (`GGM_Properties_id`)
+    `Model_Type_id` INT NOT NULL,
+    `Mathematical_Representation_id` INT NOT NULL,
+    `File_Format_id` INT NOT NULL,
+    PRIMARY KEY (`GGM_Properties_id`),
+    FOREIGN KEY (`Model_Type_id`) REFERENCES `Model_Type` (`Model_type_id`),
+    FOREIGN KEY (`Mathematical_Representation_id`) REFERENCES `Mathematical_Representation` (`Mathematical_representation_id`),
+    FOREIGN KEY (`File_Format_id`) REFERENCES `File_Format` (`File_format_id`)
 );",
 
         "Resource_has_GGM_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_GGM_Properties` (
@@ -827,25 +833,7 @@ function insertLookupData($connection)
             ["name" => "Spherical harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of solid spherical harmonics, which are solutions to Laplace's equation in a spherical coordinate system. This representation is the most common for global gravity field models"],
             ["name" => "Ellipsoidal harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of ellipsoidal harmonics, which are solutions to Laplace's equation in an ellipsoidal coordinate system."]
         ],
-        "GGM_Definition" => [
-            ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Model_type_id" => 2, "Mathematical_representation_id" => 1, "File_format_id" => 1],
-            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Model_type_id" => 3, "Mathematical_representation_id" => 1, "File_format_id" => 1]
-        ],
 
-        "GGM_Properties" => [
-            ["Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide", "degree" => 60, "radius" => null, "earth_gravity_constant" => null],
-            ["Errors" => "no", "Error_Handling_Approach" => null, "Tide_System" => "unknown", "degree" => 3660, "radius" => null, "earth_gravity_constant" => null]
-        ],
-
-        "Resource_has_GGM_Definition" => [
-            ["Resource_resource_id" => 4, "GGM_Definition_GGM_Definition_id" => 1],
-            ["Resource_resource_id" => 5, "GGM_Definition_GGM_Definition_id" => 2]
-        ],
-
-        "Resource_has_GGM_Properties" => [
-            ["Resource_resource_id" => 4, "GGM_Properties_GGM_Properties_id" => 1],
-            ["Resource_resource_id" => 5, "GGM_Properties_GGM_Properties_id" => 2]
-        ]
     ];
 
     foreach ($lookupData as $tableName => $data) {
@@ -872,11 +860,11 @@ function insertTestResourceData($connection)
 {
     $mainTableData = [
         "Resource" => [
-            ["doi" => "10.1029/2023JB028411", "version" => null, "year" => 2024, "dateCreated" => "2024-06-05", "dateEmbargoUntil" => "2024-06-15", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id" => null, "Mathematical_Representation_id" => null, "File_format_id" => null],
-            ["doi" => "10.5880/GFZ.2.4.2024.001", "version" => 2.1, "year" => 2024, "dateCreated" => "1999-04-07", "dateEmbargoUntil" => "2000-12-31", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id" => null, "Mathematical_Representation_id" => null, "File_format_id" => null],
-            ["doi" => "10.21384/test-dataset", "version" => 1.23, "year" => 2024, "dateCreated" => "2023-07-02", "dateEmbargoUntil" => "2023-07-10", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1, "Model_type_id" => null, "Mathematical_Representation_id" => null, "File_format_id" => null],
-            ["doi" => "https://doi.org/10.5880/GFZ.GRACEFO_06_GSM", "version" => null, "year" => 2024, "dateCreated" => "2024-06-15", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id" => 2, "Mathematical_Representation_id" => 1, "File_format_id" => 1],
-            ["doi" => "https://doi.org/10.5880/ICGEM.2019.011", "version" => null, "year" => 2019, "dateCreated" => "2020-04-17", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1, "Model_type_id" => 3, "Mathematical_Representation_id" => 1, "File_format_id" => 1]
+            ["resource_id" => 1,"doi" => "10.1029/2023JB028411", "version" => null, "year" => 2024, "dateCreated" => "2024-06-05", "dateEmbargoUntil" => "2024-06-15", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1],
+            ["resource_id" => 2,"doi" => "10.5880/GFZ.2.4.2024.001", "version" => 2.1, "year" => 2024, "dateCreated" => "1999-04-07", "dateEmbargoUntil" => "2000-12-31", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1],
+            ["resource_id" => 3,"doi" => "10.21384/test-dataset", "version" => 1.23, "year" => 2024, "dateCreated" => "2023-07-02", "dateEmbargoUntil" => "2023-07-10", "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 3, "Language_language_id" => 1],
+            ["resource_id" => 4, "doi" => "https://doi.org/10.5880/GFZ.GRACEFO_06_GSM", "version" => null, "year" => 2024, "dateCreated" => "2024-06-15", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1],
+            ["resource_id" => 5, "doi" => "https://doi.org/10.5880/ICGEM.2019.011", "version" => null, "year" => 2019, "dateCreated" => "2020-04-17", "dateEmbargoUntil" => null, "Rights_rights_id" => 1, "Resource_Type_resource_name_id" => 5, "Language_language_id" => 1]
 
         ],
         "Author_person" => [
@@ -1050,25 +1038,16 @@ function insertTestResourceData($connection)
             ["funder" => "Ford Foundation", "funderid" => "100000016", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.11", "grantname" => "Grants database", "awarduri" => "https://www.moore.org/grants/list/GBMF3859.01"],
             ["funder" => "U.S. Department of Defense", "funderid" => "100000005", "funderidtyp" => "Crossref Funder ID", "grantnumber" => "GBMF3859.22", "grantname" => "Grantmaking at a glance", "awarduri" => "10.3030/892034"]
         ],
+
         "GGM_Definition" => [
-            ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Model_type_id" => 2, "Mathematical_representation_id" => 1, "File_format_id" => 1],
-            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Model_type_id" => 3, "Mathematical_representation_id" => 1, "File_format_id" => 1]
+            ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field"],
+            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field"]
         ],
 
         "GGM_Properties" => [
-            ["Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide", "degree" => 60, "radius" => null, "earth_gravity_constant" => null],
-            ["Errors" => "no", "Error_Handling_Approach" => null, "Tide_System" => "unknown", "degree" => 3660, "radius" => null, "earth_gravity_constant" => null]
+            ["Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide", "degree" => 60, "radius" => null, "earth_gravity_constant" => null, "Model_type_id" => 2, "Mathematical_representation_id" => 1, "File_format_id" => 1],
+            ["Errors" => "no", "Error_Handling_Approach" => null, "Tide_System" => "unknown", "degree" => 3660, "radius" => null, "earth_gravity_constant" => null, "Model_type_id" => 3, "Mathematical_representation_id" => 1, "File_format_id" => 1]
         ],
-
-        "Resource_has_GGM_Definition" => [
-            ["Resource_resource_id" => 4, "GGM_Definition_GGM_Definition_id" => 1],
-            ["Resource_resource_id" => 5, "GGM_Definition_GGM_Definition_id" => 2]
-        ],
-
-        "Resource_has_GGM_Properties" => [
-            ["Resource_resource_id" => 4, "GGM_Properties_GGM_Properties_id" => 1],
-            ["Resource_resource_id" => 5, "GGM_Properties_GGM_Properties_id" => 2]
-        ]
     ];
 
     foreach ($mainTableData as $tableName => $data) {
@@ -1229,10 +1208,12 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 2, "originating_laboratory_originating_laboratory_id" => 3],
             ["Resource_resource_id" => 1, "originating_laboratory_originating_laboratory_id" => 2]
         ],
+
         "Resource_has_GGM_Definition" => [
             ["Resource_resource_id" => 4, "GGM_Definition_GGM_Definition_id" => 1],
             ["Resource_resource_id" => 5, "GGM_Definition_GGM_Definition_id" => 2]
         ],
+
         "Resource_has_GGM_Properties" => [
             ["Resource_resource_id" => 4, "GGM_Properties_GGM_Properties_id" => 1],
             ["Resource_resource_id" => 5, "GGM_Properties_GGM_Properties_id" => 2]
