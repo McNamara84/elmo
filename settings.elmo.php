@@ -70,12 +70,20 @@ $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabul
 
 $envShowMslLabs   = getenv('SHOW_MSL_LABS');
 $envShowMslVocabs = getenv('SHOW_MSL_VOCABS');
+$envShowMslFreeKeywords = getenv('SHOW_MSL_FREEKEYWORDS');
+$envShowMslLogo   = getenv('SHOW_MSL_LOGO');
 
 if ($envShowMslLabs !== false) {
     $showMslLabs = filter_var($envShowMslLabs, FILTER_VALIDATE_BOOLEAN);
 }
 if ($envShowMslVocabs !== false) {
     $showMslVocabs = filter_var($envShowMslVocabs, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowMslFreeKeywords !== false) {
+    $showMslFreeKeyWords = filter_var($envShowMslFreeKeywords, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowMslLogo !== false) {
+    $showMslLogo = filter_var($envShowMslLogo, FILTER_VALIDATE_BOOLEAN);
 }
 
 // SETTINGS FOR ICGEM
