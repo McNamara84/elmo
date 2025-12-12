@@ -350,4 +350,64 @@ test.describe('Contributor (Persons) form group', () => {
     await expect(renderedTags.nth(0)).toContainText('Data Curator');
     await expect(renderedTags.nth(1)).toContainText('Software Developer');
   });
+
+  test('affiliation dropdown displays correctly on slim screens without text overlap (Issue #686)', async ({ page }) => {
+    // Set viewport to mobile size (narrow screen) to test the issue scenario
+    await page.setViewportSize({ width: 375, height: 667 });
+
+    // Wait for affiliation field to be initialized with Tagify
+    await page.waitForFunction(() => {
+      const input: any = document.querySelector('#input-contributorpersons-affiliation');
+      return !!input?.tagify && input.tagify.whitelist?.length > 0;
+    });
+
+    // Trigger dropdown programmatically with a search term that returns multiple results
+    // Using "University" as it's common and returns multiple institutions
+    await page.evaluate(() => {
+      const input: any = document.querySelector('#input-contributorpersons-affiliation');
+      input.tagify.dropdown.show('University');
+    });
+    
+    // Wait for dropdown to appear
+    const dropdown = page.locator('.tagify__dropdown.affiliation');
+    await expect(dropdown).toBeVisible({ timeout: 3000 });
+
+    // Verify dropdown wrapper has reasonable minimum width (prevents items being too narrow)
+    const dropdownWrapper = dropdown.locator('.tagify__dropdown__wrapper');
+    await expect(dropdownWrapper).toBeVisible();
+    
+    const wrapperBox = await dropdownWrapper.boundingBox();
+    expect(wrapperBox).not.toBeNull();
+    if (wrapperBox) {
+      // On mobile (375px viewport), dropdown should have at least 200px width (per CSS)
+      expect(wrapperBox.width).toBeGreaterThanOrEqual(200);
+    }
+
+    // Check that dropdown items are visible and rendered
+    // We need at least 2 items to test for overlap (hence "University" search term - returns many results)
+    const dropdownItems = dropdown.locator('.tagify__dropdown__item');
+    const itemCount = await dropdownItems.count();
+    expect(itemCount).toBeGreaterThan(1);
+    await expect(dropdownItems.first()).toBeVisible();
+
+    // Verify items don't overlap by checking their vertical positions
+    // This is the core issue from #686: items were overlapping on slim screens
+    if (itemCount > 1) {
+      const firstItemBox = await dropdownItems.first().boundingBox();
+      const secondItemBox = await dropdownItems.nth(1).boundingBox();
+      
+      expect(firstItemBox).not.toBeNull();
+      expect(secondItemBox).not.toBeNull();
+      
+      if (firstItemBox && secondItemBox) {
+        // Second item should start at or below first item's bottom edge (no overlap)
+        // Allow 1px tolerance for rounding
+        expect(secondItemBox.y).toBeGreaterThanOrEqual(firstItemBox.y + firstItemBox.height - 1);
+        
+        // Items should have reasonable height (not collapsed to 0)
+        expect(firstItemBox.height).toBeGreaterThan(10);
+        expect(secondItemBox.height).toBeGreaterThan(10);
+      }
+    }
+  });
 });

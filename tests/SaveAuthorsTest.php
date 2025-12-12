@@ -345,6 +345,9 @@ class SaveAuthorsTest extends DatabaseTestCase
      */
     public function testSaveSinglePersonAuthorWithMissingGivenname()
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("No valid author data provided");
+
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.SINGLE.REQUIRED",
             "year" => 2023,
@@ -366,18 +369,12 @@ class SaveAuthorsTest extends DatabaseTestCase
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
-
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_person");
-        $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(
-            0,
-            $count,
-            "Es sollte kein Autor gespeichert werden, wenn kein Vorname angegeben wurde."
-        );
     }
     public function testSaveSingleInstitutionAuthorWithMissingName()
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("No valid author data provided");
+
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.SINGLE.REQUIRED.INSTITUTION",
             "year" => 2023,
@@ -397,15 +394,6 @@ class SaveAuthorsTest extends DatabaseTestCase
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
-
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_institution");
-        $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(
-            0,
-            $count,
-            "Es sollte kein Autor gespeichert werden, wenn kein Institutionname angegeben wurde."
-        );
     }
 
     /**
@@ -416,6 +404,9 @@ class SaveAuthorsTest extends DatabaseTestCase
      */
     public function testSavePersonAuthorWithEmptyFields()
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("No valid author data provided");
+
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.EMPTY.AUTHOR",
             "year" => 2023,
@@ -437,18 +428,12 @@ class SaveAuthorsTest extends DatabaseTestCase
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
-
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_person");
-        $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(
-            0,
-            $count,
-            "Es sollte kein Autor gespeichert worden sein, da alle Felder leer waren."
-        );
     }
     public function testSaveInstitutionAuthorsWithEmptyFields()
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("No valid author data provided");
+
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.EMPTY.INSTITUTION",
             "year" => 2023,
@@ -468,15 +453,6 @@ class SaveAuthorsTest extends DatabaseTestCase
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
-
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Author_institution");
-        $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(
-            0,
-            $count,
-            "Es sollte kein Autor gespeichert worden sein, da alle Felder leer waren."
-        );
     }
 
     /**
