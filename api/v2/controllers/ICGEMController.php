@@ -467,6 +467,9 @@ class ICGEMController
                 if (!empty($parameter['description'])) {
                     $parameterXml->addChild('description', htmlspecialchars($parameter['description']));
                 }
+                if (!empty($parameter['excentricity'])) {
+                    $parameterXml->addChild('excentricity', htmlspecialchars($parameter['excentricity']));
+                }
             }
         }
     }

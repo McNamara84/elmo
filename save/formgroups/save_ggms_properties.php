@@ -34,12 +34,14 @@ function insertEllipsoidalParameters(mysqli $connection, array $data, int $resou
         'axis_b' => 'semiminor_axis_b',
         'flattening' => 'flattening',
         'reciprocal_flattening' => 'reciprocal_flattening',
+        'eccentricity' => 'eccentricity'
     ];
 
     // Insert new record
     if (!empty($data['second_variable'])) {
         $columnName = $secondVarMapping[$data['second_variable']];
         $secondVarValue = ($data['second_variable_value'] === '') ? null : floatval($data['second_variable_value']);
+        $secondVarValue = ($secondVarValue === '') ? null : floatval($secondVarValue);
         $sql = "INSERT INTO `Ellipsoidal_Parameters`
                     (`semimajor_axis_a`, `{$columnName}`)
                  VALUES (?, ?)";
