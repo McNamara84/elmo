@@ -189,7 +189,10 @@ try {
         executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);
     }
     if ($showGGMsProperties) {
+        executeSaveFunction('saveGGMsDefinition', $connection, $_POST, $resource_id);
         executeSaveFunction('saveGGMsProperties', $connection, $_POST, $resource_id);
+        executeSaveFunction('saveGGMsDataSources', $connection, $_POST, $resource_id);
+        executeSaveFunction('saveGGMsModeltypes', $connection, $_POST, $resource_id);
     }
 
     // Validate transaction commit
