@@ -40,8 +40,8 @@ services:
       # Flags for Standard ELMO
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
-      showMslFreeKeyWords: "false"
-      showMslLogo: "false"
+      $showMslFreeKeyWords: "false"
+      $showMslLogo: "false"
     depends_on:
       - db
     restart: unless-stopped
@@ -83,8 +83,8 @@ services:
       # Flags for msl
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
-      showMslFreeKeyWords: "true"
-      showMslLogo: "true"
+      $showMslFreeKeyWords: "true"
+      $showMslLogo: "true"
     depends_on:
       - db
     restart: unless-stopped
@@ -126,8 +126,8 @@ services:
       # Flags for gem
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
-      showMslFreeKeyWords: "false"
-      showMslLogo: "false"
+      $showMslFreeKeyWords: "false"
+      $showMslLogo: "false"
       SHOW_GGMS_PROPERTIES: "true"
       DB_INIT_MODE: "keep_data"
     depends_on:
