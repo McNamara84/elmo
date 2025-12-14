@@ -69,8 +69,13 @@ function generateAndOutputXml($resource_id)
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
         $base_url = $protocol . $_SERVER['HTTP_HOST'];
         $project_path = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\');
-        $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
-
+        // Output file generation from the API endpoint. 
+        // The endpoint is different for general data and for ICGEM data. 
+        require_once __DIR__ . '/../settings.php';
+        global $showGGMsProperties; 
+        $general_url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
+        $icgem_url = $base_url . $project_path . "/api/v2/dataset/icgem_export/" . $resource_id;
+        $url = $showGGMsProperties ? icgem_url : general_url;
         // Try API call first
         $bytesRead = @readfile($url);
 
