@@ -118,7 +118,9 @@ function getIdentifierTypeId(mysqli $connection,string $identifier_type_name): ?
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     $stmt->close();
-    return $row ? (int)$row['identifier_type_id'] : null;
+    $result = $row ? (int)$row['identifier_type_id'] : null;
+    error_log("I found the id for the idType. it is " . $result);
+    return $result;
 }
 
 /**
