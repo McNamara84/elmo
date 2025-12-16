@@ -150,15 +150,12 @@ function prepareDataSourceForDb(array $row): array
     $dbRow = [
         'type' => $type,
         'description' => !empty($description) ? $description : null,
+        'details' => null,
         'S_value_name' => null,
         'S_value_uri' => null,
         'S_scheme_name' => null,
         'S_scheme_uri' => null,
-        'G_details' => null,
-        'A_details' => null,
-        'T_details' => null,
         'T_Isostasy_compensation_depth' => null,
-        'M_details' => null,
         'M_identifier' => null,
         'M_identifier_type' => null,
     ];
@@ -174,38 +171,25 @@ function prepareDataSourceForDb(array $row): array
             break;
 
         case 'G': // Ground data
-            $dbRow['G_details'] = trim($row['details']);
-            // All others NULL
-            break;
-            
         case 'A': // Altimetry
-            $dbRow['A_details'] = trim($row['details']);
-            // All others NULL
-            break;
-            
         case 'T': // Terrain
-            $dbRow['T_details'] = trim($row['details']);
-            if (!empty($row['compensation_depth'])) {
+        case 'M': // Model
+            $dbRow['details'] = trim($row['details']);
+            if ($type === 'T' && !empty($row['compensation_depth'])) {
                 $depth = intval($row['compensation_depth']);
                 if ($depth > 0) {
                     $dbRow['T_Isostasy_compensation_depth'] = $depth;
                 }
             }
-            // All others NULL
-            break;
-            
-        case 'M': // Model
-            $dbRow['M_details'] = trim($row['details']);
-            $dbRow['M_identifier'] = trim($row['identifier']);
-            $dbRow['M_identifier_type'] = trim($row['identifier_type']);
-            // All others NULL
+            if ($type === 'M') {
+                $dbRow['M_identifier'] = trim($row['identifier']);
+                $dbRow['M_identifier_type'] = trim($row['identifier_type']);
+            }
             break;
     }
     
     return $dbRow;
-}
-
-/**
+}/**
  * Inserts a single data source into the database
  * 
  * @param mysqli $connection Database connection
@@ -216,10 +200,9 @@ function prepareDataSourceForDb(array $row): array
 function insertDataSource(mysqli $connection, array $dbRow): int
 {
     $sql = "INSERT INTO `Data_Sources` 
-            (type, description, S_value_name, S_value_uri, S_scheme_name, S_scheme_uri,
-             G_details, A_details, T_details, T_Isostasy_compensation_depth, 
-             M_details, M_identifier, M_identifier_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            (type, description, details, S_value_name, S_value_uri, S_scheme_name, S_scheme_uri,
+             T_Isostasy_compensation_depth, M_identifier, M_identifier_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $stmt = $connection->prepare($sql);
     if (!$stmt) {
@@ -227,18 +210,15 @@ function insertDataSource(mysqli $connection, array $dbRow): int
     }
     
     $stmt->bind_param(
-        'sssssssssisss',
+        'ssssssisss',
         $dbRow['type'],
         $dbRow['description'],
+        $dbRow['details'],
         $dbRow['S_value_name'],
         $dbRow['S_value_uri'],
         $dbRow['S_scheme_name'],
         $dbRow['S_scheme_uri'],
-        $dbRow['G_details'],
-        $dbRow['A_details'],
-        $dbRow['T_details'],
         $dbRow['T_Isostasy_compensation_depth'],
-        $dbRow['M_details'],
         $dbRow['M_identifier'],
         $dbRow['M_identifier_type']
     );

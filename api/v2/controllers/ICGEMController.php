@@ -88,15 +88,12 @@ class ICGEMController
             ds.data_source_id as data_source_id,
             ds.type as type,
             ds.description as description,
+            ds.details as details,
             ds.S_value_name as s_value_name,
             ds.S_value_uri as s_value_uri,
             ds.S_scheme_name as s_scheme_name,  
             ds.S_scheme_uri as s_scheme_uri,
-            ds.G_details as g_details,
-            ds.A_details as a_details,
-            ds.T_details as t_details,
             ds.T_Isostasy_compensation_depth as t_isostasy_compensation_depth,
-            ds.M_details as m_details,
             ds.M_identifier as m_identifier,
             ds.M_identifier_type as m_identifier_type
         FROM Data_Sources ds
@@ -306,7 +303,6 @@ class ICGEMController
                     $dataSourceXml->addChild('description', htmlspecialchars($dataSource['description']));
                 }
                 
-                // Standardized properties (S_ prefix = Standard)
                 if (!empty($dataSource['S_value_name'])) {
                     $dataSourceXml->addChild('SatelliteValueName', htmlspecialchars($dataSource['S_value_name']));
                 }
@@ -320,21 +316,11 @@ class ICGEMController
                     $dataSourceXml->addChild('SatelliteSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']));
                 }
                 
-                // Domain-specific details
-                if (!empty($dataSource['G_details'])) {
-                    $dataSourceXml->addChild('G_Details', htmlspecialchars($dataSource['G_details']));
-                }
-                if (!empty($dataSource['A_details'])) {
-                    $dataSourceXml->addChild('A_Details', htmlspecialchars($dataSource['A_details']));
-                }
-                if (!empty($dataSource['T_details'])) {
-                    $dataSourceXml->addChild('Topography_Details', htmlspecialchars($dataSource['T_details']));
+                if (!empty($dataSource['details'])) {
+                    $dataSourceXml->addChild('Details', htmlspecialchars($dataSource['details']));
                 }
                 if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
                     $dataSourceXml->addChild('IsostasyCompensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']));
-                }
-                if (!empty($dataSource['M_details'])) {
-                    $dataSourceXml->addChild('M_Details', htmlspecialchars($dataSource['M_details']));
                 }
                 if (!empty($dataSource['M_identifier'])) {
                     $dataSourceXml->addChild('M_Identifier', htmlspecialchars($dataSource['M_identifier']));
