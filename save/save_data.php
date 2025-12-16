@@ -75,7 +75,7 @@ function generateAndOutputXml($resource_id)
         global $showGGMsProperties; 
         $general_url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
         $icgem_url = $base_url . $project_path . "/api/v2/dataset/icgem_export/" . $resource_id;
-        $url = $showGGMsProperties ? icgem_url : general_url;
+        $url = $showGGMsProperties ? $icgem_url : $general_url;
         // Try API call first
         $bytesRead = @readfile($url);
 
