@@ -166,10 +166,13 @@ function prepareDataSourceForDb(array $row): array
     // Populate type-specific columns - ALL OTHERS REMAIN NULL
     switch ($type) {
         case 'S': // Satellite
-            $dbRow['S_value_name'] = trim($row['satellite_platform']);
-            // S_value_uri, S_scheme_name, S_scheme_uri remain NULL (can be extended later)
+            $platformMetadata = $row['platform_metadata'] ?? null;
+            $dbRow['S_value_name'] = $row['satellite_platform'] ?? null;
+            $dbRow['S_value_uri'] = $platformMetadata['id'] ?? null;
+            $dbRow['S_scheme_name'] = $platformMetadata['scheme'] ?? 'NASA/GCMD Earth Platforms Keywords';
+            $dbRow['S_scheme_uri'] = $platformMetadata['schemeURI'] ?? 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms';
             break;
-            
+
         case 'G': // Ground data
             $dbRow['G_details'] = trim($row['details']);
             // All others NULL
