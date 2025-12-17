@@ -21,46 +21,76 @@ require_once __DIR__ . '/save_thesauruskeywords.php';
 require_once __DIR__ . '/save_relatedwork.php';
 
 /**
- * Extracts individual data source rows from POST arrays
+ * Extracts individual data source rows from POST arrays for the case where 1 Data Source on the front-end contains multiple keywords.
  * 
  * @param array $postData Raw POST data with array fields
  * @return array Array of individual data source row objects, indexed 0..N
  */
 function extractDataSourceRows(array $postData): array
 {
-    $rows = [];
-    
-    // Get the count of rows (all arrays should have same length)
     $types = $postData['datasource_type'] ?? [];
-    $count = count($types);
-    
-    if ($count === 0) {
-        return $rows;
+    $total_length = count($types);
+
+    if ($total_length === 0) {
+        return []; // Return an empty array if there's nothing to process
     }
+
+    // The list of all possible variables from the form
+    $post_variables = [
+        'datasource_details', 'compensation_depth',
+        'satellite_platform', 'dIdentifier', 'dIdentifierType',
+        'dName'
+    ];
     
-    // Extract corresponding values from each array by index
-    $details = $postData['datasource_details'] ?? array_fill(0, $count, '');
-    $compensationDepths = $postData['compensation_depth'] ?? array_fill(0, $count, '');
-    $platforms = $postData['satellite_platform'] ?? array_fill(0, $count, '');
-    $identifiers = $postData['dIdentifier'] ?? array_fill(0, $count, '');
-    $identifierTypes = $postData['dIdentifierType'] ?? array_fill(0, $count, '');
-    $modelNames = $postData['dName'] ?? array_fill(0, $count, '');
-    $descriptions = $postData['datasource_description'] ?? array_fill(0, $count, '');
-    
-    // Build row objects
-    for ($i = 0; $i < $count; $i++) {
-        $rows[] = [
-            'type' => $types[$i] ?? null,
-            'details' => $details[$i] ?? '',
-            'compensation_depth' => $compensationDepths[$i] ?? '',
-            'satellite_platform' => $platforms[$i] ?? '',
-            'identifier' => $identifiers[$i] ?? '',
-            'identifier_type' => $identifierTypes[$i] ?? '',
-            'model_name' => $modelNames[$i] ?? '',
-            'description' => $descriptions[$i] ?? '',
+    // Initialize a counter for each variable array
+    $counters = array_fill_keys($post_variables, 0);
+
+    // Define which variables are required for each data source type
+    $required_masks = [
+        'S' => ['satellite_platform'],
+        'G' => ['datasource_details'],
+        'A' => ['datasource_details'],
+        'T' => ['datasource_details', 'compensation_depth'],
+        'M' => ['datasource_details', 'dIdentifier', 'dIdentifierType', 'dName']
+    ];
+
+    $rows = [];
+    // Process each submitted data source row
+    for ($i = 0; $i < $total_length; $i++) {
+        $this_type = $types[$i];
+        
+        // Start building the row with universal fields that are always present
+        $row = [
+            'type' => $this_type,
+            'description' => $postData['datasource_description'][$i] ?? null
         ];
+
+        // Get the list of fields that are relevant for this specific type
+        $this_variables = $required_masks[$this_type] ?? [];
+
+        // Iterate through all possible variables to fill the row correctly
+        foreach ($post_variables as $run_variable) {
+            if (in_array($run_variable, $this_variables, true)) {
+                // If this variable is required for the type, get its value
+                $this_variable_counter = $counters[$run_variable];
+                
+                // Check if the value exists in the POST data before accessing it
+                if (isset($postData[$run_variable][$this_variable_counter])) {
+                    $row[$run_variable] = $postData[$run_variable][$this_variable_counter];
+                } else {
+                    $row[$run_variable] = null; // Set to null if not present
+                }
+                
+                // Increment the counter for this specific variable for the next time we see it
+                $counters[$run_variable]++;
+            } else {
+                // If this variable is not for this type, set it to null
+                $row[$run_variable] = null;
+            }
+        }
+        $rows[] = $row;
     }
-    
+
     return $rows;
 }
 
