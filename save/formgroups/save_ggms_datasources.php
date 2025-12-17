@@ -75,12 +75,11 @@ function extractDataSourceRows(array $postData): array
                 // Check if the value exists in the POST data before accessing it
                 if (isset($postData[$run_variable][$this_variable_counter])) {
                     $row[$run_variable] = $postData[$run_variable][$this_variable_counter];
+                    // Increment the counter for this specific variable for the next time we see it
+                    $counters[$run_variable]++;
                 } else {
                     $row[$run_variable] = null; // Set to null if not present
-                }
-                
-                // Increment the counter for this specific variable for the next time we see it
-                $counters[$run_variable]++;
+                }             
             } else {
                 // If this variable is not for this type, set it to null
                 $row[$run_variable] = null;
@@ -140,7 +139,7 @@ function validateDataSourceRow(array $row): array
     $rules = $typeRules[$type];
 
     foreach ($rules['required'] as $field) {
-        if (empty(trim($row[$field] ?? ''))) {
+        if (empty($row[$field]) || $row[$field] === null) {
             $errors[] = "Field '{$field}' is required for type {$type}";
         }
     }
@@ -187,11 +186,13 @@ function prepareDataSourceForDb(array $row): array
     // Populate type-specific columns from the $row array (which uses postData names)
     switch ($type) {
         case 'S': // Satellite
-            $platformMetadata = $row['platform_metadata'] ?? null;
-            $dbRow['S_value_name'] = $row['satellite_platform'] ?? null;
-            $dbRow['S_value_uri'] = $platformMetadata['id'] ?? null;
-            $dbRow['S_scheme_name'] = $platformMetadata['scheme'] ?? 'NASA/GCMD Earth Platforms Keywords';
-            $dbRow['S_scheme_uri'] = $platformMetadata['schemeURI'] ?? 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms';
+            $platformMetadata = json_decode($row['satellite_platform'], true);
+            if (!empty($platformMetadata)) {
+                $dbRow['S_value_name'] = $platformMetadata['value'] ?? null;
+                $dbRow['S_value_uri'] = $platformMetadata['id'] ?? null;
+                $dbRow['S_scheme_name'] = $platformMetadata['scheme'] ?? 'NASA/GCMD Earth Platforms Keywords';
+                $dbRow['S_scheme_uri'] = $platformMetadata['schemeURI'] ?? 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms';
+            }
             break;
 
         case 'G': // Ground data
@@ -199,17 +200,15 @@ function prepareDataSourceForDb(array $row): array
         case 'T': // Terrain
         case 'M': // Model
             $dbRow['details'] = trim($row['datasource_details'] ?? '');
-            if ($type === 'T' && !empty($row['compensation_depth'])) {
-                $depth = intval($row['compensation_depth']);
-                if ($depth > 0) {
-                    $dbRow['T_Isostasy_compensation_depth'] = $depth;
-                }
+            // Note: The name of the model is put in 'details'
+            if (!empty($row['dName'])) {
+                $dbRow['details'] = $row['dName'] . ": " . $dbRow['details'];
             }
-            if ($type === 'M') {
-                // Note: The the name of the model is put in 'details'
-                $dbRow['details'] = $row['dName'] . ": " . $dbRow['details']; 
-                $dbRow['M_identifier'] = trim($row['dIdentifier'] ?? '');
-                $dbRow['M_identifier_type'] = trim($row['dIdentifierType'] ?? '');
+            if (!empty($row['dIdentifier'])) {
+                $dbRow['M_identifier'] = trim($row['dIdentifier']);
+            }
+            if (!empty($row['dIdentifierType'])) {
+                $dbRow['M_identifier_type'] = trim($row['dIdentifierType']);
             }
             break;
     }
@@ -303,14 +302,14 @@ function expandSatellitePlatformsToRows(array $row): array
         return $expandedRows;
     }
     
-    $platforms = json_decode($row['satellite_platform'], true);
+    $platformMetadata = json_decode($row['satellite_platform'], true);
     
-    if (!is_array($platforms)) {
+    if (!is_array($platformMetadata)) {
         return $expandedRows;
     }
     
     // Create a separate row for each platform keyword
-    foreach ($platforms as $entry) {
+    foreach ($platformMetadata as $entry) {
         if (!is_array($entry) || empty($entry['value'])) {
             continue;
         }
@@ -321,10 +320,8 @@ function expandSatellitePlatformsToRows(array $row): array
         // All potential keys must be present to avoid "Undefined array key" errors in validateDataSourceRow.
         $expandedRows[] = [
             'type' => 'S',
-            'description' => $row['description'],          // Keep original description
-            'satellite_platform' => $platformValue,      // Single platform value for this row
-            'platform_metadata' => $entry,               // Store full metadata for keyword ingestion
-            
+            'description' => $row['description'],          // Keep the description for all the satellites.
+            'satellite_platform' => $entry,      
             // --- Fields for other types, set to null to pass validation for type 'S' ---
             'datasource_details' => null,
             'compensation_depth' => null,
@@ -356,13 +353,22 @@ function ingestSatellitePlatformAsKeyword(mysqli $connection, array $dbRow, int 
         return;
     }
     
+
+
     $value = $dbRow['S_value_name'];
     $valueURI = $dbRow['S_value_uri'] ?? null;
     $scheme = $dbRow['S_scheme_name'] ?? 'GCMD Platforms';
     $schemeURI = $dbRow['S_scheme_uri'] ?? '';
     $language = 'en'; // Assuming 'en' as platform keywords are generally in English
-    
+
+    // Temporary debug
+    error_log($value);
+    error_log($valueURI);
+    error_log($scheme);
+    error_log($schemeURI);
+    error_log($language);
     // Reuse shared functions from save_thesauruskeywords.php
+    error_log("Ingesting satellite platform as thesaurus keyword: {$value}");
     $thesaurus_keywords_id = getOrCreateThesaurusKeyword(
         $connection,
         $value,
@@ -371,7 +377,9 @@ function ingestSatellitePlatformAsKeyword(mysqli $connection, array $dbRow, int 
         $valueURI,
         $language
     );
-    
+    // Temporary debug
+    error_log("Got thesaurus_keywords_id: {$thesaurus_keywords_id}");
+    error_log("Ingest a link");
     linkResourceToThesaurusKeyword($connection, $resourceId, $thesaurus_keywords_id);
 }
 
@@ -475,8 +483,8 @@ function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceI
         
         // Prepare for database
         $dbRow = prepareDataSourceForDb($row);
-        
-
+        // Temporary debug
+        error_log(print_r($dbRow, true));
         // For Satellite (S) type, ingest platform as thesaurus keyword
         if (trim($row['type']) === 'S') {
             ingestSatellitePlatformAsKeyword($connection, $dbRow, $resourceId);
