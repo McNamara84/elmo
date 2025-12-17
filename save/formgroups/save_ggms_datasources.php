@@ -475,10 +475,11 @@ function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceI
         
         // Prepare for database
         $dbRow = prepareDataSourceForDb($row);
+        
 
         // For Satellite (S) type, ingest platform as thesaurus keyword
-        if (trim($row['type']) === 'S' && isset($row['platform_metadata'])) {
-            ingestSatellitePlatformAsKeyword($connection, $row['platform_metadata'], $resourceId);
+        if (trim($row['type']) === 'S') {
+            ingestSatellitePlatformAsKeyword($connection, $dbRow, $resourceId);
         }
         
         // For Model (M) type, ingest as related work with "IsDerivedFrom" relation
