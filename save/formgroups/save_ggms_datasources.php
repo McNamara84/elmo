@@ -186,8 +186,16 @@ function prepareDataSourceForDb(array $row): array
     // Populate type-specific columns from the $row array (which uses postData names)
     switch ($type) {
         case 'S': // Satellite
-            $platformMetadata = json_decode($row['satellite_platform'], true);
-            if (!empty($platformMetadata)) {
+            $platformData = $row['satellite_platform'];
+            
+            // Handle both JSON string and array (array comes from expandSatellitePlatformsToRows)
+            if (is_string($platformData)) {
+                $platformMetadata = json_decode($platformData, true);
+            } else {
+                $platformMetadata = $platformData;
+            }
+            
+            if (!empty($platformMetadata) && is_array($platformMetadata)) {
                 $dbRow['S_value_name'] = $platformMetadata['value'] ?? null;
                 $dbRow['S_value_uri'] = $platformMetadata['id'] ?? null;
                 $dbRow['S_scheme_name'] = $platformMetadata['scheme'] ?? 'NASA/GCMD Earth Platforms Keywords';
@@ -361,14 +369,6 @@ function ingestSatellitePlatformAsKeyword(mysqli $connection, array $dbRow, int 
     $schemeURI = $dbRow['S_scheme_uri'] ?? '';
     $language = 'en'; // Assuming 'en' as platform keywords are generally in English
 
-    // Temporary debug
-    error_log($value);
-    error_log($valueURI);
-    error_log($scheme);
-    error_log($schemeURI);
-    error_log($language);
-    // Reuse shared functions from save_thesauruskeywords.php
-    error_log("Ingesting satellite platform as thesaurus keyword: {$value}");
     $thesaurus_keywords_id = getOrCreateThesaurusKeyword(
         $connection,
         $value,
@@ -377,9 +377,6 @@ function ingestSatellitePlatformAsKeyword(mysqli $connection, array $dbRow, int 
         $valueURI,
         $language
     );
-    // Temporary debug
-    error_log("Got thesaurus_keywords_id: {$thesaurus_keywords_id}");
-    error_log("Ingest a link");
     linkResourceToThesaurusKeyword($connection, $resourceId, $thesaurus_keywords_id);
 }
 
