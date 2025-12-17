@@ -32,20 +32,19 @@ function extractDataSourceRows(array $postData): array
     $total_length = count($types);
 
     if ($total_length === 0) {
-        return []; // Return an empty array if there's nothing to process
+        return [];
     }
 
-    // The list of all possible variables from the form
+    // Use postData variable names directly as keys
     $post_variables = [
         'datasource_details', 'compensation_depth',
         'satellite_platform', 'dIdentifier', 'dIdentifierType',
         'dName'
     ];
-    
-    // Initialize a counter for each variable array
+
     $counters = array_fill_keys($post_variables, 0);
 
-    // Define which variables are required for each data source type
+    // This mask also uses postData variable names
     $required_masks = [
         'S' => ['satellite_platform'],
         'G' => ['datasource_details'],
@@ -55,7 +54,6 @@ function extractDataSourceRows(array $postData): array
     ];
 
     $rows = [];
-    // Process each submitted data source row
     for ($i = 0; $i < $total_length; $i++) {
         $this_type = $types[$i];
         
@@ -105,58 +103,54 @@ function validateDataSourceRow(array $row): array
 {
     $errors = [];
     $type = trim($row['type'] ?? '');
-    
-    // Basic validation: type must exist and be recognized
+
     if (empty($type)) {
         return ['valid' => false, 'errors' => ['Data source type is required']];
     }
-    
+
     $allowedTypes = ['S', 'G', 'A', 'T', 'M'];
     if (!in_array($type, $allowedTypes, true)) {
         return ['valid' => false, 'errors' => ["Invalid data source type: {$type}"]];
     }
-    
-    // Define what each type requires and what must be empty
+
+    // Validation rules now use the postData variable names
     $typeRules = [
         'S' => [
             'required' => ['satellite_platform'],
-            'mustBeEmpty' => ['details', 'compensation_depth', 'identifier', 'identifier_type', 'model_name']
+            'mustBeEmpty' => ['datasource_details', 'compensation_depth', 'dIdentifier', 'dIdentifierType', 'dName']
         ],
         'G' => [
-            'required' => [],
-            'mustBeEmpty' => ['satellite_platform', 'compensation_depth', 'identifier', 'identifier_type', 'model_name']
+            'required' => ['datasource_details'],
+            'mustBeEmpty' => ['satellite_platform', 'compensation_depth', 'dIdentifier', 'dIdentifierType', 'dName']
         ],
         'A' => [
-            'required' => [],
-            'mustBeEmpty' => ['satellite_platform', 'compensation_depth', 'identifier', 'identifier_type', 'model_name']
+            'required' => ['datasource_details'],
+            'mustBeEmpty' => ['satellite_platform', 'compensation_depth', 'dIdentifier', 'dIdentifierType', 'dName']
         ],
         'T' => [
-            'required' => [],
-            'mustBeEmpty' => ['satellite_platform', 'identifier', 'identifier_type', 'model_name']
-            // Note: compensation_depth is optional for T
+            'required' => ['datasource_details'],
+            'mustBeEmpty' => ['satellite_platform', 'dIdentifier', 'dIdentifierType', 'dName']
         ],
         'M' => [
-            'required' => ['model_name'],
+            'required' => ['datasource_details'],
             'mustBeEmpty' => ['satellite_platform', 'compensation_depth']
         ]
     ];
-    
+
     $rules = $typeRules[$type];
-    
-    // Check required fields are not empty
+
     foreach ($rules['required'] as $field) {
         if (empty(trim($row[$field] ?? ''))) {
-            $errors[] = ucfirst($field) . " is required for type {$type}";
+            $errors[] = "Field '{$field}' is required for type {$type}";
         }
     }
-    
-    // Check forbidden fields ARE empty
+
     foreach ($rules['mustBeEmpty'] as $field) {
         if (!empty(trim($row[$field] ?? ''))) {
-            $errors[] = "For type {$type}, field {$field} must be empty (got: {$row[$field]})";
+            $errors[] = "Field '{$field}' must be empty for type {$type} (got: {$row[$field]})";
         }
     }
-    
+
     return [
         'valid' => count($errors) === 0,
         'errors' => $errors
@@ -175,7 +169,7 @@ function prepareDataSourceForDb(array $row): array
 {
     $type = trim($row['type']);
     $description = trim($row['description'] ?? '');
-    
+
     // Initialize all type-specific columns as NULL
     $dbRow = [
         'type' => $type,
@@ -189,8 +183,8 @@ function prepareDataSourceForDb(array $row): array
         'M_identifier' => null,
         'M_identifier_type' => null,
     ];
-    
-    // Populate type-specific columns - ALL OTHERS REMAIN NULL
+
+    // Populate type-specific columns from the $row array (which uses postData names)
     switch ($type) {
         case 'S': // Satellite
             $platformMetadata = $row['platform_metadata'] ?? null;
@@ -204,7 +198,7 @@ function prepareDataSourceForDb(array $row): array
         case 'A': // Altimetry
         case 'T': // Terrain
         case 'M': // Model
-            $dbRow['details'] = trim($row['details']);
+            $dbRow['details'] = trim($row['datasource_details'] ?? '');
             if ($type === 'T' && !empty($row['compensation_depth'])) {
                 $depth = intval($row['compensation_depth']);
                 if ($depth > 0) {
@@ -212,12 +206,14 @@ function prepareDataSourceForDb(array $row): array
                 }
             }
             if ($type === 'M') {
-                $dbRow['M_identifier'] = trim($row['identifier']);
-                $dbRow['M_identifier_type'] = trim($row['identifier_type']);
+                // Note: The the name of the model is put in 'details'
+                $dbRow['details'] = $row['dName'] . ": " . $dbRow['details']; 
+                $dbRow['M_identifier'] = trim($row['dIdentifier'] ?? '');
+                $dbRow['M_identifier_type'] = trim($row['dIdentifierType'] ?? '');
             }
             break;
     }
-    
+
     return $dbRow;
 }/**
  * Inserts a single data source into the database
@@ -266,7 +262,6 @@ function insertDataSource(mysqli $connection, array $dbRow): int
 
 /**
  * Creates the link between Resource and Data_Sources
- * 
  * @param mysqli $connection Database connection
  * @param int $resourceId Resource ID
  * @param int $dataSourceId Data source ID
@@ -322,17 +317,20 @@ function expandSatellitePlatformsToRows(array $row): array
         
         $platformValue = $entry['value'];
         
-        // Create a new row with this specific platform
+        // Create a new row with this specific platform.
+        // All potential keys must be present to avoid "Undefined array key" errors in validateDataSourceRow.
         $expandedRows[] = [
             'type' => 'S',
-            'description' => $row['description'],  // Keep original description
-            'satellite_platform' => $platformValue,  // Single platform value
-            'platform_metadata' => $entry,  // Store full metadata for keyword ingestion
-            'details' => '',
-            'compensation_depth' => '',
-            'identifier' => '',
-            'identifier_type' => '',
-            'model_name' => ''
+            'description' => $row['description'],          // Keep original description
+            'satellite_platform' => $platformValue,      // Single platform value for this row
+            'platform_metadata' => $entry,               // Store full metadata for keyword ingestion
+            
+            // --- Fields for other types, set to null to pass validation for type 'S' ---
+            'datasource_details' => null,
+            'compensation_depth' => null,
+            'dIdentifier' => null,
+            'dIdentifierType' => null,
+            'dName' => null
         ];
     }
     
@@ -351,17 +349,18 @@ function expandSatellitePlatformsToRows(array $row): array
  * @return void
  * @throws Exception On database errors
  */
-function ingestSatellitePlatformAsKeyword(mysqli $connection, array $platformEntry, int $resourceId): void
+function ingestSatellitePlatformAsKeyword(mysqli $connection, array $dbRow, int $resourceId): void
 {
-    if (!is_array($platformEntry) || empty($platformEntry['value'])) {
+    // This function now receives the database-ready row, so we use DB column names.
+    if (!is_array($dbRow) || empty($dbRow['S_value_name'])) {
         return;
     }
     
-    $value = $platformEntry['value'];
-    $valueURI = $platformEntry['id'] ?? null;
-    $scheme = $platformEntry['scheme'] ?? 'GCMD Platforms';
-    $schemeURI = $platformEntry['schemeURI'] ?? '';
-    $language = $platformEntry['language'] ?? 'en';
+    $value = $dbRow['S_value_name'];
+    $valueURI = $dbRow['S_value_uri'] ?? null;
+    $scheme = $dbRow['S_scheme_name'] ?? 'GCMD Platforms';
+    $schemeURI = $dbRow['S_scheme_uri'] ?? '';
+    $language = 'en'; // Assuming 'en' as platform keywords are generally in English
     
     // Reuse shared functions from save_thesauruskeywords.php
     $thesaurus_keywords_id = getOrCreateThesaurusKeyword(
@@ -391,14 +390,15 @@ function ingestSatellitePlatformAsKeyword(mysqli $connection, array $platformEnt
  * @return void
  * @throws Exception On database errors
  */
-function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $modelEntry, int $resourceId): void
+function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $dbRow, int $resourceId): void
 {
-    if (!is_array($modelEntry) || empty($modelEntry['identifier']) || empty($modelEntry['identifier_type'])) {
+    // This function now receives the database-ready row, so we use DB column names.
+    if (!is_array($dbRow) || empty($dbRow['M_identifier']) || empty($dbRow['M_identifier_type'])) {
         return;
     }
     
-    $identifier = trim($modelEntry['identifier']);
-    $identifierTypeName = trim($modelEntry['identifier_type']);
+    $identifier = trim($dbRow['M_identifier']);
+    $identifierTypeName = trim($dbRow['M_identifier_type']);
     
     // Get the relation ID for "IsDerivedFrom"
     $relationId = getRelationId($connection, 'IsDerivedFrom');
@@ -471,6 +471,11 @@ function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceI
             throw new Exception($errorMsg);
         }
         
+
+        
+        // Prepare for database
+        $dbRow = prepareDataSourceForDb($row);
+
         // For Satellite (S) type, ingest platform as thesaurus keyword
         if (trim($row['type']) === 'S' && isset($row['platform_metadata'])) {
             ingestSatellitePlatformAsKeyword($connection, $row['platform_metadata'], $resourceId);
@@ -478,11 +483,8 @@ function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceI
         
         // For Model (M) type, ingest as related work with "IsDerivedFrom" relation
         if (trim($row['type']) === 'M') {
-            ingestModelDataSourceAsRelatedWork($connection, $row, $resourceId);
+            ingestModelDataSourceAsRelatedWork($connection, $dbRow, $resourceId);
         }
-        
-        // Prepare for database
-        $dbRow = prepareDataSourceForDb($row);
         
         // Insert data source
         $dataSourceId = insertDataSource($connection, $dbRow);
