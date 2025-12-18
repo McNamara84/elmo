@@ -492,6 +492,10 @@ $(document).ready(function () {
             const fieldElement = row.children(`.${fieldClass}`);
             fieldElement.toggle(shouldBeVisible);
             fieldElement.attr('aria-hidden', !shouldBeVisible);
+
+            // CRITICAL: Disable/enable form fields based on visibility
+            const formFields = fieldElement.find('input, select, textarea');
+            formFields.prop('disabled', !shouldBeVisible);
         }
 
         const detailsContainer = row.children('.visibility-datasources-details');
