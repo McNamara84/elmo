@@ -212,9 +212,8 @@ function prepareDataSourceForDb(array $row): array
             if (!empty($row['dName'])) {
                 $dbRow['details'] = $row['dName'] . ": " . $dbRow['details'];
             }
-            if (!empty($row['dIdentifier'])) {
-                $dbRow['M_identifier'] = trim($row['dIdentifier']);
-            }
+
+            $dbRow['M_identifier'] = trim($row['dIdentifier']);
             if (!empty($row['dIdentifierType'])) {
                 $dbRow['M_identifier_type'] = trim($row['dIdentifierType']);
             }
@@ -397,13 +396,37 @@ function ingestSatellitePlatformAsKeyword(mysqli $connection, array $dbRow, int 
  */
 function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $dbRow, int $resourceId): void
 {
-    // This function now receives the database-ready row, so we use DB column names.
     if (!is_array($dbRow) || empty($dbRow['M_identifier']) || empty($dbRow['M_identifier_type'])) {
         return;
     }
     
     $identifier = trim($dbRow['M_identifier']);
     $identifierTypeName = trim($dbRow['M_identifier_type']);
+        
+    // Check if this related work already exists for this resource
+    $checkSql = "SELECT rw.related_work_id FROM `Related_Work` rw
+                INNER JOIN `Resource_has_Related_Work` rhw ON rw.related_work_id = rhw.Related_Work_related_work_id
+                WHERE rhw.Resource_resource_id = ? 
+                AND rw.Identifier = ?
+                AND rw.identifier_type_fk = (SELECT identifier_type_id FROM `Identifier_Type` WHERE name = ?)
+                LIMIT 1";
+    
+    $checkStmt = $connection->prepare($checkSql);
+    if (!$checkStmt) {
+        throw new Exception("Failed to prepare check statement: " . $connection->error);
+    }
+    
+    $checkStmt->bind_param('iss', $resourceId, $identifier, $identifierTypeName);
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
+    
+    // If already exists, skip insertion
+    if ($result->num_rows > 0) {
+        $checkStmt->close();
+        error_log("Related work already exists for resource {$resourceId}: {$identifier}");
+        return;
+    }
+    $checkStmt->close();
     
     // Get the relation ID for "IsDerivedFrom"
     $relationId = getRelationId($connection, 'IsDerivedFrom');
@@ -420,8 +443,8 @@ function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $dbRow, in
     // Insert the related work entry
     $relatedWorkId = insertRelatedWork($connection, $identifier, $relationId, $identifierTypeId);
     if ($relatedWorkId) {
-        // Link the resource to this related work
         linkResourceToRelatedWork($connection, $resourceId, $relatedWorkId);
+        error_log("Inserted related work for model: {$identifier}");
     } else {
         throw new Exception("Failed to insert related work for model data source");
     }
@@ -444,6 +467,17 @@ function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $dbRow, in
  */
 function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceId): void
 {
+    // DEBUG: Log raw POST data structure
+    error_log("=== RAW POST DATA ===");
+    error_log("datasource_type: " . json_encode($postData['datasource_type'] ?? []));
+    error_log("datasource_description: " . json_encode($postData['datasource_description'] ?? []));
+    error_log("satellite_platform: " . json_encode($postData['satellite_platform'] ?? []));
+    error_log("datasource_details: " . json_encode($postData['datasource_details'] ?? []));
+    error_log("compensation_depth: " . json_encode($postData['compensation_depth'] ?? []));
+    error_log("dIdentifier: " . json_encode($postData['dIdentifier'] ?? []));
+    error_log("dIdentifierType: " . json_encode($postData['dIdentifierType'] ?? []));
+    error_log("dName: " . json_encode($postData['dName'] ?? []));
+    error_log("=== END RAW POST DATA ===");
     // 1. Extract rows from POST arrays
     $rows = extractDataSourceRows($postData);
     
@@ -466,7 +500,6 @@ function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceI
             $allRows[] = $row;
         }
     }
-    
     // 3. Validate and save each row
     foreach ($allRows as $index => $row) {
         // Validate
@@ -476,26 +509,25 @@ function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceI
             throw new Exception($errorMsg);
         }
         
-
-        
         // Prepare for database
         $dbRow = prepareDataSourceForDb($row);
-        // Temporary debug
-        error_log(print_r($dbRow, true));
+        
+        // Insert data source
+        $dataSourceId = insertDataSource($connection, $dbRow);
+        error_log("Inserted data source {$dataSourceId} for resource {$resourceId}");
+        
+        // Link to resource
+        linkResourceToDataSource($connection, $resourceId, $dataSourceId);
+        
         // For Satellite (S) type, ingest platform as thesaurus keyword
         if (trim($row['type']) === 'S') {
             ingestSatellitePlatformAsKeyword($connection, $dbRow, $resourceId);
         }
         
         // For Model (M) type, ingest as related work with "IsDerivedFrom" relation
+        // This happens AFTER data source insertion to ensure proper linking
         if (trim($row['type']) === 'M') {
             ingestModelDataSourceAsRelatedWork($connection, $dbRow, $resourceId);
         }
-        
-        // Insert data source
-        $dataSourceId = insertDataSource($connection, $dbRow);
-        
-        // Link to resource
-        linkResourceToDataSource($connection, $resourceId, $dataSourceId);
     }
 }
