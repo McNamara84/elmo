@@ -19,7 +19,7 @@ test.describe('Footer Tests', () => {
     await expect(elmoGuide).toBeVisible();
     await expect(legalNotice).toHaveAttribute(
       'href',
-      'https://dataservices.gfz-potsdam.de/web/about-us/legal-notice'
+      'https://dataservices.gfz.de/web/about-us/legal-notice'
     );
     await expect(dataProtection).toHaveAttribute('href', 'doc/privacyPolicy.html');
     await expect(elmoGuide).toHaveAttribute('href', 'doc/help.html');
