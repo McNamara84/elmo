@@ -119,6 +119,9 @@ $(document).ready(function () {
     // 6. Insert new row in DOM
     authorGroup.append(newAuthorRow);
 
+    // Refresh sortable to recognize the new row
+    authorGroup.sortable("refresh");
+
     // 7. Start autocomplete for affiliations
     const affId = `input-author-affiliation-${index}`;
     const rorId = `input-author-rorid-${index}`;

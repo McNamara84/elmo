@@ -105,6 +105,9 @@ describe('authorInstitution.js', () => {
     expect(window.replaceHelpButtonInClonedRows).toHaveBeenCalledTimes(1);
     expect(window.createRemoveButton).toHaveBeenCalledTimes(1);
 
+    // Sortable refresh called after adding row
+    expect($.fn.sortable).toHaveBeenCalledWith("refresh");
+
     // Autocomplete initialized
     const affiliationId = newRow.find('input[name="institutionAffiliation[]"]').attr('id');
     const rorId = newRow.find('input[name="authorInstitutionRorIds[]"]').attr('id');

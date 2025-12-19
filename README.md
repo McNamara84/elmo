@@ -820,7 +820,7 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
 
 Spatial and temporal coverage specifies the geographic region and time frame that the dataset encompasses, providing essential context for its relevance and applicability.
 In the DataCite scheme: The data from Latitude, Longitude and Description are mapped to `<geoLocations>`, while Start Date/Time and End Date/Time are mapped to `<date dateType="Collected">`.
-In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spatial and temporal coverage is 0-n.
+In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coordinates) are mapped to `<EX_GeographicBoundingBox>`, while temporal data (dates/times) are mapped to `<EX_TemporalExtent><gml:TimePeriod>` with a valid `gml:id` attribute (format: `timePeriod-{id}`). Occurency of spatial and temporal coverage is 0-n.
 
 - Latitude Min
   
