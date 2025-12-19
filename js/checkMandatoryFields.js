@@ -159,10 +159,10 @@ function validateSpatialTemporalCoverageRequirements() {
 
         // Apply 'required' based on dependencies
         if (filled.latmax || filled.longmax) {
-            ['latmin', 'longmin', 'latmax', 'longmax', 'description', 'datestart', 'dateend'].forEach(field => inputs[field].attr('required', 'required'));
+            ['latmin', 'longmin', 'latmax', 'longmax', 'description'].forEach(field => inputs[field].attr('required', 'required'));
         }
         if (filled.latmin || filled.longmin || filled.description) {
-            ['latmin', 'longmin', 'description', 'datestart', 'dateend', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
+            ['latmin', 'longmin', 'description', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
         }
         if (filled.datestart || filled.dateend) {
             ['datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
