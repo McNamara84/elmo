@@ -31,23 +31,22 @@
 .footer-notes {
     font-size: 0.8rem;
     background-color: #b6d4fe;
-    /* Transparenz des Hintergrunds */
+    /* Background transparency */
     opacity: 0.6;
 }
 
-/* Ausreichend Padding am unteren Rand für den fixierten Footer.
- * Der Wert 120px ist so bemessen, dass er die maximale Höhe des Footers
- * (Buttons + Autosave-Status + Padding) bei allen Viewport-Größen abdeckt,
- * einschließlich des Umbruchs auf kleinen Bildschirmen.
- * Dieser Wert wird durch den Playwright-Test in
- * tests/playwright/formgroups/funding-reference.spec.ts verifiziert,
- * der die Klickbarkeit des Add-Buttons über alle Bootstrap-Breakpoints testet.
+/* Sufficient bottom padding to prevent the fixed footer from overlapping content.
+ * The 120px value accounts for the maximum footer height (buttons + autosave status
+ * + padding) across all viewport sizes, including line wrapping on small screens.
+ * This value is verified by the Playwright test in
+ * tests/playwright/formgroups/funding-reference.spec.ts which tests add button
+ * clickability across all Bootstrap breakpoints.
  */
 #main-content {
     padding-bottom: 120px !important;
 }
 
-/* Footer-Styling für konsistente Darstellung */
+/* Footer styling for consistent appearance */
 footer.fixed-bottom {
     background-color: var(--bs-body-bg, #fff);
     border-top: 1px solid rgba(0, 0, 0, 0.1);
