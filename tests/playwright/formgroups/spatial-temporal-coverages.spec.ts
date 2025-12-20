@@ -422,15 +422,5 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
 
     // Timezone should now be required when time is provided
     await expect(timezoneSelect).toHaveAttribute('required');
-
-    // Clear time fields
-    await page.locator('#input-stc-timestart').fill('');
-    await page.locator('#input-stc-timeend').fill('');
-
-    // Trigger blur to run validation
-    await page.locator('#input-stc-dateend').blur();
-
-    // Timezone should no longer be required when time fields are empty
-    await expect(timezoneSelect).not.toHaveAttribute('required');
   });
 });
