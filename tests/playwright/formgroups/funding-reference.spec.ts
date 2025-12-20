@@ -172,4 +172,45 @@ test.describe('Funding Reference form group', () => {
     await expect(rows).toHaveCount(1);
     await expect(firstRow.locator('.inputFunder')).toHaveValue('Gordon and Betty Moore Foundation');
   });
+
+  test('add button is clickable and not obscured at all Bootstrap breakpoints', async ({ page }) => {
+    // Bootstrap breakpoints to test
+    const breakpoints = [
+      { name: 'xs', width: 375, height: 667 },   // Mobile (iPhone SE)
+      { name: 'sm', width: 576, height: 800 },   // Small tablets
+      { name: 'md', width: 768, height: 1024 },  // Tablets
+      { name: 'lg', width: 992, height: 800 },   // Small laptops
+      { name: 'xl', width: 1200, height: 900 },  // Desktops
+      { name: 'xxl', width: 1400, height: 900 }  // Large desktops
+    ];
+
+    for (const bp of breakpoints) {
+      await page.setViewportSize({ width: bp.width, height: bp.height });
+
+      // Scroll to the add button to ensure it's in view
+      const addButton = page.locator('#button-fundingreference-add');
+      await addButton.scrollIntoViewIfNeeded();
+
+      // Verify the button is visible
+      await expect(addButton, `Add button should be visible at ${bp.name} (${bp.width}px)`).toBeVisible();
+
+      // Get the initial row count
+      const rows = page.locator(`${SELECTORS.formGroups.fundingReference} [funding-reference-row]`);
+      const initialCount = await rows.count();
+
+      // Click the add button - this will fail if the button is obscured
+      await addButton.click({ timeout: 5000 });
+
+      // Verify a new row was added
+      await expect(rows, `Row should be added after clicking at ${bp.name} (${bp.width}px)`).toHaveCount(initialCount + 1);
+
+      // Clean up: remove the added row to reset state for next breakpoint
+      const lastRow = rows.last();
+      const removeButton = lastRow.locator('.removeButton');
+      if (await removeButton.isVisible()) {
+        await removeButton.click();
+        await expect(rows).toHaveCount(initialCount);
+      }
+    }
+  });
 });
