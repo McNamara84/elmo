@@ -35,7 +35,14 @@
     opacity: 0.6;
 }
 
-/* Ausreichend Padding am unteren Rand für den fixierten Footer */
+/* Ausreichend Padding am unteren Rand für den fixierten Footer.
+ * Der Wert 120px ist so bemessen, dass er die maximale Höhe des Footers
+ * (Buttons + Autosave-Status + Padding) bei allen Viewport-Größen abdeckt,
+ * einschließlich des Umbruchs auf kleinen Bildschirmen.
+ * Dieser Wert wird durch den Playwright-Test in
+ * tests/playwright/formgroups/funding-reference.spec.ts verifiziert,
+ * der die Klickbarkeit des Add-Buttons über alle Bootstrap-Breakpoints testet.
+ */
 #main-content {
     padding-bottom: 120px !important;
 }

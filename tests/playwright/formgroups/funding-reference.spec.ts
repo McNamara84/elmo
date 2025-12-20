@@ -221,12 +221,12 @@ test.describe('Funding Reference form group', () => {
       await expect(rows, `Row should be added after clicking at ${bp.name} (${bp.width}px)`).toHaveCount(initialCount + 1);
 
       // Clean up: remove the added row to reset state for next breakpoint
+      // The remove button should always be visible on newly added rows (see fundingreference.js)
       const lastRow = rows.last();
       const removeButton = lastRow.locator('.removeButton');
-      if (await removeButton.isVisible()) {
-        await removeButton.click();
-        await expect(rows).toHaveCount(initialCount);
-      }
+      await expect(removeButton, `Remove button should be visible at ${bp.name} (${bp.width}px)`).toBeVisible();
+      await removeButton.click();
+      await expect(rows).toHaveCount(initialCount);
     }
   });
 });
