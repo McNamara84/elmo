@@ -117,3 +117,110 @@ describe('validateAuthorInstitutionRequirements', () => {
     }));
   });
 });
+
+/**
+ * Tests for Spatial and Temporal Coverage validation (time is optional).
+ */
+describe('validateSpatialTemporalCoverageRequirements', () => {
+  let $;
+  let rafCallbacks;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div id="group-stc">
+        <div class="row" tsc-row tsc-row-id="1">
+          <input type="text" id="input-stc-latmin_1" name="tscLatitudeMin[]" />
+          <input type="text" id="input-stc-latmax_1" name="tscLatitudeMax[]" />
+          <input type="text" id="input-stc-longmin_1" name="tscLongitudeMin[]" />
+          <input type="text" id="input-stc-longmax_1" name="tscLongitudeMax[]" />
+          <textarea id="input-stc-description_1" name="tscDescription[]"></textarea>
+          <input type="date" id="input-stc-datestart_1" name="tscDateStart[]" />
+          <input type="date" id="input-stc-dateend_1" name="tscDateEnd[]" />
+          <input type="time" id="input-stc-timestart_1" name="tscTimeStart[]" />
+          <input type="time" id="input-stc-timeend_1" name="tscTimeEnd[]" />
+          <select id="input-stc-timezone_1" name="tscTimezone[]"></select>
+        </div>
+      </div>
+    `;
+
+    $ = require('jquery');
+    global.$ = global.jQuery = $;
+    window.$ = $;
+    window.jQuery = $;
+    rafCallbacks = [];
+    global.requestAnimationFrame = (cb) => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    };
+
+    const scriptPath = require('path').resolve(__dirname, '../../js/checkMandatoryFields.js');
+    const scriptContent = require('fs').readFileSync(scriptPath, 'utf8');
+    window.eval(scriptContent);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    delete global.$;
+    delete global.jQuery;
+    delete window.$;
+    delete window.jQuery;
+    delete global.requestAnimationFrame;
+  });
+
+  test('date without time is allowed (time not required)', () => {
+    const datestart = $('#input-stc-datestart_1');
+    const dateend = $('#input-stc-dateend_1');
+    const latmin = $('#input-stc-latmin_1');
+    const longmin = $('#input-stc-longmin_1');
+    const description = $('#input-stc-description_1');
+    const timestart = $('#input-stc-timestart_1');
+    const timeend = $('#input-stc-timeend_1');
+    const timezone = $('#input-stc-timezone_1');
+
+    // Provide date-only values (no time)
+    datestart.val('2025-01-01');
+    dateend.val('2025-01-15');
+    latmin.val('52.0');
+    longmin.val('13.0');
+    description.val('Test location');
+
+    window.validateSpatialTemporalCoverageRequirements();
+
+    // datestart and dateend should be required
+    expect(datestart.attr('required')).toBe('required');
+    expect(dateend.attr('required')).toBe('required');
+
+    // time fields should NOT be required (time is optional)
+    expect(timestart.attr('required')).toBeUndefined();
+    expect(timeend.attr('required')).toBeUndefined();
+
+    // timezone should NOT be required without time
+    expect(timezone.attr('required')).toBeUndefined();
+  });
+
+  test('time provided triggers time and timezone requirements', () => {
+    const datestart = $('#input-stc-datestart_1');
+    const dateend = $('#input-stc-dateend_1');
+    const latmin = $('#input-stc-latmin_1');
+    const longmin = $('#input-stc-longmin_1');
+    const description = $('#input-stc-description_1');
+    const timestart = $('#input-stc-timestart_1');
+    const timeend = $('#input-stc-timeend_1');
+    const timezone = $('#input-stc-timezone_1');
+
+    datestart.val('2025-01-01');
+    dateend.val('2025-01-15');
+    latmin.val('52.0');
+    longmin.val('13.0');
+    description.val('Test location');
+    // Only timestart is provided
+    timestart.val('08:00');
+
+    window.validateSpatialTemporalCoverageRequirements();
+
+    // Now time fields ARE required (since a time was given)
+    expect(timestart.attr('required')).toBe('required');
+    expect(timeend.attr('required')).toBe('required');
+    expect(timezone.attr('required')).toBe('required');
+  });
+});
