@@ -126,6 +126,9 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
   let rafCallbacks;
 
   beforeEach(() => {
+    // HTML structure matches formgroups/coverage.html:
+    // - Coordinate fields (latmin, latmax, longmin, longmax) have _1 suffix
+    // - Date, time, description, and timezone fields do NOT have row suffix
     document.body.innerHTML = `
       <div id="group-stc">
         <div class="row" tsc-row tsc-row-id="1">
@@ -133,12 +136,12 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
           <input type="text" id="input-stc-latmax_1" name="tscLatitudeMax[]" />
           <input type="text" id="input-stc-longmin_1" name="tscLongitudeMin[]" />
           <input type="text" id="input-stc-longmax_1" name="tscLongitudeMax[]" />
-          <textarea id="input-stc-description_1" name="tscDescription[]"></textarea>
-          <input type="date" id="input-stc-datestart_1" name="tscDateStart[]" />
-          <input type="date" id="input-stc-dateend_1" name="tscDateEnd[]" />
-          <input type="time" id="input-stc-timestart_1" name="tscTimeStart[]" />
-          <input type="time" id="input-stc-timeend_1" name="tscTimeEnd[]" />
-          <select id="input-stc-timezone_1" name="tscTimezone[]"></select>
+          <textarea id="input-stc-description" name="tscDescription[]"></textarea>
+          <input type="date" id="input-stc-datestart" name="tscDateStart[]" />
+          <input type="date" id="input-stc-dateend" name="tscDateEnd[]" />
+          <input type="time" id="input-stc-timestart" name="tscTimeStart[]" />
+          <input type="time" id="input-stc-timeend" name="tscTimeEnd[]" />
+          <select id="input-stc-timezone" name="tscTimezone[]"></select>
         </div>
       </div>
     `;
@@ -168,14 +171,14 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
   });
 
   test('date without time is allowed (time not required)', () => {
-    const datestart = $('#input-stc-datestart_1');
-    const dateend = $('#input-stc-dateend_1');
+    const datestart = $('#input-stc-datestart');
+    const dateend = $('#input-stc-dateend');
     const latmin = $('#input-stc-latmin_1');
     const longmin = $('#input-stc-longmin_1');
-    const description = $('#input-stc-description_1');
-    const timestart = $('#input-stc-timestart_1');
-    const timeend = $('#input-stc-timeend_1');
-    const timezone = $('#input-stc-timezone_1');
+    const description = $('#input-stc-description');
+    const timestart = $('#input-stc-timestart');
+    const timeend = $('#input-stc-timeend');
+    const timezone = $('#input-stc-timezone');
 
     // Provide date-only values (no time)
     datestart.val('2025-01-01');
@@ -199,14 +202,14 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
   });
 
   test('time provided triggers time and timezone requirements', () => {
-    const datestart = $('#input-stc-datestart_1');
-    const dateend = $('#input-stc-dateend_1');
+    const datestart = $('#input-stc-datestart');
+    const dateend = $('#input-stc-dateend');
     const latmin = $('#input-stc-latmin_1');
     const longmin = $('#input-stc-longmin_1');
-    const description = $('#input-stc-description_1');
-    const timestart = $('#input-stc-timestart_1');
-    const timeend = $('#input-stc-timeend_1');
-    const timezone = $('#input-stc-timezone_1');
+    const description = $('#input-stc-description');
+    const timestart = $('#input-stc-timestart');
+    const timeend = $('#input-stc-timeend');
+    const timezone = $('#input-stc-timezone');
 
     datestart.val('2025-01-01');
     dateend.val('2025-01-15');
