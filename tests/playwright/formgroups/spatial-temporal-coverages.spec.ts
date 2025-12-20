@@ -373,9 +373,9 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await expect(startTime).toHaveValue('');
     await expect(endTime).toHaveValue('');
 
-    // Leave timezone unselected (empty value)
+    // Timezone is pre-populated (no empty option exists), but validation should still pass
+    // when no time is provided since timezone is only required with time fields
     const timezoneSelect = page.locator('#input-stc-timezone');
-    await timezoneSelect.selectOption('');
 
     // Trigger blur to run validation
     await endDate.blur();
@@ -392,39 +392,45 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await expect(timezoneSelect).not.toHaveClass(/is-invalid/);
   });
 
-  test('requires timezone when time fields are filled', async ({ page }) => {
+  test('makes timezone required when time fields are filled', async ({ page }) => {
+    // Verify timezone is NOT required initially
+    const timezoneSelect = page.locator('#input-stc-timezone');
+    await expect(timezoneSelect).not.toHaveAttribute('required');
+
     // Fill spatial coordinates (required)
     await page.locator('#input-stc-latmin_1').fill('52.0');
     await page.locator('#input-stc-latmax_1').fill('52.5');
     await page.locator('#input-stc-longmin_1').fill('13.0');
     await page.locator('#input-stc-longmax_1').fill('13.5');
 
-    // Fill dates and times
+    // Fill only dates first
     await page.locator('#input-stc-datestart').fill('2024-01-15');
     await page.locator('#input-stc-dateend').fill('2024-06-30');
+
+    // Trigger blur to run validation
+    await page.locator('#input-stc-dateend').blur();
+
+    // Timezone should still NOT be required when only dates are provided
+    await expect(timezoneSelect).not.toHaveAttribute('required');
+
+    // Now fill time fields
     await page.locator('#input-stc-timestart').fill('09:00');
     await page.locator('#input-stc-timeend').fill('17:00');
-
-    // Leave timezone unselected
-    const timezoneSelect = page.locator('#input-stc-timezone');
-    await timezoneSelect.selectOption('');
 
     // Trigger blur to run validation
     await page.locator('#input-stc-timeend').blur();
 
-    // Timezone should be marked invalid when time is provided but timezone is empty
-    await expect(timezoneSelect).toHaveClass(/is-invalid/);
+    // Timezone should now be required when time is provided
+    await expect(timezoneSelect).toHaveAttribute('required');
 
-    // Now select a timezone
-    const optionValues = await timezoneSelect
-      .locator('option')
-      .evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value).filter(v => v !== ''));
-    await timezoneSelect.selectOption(optionValues[0]);
+    // Clear time fields
+    await page.locator('#input-stc-timestart').fill('');
+    await page.locator('#input-stc-timeend').fill('');
 
-    // Trigger blur again
-    await timezoneSelect.blur();
+    // Trigger blur to run validation
+    await page.locator('#input-stc-dateend').blur();
 
-    // Timezone should now be valid
-    await expect(timezoneSelect).not.toHaveClass(/is-invalid/);
+    // Timezone should no longer be required when time fields are empty
+    await expect(timezoneSelect).not.toHaveAttribute('required');
   });
 });
