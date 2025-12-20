@@ -116,12 +116,15 @@ function validateContributorOrganisationRequirements() {
  * The function ensures:
  * - If all fields are empty, none will be required.
  * - If latMax or longMax is filled, latMin, longMin, latMax, longMax, description, dateStart, and dateEnd become required.
- * - If latMin, longMin, or description is filled, those fields along with dateStart, dateEnd, and timezone become required.
- * - If dateStart or dateEnd is filled, they, along with latMin, longMin, description, and timezone, become required.
- * - If timeStart or timeEnd is filled, they, along with dateStart, dateEnd, latMin, longMin, description, and timezone, become required.
- * - If a time is given in any row, all rows require timeStart and timeEnd
+ * - If latMin, longMin, or description is filled, those fields along with dateStart and dateEnd become required.
+ * - If dateStart or dateEnd is filled, they along with latMin, longMin, and description become required.
+ * - Time fields (timeStart, timeEnd) are always optional unless one of them is filled.
+ * - If timeStart or timeEnd is filled, both time fields, dates, and timezone become required.
+ * - Timezone is only required when time values are provided.
+ *
+ * @function validateSpatialTemporalCoverageRequirements
+ * @returns {void}
  */
-
 function validateSpatialTemporalCoverageRequirements() {
     var group = $('#group-stc');
     var fields = ['latmin', 'latmax', 'longmin', 'longmax', 'description', 'datestart', 'timestart', 'dateend', 'timeend', 'timezone'];
