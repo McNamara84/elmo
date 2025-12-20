@@ -35,6 +35,17 @@
     opacity: 0.6;
 }
 
+/* Ausreichend Padding am unteren Rand für den fixierten Footer */
+#main-content {
+    padding-bottom: 120px !important;
+}
+
+/* Footer-Styling für konsistente Darstellung */
+footer.fixed-bottom {
+    background-color: var(--bs-body-bg, #fff);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 /* Feedback Button */
 .feedback-button {
     z-index: 1000;
