@@ -44,6 +44,7 @@
 footer.fixed-bottom {
     background-color: var(--bs-body-bg, #fff);
     border-top: 1px solid rgba(0, 0, 0, 0.1);
+    z-index: 1020;
 }
 
 /* Feedback Button */
