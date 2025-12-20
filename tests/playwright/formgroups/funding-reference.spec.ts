@@ -46,6 +46,13 @@ async function buildHarnessPage(): Promise<string> {
               <button type="submit" class="btn btn-warning m-1" id="button-form-save">Save</button>
               <button type="submit" class="btn btn-success m-1" id="button-form-submit">Submit</button>
             </div>
+            <div class="autosave-status" id="autosave-status" role="status" aria-live="polite">
+              <span class="autosave-status__indicator" aria-hidden="true"></span>
+              <div class="autosave-status__text">
+                <span class="autosave-status__heading">Autosave</span>
+                <span id="autosave-status-text">Autosave ready.</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -202,6 +209,9 @@ test.describe('Funding Reference form group', () => {
 
     for (const bp of breakpoints) {
       await page.setViewportSize({ width: bp.width, height: bp.height });
+
+      // Wait for layout to stabilize after viewport change
+      await page.waitForTimeout(100);
 
       // Scroll to the add button to ensure it's in view
       const addButton = page.locator('#button-fundingreference-add');
