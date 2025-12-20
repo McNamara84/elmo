@@ -23,9 +23,10 @@ async function buildHarnessPage(): Promise<string> {
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="node_modules/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css">
+    <link rel="stylesheet" href="css/gfz-cd.css">
   </head>
   <body>
-    <main class="container py-4">
+    <main id="main-content" class="container-fluid my-3">
       <form id="form-mde">
         ${template}
       </form>
@@ -34,6 +35,21 @@ async function buildHarnessPage(): Promise<string> {
       <section id="help-fundingreference-grantname" aria-live="polite">Grant Name help text</section>
       <section id="help-fundingreference-awarduri" aria-live="polite">Award URI help text</section>
     </main>
+    <!-- Fixed Footer with action buttons (same as production footer.html) -->
+    <footer class="footer mt-auto py-0 fixed-bottom">
+      <div class="container">
+        <div class="row">
+          <div class="col d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3 flex-wrap">
+            <div class="d-flex align-items-center justify-content-center flex-wrap gap-2">
+              <button type="button" class="btn btn-danger m-1" id="button-form-reset">Clear</button>
+              <button class="btn btn-primary m-1" type="button" id="button-form-load">Load</button>
+              <button type="submit" class="btn btn-warning m-1" id="button-form-save">Save</button>
+              <button type="submit" class="btn btn-success m-1" id="button-form-submit">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
     <script>
       window.translations = { funding: { title: 'Funding Reference' }, general: {} };
     </script>
