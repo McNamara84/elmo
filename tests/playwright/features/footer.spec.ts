@@ -42,4 +42,34 @@ test.describe('Footer Tests', () => {
     await expect(elmoGuide).toBeVisible();
     await elmoGuide.click();
   });
-});
+
+  test('Verify footer buttons open correct links', async ({ page }) => {
+    await page.goto('/');
+
+    const legalNoticeButton = page.getByText('Legal Notice');
+    const dataProtectionButton = page.getByText('Data Protection');
+    const elmoGuideButton = page.getByText('Elmo Guide');
+
+    const [legalNoticePage] = await Promise.all([
+      page.context().waitForEvent('page'),
+      legalNoticeButton.click(),
+    ]);
+    await expect(legalNoticePage).toHaveURL(/legal-notice/);
+    await legalNoticePage.close();
+
+    const [dataProtectionPage] = await Promise.all([
+      page.context().waitForEvent('page'),
+      dataProtectionButton.click(),
+    ]);
+    await expect(dataProtectionPage).toHaveURL(/privacyPolicy.html/);
+    await dataProtectionPage.close(); 
+
+    const [elmoGuidePage] = await Promise.all([
+      page.context().waitForEvent('page'),
+      elmoGuideButton.click(),
+    ]);
+    await expect(elmoGuidePage).toHaveURL(/help\.php/);
+    await elmoGuidePage.close();
+  });
+
+})
