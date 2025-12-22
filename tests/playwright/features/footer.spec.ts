@@ -8,9 +8,9 @@ test.describe('Footer Tests', () => {
     const footer = page.locator('.footer-info-nav');
     await expect(footer).toBeVisible();
 
-    const legalNotice = footer.getByText('Legal Notice');
-    const privacyPolicy = footer.getByText('Privacy Policy');
-    const elmoGuide = footer.getByText('Elmo Guide');
+    const legalNotice = footer.locator('#buttonLegalNotice');
+    const privacyPolicy = footer.locator('#buttonPrivacy');
+    const elmoGuide = footer.locator('#buttonHelp');
 
 
     // Check visibility
@@ -28,9 +28,9 @@ test.describe('Footer Tests', () => {
   test('Footer links are clickable', async ({ page }) => {
     await page.goto('/');
 
-    const legalNotice = page.getByText('Legal Notice');
-    const privacyPolicy = page.getByText('Privacy Policy');
-    const elmoGuide = page.getByText('Elmo Guide');
+    const legalNotice = page.locator('#buttonLegalNotice');
+    const privacyPolicy = page.locator('#buttonPrivacy');
+    const elmoGuide = page.locator('#buttonHelp');
 
     // Test clickability
     await expect(legalNotice).toBeVisible();
@@ -46,9 +46,9 @@ test.describe('Footer Tests', () => {
   test('Verify footer buttons open correct links', async ({ page }) => {
     await page.goto('/');
 
-    const legalNoticeButton = page.getByText('Legal Notice');
-    const privacyPolicyButton = page.getByText('Privacy Policy');
-    const elmoGuideButton = page.getByText('Elmo Guide');
+    const legalNoticeButton = page.locator('#buttonLegalNotice');
+    const privacyPolicyButton = page.locator('#buttonPrivacy');
+    const elmoGuideButton = page.locator('#buttonHelp');
 
     const [legalNoticePage] = await Promise.all([
       page.context().waitForEvent('page'),
