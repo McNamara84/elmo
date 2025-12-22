@@ -64,11 +64,9 @@ include_once "../settings.php";
                             <a class="nav-link" href="#help-resourceinformation" data-bs-dismiss="offcanvas">Resource
                                 Information</a>
                         </li>
-                        <?php if ($showLicense): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-rights" data-bs-dismiss="offcanvas">Licenses and rights</a>
                         </li>
-                        <?php endif; ?>
 
                         <li class="nav-item">
                             <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors</a>
@@ -154,6 +152,10 @@ include_once "../settings.php";
                         publisher will be named in the citation of the dataset as requested by the citation
                         guidelines of DataCite.
                     </p>
+                    <p>By default, this publication will be licensed under a Creative Commons Attribution 4.0 (CC-BY) licence. 
+                        This follows the GFZ German Research Centre for Geosciences' Guidelines for the Handling of Research Data for open science.
+                        If a different licence is needed for your publication, please contact us at datapub@gfz.de for further advice.
+                    </p>
                 </div>
                 <div id="help-resourceinformation-doi">
                     <h4>DOI<a href="https://www.doi.org/" target="_blank" rel="noopener"><img id="doi-logo" src="../logos/doi.logo.svg" class="logo-icon" alt="DOI Logo" onerror="this.onerror=null; this.src='logos/doi.logo.svg';" class="logo-icon" alt="DOI Logo"></a></h4>
@@ -228,7 +230,6 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>
             
-            <?php if ($showLicense): ?>
             <!-- formgroup rights & licenses -->
             <div id="help-rights" class="section-content">
                 <h3>Licenses and Rights</h3>
