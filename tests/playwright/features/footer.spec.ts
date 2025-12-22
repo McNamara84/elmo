@@ -9,19 +9,19 @@ test.describe('Footer Tests', () => {
     await expect(footer).toBeVisible();
 
     const legalNotice = footer.getByText('Legal Notice');
-    const dataProtection = footer.getByText('Data Protection');
+    const privacyPolicy = footer.getByText('Privacy Policy');
     const elmoGuide = footer.getByText('Elmo Guide');
 
 
     // Check visibility
     await expect(legalNotice).toBeVisible();
-    await expect(dataProtection).toBeVisible();
+    await expect(privacyPolicy).toBeVisible();
     await expect(elmoGuide).toBeVisible();
     await expect(legalNotice).toHaveAttribute(
       'href',
       'https://dataservices.gfz.de/web/about-us/legal-notice'
     );
-    await expect(dataProtection).toHaveAttribute('href', 'doc/privacyPolicy.html');
+    await expect(privacyPolicy).toHaveAttribute('href', 'doc/privacyPolicy.html');
     await expect(elmoGuide).toHaveAttribute('href', 'doc/help.html');
   });
 
@@ -29,15 +29,15 @@ test.describe('Footer Tests', () => {
     await page.goto('/');
 
     const legalNotice = page.getByText('Legal Notice');
-    const dataProtection = page.getByText('Data Protection');
+    const privacyPolicy = page.getByText('Privacy Policy');
     const elmoGuide = page.getByText('Elmo Guide');
 
     // Test clickability
     await expect(legalNotice).toBeVisible();
     await legalNotice.click();
 
-    await expect(dataProtection).toBeVisible();
-    await dataProtection.click();
+    await expect(privacyPolicy).toBeVisible();
+    await privacyPolicy.click();
 
     await expect(elmoGuide).toBeVisible();
     await elmoGuide.click();
@@ -47,7 +47,7 @@ test.describe('Footer Tests', () => {
     await page.goto('/');
 
     const legalNoticeButton = page.getByText('Legal Notice');
-    const dataProtectionButton = page.getByText('Data Protection');
+    const privacyPolicyButton = page.getByText('Privacy Policy');
     const elmoGuideButton = page.getByText('Elmo Guide');
 
     const [legalNoticePage] = await Promise.all([
@@ -57,12 +57,12 @@ test.describe('Footer Tests', () => {
     await expect(legalNoticePage).toHaveURL(/legal-notice/);
     await legalNoticePage.close();
 
-    const [dataProtectionPage] = await Promise.all([
+    const [privacyPolicyPage] = await Promise.all([
       page.context().waitForEvent('page'),
-      dataProtectionButton.click(),
+      privacyPolicyButton.click(),
     ]);
-    await expect(dataProtectionPage).toHaveURL(/privacyPolicy.html/);
-    await dataProtectionPage.close(); 
+    await expect(privacyPolicyPage).toHaveURL(/privacyPolicy.html/);
+    await privacyPolicyPage.close(); 
 
     const [elmoGuidePage] = await Promise.all([
       page.context().waitForEvent('page'),
