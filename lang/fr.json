@@ -253,7 +253,7 @@
         "submit": "Soumettre",
         "submitTooltip": "Transmettre les données ou le contenu saisis.",
         "legalNotice": "Mentions légales",
-        "dataProtection": "Protection des données",
+        "PrivacyPolicy": "Politique de confidentialité",
         "elmoGuide": "Guide Elmo"
     },
     "modals": {
