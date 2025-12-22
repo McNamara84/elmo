@@ -304,7 +304,7 @@
         "title": "Welcome to ELMO 😊",
         "paragraph1": "Welcome to ELMO – the new online metadata editor for GFZ Data Services.",
         "paragraph2": "Please provide your information and click the ´Submit´ button to send your metadata to the curators of GFZ Data Services. Additionally, we recommend saving a copy of the metadata on your computer for your records.",
-        "paragraph3": "For further guidance, please refer to our <a href='https://dataservices.gfz-potsdam.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
+        "paragraph3": "For further guidance, please refer to our <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
         "button": "Continue"
     }
 
