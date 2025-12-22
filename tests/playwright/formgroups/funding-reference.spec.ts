@@ -23,9 +23,10 @@ async function buildHarnessPage(): Promise<string> {
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="node_modules/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css">
+    <link rel="stylesheet" href="css/gfz-cd.css">
   </head>
   <body>
-    <main class="container py-4">
+    <main id="main-content" class="container-fluid my-3">
       <form id="form-mde">
         ${template}
       </form>
@@ -34,6 +35,28 @@ async function buildHarnessPage(): Promise<string> {
       <section id="help-fundingreference-grantname" aria-live="polite">Grant Name help text</section>
       <section id="help-fundingreference-awarduri" aria-live="polite">Award URI help text</section>
     </main>
+    <!-- Fixed Footer with action buttons (same as production footer.html) -->
+    <footer class="footer mt-auto py-0 fixed-bottom">
+      <div class="container">
+        <div class="row">
+          <div class="col d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3 flex-wrap">
+            <div class="d-flex align-items-center justify-content-center flex-wrap gap-2">
+              <button type="button" class="btn btn-danger m-1" id="button-form-reset">Clear</button>
+              <button class="btn btn-primary m-1" type="button" id="button-form-load">Load</button>
+              <button type="submit" class="btn btn-warning m-1" id="button-form-save">Save</button>
+              <button type="submit" class="btn btn-success m-1" id="button-form-submit">Submit</button>
+            </div>
+            <div class="autosave-status" id="autosave-status" role="status" aria-live="polite">
+              <span class="autosave-status__indicator" aria-hidden="true"></span>
+              <div class="autosave-status__text">
+                <span class="autosave-status__heading">Autosave</span>
+                <span id="autosave-status-text">Autosave ready.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
     <script>
       window.translations = { funding: { title: 'Funding Reference' }, general: {} };
     </script>
@@ -171,5 +194,49 @@ test.describe('Funding Reference form group', () => {
     await secondRow.locator('.removeButton').click();
     await expect(rows).toHaveCount(1);
     await expect(firstRow.locator('.inputFunder')).toHaveValue('Gordon and Betty Moore Foundation');
+  });
+
+  test('add button is clickable and not obscured at all Bootstrap breakpoints', async ({ page }) => {
+    // Bootstrap breakpoints to test
+    const breakpoints = [
+      { name: 'xs', width: 375, height: 667 },   // Mobile (iPhone SE)
+      { name: 'sm', width: 576, height: 800 },   // Small tablets
+      { name: 'md', width: 768, height: 1024 },  // Tablets
+      { name: 'lg', width: 992, height: 800 },   // Small laptops
+      { name: 'xl', width: 1200, height: 900 },  // Desktops
+      { name: 'xxl', width: 1400, height: 900 }  // Large desktops
+    ];
+
+    for (const bp of breakpoints) {
+      await page.setViewportSize({ width: bp.width, height: bp.height });
+
+      // Wait for layout to stabilize after viewport change
+      await page.waitForTimeout(100);
+
+      // Scroll to the add button to ensure it's in view
+      const addButton = page.locator('#button-fundingreference-add');
+      await addButton.scrollIntoViewIfNeeded();
+
+      // Verify the button is visible
+      await expect(addButton, `Add button should be visible at ${bp.name} (${bp.width}px)`).toBeVisible();
+
+      // Get the initial row count
+      const rows = page.locator(`${SELECTORS.formGroups.fundingReference} [funding-reference-row]`);
+      const initialCount = await rows.count();
+
+      // Click the add button - this will fail if the button is obscured
+      await addButton.click({ timeout: 5000 });
+
+      // Verify a new row was added
+      await expect(rows, `Row should be added after clicking at ${bp.name} (${bp.width}px)`).toHaveCount(initialCount + 1);
+
+      // Clean up: remove the added row to reset state for next breakpoint
+      // The remove button should always be visible on newly added rows (see fundingreference.js)
+      const lastRow = rows.last();
+      const removeButton = lastRow.locator('.removeButton');
+      await expect(removeButton, `Remove button should be visible at ${bp.name} (${bp.width}px)`).toBeVisible();
+      await removeButton.click();
+      await expect(rows).toHaveCount(initialCount);
+    }
   });
 });
