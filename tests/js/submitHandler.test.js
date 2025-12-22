@@ -62,6 +62,11 @@ describe('submitHandler.js', () => {
         validationError: 'Invalid'
       }
     };
+        // Mock applyTranslations function
+    global.applyTranslations = jest.fn();
+
+    // Mock scrollIntoView
+    Element.prototype.scrollIntoView = jest.fn();
 
     loadScript();
   });
@@ -107,13 +112,25 @@ describe('submitHandler.js', () => {
     expect($('#remove-file-btn').css('display')).toBe('none');
   });
 
-  test('showNotification populates modal and auto hides on success', () => {
+  test('showNotification populates modal does not autohide for success messages', () => {
     jest.useFakeTimers();
     handler.showNotification('success', 'Title', 'Msg');
     expect($('#modal-notification-label').text()).toBe('Title');
     expect($('#modal-notification-body').html()).toContain('Msg');
     expect(handler.modals.notification.show).toHaveBeenCalled();
-    jest.advanceTimersByTime(3000);
+    // Check that OK button is present for success
+    const body = $('#modal-notification-body').html();
+    expect(body).toContain('✓');
+    expect(body).toContain('alert-success');
+  });
+
+  test('showNotification populates modal and auto hides on info messages', () => {
+    jest.useFakeTimers();
+    handler.showNotification('info', 'Title', 'Msg');
+    expect($('#modal-notification-label').text()).toBe('Title');
+    expect($('#modal-notification-body').html()).toContain('Msg');
+    expect(handler.modals.notification.show).toHaveBeenCalled();
+    jest.advanceTimersByTime(5000);
     expect(handler.modals.notification.hide).toHaveBeenCalled();
   });
 
@@ -144,5 +161,121 @@ describe('submitHandler.js', () => {
     expect(mod.validateEmbargoDate).toBeDefined();
     expect(mod.validateTemporalCoverage).toBeDefined();
     expect(mod.validateContactPerson).toBeDefined();
+  });
+
+
+  test('submitViaAjax sends FormData and handles success', (done) => {
+    jest.spyOn($, 'ajax').mockImplementation((config) => {
+      expect(config.url).toBe('send_xml_file.php');
+      expect(config.type).toBe('POST');
+      expect(config.processData).toBe(false);
+      expect(config.contentType).toBe(false);
+      
+      // Simulate successful response
+      config.success({
+        success: true,
+        message: 'Dataset successfully transmitted.',
+        resource_id: 'RES-123'
+      });
+    });
+
+    const spyNotification = jest.spyOn(handler, 'showNotification');
+    const formData = new FormData();
+    
+    handler.submitViaAjax(formData);
+    
+    setTimeout(() => {
+      expect(spyNotification).toHaveBeenCalledWith(
+        'success',
+        'Success',
+        'Dataset successfully transmitted.'
+      );
+      done();
+    }, 100);
+  });
+
+  test('submitViaAjax handles error response', (done) => {
+    jest.spyOn($, 'ajax').mockImplementation((config) => {
+      config.success({
+        success: false,
+        message: 'Database connection failed'
+      });
+    });
+
+    const spyNotification = jest.spyOn(handler, 'showNotification');
+    const formData = new FormData();
+    
+    handler.submitViaAjax(formData);
+    
+    setTimeout(() => {
+      expect(spyNotification).toHaveBeenCalledWith(
+        'danger',
+        'Error',
+        'Database connection failed'
+      );
+      done();
+    }, 100);
+  });
+
+  test('showNotification does NOT auto-close for success type', () => {
+    jest.useFakeTimers();
+    handler.showNotification('success', 'Success', 'Message');
+    
+    jest.advanceTimersByTime(3000);
+    
+    expect(handler.modals.notification.hide).not.toHaveBeenCalled();
+  });
+
+  test('showNotification does NOT auto-close for danger type', () => {
+    jest.useFakeTimers();
+    handler.showNotification('danger', 'Error', 'Message');
+    
+    jest.advanceTimersByTime(3000);
+    
+    expect(handler.modals.notification.hide).not.toHaveBeenCalled();
+  });
+
+  test('showNotification auto-closes for info type', () => {
+    jest.useFakeTimers();
+    handler.showNotification('info', 'Info', 'Message');
+    
+    jest.advanceTimersByTime(3000);
+    
+    expect(handler.modals.notification.hide).toHaveBeenCalled();
+  });
+
+  test('showNotification displays correct icon for success', () => {
+    handler.showNotification('success', 'Success', 'All good');
+    
+    const body = $('#modal-notification-body').html();
+    expect(body).toContain('✓');
+    expect(body).toContain('All good');
+  });
+
+  test('showNotification displays correct icon for danger', () => {
+    handler.showNotification('danger', 'Error', 'Something wrong');
+    
+    const body = $('#modal-notification-body').html();
+    expect(body).toContain('✕');
+    expect(body).toContain('Something wrong');
+  });
+
+  test('showNotification converts newlines to HTML breaks', () => {
+    const message = 'Line 1\n\nLine 2\nLine 3';
+    handler.showNotification('info', 'Test', message);
+    
+    const body = $('#modal-notification-body').html();
+    expect(body).toContain('</p><p>');
+    expect(body).toContain('<br>');
+  });
+
+  test('showNotification applies correct alert class', () => {
+    handler.showNotification('success', 'Success', 'Message');
+    let body = $('#modal-notification-body').html();
+    expect(body).toContain('alert-success');
+    
+    handler.showNotification('danger', 'Error', 'Message');
+    body = $('#modal-notification-body').html();
+    expect(body).toContain('alert-danger');
   });
 });
