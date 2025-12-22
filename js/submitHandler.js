@@ -312,12 +312,6 @@ class SubmitHandler {
         let errorMessage = translations.alerts.submitError;
         const contentType = xhr.getResponseHeader('Content-Type') || '';
 
-        console.log('XHR Status:', xhr.status);
-        console.log('Content-Type:', contentType);
-        console.log('Response Text:', xhr.responseText);
-        console.log('Text Status:', textStatus);
-        console.log('Error Thrown:', errorThrown);
-
         if (contentType.includes('application/json')) {
             try {
                 const response = JSON.parse(xhr.responseText);
