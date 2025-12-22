@@ -64,9 +64,12 @@ include_once "../settings.php";
                             <a class="nav-link" href="#help-resourceinformation" data-bs-dismiss="offcanvas">Resource
                                 Information</a>
                         </li>
+                        <?php if ($showLicense): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-rights" data-bs-dismiss="offcanvas">Licenses and rights</a>
                         </li>
+                        <?php endif; ?>
+
                         <li class="nav-item">
                             <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors</a>
                         </li>
@@ -224,9 +227,12 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            
+            <?php if ($showLicense): ?>
             <!-- formgroup rights & licenses -->
             <div id="help-rights" class="section-content">
                 <h3>Licenses and Rights</h3>
+                <?php if ($showLicense): ?>
                 <p>Rights information for the data set. Following the Guidelines for the Handling of Research Data
                     of the GFZ German Research Centre for Geosciences for open science, we recommend a Creative
                     Commons Attribution 4.0 (CC-BY) license whenever possible.</p>
@@ -266,6 +272,11 @@ include_once "../settings.php";
                             usage with us in advance.</strong>
                     </li>
                 </ul>
+                <?php else: ?>
+                <p>According to the Guidelines for the Handling of Research Data of the GFZ German Research
+                    Centre for Geosciences for open science, the dataset will be published under a Creative Commons
+                    Attribution 4.0 (CC-BY) license. If your dataset requires another license, please contact us at datapub@gfz.de and we will assist you in finding a suitable license.</p>
+                <?php endif; ?>
             </div>
             <div class="section-divider"></div>
             <hr>
