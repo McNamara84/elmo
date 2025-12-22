@@ -210,7 +210,8 @@ try {
     }
 
     // Test SMTP connectivity before sending
-    if (!testGfzSmtpConnectivity()) {
+    $skipSmtpTest = getenv('SKIP_SMTP_TEST') === 'true';
+    if (!$skipSmtpTest && !testGfzSmtpConnectivity()) {
         throw new Exception("GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.");
     }
 
