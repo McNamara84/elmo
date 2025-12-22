@@ -339,17 +339,28 @@ class SubmitHandler {
      */
     showNotification(type, title, message) {
         $('#modal-notification-label').text(title);
+        
+        // Add checkmark for success notifications
+        const checkmark = type === 'success' ? '✓ ' : '';
+        
         $('#modal-notification-body').html(`
             <div class="alert alert-${type} mb-0">
-                ${message}
+                <strong>${checkmark}${message}</strong>
+            </div>
+            <div class="mt-3">
+                <button type="button" class="btn btn-${type === 'success' ? 'success' : 'danger'} close-notification-btn">
+                    ${type === 'success' ? 'OK' : 'Close'}
+                </button>
             </div>
         `);
 
         this.modals.notification.show();
 
-        if (type === 'success') {
-            setTimeout(() => this.modals.notification.hide(), 3000);
-        }
+        // Attach close button handler
+        $('.close-notification-btn').off('click').on('click', () => {
+            this.modals.notification.hide();
+        });
+
     }
 }
 
