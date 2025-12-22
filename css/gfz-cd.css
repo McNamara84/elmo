@@ -488,3 +488,33 @@ header .ms-auto.d-flex {
     margin-right: auto;
   }
 }
+
+.footer-info {
+    background-color: #00589c;
+    color: #ffffff;
+    font-size: 0.9rem;
+}
+
+.footer-info-nav a {
+    color: #cbd6ff; 
+    margin: 0 10px;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-info-nav a:hover {
+    color: #ffffff;
+}
+
+@media (max-width: 768px) {
+    .footer-info-nav {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        align-items: center;
+    }
+    
+    .footer-info-nav a {
+        margin: 0 !important;
+        padding: 0.25rem 0;
+    }
+}
