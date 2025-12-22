@@ -31,8 +31,26 @@
 .footer-notes {
     font-size: 0.8rem;
     background-color: #b6d4fe;
-    /* Transparenz des Hintergrunds */
+    /* Background transparency */
     opacity: 0.6;
+}
+
+/* Sufficient bottom padding to prevent the fixed footer from overlapping content.
+ * The 120px value accounts for the maximum footer height (buttons + autosave status
+ * + padding) across all viewport sizes, including line wrapping on small screens.
+ * This value is verified by the Playwright test in
+ * tests/playwright/formgroups/funding-reference.spec.ts which tests add button
+ * clickability across all Bootstrap breakpoints.
+ */
+#main-content {
+    padding-bottom: 120px !important;
+}
+
+/* Footer styling for consistent appearance */
+footer.fixed-bottom {
+    background-color: var(--bs-body-bg, #fff);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    z-index: 1020;
 }
 
 /* Feedback Button */
