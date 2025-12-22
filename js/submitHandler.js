@@ -342,17 +342,22 @@ class SubmitHandler {
      * @param {string} type - Message type ('success', 'danger', 'info')
      * @param {string} title - Modal title
      * @param {string} message - Notification message
+     * @param {Object} options - Additional options
+     * @param {boolean} [options.autoClose=true] - Auto-close notification
+     * @param {number} [options.autoCloseDelay=3000] - Auto-close delay in milliseconds
      */
-    showNotification(type, title, message) {
+    showNotification(type, title, message, options = {}) {
+        const {
+            autoClose = type !== 'success' && type !== 'danger',
+            autoCloseDelay = 3000
+        } = options;
         $('#modal-notification-label').text(title);
         
-        // Add checkmark for success, X for errors
-        const icon = type === 'success' ? '✓' : '✕';
+        // Get icon for notification type
+        const icon = this.getNotificationIcon(type);
         
-        // Convert newlines to HTML line breaks for better readability
-        const formattedMessage = message
-            .replace(/\n\n/g, '</p><p>')
-            .replace(/\n/g, '<br>');
+        // Format message for display
+        const formattedMessage = this.formatMessage(message);
         
         $('#modal-notification-body').html(`
             <div class="alert alert-${type} mb-0 d-flex">
@@ -368,8 +373,40 @@ class SubmitHandler {
         `);
 
         this.modals.notification.show();
+        // Auto-close only for non-critical notifications
+        if (autoClose) {
+            setTimeout(() => this.modals.notification.hide(), autoCloseDelay);
+        }
+    }
+
+    /**
+     * Get icon for notification type
+     * @param {string} type - Notification type
+     * @returns {string} Icon character
+     * @private
+     */
+    getNotificationIcon(type) {
+        const icons = {
+            'success': '✓',
+            'danger': '✕',
+            'info': 'ℹ'
+        };
+        return icons[type] || icons.info;
+    }
+
+    /**
+     * Format message for display (converts newlines to HTML)
+     * @param {string} message - Raw message
+     * @returns {string} Formatted HTML message
+     * @private
+     */
+    formatMessage(message) {
+        return message
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
     }
 }
+    
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
