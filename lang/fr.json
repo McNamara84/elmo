@@ -251,7 +251,8 @@
         "saveAs": "Enregistrer",
         "saveAsTooltip": "Enregistrer les données ou le contenu actuels sous un nouveau nom de fichier.",
         "submit": "Soumettre",
-        "submitTooltip": "Transmettre les données ou le contenu saisis."
+        "submitTooltip": "Transmettre les données ou le contenu saisis.",
+        "dataProtection": "Protection des données"
     },
     "modals": {
         "feedback": {
