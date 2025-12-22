@@ -638,7 +638,7 @@ function createDatabaseStructure($connection): array
     `S_value_name` VARCHAR(500) NULL,
     `S_value_uri` VARCHAR(100) NULL,
     `S_scheme_name` VARCHAR(100) NULL,
-    `S_scheme_uri` VARCHAR(100) NULL,
+    `S_scheme_uri` VARCHAR(300) NULL,
     `T_Isostasy_compensation_depth` INT NULL,
     `M_identifier` VARCHAR(1000) NULL,
     `M_identifier_type` VARCHAR(100) NULL,

@@ -303,30 +303,30 @@ class ICGEMController
                     $dataSourceXml->addChild('description', htmlspecialchars($dataSource['description']));
                 }
                 
-                if (!empty($dataSource['S_value_name'])) {
-                    $dataSourceXml->addChild('SatelliteValueName', htmlspecialchars($dataSource['S_value_name']));
+                if (!empty($dataSource['s_value_name'])) {
+                    $dataSourceXml->addChild('SatelliteValueName', htmlspecialchars($dataSource['s_value_name']));
                 }
-                if (!empty($dataSource['S_value_uri'])) {
-                    $dataSourceXml->addChild('SatelliteValueUri', htmlspecialchars($dataSource['S_value_uri']));
+                if (!empty($dataSource['s_value_uri'])) {
+                    $dataSourceXml->addChild('SatelliteValueUri', htmlspecialchars($dataSource['s_value_uri']));
                 }
-                if (!empty($dataSource['S_scheme_name'])) {
-                    $dataSourceXml->addChild('SatelliteSchemeName', htmlspecialchars($dataSource['S_scheme_name']));
+                if (!empty($dataSource['s_scheme_name'])) {
+                    $dataSourceXml->addChild('SatelliteSchemeName', htmlspecialchars($dataSource['s_scheme_name']));
                 }
-                if (!empty($dataSource['S_scheme_uri'])) {
-                    $dataSourceXml->addChild('SatelliteSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']));
+                if (!empty($dataSource['s_scheme_uri'])) {
+                    $dataSourceXml->addChild('SatelliteSchemeUri', htmlspecialchars($dataSource['s_scheme_uri']));
                 }
                 
                 if (!empty($dataSource['details'])) {
                     $dataSourceXml->addChild('Details', htmlspecialchars($dataSource['details']));
                 }
-                if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
-                    $dataSourceXml->addChild('IsostasyCompensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']));
+                if (!empty($dataSource['t_isostasy_compensation_depth'])) {
+                    $dataSourceXml->addChild('IsostasyCompensationDepth', htmlspecialchars($dataSource['t_isostasy_compensation_depth']));
                 }
-                if (!empty($dataSource['M_identifier'])) {
-                    $dataSourceXml->addChild('M_Identifier', htmlspecialchars($dataSource['M_identifier']));
+                if (!empty($dataSource['m_identifier'])) {
+                    $dataSourceXml->addChild('M_Identifier', htmlspecialchars($dataSource['m_identifier']));
                 }
-                if (!empty($dataSource['M_identifier_type'])) {
-                    $dataSourceXml->addChild('M_Identifier_Type', htmlspecialchars($dataSource['M_identifier_type']));
+                if (!empty($dataSource['m_identifier_type'])) {
+                    $dataSourceXml->addChild('M_Identifier_Type', htmlspecialchars($dataSource['m_identifier_type']));
                 }
             }
         }
