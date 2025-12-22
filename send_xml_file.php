@@ -342,7 +342,7 @@ try {
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
-        'message' => 'Metadaten gespeichert und E-Mail erfolgreich versendet!',
+        'message' => 'Thank you for cooperating with us. You will be contacted via email by the data curation team of GFZ Data Services shortly.',
         'resource_id' => $resource_id
     ]);
 

@@ -365,19 +365,9 @@ class SubmitHandler {
                     <p class="mb-0">${formattedMessage}</p>
                 </div>
             </div>
-            <div class="mt-3">
-                <button type="button" class="btn btn-${type === 'success' ? 'success' : 'danger'} close-notification-btn">
-                    ${type === 'success' ? 'OK' : 'Close'}
-                </button>
-            </div>
         `);
 
         this.modals.notification.show();
-
-        // Attach close button handler
-        $('.close-notification-btn').off('click').on('click', () => {
-            this.modals.notification.hide();
-        });
     }
 }
 

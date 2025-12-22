@@ -44,7 +44,7 @@
         "processingHeading": "Processing...",
         "processingInfo": "Dataset is being submitted.",
         "submitSuccess": "Dataset successfully transmitted.",
-        "savingHeading": "Saving...",
+        "savingHeading": "Success! Your metadata has been submitted",
         "savingInfo": "Dataset is being saved.",
         "savingSuccess": "Dataset saved successfully. The XML file download will start automatically.",
         "preparingDownload": "Preparing file for download.",

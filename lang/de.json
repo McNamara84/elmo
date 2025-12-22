@@ -52,7 +52,7 @@
         "saveError": "Datensatz konnte nicht gespeichert werden.",
         "submitError": "Datensatz konnte nicht übermittelt werden.",
         "errorHeading": "Fehler",
-        "successHeading": "Erfolg!"
+        "successHeading": "Erfolg! Ihre Metadaten wurden übermittelt."
     },
     "autosave": {
         "status": {

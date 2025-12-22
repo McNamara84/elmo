@@ -52,7 +52,7 @@
         "saveError": "Échec de l'enregistrement de l'ensemble de données.",
         "submitError": "Échec de la soumission de l'ensemble de données.",
         "errorHeading": "Erreur",
-        "successHeading": "Succès!"
+        "successHeading": "Succès! Vos métadonnées ont été soumises"
     },
     "autosave": {
         "status": {
