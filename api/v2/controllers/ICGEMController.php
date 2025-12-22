@@ -243,25 +243,25 @@ class ICGEMController
         if ($ggmData) {
             $ggmPropertiesXml = $xml->addChild('ggm_properties');
             if (!empty($ggmData['model_name'])) {
-                $ggmPropertiesXml->addChild('model_name', htmlspecialchars($ggmData['model_name']));
+                $ggmPropertiesXml->addChild('modelName', htmlspecialchars($ggmData['model_name']));
             }
             if (!empty($ggmData['celestial_body'])) {
-                $ggmPropertiesXml->addChild('celestial_body', htmlspecialchars($ggmData['celestial_body']));
+                $ggmPropertiesXml->addChild('celestialBody', htmlspecialchars($ggmData['celestial_body']));
             }
             if (!empty($ggmData['product_type'])) {
-                $ggmPropertiesXml->addChild('product_type', htmlspecialchars($ggmData['product_type']));
+                $ggmPropertiesXml->addChild('productType', htmlspecialchars($ggmData['product_type']));
             }
             if (!empty($ggmData['errors'])) {
                 $ggmPropertiesXml->addChild('errors', htmlspecialchars($ggmData['errors']));
             }
             if (!empty($ggmData['error_handling_approach'])) {
-                $ggmPropertiesXml->addChild('error_handling_approach', htmlspecialchars($ggmData['error_handling_approach']));
+                $ggmPropertiesXml->addChild('errorHandlingApproach', htmlspecialchars($ggmData['error_handling_approach']));
             }
             if (!empty($ggmData['error_description'])) {
-                $ggmPropertiesXml->addChild('error_description', htmlspecialchars($ggmData['error_description']));
+                $ggmPropertiesXml->addChild('errorDescription', htmlspecialchars($ggmData['error_description']));
             }
             if (!empty($ggmData['tide_system'])) {
-                $ggmPropertiesXml->addChild('tide_system', htmlspecialchars($ggmData['tide_system']));
+                $ggmPropertiesXml->addChild('tideSystem', htmlspecialchars($ggmData['tide_system']));
             }
             if (!empty($ggmData['degree'])) {
                 $ggmPropertiesXml->addChild('degree', htmlspecialchars($ggmData['degree']));
@@ -270,16 +270,16 @@ class ICGEMController
                 $ggmPropertiesXml->addChild('radius', htmlspecialchars($ggmData['radius']));
             }
             if (!empty($ggmData['earth_gravity_constant'])) {
-                $ggmPropertiesXml->addChild('earth_gravity_constant', htmlspecialchars($ggmData['earth_gravity_constant']));
+                $ggmPropertiesXml->addChild('earthGravityConstant', htmlspecialchars($ggmData['earth_gravity_constant']));
             }
             if (!empty($ggmData['model_type_name'])) {
-                $ggmPropertiesXml->addChild('model_type', htmlspecialchars($ggmData['model_type_name']));
+                $ggmPropertiesXml->addChild('modelType', htmlspecialchars($ggmData['model_type_name']));
             }
             if (!empty($ggmData['mathematical_representation_name'])) {
-                $ggmPropertiesXml->addChild('mathematical_representation', htmlspecialchars($ggmData['mathematical_representation_name']));
+                $ggmPropertiesXml->addChild('mathematicalRepresentation', htmlspecialchars($ggmData['mathematical_representation_name']));
             }
             if (!empty($ggmData['file_format_name'])) {
-                $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmData['file_format_name']));
+                $ggmPropertiesXml->addChild('fileFormat', htmlspecialchars($ggmData['file_format_name']));
             }
         }
     }
@@ -304,29 +304,29 @@ class ICGEMController
                 }
                 
                 if (!empty($dataSource['s_value_name'])) {
-                    $dataSourceXml->addChild('SatelliteValueName', htmlspecialchars($dataSource['s_value_name']));
+                    $dataSourceXml->addChild('satelliteValueName', htmlspecialchars($dataSource['s_value_name']));
                 }
                 if (!empty($dataSource['s_value_uri'])) {
-                    $dataSourceXml->addChild('SatelliteValueUri', htmlspecialchars($dataSource['s_value_uri']));
+                    $dataSourceXml->addChild('satelliteValueUri', htmlspecialchars($dataSource['s_value_uri']));
                 }
                 if (!empty($dataSource['s_scheme_name'])) {
-                    $dataSourceXml->addChild('SatelliteSchemeName', htmlspecialchars($dataSource['s_scheme_name']));
+                    $dataSourceXml->addChild('satelliteSchemeName', htmlspecialchars($dataSource['s_scheme_name']));
                 }
                 if (!empty($dataSource['s_scheme_uri'])) {
-                    $dataSourceXml->addChild('SatelliteSchemeUri', htmlspecialchars($dataSource['s_scheme_uri']));
+                    $dataSourceXml->addChild('satelliteSchemeUri', htmlspecialchars($dataSource['s_scheme_uri']));
                 }
                 
                 if (!empty($dataSource['details'])) {
-                    $dataSourceXml->addChild('Details', htmlspecialchars($dataSource['details']));
+                    $dataSourceXml->addChild('details', htmlspecialchars($dataSource['details']));
                 }
                 if (!empty($dataSource['t_isostasy_compensation_depth'])) {
-                    $dataSourceXml->addChild('IsostasyCompensationDepth', htmlspecialchars($dataSource['t_isostasy_compensation_depth']));
+                    $dataSourceXml->addChild('isostasyCompensationDepth', htmlspecialchars($dataSource['t_isostasy_compensation_depth']));
                 }
                 if (!empty($dataSource['m_identifier'])) {
-                    $dataSourceXml->addChild('M_Identifier', htmlspecialchars($dataSource['m_identifier']));
+                    $dataSourceXml->addChild('mIdentifier', htmlspecialchars($dataSource['m_identifier']));
                 }
                 if (!empty($dataSource['m_identifier_type'])) {
-                    $dataSourceXml->addChild('M_Identifier_Type', htmlspecialchars($dataSource['m_identifier_type']));
+                    $dataSourceXml->addChild('mIdentifierType', htmlspecialchars($dataSource['m_identifier_type']));
                 }
             }
         }
@@ -419,7 +419,7 @@ class ICGEMController
                 $propertyXml = $staticPropertiesXml->addChild('StaticProperty');
                 
                 if (isset($property['info_time_variable_coefficients'])) {
-                    $propertyXml->addChild('info_time_variable_coefficients', htmlspecialchars($property['info_time_variable_coefficients'] ? 'true' : 'false'));
+                    $propertyXml->addChild('infoTimeVariableCoefficients', htmlspecialchars($property['info_time_variable_coefficients'] ? 'true' : 'false'));
                 }
                 }
             }
