@@ -340,12 +340,24 @@ class SubmitHandler {
     showNotification(type, title, message) {
         $('#modal-notification-label').text(title);
         
-        // Add checkmark for success notifications
-        const checkmark = type === 'success' ? '✓ ' : '';
+        // Add checkmark for success, X for errors
+        const icon = type === 'success' ? '✓' : '✕';
+        
+        // Convert newlines to HTML line breaks for better readability
+        const formattedMessage = message
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
         
         $('#modal-notification-body').html(`
-            <div class="alert alert-${type} mb-0">
-                <strong>${checkmark}${message}</strong>
+            <div class="alert alert-${type} mb-0 d-flex">
+                <div class="notification-icon-container me-3">
+                    <span class="notification-icon notification-icon-${type}">
+                        ${icon}
+                    </span>
+                </div>
+                <div class="notification-message-container">
+                    <p class="mb-0">${formattedMessage}</p>
+                </div>
             </div>
             <div class="mt-3">
                 <button type="button" class="btn btn-${type === 'success' ? 'success' : 'danger'} close-notification-btn">
@@ -360,7 +372,6 @@ class SubmitHandler {
         $('.close-notification-btn').off('click').on('click', () => {
             this.modals.notification.hide();
         });
-
     }
 }
 
