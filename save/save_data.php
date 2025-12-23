@@ -72,10 +72,12 @@ function generateAndOutputXml($resource_id)
         // Output file generation from the API endpoint. 
         // The endpoint is different for general data and for ICGEM data. 
         require_once __DIR__ . '/../settings.php';
-        global $showGGMsProperties; 
+        $isIcg = !empty($showGGMsProperties);
+
         $general_url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
-        $icgem_url = $base_url . $project_path . "/api/v2/dataset/icgem_export/" . $resource_id;
-        $url = $showGGMsProperties ? $icgem_url : $general_url;
+        $icgem_url   = $base_url . $project_path . "/api/v2/dataset/icgem_export/" . $resource_id;
+        $url         = $isIcg ? $icgem_url : $general_url;
+
         // Try API call first
         $bytesRead = @readfile($url);
 
@@ -84,8 +86,10 @@ function generateAndOutputXml($resource_id)
 
             try {
                 $datasetController = new DatasetController();
-                $xmlString = $datasetController->envelopeXmlAsString($connection, $resource_id);
-
+                $xmlString = $isIcg
+                    ? $datasetController->createICGEMxml($resource_id)
+                    : $datasetController->envelopeXmlAsString($connection, $resource_id);
+                    
                 if ($xmlString) {
                     echo $xmlString;
                 } else {
