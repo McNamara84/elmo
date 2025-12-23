@@ -108,10 +108,8 @@ function firstNonEmpty(array $data, array $keys)
  */
 function saveStaticModelData(mysqli $connection, array $postData, int $resourceId): void
 {
-    $hasTimeVariableCoefficients = isset($postData['time_variable_coefficients']) && $postData['time_variable_coefficients'];
-    $description = $hasTimeVariableCoefficients && isset($postData['time_variable_description']) 
-        ? $postData['time_variable_description'] 
-        : null;
+    // Frontend posts description via staticDescription[] (camelCase)
+    $description = firstNonEmpty($postData, ['staticDescription']);
 
     // Insert new static model data
     $sql = "INSERT INTO `Static_Model_Properties`
@@ -179,7 +177,7 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
     $startDate = firstNonEmpty($postData, ['temporalStart', 'temporal_start']);
     $endDate = firstNonEmpty($postData, ['temporalEnd', 'temporal_end']);
     $generatingInstitution = firstNonEmpty($postData, ['temporalInstitution', 'temporal_institution']);
-    $generatingInstitution = ($generatingInstitution !== null && $generatingInstitution !== '') ? 1 : 0;
+    $generatingInstitution = ($generatingInstitution !== '') ? $generatingInstitution : null;
 
     // Insert new temporal properties record
     $sql = "INSERT INTO `Temporal_Model_Properties`
@@ -190,7 +188,7 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
         throw new Exception("Failed to prepare insert statement: " . $connection->error);
     }
 
-    $stmt->bind_param('ssii', $startDate, $endDate, $temporalResolutionDays, $generatingInstitution);
+    $stmt->bind_param('ssis', $startDate, $endDate, $temporalResolutionDays, $generatingInstitution);
     if (!$stmt->execute()) {
         throw new Exception('Error inserting Temporal_Model_Properties: ' . $stmt->error);
     }

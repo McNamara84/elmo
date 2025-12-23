@@ -576,7 +576,7 @@ function createDatabaseStructure($connection): array
 
         "Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Temporal_Model_Properties` (
     `temporal_model_property_id` INT NOT NULL AUTO_INCREMENT,
-    `generating_institution` VARCHAR(100) NULL,
+    `generating_institution` VARCHAR(500) NULL,
     `temporal_resolution_days` INT NULL,
     `start_date` DATE NULL,
     `end_date` DATE NULL,

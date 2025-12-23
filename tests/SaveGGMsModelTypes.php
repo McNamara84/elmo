@@ -71,15 +71,19 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
     public function testSaveStaticModelDataWithTimeVariableCoefficients(): void
     {
         $postData = [
-            'time_variable_coefficients' => true,
-            'time_variable_description' => 'Annual and semi-annual variations included'
+            'staticDescription' => ['Annual and semi-annual variations included']
         ];
 
         saveStaticModelData($this->connection, $postData, $this->resourceId);
 
         // Verify in Static_Model_Properties table
-        $sql = "SELECT `info_time_variable_coefficients` FROM `Static_Model_Properties` 
-                WHERE `resource_id` = ?";
+        $sql = "SELECT smp.info_time_variable_coefficients
+                FROM `Static_Model_Properties` smp
+                JOIN `Resource_has_Static_Model_Properties` rhsmp
+                  ON smp.static_model_property_id = rhsmp.static_model_property_id
+                WHERE rhsmp.resource_id = ?
+                ORDER BY smp.static_model_property_id DESC
+                LIMIT 1";
         $stmt = $this->connection->prepare($sql);
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
@@ -96,14 +100,18 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
     public function testSaveStaticModelDataWithoutTimeVariableCoefficients(): void
     {
         $postData = [
-            'time_variable_coefficients' => false,
-            'time_variable_description' => 'Should be ignored'
+            'staticDescription' => ['']
         ];
 
         saveStaticModelData($this->connection, $postData, $this->resourceId);
 
-        $sql = "SELECT `info_time_variable_coefficients` FROM `Static_Model_Properties` 
-                WHERE `resource_id` = ?";
+        $sql = "SELECT smp.info_time_variable_coefficients
+            FROM `Static_Model_Properties` smp
+            JOIN `Resource_has_Static_Model_Properties` rhsmp
+              ON smp.static_model_property_id = rhsmp.static_model_property_id
+            WHERE rhsmp.resource_id = ?
+            ORDER BY smp.static_model_property_id DESC
+            LIMIT 1";
         $stmt = $this->connection->prepare($sql);
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
@@ -119,14 +127,17 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
      */
     public function testSaveStaticModelDataWithEmptyCheckbox(): void
     {
-        $postData = [
-            'time_variable_coefficients' => '',
-        ];
+        $postData = [];
 
         saveStaticModelData($this->connection, $postData, $this->resourceId);
 
-        $sql = "SELECT `info_time_variable_coefficients` FROM `Static_Model_Properties` 
-                WHERE `resource_id` = ?";
+        $sql = "SELECT smp.info_time_variable_coefficients
+            FROM `Static_Model_Properties` smp
+            JOIN `Resource_has_Static_Model_Properties` rhsmp
+              ON smp.static_model_property_id = rhsmp.static_model_property_id
+            WHERE rhsmp.resource_id = ?
+            ORDER BY smp.static_model_property_id DESC
+            LIMIT 1";
         $stmt = $this->connection->prepare($sql);
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
@@ -425,18 +436,22 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
         $this->setResourceModelType('Static');
         
         $postData = [
-            'time_variable_coefficients' => true,
-            'time_variable_description' => 'Monthly variations'
+            'staticDescription' => ['Monthly variations']
         ];
 
         $result = saveGGMsModelTypes($this->connection, $postData, $this->resourceId);
         $this->assertTrue($result);
 
-        // Verify GGM_Properties was updated
-        $sql = "SELECT `info_time_variable_coefficients` FROM `GGM_Properties` 
-                WHERE `GGM_Properties_id` = ?";
+        // Verify Static_Model_Properties was inserted and linked
+        $sql = "SELECT smp.info_time_variable_coefficients
+            FROM `Static_Model_Properties` smp
+            JOIN `Resource_has_Static_Model_Properties` rhsmp
+              ON smp.static_model_property_id = rhsmp.static_model_property_id
+            WHERE rhsmp.resource_id = ?
+            ORDER BY smp.static_model_property_id DESC
+            LIMIT 1";
         $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param('i', $this->ggmPropertiesId);
+        $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
         $stmt->bind_result($description);
         $stmt->fetch();
