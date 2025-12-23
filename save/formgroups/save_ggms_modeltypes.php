@@ -232,18 +232,10 @@ function insertTopographicModelProperties(mysqli $connection, array $postData, i
     $densityDetails = firstNonEmpty($postData, ['topoDensityDetails', 'topo_density_details']);
 
     // Handle separate density inputs (form provides descriptions, not numeric values)
-    $crustDensityValue = null;
+    $crustDensityValue = firstNonEmpty($postData, ['topoDensityCrust']);
     $crustDensityDesc = firstNonEmpty($postData, ['topoDensityDetailsCrust']);
-    $mantleDensityValue = null;
+    $mantleDensityValue =firstNonEmpty($postData, ['topoDensityMantle']);
     $mantleDensityDesc = firstNonEmpty($postData, ['topoDensityDetailsMantle']);
-
-    // Fallback: if details missing but info labels present, store those labels as description
-    if ($crustDensityDesc === null) {
-        $crustDensityDesc = firstNonEmpty($postData, ['topoDensityCrust']);
-    }
-    if ($mantleDensityDesc === null) {
-        $mantleDensityDesc = firstNonEmpty($postData, ['topoDensityMantle']);
-    }
 
     // Insert new topographic properties record
     $sql = "INSERT INTO `Topographic_Models_Properties`
