@@ -240,7 +240,7 @@ function insertDataSource(mysqli $connection, array $dbRow): int
     if (!$stmt) {
         throw new Exception("Failed to prepare insert statement: " . $connection->error);
     }
-    
+
     $stmt->bind_param(
         'ssssssisss',
         $dbRow['type'],
@@ -365,7 +365,7 @@ function ingestSatellitePlatformAsKeyword(mysqli $connection, array $dbRow, int 
     $value = $dbRow['S_value_name'];
     $valueURI = $dbRow['S_value_uri'] ?? null;
     $scheme = $dbRow['S_scheme_name'] ?? 'GCMD Platforms';
-    $schemeURI = $dbRow['S_scheme_uri'] ?? '';
+    $schemeURI = $dbRow['S_scheme_uri'] ?? 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms';
     $language = 'en'; // Assuming 'en' as platform keywords are generally in English
 
     $thesaurus_keywords_id = getOrCreateThesaurusKeyword(
@@ -423,7 +423,6 @@ function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $dbRow, in
     // If already exists, skip insertion
     if ($result->num_rows > 0) {
         $checkStmt->close();
-        error_log("Related work already exists for resource {$resourceId}: {$identifier}");
         return;
     }
     $checkStmt->close();
@@ -444,7 +443,6 @@ function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $dbRow, in
     $relatedWorkId = insertRelatedWork($connection, $identifier, $relationId, $identifierTypeId);
     if ($relatedWorkId) {
         linkResourceToRelatedWork($connection, $resourceId, $relatedWorkId);
-        error_log("Inserted related work for model: {$identifier}");
     } else {
         throw new Exception("Failed to insert related work for model data source");
     }
@@ -467,17 +465,7 @@ function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $dbRow, in
  */
 function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceId): void
 {
-    // DEBUG: Log raw POST data structure
-    error_log("=== RAW POST DATA ===");
-    error_log("datasource_type: " . json_encode($postData['datasource_type'] ?? []));
-    error_log("datasource_description: " . json_encode($postData['datasource_description'] ?? []));
-    error_log("satellite_platform: " . json_encode($postData['satellite_platform'] ?? []));
-    error_log("datasource_details: " . json_encode($postData['datasource_details'] ?? []));
-    error_log("compensation_depth: " . json_encode($postData['compensation_depth'] ?? []));
-    error_log("dIdentifier: " . json_encode($postData['dIdentifier'] ?? []));
-    error_log("dIdentifierType: " . json_encode($postData['dIdentifierType'] ?? []));
-    error_log("dName: " . json_encode($postData['dName'] ?? []));
-    error_log("=== END RAW POST DATA ===");
+
     // 1. Extract rows from POST arrays
     $rows = extractDataSourceRows($postData);
     
@@ -514,7 +502,6 @@ function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceI
         
         // Insert data source
         $dataSourceId = insertDataSource($connection, $dbRow);
-        error_log("Inserted data source {$dataSourceId} for resource {$resourceId}");
         
         // Link to resource
         linkResourceToDataSource($connection, $resourceId, $dataSourceId);
