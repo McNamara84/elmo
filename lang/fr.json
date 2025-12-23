@@ -6,8 +6,7 @@
         "mode": "Mode",
         "light": "Clair",
         "dark": "Sombre",
-        "language": "Langue",
-        "legalNotice": "Mentions légales"
+        "language": "Langue"
     },
     "general": {
         "logoTitle": "ELMO - Enhanced Laboratory Metadata Organizer 2.0",
@@ -252,7 +251,10 @@
         "saveAs": "Enregistrer",
         "saveAsTooltip": "Enregistrer les données ou le contenu actuels sous un nouveau nom de fichier.",
         "submit": "Soumettre",
-        "submitTooltip": "Transmettre les données ou le contenu saisis."
+        "submitTooltip": "Transmettre les données ou le contenu saisis.",
+        "legalNotice": "Mentions légales",
+        "PrivacyPolicy": "Politique de confidentialité",
+        "elmoGuide": "Guide Elmo"
     },
     "modals": {
         "feedback": {
