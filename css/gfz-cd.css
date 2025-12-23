@@ -54,7 +54,7 @@ footer.fixed-bottom {
 /* Feedback Button */
 .feedback-button {
     z-index: 1000;
-    font-size: 16px;
+    font-size: 20px;
     background-color: #800080;
     color: white !important;
 }
