@@ -24,7 +24,7 @@ services:
       DB_NAME: ${DB_NAME}
       # Database install routine
       INSTALL_ACTION: basic
-      DB_INIT_MODE: keep_data 
+      DB_INIT_MODE: keep_data
 
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -110,7 +110,7 @@ services:
       DB_NAME: ${DB_NAME}
       # No install routine
       INSTALL_ACTION: skip
-      DB_INIT_MODE: keep_data 
+      DB_INIT_MODE: keep_data
 
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
