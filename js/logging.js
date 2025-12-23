@@ -1,4 +1,12 @@
-// 
+/**
+ * Logs an event to the server by sending a POST request.
+ * @async
+ * @function logEvent
+ * @param {string} eventType - The type of event to log (e.g., 'page loaded')
+ * @returns {Promise<void>} 
+ * @throws {Error} Logs a warning to console if the fetch request fails
+ * @description Sends an event log to 'log_page_event.php' with the event type and current timestamp.
+ */
 async function logEvent(eventType) {
     try {
         await fetch('log_page_event.php', {
