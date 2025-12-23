@@ -87,17 +87,7 @@ function insertEllipsoidalParameters(mysqli $connection, array $data, int $resou
  */
 function saveGGMsProperties(mysqli $connection, array $postData, int $resourceId): bool
 {
-    // 1) Insert or update GGM_Properties directly
-    $sql = "INSERT INTO `GGM_Properties` (
-                `Tide_System`, `degree`, `Errors`, `Error_Handling_Approach`, `radius`, `earth_gravity_constant`
-            ) VALUES (?, ?, ?, ?, ?, ?)";
-
-    $stmt = $connection->prepare($sql);
-    if (!$stmt) {
-        throw new Exception("Failed to prepare insert statement: " . $connection->error);
-    }
-
-    // Convert empty strings to NULL for numeric fields
+    // Normalize numeric inputs
     $numericFields = ['radius', 'earth_gravity_constant'];
     foreach ($numericFields as $field) {
         if (isset($postData[$field]) && $postData[$field] === '') {
@@ -107,7 +97,6 @@ function saveGGMsProperties(mysqli $connection, array $postData, int $resourceId
         }
     }
 
-    // Convert numeric integer fields
     $integerFields = ['degree'];
     foreach ($integerFields as $field) {
         if (isset($postData[$field]) && $postData[$field] === '') {
@@ -117,20 +106,82 @@ function saveGGMsProperties(mysqli $connection, array $postData, int $resourceId
         }
     }
 
-    $stmt->bind_param(
-        'sisisd',
-        $postData['tide_system'],
-        $postData['degree'],
-        $postData['errors'],
-        $postData['error_handling_approach'],
-        $postData['radius'],
-        $postData['earth_gravity_constant']
-    );
-
-    if (!$stmt->execute()) {
-        throw new Exception('Error inserting GGM_Properties: ' . $stmt->error);
+    // Check if resource already has linked GGM_Properties
+    $existingGgmId = null;
+    $checkSql = "SELECT GGM_Properties_GGM_Properties_id FROM `Resource_has_GGM_Properties` WHERE Resource_resource_id = ? LIMIT 1";
+    if ($stmt = $connection->prepare($checkSql)) {
+        $stmt->bind_param('i', $resourceId);
+        $stmt->execute();
+        $stmt->bind_result($existingGgmId);
+        $stmt->fetch();
+        $stmt->close();
+    } else {
+        throw new Exception('Failed to check existing GGM_Properties link: ' . $connection->error);
     }
-    $stmt->close();
+
+    if ($existingGgmId) {
+        // Update existing GGM_Properties row
+        $updateSql = "UPDATE `GGM_Properties`
+            SET `Tide_System` = ?, `degree` = ?, `Errors` = ?, `Error_Handling_Approach` = ?, `radius` = ?, `earth_gravity_constant` = ?
+            WHERE `GGM_Properties_id` = ?";
+        $stmt = $connection->prepare($updateSql);
+        if (!$stmt) {
+            throw new Exception('Failed to prepare update statement: ' . $connection->error);
+        }
+        $stmt->bind_param(
+            'sissddi',
+            $postData['tide_system'],
+            $postData['degree'],
+            $postData['errors'],
+            $postData['error_handling_approach'],
+            $postData['radius'],
+            $postData['earth_gravity_constant'],
+            $existingGgmId
+        );
+        if (!$stmt->execute()) {
+            throw new Exception('Error updating GGM_Properties: ' . $stmt->error);
+        }
+        $stmt->close();
+        $ggmId = $existingGgmId;
+    } else {
+        // Insert new GGM_Properties and link to resource
+        $insertSql = "INSERT INTO `GGM_Properties` (
+                `Tide_System`, `degree`, `Errors`, `Error_Handling_Approach`, `radius`, `earth_gravity_constant`
+            ) VALUES (?, ?, ?, ?, ?, ?)";
+
+        $stmt = $connection->prepare($insertSql);
+        if (!$stmt) {
+            throw new Exception('Failed to prepare insert statement: ' . $connection->error);
+        }
+
+        $stmt->bind_param(
+            'sissdd',
+            $postData['tide_system'],
+            $postData['degree'],
+            $postData['errors'],
+            $postData['error_handling_approach'],
+            $postData['radius'],
+            $postData['earth_gravity_constant']
+        );
+
+        if (!$stmt->execute()) {
+            throw new Exception('Error inserting GGM_Properties: ' . $stmt->error);
+        }
+        $ggmId = $stmt->insert_id;
+        $stmt->close();
+
+        // Link to resource
+        $linkSql = "INSERT INTO `Resource_has_GGM_Properties` (`Resource_resource_id`, `GGM_Properties_GGM_Properties_id`) VALUES (?, ?)";
+        $stmt = $connection->prepare($linkSql);
+        if (!$stmt) {
+            throw new Exception('Failed to prepare link statement: ' . $connection->error);
+        }
+        $stmt->bind_param('ii', $resourceId, $ggmId);
+        if (!$stmt->execute()) {
+            throw new Exception('Error linking GGM_Properties to resource: ' . $stmt->error);
+        }
+        $stmt->close();
+    }
 
     // 2) Insert Ellipsoidal Parameters (if applicable)
     insertEllipsoidalParameters($connection, $postData, $resourceId);
