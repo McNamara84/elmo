@@ -130,7 +130,7 @@ describe('submitHandler.js', () => {
     expect($('#modal-notification-label').text()).toBe('Title');
     expect($('#modal-notification-body').html()).toContain('Msg');
     expect(handler.modals.notification.show).toHaveBeenCalled();
-    jest.advanceTimersByTime(5000);
+    jest.advanceTimersByTime(3000);
     expect(handler.modals.notification.hide).toHaveBeenCalled();
   });
 
