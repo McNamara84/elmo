@@ -6,8 +6,7 @@
         "mode": "Mode",
         "light": "Clair",
         "dark": "Sombre",
-        "language": "Langue",
-        "legalNotice": "Mentions légales"
+        "language": "Langue"
     },
     "general": {
         "logoTitle": "ELMO - Enhanced Laboratory Metadata Organizer 2.0",
@@ -26,6 +25,14 @@
         "add": "+",
         "cancel": "Annuler",
         "accept": "Accepter"
+    },
+    "confirmations": {
+        "clear": {
+            "title": "Réinitialiser le formulaire ?",
+            "message": "Êtes-vous sûr de vouloir réinitialiser le formulaire ? Toutes les données saisies seront perdues.",
+            "cancel": "Annuler",
+            "confirm": "Réinitialiser"
+        }
     },
     "alerts": {
         "languageWarning": "Veuillez remplir le formulaire en anglais.",
@@ -170,7 +177,8 @@
         "descriptionPlaceholder": "Veuillez saisir la description de la couverture temporelle et spatiale...",
         "start": "Début",
         "end": "Fin",
-        "dateTimeInvalid": "Veuillez saisir une date et une heure valides.",
+        "dateTimeInvalid": "Veuillez saisir une date valide.",
+        "endDateError": "La date de fin ne doit pas être antérieure à la date de début.",
         "timezone": "Fuseau horaire",
         "timezoneInvalid": "Veuillez sélectionner le fuseau horaire",
         "mapInfo": "(Veuillez choisir les coordonnées par rectangle ou marqueur)",
@@ -243,7 +251,10 @@
         "saveAs": "Enregistrer",
         "saveAsTooltip": "Enregistrer les données ou le contenu actuels sous un nouveau nom de fichier.",
         "submit": "Soumettre",
-        "submitTooltip": "Transmettre les données ou le contenu saisis."
+        "submitTooltip": "Transmettre les données ou le contenu saisis.",
+        "legalNotice": "Mentions légales",
+        "PrivacyPolicy": "Politique de confidentialité",
+        "elmoGuide": "Guide Elmo"
     },
     "modals": {
         "feedback": {

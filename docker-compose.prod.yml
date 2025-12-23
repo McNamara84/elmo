@@ -22,7 +22,9 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      # Database install routine
       INSTALL_ACTION: basic
+      DB_INIT_MODE: drop_data 
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
@@ -34,10 +36,10 @@ services:
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       # Flags for Standard ELMO
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
-      DB_INIT_MODE: "keep_data"
     depends_on:
       - db
     restart: unless-stopped
@@ -75,10 +77,10 @@ services:
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_MSL}
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       # Flags for msl
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
-      DB_INIT_MODE: "keep_data"
     depends_on:
       - db
     restart: unless-stopped
@@ -116,6 +118,7 @@ services:
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       # Flags for gem
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
