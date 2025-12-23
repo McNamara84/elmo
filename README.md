@@ -820,7 +820,7 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
 
 Spatial and temporal coverage specifies the geographic region and time frame that the dataset encompasses, providing essential context for its relevance and applicability.
 In the DataCite scheme: The data from Latitude, Longitude and Description are mapped to `<geoLocations>`, while Start Date/Time and End Date/Time are mapped to `<date dateType="Collected">`.
-In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spatial and temporal coverage is 0-n.
+In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coordinates) are mapped to `<EX_GeographicBoundingBox>`, while temporal data (dates/times) are mapped to `<EX_TemporalExtent><gml:TimePeriod>` with a valid `gml:id` attribute (format: `timePeriod-{id}`). Occurency of spatial and temporal coverage is 0-n.
 
 - Latitude Min
   
@@ -886,7 +886,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
   This field contains the starting time.
   - Data type: TIME  
-  - Occurrence: 0-1, becomes mandatory, if any time in Spatial and Temporal Coverage is specified, to achieve data consistency
+  - Occurrence: 0-1, optional. If provided, both Start Time and End Time as well as Timezone become mandatory.
   - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -906,7 +906,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
   This field contains the ending time.
   - Data type: TIME 
-  - Occurrence: 0-1, becomes mandatory, if any time in Spatial and Temporal Coverage is specified, to achieve data consistency
+  - Occurrence: 0-1, optional. If provided, both Start Time and End Time as well as Timezone become mandatory.
   - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -916,7 +916,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Occurency of spat
   
   This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
   - Data type: String
-  - Occurrence: 0-1, mandatory, when Start Date, Start Time, End Date or End Time is filled
+  - Occurrence: 0-1, mandatory only when Start Time or End Time is provided.
   - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
   - Restrictions: Only values from the list are permitted
   - ISO documentation
@@ -1255,6 +1255,55 @@ We appreciate every contribution to this project! You can use the feedback back 
 
 > [!NOTE]
 > In order to run the tests, the dependencies must first be loaded via `composer install` and `npm install`.
+
+### Test Database & User Management
+
+ELMO's test suite uses a two-tier database user setup:
+- **Bootstrap (root):** Creates the test database and grants privileges
+- **Execution (elmo user):** All tests run with the unprivileged `elmo` user
+
+### Overview
+
+ELMO's test suite uses different database user credentials depending on the execution environment (local Docker or CI/CD):
+- **Local Development (Docker):** Uses `root` user to set up the test database, then switches to the `elmo` user for actual test execution.
+- **CI/CD Environment (GitHub Actions/GitLab):** Uses a pre-configured `test_user` account with restricted privileges.
+
+This two-tier approach ensures:
+1. **Test isolation:** Each test suite gets a fresh database schema
+2. **User privilege separation:** Tests always run with limited user permissions (not root)
+3. **CI/CD compatibility:** Different environments can have different user setup strategies
+
+### Local Development Setup
+
+When running tests locally in Docker, the `tests/DatabaseTestCase.php` base class handles the following:
+
+**1. Environment Variable Loading**
+- The `.env` file is automatically parsed and loaded at test startup
+- This ensures database credentials (`DB_USER`, `DB_PASSWORD`, `DB_HOST`, `ROOT_PASSWORD`) are available via `getenv()`
+
+**2. Root Connection (Bootstrapping Only)** Root user connects → Creates test database → Grants privileges to elmo user (or whichever credentials are included into you .env) → Closes root connection
+
+### CI/CD Environment Setup
+
+In GitHub Actions or GitLab CI, the `tests/DatabaseTestCase.php` detects the `CI` or `GITHUB_ACTIONS` environment variable and uses a different strategy:
+
+**1. Pre-configured Test User**
+- Username: `test_user` (hardcoded in test code)
+- Password: `test_password` (hardcoded in test code)
+- Host: `127.0.0.1` (local CI runner)
+- This user is configured in the CI environment and already has all necessary privileges
+
+**2. Database Creation**
+- The test user can directly create databases and select them
+- No root user interaction required
+
+### Running Tests Locally
+
+Enter the Docker container and run tests:
+
+```bash
+docker exec -it web bash
+composer test -- --filter SaveAuthorsTest
 
 - `composer run test` runs the tests in `tests/`
 - `npm test` runs the JavaScript tests in `tests/js/`

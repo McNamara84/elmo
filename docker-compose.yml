@@ -20,9 +20,11 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
       DB_INIT_MODE: keep_data
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
     depends_on:
       - db
     restart: unless-stopped

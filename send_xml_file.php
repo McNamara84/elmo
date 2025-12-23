@@ -1,4 +1,12 @@
 <?php
+
+
+// Guard for PHPUnit
+if (defined('PHPUNIT_RUNNING')) {
+    return;
+}
+
+
 /**
  * Script to save metadata and send it as XML via email
  * 
@@ -86,6 +94,53 @@ function getPriorityText($weeks)
         default:
             return "undefined";
     }
+}
+/**
+* Create XML filename from metadata and add as PHPMailer string attachment.
+*
+* @param PHPMailer $mail
+* @param string    $xml_content
+* @param int       $resource_id
+*
+ * @param array{
+ *   familynames?: array<int, string>,
+ *   title?: array<int, string>
+ * } $postData
+ *
+* @return string   The final XML filename
+*/
+function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string
+{
+    $firstAuthor = $postData['familynames'][0] ?? 'unknown';
+    $mainTitle   = $postData['title'][0] ?? 'untitled';
+
+    // Abbreviate title
+    $abbreviateTitle = substr($mainTitle, 0, 30);
+
+    // Replace German umlauts FIRST
+    $deUmlauts = ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'Ä' => 'Ae', 'Ö' => 'Oe', 'Ü' => 'Ue', 'ß' => 'ss'];
+    $firstAuthor = str_replace(array_keys($deUmlauts), array_values($deUmlauts), $firstAuthor);
+    $abbreviateTitle = str_replace(array_keys($deUmlauts), array_values($deUmlauts), $abbreviateTitle);
+
+    // Set locale for iconv
+    setlocale(LC_ALL, 'en_US.UTF-8');
+
+    // Transliteration with iconv
+    $firstAuthor = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $firstAuthor) ?: $firstAuthor;
+    $abbreviateTitle = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $abbreviateTitle) ?: $abbreviateTitle;
+
+    $cleanAuthor = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $firstAuthor)), '_') ?: 'unknown';
+    $cleanTitle  = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $abbreviateTitle)), '_') ?: 'untitled';
+
+    $currentDateTime = date('Y-m-d_H-i-s');
+    // Assemble filename
+    $xmlFilename = "metadata{$resource_id}-{$cleanAuthor}-{$cleanTitle}-{$currentDateTime}.xml";
+    error_log("Final XML filename: " . $xmlFilename);
+
+    $mail->addStringAttachment($xml_content, $xmlFilename);
+    error_log("XML attachment added: " . $xmlFilename);
+
+    return $xmlFilename;
 }
 
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
@@ -225,9 +280,7 @@ try {
         error_log("XML Submit: Added file attachment: data_description_" . $resource_id . "." . $fileExtension);
     }
 
-    // Add XML attachment
-    $mail->addStringAttachment($xml_content, "metadata_" . $resource_id . ".xml");
-    error_log("XML Submit: Added XML attachment: metadata_" . $resource_id . ".xml");
+    $xmlFilename = createAndAttachXmlFile($mail, $xml_content, $resource_id, $_POST);
 
     // Prepare email content
     $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
@@ -318,7 +371,12 @@ try {
     header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
-        'message' => 'Fehler: ' . $e->getMessage(),
+        'message' => "Sorry, we encountered an error when sending the email:\n\n" . 
+                     $e->getMessage() . "\n\n" .
+                     "Your data has been saved in our system with Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
+                     "Please contact the data curation team at datapub@gfz.de. In your Email, make sure to reference this Resource ID.\n\n" .
+                     "Thank you for your understanding.\n" .
+                     "ELMO team"
     ]);
 }
 

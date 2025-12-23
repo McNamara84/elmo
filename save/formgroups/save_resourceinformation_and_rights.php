@@ -26,8 +26,8 @@ require_once dirname(__FILE__) . '/../validation.php';
  */
 function saveResourceInformationAndRights($connection, $postData)
 {
-    // Iterates over $requiredFields to check if each field is present and not empty in $postData.
-    // Iterates over $requiredArrayFields to check if each array field is present and not empty in $postData.
+    global $showLicense;
+    
     try {
         // Validate required fields
         $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
@@ -46,8 +46,6 @@ function saveResourceInformationAndRights($connection, $postData)
         // Sanitize and prepare data
         $resourceData = prepareResourceData($postData);
 
-        // Begin transaction
-        $connection->begin_transaction();
 
         // Check for existing DOI and handle accordingly
         $resource_id = handleExistingResource($connection, $resourceData);
@@ -56,19 +54,20 @@ function saveResourceInformationAndRights($connection, $postData)
             $resource_id = createNewResource($connection, $resourceData);
         }
 
-        // Save titles
+        // IMPORTANT: Always save titles after resource is created/updated
+        if (!$resource_id) {
+            return false;
+        }
+        
         if (!saveTitles($connection, $resource_id, $postData['title'], $postData['titleType'])) {
-            $connection->rollback();
             return false;
         }
 
-        $connection->commit();
         return $resource_id;
 
     } catch (Exception $e) {
-        $connection->rollback();
         error_log("Error in saveResourceInformationAndRights: " . $e->getMessage());
-        throw $e;
+        return false;
     }
 }
 
@@ -123,7 +122,7 @@ function prepareResourceData($postData)
         'version' => isset($postData['version']) && trim($postData['version']) !== ''
             ? (float) $postData['version'] : null,
         'language' => (int) $postData['language'],
-        'rights' => $rightsId
+        'rights' => (int) $rightsId
     ];
 }
 
@@ -234,7 +233,11 @@ function createNewResource($connection, $resourceData)
         $resourceData['language']
     );
 
-    $stmt->execute();
+    try { $stmt->execute();
+    } catch (Exception $e) {
+        error_log("Error creating new resource: " . $e->getMessage());
+        throw $e;
+    }
     return $stmt->insert_id;
 }
 
@@ -249,6 +252,8 @@ function createNewResource($connection, $resourceData)
  */
 function saveTitles($connection, $resource_id, $titles, $titleTypes)
 {
+    error_log("saveTitles called with resource_id: $resource_id, title count: " . count($titles));
+    
     $uniqueTitles = [];
     for ($i = 0; $i < count($titles); $i++) {
         $key = $titles[$i] . '|' . $titleTypes[$i];
@@ -271,8 +276,10 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes)
             $resource_id
         );
         if (!$stmt->execute()) {
+            error_log("Failed to insert title: " . $stmt->error);
             return false;
         }
+        error_log("Successfully inserted title: " . $title['text']);
     }
 
     return true;
