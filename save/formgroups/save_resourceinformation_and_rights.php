@@ -28,19 +28,21 @@ function saveResourceInformationAndRights($connection, $postData)
 {
     global $showLicense;
     
-    try {
-        // Validate required fields
-        $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
-        
+    try {        
         // Only require Rights field if license form group is shown
         global $showLicense;
-        if ($showLicense) {
-            $requiredFields[] = 'Rights';
-        }
-        $requiredArrayFields = ['title', 'titleType'];
+        $action = $postData['action'] ?? 'submit';
+        if ($action === 'submit') {
+            $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
+            $requiredArrayFields = ['title', 'titleType'];
 
-        if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
-            return false;
+            if ($showLicense) {
+                $requiredFields[] = 'Rights';
+            }
+
+            if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
+                return false;
+            }
         }
 
         // Sanitize and prepare data
