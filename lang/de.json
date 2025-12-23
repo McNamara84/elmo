@@ -6,8 +6,7 @@
         "mode": "Modus",
         "light": "Hell",
         "dark": "Dunkel",
-        "language": "Sprache",
-        "legalNotice": "Impressum"
+        "language": "Sprache"
     },
     "general": {
         "logoTitle": "ELMO - Enhanced Laboratory Metadata Organizer 2.0",
@@ -178,7 +177,8 @@
         "descriptionPlaceholder": "Bitte geben Sie die Beschreibung der zeitlichen und räumlichen Abdeckung ein...",
         "start": "Start",
         "end": "Ende",
-        "dateTimeInvalid": "Bitte machen Sie eine gültige Zeitangabe.",
+        "dateTimeInvalid": "Bitte geben Sie ein gültiges Datum an.",
+        "endDateError": "Das Enddatum darf nicht vor dem Startdatum liegen.",
         "timezone": "Zeitzone",
         "timezoneInvalid": "Bitte wählen Sie die Zeitzone",
         "mapInfo": "(Bitte wählen Sie Koordinaten per Rechteck oder Markierung)",
@@ -251,7 +251,10 @@
         "saveAs": "Speichern",
         "saveAsTooltip": "Aktuelle Daten oder Inhalte unter neuem Dateinamen speichern.",
         "submit": "Absenden",
-        "submitTooltip": "Eingegebene Daten oder Inhalte übermitteln."
+        "submitTooltip": "Eingegebene Daten oder Inhalte übermitteln.",
+        "legalNotice": "Impressum",
+        "PrivacyPolicy": "Datenschutzerklärung",
+        "elmoGuide": "Elmo Anleitung"
     },
     "modals": {
         "feedback": {

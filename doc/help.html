@@ -836,25 +836,19 @@ include_once "../settings.php";
                     <p>Both Start and End Date should be between 01.01.1900 and 31.12.2100.</p>
                     <ul>
                         <li><strong>Start Date:</strong> Date of the beginning of the temporal coverage of the
-                            dataset.
-                            Can be selected via the date picker. Required field.</li>
-                        <li><strong>Start Time:</strong> Time specification in format hh:mm:ss. Can be selected
-                            via
-                            the
-                            time picker.</li>
-                        <li><strong>End Date:</strong> Date of the end of the temporal coverage of the dataset.
-                            Can
-                            be
-                            selected via the date picker. Required field.</li>
-                        <li><strong>End Time:</strong> Time specification in format hh:mm:ss. Can be selected
-                            via
-                            the
-                            time picker.</li>
+                            dataset. Can be selected via the date picker. Required field.</li>
+                        <li><strong>Start Time:</strong> Time specification in format hh:mm:ss. Can be selected via
+                            the time picker. <strong>Optional.</strong></li>
+                        <li><strong>End Date:</strong> Date of the end of the temporal coverage of the dataset. Can
+                            be selected via the date picker. Required field.</li>
+                        <li><strong>End Time:</strong> Time specification in format hh:mm:ss. Can be selected via
+                            the time picker. <strong>Optional.</strong></li>
                     </ul>
                 </div>
                 <div id="help-tsc-timezone">
                     <h4>Timezone</h4>
-                    Specifies the UTC-based time zone for start and end times.<br>
+                    Specifies the UTC-based time zone for start and end times.
+                    <strong>Only required if times are provided.</strong><br>
                     This field allows selection from all worldwide time zones to accurately represent the
                     temporal details of your data.
                 </div>

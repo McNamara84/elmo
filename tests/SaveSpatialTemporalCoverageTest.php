@@ -5,6 +5,7 @@ use mysqli_sql_exception;
 use Tests\DatabaseTestCase;
 
 require_once __DIR__ . '/../save/formgroups/save_spatialtemporalcoverage.php';
+require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 
 /**
  * Test class for Spatial Temporal Coverage saving functionality.
@@ -385,5 +386,58 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $this->assertEquals($postData["tscDateEnd"][0], $retrievedStc["dateEnd"]);
         $this->assertNull($retrievedStc["timeStart"]);
         $this->assertEquals($postData["tscTimeEnd"][0], $retrievedStc["timeEnd"]);
+    }
+
+    /**
+     * Tests saving STC record with date only, no time and no timezone.
+     *
+     * Verifies that a spatial temporal coverage entry can be saved when
+     * only dates (no time or timezone) are provided. This is the expected
+     * behaviour for users entering temporal coverage without times.
+     *
+     * @return void
+     */
+    public function testSaveDateOnlyWithoutTimezone(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.DATE.ONLY",
+            "year" => 2025,
+            "dateCreated" => "2025-01-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Date Only STC"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            "tscLatitudeMin"  => ["52.5200"],
+            "tscLatitudeMax"  => [""],
+            "tscLongitudeMin" => ["13.4050"],
+            "tscLongitudeMax" => [""],
+            "tscDescription"  => ["Berlin"],
+            "tscDateStart"    => ["2025-01-01"],
+            "tscTimeStart"    => [""],
+            "tscDateEnd"      => ["2025-12-31"],
+            "tscTimeEnd"      => [""],
+            "tscTimezone"     => [""]
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'Function should return true for date-only STC (no time, no timezone).');
+
+        $stmt = $this->connection->prepare("SELECT * FROM Spatial_Temporal_Coverage WHERE Description = ?");
+        $stmt->bind_param("s", $postData["tscDescription"][0]);
+        $stmt->execute();
+        $retrievedStc = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotNull($retrievedStc, 'The STC entry should be saved.');
+        $this->assertEquals($postData["tscDateStart"][0], $retrievedStc["dateStart"]);
+        $this->assertEquals($postData["tscDateEnd"][0], $retrievedStc["dateEnd"]);
+        $this->assertNull($retrievedStc["timeStart"]);
+        $this->assertNull($retrievedStc["timeEnd"]);
+        $this->assertNull($retrievedStc["timezone"]);
     }
 }

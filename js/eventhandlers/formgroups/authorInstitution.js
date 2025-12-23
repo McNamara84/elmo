@@ -66,6 +66,9 @@ $(document).ready(function () {
     // Append the cloned row
     authorInstitutionGroup.append(newAuthorInstitutionRow);
 
+    // Refresh sortable to recognize the new row
+    authorInstitutionGroup.sortable("refresh");
+
     /**
      * Initialize autocomplete
      */

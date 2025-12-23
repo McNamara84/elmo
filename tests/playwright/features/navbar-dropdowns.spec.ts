@@ -29,8 +29,6 @@ test.describe('Navbar Dropdown Tests', () => {
     // Assert Help dropdown is displayed with .show class
     await expect(page.locator(`${SELECTORS.navigation.helpToggle} + ul.dropdown-menu.show`)).toBeVisible();
     
-    // Verify Privacy Policy link is present in Help dropdown
-    await expect(page.locator('#buttonPrivacy')).toBeVisible();
     
     // Close Help dropdown by clicking elsewhere (navbar brand)
     await page.locator('.logo-left').click();

@@ -31,16 +31,15 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
     for ($i = 0; $i < $len; $i++) {
         // Extract data for easier handling
         $entry = [
-            'latitudeMin' => $postData['tscLatitudeMin'][$i] ?? '',
-            'latitudeMax' => $postData['tscLatitudeMax'][$i] ?? '',
-            'longitudeMin' => $postData['tscLongitudeMin'][$i] ?? '',
-            'longitudeMax' => $postData['tscLongitudeMax'][$i] ?? '',
-            'description' => $postData['tscDescription'][$i] ?? '',
-            'dateStart' => $postData['tscDateStart'][$i] ?? '',
-            'dateEnd' => $postData['tscDateEnd'][$i] ?? '',
-            'timeStart' => $postData['tscTimeStart'][$i] ?? '',
-            'timeEnd' => $postData['tscTimeEnd'][$i] ?? '',
-            'timezone' => $postData['tscTimezone'][$i] ?? ''
+            'latitudeMin' => $postData['tscLatitudeMin'][$i] ?? NULL,
+            'longitudeMin' => $postData['tscLongitudeMin'][$i] ?? NULL,
+            'longitudeMax' => $postData['tscLongitudeMax'][$i] ?? NULL,
+            'description' => $postData['tscDescription'][$i] ?? NULL,
+            'dateStart' => $postData['tscDateStart'][$i] ?? NULL,
+            'dateEnd' => $postData['tscDateEnd'][$i] ?? NULL,
+            'timeStart' => $postData['tscTimeStart'][$i] ?? NULL,
+            'timeEnd' => $postData['tscTimeEnd'][$i] ?? NULL,
+            'timezone' => $postData['tscTimezone'][$i] ?? NULL
         ];
 
         if (!validateSTCDependencies($entry)) {
@@ -49,11 +48,16 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         }
 
         // Prepare optional fields
-        $entry['latitudeMax'] = empty($entry['latitudeMax']) ? NULL : $entry['latitudeMax'];
+        $entry['latitudeMin']  = empty($entry['latitudeMin'])  ? NULL : $entry['latitudeMin'];
+        $entry['latitudeMax']  = empty($entry['latitudeMax'])  ? NULL : $entry['latitudeMax'];
+        $entry['longitudeMin'] = empty($entry['longitudeMin']) ? NULL : $entry['longitudeMin'];
         $entry['longitudeMax'] = empty($entry['longitudeMax']) ? NULL : $entry['longitudeMax'];
         $entry['timeStart'] = empty($entry['timeStart']) ? NULL : $entry['timeStart'];
         $entry['timeEnd'] = empty($entry['timeEnd']) ? NULL : $entry['timeEnd'];
 
+        if (empty($entry['latitudeMin']) || empty($entry['dateStart'])) {
+            return true;
+        }
         // Save STC entry
         $stc_id = insertSpatialTemporalCoverage($connection, $entry);
         if ($stc_id) {
