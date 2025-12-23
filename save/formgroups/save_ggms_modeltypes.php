@@ -76,6 +76,27 @@ function getModelTypeName(mysqli $connection, int $modelTypeId): ?string
 }
 
 /**
+ * Helper: return the first non-empty value for any of the provided keys.
+ * If a value is an array (e.g., posted with []), the first element is used.
+ */
+function firstNonEmpty(array $data, array $keys)
+{
+    foreach ($keys as $key) {
+        if (!array_key_exists($key, $data)) {
+            continue;
+        }
+        $val = $data[$key];
+        if (is_array($val)) {
+            $val = reset($val);
+        }
+        if ($val !== '' && $val !== null) {
+            return $val;
+        }
+    }
+    return null;
+}
+
+/**
  * Saves time-variable coefficients info for Static models
  *
  * @param mysqli $connection  Database connection
@@ -139,9 +160,12 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
 {
     // Parse temporal resolution from either custom value or predefined frequency
     $temporalResolutionDays = null;
-    if (!empty($postData['temporal_frequency'])) {
-        $temporalResolutionDays = (int) $postData['temporal_frequency'];
-    } elseif (!empty($postData['temporal_frequency_predef'])) {
+    $customFreq = firstNonEmpty($postData, ['temporalFrequency', 'temporal_frequency']);
+    $predefFreq = firstNonEmpty($postData, ['temporalFrequencyPredef', 'temporal_frequency_predef']);
+
+    if ($customFreq !== null && $customFreq !== '') {
+        $temporalResolutionDays = (int) $customFreq;
+    } elseif ($predefFreq !== null && $predefFreq !== '') {
         $frequencyMap = [
             'daily' => 1,
             'weekly' => 7,
@@ -149,12 +173,13 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
             'quarterly' => 90,
             'yearly' => 365
         ];
-        $temporalResolutionDays = $frequencyMap[$postData['temporal_frequency_predef']] ?? null;
+        $temporalResolutionDays = $frequencyMap[$predefFreq] ?? null;
     }
 
-    $startDate = $postData['temporal_start'] ?? null;
-    $endDate = $postData['temporal_end'] ?? null;
-    $generatingInstitution = isset($postData['temporal_institution']) && $postData['temporal_institution'] ? 1 : 0;
+    $startDate = firstNonEmpty($postData, ['temporalStart', 'temporal_start']);
+    $endDate = firstNonEmpty($postData, ['temporalEnd', 'temporal_end']);
+    $generatingInstitution = firstNonEmpty($postData, ['temporalInstitution', 'temporal_institution']);
+    $generatingInstitution = ($generatingInstitution !== null && $generatingInstitution !== '') ? 1 : 0;
 
     // Insert new temporal properties record
     $sql = "INSERT INTO `Temporal_Model_Properties`
@@ -202,28 +227,24 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
  */
 function insertTopographicModelProperties(mysqli $connection, array $postData, int $resourceId): int
 {
-    $layerApproach = $postData['topo_layer_approach'] ?? null;
-    $domain = $postData['topo_domain'] ?? null;
-    $approximation = $postData['topo_approximation'] ?? null;
-    $densityInformation = $postData['topo_density'] ?? null;
-    $densityDetails = $postData['topo_density_details'] ?? null;
+    $layerApproach = firstNonEmpty($postData, ['topoLayerApproach', 'topo_layer_approach']);
+    $domain = firstNonEmpty($postData, ['topoDomain', 'topo_domain']);
+    $approximation = firstNonEmpty($postData, ['topoApproximation', 'topo_approximation']);
+    $densityInformation = firstNonEmpty($postData, ['topoDensity', 'topo_density']);
+    $densityDetails = firstNonEmpty($postData, ['topoDensityDetails', 'topo_density_details']);
 
-    // Handle separate density values for crust and mantle
+    // Handle separate density inputs (form provides descriptions, not numeric values)
     $crustDensityValue = null;
-    $crustDensityDesc = null;
+    $crustDensityDesc = firstNonEmpty($postData, ['topoDensityDetailsCrust']);
     $mantleDensityValue = null;
-    $mantleDensityDesc = null;
+    $mantleDensityDesc = firstNonEmpty($postData, ['topoDensityDetailsMantle']);
 
-    if (!empty($postData['separate_density'])) {
-        $crustDensityValue = !empty($postData['topo_density_crust_value']) 
-            ? (float) $postData['topo_density_crust_value'] 
-            : null;
-        $crustDensityDesc = $postData['topo_density_crust_description'] ?? null;
-
-        $mantleDensityValue = !empty($postData['topo_density_mantle_value']) 
-            ? (float) $postData['topo_density_mantle_value'] 
-            : null;
-        $mantleDensityDesc = $postData['topo_density_mantle_description'] ?? null;
+    // Fallback: if details missing but info labels present, store those labels as description
+    if ($crustDensityDesc === null) {
+        $crustDensityDesc = firstNonEmpty($postData, ['topoDensityCrust']);
+    }
+    if ($mantleDensityDesc === null) {
+        $mantleDensityDesc = firstNonEmpty($postData, ['topoDensityMantle']);
     }
 
     // Insert new topographic properties record
@@ -237,8 +258,9 @@ function insertTopographicModelProperties(mysqli $connection, array $postData, i
         throw new Exception("Failed to prepare insert statement: " . $connection->error);
     }
 
+    // Use string bindings to allow NULL propagation for nullable numeric fields
     $stmt->bind_param(
-        'ssssddsds',
+        'sssssssss',
         $layerApproach,
         $domain,
         $densityInformation,
