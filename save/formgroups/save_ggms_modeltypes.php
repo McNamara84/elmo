@@ -94,7 +94,7 @@ function saveStaticModelData(mysqli $connection, array $postData, int $resourceI
 
     // Insert new static model data
     $sql = "INSERT INTO `Static_Model_Properties`
-                (`resource_id`, `info_time_variable_coefficients`)
+                (`info_time_variable_coefficients`, `description`)
             VALUES (?, ?)";
 
     $stmt = $connection->prepare($sql);
@@ -102,9 +102,25 @@ function saveStaticModelData(mysqli $connection, array $postData, int $resourceI
         throw new Exception("Failed to prepare insert statement: " . $connection->error);
     }
 
-    $stmt->bind_param('is', $resourceId, $description);
+    // Store description as the info text; leave description column available for future use
+    $stmt->bind_param('ss', $description, $description);
     if (!$stmt->execute()) {
         throw new Exception('Error inserting Static_Model_Properties: ' . $stmt->error);
+    }
+    $staticId = $stmt->insert_id;
+    $stmt->close();
+
+    // Link to resource
+    $linkSql = "INSERT INTO `Resource_has_Static_Model_Properties`
+                (`resource_id`, `static_model_property_id`)
+            VALUES (?, ?)";
+    $stmt = $connection->prepare($linkSql);
+    if (!$stmt) {
+        throw new Exception('Failed to prepare linking statement: ' . $connection->error);
+    }
+    $stmt->bind_param('ii', $resourceId, $staticId);
+    if (!$stmt->execute()) {
+        throw new Exception('Error linking Static_Model_Properties: ' . $stmt->error);
     }
     $stmt->close();
 }
@@ -280,11 +296,11 @@ function saveGGMsModelTypes(mysqli $connection, array $postData, int $resourceId
     // 2) Get model type name and process accordingly
     $modelTypeName = getModelTypeName($connection, $modelTypeId);
 
-    if ($modelTypeName === 'Static') {
+    if ($modelTypeName === 'static') {
         saveStaticModelData($connection, $postData, $resourceId);
-    } elseif ($modelTypeName === 'Temporal') {
+    } elseif ($modelTypeName === 'temporal') {
         insertTemporalModelProperties($connection, $postData, $resourceId);
-    } elseif ($modelTypeName === 'Topographic') {
+    } elseif ($modelTypeName === 'topographic') {
         insertTopographicModelProperties($connection, $postData, $resourceId);
     }
 
