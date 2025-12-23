@@ -21,15 +21,16 @@ if (!defined('INCLUDED_FROM_TEST')) {
         ]));
     }
     require_once $settingsPath;
+    // Check database connection. Assuming that the test methods take care of passing the connection.
+    if (!isset($connection) || !$connection) {
+        die(json_encode([
+            'status' => 'error',
+            'message' => 'Error: Database connection could not be established. Please check settings.php and database availability.'
+        ]));
+    }
 }
 
-// Check database connection
-if (!isset($connection) || !$connection) {
-    die(json_encode([
-        'status' => 'error',
-        'message' => 'Error: Database connection could not be established. Please check settings.php and database availability.'
-    ]));
-}
+
 
 /**
  * Drops all existing tables in the database.
@@ -374,7 +375,7 @@ function createDatabaseStructure($connection): array
    `funderid` VARCHAR(11) NULL,
    `funderidtyp` VARCHAR(25) NULL,
    `grantnumber` VARCHAR(45) NULL,
-   `grantname` VARCHAR(75) NULL,
+   `grantname` VARCHAR(500) NULL,
    `awarduri` VARCHAR(255) NULL,
     PRIMARY KEY (`funding_reference_id`));",
 
@@ -1231,14 +1232,27 @@ function processInstallation($connection, $action): array
 // Handle AJAX requests
 if (isset($_POST['action'])) {
     header('Content-Type: application/json');
+    // Ensure connection exists
+    if (!isset($connection)) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Database connection not available.'
+        ]);
+        exit(1);
+    }
     $result = processInstallation($connection, $_POST['action']);
     echo json_encode($result);
     exit;
 }
 
 // Handle CLI requests
-if (php_sapi_name() === 'cli' && $argc >= 2) {
+if (php_sapi_name() === 'cli' && isset($argc) && $argc >= 2) {
     $action = $argv[1] ?? 'basic';
+    // Ensure connection exists
+    if (!isset($connection)) {
+        fwrite(STDERR, "Error: Database connection not available." . PHP_EOL);
+        exit(1);
+    }
     $result = processInstallation($connection, $action);
     fwrite(STDOUT, $result['message'] . PHP_EOL);
     exit($result['status'] === 'success' ? 0 : 1);

@@ -19,6 +19,7 @@ import './formgroups/ggms-modeltypes.js';
 import './formgroups/ggms-definition.js';
 import './formgroups/ggms-properties.js';
 import './formgroups/ggms-datasources.js';
+import './confirmationModal.js';
 
 
 import { replaceHelpButtonInClonedRows, createRemoveButton, updateOverlayLabels } from './functions.js';
@@ -87,11 +88,17 @@ $(document).ready(function () {
   // ─── Additional Global UI Handlers ─────────────────────────────────────────
 
   /**
-   * Reset all input fields when clicking the reset button.
-   * Requires a global clearInputFields() function.
+   * Show confirmation modal before clearing all input fields.
+   * Requires translations object and clearInputFields() function to be loaded.
    */
   $('#button-form-reset').on('click', function () {
-    clearInputFields();
+    window.showConfirmationModal(
+      'confirmations.clear.title',
+      'confirmations.clear.message',
+      'confirmations.clear.cancel',
+      'confirmations.clear.confirm',
+      clearInputFields
+    );
   });
 
   /**

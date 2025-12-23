@@ -146,7 +146,7 @@ function saveAuthors($connection, $postData, $resource_id)
 
     if (!$validPerson && !$validInstitution) {
         // No valid author data
-        return false;
+        throw new Exception("No valid author data provided");
     }
 
     // Filtering of person authors: only complete pure
@@ -171,53 +171,63 @@ function saveAuthors($connection, $postData, $resource_id)
     $institutionRorIds = $postData['authorInstitutionRorIds'] ?? [];
 
     // Processing of personal authors
-    $personCount = count($familynames);
-    for ($i = 0; $i < $personCount; $i++) {
-        $familyname = trim($familynames[$i] ?? '');
-        $givenname = trim($givennames[$i] ?? '');
-        $orcid = trim($orcids[$i] ?? '');
-        $affiliation_data = trim($personAffiliations[$i] ?? '');
-        $rorId_data = trim($personRorIds[$i] ?? '');
+    try{
+        $personCount = count($familynames);
+        for ($i = 0; $i < $personCount; $i++) {
+            $familyname = trim($familynames[$i] ?? '');
+            $givenname = trim($givennames[$i] ?? '');
+            $orcid = trim($orcids[$i] ?? '');
+            $affiliation_data = trim($personAffiliations[$i] ?? '');
+            $rorId_data = trim($personRorIds[$i] ?? '');
 
 
-        $rorIdArray = parseRorIds($rorId_data);
-        $affiliationArray = parseAffiliationData($affiliation_data);
-        if (!empty($rorIdArray) && empty($affiliationArray))
-            continue;
+            $rorIdArray = parseRorIds($rorId_data);
+            $affiliationArray = parseAffiliationData($affiliation_data);
+            if (!empty($rorIdArray) && empty($affiliationArray))
+                continue;
 
-        processAuthor($connection, $resource_id, [
-            'familyname' => $familyname,
-            'givenname' => $givenname,
-            'orcid' => $orcid,
-            'institutionname' => null,
-            'affiliation_data' => $affiliation_data,
-            'rorId_data' => $rorId_data
-        ]);
+            processAuthor($connection, $resource_id, [
+                'familyname' => $familyname,
+                'givenname' => $givenname,
+                'orcid' => $orcid,
+                'institutionname' => null,
+                'affiliation_data' => $affiliation_data,
+                'rorId_data' => $rorId_data
+            ]);
+        }
+    } catch (Exception $e) {
+        error_log("Error processing personal authors: " . $e->getMessage());
+        throw $e;
     }
 
     // Processing of institutional authors
-    $institutionCount = count($institutionnames);
-    for ($i = 0; $i < $institutionCount; $i++) {
-        $institutionname = trim($institutionnames[$i] ?? '');
-        $affiliation_data = trim($institutionAffiliations[$i] ?? '');
-        $rorId_data = trim($institutionRorIds[$i] ?? '');
+    try {
+        $institutionCount = count($institutionnames);
+        for ($i = 0; $i < $institutionCount; $i++) {
+            $institutionname = trim($institutionnames[$i] ?? '');
+            $affiliation_data = trim($institutionAffiliations[$i] ?? '');
+            $rorId_data = trim($institutionRorIds[$i] ?? '');
 
-        if (empty($institutionname))
-            continue;
+            if (empty($institutionname))
+                continue;
 
-        $rorIdArray = parseRorIds($rorId_data);
-        $affiliationArray = parseAffiliationData($affiliation_data);
-        if (!empty($rorIdArray) && empty($affiliationArray))
-            continue;
+            $rorIdArray = parseRorIds($rorId_data);
+            $affiliationArray = parseAffiliationData($affiliation_data);
+            if (!empty($rorIdArray) && empty($affiliationArray))
+                continue;
 
-        processAuthor($connection, $resource_id, [
-            'familyname' => null,
-            'givenname' => null,
-            'orcid' => null,
-            'institutionname' => $institutionname,
-            'affiliation_data' => $affiliation_data,
-            'rorId_data' => $rorId_data
-        ]);
+            processAuthor($connection, $resource_id, [
+                'familyname' => null,
+                'givenname' => null,
+                'orcid' => null,
+                'institutionname' => $institutionname,
+                'affiliation_data' => $affiliation_data,
+                'rorId_data' => $rorId_data
+            ]);
+        }
+    } catch (Exception $e) {
+        error_log("Error processing institutional authors: " . $e->getMessage());
+        throw $e;
     }
 }
 
