@@ -216,6 +216,7 @@ label.mandatory-field::after {
 
 .settings-menu-link {
     text-decoration: none;
+    font-size: 20px;
 }
 
 .feedback-message-thanks {
