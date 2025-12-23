@@ -35,15 +35,13 @@
     opacity: 0.6;
 }
 
-/* Sufficient bottom padding to prevent the fixed footer from overlapping content.
- * The 120px value accounts for the maximum footer height (buttons + autosave status
- * + padding) across all viewport sizes, including line wrapping on small screens.
- * This value is verified by the Playwright test in
- * tests/playwright/formgroups/funding-reference.spec.ts which tests add button
- * clickability across all Bootstrap breakpoints.
+/* Bottom padding keeps the fixed footer from overlapping page content.
+ * 104px covers the compact footer stack (buttons + autosave status + padding)
+ * across viewports while giving a bit more room back to the form. Keep in sync
+ * with tests that exercise controls near the bottom of the page.
  */
 #main-content {
-    padding-bottom: 120px !important;
+    padding-bottom: 15px !important;
 }
 
 /* Footer styling for consistent appearance */
@@ -258,6 +256,11 @@ label.mandatory-field::after {
     min-height: 2.25rem;
     box-shadow: var(--bs-box-shadow-sm, 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075));
     transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Nudge autosave badge off the footer edge */
+.footer .autosave-status {
+    margin-bottom: 0.35rem;
 }
 
 .autosave-status__indicator {
