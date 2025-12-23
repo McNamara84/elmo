@@ -3,13 +3,40 @@ import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { REPO_ROOT, SELECTORS } from '../utils';
 
+const freeKeywordsGroupMarkup = String.raw`
+<div class="card mb-2">
+  <div class="card-header">
+    <b data-translate="keywords.free.title">Free Keywords</b>
+  </div>
+  <div class="card-body reduce-padding">
+    <div id="group-freekeyword" class="form-floating">
+      <div class="row align-items-center">
+        <div class="input-group input-margin-top-bottom">
+          <label for="input-freekeyword" class="visually-hidden">Free Keyword</label>
+          <input
+            type="text"
+            class="form-control input-with-help input-right-no-round-corners"
+            name="freekeywords[]"
+            id="input-freekeyword"
+            value="EPOS, multi-scale laboratories"
+            data-translate-placeholder="keywords.free.placeholder"
+          />
+          <span class="input-group-text">
+            <i class="bi bi-question-circle-fill" data-help-section-id="help-freeKeywords"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`;
+
+
 const CURATED_KEYWORDS = [
   { free_keyword: 'Arctic Ocean Circulation' },
   { free_keyword: 'Baltic Sea Monitoring' },
   { free_keyword: 'Crustal Deformation Analysis' },
 ];
 
-const FREE_KEYWORDS_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/freeKeywords.html'), 'utf8');
 const TEST_ROUTE_PATH = '/free-keywords-test';
 const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -19,7 +46,7 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
   </head>
   <body>
     <main class="container p-3">
-      ${FREE_KEYWORDS_TEMPLATE}
+      ${freeKeywordsGroupMarkup}
       <div id="help-freeKeywords" role="note">Help placeholder</div>
     </main>
   </body>
