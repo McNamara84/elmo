@@ -1,25 +1,56 @@
 <?php
 require_once __DIR__ . '/settings.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Allow only known events
-    $allowedEvents = ['page loaded', 'save', 'submit'];
-    $eventRaw = $_POST['event'] ?? '';
-    $event = in_array($eventRaw, $allowedEvents, true) ? $eventRaw : 'unknown';
+if (!function_exists('handle_log_page_event')) {
+    /**
+     * Process a page event log request.
+     *
+     * @param array $post Incoming POST data
+     * @param array $server Server context (expects REQUEST_METHOD)
+     * @param callable|null $logger Logger callback; defaults to error_log
+     * @param callable|null $nowProvider Time provider; defaults to date('c')
+     * @return array{status:string,event?:string,timestamp?:string}
+     */
+    function handle_log_page_event(array $post, array $server, callable $logger = null, callable $nowProvider = null): array
+    {
+        if (($server['REQUEST_METHOD'] ?? '') !== 'POST') {
+            return ['status' => 'ignored'];
+        }
 
-    // Validate ISO 8601 timestamps coming from Date().toISOString(); fall back to server time
-    $timestampRaw = $_POST['timestamp'] ?? '';
-    $isoPattern = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/';
-    $timestamp = preg_match($isoPattern, $timestampRaw) === 1 ? $timestampRaw : date('c');
+        $allowedEvents = ['page loaded', 'save', 'submit'];
+        $eventRaw = $post['event'] ?? '';
+        $event = in_array($eventRaw, $allowedEvents, true) ? $eventRaw : 'unknown';
 
-    // Strip control characters to avoid log injection
-    $eventSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $event);
-    $timestampSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $timestamp);
+        $timestampRaw = $post['timestamp'] ?? '';
+        $isoPattern = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/';
+        $timestamp = preg_match($isoPattern, $timestampRaw) === 1
+            ? $timestampRaw
+            : ($nowProvider ? $nowProvider() : date('c'));
 
-    error_log("[PAGE_EVENT📝] Event: {$eventSafe} | Timestamp: {$timestampSafe}");
-    
+        $eventSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $event);
+        $timestampSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $timestamp);
+
+        $logMessage = "[PAGE_EVENT📝] Event: {$eventSafe} | Timestamp: {$timestampSafe}";
+        ($logger ?? 'error_log')($logMessage);
+
+        return [
+            'status' => 'logged',
+            'event' => $eventSafe,
+            'timestamp' => $timestampSafe,
+        ];
+    }
+}
+
+$result = handle_log_page_event($_POST, $_SERVER);
+
+if (($result['status'] ?? '') === 'logged') {
     header('Content-Type: application/json');
     echo json_encode(['status' => 'logged']);
+}
+
+if (!defined('UNIT_TESTING')) {
     exit();
 }
+
+return $result;
 ?>
