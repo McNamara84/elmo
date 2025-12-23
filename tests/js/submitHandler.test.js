@@ -269,6 +269,19 @@ describe('submitHandler.js', () => {
     expect(body).toContain('<br>');
   });
 
+  test('showNotification escapes HTML and strips script/img tags', () => {
+    const message = '<script>alert(1)</script>Hello & <b>World</b><img src=x onerror="alert(2)">';
+    handler.showNotification('info', 'Title', message);
+
+    const body = $('#modal-notification-body').html();
+    expect(body).not.toContain('<script');
+    expect(body).not.toContain('<img');
+    expect(body).not.toContain('alert(1)');
+    expect(body).not.toContain('alert(2)');
+    expect(body).toContain('Hello &amp;');
+    expect(body).toContain('&lt;b&gt;World&lt;/b&gt;');
+  });
+
   test('showNotification applies correct alert class', () => {
     handler.showNotification('success', 'Success', 'Message');
     let body = $('#modal-notification-body').html();

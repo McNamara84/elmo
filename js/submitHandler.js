@@ -387,17 +387,41 @@ class SubmitHandler {
         };
         return icons[type] || icons.info;
     }
-
+    /** 
+     * Escape HTML special characters in a string
+     * @param {string} text - Raw text
+     * @returns {string} Escaped text safe for HTML insertion
+     * @private
+     */
+    escapeHtml(text) {
+        return String(text).replace(/[&<>"']/g, function (ch) {
+            switch (ch) {
+                case '&': return '&amp;';
+                case '<': return '&lt;';
+                case '>': return '&gt;';
+                case '"': return '&quot;';
+                case "'": return '&#39;';
+                default: return ch;
+            }
+        });
+    }
     /**
-     * Format message for display (converts newlines to HTML)
+     * Format message for display (scrubs risky tags, escapes, and converts newlines)
      * @param {string} message - Raw message
      * @returns {string} Formatted HTML message
      * @private
      */
     formatMessage(message) {
-        return message
-            .replace(/\n\n/g, '</p><p>')
-            .replace(/\n/g, '<br>');
+        const raw = message == null ? '' : String(message);
+        // Strip script and img tags entirely before escaping to avoid rendering them
+        const scrubbed = raw
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+            .replace(/<img[^>]*>/gi, '');
+
+        const escaped = this.escapeHtml(scrubbed);
+        const paragraphs = escaped.split(/\n{2,}/).map(part => part.replace(/\n/g, '<br>'));
+        return paragraphs.length ? `<p>${paragraphs.join('</p><p>')}</p>` : '';
+
     }
 }
     
