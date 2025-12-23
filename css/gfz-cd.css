@@ -53,18 +53,30 @@ footer.fixed-bottom {
 
 /* Feedback Button */
 .feedback-button {
+    --bs-btn-color: #ffffff;
+    --bs-btn-bg: #800080;
+    --bs-btn-border-color: #800080;
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-hover-bg: #6A006A;
+    --bs-btn-hover-border-color: #6A006A;
+    --bs-btn-focus-shadow-rgb: 128, 0, 128;
+    --bs-btn-active-color: #ffffff;
+    --bs-btn-active-bg: #6A006A;
+    --bs-btn-active-border-color: #6A006A;
+    --bs-btn-disabled-color: #ffffff;
+    --bs-btn-disabled-bg: #b073b0;
+    --bs-btn-disabled-border-color: #b073b0;
     z-index: 1000;
     font-size: 20px;
-    background-color: #800080;
-    color: white !important;
+    color: #ffffff !important;
 }
 
-.feedback-button:hover {
-    background-color: #6A006A;
-}
-
-.feedback-button:active {
-    background-color: #6A006A;
+.feedback-button:hover,
+.feedback-button:focus,
+.feedback-button:focus-visible,
+.feedback-button:active,
+.feedback-button:disabled {
+    color: #ffffff !important;
 }
 
 @keyframes blink {
