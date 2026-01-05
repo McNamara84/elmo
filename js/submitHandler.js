@@ -281,7 +281,7 @@ class SubmitHandler {
                 if (parsedResponse.success) {
                     this.showNotification('success',
                         translations.alerts.successHeading,
-                        parsedResponse.message);
+                        translations.alerts.successMessage);
                     if (this.autosaveService) {
                         this.autosaveService.clearDraft();
                     }
@@ -336,22 +336,104 @@ class SubmitHandler {
      * @param {string} type - Message type ('success', 'danger', 'info')
      * @param {string} title - Modal title
      * @param {string} message - Notification message
+     * @param {Object} options - Additional options
+     * @param {boolean} [options.autoClose=true] - Auto-close notification
+     * @param {number} [options.autoCloseDelay=3000] - Auto-close delay in milliseconds
      */
-    showNotification(type, title, message) {
+    showNotification(type, title, message, options = {}) {
+        const {
+            autoClose = type !== 'success' && type !== 'danger',
+            autoCloseDelay = 3000
+        } = options;
         $('#modal-notification-label').text(title);
+        
+        // Get icon for notification type
+        const icon = this.getNotificationIcon(type);
+        
+        // Format message for display
+        const formattedMessage = this.formatMessage(message);
+        
         $('#modal-notification-body').html(`
-            <div class="alert alert-${type} mb-0">
-                ${message}
+            <div class="alert alert-${type} mb-0 d-flex">
+                <div class="notification-icon-container me-3">
+                    <span class="notification-icon notification-icon-${type}">
+                        ${icon}
+                    </span>
+                </div>
+                <div class="notification-message-container mb-0">
+                    ${formattedMessage}
+                </div>
             </div>
         `);
 
         this.modals.notification.show();
-
-        if (type === 'success') {
-            setTimeout(() => this.modals.notification.hide(), 3000);
+        // Auto-close only for non-critical notifications
+        if (autoClose) {
+            setTimeout(() => this.modals.notification.hide(), autoCloseDelay);
         }
     }
+
+    /**
+     * Get icon for notification type
+     * @param {string} type - Notification type
+     * @returns {string} Icon character
+     * @private
+     */
+    getNotificationIcon(type) {
+        const icons = {
+            'success': '✓',
+            'danger': '✕',
+            'info': 'ℹ'
+        };
+        return icons[type] || icons.info;
+    }
+    /** 
+     * Escape HTML special characters in a string
+     * @param {string} text - Raw text
+     * @returns {string} Escaped text safe for HTML insertion
+     * @private
+     */
+    escapeHtml(text) {
+        return String(text).replace(/[&<>"']/g, function (ch) {
+            switch (ch) {
+                case '&': return '&amp;';
+                case '<': return '&lt;';
+                case '>': return '&gt;';
+                case '"': return '&quot;';
+                case "'": return '&#39;';
+                default: return ch;
+            }
+        });
+    }
+    /**
+     * Format message for display (scrubs risky tags, escapes, and converts newlines)
+     * @param {string} message - Raw message
+     * @returns {string} Formatted HTML message
+     * @private
+     */
+    formatMessage(message) {
+        const raw = message == null ? '' : String(message);
+        
+        // Parse the message as HTML to safely remove dangerous elements
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(raw, 'text/html');
+        
+        // Remove dangerous elements
+        const dangerousElements = doc.querySelectorAll('script, img');
+        dangerousElements.forEach(el => el.remove());
+        
+        // Get the cleaned HTML content
+        const scrubbed = doc.body.innerHTML;
+        
+        // Escape HTML special characters
+        const escaped = this.escapeHtml(scrubbed);
+        
+        // Convert newlines to paragraphs and line breaks
+        const paragraphs = escaped.split(/\n{2,}/).map(part => part.replace(/\n/g, '<br>'));
+        return paragraphs.length ? `<p>${paragraphs.join('</p><p>')}</p>` : '';
+    }
 }
+    
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
