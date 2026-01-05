@@ -209,6 +209,13 @@ try {
         }
     }
 
+// Add simulation flag for development 
+// (set SIMULATE_EMAIL=true in env to skip the actual email sending)
+include_once __DIR__ . '/includes/feature_toggles.php';
+$simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
+
+// Test SMTP connectivity and send email (skip if simulating)
+if (!$simulateEmail) {
     // Test SMTP connectivity before sending
     if (!testGfzSmtpConnectivity()) {
         throw new Exception("GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.");
@@ -333,6 +340,9 @@ try {
     error_log("XML Submit: Sende E-Mail über GFZ SMTP an {$xmlSubmitAddress}");
     $mail->send();
     error_log("XML Submit: E-Mail erfolgreich über GFZ SMTP versendet!");
+} else {
+    error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
+}
 
     // Clear any output buffers
     ob_clean();
