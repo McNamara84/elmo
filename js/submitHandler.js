@@ -413,15 +413,24 @@ class SubmitHandler {
      */
     formatMessage(message) {
         const raw = message == null ? '' : String(message);
-        // Strip script and img tags entirely before escaping to avoid rendering them
-        const scrubbed = raw
-            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-            .replace(/<img[^>]*>/gi, '');
-
+        
+        // Parse the message as HTML to safely remove dangerous elements
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(raw, 'text/html');
+        
+        // Remove dangerous elements
+        const dangerousElements = doc.querySelectorAll('script, img');
+        dangerousElements.forEach(el => el.remove());
+        
+        // Get the cleaned HTML content
+        const scrubbed = doc.body.innerHTML;
+        
+        // Escape HTML special characters
         const escaped = this.escapeHtml(scrubbed);
+        
+        // Convert newlines to paragraphs and line breaks
         const paragraphs = escaped.split(/\n{2,}/).map(part => part.replace(/\n/g, '<br>'));
         return paragraphs.length ? `<p>${paragraphs.join('</p><p>')}</p>` : '';
-
     }
 }
     
