@@ -117,7 +117,8 @@ function prepareResourceData($postData)
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
         'year' => (int) $postData['year'],
-        'dateCreated' => $postData['dateCreated'],
+        'dateCreated' => isset($postData['dateCreated']) && trim($postData['dateCreated']) !== ''
+            ? trim($postData['dateCreated']): null,
         'dateEmbargoUntil' => isset($postData['dateEmbargo']) && trim($postData['dateEmbargo']) !== ''
             ? trim($postData['dateEmbargo']) : null,
         'resourceType' => (int) $postData['resourcetype'],
