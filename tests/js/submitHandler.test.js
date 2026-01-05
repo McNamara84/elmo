@@ -59,7 +59,8 @@ describe('submitHandler.js', () => {
         errorHeading: 'Error',
         submitError: 'Submit Error',
         validationErrorheading: 'Validation',
-        validationError: 'Invalid'
+        validationError: 'Invalid',
+        successMessage: 'Dataset successfully transmitted.'
       }
     };
         // Mock applyTranslations function
