@@ -201,7 +201,7 @@ function createDatabaseStructure($connection): array
     `dateCreated` DATE NULL,
     `dateEmbargoUntil` DATE NULL,
     `Rights_rights_id` INT NOT NULL,
-    `Resource_Type_resource_name_id` INT NOT NULL,
+    `Resource_Type_resource_name_id` INT NULL,
     `Language_language_id` INT NOT NULL,
     `Model_type_id` INT,
     `Mathematical_Representation_id` INT,

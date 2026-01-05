@@ -121,7 +121,8 @@ function prepareResourceData($postData)
             ? trim($postData['dateCreated']): null,
         'dateEmbargoUntil' => isset($postData['dateEmbargo']) && trim($postData['dateEmbargo']) !== ''
             ? trim($postData['dateEmbargo']) : null,
-        'resourceType' => (int) $postData['resourcetype'],
+        'resourceType' => isset($postData['resourcetype']) && trim($postData['resourcetype']) !== ''
+         ? trim($postData['resourcetype']): null,
         'version' => isset($postData['version']) && trim($postData['version']) !== ''
             ? (float) $postData['version'] : null,
         'language' => (int) $postData['language'],
