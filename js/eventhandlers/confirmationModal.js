@@ -25,7 +25,8 @@ function showConfirmationModal(titleKey, messageKey, cancelKey, confirmKey, onCo
     // Get translations from nested keys (e.g., "confirmations.clear.title")
     const getTranslation = (key) => {
         const keys = key.split('.');
-        let value = window.elmo?.translations || {};
+        // Check both window.elmo.translations and global translations variable
+        let value = window.elmo?.translations || (typeof translations !== 'undefined' ? translations : {});
         for (const k of keys) {
             if (value && typeof value === 'object') {
                 value = value[k];
@@ -41,31 +42,62 @@ function showConfirmationModal(titleKey, messageKey, cancelKey, confirmKey, onCo
     const cancel = getTranslation(cancelKey);
     const confirm = getTranslation(confirmKey);
     
+    // Get modal elements
+    const modalElement = document.getElementById('modal-confirm');
+    const confirmButton = document.getElementById('button-confirm-action');
+    const cancelButton = document.getElementById('button-confirm-cancel');
+    
+    if (!modalElement || !confirmButton || !cancelButton) {
+        console.error('Confirmation modal elements not found');
+        return;
+    }
+    
     // Set modal content
-    $('#modal-confirm-label').text(title);
-    $('#modal-confirm-description').text(message);
-    $('#button-confirm-cancel').text(cancel);
-    $('#button-confirm-action').text(confirm);
+    document.getElementById('modal-confirm-label').textContent = title;
+    document.getElementById('modal-confirm-description').textContent = message;
+    cancelButton.textContent = cancel;
+    confirmButton.textContent = confirm;
     
     // Remove previous event handlers to avoid duplicates
-    $('#button-confirm-action').off('click');
+    const newConfirmButton = confirmButton.cloneNode(true);
+    confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+    const newCancelButton = cancelButton.cloneNode(true);
+    cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
     
-    // Attach confirmation handler (use .one() to ensure it only fires once)
-    $('#button-confirm-action').one('click', function () {
-        $('#modal-confirm').modal('hide');
+    // Get fresh references after cloning
+    const freshConfirmButton = document.getElementById('button-confirm-action');
+    const freshCancelButton = document.getElementById('button-confirm-cancel');
+    
+    // Create modal instance
+    let modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+        modal.dispose();
+    }
+    modal = new bootstrap.Modal(modalElement, {
+        backdrop: 'static',
+        keyboard: false
+    });
+    
+    // Handle confirm action
+    freshConfirmButton.addEventListener('click', function handleConfirm() {
+        modal.hide();
         if (typeof onConfirm === 'function') {
             onConfirm();
         }
     });
     
+    // Handle cancel action
+    freshCancelButton.addEventListener('click', function handleCancel() {
+        modal.hide();
+    });
+    
+    // Focus management: move focus to confirm button when modal opens
+    modalElement.addEventListener('shown.bs.modal', function focusConfirmButton() {
+        freshConfirmButton.focus();
+    }, { once: true });
+    
     // Show modal
-    const modalElement = document.getElementById('modal-confirm');
-    if (modalElement) {
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
-    } else {
-        console.error('Confirmation modal element not found');
-    }
+    modal.show();
 }
 
 // Make function globally available for use in other modules
