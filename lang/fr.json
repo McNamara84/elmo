@@ -51,7 +51,7 @@
         "saveError": "Échec de l'enregistrement de l'ensemble de données.",
         "submitError": "Échec de la soumission de l'ensemble de données.",
         "errorHeading": "Erreur",
-        "successHeading": "Succès! Vos métadonnées ont été soumises.",
+        "successHeading": "Succès ! Vos métadonnées ont été soumises.",
         "successMessage": "Merci de votre coopération. Vous serez contacté par email par l'équipe de curation des données des GFZ Data Services sous peu."
 
     },
