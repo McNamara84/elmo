@@ -129,3 +129,37 @@ $(document).ready(function () {
     $('[data-bs-toggle="tooltip"]').tooltip({ container: tooltipContainer });
   }
 });
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('form-mde');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        const activeBtn = document.activeElement;
+        const isSubmit = activeBtn && activeBtn.dataset.action === 'submit';
+
+        // Remove all required first
+        form.querySelectorAll('.js-required-on-submit').forEach(el => {
+            el.removeAttribute('required');
+            el.classList.remove('is-invalid');
+        });
+
+        if (!isSubmit) {
+            // When SAVE no validation
+            return;
+        }
+
+        // When SUBMIT enforce required
+        form.querySelectorAll('.js-required-on-submit').forEach(el => {
+            el.setAttribute('required', 'required');
+        });
+
+        // Let browser validate
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+            form.classList.add('was-validated');
+        }
+    });
+});
