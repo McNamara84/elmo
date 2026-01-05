@@ -22,7 +22,7 @@ test.describe('Footer Tests', () => {
       'https://dataservices.gfz.de/web/about-us/legal-notice'
     );
     await expect(privacyPolicy).toHaveAttribute('href', 'doc/privacyPolicy.html');
-    await expect(elmoGuide).toHaveAttribute('href', 'doc/help.html');
+    await expect(elmoGuide).toHaveAttribute('href', 'doc/help.php');
   });
 
   test('Footer links are clickable', async ({ page }) => {
