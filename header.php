@@ -62,9 +62,6 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
     </a>
     <div class="ms-auto d-flex align-items-center me-3 p-1">
 
-      <!-- Link to legal notice -->
-      <a href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
-        class="text-white me-3 settings-menu-link" data-translate="header.legalNotice">Legal Notice</a>
       <!-- Dropdown menu for help -->
       <div class="dropdown ms-auto me-3 p-1">
         <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
@@ -73,11 +70,6 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
           Help
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-help">
-          <li><a href="doc/privacyPolicy.html" class="dropdown-item" target="_blank" id="buttonPrivacy"><i
-                class="bi bi-shield-check"></i> Privacy Policy</a></li>
-          <li><a href="doc/help.html" class="dropdown-item" target="_blank" id="buttonHelp"
-              data-translate="buttons.guide">
-              <i class="bi bi-book"></i> Guide</a></li>
           <li><a class="dropdown-item" data-bs-theme-value="help-on" id="buttonHelpOn" data-translate="buttons.helpOn">
               <i class="bi bi-question-circle-fill"></i> <span data-translate="header.on">On</span></a></li>
           <li><a class="dropdown-item" data-bs-theme-value="help-off" id="buttonHelpOff"
