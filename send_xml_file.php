@@ -22,13 +22,19 @@ ini_set('display_errors', 0);
 // Buffer output
 ob_start();
 
+error_log("send_xml_file.php: Script started");
+
 // Include required files
 require_once __DIR__ . '/settings.php';
+
+error_log("send_xml_file.php: settings.php included");
 
 // Make global variables from settings.php available
 global $connection, $showGGMsProperties;
 global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
 global $xmlSubmitAddress;
+
+error_log("send_xml_file.php: Globals set, connection: " . (isset($connection) ? 'set' : 'not set'));
 
 require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/save/formgroups/save_authors.php';
@@ -46,12 +52,16 @@ if ($showGGMsProperties) {
     require_once __DIR__ . '/save/formgroups/save_ggmsproperties.php';
 }
 
+error_log("send_xml_file.php: Save functions included");
+
 // Include PHPMailer classes
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/Exception.php';
 require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/SMTP.php';
+
+error_log("send_xml_file.php: PHPMailer included");
 
 /**
  * Test GFZ SMTP connectivity
@@ -146,6 +156,7 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
 
 try {
+    error_log("send_xml_file.php: Try block started");
     // Save all form components
     $resource_id = saveResourceInformationAndRights($connection, $_POST);
     saveAuthors($connection, $_POST, $resource_id);
@@ -158,6 +169,8 @@ try {
     saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
     saveRelatedWork($connection, $_POST, $resource_id);
     saveFundingReferences($connection, $_POST, $resource_id);
+
+    error_log("send_xml_file.php: All data saved successfully");
 
     // Get additional submission data from modal
     $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;
@@ -197,22 +210,30 @@ try {
         error_log("Submit: Fetched XML via API: $url");
     } else {
         error_log("Submit: File not found via the API. URL tried: $url. Turning to fallback logic -- generating the file on-the-fly");
-        // The controller is already included, so we can use it.
-        $datasetController = new DatasetController();
-        // Generate XML directly in-memory
-        $xml_content = $datasetController->envelopeXmlAsString($connection, $resource_id);
-        // check for errors
-        if (empty($xml_content)) {
-            error_log("Submit: Failed to retrieve XML content from API and in-memory. Endpoint: $url");     
-        } else {
-            error_log("Submit: Successfully generated XML file in-memory for resource_id $resource_id.");
+        try {
+            // The controller is already included, so we can use it.
+            $datasetController = new DatasetController();
+            // Generate XML directly in-memory
+            $xml_content = $datasetController->envelopeXmlAsString($connection, $resource_id);
+            // check for errors
+            if (empty($xml_content)) {
+                error_log("Submit: Failed to retrieve XML content from API and in-memory. Endpoint: $url");     
+            } else {
+                error_log("Submit: Successfully generated XML file in-memory for resource_id $resource_id.");
+            }
+        } catch (Exception $e) {
+            error_log("Submit: Error generating XML in-memory: " . $e->getMessage());
+            $xml_content = ''; // Set empty to continue
         }
     }
+
+    error_log("send_xml_file.php: XML content ready");
 
 // Add simulation flag for development 
 // (set SIMULATE_EMAIL=true in env to skip the actual email sending)
 include_once __DIR__ . '/includes/feature_toggles.php';
-$simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
+$simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, true);
+error_log("send_xml_file.php: simulateEmail = " . ($simulateEmail ? 'true' : 'false'));
 
 // Test SMTP connectivity and send email (skip if simulating)
 if (!$simulateEmail) {
@@ -343,6 +364,8 @@ if (!$simulateEmail) {
 } else {
     error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
 }
+
+    error_log("send_xml_file.php: About to return success");
 
     // Clear any output buffers
     ob_clean();
