@@ -51,7 +51,8 @@
         "saveError": "Failed to save dataset.",
         "submitError": "Failed to submit dataset.",
         "errorHeading": "Error",
-        "successHeading": "Success!"
+        "successHeading": "Success! Your metadata has been submitted.",
+        "successMessage": "Thank you for cooperating with us. You will be contacted via email by the data curation team of GFZ Data Services shortly."
     },
     "autosave": {
         "status": {
