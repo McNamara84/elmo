@@ -360,8 +360,8 @@ class SubmitHandler {
                         ${icon}
                     </span>
                 </div>
-                <div class="notification-message-container">
-                    <p class="mb-0">${formattedMessage}</p>
+                <div class="notification-message-container mb-0">
+                    ${formattedMessage}
                 </div>
             </div>
         `);
