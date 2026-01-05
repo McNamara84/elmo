@@ -129,7 +129,7 @@ function createDatabaseStructure($connection): array
     PRIMARY KEY (`rights_id`));",
 
         "Language" => "CREATE TABLE IF NOT EXISTS `Language` (
-    `language_id` INT NOT NULL AUTO_INCREMENT,
+    `language_id` INT NULL AUTO_INCREMENT,
     `code` VARCHAR(10) NULL,
     `name` VARCHAR(20) NOT NULL,
     PRIMARY KEY (`language_id`));",
@@ -202,7 +202,7 @@ function createDatabaseStructure($connection): array
     `dateEmbargoUntil` DATE NULL,
     `Rights_rights_id` INT NOT NULL,
     `Resource_Type_resource_name_id` INT NULL,
-    `Language_language_id` INT NOT NULL,
+    `Language_language_id` INT NULL,
     `Model_type_id` INT,
     `Mathematical_Representation_id` INT,
     `File_format_id` INT,
