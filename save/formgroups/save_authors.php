@@ -137,16 +137,19 @@ function validateInstitutionAuthors(array $postData): bool
  */
 function saveAuthors($connection, $postData, $resource_id)
 {
+    $action = $postData['action'] ?? 'submit';
+
     $hasPersonData = !empty($postData['familynames']) || !empty($postData['givennames']);
     $hasInstitutionData = !empty($postData['authorinstitutionName']);
 
-    // Validation: at least one group must be valid
-    $validPerson = $hasPersonData ? validatePersonAuthors($postData) : false;
-    $validInstitution = $hasInstitutionData ? validateInstitutionAuthors($postData) : false;
+    if ($action === 'submit') {
+        $validPerson = $hasPersonData ? validatePersonAuthors($postData) : false;
+        $validInstitution = $hasInstitutionData ? validateInstitutionAuthors($postData) : false;
 
     if (!$validPerson && !$validInstitution) {
         // No valid author data
         throw new Exception("No valid author data provided");
+    }
     }
 
     // Filtering of person authors: only complete pure
