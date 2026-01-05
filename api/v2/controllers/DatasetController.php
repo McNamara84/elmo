@@ -1034,25 +1034,6 @@ class DatasetController extends ICGEMController
                 }
             }
         }
-        // ICGEM specific data 
-        $ggmDataForXml = $this->getGGMData($connection, $id);
-        $this->insertGgmProperties($xml, $ggmDataForXml);
-
-        // Data Sources
-        $dataSources = $this->getDataSources($connection, $id);
-        $this->insertDataSources($xml, $dataSources);
-
-        // Topographic Model Properties
-        $topographicProperties = $this->getTopographicModelProperties($connection, $id);
-        $this->insertTopographicModelProperties($xml, $topographicProperties);
-
-        // Temporal Model Properties
-        $temporalProperties = $this->getTemporalModelProperties($connection, $id);
-        $this->insertTemporalModelProperties($xml, $temporalProperties);
-
-        // Ellipsoidal Parameters
-        $ellipsoidalParameters = $this->getEllipsoidalParameters($connection, $id);
-        $this->insertEllipsoidalParameters($xml, $ellipsoidalParameters);
 
         // XML formating
         $dom = dom_import_simplexml($xml)->ownerDocument;
