@@ -281,7 +281,7 @@ class SubmitHandler {
                 if (parsedResponse.success) {
                     this.showNotification('success',
                         translations.alerts.successHeading,
-                        parsedResponse.message);
+                        translations.alerts.successMessage);
                     if (this.autosaveService) {
                         this.autosaveService.clearDraft();
                     }

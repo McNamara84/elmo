@@ -341,7 +341,7 @@ try {
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
-        'message' => 'Thank you for cooperating with us. You will be contacted via email by the data curation team of GFZ Data Services shortly.',
+        'message' => 'Backend reports: XML submission email sent successfully.',
         'resource_id' => $resource_id
     ]);
 
