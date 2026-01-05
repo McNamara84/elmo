@@ -268,11 +268,19 @@ class SaveHandler {
             if (this.autosaveService) {
                 await this.autosaveService.markManualSave();
             }
+
+            // Log successful save
+            await logEvent('save', 'user successfully saved xml file locally');
+
             this.showNotification('success',
                 translations.alerts.successHeading,
                 translations.alerts.savingSuccess);
         } catch (error) {
             console.error('Error saving dataset:', error);
+
+            // Log failed save
+            await logEvent('save', 'user FAILED to save xml file locally');
+
             this.showNotification('danger',
                 translations.alerts.errorHeading,
                 translations.alerts.saveError);

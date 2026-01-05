@@ -29,8 +29,11 @@ if (!function_exists('handle_log_page_event')) {
 
         $eventSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $event);
         $timestampSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $timestamp);
+        
+        $statusRaw = $post['status'] ?? '';
+        $statusSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $statusRaw);
 
-        $logMessage = "[PAGE_EVENT📝] Event: {$eventSafe} | Timestamp: {$timestampSafe}";
+        $logMessage = "[PAGE_EVENT📝] Type: {$eventSafe} | Message: {$statusSafe} | Timestamp: {$timestampSafe}";
         ($logger ?? 'error_log')($logMessage);
 
         return [
