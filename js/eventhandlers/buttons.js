@@ -130,7 +130,11 @@ $(document).ready(function () {
   }
 });
 
-
+/**
+ * Treat fields with "js-required-on-submit" as required only
+ * when the Submit button (data-action="submit") is used.
+ * When Save is clicked, those fields behave like optional fields.
+ */
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('form-mde');
     if (!form) return;
@@ -139,18 +143,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const activeBtn = document.activeElement;
         const isSubmit = activeBtn && activeBtn.dataset.action === 'submit';
 
-        // Remove all required first
+        // Reset submit-only required fields
         form.querySelectorAll('.js-required-on-submit').forEach(el => {
             el.removeAttribute('required');
             el.classList.remove('is-invalid');
         });
 
+        // For Save: no validation
         if (!isSubmit) {
-            // When SAVE no validation
             return;
         }
 
-        // When SUBMIT enforce required
+        // For Submit: enforce required and run HTML5 validation
         form.querySelectorAll('.js-required-on-submit').forEach(el => {
             el.setAttribute('required', 'required');
         });
