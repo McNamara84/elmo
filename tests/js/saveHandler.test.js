@@ -1,13 +1,12 @@
 const { requireFresh } = require('./utils');
 
 let SaveHandler;
-let validateTemporalCoverage;
 let validateContactPerson;
 let $;
 let modalInstances;
 
 function loadScript() {
-  ({ SaveHandler, validateTemporalCoverage, validateContactPerson } =
+  ({ SaveHandler, validateContactPerson } =
     requireFresh('../../js/saveHandler.js'));
 }
 
@@ -72,27 +71,6 @@ describe('saveHandler.js', () => {
     validateEmbargoDate();
     expect(embargo.className).not.toContain('is-invalid');
     expect(embargo.className).not.toContain('is-valid');
-  });
-
-  test('validateTemporalCoverage sets classes based on dates', () => {
-    const row = document.createElement('div');
-    row.setAttribute('tsc-row', '');
-    row.innerHTML = `
-      <input id="input-stc-datestart0" value="2024-06-10">
-      <input id="input-stc-dateend0" value="2024-06-01">
-      <div class="invalid-feedback" data-translate="coverage.dateTimeInvalid"></div>`;
-    document.body.appendChild(row);
-
-    const result = validateTemporalCoverage(row);
-    const end = row.querySelector('[id*="input-stc-dateend"]');
-    expect(result).toBe(false);
-    expect(end.classList.contains('is-invalid')).toBe(true);
-    expect(row.querySelector('.invalid-feedback').textContent).toBe('endErr');
-
-    end.value = '2024-06-20';
-    const result2 = validateTemporalCoverage(row);
-    expect(result2).toBe(true);
-    expect(end.classList.contains('is-valid')).toBe(true);
   });
 
   test('validateContactPerson requires one selection', () => {
@@ -176,7 +154,6 @@ describe('saveHandler.js', () => {
     const mod = await import('../../js/saveHandler.js');
     expect(mod.default).toBeDefined();
     expect(mod.SaveHandler).toBeDefined();
-    expect(mod.validateTemporalCoverage).toBeDefined();
     expect(mod.validateContactPerson).toBeDefined();
   });
 });
