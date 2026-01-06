@@ -128,42 +128,44 @@ $(document).ready(function () {
   if (typeof $.fn.tooltip === 'function') {
     $('[data-bs-toggle="tooltip"]').tooltip({ container: tooltipContainer });
   }
-});
 
-/**
- * Treat fields with "js-required-on-submit" as required only
- * when the Submit button (data-action="submit") is used.
- * When Save is clicked, those fields behave like optional fields.
- */
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('form-mde');
-    if (!form) return;
+  /**
+   * Treat fields with "js-required-on-submit" as required only
+   * when the Submit button (data-action="submit") is used.
+   * When Save is clicked, those fields behave like optional fields.
+   */
+  const form = document.getElementById('form-mde');
+  if (form) {
+    const $form = $(form);
 
-    form.addEventListener('submit', function (e) {
-        const activeBtn = document.activeElement;
-        const isSubmit = activeBtn && activeBtn.dataset.action === 'submit';
+    // Reset submit-only required fields
+    function resetSubmitOnlyFields() {
+      form.querySelectorAll('.js-required-on-submit').forEach(el => {
+        el.removeAttribute('required');
+        el.classList.remove('is-invalid');
+      });
+    }
 
-        // Reset submit-only required fields
-        form.querySelectorAll('.js-required-on-submit').forEach(el => {
-            el.removeAttribute('required');
-            el.classList.remove('is-invalid');
-        });
-
-        // For Save: no validation
-        if (!isSubmit) {
-            return;
-        }
-
-        // For Submit: enforce required and run HTML5 validation
-        form.querySelectorAll('.js-required-on-submit').forEach(el => {
-            el.setAttribute('required', 'required');
-        });
-
-        // Let browser validate
-        if (!form.checkValidity()) {
-            e.preventDefault();
-            e.stopPropagation();
-            form.classList.add('was-validated');
-        }
+    // For Save: no validation
+    $('#button-form-save').on('click', function () {
+      resetSubmitOnlyFields();
     });
+
+    // For Submit: enforce required and run HTML5 validation
+    $('#button-form-submit').on('click', function (e) {
+      resetSubmitOnlyFields();
+
+      form.querySelectorAll('.js-required-on-submit').forEach(el => {
+        el.setAttribute('required', 'required');
+      });
+
+      // Let browser validate
+      if (!form.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+        form.classList.add('was-validated');
+      }
+
+    });
+  }
 });
