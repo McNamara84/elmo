@@ -56,7 +56,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
       <img src="logos/GFZ-logo.png" alt="GFZ Logo" class="logo logo-left">
     </a>
 
-    <a href="https://dataservices.gfz-potsdam.de/web/" target="_blank" rel="noopener noreferrer"
+    <a href="https://dataservices.gfz.de/web/" target="_blank" rel="noopener noreferrer"
       class="logo-center-wrapper">
       <img src="logos/GFZ_Data_Services_logo.png" alt="GFZ Data Services Logo" class="logo">
     </a>

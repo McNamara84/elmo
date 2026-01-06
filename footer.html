@@ -3,32 +3,32 @@
   <div class="container">
     <div class="row">
       <div class="col d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3 flex-wrap">
-        <div class="d-flex align-items-center justify-content-center flex-wrap gap-2">
-          <button type="button" class="btn btn-danger m-1" data-bs-toggle="tooltip" data-translate="buttons.clear"
+        <div class="d-flex align-items-center justify-content-center flex-wrap gap-0 gap-md-1 gap-lg-3">
+          <button type="button" class="btn btn-danger m-0 m-md-1" data-bs-toggle="tooltip" data-translate="buttons.clear"
             id="button-form-reset" data-translate-tooltip="buttons.clearTooltip">
             Clear
           </button>
-          <button class="btn btn-primary m-1" type="button" id="button-form-load" data-action="load"
+          <button class="btn btn-primary m-0 m-md-1" type="button" id="button-form-load" data-action="load"
             data-translate="buttons.load" data-translate-tooltip="buttons.loadTooltip">
             Load
           </button>
-          <button type="submit" class="btn btn-warning m-1" form="form-mde" id="button-form-save" data-action="save"
+          <button type="submit" class="btn btn-warning m-0 m-md-1" form="form-mde" id="button-form-save" data-action="save"
             data-translate="buttons.saveAs" data-translate-tooltip="buttons.saveAsTooltip">
             Save
           </button>
-          <button type="submit" class="btn btn-success m-1" form="form-mde" id="button-form-submit" data-action="submit"
+          <button type="submit" class="btn btn-success m-0 m-md-1" form="form-mde" id="button-form-submit" data-action="submit"
             data-translate="buttons.submit" data-translate-tooltip="buttons.submitTooltip">
             Submit
           </button>
           <?php if ($showFeedbackLink): ?>
-          <button type="button" class="btn feedback-button m-2 text-feedback" id="button-feedback-openmodalfooter"
+          <button type="button" class="btn feedback-button m-0 m-md-1 text-feedback" id="button-feedback-openmodalfooter"
             data-bs-toggle="modal" data-bs-target="#modal-feedback" data-translate="feedback.button"
             data-translate-tooltip="modals.feedback.buttonTooltip">
             Feedback
           </button>
           <?php endif; ?>
         </div>
-        <div class="autosave-status" id="autosave-status" role="status" aria-live="polite" aria-atomic="true" aria-labelledby="autosave-status-label autosave-status-text">
+        <div class="autosave-status autosave-status--compact-mobile" id="autosave-status" role="status" aria-live="polite" aria-atomic="true" aria-labelledby="autosave-status-label autosave-status-text">
           <span class="visually-hidden" id="autosave-status-label" data-translate="autosave.status.label">Autosave status:</span>
           <span class="autosave-status__indicator" aria-hidden="true"></span>
           <div class="autosave-status__text">
@@ -44,7 +44,7 @@
       <nav class="footer-info-nav mb-2 d-flex justify-content-center gap-4">
         <a href="https://dataservices.gfz.de/web/about-us/legal-notice" target="_blank" class="settings-menu-link" id="buttonLegalNotice" data-translate="buttons.legalNotice">Legal Notice</a>
         <a href="doc/privacyPolicy.html" target="_blank" class="settings-menu-link" id="buttonPrivacy" data-translate="buttons.PrivacyPolicy">Privacy Policy</a>
-        <a href="doc/help.html" target="_blank" class="settings-menu-link" id="buttonHelp" data-translate="buttons.elmoGuide">Elmo Guide</a>
+        <a href="doc/help.php" target="_blank" class="settings-menu-link" id="buttonHelp" data-translate="buttons.elmoGuide">Elmo Guide</a>
       </nav>
     </div>
   </div>
@@ -100,8 +100,12 @@
 <script src="node_modules/@yaireo/tagify/dist/tagify.js"></script>
 <!--jsTree-->
 <script src="node_modules/jstree/dist/jstree.min.js"></script>
+<!-- Making environmental variables accessible to JS -->
 <script type="text/javascript">
   var maxTitles = "<?php echo $maxTitles; ?>";
+</script>
+<!-- Log page load event -->
+<script src = "js/logging.js">
 </script>
 </body>
 

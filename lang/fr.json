@@ -51,7 +51,9 @@
         "saveError": "Échec de l'enregistrement de l'ensemble de données.",
         "submitError": "Échec de la soumission de l'ensemble de données.",
         "errorHeading": "Erreur",
-        "successHeading": "Succès!"
+        "successHeading": "Succès ! Vos métadonnées ont été soumises.",
+        "successMessage": "Merci de votre coopération. Vous serez contacté par email par l'équipe de curation des données des GFZ Data Services sous peu."
+
     },
     "autosave": {
         "status": {
@@ -306,7 +308,7 @@
         "title": "Bienvenue sur ELMO 😊",
         "paragraph1": "Bienvenue sur ELMO – le nouvel éditeur de métadonnées en ligne des GFZ Data Services.",
         "paragraph2": "Veuillez saisir vos informations et cliquer sur « Soumettre » pour transmettre vos métadonnées aux curatrices et curateurs des GFZ Data Services. Nous vous recommandons également d’enregistrer une copie de vos métadonnées sur votre ordinateur pour vos dossiers.",
-        "paragraph3": "Pour plus d'informations, veuillez consulter nos <a href='https://dataservices.gfz-potsdam.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>instructions de publication</a>.",
+        "paragraph3": "Pour plus d'informations, veuillez consulter nos <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>instructions de publication</a>.",
         "button": "Continuer"
     }
 }
