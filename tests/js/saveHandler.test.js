@@ -1,12 +1,11 @@
 const { requireFresh } = require('./utils');
 
 let SaveHandler;
-let validateContactPerson;
 let $;
 let modalInstances;
 
 function loadScript() {
-  ({ SaveHandler, validateContactPerson } =
+  ({ SaveHandler } =
     requireFresh('../../js/saveHandler.js'));
 }
 
@@ -71,19 +70,6 @@ describe('saveHandler.js', () => {
     validateEmbargoDate();
     expect(embargo.className).not.toContain('is-invalid');
     expect(embargo.className).not.toContain('is-valid');
-  });
-
-  test('validateContactPerson requires one selection', () => {
-    const boxes = document.querySelectorAll('input[name="contacts[]"]');
-    expect(validateContactPerson()).toBe(false);
-    expect(document.getElementById('contact-person-error')).not.toBeNull();
-    boxes.forEach(b => expect(b.required).toBe(true));
-
-    boxes[0].checked = true;
-    const res2 = validateContactPerson();
-    expect(res2).toBe(true);
-    expect(document.getElementById('contact-person-error')).toBeNull();
-    boxes.forEach(b => expect(b.required).toBe(false));
   });
 
   test('generateFilename returns formatted timestamp', async () => {
@@ -154,6 +140,5 @@ describe('saveHandler.js', () => {
     const mod = await import('../../js/saveHandler.js');
     expect(mod.default).toBeDefined();
     expect(mod.SaveHandler).toBeDefined();
-    expect(mod.validateContactPerson).toBeDefined();
   });
 });
