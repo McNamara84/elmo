@@ -163,4 +163,23 @@ describe('buttons.js', () => {
     expect(field2.classList.contains('is-invalid')).toBe(false);
   });
 
+  test('Submit button enforces required on js-required-on-submit fields and triggers HTML5 validation', () => {
+    loadScript();
+    const form = document.getElementById('form-mde');
+    const field1 = document.getElementById('field1');
+    const field2 = document.getElementById('field2');
+
+    const checkSpy = jest.spyOn(form, 'checkValidity').mockReturnValue(false);
+
+    const clickEvent = $.Event('click');
+    $('#button-form-submit').trigger(clickEvent);
+
+    expect(field1.hasAttribute('required')).toBe(true);
+    expect(field2.hasAttribute('required')).toBe(true);
+    expect(clickEvent.isDefaultPrevented()).toBe(true);
+    expect(form.classList.contains('was-validated')).toBe(true);
+
+    checkSpy.mockRestore();
+  });
+
 });
