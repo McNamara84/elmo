@@ -26,4 +26,22 @@ test.describe('Save vs Submit – required fields', () => {
     expect(requiredAttr).toBeNull();
   });
 
+  test('Submit sets js-required-on-submit field to required', async ({ page }) => {
+    const form = page.locator('#form-mde');
+    const field = form.locator('.js-required-on-submit').first();
+
+    await expect(field).toBeVisible();
+
+    // field empty
+    await field.fill('');
+
+    const submitButton = page.locator('#button-form-submit');
+    await expect(submitButton).toBeVisible();
+    await submitButton.click();
+
+    // Expectation: required attribute is set after submit
+    const requiredAttr = await field.getAttribute('required');
+    expect(requiredAttr).not.toBeNull();
+  });
+
 });
