@@ -197,7 +197,7 @@ function createDatabaseStructure($connection): array
     `resource_id` INT NOT NULL AUTO_INCREMENT,
     `doi` VARCHAR(100) NULL,
     `version` FLOAT NULL,
-    `year` YEAR(4) NOT NULL,
+    `year` YEAR(4) NULL,
     `dateCreated` DATE NULL,
     `dateEmbargoUntil` DATE NULL,
     `Rights_rights_id` INT NOT NULL,
