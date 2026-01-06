@@ -123,11 +123,11 @@ function prepareResourceData($postData)
         'dateEmbargoUntil' => isset($postData['dateEmbargo']) && trim($postData['dateEmbargo']) !== ''
             ? trim($postData['dateEmbargo']) : null,
         'resourceType' => isset($postData['resourcetype']) && trim($postData['resourcetype']) !== ''
-         ? trim($postData['resourcetype']): null,
+            ? trim($postData['resourcetype']): null,
         'version' => isset($postData['version']) && trim($postData['version']) !== ''
             ? (float) $postData['version'] : null,
         'language' => isset($postData['language']) && trim($postData['language']) !== ''
-         ? trim($postData['language']): null,
+            ? trim($postData['language']): null,
         'rights' => (int) $rightsId
     ];
 }
