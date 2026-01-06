@@ -51,7 +51,9 @@
         "saveError": "Datensatz konnte nicht gespeichert werden.",
         "submitError": "Datensatz konnte nicht übermittelt werden.",
         "errorHeading": "Fehler",
-        "successHeading": "Erfolg!"
+        "successHeading": "Erfolg! Ihre Metadaten wurden übermittelt.",
+        "successMessage": "Vielen Dank für Ihre Kooperation. Sie werden in Kürze per E-Mail vom Datenkuratierungsteam der GFZ Data Services kontaktiert."
+
     },
     "autosave": {
         "status": {
