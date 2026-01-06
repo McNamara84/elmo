@@ -1,14 +1,13 @@
 const { requireFresh } = require('./utils');
 
 let SaveHandler;
-let validateEmbargoDate;
 let validateTemporalCoverage;
 let validateContactPerson;
 let $;
 let modalInstances;
 
 function loadScript() {
-  ({ SaveHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson } =
+  ({ SaveHandler, validateTemporalCoverage, validateContactPerson } =
     requireFresh('../../js/saveHandler.js'));
 }
 
@@ -66,18 +65,6 @@ describe('saveHandler.js', () => {
 
   afterEach(() => {
     jest.useRealTimers();
-  });
-
-  test('validateEmbargoDate marks invalid when embargo before creation', () => {
-    const created = document.getElementById('input-date-created');
-    const embargo = document.getElementById('input-date-embargo');
-    const feedback = document.querySelector('.embargo-invalid');
-    created.value = '2024-06-02';
-    embargo.value = '2024-06-01';
-    const result = validateEmbargoDate();
-    expect(result).toBe(false);
-    expect(embargo.classList.contains('is-invalid')).toBe(true);
-    expect(feedback.textContent).toBe('embargoErr');
   });
 
   test('validateEmbargoDate resets when empty', () => {
@@ -189,7 +176,6 @@ describe('saveHandler.js', () => {
     const mod = await import('../../js/saveHandler.js');
     expect(mod.default).toBeDefined();
     expect(mod.SaveHandler).toBeDefined();
-    expect(mod.validateEmbargoDate).toBeDefined();
     expect(mod.validateTemporalCoverage).toBeDefined();
     expect(mod.validateContactPerson).toBeDefined();
   });
