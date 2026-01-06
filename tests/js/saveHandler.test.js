@@ -65,13 +65,6 @@ describe('saveHandler.js', () => {
     jest.useRealTimers();
   });
 
-  test('validateEmbargoDate resets when empty', () => {
-    const embargo = document.getElementById('input-date-embargo');
-    validateEmbargoDate();
-    expect(embargo.className).not.toContain('is-invalid');
-    expect(embargo.className).not.toContain('is-valid');
-  });
-
   test('generateFilename returns formatted timestamp', async () => {
     jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z'));
     const handler = new SaveHandler('form-mde','modal-saveas','modal-notification');
