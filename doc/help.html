@@ -836,25 +836,19 @@ include_once "../settings.php";
                     <p>Both Start and End Date should be between 01.01.1900 and 31.12.2100.</p>
                     <ul>
                         <li><strong>Start Date:</strong> Date of the beginning of the temporal coverage of the
-                            dataset.
-                            Can be selected via the date picker. Required field.</li>
-                        <li><strong>Start Time:</strong> Time specification in format hh:mm:ss. Can be selected
-                            via
-                            the
-                            time picker.</li>
-                        <li><strong>End Date:</strong> Date of the end of the temporal coverage of the dataset.
-                            Can
-                            be
-                            selected via the date picker. Required field.</li>
-                        <li><strong>End Time:</strong> Time specification in format hh:mm:ss. Can be selected
-                            via
-                            the
-                            time picker.</li>
+                            dataset. Can be selected via the date picker. Required field.</li>
+                        <li><strong>Start Time:</strong> Time specification in format hh:mm:ss. Can be selected via
+                            the time picker. <strong>Optional.</strong></li>
+                        <li><strong>End Date:</strong> Date of the end of the temporal coverage of the dataset. Can
+                            be selected via the date picker. Required field.</li>
+                        <li><strong>End Time:</strong> Time specification in format hh:mm:ss. Can be selected via
+                            the time picker. <strong>Optional.</strong></li>
                     </ul>
                 </div>
                 <div id="help-tsc-timezone">
                     <h4>Timezone</h4>
-                    Specifies the UTC-based time zone for start and end times.<br>
+                    Specifies the UTC-based time zone for start and end times.
+                    <strong>Only required if times are provided.</strong><br>
                     This field allows selection from all worldwide time zones to accurately represent the
                     temporal details of your data.
                 </div>
@@ -1057,7 +1051,7 @@ include_once "../settings.php";
                 <div id="help-file-format">
                     <h4>File Format</h4>
                     <p>
-                        All models on the ICGEM are published in the ICGEM file format. See description at <a href="https://icgem.gfz-potsdam.de/docs/ICGEM-Format-2023.pdf" target="_blank">ICGEM-Format-2023.pdf</a>
+                        All models on the ICGEM are published in the ICGEM file format. See description at <a href="https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf" target="_blank">ICGEM-Format-2023.pdf</a>
                     </p>
                     <p>
                         This field is mandatory. To support time-limited validity periods for time-varying coefficients, a new parameter has been introduced: <code>format=icgem2.0</code>.
@@ -1167,7 +1161,7 @@ include_once "../settings.php";
                     <h4>File Format</h4>
                     <p>
                         All models on the ICGEM are published in the ICGEM file format. 
-                        See description at https://icgem.gfz-potsdam.de/docs/ICGEM-Format-2023.pdf
+                        See description at https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf
 
                         This field is mandatory. To support time-limited validity periods for time-varying coefficients, 
                         a new parameter has been introduced: format=icgem2.0.
@@ -1270,7 +1264,7 @@ include_once "../settings.php";
             <div id="help-technical">
                 <h3>Characteristics of the model</h3>
                 <p>
-                    This section is fully based on the technical specifications of the model. They are provided in the model file header. According to the <a href="https://icgem.gfz-potsdam.de/docs/ICGEM-Format-2023.pdf" target="_blank" rel="noopener">ICGEM file format description</a>, these variables are required, as they are essential for the use of the model.
+                    This section is fully based on the technical specifications of the model. They are provided in the model file header. According to the <a href="https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf" target="_blank" rel="noopener">ICGEM file format description</a>, these variables are required, as they are essential for the use of the model.
                 </p>
                 <div id="help-tide-system">
                     <h4>Tide system</h4>

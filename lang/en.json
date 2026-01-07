@@ -6,8 +6,7 @@
         "mode": "Mode",
         "light": "Light",
         "dark": "Dark",
-        "language": "Language",
-        "legalNotice": "Legal notice"
+        "language": "Language"
     },
     "general": {
         "logoTitle": "ELMO - Enhanced Laboratory Metadata Organizer 2.0",
@@ -52,7 +51,8 @@
         "saveError": "Failed to save dataset.",
         "submitError": "Failed to submit dataset.",
         "errorHeading": "Error",
-        "successHeading": "Success!"
+        "successHeading": "Success! Your metadata has been submitted.",
+        "successMessage": "Thank you for cooperating with us. You will be contacted via email by the data curation team of GFZ Data Services shortly."
     },
     "autosave": {
         "status": {
@@ -178,7 +178,8 @@
         "descriptionPlaceholder": "Please enter the description of the temporal and spatial coverage...",
         "start": "Start",
         "end": "End",
-        "dateTimeInvalid": "Please enter a valid date and time.",
+        "dateTimeInvalid": "Please enter a valid date.",
+        "endDateError": "End date must not be before start date.",
         "timezone": "Timezone",
         "timezoneInvalid": "Please choose a timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)",
@@ -251,7 +252,10 @@
         "saveAs": "Save",
         "saveAsTooltip": "Save the current data or content under a new file name.",
         "submit": "Submit",
-        "submitTooltip": "Transmit the entered data or content."
+        "submitTooltip": "Transmit the entered data or content.",
+        "legalNotice": "Legal Notice",
+        "PrivacyPolicy": "Privacy Policy",
+        "elmoGuide": "Elmo Guide"
     },
     "modals": {
         "feedback": {
@@ -303,7 +307,7 @@
         "title": "Welcome to ELMO 😊",
         "paragraph1": "Welcome to ELMO – the new online metadata editor for GFZ Data Services.",
         "paragraph2": "Please provide your information and click the ´Submit´ button to send your metadata to the curators of GFZ Data Services. Additionally, we recommend saving a copy of the metadata on your computer for your records.",
-        "paragraph3": "For further guidance, please refer to our <a href='https://dataservices.gfz-potsdam.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
+        "paragraph3": "For further guidance, please refer to our <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
         "button": "Continue"
     }
 

@@ -521,7 +521,7 @@ A Contact Person is saved as a "Contributor" with the role "Contact Person" in t
   - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
 ### Originating Laboratory
-The controlled list is provided and maintained by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/laboratories.json)) and can be updated via API call (see [API documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/index.html)).
+The controlled list is provided and maintained by Utrecht University ([MSL Laboratories](https://github.com/UtrechtUniversity/msl_vocabularies/blob/main/vocabularies/labs/laboratories.json)) and can be updated via API call (see [API documentation](https://dataservices.gfz.de/elmo/api/v2/docs/index.html)).
 
 - Laboratory Name
   This field contains the laboratory, where the research data came from. Its content is mapped to `<contributor contributorType="HostingInstitution"><contributorName>` in the DataCite scheme. 
@@ -676,7 +676,7 @@ Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD
 
 #### EPOS Multi-Scale Laboratories Keywords
 
-Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies) are provided by Utrecht University on [GitHub](https://github.com/UtrechtUniversity/msl_vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/index.html)).
+Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.uu.nl/vocabularies) are provided by Utrecht University on [GitHub](https://github.com/UtrechtUniversity/msl_vocabularies). Vocabulary can be updated from the repository via API (see [API Documentation](https://dataservices.gfz.de/elmo/api/v2/docs/index.html)).
 
 - EPOS Multi-Scale Laboratories Keyword
 
@@ -704,7 +704,7 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
 
 #### Thesaurus Keywords
 
-Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GCMD Instruments are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/index.html))
+Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GCMD Instruments are available for selection. Can be updated from [NASA's GCMD](https://www.earthdata.nasa.gov/data/tools/idn/gcmd-keyword-viewer) repository via API (see [API documentation](https://dataservices.gfz.de/elmo/api/v2/docs/index.html))
 
 - **GCMD Science Keyword**
 
@@ -886,7 +886,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the starting time.
   - Data type: TIME  
-  - Occurrence: 0-1, becomes mandatory, if any time in Spatial and Temporal Coverage is specified, to achieve data consistency
+  - Occurrence: 0-1, optional. If provided, both Start Time and End Time as well as Timezone become mandatory.
   - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -906,7 +906,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the ending time.
   - Data type: TIME 
-  - Occurrence: 0-1, becomes mandatory, if any time in Spatial and Temporal Coverage is specified, to achieve data consistency
+  - Occurrence: 0-1, optional. If provided, both Start Time and End Time as well as Timezone become mandatory.
   - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
@@ -916,7 +916,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
   - Data type: String
-  - Occurrence: 0-1, mandatory, when Start Date, Start Time, End Date or End Time is filled
+  - Occurrence: 0-1, mandatory only when Start Time or End Time is provided.
   - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
   - Restrictions: Only values from the list are permitted
   - ISO documentation
