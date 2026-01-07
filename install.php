@@ -595,7 +595,6 @@ function createDatabaseStructure($connection): array
         "Static_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Static_Model_Properties` (
     `static_model_property_id` INT NOT NULL AUTO_INCREMENT,
     `info_time_variable_coefficients` TEXT NULL,
-    `description` TEXT NULL,
     PRIMARY KEY (`static_model_property_id`)
 );",
 
