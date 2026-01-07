@@ -178,17 +178,19 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
     $endDate = firstNonEmpty($postData, ['temporalEnd', 'temporal_end']);
     $generatingInstitution = firstNonEmpty($postData, ['temporalInstitution', 'temporal_institution']);
     $generatingInstitution = ($generatingInstitution !== '') ? $generatingInstitution : null;
+    $release = firstNonEmpty($postData, ['temporalRelease', 'temporal_release']);
+    $release = ($release !== '') ? $release : null;
 
     // Insert new temporal properties record
     $sql = "INSERT INTO `Temporal_Model_Properties`
-                (`start_date`, `end_date`, `temporal_resolution_days`, `generating_institution`)
-             VALUES (?, ?, ?, ?)";
+                (`start_date`, `end_date`, `temporal_resolution_days`, `generating_institution`, `release`)
+             VALUES (?, ?, ?, ?, ?)";
     $stmt = $connection->prepare($sql);
     if (!$stmt) {
         throw new Exception("Failed to prepare insert statement: " . $connection->error);
     }
 
-    $stmt->bind_param('ssis', $startDate, $endDate, $temporalResolutionDays, $generatingInstitution);
+    $stmt->bind_param('ssiss', $startDate, $endDate, $temporalResolutionDays, $generatingInstitution, $release);
     if (!$stmt->execute()) {
         throw new Exception('Error inserting Temporal_Model_Properties: ' . $stmt->error);
     }

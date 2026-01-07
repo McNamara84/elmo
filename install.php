@@ -556,9 +556,9 @@ function createDatabaseStructure($connection): array
     `forward_modelling_domain` VARCHAR(100),
     `density_information` VARCHAR(100),
     `density_information_details` VARCHAR(1000),
-    `mantle_density_value` VARCHAR(100) NULL,
+    `mantle_density_value` FLOAT(9,3) NULL,
     `mantle_density_description` TEXT NULL,
-    `crust_density_value` VARCHAR(100) NULL,
+    `crust_density_value` FLOAT(9,3) NULL,
     `crust_density_description` TEXT NULL,
     `approximation` VARCHAR(100),
     `description` TEXT NULL,
@@ -576,10 +576,11 @@ function createDatabaseStructure($connection): array
 
         "Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Temporal_Model_Properties` (
     `temporal_model_property_id` INT NOT NULL AUTO_INCREMENT,
-    `generating_institution` VARCHAR(500) NULL,
+    `generating_institution` VARCHAR(100) NULL,
     `temporal_resolution_days` INT NULL,
     `start_date` DATE NULL,
     `end_date` DATE NULL,
+    `release` VARCHAR(100) NULL,
     PRIMARY KEY (`temporal_model_property_id`)
         );",
 
@@ -910,8 +911,8 @@ function insertTestResourceData($connection)
             ["familyName" => "Grzegorz", "givenname" => "Kwiatek", "orcid" => "1234-1234-1234-1234", "email" => "Kwiatek.Grzegorz@gfz.de", "website" => "gfz.de"],
             ["familyName" => "Goebel", "givenname" => "Thomas", "orcid" => "5678-5678-5678-5678", "email" => "Thomas.Goebel@tu-berlin.de", "website" => "www.tu.berlin"],
             ["familyName" => "Wille", "givenname" => "Christian", "orcid" => "9012-9012-9012-9012", "email" => "Christian.Wille@fh-potsdam.de", "website" => "fh-potsdam.de"],
-            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242", "email" => "grace@gfz.de", "website" => null],
-            ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "0000-0003-1463-412X", "email" => "oleh.abrykosov@gfz.de", "website" => null]
+            ["familyName" => "Dahle", "givenname" => "Christoph", "orcid" => "0000-0002-4733-9242", "email" => "grace@gfz-potsdam.de", "website" => null],
+            ["familyName" => "Abrykosov", "givenname" => "Oleh", "orcid" => "0000-0003-1463-412X", "email" => "oleh.abrykosov@gfz-potsdam.de", "website" => null]
         ],
         "Originating_Laboratory" => [
             ["laboratoryname" => "Lab 1", "labId" => "123456789c7caa2d763b647d476b2910"],
@@ -1017,9 +1018,9 @@ function insertTestResourceData($connection)
             ["Identifier" => "IECUR0097", "relation_fk" => 3, "identifier_type_fk" => 5],
             ["Identifier" => "978-3-905673-82-1", "relation_fk" => 4, "identifier_type_fk" => 2],
             // Entries for GRACE-FO documentation
-            ["Identifier" => "ftp://isdcftp.gfz.de/grace-fo/DOCUMENTS/Level-2/GRACE-FO_L2_Gravity_Field_Product_User_Handbook_v1.0.pdf", "relation_fk" => 19, "identifier_type_fk" => 17],
+            ["Identifier" => "ftp://isdcftp.gfz-potsdam.de/grace-fo/DOCUMENTS/Level-2/GRACE-FO_L2_Gravity_Field_Product_User_Handbook_v1.0.pdf", "relation_fk" => 19, "identifier_type_fk" => 17],
             ["Identifier" => "10.2312/GFZ.b103-19098", "relation_fk" => 19, "identifier_type_fk" => 4],
-            ["Identifier" => "ftp://isdcftp.gfz.de/grace-fo/DOCUMENTS/RELEASE_NOTES/GRACE-FO_GFZ_L2_Release_Notes_for_RL06.3.pdf", "relation_fk" => 19, "identifier_type_fk" => 17],
+            ["Identifier" => "ftp://isdcftp.gfz-potsdam.de/grace-fo/DOCUMENTS/RELEASE_NOTES/GRACE-FO_GFZ_L2_Release_Notes_for_RL06.3.pdf", "relation_fk" => 19, "identifier_type_fk" => 17],
             //
             ["Identifier" => "10.1016/j.jag.2015.03.001", "relation_fk" => 19, "identifier_type_fk" => 4],
             ["Identifier" => "10.1007/s10712-020-09590-9", "relation_fk" => 19, "identifier_type_fk" => 4]

@@ -162,7 +162,8 @@ class ICGEMController
         tmp.generating_institution,
         tmp.temporal_resolution_days,
         tmp.start_date,
-        tmp.end_date
+        tmp.end_date,
+        tmp.release
         FROM Temporal_Model_Properties tmp
         JOIN Resource_has_Temporal_Model_Properties rhtmp ON tmp.temporal_model_property_id = rhtmp.temporal_model_property_id
         WHERE rhtmp.resource_id = ?
@@ -401,6 +402,9 @@ class ICGEMController
                 }
                 if (!empty($property['end_date'])) {
                     $propertyXml->addChild('endDate', htmlspecialchars($property['end_date']));
+                }
+                if (!empty($property['release'])) {
+                    $propertyXml->addChild('release', htmlspecialchars($property['release']));
                 }
             }
         }
