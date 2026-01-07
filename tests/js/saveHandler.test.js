@@ -60,7 +60,7 @@ describe('saveHandler.js', () => {
         savingInfo: 'savI'
       }
     };
-
+    global.logEvent = jest.fn().mockResolvedValue();
     loadScript();
   });
 
