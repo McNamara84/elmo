@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
  */
 function generateAndOutputXml($resource_id)
 {
-    global $connection;
+    global $connection, $showGGMsProperties;
     
     try {
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
@@ -69,24 +69,25 @@ function generateAndOutputXml($resource_id)
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
         $base_url = $protocol . $_SERVER['HTTP_HOST'];
         $project_path = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\');
-        // Output file generation from the API endpoint. 
-        // The endpoint is different for general data and for ICGEM data. 
-        require_once __DIR__ . '/../settings.php';
-        $isIcg = !empty($showGGMsProperties);
+        
+        // $showGGMsProperties; is an indicator, whether this version is ICGEM or not.
 
         $general_url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
         $icgem_url   = $base_url . $project_path . "/api/v2/dataset/icgem_export/" . $resource_id;
-        $url         = $isIcg ? $icgem_url : $general_url;
+        $url         = $showGGMsProperties ? $icgem_url : $general_url;
 
         // Try API call first
         $bytesRead = @readfile($url);
 
         if ($bytesRead === false) {
-            error_log("[💿SAVE]: readfile from URL failed. Attempting in-memory generation. Resource ID: $resource_id, URL: $url");
+            error_log("[💿SAVE]: readfile from URL failed. Attempting in-memory generation. Resource ID: $resource_id");
+            error_log("[💿SAVE]: showGGMsProperties = " . var_export($showGGMsProperties, true));
+            error_log("[💿SAVE]: showGGMsProperties = " . var_export($showGGMsProperties, true));
+            error_log("[💿SAVE]: Will use " . ($showGGMsProperties ? "createICGEMxml()" : "envelopeXmlAsString()"));
 
             try {
                 $datasetController = new DatasetController();
-                $xmlString = $isIcg
+                $xmlString = $showGGMsProperties
                     ? $datasetController->createICGEMxml($resource_id)
                     : $datasetController->envelopeXmlAsString($connection, $resource_id);
                     
