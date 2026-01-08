@@ -128,12 +128,11 @@ class ICGEMController
             tmp.forward_modelling_domain,
             tmp.density_information,
             tmp.density_information_details,
-            tmp.mantle_density_value,
-            tmp.mantle_density_description,
-            tmp.crust_density_value,
-            tmp.crust_density_description,
-            tmp.approximation,
-            tmp.description
+            tmp.mantle_density_information,
+            tmp.mantle_density_information_details,
+            tmp.crust_density_information,
+            tmp.crust_density_information_details,
+            tmp.approximation
         FROM Topographic_Models_Properties tmp
         JOIN Resource_has_Topographic_Model_Properties rhtmp ON tmp.topographic_model_property_id = rhtmp.topographic_model_property_id
         WHERE rhtmp.resource_id = ?

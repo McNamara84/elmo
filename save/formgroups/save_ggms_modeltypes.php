@@ -108,21 +108,20 @@ function firstNonEmpty(array $data, array $keys)
  */
 function saveStaticModelData(mysqli $connection, array $postData, int $resourceId): void
 {
-    // Frontend posts description via staticDescription[] (camelCase)
-    $description = firstNonEmpty($postData, ['staticDescription']);
+    // Frontend posts this information via staticDescription[] (camelCase)
+    $info_tv_coefficients = firstNonEmpty($postData, ['staticDescription']);
 
     // Insert new static model data
     $sql = "INSERT INTO `Static_Model_Properties`
-                (`info_time_variable_coefficients`, `description`)
-            VALUES (?, ?)";
+                (`info_time_variable_coefficients`)
+            VALUES (?)";
 
     $stmt = $connection->prepare($sql);
     if (!$stmt) {
         throw new Exception("Failed to prepare insert statement: " . $connection->error);
     }
 
-    // Store description as the info text; leave description column available for future use
-    $stmt->bind_param('ss', $description, $description);
+    $stmt->bind_param('s', $info_tv_coefficients);
     if (!$stmt->execute()) {
         throw new Exception('Error inserting Static_Model_Properties: ' . $stmt->error);
     }
@@ -234,18 +233,18 @@ function insertTopographicModelProperties(mysqli $connection, array $postData, i
     $densityDetails = firstNonEmpty($postData, ['topoDensityDetails', 'topo_density_details']);
 
     // Handle separate density inputs (form provides descriptions, not numeric values)
-    $crustDensityValue = firstNonEmpty($postData, ['topoDensityCrust']);
-    $crustDensityDesc = firstNonEmpty($postData, ['topoDensityDetailsCrust']);
-    $mantleDensityValue = firstNonEmpty($postData, ['topoDensityMantle']);
-    $mantleDensityDesc = firstNonEmpty($postData, ['topoDensityDetailsMantle']);
+    $crustDensityInfo = firstNonEmpty($postData, ['topoDensityCrust']);
+    $crustDensityDet = firstNonEmpty($postData, ['topoDensityDetailsCrust']);
+    $mantleDensityInfo = firstNonEmpty($postData, ['topoDensityMantle']);
+    $mantleDensityDet = firstNonEmpty($postData, ['topoDensityDetailsMantle']);
 
     // Store dropdown labels (e.g., "constant", "layer-specific") directly; columns are VARCHAR(100)
 
     // Insert new topographic properties record
     $sql = "INSERT INTO `Topographic_Models_Properties`
                 (`layer_approach`, `forward_modelling_domain`, `density_information`, 
-                 `density_information_details`, `crust_density_value`, `crust_density_description`,
-                 `mantle_density_value`, `mantle_density_description`, `approximation`)
+                 `density_information_details`, `crust_density_information`, `crust_density_information_details`,
+                 `mantle_density_information`, `mantle_density_information_details`, `approximation`)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $connection->prepare($sql);
     if (!$stmt) {
@@ -259,10 +258,10 @@ function insertTopographicModelProperties(mysqli $connection, array $postData, i
         $domain,
         $densityInformation,
         $densityDetails,
-        $crustDensityValue,
-        $crustDensityDesc,
-        $mantleDensityValue,
-        $mantleDensityDesc,
+        $crustDensityInfo,
+        $crustDensityDet,
+        $mantleDensityInfo,
+        $mantleDensityDet,
         $approximation
     );
     if (!$stmt->execute()) {

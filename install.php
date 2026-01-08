@@ -556,12 +556,11 @@ function createDatabaseStructure($connection): array
     `forward_modelling_domain` VARCHAR(100),
     `density_information` VARCHAR(100),
     `density_information_details` VARCHAR(1000),
-    `mantle_density_value` FLOAT(9,3) NULL,
-    `mantle_density_description` TEXT NULL,
-    `crust_density_value` FLOAT(9,3) NULL,
-    `crust_density_description` TEXT NULL,
+    `mantle_density_information` VARCHAR(100),
+    `mantle_density_information_details` TEXT NULL,
+    `crust_density_information` VARCHAR(100),
+    `crust_density_information_details` TEXT NULL,
     `approximation` VARCHAR(100),
-    `description` TEXT NULL,
     PRIMARY KEY (`topographic_model_property_id`)
         );",
 
