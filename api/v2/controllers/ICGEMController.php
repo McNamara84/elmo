@@ -350,30 +350,28 @@ class ICGEMController
                 if (!empty($property['forward_modelling_domain'])) {
                     $propertyXml->addChild('forwardModellingDomain', htmlspecialchars($property['forward_modelling_domain']));
                 }
+                    if (!empty($property['approximation'])) {
+                    $propertyXml->addChild('approximation', htmlspecialchars($property['approximation']));
+                }
                 if (!empty($property['density_information'])) {
                     $propertyXml->addChild('densityInformation', htmlspecialchars($property['density_information']));
                 }
                 if (!empty($property['density_information_details'])) {
                     $propertyXml->addChild('densityInformationDetails', htmlspecialchars($property['density_information_details']));
                 }
-                if (!empty($property['mantle_density_value'])) {
-                    $propertyXml->addChild('mantleDensityValue', htmlspecialchars($property['mantle_density_value']));
+                if (!empty($property['mantle_density_information'])) {
+                    $propertyXml->addChild('mantleDensityInformation', htmlspecialchars($property['mantle_density_information']));
                 }
-                if (!empty($property['mantle_density_description'])) {
-                    $propertyXml->addChild('mantleDensityDescription', htmlspecialchars($property['mantle_density_description']));
+                if (!empty($property['mantle_density_information_details'])) {
+                    $propertyXml->addChild('mantleDensityInformationDetails', htmlspecialchars($property['mantle_density_information_details']));
                 }
-                if (!empty($property['crust_density_value'])) {
-                    $propertyXml->addChild('crustDensityValue', htmlspecialchars($property['crust_density_value']));
+                if (!empty($property['crust_density_information'])) {
+                    $propertyXml->addChild('crustDensityInformation', htmlspecialchars($property['crust_density_information']));
                 }
-                if (!empty($property['crust_density_description'])) {
-                    $propertyXml->addChild('crustDensityDescription', htmlspecialchars($property['crust_density_description']));
+                if (!empty($property['crust_density_information_details'])) {
+                    $propertyXml->addChild('crustDensityInformationDetails', htmlspecialchars($property['crust_density_information_details']));
                 }
-                if (!empty($property['approximation'])) {
-                    $propertyXml->addChild('approximation', htmlspecialchars($property['approximation']));
-                }
-                if (!empty($property['description'])) {
-                    $propertyXml->addChild('description', htmlspecialchars($property['description']));
-                }
+
             }
         }
     }
