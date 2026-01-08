@@ -48,7 +48,8 @@ function sendFeedbackMail(
     } else {
         $elmoVersion = 'generic';
     }
-    
+    // Testing log 
+    error_log("ELMO Version for Feedback: {$elmoVersion}");
     // Network test before sending
     if (!testGfzSmtpConnectivity()) {
         echo json_encode(['success' => false, 'message' => 'GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.']);
