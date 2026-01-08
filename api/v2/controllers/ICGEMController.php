@@ -328,6 +328,9 @@ class ICGEMController
                 if (!empty($dataSource['M_identifier_type'])) {
                     $dataSourceXml->addChild('M_Identifier_Type', htmlspecialchars($dataSource['M_identifier_type']));
                 }
+                if (!empty($dataSource['M_name'])) {
+                    $dataSourceXml->addChild('M_Name', htmlspecialchars($dataSource['M_name']));
+                }
             }
         }
     }

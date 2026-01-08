@@ -641,6 +641,7 @@ function createDatabaseStructure($connection): array
     `T_Isostasy_compensation_depth` INT NULL,
     `M_identifier` VARCHAR(1000) NULL,
     `M_identifier_type` VARCHAR(100) NULL,
+    `M_name` VARCHAR(500) NULL,
     PRIMARY KEY (`data_source_id`)
         );",
 

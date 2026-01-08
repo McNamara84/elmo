@@ -207,10 +207,15 @@ function prepareDataSourceForDb(array $row): array
         case 'A': // Altimetry
         case 'T': // Terrain
         case 'M': // Model
-            $dbRow['details'] = trim($row['datasource_details'] ?? '');
+            if (!empty($row['dIdentifierType'])) {
+                $dbRow['M_identifier_type'] = trim($row['dIdentifierType']);
+            }
             // Note: The name of the model is put in 'details'
             if (!empty($row['dName'])) {
-                $dbRow['details'] = $row['dName'] . ": " . $dbRow['details'];
+                $dbRow['M_name'] = trim($row['dName']);
+                if(!empty($row['details'])) {
+                    $dbRow['details'] = $row['dName'] . ": " . $dbRow['details'];
+                }
             }
 
             $dbRow['M_identifier'] = trim($row['dIdentifier']);
@@ -233,8 +238,8 @@ function insertDataSource(mysqli $connection, array $dbRow): int
 {
     $sql = "INSERT INTO `Data_Sources` 
             (type, description, details, S_value_name, S_value_uri, S_scheme_name, S_scheme_uri,
-             T_Isostasy_compensation_depth, M_identifier, M_identifier_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+             T_Isostasy_compensation_depth, M_identifier, M_identifier_type, M_name)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $stmt = $connection->prepare($sql);
     if (!$stmt) {
@@ -252,7 +257,8 @@ function insertDataSource(mysqli $connection, array $dbRow): int
         $dbRow['S_scheme_uri'],
         $dbRow['T_Isostasy_compensation_depth'],
         $dbRow['M_identifier'],
-        $dbRow['M_identifier_type']
+        $dbRow['M_identifier_type'],
+        $dbRow['M_name']
     );
     
     $stmt->execute();
