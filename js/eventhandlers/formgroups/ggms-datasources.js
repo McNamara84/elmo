@@ -34,7 +34,7 @@ $(document).ready(function () {
      * Defines which fields are required based on datasource type
      */
     const validationRules = {
-        'S': { required: ['satellite_platform'] },
+        'S': { required: [] },
         'G': { required: [] },
         'A': { required: [] },
         'T': { required: [] },
