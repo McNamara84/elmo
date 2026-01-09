@@ -168,12 +168,13 @@ function prepareDataSourceForDb(array $row): array
 {
     $type = trim($row['type']);
     $description = trim($row['description'] ?? '');
+    $details = trim($row['datasource_details'] ?? ''); // Add this line
 
     // Initialize all type-specific columns as NULL
     $dbRow = [
         'type' => $type,
         'description' => !empty($description) ? $description : null,
-        'details' => null,
+        'details' => !empty($details) ? $details : null,
         'S_value_name' => null,
         'S_value_uri' => null,
         'S_scheme_name' => null,
@@ -207,7 +208,6 @@ function prepareDataSourceForDb(array $row): array
         case 'A': // Altimetry
         case 'T': // Terrain
         case 'M': // Model
-
             // Note: The name of the model is put in 'details'
             if (!empty($row['dName'])) {
                 $dbRow['M_name'] = trim($row['dName']);
@@ -226,9 +226,9 @@ function prepareDataSourceForDb(array $row): array
             }
             break;
     }
-
     return $dbRow;
-}/**
+}
+/**
  * Inserts a single data source into the database
  * 
  * @param mysqli $connection Database connection
