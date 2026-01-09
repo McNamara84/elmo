@@ -174,7 +174,7 @@ function validateSpatialTemporalCoverageRequirements() {
 
 
 /**
- * Validates the Related Work section of the form.
+ * Validates the Related Work section of the form(only when clicking submit).
  * Ensures all fields ("Relation", "Identifier", and "Identifier Type") are required if any of them are filled.
  */
 function validateRelatedWorkRequirements() {
@@ -188,17 +188,21 @@ function validateRelatedWorkRequirements() {
         };
 
         // Checks if any field in the row is filled
-        var isAnyFieldFilled = Object.values(fields).some(field => field.val() && field.val().trim() !== '');
+        var isAnyFieldFilled = Object.values(fields).some(function (field) {
+            return field.val() && field.val().trim() !== '';
+        });
 
         // Sets or removes the 'required' attribute based on the fill status
         if (isAnyFieldFilled) {
-            fields.relation.attr('required', 'required');
-            fields.identifier.attr('required', 'required');
-            fields.type.attr('required', 'required');
+            // Diese drei Felder sollen beim Submit required sein
+            fields.relation.addClass('js-required-on-submit');
+            fields.identifier.addClass('js-required-on-submit');
+            fields.type.addClass('js-required-on-submit');
         } else {
-            fields.relation.removeAttr('required');
-            fields.identifier.removeAttr('required');
-            fields.type.removeAttr('required');
+            // Zeile leer: nicht submit-pflichtig, altes required aufräumen
+            fields.relation.removeClass('js-required-on-submit').removeAttr('required');
+            fields.identifier.removeClass('js-required-on-submit').removeAttr('required');
+            fields.type.removeClass('js-required-on-submit').removeAttr('required');
         }
     });
 

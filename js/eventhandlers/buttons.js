@@ -149,14 +149,15 @@ $(document).ready(function () {
     // For Save: no validation
     $('#button-form-save').on('click', function () {
       resetSubmitOnlyFields();
-      validateFundingReferenceRequirements();
     });
 
     // For Submit: enforce required and run HTML5 validation
     $('#button-form-submit').on('click', function (e) {
       resetSubmitOnlyFields();
 
+      // Apply specific rules
       validateFundingReferenceRequirements();
+      validateRelatedWorkRequirements();
 
       form.querySelectorAll('.js-required-on-submit').forEach(el => {
         el.setAttribute('required', 'required');
