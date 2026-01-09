@@ -204,9 +204,9 @@ function createDatabaseStructure($connection): array
     `year` YEAR(4) NULL,
     `dateCreated` DATE NULL,
     `dateEmbargoUntil` DATE NULL,
-    `Rights_rights_id` INT NOT NULL,
-    `Resource_Type_resource_name_id` INT NOT NULL,
-    `Language_language_id` INT NOT NULL,  
+    `Rights_rights_id` INT NULL,
+    `Resource_Type_resource_name_id` INT NULL,
+    `Language_language_id` INT NULL,  
     PRIMARY KEY (`resource_id`),
     FOREIGN KEY (`Rights_rights_id`)
     REFERENCES `Rights` (`rights_id`),

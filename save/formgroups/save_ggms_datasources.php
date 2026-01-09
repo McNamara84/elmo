@@ -207,9 +207,7 @@ function prepareDataSourceForDb(array $row): array
         case 'A': // Altimetry
         case 'T': // Terrain
         case 'M': // Model
-            if (!empty($row['dIdentifierType'])) {
-                $dbRow['M_identifier_type'] = trim($row['dIdentifierType']);
-            }
+
             // Note: The name of the model is put in 'details'
             if (!empty($row['dName'])) {
                 $dbRow['M_name'] = trim($row['dName']);
@@ -217,8 +215,12 @@ function prepareDataSourceForDb(array $row): array
                     $dbRow['details'] = $row['dName'] . ": " . $dbRow['details'];
                 }
             }
-
-            $dbRow['M_identifier'] = trim($row['dIdentifier']);
+            if (!empty($row['dIdentifier'])) {
+                $dbRow['M_identifier'] = trim($row['dIdentifier']);
+            }
+            if (!empty($row['dIdentifierType'])) {
+                $dbRow['M_identifier_type'] = trim($row['dIdentifierType']);
+            }
             if (!empty($row['dIdentifierType'])) {
                 $dbRow['M_identifier_type'] = trim($row['dIdentifierType']);
             }
@@ -247,7 +249,7 @@ function insertDataSource(mysqli $connection, array $dbRow): int
     }
 
     $stmt->bind_param(
-        'ssssssisss',
+        'sssssssisss',
         $dbRow['type'],
         $dbRow['description'],
         $dbRow['details'],
