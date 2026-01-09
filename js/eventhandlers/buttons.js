@@ -158,6 +158,7 @@ $(document).ready(function () {
       // Apply specific rules
       validateFundingReferenceRequirements();
       validateRelatedWorkRequirements();
+      validateSpatialTemporalCoverageRequirements();
 
       form.querySelectorAll('.js-required-on-submit').forEach(el => {
         el.setAttribute('required', 'required');

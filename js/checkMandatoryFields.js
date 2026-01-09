@@ -137,10 +137,10 @@ function validateSpatialTemporalCoverageRequirements() {
         var filled = {};
 
         // Store jQuery elements and their filled status
-        fields.forEach(field => {
-            inputs[field] = row.find(`[id^="input-stc-${field}"]`);
+        fields.forEach(function (field) {
+            inputs[field] = row.find('[id^="input-stc-' + field + '"]');
             filled[field] = inputs[field].val() && inputs[field].val().trim() !== '';
-            inputs[field].removeAttr('required'); // Reset required first
+            inputs[field].removeAttr('required').removeClass('js-required-on-submit');
         });
 
         // If all fields are empty, skip this row
@@ -148,24 +148,38 @@ function validateSpatialTemporalCoverageRequirements() {
             return;
         }
 
+        // _______________________________________________________________________
+
         // Bounding box dependencies -> dates required but time optional
         if (filled.latmax || filled.longmax) {
-            ['latmin', 'longmin', 'latmax', 'longmax', 'description', 'datestart', 'dateend'].forEach(field => inputs[field].attr('required', 'required'));
+            ['latmin', 'longmin', 'latmax', 'longmax', 'description', 'datestart', 'dateend']
+                .forEach(function (field) {
+                    inputs[field].addClass('js-required-on-submit');
+                });
         }
 
         // If any of latmin/longmin/description is filled -> dates required, time optional
         if (filled.latmin || filled.longmin || filled.description) {
-            ['latmin', 'longmin', 'description', 'datestart', 'dateend'].forEach(field => inputs[field].attr('required', 'required'));
+            ['latmin', 'longmin', 'description', 'datestart', 'dateend']
+                .forEach(function (field) {
+                    inputs[field].addClass('js-required-on-submit');
+                });
         }
 
         // If dates are provided -> ensure basic required fields, time optional
         if (filled.datestart || filled.dateend) {
-            ['datestart', 'dateend', 'latmin', 'longmin', 'description'].forEach(field => inputs[field].attr('required', 'required'));
+            ['datestart', 'dateend', 'latmin', 'longmin', 'description']
+                .forEach(function (field) {
+                    inputs[field].addClass('js-required-on-submit');
+                });
         }
 
         // If any time value is provided in this row -> require both times, dates and timezone
         if (filled.timestart || filled.timeend) {
-            ['timestart', 'timeend', 'datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
+            ['timestart', 'timeend', 'datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone']
+                .forEach(function (field) {
+                    inputs[field].addClass('js-required-on-submit');
+                });
         }
     });
 }
