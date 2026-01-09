@@ -155,14 +155,15 @@ function saveStaticModelData(mysqli $connection, array $postData, int $resourceI
  */
 function insertTemporalModelProperties(mysqli $connection, array $postData, int $resourceId): int
 {
+    error_log("starting saving temporal model properties");
     // Parse temporal resolution from either custom value or predefined frequency
     $temporalResolutionDays = null;
-    $customFreq = firstNonEmpty($postData, ['temporalFrequency', 'temporal_frequency']);
-    $predefFreq = firstNonEmpty($postData, ['temporalFrequencyPredef', 'temporal_frequency_predef']);
+    $customFreq = $postData['temporalFrequency'] ?? '';
+    $predefFreq = $postData['temporalFrequencyPredef'] ?? '';
 
-    if ($customFreq !== null && $customFreq !== '') {
+    if ($customFreq !== '') {
         $temporalResolutionDays = (int) $customFreq;
-    } elseif ($predefFreq !== null && $predefFreq !== '') {
+    } elseif ($predefFreq !== '') {
         $frequencyMap = [
             'daily' => 1,
             'weekly' => 7,
@@ -173,12 +174,10 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
         $temporalResolutionDays = $frequencyMap[$predefFreq] ?? null;
     }
 
-    $startDate = firstNonEmpty($postData, ['temporalStart', 'temporal_start']);
-    $endDate = firstNonEmpty($postData, ['temporalEnd', 'temporal_end']);
-    $generatingInstitution = firstNonEmpty($postData, ['temporalInstitution', 'temporal_institution']);
-    $generatingInstitution = ($generatingInstitution !== '') ? $generatingInstitution : null;
-    $release = firstNonEmpty($postData, ['temporalRelease', 'temporal_release']);
-    $release = ($release !== '') ? $release : null;
+    $startDate = $postData['temporalStart'] !== '' ? $postData['temporalStart'] : null;
+    $endDate = $postData['temporalEnd'] !== '' ? $postData['temporalEnd'] : null;
+    $generatingInstitution = $postData['temporalInstitution'] !== '' ? $postData['temporalInstitution'] : null;
+    $release = $postData['temporalRelease'] !== '' ? $postData['temporalRelease'] : null;
 
     // Insert new temporal properties record
     $sql = "INSERT INTO `Temporal_Model_Properties`
@@ -188,7 +187,7 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
     if (!$stmt) {
         throw new Exception("Failed to prepare insert statement: " . $connection->error);
     }
-
+    error_log("binding parameters: " . $startDate . ", " . $endDate . ", " . $temporalResolutionDays . ", " . $generatingInstitution . ", " . $release);
     $stmt->bind_param('ssiss', $startDate, $endDate, $temporalResolutionDays, $generatingInstitution, $release);
     if (!$stmt->execute()) {
         throw new Exception('Error inserting Temporal_Model_Properties: ' . $stmt->error);
@@ -310,6 +309,7 @@ function saveGGMsModelTypes(mysqli $connection, array $postData, int $resourceId
 
     // 2) Get model type name and process accordingly
     $modelTypeName = getModelTypeName($connection, $modelTypeId);
+    error_log("Model type name determined as: " . $modelTypeName);
 
     if ($modelTypeName === 'static') {
         saveStaticModelData($connection, $postData, $resourceId);
