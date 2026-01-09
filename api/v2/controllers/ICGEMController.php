@@ -89,13 +89,14 @@ class ICGEMController
             ds.type as type,
             ds.description as description,
             ds.details as details,
-            ds.S_value_name as s_value_name,
-            ds.S_value_uri as s_value_uri,
-            ds.S_scheme_name as s_scheme_name,  
-            ds.S_scheme_uri as s_scheme_uri,
-            ds.T_Isostasy_compensation_depth as t_isostasy_compensation_depth,
-            ds.M_identifier as m_identifier,
-            ds.M_identifier_type as m_identifier_type
+            ds.S_value_name as S_value_name,
+            ds.S_value_uri as S_value_uri,
+            ds.S_scheme_name as S_scheme_name,  
+            ds.S_scheme_uri as S_scheme_uri,
+            ds.T_Isostasy_compensation_depth as T_Isostasy_compensation_depth,
+            ds.M_identifier as M_identifier,
+            ds.M_identifier_type as M_identifier_type,
+            ds.M_name as M_name
         FROM Data_Sources ds
         JOIN Resource_has_Data_Sources rhds ON ds.data_source_id = rhds.data_source_id
         WHERE rhds.resource_id = ?
