@@ -74,7 +74,7 @@ include_once "../settings.php";
                         <li class="nav-item">
                             <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors Institution</a>
                         </li>
-                        <?php if ($showMslLabs): ?>
+                        <?php if ($showMslLabs ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-originatinglaboratory"
                                 data-bs-dismiss="offcanvas">Originating Laboratory</a>
@@ -91,7 +91,7 @@ include_once "../settings.php";
                         <li class="nav-item">
                             <a class="nav-link" href="#help-descriptions" data-bs-dismiss="offcanvas">Description(s)</a>
                         </li>
-                        <?php if ($showMslVocabs): ?>
+                        <?php if ($showMslVocabs ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-mslkeywords" data-bs-dismiss="offcanvas">EPOS MSL
                                 Keywords</a>
@@ -152,7 +152,7 @@ include_once "../settings.php";
                         publisher will be named in the citation of the dataset as requested by the citation
                         guidelines of DataCite.
                     </p>
-                    <?php if (!$showLicense): ?>
+                    <?php if (!($showLicense ?? true)): ?>
                     <p>By default, this publication will be published under a Creative Commons Attribution 4.0 (CC-BY) license. 
                         This follows the GFZ German Research Centre for Geosciences' Guidelines for open science.
                         If your dataset requires another license, please contact us at datapub@gfz.de for further advice.
@@ -232,7 +232,7 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>
             <!-- formgroup rights & licenses -->
-            <?php if ($showLicense): ?>
+            <?php if ($showLicense ?? true): ?>
             <div id="help-rights" class="section-content">
                 <h3>Licenses and Rights</h3>                
                 <p>Rights information for the data set. Following the Guidelines for the Handling of Research Data
@@ -276,6 +276,7 @@ include_once "../settings.php";
                 </ul>
             </div>
             <div class="section-divider"></div>
+            <hr>
             <?php endif; ?>
             <!-- formgroup authors -->
             <div id="help-authors" class="section-content">
@@ -338,7 +339,7 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
-            <?php if ($showMslLabs): ?>
+            <?php if ($showMslLabs ?? false): ?>
             <!-- formgroup originating laboratory -->
             <div id="help-originatinglaboratory" class="section-content">
                 <div id="help-originatinglaboratory-fg">
@@ -659,7 +660,7 @@ include_once "../settings.php";
                 </div>
             </div>
             <div class="section-divider"></div>
-            <?php if ($showMslVocabs): ?>
+            <?php if ($showMslVocabs ?? false): ?>
             <hr>
             <!-- formgroup MSL Keywords -->
             <div id="help-mslkeywords" class="section-content">
@@ -996,7 +997,7 @@ include_once "../settings.php";
                 </div>
             </div>
             <!-- formgroup GGMs Properties -->
-            <?php if ($showGGMsProperties): ?>
+            <?php if ($showGGMsProperties ?? false): ?>
             <div id="help-model-characteristics" class="section-content">
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
