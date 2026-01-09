@@ -224,11 +224,12 @@ function validateFundingReferenceRequirements() {
             (fields.grantName.val() && fields.grantName.val().trim() !== '') ||
             (fields.awardUri.val() && fields.awardUri.val().trim() !== '');
 
-        // Sets or removes the 'required' attribute for the Funder field based on the Grant fields' fill status
+        // Mark Funder as a required field only if Submit has been clicked.
         if (isAnyGrantFieldFilled) {
-            fields.funder.attr('required', 'required');
+            fields.funder.addClass('js-required-on-submit');
         } else {
-            fields.funder.removeAttr('required');
+            fields.funder.removeClass('js-required-on-submit')
+                .removeAttr('required');
         }
     });
 };
