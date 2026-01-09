@@ -156,14 +156,24 @@ function saveStaticModelData(mysqli $connection, array $postData, int $resourceI
 function insertTemporalModelProperties(mysqli $connection, array $postData, int $resourceId): int
 {
     error_log("starting saving temporal model properties");
+
+    // Helper to get single value, handling potential array wrapping or undefined keys
+    $getVal = function ($key) use ($postData) {
+        $val = $postData[$key] ?? '';
+        if (is_array($val)) {
+            $val = reset($val); // Get first element if it's an array
+        }
+        return ($val !== '' && $val !== null) ? $val : null;
+    };
+
     // Parse temporal resolution from either custom value or predefined frequency
     $temporalResolutionDays = null;
-    $customFreq = $postData['temporalFrequency'] ?? '';
-    $predefFreq = $postData['temporalFrequencyPredef'] ?? '';
+    $customFreq = $postData['temporalFrequency'];
+    $predefFreq = $postData['temporalFrequencyPredef'];
 
-    if ($customFreq !== '') {
+    if ($customFreq !== null) {
         $temporalResolutionDays = (int) $customFreq;
-    } elseif ($predefFreq !== '') {
+    } elseif ($predefFreq !== null) {
         $frequencyMap = [
             'daily' => 1,
             'weekly' => 7,
@@ -174,10 +184,10 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
         $temporalResolutionDays = $frequencyMap[$predefFreq] ?? null;
     }
 
-    $startDate = $postData['temporalStart'] !== '' ? $postData['temporalStart'] : null;
-    $endDate = $postData['temporalEnd'] !== '' ? $postData['temporalEnd'] : null;
-    $generatingInstitution = $postData['temporalInstitution'] !== '' ? $postData['temporalInstitution'] : null;
-    $release = $postData['temporalRelease'] !== '' ? $postData['temporalRelease'] : null;
+    $startDate = $getVal('temporalStart');
+    $endDate = $getVal('temporalEnd');
+    $generatingInstitution = $getVal('temporalInstitution');
+    $release = $getVal('releaseNumber');
 
     // Insert new temporal properties record
     $sql = "INSERT INTO `Temporal_Model_Properties`
