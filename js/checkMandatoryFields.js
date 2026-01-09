@@ -205,7 +205,7 @@ function validateRelatedWorkRequirements() {
 };
 
 /**
- * Validates the Funding Reference section of the form.
+ * Validates the Funding Reference section of the form(only when clicking submit).
  * Ensures the "Funder" field is required if either "Grant Number" or "Grant Name" fields are filled.
  */
 function validateFundingReferenceRequirements() {
