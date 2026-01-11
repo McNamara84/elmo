@@ -289,6 +289,9 @@ function sendFeedbackMail(
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     
+    // Get database connection from settings.php
+    global $connection;
+    
     $clientIp = getClientIp();
     
     // Security Check 1: Honeypot
