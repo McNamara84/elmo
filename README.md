@@ -1379,24 +1379,14 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | *schemeURI*                               |                   0-1                   |                  0-1                  | `<funderIdentifier schemeURI>`                                                                                                                                              |
 |                            | **Grant Number**                          |                   0-1                   |                  0-1                  | `<awardNumber>`                                                                                                                                                             |
 |                            | **Grant Name**                            |                   0-1                   |                  0-1                  | `<awardTitle>`                                                                                                                                                              |
-|                            | **Award URI**                             |             0-1                   |                  0-1                  | `<awardNumber awardURI="...">` |
-| GGM Definition             | **Model Name**                            |        1                                |                  --                   | `<modelName>`                                                                                                                                                               |
-|                            | **Model Type**                            |        1                                |                  --                   | `<modelType>`                                                                                                                                                               |
-|                            | **Mathematical Representation**           |        1                                |                  --                   | `<mathematicalRepresentation>`                                                                                                                                               |
-|                            | **Celestial Body**                        |       0-1                               |                  --                   | `<celestialBody>`                                                                                                                                                           |
-|                            | **Product Type**                          |       0-1                               |                  --                   | `<productType>`                                                                                                                                                             |
-|                            | **File Format**                           |       0-1                               |                  --                   | `<fileFormat>`                                                                                                                                                              |
-| GGM Properties             | **Errors**                                |       0-1                               |                  --                   | `<errors>`                                                                                                                                                                  |
-|                            | **Tide System**                           |       0-1                               |                  --                   | `<tideSystem>`                                                                                                                                                              |
-|                            | **Degree**                                |       0-1                               |                  --                   | `<degree>`                                                                                                                                                                  |
-|                            | **Radius**                                |       0-1                               |                  --                   | `<radius>`                                                                                                                                                                  |
-|                            | **Earth Gravity Constant**                |       0-1                               |                  --                   | `<earthGravityConstant>`                                                                                                                                                    |
-| Topographic Properties     | **Layer Approach**                        |       0-1                               |                  --                   | `<layerApproach>`                                                                                                                                                           |
-|                            | **Density Information**                   |       0-1                               |                  --                   | `<densityInformation>`                                                                                                                                                      |
-| Temporal Properties        | **Generating Institution**                |       0-1                               |                  --                   | `<generatingInstitution>`                                                                                                                                                   |
-|                            | **Temporal Resolution**                   |       0-1                               |                  --                   | `<temporalResolutionDays>`                                                                                                                                                  |
-| Data Sources               | **Source Type**                           |       1-n                               |                  --                   | `<sourceType>`                                                                                                                                                              |
-|                            | **Source Name (M/S)**                     |       0-n                               |                  --                   | `<M_Name>` / `<SatelliteValueName>`                                                                                                                                         |
+|                            | **Award URI**                             |             0-1                         |               0-1                     | `<awardNumber awardURI="...">` |
+|                            |                                           |                                         |                                       |                                |
+| GGM Definition             | **File Format**                           |       0-1                               |                  --                   | `<fileFormat>`                 |
+| Data Sources            | **Satellite value name, URI, Scheme name, URI**                           |       0-1                               |                  --                   | `subjects`                 |
+| Data Sources            | **Model identifier and identifier type**              |       0-1                               |                  --                   | `relatedIdentifiers`                 |
+
+
+
 
 
 </details>
@@ -1404,10 +1394,8 @@ The following table gives a quick overview on the occurences of the form fields 
 <details>
   <summary>
 
-  ## Data validation
+  ## Architecture & Data Flow
   </summary>
-
-### Architecture & Data Flow
 
 The `saveGGMsDataSources` function orchestrates a multi-step pipeline that transforms frontend form data into structured database records, often triggering "side effects" to maintain data integrity across the system.
 
