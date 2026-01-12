@@ -1407,6 +1407,79 @@ The following table gives a quick overview on the occurences of the form fields 
   ## Data validation
   </summary>
 
+### Architecture & Data Flow
+
+The `saveGGMsDataSources` function orchestrates a multi-step pipeline that transforms frontend form data into structured database records, often triggering "side effects" to maintain data integrity across the system.
+
+**ASCII Data Flow Diagram**
+```text
+[ Frontend UI ] -> [ POST Data ]
+                         |
+            (1) [ extractDataSourceRows ] ----------+
+                         |                          |
+            (2) [ expandSatellitePlatformsToRows ] -|--> (One UI row -> Multiple DB rows)
+                         |                          |
+            (3) [ validateDataSourceRow ] <---------+
+                         |
+            (4) [ prepareDataSourceForDb ]
+                         |
+            (5) [ insertDataSource ] ----> [ Table: Data_Sources ]
+                         |
+            (6) [ Side Effects ] --------+--> [ Table: Thesaurus_Keywords ] (Type 'S')
+                                         +--> [ Table: Related_Work ] (Type 'M')
+```
+
+**Call Sequence of `saveGGMsDataSources()`**
+1. **Extraction**: `extractDataSourceRows()` parses the indexed POST arrays into discrete row objects.
+2. **Expansion**: `expandSatellitePlatformsToRows()` detects rows of Type `S`. If a single UI field contains 3 satellite platforms, it clones the row into 3 separate entities.
+3. **Validation**: `validateDataSourceRow()` enforces strict type-specific rules:
+   - **Type S**: Requires platform metadata; forbids `datasource_details`.
+   - **Type M**: Requires model name and identifiers; forbids `compensation_depth`.
+4. **Preparation**: `prepareDataSourceForDb()` maps frontend keys (e.g., `satellite_platform`) to database columns (e.g., `S_value_name`).
+5. **Persistence**: `insertDataSource()` and `linkResourceToDataSource()` record the primary data.
+6. **Side-Effect Ingestion**:
+   - `ingestSatellitePlatformAsKeyword()`: Automatically registers satellite platforms as searchable keywords in the `Thesaurus_Keywords` table.
+   - `ingestModelDataSourceAsRelatedWork()`: Automatically records Model (Type M) sources as a "Related Work" with the relation `IsDerivedFrom`.
+
+### Internal Data Protocols
+
+#### Satellite JSON Structure (Tagify)
+The "Satellite Platform" field uses a Tagify-based JSON schema. The backend expects an array of objects with the following keys:
+
+- **Data type**: JSON Array of Objects
+- **Keys**:
+  - `value`: The name of the satellite (e.g., `GRACE-A`).
+  - `id`: The URI of the platform (e.g., GCMD concept URL).
+  - `scheme`: The name of the controlled vocabulary.
+  - `schemeURI`: The URL of the vocabulary scheme.
+
+**Example Input:**
+```json
+[
+  {
+    "value": "GOCE",
+    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/...",
+    "scheme": "GCMD Platforms",
+    "schemeURI": "..."
+  }
+]
+```
+
+#### Expansion Logic
+One of ELMO's non-obvious transformations is the **Row Expansion**. 
+
+- **UI Behavior**: A user adds one "Data Source" card, selects "Satellite" type, and picks 5 satellites (e.g., Swarm A, B, C, GRACE-A, B).
+- **Processing**: The function `expandSatellitePlatformsToRows` iterates through the JSON array and generates 5 distinct database entries.
+- **Database Result**: In the `Data_Sources` table, 5 rows are created, each linked to the same Resource ID. This ensures that each satellite platform is treated as an individual, atomic data source for granular XML export and searching.
+
+</details>
+
+<details>
+  <summary>
+
+  ## Data validation
+  </summary>
+
 The metadata editor has some mandatory fields which are necessary for the submission of data. These include the following fields:
 - **Publication Year**, **Resource Type**, **Language of dataset**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email address**, **Descriptions Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
 
@@ -1436,9 +1509,7 @@ As for the ICGEM implementation, more required variables are added to ensure a f
 - **Model Type**, **Mathematical Representation**, **Model Name**
 
 Meanwhile these variables from required list are not required to publish a GGM:
-- **Resource Type** *(can be mapped to Model)*, **Spatio-temporal Coverage** *(can be mapped to global coverage)* 
-
-
+- **Resource Type** *(can be mapped to Dataset)*, **Spatio-temporal Coverage** *(can be mapped to global coverage)* 
 </details>
 
 <details>
