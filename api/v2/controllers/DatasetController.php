@@ -676,8 +676,12 @@ class DatasetController extends ICGEMController
         if ($resource['version']) {
             $xml->addChild('version', htmlspecialchars($resource['version']));
         }
-        $xml->addChild('year', htmlspecialchars($resource['year']));
-        $xml->addChild('dateCreated', htmlspecialchars($resource['dateCreated']));
+        if ($resource['year']) {
+            $xml->addChild('year', htmlspecialchars($resource['year']));
+        }
+        if ($resource['dateCreated']) {
+            $xml->addChild('dateCreated', htmlspecialchars($resource['dateCreated']));
+        }
         if ($resource['dateEmbargoUntil']) {
             $xml->addChild('dateEmbargoUntil', htmlspecialchars($resource['dateEmbargoUntil']));
         }

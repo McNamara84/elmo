@@ -28,19 +28,21 @@ function saveResourceInformationAndRights($connection, $postData)
 {
     global $showLicense;
     
-    try {
-        // Validate required fields
-        $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
-        
+    try {        
         // Only require Rights field if license form group is shown
         global $showLicense;
-        if ($showLicense) {
-            $requiredFields[] = 'Rights';
-        }
-        $requiredArrayFields = ['title', 'titleType'];
+        $action = $postData['action'] ?? 'submit';
+        if ($action === 'submit') {
+            $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
+            $requiredArrayFields = ['title', 'titleType'];
 
-        if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
-            return false;
+            if ($showLicense) {
+                $requiredFields[] = 'Rights';
+            }
+
+            if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
+                return false;
+            }
         }
 
         // Sanitize and prepare data
@@ -114,14 +116,18 @@ function prepareResourceData($postData)
     }
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
-        'year' => (int) $postData['year'],
-        'dateCreated' => $postData['dateCreated'],
+        'year' => isset($postData['year']) && trim($postData['year']) !== ''
+            ? (int) $postData['year']: null,
+        'dateCreated' => isset($postData['dateCreated']) && trim($postData['dateCreated']) !== ''
+            ? trim($postData['dateCreated']): null,
         'dateEmbargoUntil' => isset($postData['dateEmbargo']) && trim($postData['dateEmbargo']) !== ''
             ? trim($postData['dateEmbargo']) : null,
-        'resourceType' => (int) $postData['resourcetype'],
+        'resourceType' => isset($postData['resourcetype']) && trim($postData['resourcetype']) !== ''
+            ? trim($postData['resourcetype']): null,
         'version' => isset($postData['version']) && trim($postData['version']) !== ''
             ? (float) $postData['version'] : null,
-        'language' => (int) $postData['language'],
+        'language' => isset($postData['language']) && trim($postData['language']) !== ''
+            ? trim($postData['language']): null,
         'rights' => (int) $rightsId
     ];
 }

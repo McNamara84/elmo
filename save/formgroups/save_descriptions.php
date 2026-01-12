@@ -13,8 +13,14 @@ require_once __DIR__ . '/../validation.php';
 function saveDescriptions($connection, $postData, $resource_id)
 {
     // Validate that abstract is present
-    if (!validateRequiredFields($postData, ['descriptionAbstract'])) {
-        return false;
+    $action = $postData['action'] ?? 'submit';
+
+    if ($action === 'submit') {
+        $requiredFields = ['descriptionAbstract'];
+
+        if (!validateRequiredFields($postData, $requiredFields)) {
+            return false;
+        }
     }
 
     $descriptionTypes = [

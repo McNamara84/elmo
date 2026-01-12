@@ -18,6 +18,10 @@ describe('buttons.js', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     document.body.innerHTML = `
+      <form id="form-mde">
+        <input id="field1" class="js-required-on-submit" required>
+        <input id="field2" class="js-required-on-submit" required>
+      </form>
       <div class="input-group-text"></div>
       <div class="input-group-text"></div>
       <button id="buttonHelpOn"></button>
@@ -26,6 +30,8 @@ describe('buttons.js', () => {
       <button id="bd-theme"></button>
       <button id="button-form-reset"></button>
       <button id="button-form-load"></button>
+      <button id="button-form-save"></button>
+      <button id="button-form-submit"></button>
       <div id="modal-uploadxml"></div>
       <a id="button-changelog-show" href="#"></a>
       <div id="panel-changelog-content"></div>
@@ -138,4 +144,42 @@ describe('buttons.js', () => {
     loadScript();
     expect($.fn.tooltip).toHaveBeenCalled();
   });
+
+  test('Save button makes js-required-on-submit fields optional', () => {
+    loadScript();
+    const field1 = document.getElementById('field1');
+    const field2 = document.getElementById('field2');
+
+    field1.setAttribute('required', 'required');
+    field1.classList.add('is-invalid');
+    field2.setAttribute('required', 'required');
+    field2.classList.add('is-invalid');
+
+    $('#button-form-save').trigger('click');
+
+    expect(field1.hasAttribute('required')).toBe(false);
+    expect(field2.hasAttribute('required')).toBe(false);
+    expect(field1.classList.contains('is-invalid')).toBe(false);
+    expect(field2.classList.contains('is-invalid')).toBe(false);
+  });
+
+  test('Submit button enforces required on js-required-on-submit fields and triggers HTML5 validation', () => {
+    loadScript();
+    const form = document.getElementById('form-mde');
+    const field1 = document.getElementById('field1');
+    const field2 = document.getElementById('field2');
+
+    const checkSpy = jest.spyOn(form, 'checkValidity').mockReturnValue(false);
+
+    const clickEvent = $.Event('click');
+    $('#button-form-submit').trigger(clickEvent);
+
+    expect(field1.hasAttribute('required')).toBe(true);
+    expect(field2.hasAttribute('required')).toBe(true);
+    expect(clickEvent.isDefaultPrevented()).toBe(true);
+    expect(form.classList.contains('was-validated')).toBe(true);
+
+    checkSpy.mockRestore();
+  });
+
 });
