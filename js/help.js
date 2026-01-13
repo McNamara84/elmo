@@ -19,6 +19,45 @@ function updateHelpStatus() {
   $('.input-with-help').toggleClass('input-right-with-round-corners', status === 'help-off');
 }
 
+function getSelectedResourceType() {
+  return $('#input-resourceinformation-resourcetype option:selected').text().trim();
+}
+
+function classifyLicenseScope($li) {
+  const txt = $li.text().toLowerCase();
+  const href = ($li.find('a').attr('href') || '').toLowerCase();
+
+  if (txt.includes('(for software)')) return 'software';
+
+  if (href.includes('gnu.org/licenses/gpl')) return 'software';
+  if (href.includes('opensource.org/license/mit')) return 'software';
+  if (href.includes('apache.org/licenses/license-2.0')) return 'software';
+  if (href.includes('opensource.org/licenses/bsd-3-clause')) return 'software';
+
+  if (href.includes('joinup.ec.europa.eu') || href.includes('eupl')) return 'general';
+  if (href.includes('creativecommons.org/licenses/by/4.0')) return 'general';
+  if (href.includes('creativecommons.org/publicdomain/zero/1.0')) return 'general';
+  if (href.includes('creativecommons.org/licenses/by-nc/4.0')) return 'general';
+
+  return 'general';
+}
+
+function filterHelpRightsByResourceType() {
+  const isSoftware = getSelectedResourceType() === 'Software';
+  const $modal = $('#helpModal');
+  const $body = $modal.find('.modal-body');
+
+  if ($modal.data('currentSection') !== 'help-rights') return;
+
+  const $list = $body.find('ul').first();
+  if ($list.length === 0) return;
+
+  $list.children('li').each(function () {
+    const scope = classifyLicenseScope($(this));
+    $(this).toggle(isSoftware ? scope === 'software' : scope === 'general');
+  });
+}
+
 function loadHelpContent(callback) {
   $.get('doc/help.php', function (data) {
     // Return the HTML data via callback
@@ -39,7 +78,11 @@ function displayHelpSection(sectionId, htmlData) {
   }
   
   $('#helpModal .modal-body').html(content);
-  $('#helpModal').modal('show');
+  $('#helpModal').data('currentSection', sectionId).modal('show');
+
+  if (sectionId === 'help-rights') {
+    filterHelpRightsByResourceType();
+  }
 }
 
 function initHelp() {
@@ -65,6 +108,12 @@ function initHelp() {
     });
   });
 
+  $(document).on('change', '#input-resourceinformation-resourcetype', function () {
+    if ($('#helpModal').hasClass('show') && $('#helpModal').data('currentSection') === 'help-rights') {
+      filterHelpRightsByResourceType();
+    }
+  });
+
   document.getElementById('buttonHelp').addEventListener('click', function (event) {
     event.preventDefault();
     window.open('doc/help.php', '_blank');
@@ -72,7 +121,7 @@ function initHelp() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { initHelp, loadHelpContent, setHelpStatus, updateHelpStatus, displayHelpSection };
+  module.exports = { initHelp, loadHelpContent, setHelpStatus, updateHelpStatus, displayHelpSection, getSelectedResourceType, classifyLicenseScope, filterHelpRightsByResourceType };
 }
 
 if (typeof window !== 'undefined') {
