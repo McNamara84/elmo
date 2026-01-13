@@ -320,40 +320,82 @@ $(document).ready(function () {
   * Populates the select field with ID input-rights-license with options created via an API call.
   * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
   */
-  function setupLicenseDropdown(isSoftware) {
-    $("#input-rights-license").empty();
+function setupLicenseDropdown(isSoftware) {
+  const $select = $("#input-rights-license"); // Defined as $select for consistency
+  const top_licenseId = "CC-BY-4.0"; 
 
-    const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
-    $.getJSON(`./api/v2/${endpoint}`, function (data) {
-      var defaultOptionSet = false;
+  // 1. Determine the endpoint FIRST
+  const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
 
-      $.each(data, function (key, val) {
-        var option = $("<option>", {
-          value: val.rights_id,
-          text: val.text + " (" + val.rightsIdentifier + ")",
+  // Loading state
+  $select.prop("disabled", true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+      "data-translate": "general.loading",
+    })
+  );
+
+  // 2. Start the API call
+  $.getJSON(`./api/v2/${endpoint}`, function (data) {
+    let processedLicenses = [];
+
+    // Prepare the options for the dropdown menu
+    if (!isSoftware) {
+      processedLicenses = data
+        .filter(item => item.forSoftware === "0") // Only non-software
+        .sort((a, b) => {
+          // Custom Priority: If it's our target ID, move it to the top (-1)
+          if (a.rightsIdentifier === top_licenseId) return -1;
+          if (b.rightsIdentifier === top_licenseId) return 1;
+
+          // Otherwise: Standard alphabetical sort
+          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
         });
+    } else {
+      processedLicenses = data.sort((a, b) => {
+        return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
+      }); // Keep original order for software licenses
+    }
 
-        if (val.rightsIdentifier === "CC-BY-4.0") {
-          option.prop("selected", true);
-          defaultOptionSet = true;
-        }
-
-        $("#input-rights-license").append(option);
+    // Include them into the dropdown
+    processedLicenses.forEach(license => {
+      const option = $("<option>", {
+        value: license.rights_id,
+        text: `${license.text} (${license.rightsIdentifier})`,
+        title: license.description || license.text
       });
 
-      // Trigger change event to ensure any listeners are notified
-      $("#input-rights-license").trigger("change");
-    }).fail(function (jqXHR, textStatus, errorThrown) {
-      console.error("Fehler beim Laden der Lizenzen:", textStatus, errorThrown);
-      // Fallback: Default-Option hinzufügen
-      $("#input-rights-license").append($("<option>", {
+      if (license.rightsIdentifier === "CC-BY-4.0") {
+        option.prop("selected", true);
+      }
+
+      $select.append(option);
+    });
+
+    $select.prop("disabled", false).trigger("change");
+
+  }).fail(function (jqXHR, textStatus, errorThrown) {
+    // Fallback: use CC-BY-4.0 if API call fails
+    console.error("Error loading licenses:", textStatus, errorThrown);
+
+    // Fallback with CC-BY-4.0 default
+    $select.empty().append(
+      $("<option>", {
+        value: "",
+        text: "Choose...",
+        "data-translate": "general.choose"
+      }),
+      $("<option>", {
         value: "CC-BY-4.0",
         text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
-        selected: true,
-      }));
-      $("#input-rights-license").trigger("change");
-    });
-  }
+        selected: true
+      })
+    );
+
+    $select.prop("disabled", false).trigger("change");
+  });
+}
 
   // Initialize the license dropdown
   setupLicenseDropdown(false);
