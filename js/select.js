@@ -357,6 +357,8 @@ function setupLicenseDropdown(isSoftware) {
         return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
       }); // Keep original order for software licenses
     }
+    // Clear existing options
+    $select.empty()
 
     // Include them into the dropdown
     processedLicenses.forEach(license => {
@@ -396,6 +398,9 @@ function setupLicenseDropdown(isSoftware) {
     $select.prop("disabled", false).trigger("change");
   });
 }
+
+// Make available to tests
+window.setupLicenseDropdown = setupLicenseDropdown;
 
   // Initialize the license dropdown
   setupLicenseDropdown(false);
