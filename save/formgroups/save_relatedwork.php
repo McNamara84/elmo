@@ -51,7 +51,7 @@ function saveRelatedWork($connection, $postData, $resource_id)
         $relation_id = getRelationId($connection, $entry['relation']);
         $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
 
-        if ($relation_id && $identifier_type_id) {
+        if ($relation_id !== null && $identifier_type_id !== null) {
             $related_work_id = insertRelatedWork($connection, $entry['identifier'], $relation_id, $identifier_type_id);
             if ($related_work_id) {
                 linkResourceToRelatedWork($connection, $resource_id, $related_work_id);
@@ -107,13 +107,13 @@ function getIdentifierTypeId(mysqli $connection,string $identifier_type_name): ?
     $stmt = $connection->prepare("SELECT `identifier_type_id` FROM `Identifier_Type` WHERE `name` = ?");
     if (!$stmt) {
         error_log("Failed to prepare statement for getIdentifierTypeId: " . $connection->error);
-        return false;
+        return null;
     }
     $stmt->bind_param("s", $identifier_type_name);
     if (!$stmt->execute()) {
         error_log("Failed to execute statement for getIdentifierTypeId: " . $stmt->error);
         $stmt->close();
-        return false;
+        return null;
     }
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
