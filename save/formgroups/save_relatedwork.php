@@ -170,8 +170,4 @@ function linkResourceToRelatedWork($connection, $resource_id, $related_work_id)
         error_log("Error executing statement for linkResourceToRelatedWork: " . $stmt->error);
     }
     $stmt->close();
-    $stmt = $connection->prepare("INSERT INTO Resource_has_Related_Work (`Resource_resource_id`, `Related_Work_related_work_id`) VALUES (?, ?)");
-    $stmt->bind_param("ii", $resource_id, $related_work_id);
-    $stmt->execute();
-    $stmt->close();
 }
