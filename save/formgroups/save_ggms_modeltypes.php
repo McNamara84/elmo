@@ -10,6 +10,9 @@
  * Reuses existing GGM_Properties record and validates model type
  */
 
+// lookupForeignKeyId is used in this file
+require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
+
 /**
  * Retrieves the GGM_Properties_id and Model_type_id linked to a resource
  *
