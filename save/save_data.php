@@ -11,20 +11,30 @@
  * @requires formgroups/*.php
  */
 
-// Include required configuration and helper files so that they are accessible for testing as well
-require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
-require_once __DIR__ . '/formgroups/save_authors.php';
-require_once __DIR__ . '/formgroups/save_contactperson.php';
-require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
-require_once __DIR__ . '/formgroups/save_freekeywords.php';
-require_once __DIR__ . '/formgroups/save_contributorpersons.php';
-require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
-require_once __DIR__ . '/formgroups/save_descriptions.php';
-require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
-require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
-require_once __DIR__ . '/formgroups/save_relatedwork.php';
-require_once __DIR__ . '/formgroups/save_fundingreferences.php';
-require_once __DIR__ . '/formgroups/save_ggmsproperties.php';
+/**
+ * Process form submission based on action type
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Include required configuration and helper files
+    require_once __DIR__ . '/../settings.php';
+    require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
+    require_once __DIR__ . '/formgroups/save_authors.php';
+    require_once __DIR__ . '/formgroups/save_contactperson.php';
+    require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
+    require_once __DIR__ . '/formgroups/save_freekeywords.php';
+    require_once __DIR__ . '/formgroups/save_contributorpersons.php';
+    require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
+    require_once __DIR__ . '/formgroups/save_descriptions.php';
+    require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
+    require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
+    require_once __DIR__ . '/formgroups/save_relatedwork.php';
+    require_once __DIR__ . '/formgroups/save_fundingreferences.php';
+    // ICGEM related formgroups
+    require_once __DIR__ . '/formgroups/save_ggms_definition.php';
+    require_once __DIR__ . '/formgroups/save_ggms_properties.php';
+    require_once __DIR__ . '/formgroups/save_ggms_datasources.php';
+    require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
+}
 
 /**
  * Generates and outputs XML for a dataset
@@ -38,7 +48,7 @@ require_once __DIR__ . '/formgroups/save_ggmsproperties.php';
  */
 function generateAndOutputXml($resource_id)
 {
-    global $connection;
+    global $connection, $showGGMsProperties;
     
     try {
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
@@ -59,18 +69,28 @@ function generateAndOutputXml($resource_id)
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
         $base_url = $protocol . $_SERVER['HTTP_HOST'];
         $project_path = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\');
-        $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
+        
+        // $showGGMsProperties; is an indicator, whether this version is ICGEM or not.
+
+        $general_url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
+        $icgem_url   = $base_url . $project_path . "/api/v2/dataset/icgem_export/" . $resource_id;
+        $url         = $showGGMsProperties ? $icgem_url : $general_url;
 
         // Try API call first
         $bytesRead = @readfile($url);
 
         if ($bytesRead === false) {
-            error_log("[💿SAVE]: readfile from URL failed. Attempting in-memory generation. Resource ID: $resource_id, URL: $url");
+            error_log("[💿SAVE]: readfile from URL failed. Attempting in-memory generation. Resource ID: $resource_id");
+            error_log("[💿SAVE]: showGGMsProperties = " . var_export($showGGMsProperties, true));
+            error_log("[💿SAVE]: showGGMsProperties = " . var_export($showGGMsProperties, true));
+            error_log("[💿SAVE]: Will use " . ($showGGMsProperties ? "createICGEMxml()" : "envelopeXmlAsString()"));
 
             try {
                 $datasetController = new DatasetController();
-                $xmlString = $datasetController->envelopeXmlAsString($connection, $resource_id);
-
+                $xmlString = $showGGMsProperties
+                    ? $datasetController->createICGEMxml($resource_id)
+                    : $datasetController->envelopeXmlAsString($connection, $resource_id);
+                    
                 if ($xmlString) {
                     echo $xmlString;
                 } else {
@@ -179,7 +199,10 @@ try {
         executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);
     }
     if ($showGGMsProperties) {
+        executeSaveFunction('saveGGMsDefinition', $connection, $_POST, $resource_id);
         executeSaveFunction('saveGGMsProperties', $connection, $_POST, $resource_id);
+        executeSaveFunction('saveGGMsDataSources', $connection, $_POST, $resource_id);
+        executeSaveFunction('saveGGMsModeltypes', $connection, $_POST, $resource_id);
     }
 
     // Validate transaction commit

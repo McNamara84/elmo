@@ -926,6 +926,83 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /dataset/icgem_export/{id}:
+    get:
+      tags:
+        - dataset
+      security: []
+      summary: Export dataset in ICGEM format
+      description: Retrieves dataset metadata combined with ICGEM-specific Global Gravitational Model (GGM) properties as an XML document.
+      operationId: exportICGEMxml
+      parameters:
+        - name: id
+          in: path
+          description: Dataset ID to export
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                type: string
+                format: binary
+              example: |
+                <?xml version="1.0" encoding="UTF-8"?>
+                <icgemMetadata xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                  <modelName>EIGEN-6C4</modelName>
+                  <modelType>Static</modelType>
+                  <mathematicalRepresentation>Spherical harmonics</mathematicalRepresentation>
+                  <degree>2190</degree>
+                  <errors>formal</errors>
+                  <tideSystem>tide-free</tideSystem>
+                  <earthGravityConstant>3.986004415E+14</earthGravityConstant>
+                  <radius>6378136.3</radius>
+                  <DataSources>
+                    <DataSource>
+                      <sourceId>22</sourceId>
+                      <sourceType>S</sourceType>
+                      <description>composite description</description>
+                      <SatelliteValueName>Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</SatelliteValueName>
+                      <SatelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632</SatelliteValueUri>
+                      <SatelliteSchemeName>NASA/GCMD Earth Platforms Keywords</SatelliteSchemeName>
+                      <SatelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</SatelliteSchemeUri>
+                    </DataSource>
+                    <DataSource>
+                      <sourceId>23</sourceId>
+                      <sourceType>S</sourceType>
+                      <description>composite description</description>
+                      <SatelliteValueName>Space-based Platforms &gt; Earth Observation Satellites &gt; Laser Geodetic Satellite (LAGEOS) &gt; LAGEOS-1</SatelliteValueName>
+                      <SatelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/8124c4a5-fb77-455c-9ecd-3cf325fc12a9</SatelliteValueUri>
+                      <SatelliteSchemeName>NASA/GCMD Earth Platforms Keywords</SatelliteSchemeName>
+                      <SatelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</SatelliteSchemeUri>
+                    </DataSource>
+                  </DataSources>
+                  <TemporalModelProperties>
+                    <TemporalProperty>
+                      <generatingInstitution>fdt</generatingInstitution>
+                      <temporalResolutionDays>1</temporalResolutionDays>
+                      <startDate>2026-01-10</startDate>
+                      <endDate>2026-01-16</endDate>
+                      <release>3</release>
+                    </TemporalProperty>
+                  </TemporalModelProperties>
+                </icgemMetadata>
+        "404":
+          description: Dataset not found or contains no GGM data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /drafts:
     post:
       tags:
