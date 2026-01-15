@@ -322,7 +322,8 @@ $(document).ready(function () {
   */
 function setupLicenseDropdown(isSoftware) {
   const $select = $("#input-rights-license"); // Defined as $select for consistency
-  const top_licenseId = "CC-BY-4.0"; 
+  const top_licenseId = "CC-BY-4.0";
+  const last_licenseId_software = "GPL-3.0-or-later";
 
   // 1. Determine the endpoint FIRST
   const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
@@ -354,6 +355,8 @@ function setupLicenseDropdown(isSoftware) {
         });
     } else {
       processedLicenses = data.sort((a, b) => {
+        if (a.rightsIdentifier === last_licenseId_software) return 1;
+        if (b.rightsIdentifier === last_licenseId_software) return -1;
         return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
       }); // Keep original order for software licenses
     }

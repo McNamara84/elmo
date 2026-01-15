@@ -136,8 +136,8 @@ describe('setupLicenseDropdown', () => {
       'Apache License 2.0 (Apache-2.0)',
       'BSD 3-Clause License (BSD-3-Clause)',
       'European Union Public License 2.0 (EUPL-1.2)',
-      'GNU General Public License v3.0 or later (GPL-3.0-or-later)',
       'MIT License (MIT)',
+      'GNU General Public License v3.0 or later (GPL-3.0-or-later)'
     ]);
 
     // No CC-BY in software list
