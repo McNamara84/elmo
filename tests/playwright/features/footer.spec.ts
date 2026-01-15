@@ -43,33 +43,45 @@ test.describe('Footer Tests', () => {
     await elmoGuide.click();
   });
 
-  test('Verify footer buttons open correct links', async ({ page }) => {
+  test('Verify legal notice button opens correct link', async ({ page }) => {
     await page.goto('/');
-
+    
     const legalNoticeButton = page.locator('#buttonLegalNotice');
-    const privacyPolicyButton = page.locator('#buttonPrivacy');
-    const elmoGuideButton = page.locator('#buttonHelp');
-
-    const [legalNoticePage] = await Promise.all([
-      page.context().waitForEvent('page'),
-      legalNoticeButton.click(),
-    ]);
+    
+    const pagePromise = page.context().waitForEvent('page');
+    await legalNoticeButton.click();
+    const legalNoticePage = await pagePromise;
+    
+    await legalNoticePage.waitForLoadState('domcontentloaded');
     await expect(legalNoticePage).toHaveURL(/legal-notice/);
     await legalNoticePage.close();
-
-    const [privacyPolicyPage] = await Promise.all([
-      page.context().waitForEvent('page'),
-      privacyPolicyButton.click(),
-    ]);
-    await expect(privacyPolicyPage).toHaveURL(/privacyPolicy.html/);
-    await privacyPolicyPage.close(); 
-
-    const [elmoGuidePage] = await Promise.all([
-      page.context().waitForEvent('page'),
-      elmoGuideButton.click(),
-    ]);
-    await expect(elmoGuidePage).toHaveURL(/help\.php/);
-    await elmoGuidePage.close();
   });
 
-})
+  test('Verify privacy policy button opens correct link', async ({ page }) => {
+    await page.goto('/');
+    
+    const privacyPolicyButton = page.locator('#buttonPrivacy');
+    
+    const pagePromise = page.context().waitForEvent('page');
+    await privacyPolicyButton.click();
+    const privacyPolicyPage = await pagePromise;
+    
+    await privacyPolicyPage.waitForLoadState('domcontentloaded');
+    await expect(privacyPolicyPage).toHaveURL(/privacyPolicy.html/);
+    await privacyPolicyPage.close();
+  });
+
+  test('Verify ELMO guide button opens correct link', async ({ page }) => {
+    await page.goto('/');
+    
+    const elmoGuideButton = page.locator('#buttonHelp');
+    
+    const pagePromise = page.context().waitForEvent('page');
+    await elmoGuideButton.click();
+    const elmoGuidePage = await pagePromise;
+    
+    await elmoGuidePage.waitForLoadState('domcontentloaded');
+    await expect(elmoGuidePage).toHaveURL(/help\.php/);
+    await elmoGuidePage.close();
+  })
+});
