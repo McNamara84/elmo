@@ -95,6 +95,7 @@ describe('autocomplete.js', () => {
     ];
 
     // Simulate the API call for software licenses
+    jest.spyOn($, 'getJSON');
     $.getJSON.mockImplementation((url, callback) => {
       if (url.includes('software')) {
         callback(softwareLicenses.map(l => ({ text: l, rightsIdentifier: l })));
