@@ -51,14 +51,14 @@ describe('setupLicenseDropdown', () => {
 
   test('non-software licenses: filters out software-only, sorts by rightsIdentifier with CC-BY-4.0 on top and selects it', () => {
     const allData = [
-      // software-only (should be filtered out)
+      // software-only
       { rights_id: 'rid-apache', rightsIdentifier: 'Apache-2.0', text: 'Apache License 2.0', forSoftware: '1' },
       { rights_id: 'rid-mit', rightsIdentifier: 'MIT', text: 'MIT License', forSoftware: '1' },
       { rights_id: 'rid-bsd', rightsIdentifier: 'BSD-3-Clause', text: 'BSD 3-Clause License', forSoftware: '1' },
       { rights_id: 'rid-gpl', rightsIdentifier: 'GPL-3.0-or-later', text: 'GNU General Public License v3.0 or later', forSoftware: '1' },
-      { rights_id: 'rid-eul', rightsIdentifier: 'EUPL-1.2', text: 'European Union Public License 2.0', forSoftware: '1' },
 
-      // non-software (should remain)
+      // non-software
+      { rights_id: 'rid-eul', rightsIdentifier: 'EUPL-1.2', text: 'European Union Public License 2.0', forSoftware: '0' },
       {
         rights_id: 'rid-ccb4',
         rightsIdentifier: 'CC-BY-4.0',
@@ -96,18 +96,11 @@ describe('setupLicenseDropdown', () => {
       'Creative Commons Attribution 4.0 International (CC-BY-4.0)',
       'Creative Commons Attribution-NonCommercial 4.0 International (CC-BY-NC-4.0)',
       'Creative Commons Zero v1.0 Universal (CC0-1.0)',
+      'European Union Public License 2.0 (EUPL-1.2)',
     ]);
 
     // CC-BY-4.0 is selected and is the first
     expect($select.val()).toBe('rid-ccb4');
-
-    // Sorting: CC-BY-4.0 forced top; remaining are alphabetical by rightsIdentifier
-    const remainingRightsIds = options.slice(1).map(o => {
-      const m = o.textContent.match(/\(([^)]+)\)$/);
-      return m ? m[1] : '';
-    });
-    const sortedRemaining = [...remainingRightsIds].sort((a, b) => a.localeCompare(b));
-    expect(remainingRightsIds).toEqual(sortedRemaining);
   });
 
   test('software licenses: sorted alphabetically by rightsIdentifier, no CC-BY-4.0 required', () => {
@@ -115,9 +108,8 @@ describe('setupLicenseDropdown', () => {
       { rights_id: 'rid-mit', rightsIdentifier: 'MIT', text: 'MIT License' },
       { rights_id: 'rid-apache', rightsIdentifier: 'Apache-2.0', text: 'Apache License 2.0' },
       { rights_id: 'rid-gpl', rightsIdentifier: 'GPL-3.0-or-later', text: 'GNU General Public License v3.0 or later' },
-      { rights_id: 'rid-bsd', rightsIdentifier: 'BSD-3-Clause', text: 'BSD 3-Clause License' },
-      { rights_id: 'rid-eul', rightsIdentifier: 'EUPL-1.2', text: 'European Union Public License 2.0' },
-    ];
+      { rights_id: 'rid-bsd', rightsIdentifier: 'BSD-3-Clause', text: 'BSD 3-Clause License' }
+      ];
 
     mockGetJSONForBothEndpoints({ allData: [], softwareData });
 
@@ -135,7 +127,6 @@ describe('setupLicenseDropdown', () => {
     expect(texts).toEqual([
       'Apache License 2.0 (Apache-2.0)',
       'BSD 3-Clause License (BSD-3-Clause)',
-      'European Union Public License 2.0 (EUPL-1.2)',
       'MIT License (MIT)',
       'GNU General Public License v3.0 or later (GPL-3.0-or-later)'
     ]);

@@ -306,7 +306,94 @@ function setupTitleTypeDropdown() {
   });
 }
 
+/**
+* Populates the select field with ID input-rights-license with options created via an API call.
+* @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
+*/
+function setupLicenseDropdown(isSoftware) {
+  const $select = $("#input-rights-license"); // Defined as $select for consistency
+  const top_licenseId = "CC-BY-4.0";
+  const last_licenseId_software = "GPL-3.0-or-later";
+
+  // 1. Determine the endpoint FIRST
+  const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
+
+  // Loading state
+  $select.prop("disabled", true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+      "data-translate": "general.loading",
+    })
+  );
+
+  // 2. Start the API call
+  $.getJSON(`./api/v2/${endpoint}`, function (data) {
+    let processedLicenses = [];
+
+    // Prepare the options for the dropdown menu
+    if (!isSoftware) {
+      processedLicenses = data
+        .filter(item => item.forSoftware === "0") // Only non-software
+        .sort((a, b) => {
+          // Custom Priority: If it's our target ID, move it to the top (-1)
+          if (a.rightsIdentifier === top_licenseId) return -1;
+          if (b.rightsIdentifier === top_licenseId) return 1;
+
+          // Otherwise: Standard alphabetical sort
+          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
+        });
+    } else {
+      processedLicenses = data.sort((a, b) => {
+        if (a.rightsIdentifier === last_licenseId_software) return 1;
+        if (b.rightsIdentifier === last_licenseId_software) return -1;
+        return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
+      }); // Keep original order for software licenses
+    }
+    // Clear existing options
+    $select.empty()
+
+    // Include them into the dropdown
+    processedLicenses.forEach(license => {
+      const option = $("<option>", {
+        value: license.rights_id,
+        text: `${license.text} (${license.rightsIdentifier})`,
+        title: license.description || license.text
+      });
+
+      if (license.rightsIdentifier === "CC-BY-4.0") {
+        option.prop("selected", true);
+      }
+
+      $select.append(option);
+    });
+
+    $select.prop("disabled", false).trigger("change");
+
+  }).fail(function (jqXHR, textStatus, errorThrown) {
+    // Fallback: use CC-BY-4.0 if API call fails
+    console.error("Error loading licenses:", textStatus, errorThrown);
+
+    // Fallback with CC-BY-4.0 default
+    $select.empty().append(
+      $("<option>", {
+        value: "",
+        text: "Choose...",
+        "data-translate": "general.choose"
+      }),
+      $("<option>", {
+        value: "CC-BY-4.0",
+        text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
+        selected: true
+      })
+    );
+
+    $select.prop("disabled", false).trigger("change");
+  });
+}
+
 // Make functions available globally (important for tests)
+window.setupLicenseDropdown = setupLicenseDropdown;
 window.setupLanguageDropdown = setupLanguageDropdown;
 window.setupResourceTypeDropdown = setupResourceTypeDropdown;
 window.setupTitleTypeDropdown = setupTitleTypeDropdown;
@@ -316,94 +403,6 @@ $(document).ready(function () {
   setupResourceTypeDropdown();
   setupLanguageDropdown();
   setupTitleTypeDropdown();
-  /**
-  * Populates the select field with ID input-rights-license with options created via an API call.
-  * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
-  */
-  function setupLicenseDropdown(isSoftware) {
-    const $select = $("#input-rights-license"); // Defined as $select for consistency
-    const top_licenseId = "CC-BY-4.0";
-    const last_licenseId_software = "GPL-3.0-or-later";
-
-    // 1. Determine the endpoint FIRST
-    const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
-
-    // Loading state
-    $select.prop("disabled", true).empty().append(
-      $("<option>", {
-        value: "",
-        text: "Loading...",
-        "data-translate": "general.loading",
-      })
-    );
-
-    // 2. Start the API call
-    $.getJSON(`./api/v2/${endpoint}`, function (data) {
-      let processedLicenses = [];
-
-      // Prepare the options for the dropdown menu
-      if (!isSoftware) {
-        processedLicenses = data
-          .filter(item => item.forSoftware === "0") // Only non-software
-          .sort((a, b) => {
-            // Custom Priority: If it's our target ID, move it to the top (-1)
-            if (a.rightsIdentifier === top_licenseId) return -1;
-            if (b.rightsIdentifier === top_licenseId) return 1;
-
-            // Otherwise: Standard alphabetical sort
-            return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
-          });
-      } else {
-        processedLicenses = data.sort((a, b) => {
-          if (a.rightsIdentifier === last_licenseId_software) return 1;
-          if (b.rightsIdentifier === last_licenseId_software) return -1;
-          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
-        }); // Keep original order for software licenses
-      }
-      // Clear existing options
-      $select.empty()
-
-      // Include them into the dropdown
-      processedLicenses.forEach(license => {
-        const option = $("<option>", {
-          value: license.rights_id,
-          text: `${license.text} (${license.rightsIdentifier})`,
-          title: license.description || license.text
-        });
-
-        if (license.rightsIdentifier === "CC-BY-4.0") {
-          option.prop("selected", true);
-        }
-
-        $select.append(option);
-      });
-
-      $select.prop("disabled", false).trigger("change");
-
-    }).fail(function (jqXHR, textStatus, errorThrown) {
-      // Fallback: use CC-BY-4.0 if API call fails
-      console.error("Error loading licenses:", textStatus, errorThrown);
-
-      // Fallback with CC-BY-4.0 default
-      $select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Choose...",
-          "data-translate": "general.choose"
-        }),
-        $("<option>", {
-          value: "CC-BY-4.0",
-          text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
-          selected: true
-        })
-      );
-
-      $select.prop("disabled", false).trigger("change");
-    });
-  }
-
-  // Make available to tests
-  window.setupLicenseDropdown = setupLicenseDropdown;
 
   // Initialize the license dropdown
   setupLicenseDropdown(false);
