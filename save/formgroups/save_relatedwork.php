@@ -38,6 +38,7 @@ function saveRelatedWork($connection, $postData, $resource_id)
 
         // Validate dependencies for this entry
         if (!validateRelatedWorkDependencies($entry)) {
+            error_log('Related Work entry validation failed: ' . json_encode($entry));
             $allSuccessful = false;
             continue;
         }
@@ -50,14 +51,16 @@ function saveRelatedWork($connection, $postData, $resource_id)
         $relation_id = getRelationId($connection, $entry['relation']);
         $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
 
-        if ($relation_id && $identifier_type_id) {
+        if ($relation_id !== null && $identifier_type_id !== null) {
             $related_work_id = insertRelatedWork($connection, $entry['identifier'], $relation_id, $identifier_type_id);
             if ($related_work_id) {
                 linkResourceToRelatedWork($connection, $resource_id, $related_work_id);
             } else {
+                error_log('Failed to link resource to Related Work for entry: ' . json_encode($entry));
                 $allSuccessful = false;
             }
         } else {
+            error_log('Failed to retrieve IDs for Related Work entry: ' . json_encode($entry));
             $allSuccessful = false;
         }
     }
@@ -66,22 +69,29 @@ function saveRelatedWork($connection, $postData, $resource_id)
 }
 
 /**
- * Retrieves the relation ID based on the given relation.
- *
- * @param mysqli $connection  The database connection.
- * @param int    $relation_id The relation ID to search for.
+ * Retrieves the relation id based on name.
+ * @param mysqli $connection The database connection.
+ * @param string $relationName The relation name to search for.
  *
  * @return int|null The found relation ID or null if not found.
  */
-function getRelationId($connection, $relation_id)
+function getRelationId(mysqli $connection, string $relationName): ?int
 {
-    $stmt = $connection->prepare("SELECT `relation_id` FROM `Relation` WHERE `relation_id` = ?");
-    $stmt->bind_param("i", $relation_id);
-    $stmt->execute();
+    $stmt = $connection->prepare("SELECT `relation_id` FROM `Relation` WHERE `name` = ?");
+    if (!$stmt) {
+        error_log("Failed to prepare statement for getRelationId: " . $connection->error);
+        return null;
+    }
+    $stmt->bind_param("s", $relationName);
+    if (!$stmt->execute()) {
+        error_log("Failed to execute statement for getRelationId: " . $stmt->error);
+        $stmt->close();
+        return null;
+    }
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     $stmt->close();
-    return $row ? $row['relation_id'] : null;
+    return $row ? (int)$row['relation_id'] : null;
 }
 
 /**
@@ -92,15 +102,25 @@ function getRelationId($connection, $relation_id)
  *
  * @return int|null The found identifier type ID or null if not found.
  */
-function getIdentifierTypeId($connection, $identifier_type_name)
+function getIdentifierTypeId(mysqli $connection,string $identifier_type_name): ?int
 {
     $stmt = $connection->prepare("SELECT `identifier_type_id` FROM `Identifier_Type` WHERE `name` = ?");
+    if (!$stmt) {
+        error_log("Failed to prepare statement for getIdentifierTypeId: " . $connection->error);
+        return null;
+    }
     $stmt->bind_param("s", $identifier_type_name);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        error_log("Failed to execute statement for getIdentifierTypeId: " . $stmt->error);
+        $stmt->close();
+        return null;
+    }
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     $stmt->close();
-    return $row ? $row['identifier_type_id'] : null;
+    $result = $row ? (int)$row['identifier_type_id'] : null;
+    error_log("I found the id for the idType. it is " . $result);
+    return $result;
 }
 
 /**
@@ -116,6 +136,10 @@ function getIdentifierTypeId($connection, $identifier_type_name)
 function insertRelatedWork($connection, $identifier, $relation_id, $identifier_type_id)
 {
     $stmt = $connection->prepare("INSERT INTO Related_Work (`Identifier`, `relation_fk`, `identifier_type_fk`) VALUES (?, ?, ?)");
+    if (!$stmt) {
+        error_log("Error preparing statement for insertRelatedWork: " . $connection->error);
+        return false;
+    }
     $stmt->bind_param("sii", $identifier, $relation_id, $identifier_type_id);
     if ($stmt->execute()) {
         $related_work_id = $stmt->insert_id;
@@ -124,7 +148,7 @@ function insertRelatedWork($connection, $identifier, $relation_id, $identifier_t
     } else {
         error_log("Error inserting Related Work: " . $stmt->error);
         $stmt->close();
-        return null;
+        return false;
     }
 }
 
@@ -133,14 +157,17 @@ function insertRelatedWork($connection, $identifier, $relation_id, $identifier_t
  *
  * @param mysqli $connection      The database connection.
  * @param int    $resource_id     The ID of the resource.
- * @param int    $related_work_id The ID of the related work entry.
- *
- * @return void
- */
+*/
 function linkResourceToRelatedWork($connection, $resource_id, $related_work_id)
 {
     $stmt = $connection->prepare("INSERT INTO Resource_has_Related_Work (`Resource_resource_id`, `Related_Work_related_work_id`) VALUES (?, ?)");
+    if (!$stmt) {
+        error_log("Error preparing statement for linkResourceToRelatedWork: " . $connection->error);
+        return;
+    }
     $stmt->bind_param("ii", $resource_id, $related_work_id);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        error_log("Error executing statement for linkResourceToRelatedWork: " . $stmt->error);
+    }
     $stmt->close();
 }

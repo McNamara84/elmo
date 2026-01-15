@@ -1019,70 +1019,268 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#a-awarduri)
   - Example values: `https://www.moore.org/grants/list/GBMF3859.01`, `[Grantmaking at a glance](https://doi.org/10.35802/221400)`
 
-### GGMs Properties (Essential)
+### ICGEM metadata
 
-Viable for the implementation for the ICGEM platform. This form group collects the essential characteristics of a Global Geopotential Model (GGM). 
-Essential are understood as one formgroup containing the most general information about a model being published. This formgroup is the first of multiple groups. These formgroups are developed as an adaptation of ELMO for publications of the Global Gravitational Models. Hence, if any field in this group is filled, all the fields become required.
+The following relates to ELMO-GEM — the ELMO implementation for the ICGEM platform. This form group collects the essential characteristics of a Global Gravitational Model (GGM).
 
-- **Model Type**
-
-  The type of gravity field model being described.
-  - Data type: String
-  - Occurrence: 1
-  - The corresponding field in the database is described in the dedicated `Model_Type` table with id, name and description
-  - Restrictions: Must be selected from a controlled list
-  - Example values: `Static`, `Temporal`
-  - Mapping: mapped to `<modelType>` in the XML export
-
-- **Mathematical Representation**
-
-  The set of functions used to express the gravitational potential, which are solutions of Laplace’s equation in a given coordinate system. The coordi-nate system determines the type of harmonics — spherical or ellipsoidal — and thus defines the mathematical form of the model. 
-  - Data type: String
-  - Occurrence: 1
-  - The corresponding field in the database is described in the dedicated `Mathematical_Representation` table with id, name and description
-  - Restrictions: Must be selected from a controlled list 
-  - Example values: `Spherical harmonics`, `Ellipsoidal harmonics`
-  - Mapping: mapped to `<mathematicalRepresentation>` in the XML export
-
-- **Celestial Body**
-
-  The planetary body for which the gravity field model is computed.
-  - Data type: String
-  - Occurrence: 0-1
-  - The corresponding field in the database is called: `Celestial_Body` in the `GGM_Properties` table
-  - Restrictions: Must be selected from a controlled list
-  - Example values: `Earth`, `Moon of the Earth`, `Mars`, `Ceres`, `Venus`, `Other`
-  - Mapping: mapped to `<celestialBody>` in the XML export
-
-- **File Format**
-
-  The file format following ICGEM standards, that is used for the model data.
-  - Data type: String
-  - Occurrence: 0-1
-  - The corresponding field in the database is described in the dedicated `File_Format` table with id, name and description
-  - Restrictions: Must be selected from a controlled list (populated from the ICGEM format database)
-  - Example values: `icgem1.0`, `icgem2.0`
-  - Mapping: mapped to `<fileFormat>` in the XML export
+#### GGM Definition & General Properties
 
 - **Model Name**
-
   The unique identifier for the gravity field model.
   - Data type: String
   - Occurrence: 1
-  - The corresponding field in the database is called: `Model_Name` in the `GGM_Properties` table
+  - The corresponding field in the database is `Model_Name` in the `GGM_Definition` table.
   - Restrictions: No spaces allowed; must be unique
   - Example values: `EIGEN-6C4`, `GOCO06s`, `GGM05G`
   - Mapping: mapped to `<modelName>` in the XML export
 
-- **Product Type**
+- **Model Type**
+  The type of gravity field model being described (e.g., whether it represents a static field or temporal variations).
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database is described in the dedicated `Model_Type` table.
+  - Restrictions: Must be selected from a controlled list
+  - Example values: `Static`, `Temporal`, `Topographic`, `Simulated`
+  - Mapping: mapped to `<modelType>` in the XML export
 
-  Specifies the type of gravity field product.
+- **Mathematical Representation**
+  The set of functions (harmonics) used to express the gravitational potential.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database is described in the dedicated `Mathematical_Representation` table.
+  - Restrictions: Must be selected from a controlled list
+  - Example values: `Spherical harmonics`, `Ellipsoidal harmonics`
+  - Mapping: mapped to `<mathematicalRepresentation>` in the XML export
+
+- **Celestial Body**
+  The planetary body for which the gravity field model is computed.
   - Data type: String
   - Occurrence: 0-1
-  - The corresponding field in the database is called: `Product_Type` in the `GGM_Properties` table
+  - The corresponding field in the database is `Celestial_Body` in the `GGM_Definition` table.
   - Restrictions: Must be selected from a controlled list
-  - Example values: `Gravity Field`, `Topographic Gravity Field`
-  - Mapping: mapped to `<productType>` in the XML export
+  - Example values: `Earth`, `Mars`, `Moon`
+  - Mapping: mapped to `<celestialBody>` in the XML export
+
+
+- **File Format**
+  The specific ASCII format used for the model coefficients.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is described in the dedicated `File_Format` table.
+  - Restrictions: Must be selected from a controlled list
+  - Example values: `icgem1.0`, `icgem2.0`
+  - Mapping: mapped to `<fileFormat>` in the XML export
+
+- **Errors**
+  Describes, whether the errors were included into the model
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `Errors` in the `GGM_Properties` table.
+  - Example values: `formal`, `calibrated`, `no`
+  - Mapping: mapped to `<errors>` in the XML export
+
+- **Error Handling Approach**
+  A description of how errors were treated during the model computation.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `Error_Handling_Approach` in the `GGM_Properties` table.
+  - Mapping: mapped to `<errorHandlingApproach>` in the XML export
+
+- **Tide System**
+  The tide system to which the gravity field coefficients refer.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `Tide_System` in the `GGM_Properties` table.
+  - Example values: `zero-tide`, `tide-free`, `mean-tide`
+  - Mapping: mapped to `<tideSystem>` in the XML export
+
+- **Degree**
+  The maximum degree and order of the harmonic expansion.
+  - Data type: Integer
+  - Occurrence: 0-1
+  - The corresponding field in the database is `degree` in the `GGM_Properties` table.
+  - Example values: `60`, `3660`, `2190`
+  - Mapping: mapped to `<degree>` in the XML export
+
+- **Radius**
+  The reference radius of the model in meters.
+  - Data type: Float
+  - Occurrence: 0-1
+  - The corresponding field in the database is `radius` in the `GGM_Properties` table.
+  - Mapping: mapped to `<radius>` in the XML export
+
+- **Earth Gravity Constant**
+  The value used for the Earth's gravity constant (GM).
+  - Data type: Float
+  - Occurrence: 0-1
+  - The corresponding field in the database is `earth_gravity_constant` in the `GGM_Properties` table.
+  - Mapping: mapped to `<earthGravityConstant>` in the XML export
+
+#### Topographic Model Properties
+Concepts specific to models, where model type is topographic masses.
+
+- **Layer Approach**
+  The method used to decompose the Earth's layers for forward modeling.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `layer_approach` in the `Topographic_Models_Properties` table.
+  - Mapping: mapped to `<layerApproach>` in the XML export
+
+- **Forward Modelling Domain**
+  The spatial domain used for the forward modeling calculation.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `forward_modelling_domain` in the `Topographic_Models_Properties` table.
+  - Mapping: mapped to `<forwardModellingDomain>` in the XML export
+
+- **Density Information**
+  General description of the density values used for the topographic masses.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `density_information` in the `Topographic_Models_Properties` table.
+  - Mapping: mapped to `<densityInformation>` in the XML export
+
+- **Approximation**
+  The type of mathematical approximation used (e.g., spherical vs ellipsoidal).
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `approximation` in the `Topographic_Models_Properties` table.
+  - Mapping: mapped to `<approximation>` in the XML export
+
+#### Temporal Model Properties
+Concepts specific to gravity field models measuring time-variable mass transport.
+
+- **Generating Institution**
+  The primary institution responsible for the processing of the temporal solution.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `generating_institution` in the `Temporal_Model_Properties` table.
+  - Mapping: mapped to `<generatingInstitution>` in the XML export
+
+- **Temporal Resolution**
+  The time period (in days) that each individual solution represents.
+  - Data type: Integer
+  - Occurrence: 0-1
+  - The corresponding field in the database is `temporal_resolution_days` in the `Temporal_Model_Properties` table.
+  - Mapping: mapped to `<temporalResolutionDays>` in the XML export
+
+- **Start/End Date**
+  The temporal extent covered by the model series.
+  - Data type: Date
+  - Occurrence: 0-1
+  - The corresponding fields in the database are `start_date` and `end_date` in the `Temporal_Model_Properties` table.
+  - Mapping: mapped to `<startDate>` and `<endDate>` in the XML export
+
+#### Static Model Properties
+Variables valid when Model Type = Static.
+
+- **Time Variable Coefficients Info**
+  Details regarding coefficients that vary with time within a predominantly static model.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `info_time_variable_coefficients` in the `Static_Model_Properties` table.
+  - Mapping: mapped to `<infoTimeVariableCoefficients>` in the XML export
+
+#### Ellipsoidal Parameters
+Physical parameters of the reference ellipsoid used by the model. Only valid for models where Mathematical Representation = Ellipsoidal harmonics.
+
+- **Semimajor Axis (a)**
+  - Data type: Float
+  - Occurrence: 1
+  - The corresponding field in the database is `semimajor_axis_a` in the `Ellipsoidal_Parameters` table.
+  - Mapping: mapped to `<semimajorAxisA>` in the XML export
+
+- **Flattening / Reciprocal Flattening**
+  - Data type: Float
+  - Occurrence: 0-1
+  - The corresponding fields in the database are `flattening` and `reciprocal_flattening` in the `Ellipsoidal_Parameters` table.
+  - Mapping: mapped to `<flattening>` / `<reciprocalFlattening>` in the XML export
+
+#### Data Sources
+Describes the input data (Satellite, Terrestrial, Model) used to compose the global model.
+
+- **Data Source Type**
+  The classification of the input data used for the model.
+  - Data type: String
+  - Occurrence: 1
+  - The corresponding field in the database is `type` in the `Data_Sources` table.
+  - Example values: `Satellite`, `Terrestrial`, `Model`
+  - Mapping: mapped to `<sourceType>` in the XML export
+
+- **Details**
+  A sub-category of the data source. Active for all types except Satellite.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `details` in the `Data_Sources` table.
+  - Mapping: mapped to `<details>` in the XML export
+
+- **Source Description**
+  A brief textual description of the data source.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `description` in the `Data_Sources` table.
+  - Mapping: mapped to `<description>` in the XML export
+
+**Satellite Data Sources (S-Variables)**
+Specific metadata used when the type is set to "Satellite".
+
+- **Satellite Value Name**
+  The name of the satellite mission.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `S_value_name` in the `Data_Sources` table.
+  - Example values: `GRACE-A`, `GOCE`, `LAGEOS`
+  - Mapping: mapped to `<SatelliteValueName>` in the XML export
+
+- **Satellite Value URI**
+  A persistent identifier for the satellite mission.
+  - Data type: String (URI)
+  - Occurrence: 0-1
+  - The corresponding field in the database is `S_value_uri` in the `Data_Sources` table.
+  - Mapping: mapped to `<SatelliteValueUri>` in the XML export
+
+- **Satellite Scheme Name & URI**
+  The controlled vocabulary from which the satellite name is derived.
+  - Data type: String
+  - Occurrence: 0-1
+  - Default values: "GCMD Platforms/Sources Keywords", "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms"
+  - The corresponding fields in the database are `S_scheme_name` and `S_scheme_uri` in the `Data_Sources` table.
+  - Mapping: mapped to `<SatelliteSchemeName>` and `<SatelliteSchemeUri>` in the XML export
+
+**Model Data Sources (M-Variables)**
+Metadata used when the gravity field model incorporates data from another existing model.
+
+- **Model Identifier**
+  The unique identifier (e.g., DOI) for the source model.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `M_identifier` in the `Data_Sources` table.
+  - Mapping: mapped to `<M_Identifier>` in the XML export
+
+- **Model Identifier Type**
+  The type of identifier used (e.g., DOI, URL).
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `M_identifier_type` in the `Data_Sources` table.
+  - Mapping: mapped to `<M_Identifier_Type>` in the XML export
+
+- **Source Model Name**
+  The full name of the model used as a data source.
+  - Data type: String
+  - Occurrence: 0-1
+  - The corresponding field in the database is `M_name` in the `Data_Sources` table.
+  - Example values: `EGM2008`, `WGS84`
+  - Mapping: mapped to `<M_Name>` in the XML export
+
+**Terrestrial Data Sources (T-Variables)**
+Metadata specific to elevation/terrain gravity measurements. This type of data sources is only actice for topographic gravity models. 
+
+- **Isostasy Compensation Depth**
+  The depth of compensation (in meters) assumed for topographic/isostatic models.
+  - Data type: Integer
+  - Occurrence: 0-1
+  - The corresponding field in the database is `T_Isostasy_compensation_depth` in the `Data_Sources` table.
+  - Mapping: mapped to `<T_Isostasy_compensation_depth>` in the XML export
 
 </details>
 
@@ -1181,15 +1379,86 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | *schemeURI*                               |                   0-1                   |                  0-1                  | `<funderIdentifier schemeURI>`                                                                                                                                              |
 |                            | **Grant Number**                          |                   0-1                   |                  0-1                  | `<awardNumber>`                                                                                                                                                             |
 |                            | **Grant Name**                            |                   0-1                   |                  0-1                  | `<awardTitle>`                                                                                                                                                              |
-|                            | **Award URI**                             |             0-1                   |                  0-1                  | `<awardNumber awardURI="...">` |
-| GGMs Properties (Essential)|                                           |        1                                |                  0                    |           not mapped                                                                                                                                                        |
-|                            | **Model Type**                            |        1                                |                  0                    |           not mapped                                                                                                                                                        |
-|                            | **Mathematical Representation**           |        1                                |                  0                    |           not mapped                                                                                                                                                        |
-|                            | **Celestial Body**                        |       0-1                               |                  0                    |           not mapped                                                                                                                                                        |
-|                            | **File Format**                           |       0-1                               |                  0                    |           not mapped                                                                                                                                                        |
-|                            | **Model Name**                            |        1                                |                  0                    |           not mapped                                                                                                                                                        |
-|                            | **Product Type**                          |       0-1                               |                  0                    |           not mapped                                                                                                                                                        |
+|                            | **Award URI**                             |             0-1                         |               0-1                     | `<awardNumber awardURI="...">` |
+|                            |                                           |                                         |                                       |                                |
+| GGM Definition             | **File Format**                           |       0-1                               |                  --                   | `<fileFormat>`                 |
+| Data Sources            | **Satellite value name, URI, Scheme name, URI**                           |       0-1                               |                  --                   | `subjects`                 |
+| Data Sources            | **Model identifier and identifier type**              |       0-1                               |                  --                   | `relatedIdentifiers`                 |
 
+
+
+
+
+</details>
+
+<details>
+  <summary>
+
+  ## Architecture & Data Flow
+  </summary>
+
+The `saveGGMsDataSources` function orchestrates a multi-step pipeline that transforms frontend form data into structured database records, often triggering "side effects" to maintain data integrity across the system.
+
+**ASCII Data Flow Diagram**
+```text
+[ Frontend UI ] -> [ POST Data ]
+                         |
+            (1) [ extractDataSourceRows ] ----------+
+                         |                          |
+            (2) [ expandSatellitePlatformsToRows ] -|--> (One UI row -> Multiple DB rows)
+                         |                          |
+            (3) [ validateDataSourceRow ] <---------+
+                         |
+            (4) [ prepareDataSourceForDb ]
+                         |
+            (5) [ insertDataSource ] ----> [ Table: Data_Sources ]
+                         |
+            (6) [ Side Effects ] --------+--> [ Table: Thesaurus_Keywords ] (Type 'S')
+                                         +--> [ Table: Related_Work ] (Type 'M')
+```
+
+**Call Sequence of `saveGGMsDataSources()`**
+1. **Extraction**: `extractDataSourceRows()` parses the indexed POST arrays into discrete row objects.
+2. **Expansion**: `expandSatellitePlatformsToRows()` detects rows of Type `S`. If a single UI field contains 3 satellite platforms, it clones the row into 3 separate entities.
+3. **Validation**: `validateDataSourceRow()` enforces strict type-specific rules:
+   - **Type S**: Requires platform metadata; forbids `datasource_details`.
+   - **Type M**: Requires model name and identifiers; forbids `compensation_depth`.
+4. **Preparation**: `prepareDataSourceForDb()` maps frontend keys (e.g., `satellite_platform`) to database columns (e.g., `S_value_name`).
+5. **Persistence**: `insertDataSource()` and `linkResourceToDataSource()` record the primary data.
+6. **Side-Effect Ingestion**:
+   - `ingestSatellitePlatformAsKeyword()`: Automatically registers satellite platforms as searchable keywords in the `Thesaurus_Keywords` table.
+   - `ingestModelDataSourceAsRelatedWork()`: Automatically records Model (Type M) sources as a "Related Work" with the relation `IsDerivedFrom`.
+
+### Internal Data Protocols
+
+#### Satellite JSON Structure (Tagify)
+The "Satellite Platform" field uses a Tagify-based JSON schema. The backend expects an array of objects with the following keys:
+
+- **Data type**: JSON Array of Objects
+- **Keys**:
+  - `value`: The name of the satellite (e.g., `GRACE-A`).
+  - `id`: The URI of the platform (e.g., GCMD concept URL).
+  - `scheme`: The name of the controlled vocabulary.
+  - `schemeURI`: The URL of the vocabulary scheme.
+
+**Example Input:**
+```json
+[
+  {
+    "value": "GOCE",
+    "id": "https://gcmd.earthdata.nasa.gov/kms/concept/...",
+    "scheme": "GCMD Platforms",
+    "schemeURI": "..."
+  }
+]
+```
+
+#### Expansion Logic
+One of ELMO's non-obvious transformations is the **Row Expansion**. 
+
+- **UI Behavior**: A user adds one "Data Source" card, selects "Satellite" type, and picks 5 satellites (e.g., Swarm A, B, C, GRACE-A, B).
+- **Processing**: The function `expandSatellitePlatformsToRows` iterates through the JSON array and generates 5 distinct database entries.
+- **Database Result**: In the `Data_Sources` table, 5 rows are created, each linked to the same Resource ID. This ensures that each satellite platform is treated as an individual, atomic data source for granular XML export and searching.
 
 </details>
 
@@ -1228,9 +1497,7 @@ As for the ICGEM implementation, more required variables are added to ensure a f
 - **Model Type**, **Mathematical Representation**, **Model Name**
 
 Meanwhile these variables from required list are not required to publish a GGM:
-- **Resource Type** *(can be mapped to Model)*, **Spatio-temporal Coverage** *(can be mapped to global coverage)* 
-
-
+- **Resource Type** *(can be mapped to Dataset)*, **Spatio-temporal Coverage** *(can be mapped to global coverage)* 
 </details>
 
 <details>

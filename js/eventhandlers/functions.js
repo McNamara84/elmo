@@ -49,20 +49,47 @@ function updateOverlayLabels() {
   }
 }
 
-export { replaceHelpButtonInClonedRows, createRemoveButton, updateOverlayLabels };
+function visibilityOFF(elementOrSelector) {
+  const $el = $(elementOrSelector);
+  if (!$el.length) return;
+
+  $el.addClass('d-none').attr('aria-hidden', 'true');
+  $el.find('input, select, textarea, button').prop('disabled', true);
+}
+
+function visibilityON(elementOrSelector) {
+  const $el = $(elementOrSelector);
+  if (!$el.length) return;
+
+  $el.removeClass('d-none').attr('aria-hidden', 'false');
+  $el.find('input, select, textarea, button').prop('disabled', false);
+}
+
+// ...existing code...
+
+export {
+  replaceHelpButtonInClonedRows,
+  createRemoveButton,
+  updateOverlayLabels,
+  visibilityOFF,
+  visibilityON
+};
 
 // Expose functions for both browser and Node environments
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     replaceHelpButtonInClonedRows,
     createRemoveButton,
-    updateOverlayLabels
+    updateOverlayLabels,
+    visibilityOFF,
+    visibilityON
   };
 }
 
 if (typeof window !== 'undefined') {
   window.replaceHelpButtonInClonedRows = replaceHelpButtonInClonedRows;
   window.createRemoveButton = createRemoveButton;
-  // avoid clobbering potential global updateOverlayLabels implementation
   window.updateOverlayLabelsWrapper = updateOverlayLabels;
+  window.visibilityOFF = visibilityOFF;
+  window.visibilityON = visibilityON;
 }
