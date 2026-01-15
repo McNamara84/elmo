@@ -4,7 +4,7 @@ require_once __DIR__ . '/settings.php';
 if (!function_exists('handle_log_page_event')) {
     /**
      * Process a page event log request.
-     *
+     * The function outputs 2 parts: even and status. The event is one of the allowed events, and describes the type of page action. Stat
      * @param array $post Incoming POST data
      * @param array $server Server context (expects REQUEST_METHOD)
      * @param callable|null $logger Logger callback; defaults to error_log
@@ -48,7 +48,7 @@ $result = handle_log_page_event($_POST, $_SERVER);
 
 if (($result['status'] ?? '') === 'logged') {
     header('Content-Type: application/json');
-    echo json_encode(['status' => 'logged']);
+    echo json_encode(['response' => 'logged']);
 }
 
 if (!defined('UNIT_TESTING')) {

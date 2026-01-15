@@ -33,7 +33,46 @@ class LogPageEventTest extends TestCase
         $this->assertStringContainsString('page loaded', $logs[0]);
         $this->assertStringContainsString($timestamp, $logs[0]);
     }
+    
+    public function testLogsEventWithStatus(): void
+    {
+        $logs = [];
+        $timestamp = '2025-01-02T03:04:05.678Z';
+        $status = 'success';
 
+        handle_log_page_event(
+            ['event' => 'save', 'timestamp' => $timestamp, 'status' => $status],
+            ['REQUEST_METHOD' => 'POST'],
+            function (string $message) use (&$logs): void {
+                $logs[] = $message;
+            }
+        );
+
+        $this->assertNotEmpty($logs, 'Expected logger to be called.');
+        $this->assertStringContainsString('Type: save', $logs[0]);
+        $this->assertStringContainsString('Message: success', $logs[0]);
+        $this->assertStringContainsString("Timestamp: $timestamp", $logs[0]);
+    }
+
+    public function testSanitizesStatusParameter(): void
+    {
+        $logs = [];
+        $statusWithControlChars = "failure\r\n<script>alert(1)</script>";
+
+        handle_log_page_event(
+            ['event' => 'submit', 'status' => $statusWithControlChars],
+            ['REQUEST_METHOD' => 'POST'],
+            function (string $message) use (&$logs): void {
+                $logs[] = $message;
+            }
+        );
+
+        $this->assertNotEmpty($logs, 'Expected logger to be called.');
+        $this->assertStringNotContainsString("\n", $logs[0]);
+        $this->assertStringNotContainsString("\r", $logs[0]);
+        $this->assertStringContainsString('Message: failure<script>alert(1)</script>', $logs[0]);
+    }
+    
     public function testInvalidEventAndTimestampFallbackAndSanitize(): void
     {
         $logs = [];
