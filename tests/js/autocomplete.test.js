@@ -80,13 +80,39 @@ describe('autocomplete.js', () => {
   });
 
   test('license options filtered based on resource type', () => {
+    const softwareLicenses = [
+      'Apache License 2.0',
+      'BSD 3-Clause License',
+      'GNU General Public License v3.0 or later',
+      'MIT License'
+    ];
+    const nonSoftwareLicenses = [
+      'Creative Commons Attribution 4.0 International',
+      'Creative Commons Attribution-NonCommercial 4.0 International',
+      'Creative Commons Zero v1.0 Universal',
+      'European Union Public License 2.0',
+
+    ];
+
+    // Simulate the API call for software licenses
+    $.getJSON.mockImplementation((url, callback) => {
+      if (url.includes('software')) {
+        callback(softwareLicenses.map(l => ({ text: l, rightsIdentifier: l })));
+      } else {
+        callback(nonSoftwareLicenses.map(l => ({ text: l, rightsIdentifier: l, forSoftware: '0' })));
+      }
+      return { fail: jest.fn() };
+    });
+
+    // Trigger change to 'Software'
     $('#input-resourceinformation-resourcetype').val('Software').trigger('change');
     let options = $('#input-rights-license option').map((i, el) => $(el).text()).get();
-    expect(options).toEqual(['MIT License', 'Apache License 2.0']);
+    expect(options).toEqual(softwareLicenses.map(l => `${l} (${l})`));
 
+    // Trigger change to 'Article'
     $('#input-resourceinformation-resourcetype').val('Article').trigger('change');
     options = $('#input-rights-license option').map((i, el) => $(el).text()).get();
-    expect(options).toEqual(['MIT License', 'Apache License 2.0', 'GPL']);
+    expect(options).toEqual(nonSoftwareLicenses.map(l => `${l} (${l})`));
   });
 
   test('normalizeRorId utility', () => {

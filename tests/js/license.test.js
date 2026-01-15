@@ -24,7 +24,7 @@ describe('setupLicenseDropdown', () => {
     });
 
     // Load select.js once (document.ready will run)
-    require('../../..//js/select.js');
+    require('../../js/select.js');
   });
 
   beforeEach(() => {
@@ -54,6 +54,9 @@ describe('setupLicenseDropdown', () => {
       // software-only (should be filtered out)
       { rights_id: 'rid-apache', rightsIdentifier: 'Apache-2.0', text: 'Apache License 2.0', forSoftware: '1' },
       { rights_id: 'rid-mit', rightsIdentifier: 'MIT', text: 'MIT License', forSoftware: '1' },
+      { rights_id: 'rid-bsd', rightsIdentifier: 'BSD-3-Clause', text: 'BSD 3-Clause License', forSoftware: '1' },
+      { rights_id: 'rid-gpl', rightsIdentifier: 'GPL-3.0-or-later', text: 'GNU General Public License v3.0 or later', forSoftware: '1' },
+      { rights_id: 'rid-eul', rightsIdentifier: 'EUPL-1.2', text: 'European Union Public License 2.0', forSoftware: '1' },
 
       // non-software (should remain)
       {
@@ -69,9 +72,9 @@ describe('setupLicenseDropdown', () => {
         forSoftware: '0',
       },
       {
-        rights_id: 'rid-ccbysa4',
-        rightsIdentifier: 'CC-BY-SA-4.0',
-        text: 'Creative Commons Attribution-ShareAlike 4.0 International',
+        rights_id: 'rid-ccbync4',
+        rightsIdentifier: 'CC-BY-NC-4.0',
+        text: 'Creative Commons Attribution-NonCommercial 4.0 International',
         forSoftware: '0',
       },
     ];
@@ -87,11 +90,11 @@ describe('setupLicenseDropdown', () => {
     // No "Choose..." placeholder
     expect(options.some(o => o.textContent.includes('Choose'))).toBe(false);
 
-    // Ensure only non-software remain
+    // Ensure only non-software remain and are sorted correctly
     const texts = options.map(o => o.textContent.trim());
     expect(texts).toEqual([
       'Creative Commons Attribution 4.0 International (CC-BY-4.0)',
-      'Creative Commons Attribution-ShareAlike 4.0 International (CC-BY-SA-4.0)',
+      'Creative Commons Attribution-NonCommercial 4.0 International (CC-BY-NC-4.0)',
       'Creative Commons Zero v1.0 Universal (CC0-1.0)',
     ]);
 
@@ -111,7 +114,9 @@ describe('setupLicenseDropdown', () => {
     const softwareData = [
       { rights_id: 'rid-mit', rightsIdentifier: 'MIT', text: 'MIT License' },
       { rights_id: 'rid-apache', rightsIdentifier: 'Apache-2.0', text: 'Apache License 2.0' },
-      { rights_id: 'rid-gpl3', rightsIdentifier: 'GPL-3.0-only', text: 'GNU General Public License v3.0 only' },
+      { rights_id: 'rid-gpl', rightsIdentifier: 'GPL-3.0-or-later', text: 'GNU General Public License v3.0 or later' },
+      { rights_id: 'rid-bsd', rightsIdentifier: 'BSD-3-Clause', text: 'BSD 3-Clause License' },
+      { rights_id: 'rid-eul', rightsIdentifier: 'EUPL-1.2', text: 'European Union Public License 2.0' },
     ];
 
     mockGetJSONForBothEndpoints({ allData: [], softwareData });
@@ -129,7 +134,9 @@ describe('setupLicenseDropdown', () => {
     // Sorted by rightsIdentifier
     expect(texts).toEqual([
       'Apache License 2.0 (Apache-2.0)',
-      'GNU General Public License v3.0 only (GPL-3.0-only)',
+      'BSD 3-Clause License (BSD-3-Clause)',
+      'European Union Public License 2.0 (EUPL-1.2)',
+      'GNU General Public License v3.0 or later (GPL-3.0-or-later)',
       'MIT License (MIT)',
     ]);
 
