@@ -18,7 +18,7 @@ async function navigateToFeedbackModal(page: Page) {
   await feedbackButton.click();
 
   const feedbackModal = page.locator(SELECTORS.modals.feedback);
-  await expect(feedbackModal).toBeVisible();
+  await expect(feedbackModal).toBeVisible({ timeout: 3000 });
   await expect(feedbackModal.locator('#form-feedback')).toBeVisible();
 
   return { feedbackButton, feedbackModal };

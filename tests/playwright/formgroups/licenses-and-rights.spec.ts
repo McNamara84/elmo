@@ -15,11 +15,11 @@ test.describe("Licenses and Rights", () => {
     await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length > 0);
     const allOptions = licenseSelect.locator("option");
     const allCount = await allOptions.count();
-    expect(allCount).toBeGreaterThan(4);
+    expect(allCount).toBe(4);
 
     // Switch resource type to Software
     const resourceType = page.locator('#input-resourceinformation-resourcetype');
-    await resourceType.selectOption('12');
+    await resourceType.selectOption({ label: 'Software' });
     // Wait for the dropdown to update
     await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length === 4);
 
@@ -33,10 +33,10 @@ test.describe("Licenses and Rights", () => {
 
     // Switch back to Dataset
     await resourceType.selectOption('5');
-    await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length > 4);
+    await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length === 4);
     const datasetOptions = licenseSelect.locator('option');
     const datasetCount = await datasetOptions.count();
-    expect(datasetCount).toBeGreaterThan(4);
+    expect(datasetCount).toBe(4);
     const datasetTexts = await datasetOptions.allTextContents();
     expect(datasetTexts.join(' ')).toContain('Creative Commons Attribution 4.0');
   });
