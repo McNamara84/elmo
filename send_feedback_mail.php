@@ -182,8 +182,18 @@ function sendFeedbackMail(
     string $feedbackQuestion6,
     string $feedbackQuestion7
 ): void {
-    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth;
+    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth, $showMslLabs, $showGGMsProperties;
     
+    // Determine ELMO version
+    if ($showMslLabs) {
+        $elmoVersion = 'MSL';
+    } elseif ($showGGMsProperties) {
+        $elmoVersion = 'ELMOGEM';
+    } else {
+        $elmoVersion = 'generic';
+    }
+    // Testing log 
+    error_log("ELMO Version for Feedback: {$elmoVersion}");
     // Network test before sending
     if (!testGfzSmtpConnectivity()) {
         echo json_encode(['success' => false, 'message' => 'GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.']);
@@ -227,10 +237,12 @@ function sendFeedbackMail(
         $mail->addReplyTo($smtpSender, 'ELMO System');
         
         $mail->isHTML(false);
-        $mail->Subject = 'Neues ELMO Feedback - ' . date('d.m.Y H:i:s');
-        
+        $mail->Subject = 'Neues ELMO Feedback - ' . date('d.m.Y H:i:s') . ' [' . $elmoVersion . ']';
+
         // Email body in German
         $mail->Body = "Neues Feedback über ELMO erhalten:\n\n"
+            . "ELMO-Version: {$elmoVersion}\n"
+            . "---\n\n"
             . "1. Welche Funktionen des neuen Metadaten-Editors finden Sie besonders hilfreich?\n"
             . $feedbackQuestion1 . "\n\n"
             . "2. Gibt es eine bestimmte Design- oder Benutzeroberflächen-Änderung, die Ihnen gefällt?\n"

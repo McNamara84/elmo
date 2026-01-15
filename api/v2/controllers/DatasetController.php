@@ -654,7 +654,7 @@ class DatasetController extends ICGEMController
      * @return string The XML representation of the resource as a string.
      * @throws Exception If the resource is not found.
      */
-    function getResourceAsXml($connection, $id, bool $includeGGMData = true)
+    function getResourceAsXml($connection, $id)
     {
         $stmt = $connection->prepare('SELECT * FROM Resource WHERE resource_id = ?');
         $stmt->bind_param('i', $id);
@@ -1038,25 +1038,6 @@ class DatasetController extends ICGEMController
                 }
             }
         }
-        // ICGEM specific data 
-        $ggmDataForXml = $this->getGGMData($connection, $id);
-        $this->insertGgmProperties($xml, $ggmDataForXml);
-
-        // Data Sources
-        $dataSources = $this->getDataSources($connection, $id);
-        $this->insertDataSources($xml, $dataSources);
-
-        // Topographic Model Properties
-        $topographicProperties = $this->getTopographicModelProperties($connection, $id);
-        $this->insertTopographicModelProperties($xml, $topographicProperties);
-
-        // Temporal Model Properties
-        $temporalProperties = $this->getTemporalModelProperties($connection, $id);
-        $this->insertTemporalModelProperties($xml, $temporalProperties);
-
-        // Ellipsoidal Parameters
-        $ellipsoidalParameters = $this->getEllipsoidalParameters($connection, $id);
-        $this->insertEllipsoidalParameters($xml, $ellipsoidalParameters);
 
         // XML formating
         $dom = dom_import_simplexml($xml)->ownerDocument;
@@ -1106,7 +1087,7 @@ class DatasetController extends ICGEMController
         }
         
         // Temporarily create FreestyleXML
-        $this->getResourceAsXml($GLOBALS['connection'], $id, false);
+        $this->getResourceAsXml($GLOBALS['connection'], $id);
         $inputXmlPath = $this->generate_xml_path($id);
         $xsltPath = $baseDir . "/schemas/XSLT/" . $formatInfo[$format]['xsltFile'];
         $outputXmlPath = $this->generate_xml_path($id, $formatInfo[$format]['outputPrefix']);

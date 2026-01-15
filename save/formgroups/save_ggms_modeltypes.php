@@ -11,7 +11,7 @@
  */
 
 // lookupForeignKeyId is used in this file
-require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
+require_once __DIR__ . '/save_ggms_definition.php';
 
 /**
  * Retrieves the GGM_Properties_id and Model_type_id linked to a resource

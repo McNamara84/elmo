@@ -57,7 +57,7 @@ describe('saveHandler.js', () => {
         savingInfo: 'savI'
       }
     };
-
+    global.logEvent = jest.fn().mockResolvedValue();
     loadScript();
   });
 
@@ -133,5 +133,41 @@ describe('saveHandler.js', () => {
     const mod = await import('../../js/saveHandler.js');
     expect(mod.default).toBeDefined();
     expect(mod.SaveHandler).toBeDefined();
+  });
+
+  test('saveAndDownload logs success event', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      blob: jest.fn().mockResolvedValue(new Blob())
+    });
+    window.URL.createObjectURL = jest.fn();
+    window.URL.revokeObjectURL = jest.fn();
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved xml file locally');
+    expect(global.logEvent).toHaveBeenCalledTimes(1);
+    delete global.fetch;
+  });
+
+  test('saveAndDownload logs failure on network error', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('Network failure'));
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally');
+    expect(global.logEvent).toHaveBeenCalledTimes(1);
+    delete global.fetch;
+  });
+
+  test('saveAndDownload logs failure on HTTP error', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 });
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally');
+    expect(global.logEvent).toHaveBeenCalledTimes(1);
+    delete global.fetch;
   });
 });
