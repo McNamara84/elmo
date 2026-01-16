@@ -1,40 +1,130 @@
 <?php
 /**
- * @description Handles dataset saving and XML file generation
+ * @description Handles dataset saving and XML file generation with security validations
  * 
  * This script processes form submissions for dataset metadata:
+ * - Validates CSRF token
+ * - Checks honeypot field
+ * - Enforces rate limiting for save operations
  * - Saves metadata to database
  * - Generates XML files
  * - Handles both initial save requests and file downloads
  * 
  * @requires settings.php
+ * @requires api/security.php
  * @requires formgroups/*.php
  */
 
-/**
- * Process form submission based on action type
- */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Include required configuration and helper files
-    require_once __DIR__ . '/../settings.php';
-    require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
-    require_once __DIR__ . '/formgroups/save_authors.php';
-    require_once __DIR__ . '/formgroups/save_contactperson.php';
-    require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
-    require_once __DIR__ . '/formgroups/save_freekeywords.php';
-    require_once __DIR__ . '/formgroups/save_contributorpersons.php';
-    require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
-    require_once __DIR__ . '/formgroups/save_descriptions.php';
-    require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
-    require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
-    require_once __DIR__ . '/formgroups/save_relatedwork.php';
-    require_once __DIR__ . '/formgroups/save_fundingreferences.php';
-    // ICGEM related formgroups
-    require_once __DIR__ . '/formgroups/save_ggms_definition.php';
-    require_once __DIR__ . '/formgroups/save_ggms_properties.php';
-    require_once __DIR__ . '/formgroups/save_ggms_datasources.php';
-    require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
+// Guard for PHPUnit
+if (defined('PHPUNIT_RUNNING')) {
+    return;
 }
+
+// Only process POST requests
+if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
+    exit();
+}
+
+// Include security functions BEFORE settings to ensure they're available
+require_once __DIR__ . '/../api/security.php';
+
+// Only load settings if connection not already injected (for testing)
+if (!isset($GLOBALS['connection']) || $GLOBALS['connection'] === null) {
+    require_once __DIR__ . '/../settings.php';
+}
+global $connection;
+/**
+ * Validates security checks for save operations.
+ * 
+ * @param array $postData The POST data
+ * @param mysqli $connection Database connection for rate limiting
+ * @return array {status: bool, message: string|null, code: int}
+ */
+function validateSaveSecurity($postData, $connection)
+{
+    $clientIp = getClientIp();
+    
+    // Security Check 1: Honeypot
+    if (!validateHoneypot($postData['website'] ?? '')) {
+        error_log("[💿SAVE]: Save blocked - Honeypot triggered from IP {$clientIp}");
+        return [
+            'status' => false,
+            'message' => 'Invalid request',
+            'code' => 400
+        ];
+    }
+    
+    // Security Check 2: CSRF Token validation
+    $submittedToken = $postData['csrf_token'] ?? '';
+    if (!validateCsrfToken($submittedToken)) {
+        error_log("[💿SAVE]: Save blocked - Invalid CSRF token from IP {$clientIp}");
+        return [
+            'status' => false,
+            'message' => 'Invalid request - CSRF token validation failed',
+            'code' => 403
+        ];
+    }
+    
+    // Security Check 3: Rate limiting
+    if (!checkRateLimit($connection, $clientIp, 'save', RATE_LIMIT_SAVE_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        error_log("[💿SAVE]: Save blocked - Rate limit exceeded for IP {$clientIp}");
+        return [
+            'status' => false,
+            'message' => 'Too many save requests. Please try again later.',
+            'code' => 429
+        ];
+    }
+    
+    // Record this save for rate limiting
+    recordRateLimit($connection, $clientIp, 'save');
+    
+    // Invalidate the used CSRF token
+    invalidateCsrfToken();
+    
+    // Security Check 4: Minimum time validation
+    if (isset($postData['save_time_spent'])) {
+        $timeSpent = (int) $postData['save_time_spent'];
+        if ($timeSpent < 2) {
+            error_log("[💿SAVE]: Save blocked - Insufficient time spent ({$timeSpent}s) from IP {$clientIp}");
+            return [
+                'status' => false,
+                'message' => 'Save request too fast - minimum 2 seconds required',
+                'code' => 400
+            ];
+        }
+    }
+    
+    return ['status' => true];
+}
+
+// Validate security first
+$securityCheck = validateSaveSecurity($_POST, $connection);
+if (!$securityCheck['status']) {
+    http_response_code($securityCheck['code'] ?? 400);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => $securityCheck['message'] ?? 'Security validation failed']);
+    error_log("[💿SAVE]: Security validation failed: " . ($securityCheck['message'] ?? 'Unknown reason'));
+    exit();
+}
+
+// Include required files
+require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
+require_once __DIR__ . '/formgroups/save_authors.php';
+require_once __DIR__ . '/formgroups/save_contactperson.php';
+require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
+require_once __DIR__ . '/formgroups/save_freekeywords.php';
+require_once __DIR__ . '/formgroups/save_contributorpersons.php';
+require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
+require_once __DIR__ . '/formgroups/save_descriptions.php';
+require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
+require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
+require_once __DIR__ . '/formgroups/save_relatedwork.php';
+require_once __DIR__ . '/formgroups/save_fundingreferences.php';
+// ICGEM related formgroups
+require_once __DIR__ . '/formgroups/save_ggms_definition.php';
+require_once __DIR__ . '/formgroups/save_ggms_properties.php';
+require_once __DIR__ . '/formgroups/save_ggms_datasources.php';
+require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
 
 /**
  * Generates and outputs XML for a dataset

@@ -19,7 +19,29 @@ class SaveHandler {
             notification: new bootstrap.Modal($(`#${notificationModalId}`)[0])
         };
         this.autosaveService = autosaveService;
+        
+        // Security fields
+        this.$csrfTokenField = $('#input-save-csrf-token');
+        this.$timeSpentField = $('#input-save-time-spent');
+        this.$honeypotField = $('input[name="website"]');
+        this.modalOpenedAt = null;
+        
         this.initializeEventListeners();
+    }
+
+    /**
+     * Fetches a CSRF token from the server for form protection.
+     * @returns {Promise<string>} The CSRF token
+     */
+    async fetchCsrfToken() {
+        try {
+            const response = await fetch('api/csrf_token.php');
+            const data = await response.json();
+            return data.token || '';
+        } catch (error) {
+            console.error('Failed to fetch CSRF token:', error);
+            return '';
+        }
     }
 
     /**
@@ -29,8 +51,19 @@ class SaveHandler {
         $('#button-saveas-save').on('click', () => this.handleSaveConfirm());
         $('#modal-saveas').on('hidden.bs.modal', () => this.modals.notification.hide());
 
-        // Focus on input field
-        $('#modal-saveas').on('shown.bs.modal', () => {
+        // Focus on input field and fetch CSRF token
+        $('#modal-saveas').on('shown.bs.modal', async () => {
+            // Record when modal was opened for time-spent calculation
+            this.modalOpenedAt = Date.now();
+            
+            // Fetch fresh CSRF token
+            const token = await this.fetchCsrfToken();
+            this.$csrfTokenField.val(token);
+            
+            // Reset time spent and honeypot
+            this.$timeSpentField.val('0');
+            this.$honeypotField.val('');
+            
             $('#input-saveas-filename').select();
         });
         $('#modal-saveas').on('keydown', (e) => {
@@ -97,6 +130,12 @@ class SaveHandler {
             return;
         }
 
+        // Calculate time spent filling the save modal (in seconds)
+        if (this.modalOpenedAt) {
+            const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
+            this.$timeSpentField.val(timeSpent);
+        }
+
         this.modals.saveAs.hide();
         await this.saveAndDownload(filename);
     }
@@ -116,7 +155,11 @@ class SaveHandler {
         try {
             const formData = new FormData(this.$form[0]);
             formData.append('filename', filename);
-            formData.append('action', 'save_and_download');
+            
+            // Append security fields
+            formData.append('csrf_token', this.$csrfTokenField.val());
+            formData.append('save_time_spent', this.$timeSpentField.val());
+            formData.append('website', this.$honeypotField.val());
 
             const response = await fetch('save/save_data.php', {
                 method: 'POST',
