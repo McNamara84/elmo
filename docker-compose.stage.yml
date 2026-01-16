@@ -81,6 +81,7 @@ services:
       # Flags for msl
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
+      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor 2.0"
     depends_on:
       - db
     restart: unless-stopped
@@ -123,6 +124,7 @@ services:
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
       SHOW_GGMS_PROPERTIES: "true"
+      INSTANCE_TITLE: "ELMO ICGEM Edition – Alpha Version"
       DB_INIT_MODE: "keep_data"
     depends_on:
       - db
@@ -170,6 +172,7 @@ services:
       SHOW_FREE_KEYWORDS: "false"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
       SHOW_RELATED_WORK: "false"
+      INSTANCE_TITLE: "ELMO IGSN Edition – Alpha Version"
       DB_INIT_MODE: "keep_data"
     depends_on:
       - db
