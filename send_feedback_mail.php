@@ -17,10 +17,6 @@ include __DIR__ . '/settings.php';
 // Initialize session for CSRF validation
 initializeCsrfSession();
 
-// Rate limiting configuration
-define('RATE_LIMIT_MAX_REQUESTS', 3);
-define('RATE_LIMIT_WINDOW_SECONDS', 3600); // 1 hour
-
 /**
  * Sends a JSON error response and exits.
  *
@@ -206,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Security Check 3: Rate limiting
-    if (!checkRateLimit($connection, $clientIp, 'feedback', RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_SECONDS)) {
+    if (!checkRateLimit($connection, $clientIp, 'feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
         error_log("Feedback blocked: Rate limit exceeded for IP {$clientIp}");
         sendErrorResponse('Sie haben zu viele Anfragen gesendet. Bitte versuchen Sie es in einer Stunde erneut.', 429);
     }

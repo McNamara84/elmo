@@ -9,6 +9,36 @@
  * - Client IP detection
  */
 
+// Load environment variables from .env file
+$envFile = dirname(__DIR__) . '/../.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos($line, '=') === false || strpos($line, '#') === 0) {
+            continue;
+        }
+        [$key, $value] = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+        if (!isset($_ENV[$key])) {
+            putenv("{$key}={$value}");
+        }
+    }
+}
+
+// Rate limiting configuration (loaded from .env or defaults)
+define('RATE_LIMIT_FEEDBACK_MAX', (int) getenv('FEEDBACK_MAX_SUBMISSIONS') ?: 3);
+define('RATE_LIMIT_SAVE_MAX', (int) getenv('SAVE_RATE_LIMIT') ?: 100);
+define('RATE_LIMIT_SUBMIT_MAX', (int) getenv('SUBMIT_RATE_LIMIT') ?: 5);
+define('RATE_LIMIT_WINDOW_SECONDS', (int) getenv('RATE_LIMIT_TIME_WINDOW') ?: 3600);
+
+// Debug: Log loaded configuration
+error_log('Security Configuration Loaded:');
+error_log('  RATE_LIMIT_FEEDBACK_MAX: ' . RATE_LIMIT_FEEDBACK_MAX);
+error_log('  RATE_LIMIT_SAVE_MAX: ' . RATE_LIMIT_SAVE_MAX);
+error_log('  RATE_LIMIT_SUBMIT_MAX: ' . RATE_LIMIT_SUBMIT_MAX);
+error_log('  RATE_LIMIT_WINDOW_SECONDS: ' . RATE_LIMIT_WINDOW_SECONDS);
+
 /**
  * Initializes session if not already started.
  * Must be called before any session operations.
