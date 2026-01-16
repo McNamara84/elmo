@@ -84,6 +84,7 @@ services:
       # Flags for msl
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
+      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor 2.0"
     depends_on:
       - db
     restart: unless-stopped
