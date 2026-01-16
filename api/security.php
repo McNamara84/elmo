@@ -10,7 +10,7 @@
  */
 
 // Load environment variables from .env file
-$envFile = dirname(__DIR__) . '/../.env';
+$envFile = dirname(__DIR__) . '/.env';
 if (file_exists($envFile)) {
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
@@ -24,6 +24,8 @@ if (file_exists($envFile)) {
             putenv("{$key}={$value}");
         }
     }
+} else {
+    error_log("Security.php: .env file not found at expected path: {$envFile}");
 }
 
 // Rate limiting configuration (loaded from .env or defaults)
@@ -31,13 +33,6 @@ define('RATE_LIMIT_FEEDBACK_MAX', (int) getenv('FEEDBACK_MAX_SUBMISSIONS') ?: 3)
 define('RATE_LIMIT_SAVE_MAX', (int) getenv('SAVE_RATE_LIMIT') ?: 100);
 define('RATE_LIMIT_SUBMIT_MAX', (int) getenv('SUBMIT_RATE_LIMIT') ?: 5);
 define('RATE_LIMIT_WINDOW_SECONDS', (int) getenv('RATE_LIMIT_TIME_WINDOW') ?: 3600);
-
-// Debug: Log loaded configuration
-error_log('Security Configuration Loaded:');
-error_log('  RATE_LIMIT_FEEDBACK_MAX: ' . RATE_LIMIT_FEEDBACK_MAX);
-error_log('  RATE_LIMIT_SAVE_MAX: ' . RATE_LIMIT_SAVE_MAX);
-error_log('  RATE_LIMIT_SUBMIT_MAX: ' . RATE_LIMIT_SUBMIT_MAX);
-error_log('  RATE_LIMIT_WINDOW_SECONDS: ' . RATE_LIMIT_WINDOW_SECONDS);
 
 /**
  * Initializes session if not already started.
