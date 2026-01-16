@@ -87,6 +87,25 @@ if ($envShowGGMsProperties !== false) {
     $showGGMsProperties = filter_var($envShowGGMsProperties, FILTER_VALIDATE_BOOLEAN);
 }
 
+// Environment variable overrides for additional form groups
+$envShowGcmdThesauri = getenv('SHOW_GCMD_THESAURI');
+$envShowFreeKeywords = getenv('SHOW_FREE_KEYWORDS');
+$envShowSpatialTemporalCoverage = getenv('SHOW_SPATIAL_TEMPORAL_COVERAGE');
+$envShowRelatedWork = getenv('SHOW_RELATED_WORK');
+
+if ($envShowGcmdThesauri !== false) {
+    $showGcmdThesauri = filter_var($envShowGcmdThesauri, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowFreeKeywords !== false) {
+    $showFreeKeywords = filter_var($envShowFreeKeywords, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowSpatialTemporalCoverage !== false) {
+    $showSpatialTemporalCoverage = filter_var($envShowSpatialTemporalCoverage, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowRelatedWork !== false) {
+    $showRelatedWork = filter_var($envShowRelatedWork, FILTER_VALIDATE_BOOLEAN);
+}
+
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
 
