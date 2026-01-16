@@ -24,6 +24,11 @@ ob_start();
 
 error_log("send_xml_file.php: Script started");
 
+// Include security functions FIRST (before settings.php to avoid duplicate includes)
+require_once __DIR__ . '/api/security.php';
+
+error_log("send_xml_file.php: security.php included");
+
 // Include required files
 require_once __DIR__ . '/settings.php';
 
@@ -85,6 +90,73 @@ function testGfzSmtpConnectivity(): bool {
         error_log("Port {$smtpPort} on {$smtpHost} is CLOSED or FILTERED. Error: {$errno} - {$errstr}");
         return false;
     }
+}
+/**
+ * Validate submit security (honeypot, CSRF, rate limiting, minimum time)
+ * @param array $postData POST data from form
+ * @param mysqli $connection Database connection
+ * @throws Exception if validation fails
+ */
+function validateSubmitSecurity(array $postData, $connection) {
+    // Get client IP
+    $clientIp = getClientIp();
+    
+    // Check 1: Honeypot - Silent rejection
+    if (validateHoneypot($postData['website'] ?? '')) {
+        http_response_code(400);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid submission detected.'
+        ]);
+        exit;
+    }
+    
+    // Check 2: CSRF Token validation
+    if (!validateCsrfToken($postData['csrf_token'] ?? '')) {
+        http_response_code(403);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Security token validation failed.'
+        ]);
+        exit;
+    }
+    
+    // Check 3: Rate limiting for submit (10 per hour)
+    if (!checkRateLimit($connection, $clientIp, 'submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        http_response_code(429);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Too many submission attempts. Please try again later.'
+        ]);
+        exit;
+    }
+    
+    // Check 4: Minimum time spent (5 seconds for submit)
+    $timeSpent = intval($postData['submit_time_spent'] ?? 0);
+    if ($timeSpent < 5) {
+        http_response_code(400);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Please take time to review your submission before submitting.'
+        ]);
+        exit;
+    }
+    
+    // All checks passed, record the rate limit
+    recordRateLimit($connection, $clientIp, 'submit');
+    
+    // Invalidate CSRF token after successful security validation
+    invalidateCsrfToken();
+    
+    error_log("send_xml_file.php: Submit security validation passed");
 }
 
 /**
@@ -157,6 +229,12 @@ $resource_id = false; // Initialize to false (matches saveResourceInformationAnd
 
 try {
     error_log("send_xml_file.php: Try block started");
+    
+    // Validate security before saving any data
+    validateSubmitSecurity($_POST, $connection);
+    
+    error_log("send_xml_file.php: Security validation passed");
+    
     // Save all form components
     $resource_id = saveResourceInformationAndRights($connection, $_POST);
     saveAuthors($connection, $_POST, $resource_id);

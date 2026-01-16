@@ -180,6 +180,15 @@
         </div>
         <div class="modal-body">
           <form id="modal-submit-form">
+            <!-- Honeypot field - hidden from humans, bots will fill it -->
+            <div style="position: absolute; left: -9999px;" aria-hidden="true">
+                <input type="text" name="website" tabindex="-1" autocomplete="off">
+            </div>
+            
+            <!-- Hidden security fields -->
+            <input type="hidden" name="submit_time_spent" id="input-submit-time-spent" value="0">
+            <input type="hidden" name="csrf_token" id="input-submit-csrf-token" value="">
+            
             <!-- Publication urgency dropdown -->
             <div class="mb-3">
               <label for="input-submit-urgency" class="form-label" data-translate="modals.submit.urgency">Urgency</label>
