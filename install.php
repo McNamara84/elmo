@@ -194,19 +194,25 @@ function createDatabaseStructure($connection): array
     `Model_type_id` INT NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
-    PRIMARY KEY (`Model_type_id`));",
+    PRIMARY KEY (`Model_type_id`),
+    UNIQUE KEY `unique_name` (`name`)
+    );",
 
         "Mathematical_Representation" => "CREATE TABLE IF NOT EXISTS `Mathematical_Representation` (
     `Mathematical_representation_id` INT NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
-    PRIMARY KEY (`Mathematical_representation_id`));",
+    PRIMARY KEY (`Mathematical_representation_id`),
+    UNIQUE KEY `unique_name` (`name`)
+    );",
 
         "File_Format" => "CREATE TABLE IF NOT EXISTS `File_Format` (
     `File_format_id` INT NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
-    PRIMARY KEY (`File_format_id`));",
+    PRIMARY KEY (`File_format_id`),
+    UNIQUE KEY `unique_name` (`name`)
+    );",
 
         "Resource" => "CREATE TABLE IF NOT EXISTS `Resource` (
     `resource_id` INT NOT NULL AUTO_INCREMENT,
