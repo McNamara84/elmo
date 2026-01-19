@@ -67,13 +67,14 @@ include_once "../settings.php";
                         <li class="nav-item">
                             <a class="nav-link" href="#help-rights" data-bs-dismiss="offcanvas">Licenses and rights</a>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors Institution</a>
                         </li>
-                        <?php if ($showMslLabs): ?>
+                        <?php if ($showMslLabs ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-originatinglaboratory"
                                 data-bs-dismiss="offcanvas">Originating Laboratory</a>
@@ -90,7 +91,7 @@ include_once "../settings.php";
                         <li class="nav-item">
                             <a class="nav-link" href="#help-descriptions" data-bs-dismiss="offcanvas">Description(s)</a>
                         </li>
-                        <?php if ($showMslVocabs): ?>
+                        <?php if ($showMslVocabs ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-mslkeywords" data-bs-dismiss="offcanvas">EPOS MSL
                                 Keywords</a>
@@ -151,6 +152,12 @@ include_once "../settings.php";
                         publisher will be named in the citation of the dataset as requested by the citation
                         guidelines of DataCite.
                     </p>
+                    <?php if (!($showLicense ?? true)): ?>
+                    <p>By default, this publication will be published under a Creative Commons Attribution 4.0 (CC-BY) license. 
+                        This follows the GFZ German Research Centre for Geosciences' Guidelines for open science.
+                        If your dataset requires another license, please contact us at datapub@gfz.de for further advice.
+                    </p>
+                    <?php endif; ?>
                 </div>
                 <div id="help-resourceinformation-doi">
                     <h4>DOI<a href="https://www.doi.org/" target="_blank" rel="noopener"><img id="doi-logo" src="../logos/doi.logo.svg" class="logo-icon" alt="DOI Logo" onerror="this.onerror=null; this.src='logos/doi.logo.svg';" class="logo-icon" alt="DOI Logo"></a></h4>
@@ -225,8 +232,9 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>
             <!-- formgroup rights & licenses -->
+            <?php if ($showLicense ?? true): ?>
             <div id="help-rights" class="section-content">
-                <h3>Licenses and Rights</h3>
+                <h3>Licenses and Rights</h3>                
                 <p>Rights information for the data set. Following the Guidelines for the Handling of Research Data
                     of the GFZ German Research Centre for Geosciences for open science, we recommend a Creative
                     Commons Attribution 4.0 (CC-BY) license whenever possible.</p>
@@ -269,6 +277,7 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
             <!-- formgroup authors -->
             <div id="help-authors" class="section-content">
                 <div id="help-authors-fg">
@@ -329,8 +338,8 @@ include_once "../settings.php";
                 </div>
             </div>
             <div class="section-divider"></div>
-            <?php if ($showMslLabs): ?>
             <hr>
+            <?php if ($showMslLabs ?? false): ?>
             <!-- formgroup originating laboratory -->
             <div id="help-originatinglaboratory" class="section-content">
                 <div id="help-originatinglaboratory-fg">
@@ -351,8 +360,8 @@ include_once "../settings.php";
                 </div>
             </div>
             <div class="section-divider"></div>
+            <hr>            
             <?php endif; ?>
-            <hr>
             <!-- formgroup contributor persons -->
             <div id="help-contributorpersons" class="section-content">
                 <div id="help-contributorpersons-fg">
@@ -651,7 +660,7 @@ include_once "../settings.php";
                 </div>
             </div>
             <div class="section-divider"></div>
-            <?php if ($showMslVocabs): ?>
+            <?php if ($showMslVocabs ?? false): ?>
             <hr>
             <!-- formgroup MSL Keywords -->
             <div id="help-mslkeywords" class="section-content">
@@ -988,7 +997,7 @@ include_once "../settings.php";
                 </div>
             </div>
             <!-- formgroup GGMs Properties -->
-            <?php if ($showGGMsProperties): ?>
+            <?php if ($showGGMsProperties ?? false): ?>
             <div id="help-model-characteristics" class="section-content">
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
@@ -1051,7 +1060,7 @@ include_once "../settings.php";
                 <div id="help-file-format">
                     <h4>File Format</h4>
                     <p>
-                        All models on the ICGEM are published in the ICGEM file format. See description at <a href="https://icgem.gfz-potsdam.de/docs/ICGEM-Format-2023.pdf" target="_blank">ICGEM-Format-2023.pdf</a>
+                        All models on the ICGEM are published in the ICGEM file format. See description at <a href="https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf" target="_blank">ICGEM-Format-2023.pdf</a>
                     </p>
                     <p>
                         This field is mandatory. To support time-limited validity periods for time-varying coefficients, a new parameter has been introduced: <code>format=icgem2.0</code>.
@@ -1161,7 +1170,7 @@ include_once "../settings.php";
                     <h4>File Format</h4>
                     <p>
                         All models on the ICGEM are published in the ICGEM file format. 
-                        See description at https://icgem.gfz-potsdam.de/docs/ICGEM-Format-2023.pdf
+                        See description at https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf
 
                         This field is mandatory. To support time-limited validity periods for time-varying coefficients, 
                         a new parameter has been introduced: format=icgem2.0.
@@ -1264,7 +1273,7 @@ include_once "../settings.php";
             <div id="help-technical">
                 <h3>Characteristics of the model</h3>
                 <p>
-                    This section is fully based on the technical specifications of the model. They are provided in the model file header. According to the <a href="https://icgem.gfz-potsdam.de/docs/ICGEM-Format-2023.pdf" target="_blank" rel="noopener">ICGEM file format description</a>, these variables are required, as they are essential for the use of the model.
+                    This section is fully based on the technical specifications of the model. They are provided in the model file header. According to the <a href="https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf" target="_blank" rel="noopener">ICGEM file format description</a>, these variables are required, as they are essential for the use of the model.
                 </p>
                 <div id="help-tide-system">
                     <h4>Tide system</h4>

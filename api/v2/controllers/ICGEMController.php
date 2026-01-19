@@ -28,23 +28,27 @@ class ICGEMController
                 mt.name as model_type_name, 
                 mr.name as mathematical_representation_name, 
                 ff.name as file_format_name,
-                ggm.Model_Name as model_name, 
-                ggm.Celestial_Body as celestial_body,
-                ggm.Product_Type as product_type,
+                def.Model_Name as model_name, 
+                def.Celestial_Body as celestial_body,
+                def.Product_Type as product_type,
                 ggm.Errors as errors,
                 ggm.Error_Handling_Approach as error_handling_approach,
-                ggm.Error_Description as error_description,
                 ggm.Tide_System as tide_system,
                 ggm.degree as degree,
                 ggm.radius as radius,
-                ggm.earth_gravity_constant as earth_gravity_constant,
-                ggm.info_time_variable_coefficients as info_time_variable_coefficients
-            FROM Resource r
-            LEFT JOIN Model_Type mt ON r.Model_type_id = mt.Model_type_id
-            LEFT JOIN Mathematical_Representation mr ON r.Mathematical_Representation_id = mr.Mathematical_representation_id
-            LEFT JOIN File_Format ff ON r.File_format_id = ff.File_format_id
-            LEFT JOIN Resource_has_GGM_Properties rhg ON r.resource_id = rhg.Resource_resource_id
-            LEFT JOIN GGM_Properties ggm ON rhg.GGM_Properties_GGM_Properties_id = ggm.GGM_Properties_id
+                ggm.earth_gravity_constant as earth_gravity_constant
+            
+                FROM Resource r
+            Left JOIN Resource_has_GGM_Definition rhgd ON r.resource_id = rhgd.Resource_resource_id
+            LEFT JOIN GGM_Definition def ON rhgd.GGM_Definition_GGM_Definition_id = def.GGM_Definition_id
+
+            Left JOIN Resource_has_GGM_Properties rhgp ON r.resource_id = rhgp.Resource_resource_id
+            LEFT JOIN GGM_Properties ggm ON rhgp.GGM_Properties_GGM_Properties_id = ggm.GGM_Properties_id
+
+            LEFT JOIN Model_Type mt ON def.Model_type_id = mt.Model_type_id
+            LEFT JOIN Mathematical_Representation mr ON def.Mathematical_Representation_id = mr.Mathematical_representation_id
+            LEFT JOIN File_Format ff ON def.File_format_id = ff.File_format_id
+
             WHERE r.resource_id = ?
         ");
         
@@ -84,17 +88,15 @@ class ICGEMController
             ds.data_source_id as data_source_id,
             ds.type as type,
             ds.description as description,
-            ds.S_value_name as s_value_name,
-            ds.S_value_uri as s_value_uri,
-            ds.S_scheme_name as s_scheme_name,  
-            ds.S_scheme_uri as s_scheme_uri,
-            ds.G_details as g_details,
-            ds.A_details as a_details,
-            ds.T_details as t_details,
-            ds.T_Isostasy_compensation_depth as t_isostasy_compensation_depth,
-            ds.M_details as m_details,
-            ds.M_identifier as m_identifier,
-            ds.M_identifier_type as m_identifier_type
+            ds.details as details,
+            ds.S_value_name as S_value_name,
+            ds.S_value_uri as S_value_uri,
+            ds.S_scheme_name as S_scheme_name,  
+            ds.S_scheme_uri as S_scheme_uri,
+            ds.T_Isostasy_compensation_depth as T_Isostasy_compensation_depth,
+            ds.M_identifier as M_identifier,
+            ds.M_identifier_type as M_identifier_type,
+            ds.M_name as M_name
         FROM Data_Sources ds
         JOIN Resource_has_Data_Sources rhds ON ds.data_source_id = rhds.data_source_id
         WHERE rhds.resource_id = ?
@@ -127,12 +129,11 @@ class ICGEMController
             tmp.forward_modelling_domain,
             tmp.density_information,
             tmp.density_information_details,
-            tmp.mantle_density_value,
-            tmp.mantle_density_description,
-            tmp.crust_density_value,
-            tmp.crust_density_description,
-            tmp.approximation,
-            tmp.description
+            tmp.mantle_density_information,
+            tmp.mantle_density_information_details,
+            tmp.crust_density_information,
+            tmp.crust_density_information_details,
+            tmp.approximation
         FROM Topographic_Models_Properties tmp
         JOIN Resource_has_Topographic_Model_Properties rhtmp ON tmp.topographic_model_property_id = rhtmp.topographic_model_property_id
         WHERE rhtmp.resource_id = ?
@@ -161,7 +162,8 @@ class ICGEMController
         tmp.generating_institution,
         tmp.temporal_resolution_days,
         tmp.start_date,
-        tmp.end_date
+        tmp.end_date,
+        tmp.release
         FROM Temporal_Model_Properties tmp
         JOIN Resource_has_Temporal_Model_Properties rhtmp ON tmp.temporal_model_property_id = rhtmp.temporal_model_property_id
         WHERE rhtmp.resource_id = ?
@@ -176,6 +178,31 @@ class ICGEMController
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
+    /**
+     * Retrieves static model properties for a given resource.
+     *
+     * @param mysqli $connection The database connection.
+     * @param int $resource_id The ID of the resource.
+     * @return array<mixed> An array of static model properties.
+     */
+    function getStaticModelProperties(mysqli $connection, int $resource_id): array
+    {
+        $stmt = $connection->prepare("
+        SELECT 
+        static.info_time_variable_coefficients
+        FROM Static_Model_Properties static
+        JOIN Resource_has_Static_Model_Properties rhsmp ON static.static_model_property_id = rhsmp.static_model_property_id
+        WHERE rhsmp.resource_id = ?
+        ");
+        if (!$stmt) {
+            $this->logger && $this->logger->error("Prepare failed for Static Model Properties: " . $connection->error);
+            return [];
+        }
+        $stmt->bind_param('i', $resource_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
     /**
      * Retrieves ellipsoidal parameters for a given resource.
      *
@@ -217,25 +244,25 @@ class ICGEMController
         if ($ggmData) {
             $ggmPropertiesXml = $xml->addChild('ggm_properties');
             if (!empty($ggmData['model_name'])) {
-                $ggmPropertiesXml->addChild('model_name', htmlspecialchars($ggmData['model_name']));
+                $ggmPropertiesXml->addChild('modelName', htmlspecialchars($ggmData['model_name']));
             }
             if (!empty($ggmData['celestial_body'])) {
-                $ggmPropertiesXml->addChild('celestial_body', htmlspecialchars($ggmData['celestial_body']));
+                $ggmPropertiesXml->addChild('celestialBody', htmlspecialchars($ggmData['celestial_body']));
             }
             if (!empty($ggmData['product_type'])) {
-                $ggmPropertiesXml->addChild('product_type', htmlspecialchars($ggmData['product_type']));
+                $ggmPropertiesXml->addChild('productType', htmlspecialchars($ggmData['product_type']));
             }
             if (!empty($ggmData['errors'])) {
                 $ggmPropertiesXml->addChild('errors', htmlspecialchars($ggmData['errors']));
             }
             if (!empty($ggmData['error_handling_approach'])) {
-                $ggmPropertiesXml->addChild('error_handling_approach', htmlspecialchars($ggmData['error_handling_approach']));
+                $ggmPropertiesXml->addChild('errorHandlingApproach', htmlspecialchars($ggmData['error_handling_approach']));
             }
             if (!empty($ggmData['error_description'])) {
-                $ggmPropertiesXml->addChild('error_description', htmlspecialchars($ggmData['error_description']));
+                $ggmPropertiesXml->addChild('errorDescription', htmlspecialchars($ggmData['error_description']));
             }
             if (!empty($ggmData['tide_system'])) {
-                $ggmPropertiesXml->addChild('tide_system', htmlspecialchars($ggmData['tide_system']));
+                $ggmPropertiesXml->addChild('tideSystem', htmlspecialchars($ggmData['tide_system']));
             }
             if (!empty($ggmData['degree'])) {
                 $ggmPropertiesXml->addChild('degree', htmlspecialchars($ggmData['degree']));
@@ -244,16 +271,16 @@ class ICGEMController
                 $ggmPropertiesXml->addChild('radius', htmlspecialchars($ggmData['radius']));
             }
             if (!empty($ggmData['earth_gravity_constant'])) {
-                $ggmPropertiesXml->addChild('earth_gravity_constant', htmlspecialchars($ggmData['earth_gravity_constant']));
+                $ggmPropertiesXml->addChild('earthGravityConstant', htmlspecialchars($ggmData['earth_gravity_constant']));
             }
             if (!empty($ggmData['model_type_name'])) {
-                $ggmPropertiesXml->addChild('model_type', htmlspecialchars($ggmData['model_type_name']));
+                $ggmPropertiesXml->addChild('modelType', htmlspecialchars($ggmData['model_type_name']));
             }
             if (!empty($ggmData['mathematical_representation_name'])) {
-                $ggmPropertiesXml->addChild('mathematical_representation', htmlspecialchars($ggmData['mathematical_representation_name']));
+                $ggmPropertiesXml->addChild('mathematicalRepresentation', htmlspecialchars($ggmData['mathematical_representation_name']));
             }
             if (!empty($ggmData['file_format_name'])) {
-                $ggmPropertiesXml->addChild('file_format', htmlspecialchars($ggmData['file_format_name']));
+                $ggmPropertiesXml->addChild('fileFormat', htmlspecialchars($ggmData['file_format_name']));
             }
         }
     }
@@ -277,7 +304,6 @@ class ICGEMController
                     $dataSourceXml->addChild('description', htmlspecialchars($dataSource['description']));
                 }
                 
-                // Standardized properties (S_ prefix = Standard)
                 if (!empty($dataSource['S_value_name'])) {
                     $dataSourceXml->addChild('SatelliteValueName', htmlspecialchars($dataSource['S_value_name']));
                 }
@@ -291,27 +317,20 @@ class ICGEMController
                     $dataSourceXml->addChild('SatelliteSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']));
                 }
                 
-                // Domain-specific details
-                if (!empty($dataSource['G_details'])) {
-                    $dataSourceXml->addChild('G_Details', htmlspecialchars($dataSource['G_details']));
-                }
-                if (!empty($dataSource['A_details'])) {
-                    $dataSourceXml->addChild('A_Details', htmlspecialchars($dataSource['A_details']));
-                }
-                if (!empty($dataSource['T_details'])) {
-                    $dataSourceXml->addChild('Topography_Details', htmlspecialchars($dataSource['T_details']));
+                if (!empty($dataSource['details'])) {
+                    $dataSourceXml->addChild('Details', htmlspecialchars($dataSource['details']));
                 }
                 if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
                     $dataSourceXml->addChild('IsostasyCompensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']));
-                }
-                if (!empty($dataSource['M_details'])) {
-                    $dataSourceXml->addChild('M_Details', htmlspecialchars($dataSource['M_details']));
                 }
                 if (!empty($dataSource['M_identifier'])) {
                     $dataSourceXml->addChild('M_Identifier', htmlspecialchars($dataSource['M_identifier']));
                 }
                 if (!empty($dataSource['M_identifier_type'])) {
                     $dataSourceXml->addChild('M_Identifier_Type', htmlspecialchars($dataSource['M_identifier_type']));
+                }
+                if (!empty($dataSource['M_name'])) {
+                    $dataSourceXml->addChild('M_Name', htmlspecialchars($dataSource['M_name']));
                 }
             }
         }
@@ -335,30 +354,28 @@ class ICGEMController
                 if (!empty($property['forward_modelling_domain'])) {
                     $propertyXml->addChild('forwardModellingDomain', htmlspecialchars($property['forward_modelling_domain']));
                 }
+                    if (!empty($property['approximation'])) {
+                    $propertyXml->addChild('approximation', htmlspecialchars($property['approximation']));
+                }
                 if (!empty($property['density_information'])) {
                     $propertyXml->addChild('densityInformation', htmlspecialchars($property['density_information']));
                 }
                 if (!empty($property['density_information_details'])) {
                     $propertyXml->addChild('densityInformationDetails', htmlspecialchars($property['density_information_details']));
                 }
-                if (!empty($property['mantle_density_value'])) {
-                    $propertyXml->addChild('mantleDensityValue', htmlspecialchars($property['mantle_density_value']));
+                if (!empty($property['mantle_density_information'])) {
+                    $propertyXml->addChild('mantleDensityInformation', htmlspecialchars($property['mantle_density_information']));
                 }
-                if (!empty($property['mantle_density_description'])) {
-                    $propertyXml->addChild('mantleDensityDescription', htmlspecialchars($property['mantle_density_description']));
+                if (!empty($property['mantle_density_information_details'])) {
+                    $propertyXml->addChild('mantleDensityInformationDetails', htmlspecialchars($property['mantle_density_information_details']));
                 }
-                if (!empty($property['crust_density_value'])) {
-                    $propertyXml->addChild('crustDensityValue', htmlspecialchars($property['crust_density_value']));
+                if (!empty($property['crust_density_information'])) {
+                    $propertyXml->addChild('crustDensityInformation', htmlspecialchars($property['crust_density_information']));
                 }
-                if (!empty($property['crust_density_description'])) {
-                    $propertyXml->addChild('crustDensityDescription', htmlspecialchars($property['crust_density_description']));
+                if (!empty($property['crust_density_information_details'])) {
+                    $propertyXml->addChild('crustDensityInformationDetails', htmlspecialchars($property['crust_density_information_details']));
                 }
-                if (!empty($property['approximation'])) {
-                    $propertyXml->addChild('approximation', htmlspecialchars($property['approximation']));
-                }
-                if (!empty($property['description'])) {
-                    $propertyXml->addChild('description', htmlspecialchars($property['description']));
-                }
+
             }
         }
     }
@@ -375,8 +392,8 @@ class ICGEMController
             foreach ($temporalProperties as $property) {
                 $propertyXml = $temporalPropertiesXml->addChild('TemporalProperty');
                 
-                if (isset($property['generating_institution'])) {
-                    $propertyXml->addChild('generatingInstitution', htmlspecialchars($property['generating_institution'] ? 'true' : 'false'));
+                if (!empty($property['generating_institution'])) {
+                    $propertyXml->addChild('generatingInstitution', htmlspecialchars($property['generating_institution']));
                 }
                 if (!empty($property['temporal_resolution_days'])) {
                     $propertyXml->addChild('temporalResolutionDays', htmlspecialchars($property['temporal_resolution_days']));
@@ -387,9 +404,32 @@ class ICGEMController
                 if (!empty($property['end_date'])) {
                     $propertyXml->addChild('endDate', htmlspecialchars($property['end_date']));
                 }
+                if (!empty($property['release'])) {
+                    $propertyXml->addChild('release', htmlspecialchars($property['release']));
+                }
             }
         }
     }
+    /**
+     * Inserts static model properties into the XML.
+     *
+     * @param SimpleXMLElement $xml The XML element to insert into.
+     * @param array<string, mixed> $staticProperties The static model properties to insert.
+     */
+    protected function insertStaticModelProperties(SimpleXMLElement $xml, array $staticProperties): void
+    {
+        if ($staticProperties) {
+            $staticPropertiesXml = $xml->addChild('StaticModelProperties');
+            foreach ($staticProperties as $property) {
+                $propertyXml = $staticPropertiesXml->addChild('StaticProperty');
+                
+                if (!empty($property['info_time_variable_coefficients'])) {
+                    $propertyXml->addChild('infoTimeVariableCoefficients', htmlspecialchars($property['info_time_variable_coefficients']));
+                }
+            }
+        }
+    }
+
     /**
      * Inserts ellipsoidal parameters into the XML.
      *
@@ -417,6 +457,9 @@ class ICGEMController
                 }
                 if (!empty($parameter['description'])) {
                     $parameterXml->addChild('description', htmlspecialchars($parameter['description']));
+                }
+                if (!empty($parameter['excentricity'])) {
+                    $parameterXml->addChild('excentricity', htmlspecialchars($parameter['excentricity']));
                 }
             }
         }
@@ -467,6 +510,7 @@ class ICGEMController
         $dataSources = $this->getDataSources($this->connection, $id);
         $topographicProperties = $this->getTopographicModelProperties($this->connection, $id);
         $temporalProperties = $this->getTemporalModelProperties($this->connection, $id);
+        $staticProperties = $this->getStaticModelProperties($this->connection, $id);
         $ellipsoidalParameters = $this->getEllipsoidalParameters($this->connection, $id);
 
         // 7. Insert the fetched data into <icgem_metadata>
@@ -474,6 +518,7 @@ class ICGEMController
         $this->insertDataSources($icgemSpecificXml, $dataSources);
         $this->insertTopographicModelProperties($icgemSpecificXml, $topographicProperties);
         $this->insertTemporalModelProperties($icgemSpecificXml, $temporalProperties);
+        $this->insertStaticModelProperties($icgemSpecificXml, $staticProperties);
         $this->insertEllipsoidalParameters($icgemSpecificXml, $ellipsoidalParameters);
 
         // 8. Format and return the final XML as a string.

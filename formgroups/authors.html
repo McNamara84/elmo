@@ -17,7 +17,7 @@
             <!-- ORCID Input Field -->
             <div class="form-floating flex-grow-1">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                id="input-author-orcid" name="orcids[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
+                id="input-author-orcid" name="orcids[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" maxlength="19" />
               <label for="input-author-orcid" data-translate="general.ORCID">ORCID</label>
               <div class="invalid-feedback" data-translate="general.orcidInvalid">
                 Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))
@@ -33,7 +33,7 @@
         <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
-              <input type="text" class="form-control" id="input-author-lastname" name="familynames[]" 
+              <input type="text" class="form-control js-required-on-submit" id="input-author-lastname" name="familynames[]" 
               pattern="^[\p{L}\s'-]+$"  required />
               <label for="input-author-lastname"><span data-translate="general.lastName">Last Name</span><span
                   class="red-star">*</span></label>
@@ -47,7 +47,7 @@
         <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
-              <input type="text" class="form-control" id="input-author-firstname" name="givennames[]" 
+              <input type="text" class="form-control js-required-on-submit" id="input-author-firstname" name="givennames[]" 
               pattern="^[\p{L}\s'-]+$"  required   />
               <label for="input-author-firstname"><span data-translate="general.firstName">First Name</span><span
                   class="red-star">*</span></label>

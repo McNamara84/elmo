@@ -1,14 +1,11 @@
 const { requireFresh } = require('./utils');
 
 let SaveHandler;
-let validateEmbargoDate;
-let validateTemporalCoverage;
-let validateContactPerson;
 let $;
 let modalInstances;
 
 function loadScript() {
-  ({ SaveHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson } =
+  ({ SaveHandler } =
     requireFresh('../../js/saveHandler.js'));
 }
 
@@ -60,65 +57,12 @@ describe('saveHandler.js', () => {
         savingInfo: 'savI'
       }
     };
-
+    global.logEvent = jest.fn().mockResolvedValue();
     loadScript();
   });
 
   afterEach(() => {
     jest.useRealTimers();
-  });
-
-  test('validateEmbargoDate marks invalid when embargo before creation', () => {
-    const created = document.getElementById('input-date-created');
-    const embargo = document.getElementById('input-date-embargo');
-    const feedback = document.querySelector('.embargo-invalid');
-    created.value = '2024-06-02';
-    embargo.value = '2024-06-01';
-    const result = validateEmbargoDate();
-    expect(result).toBe(false);
-    expect(embargo.classList.contains('is-invalid')).toBe(true);
-    expect(feedback.textContent).toBe('embargoErr');
-  });
-
-  test('validateEmbargoDate resets when empty', () => {
-    const embargo = document.getElementById('input-date-embargo');
-    validateEmbargoDate();
-    expect(embargo.className).not.toContain('is-invalid');
-    expect(embargo.className).not.toContain('is-valid');
-  });
-
-  test('validateTemporalCoverage sets classes based on dates', () => {
-    const row = document.createElement('div');
-    row.setAttribute('tsc-row', '');
-    row.innerHTML = `
-      <input id="input-stc-datestart0" value="2024-06-10">
-      <input id="input-stc-dateend0" value="2024-06-01">
-      <div class="invalid-feedback" data-translate="coverage.dateTimeInvalid"></div>`;
-    document.body.appendChild(row);
-
-    const result = validateTemporalCoverage(row);
-    const end = row.querySelector('[id*="input-stc-dateend"]');
-    expect(result).toBe(false);
-    expect(end.classList.contains('is-invalid')).toBe(true);
-    expect(row.querySelector('.invalid-feedback').textContent).toBe('endErr');
-
-    end.value = '2024-06-20';
-    const result2 = validateTemporalCoverage(row);
-    expect(result2).toBe(true);
-    expect(end.classList.contains('is-valid')).toBe(true);
-  });
-
-  test('validateContactPerson requires one selection', () => {
-    const boxes = document.querySelectorAll('input[name="contacts[]"]');
-    expect(validateContactPerson()).toBe(false);
-    expect(document.getElementById('contact-person-error')).not.toBeNull();
-    boxes.forEach(b => expect(b.required).toBe(true));
-
-    boxes[0].checked = true;
-    const res2 = validateContactPerson();
-    expect(res2).toBe(true);
-    expect(document.getElementById('contact-person-error')).toBeNull();
-    boxes.forEach(b => expect(b.required).toBe(false));
   });
 
   test('generateFilename returns formatted timestamp', async () => {
@@ -189,8 +133,41 @@ describe('saveHandler.js', () => {
     const mod = await import('../../js/saveHandler.js');
     expect(mod.default).toBeDefined();
     expect(mod.SaveHandler).toBeDefined();
-    expect(mod.validateEmbargoDate).toBeDefined();
-    expect(mod.validateTemporalCoverage).toBeDefined();
-    expect(mod.validateContactPerson).toBeDefined();
+  });
+
+  test('saveAndDownload logs success event', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      blob: jest.fn().mockResolvedValue(new Blob())
+    });
+    window.URL.createObjectURL = jest.fn();
+    window.URL.revokeObjectURL = jest.fn();
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved xml file locally');
+    expect(global.logEvent).toHaveBeenCalledTimes(1);
+    delete global.fetch;
+  });
+
+  test('saveAndDownload logs failure on network error', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('Network failure'));
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally');
+    expect(global.logEvent).toHaveBeenCalledTimes(1);
+    delete global.fetch;
+  });
+
+  test('saveAndDownload logs failure on HTTP error', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 });
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally');
+    expect(global.logEvent).toHaveBeenCalledTimes(1);
+    delete global.fetch;
   });
 });

@@ -232,7 +232,7 @@ try {
 // Add simulation flag for development 
 // (set SIMULATE_EMAIL=true in env to skip the actual email sending)
 include_once __DIR__ . '/includes/feature_toggles.php';
-$simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, true);
+$simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
 error_log("send_xml_file.php: simulateEmail = " . ($simulateEmail ? 'true' : 'false'));
 
 // Test SMTP connectivity and send email (skip if simulating)

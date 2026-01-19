@@ -7,7 +7,16 @@ describe('ggms-modeltypes.js', () => {
     beforeEach(() => {
         // Load jQuery
         $ = require('jquery');
+                // Define helper functions that are used in ggms-modeltypes.js
+        window.visibilityON = function(element) {
+            element.removeClass('d-none');
+            element.attr('aria-hidden', 'false');
+        };
         
+        window.visibilityOFF = function(element) {
+            element.addClass('d-none');
+            element.attr('aria-hidden', 'true');
+        };
         // Set up the document body with the necessary HTML structure
         document.body.innerHTML = `
             <select id="input-model-type">

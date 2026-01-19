@@ -12,13 +12,11 @@ $(document).ready(function() {
         // Check if a valid model type is selected.
         // This covers null, undefined, and empty strings ''.
         if (modelType && modelType.toLowerCase() !== 'choose...' && modelType.toLowerCase() !== 'simulated') {
-            // If a valid model type is selected (not 'Choose...' or 'Simulated'), show the card.
-            modelSpecificCard.removeClass('d-none');
-            modelSpecificCard.attr('aria-hidden', 'false');
+            // If a valid model type is selected (not 'Choose...' or 'Simulated'), show the card and enable inputs.
+            visibilityON(modelSpecificCard);
         } else {
-            // Otherwise, hide the card.
-            modelSpecificCard.addClass('d-none');
-            modelSpecificCard.attr('aria-hidden', 'true');
+            // Otherwise, hide the card and disable inputs inside.
+            visibilityOFF(modelSpecificCard);
         }
     };
     
@@ -35,9 +33,9 @@ $(document).ready(function() {
         const topographicSection = $('.visibility-modeltype-topographic');
 
         // Hide all sections by default.
-        staticSection.addClass('d-none');
-        temporalSection.addClass('d-none');
-        topographicSection.addClass('d-none');
+        visibilityOFF(staticSection);
+        visibilityOFF(temporalSection);
+        visibilityOFF(topographicSection);
 
         // If no model type is selected, do nothing further.
         if (!modelType || modelType.trim() === '') {
@@ -48,11 +46,11 @@ $(document).ready(function() {
         const modelTypeLower = modelType.toLowerCase();
 
         if (modelTypeLower === 'static') {
-            staticSection.removeClass('d-none');
+            visibilityON(staticSection);
         } else if (modelTypeLower === 'temporal') {
-            temporalSection.removeClass('d-none');
+            visibilityON(temporalSection);
         } else if (modelTypeLower === 'topographic') {
-            topographicSection.removeClass('d-none');
+            visibilityON(topographicSection);
         }
         
     // Update the help button's data-help-section-id
@@ -92,11 +90,11 @@ $(document).ready(function() {
     
     function toggleDensityInputs() {
         if (separateDensityCheckbox.is(':checked')) {
-            singleDensity.addClass('d-none');
-            separateDensity.removeClass('d-none');
+            visibilityOFF(singleDensity);
+            visibilityON(separateDensity);
         } else {
-            singleDensity.removeClass('d-none');
-            separateDensity.addClass('d-none');
+            visibilityON(singleDensity);
+            visibilityOFF(separateDensity);
         }
     }
     // Add event listener for the checkbox
@@ -122,14 +120,14 @@ $(document).ready(function() {
         function toggleCustomFrequencyInput() {
             if ($customFrequencyCheckbox.is(':checked')) {
                 // Enable custom input, disable dropdown
-                $customFrequencyContainer.removeClass('d-none');
+                visibilityON($customFrequencyContainer);
                 $predefinedFrequencySelect.prop('disabled', true).val('');
                 $predefinedFrequencySelect.removeClass('is-valid is-invalid');
                 $customFrequencyContainer.addClass('required');
                 $customFrequencyInput.focus();
             } else {
                 // Disable custom input, enable dropdown
-                $customFrequencyContainer.addClass('d-none');
+                visibilityOFF($customFrequencyContainer);
                 $customFrequencyInput.val('').removeClass('is-valid is-invalid');
                 $predefinedFrequencySelect.prop('disabled', false);
                 
@@ -160,11 +158,9 @@ $(document).ready(function() {
     if (timeVariableCheckbox && descriptionContainer) {
         timeVariableCheckbox.addEventListener('change', function () {
             if (this.checked) {
-                descriptionContainer.classList.remove('d-none');
-                descriptionContainer.setAttribute('aria-hidden', 'false');
+                visibilityON(descriptionContainer);
             } else {
-                descriptionContainer.classList.add('d-none');
-                descriptionContainer.setAttribute('aria-hidden', 'true');
+                visibilityOFF(descriptionContainer);
             }
         });
     }
