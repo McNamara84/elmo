@@ -86,6 +86,7 @@ services:
       # Flags for msl
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
+      SHOW_MSL_LOGO: "true"
     depends_on:
       - db
     restart: unless-stopped
