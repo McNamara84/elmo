@@ -123,7 +123,9 @@ function createDatabaseStructure($connection): array
     `resource_name_id` INT NOT NULL AUTO_INCREMENT,
     `resource_type_general` VARCHAR(30) NULL,
     `description` TEXT(5000) NULL,
-    PRIMARY KEY (`resource_name_id`));",
+    PRIMARY KEY (`resource_name_id`),
+    UNIQUE KEY `unique_name` (`resource_type_general`)
+    );",
 
         "Rights" => "CREATE TABLE IF NOT EXISTS `Rights` (
     `rights_id` INT NOT NULL AUTO_INCREMENT,
@@ -131,13 +133,17 @@ function createDatabaseStructure($connection): array
     `rightsIdentifier` VARCHAR(20) NULL,
     `rightsURI` VARCHAR(256) NULL,
     `forSoftware` SMALLINT,
-    PRIMARY KEY (`rights_id`));",
+    PRIMARY KEY (`rights_id`),
+    UNIQUE KEY `unique_name` (`text`)
+    );",
 
         "Language" => "CREATE TABLE IF NOT EXISTS `Language` (
     `language_id` INT NOT NULL AUTO_INCREMENT,
     `code` VARCHAR(10) NULL,
     `name` VARCHAR(20) NOT NULL,
-    PRIMARY KEY (`language_id`));",
+    PRIMARY KEY (`language_id`),
+    UNIQUE KEY `unique_name` (`name`)
+    );",
 
 
         "Author_person" => "CREATE TABLE IF NOT EXISTS `Author_person` (
@@ -167,7 +173,9 @@ function createDatabaseStructure($connection): array
     `name` VARCHAR(45) NOT NULL,
     `description` TEXT(1000) NULL,
     `forInstitutions` SMALLINT,
-    PRIMARY KEY (`role_id`));",
+    PRIMARY KEY (`role_id`),
+    UNIQUE KEY `unique_name` (`name`)
+    );",
 
         "Affiliation" => "CREATE TABLE IF NOT EXISTS `Affiliation` (
     `affiliation_id` INT NOT NULL AUTO_INCREMENT,
@@ -178,7 +186,9 @@ function createDatabaseStructure($connection): array
         "Title_Type" => "CREATE TABLE IF NOT EXISTS `Title_Type` (
     `title_type_id` INT NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(25) NOT NULL,
-    PRIMARY KEY (`title_type_id`));",
+    PRIMARY KEY (`title_type_id`),
+    UNIQUE KEY `unique_name` (`name`)
+    );",
 
         "Model_Type" => "CREATE TABLE IF NOT EXISTS `Model_Type` (
     `Model_type_id` INT NOT NULL AUTO_INCREMENT,
@@ -334,7 +344,9 @@ function createDatabaseStructure($connection): array
     `relation_id` INT NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(45) NOT NULL,
     `description` TEXT(1000) NULL,
-    PRIMARY KEY (`relation_id`));",
+    PRIMARY KEY (`relation_id`),
+    UNIQUE KEY `unique_name` (`name`)
+    );",
 
         "Identifier_Type" => "CREATE TABLE IF NOT EXISTS `Identifier_Type` (
     `identifier_type_id` INT NOT NULL AUTO_INCREMENT,
@@ -342,7 +354,9 @@ function createDatabaseStructure($connection): array
     `description` TEXT(1000) NULL,
     `pattern` VARCHAR(256),
     `isShown` SMALLINT(1) NOT NULL DEFAULT 0,
-    PRIMARY KEY (`identifier_type_id`));",
+    PRIMARY KEY (`identifier_type_id`),
+    UNIQUE KEY `unique_name` (`name`)
+    );",
 
         "Related_Work" => "CREATE TABLE IF NOT EXISTS `Related_Work` (
     `related_work_id` INT NOT NULL AUTO_INCREMENT,
