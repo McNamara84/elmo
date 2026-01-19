@@ -38,6 +38,7 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      LOCAL_DEVELOPMENT: "true"
       # Flags for Standard ELMO
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
@@ -80,6 +81,7 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      LOCAL_DEVELOPMENT: "true"
       # Flags for msl
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
@@ -122,6 +124,7 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      LOCAL_DEVELOPMENT: "true"
       # Flags for gem
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
