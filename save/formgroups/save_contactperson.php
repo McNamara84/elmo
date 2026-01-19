@@ -39,6 +39,8 @@ function saveContactPerson($connection, $postData, $resource_id)
         $familyname = trim($familynames[$i] ?? '');
         $givenname = trim($givennames[$i] ?? '');
         $orcid = trim($orcids[$i] ?? '');
+        // Remove ORCID URL prefix if present (defense against frontend bypass)
+        $orcid = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $orcid);
         $email = trim($emails[$i] ?? '');
         $website = isset($websites[$i]) ? preg_replace('#^https?://#', '', $websites[$i]) : '';
         $affiliation_data = $affiliations[$i] ?? '';
