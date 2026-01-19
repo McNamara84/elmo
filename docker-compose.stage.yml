@@ -24,7 +24,8 @@ services:
       DB_NAME: ${DB_NAME}
       # Database install routine
       INSTALL_ACTION: basic
-      DB_INIT_MODE: drop_data 
+      DB_INIT_MODE: drop_data
+
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
@@ -65,7 +66,10 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-      # No install routine
+      # Database install routine
+      INSTALL_ACTION: basic
+      DB_INIT_MODE: drop_data
+      
       INSTALL_ACTION: skip
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
