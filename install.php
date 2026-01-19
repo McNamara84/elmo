@@ -855,7 +855,7 @@ function insertLookupData($connection)
     foreach ($lookupData as $tableName => $data) {
         $columns = implode(", ", array_keys($data[0]));
         $placeholders = implode(", ", array_fill(0, count($data[0]), "?"));
-        $sqlInsert = "INSERT INTO $tableName ($columns) VALUES ($placeholders)";
+        $sqlInsert = "INSERT IGNORE INTO $tableName ($columns) VALUES ($placeholders)";
         $stmt = $connection->prepare($sqlInsert);
 
         foreach ($data as $row) {
