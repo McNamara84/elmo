@@ -51,6 +51,7 @@ $showMslVocabs = resolveFeatureToggle($showMslVocabs ?? null, false);
 $mslLogoHtml = '<a href="https://epos-msl.uu.nl/" target="_blank" rel="noopener noreferrer"> <img src="logos/EPOS_logo.png" alt="MSL Logo" class="logo logo-right"> </a>';
 $baseDir = __DIR__ . '/';
 include $baseDir . 'header.php';
+include $baseDir . 'formgroups/honeypot.html';
 include $baseDir . 'formgroups/resourceInformation.html';
 
 if ($showLicense) {
