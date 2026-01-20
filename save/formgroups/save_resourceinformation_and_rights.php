@@ -36,10 +36,6 @@ function saveResourceInformationAndRights($connection, $postData)
             $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
             $requiredArrayFields = ['title', 'titleType'];
 
-            if ($showLicense) {
-                $requiredFields[] = 'Rights';
-            }
-
             if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
                 return false;
             }
