@@ -64,18 +64,14 @@ function saveContributorPersons($connection, $postData, $resource_id)
 
         // Save affiliations
         if (!empty($postData['cbAffiliation'][$i])) {
-            if (
-                !saveAffiliations(
-                    $connection,
-                    $contributor_person_id,
-                    $postData['cbAffiliation'][$i],
-                    $postData['cbpRorIds'][$i] ?? null,
-                    'Contributor_Person_has_Affiliation',
-                    'Contributor_Person_contributor_person_id'
-                )
-            ) {
-                $allSuccessful = false;
-            }
+            saveAffiliations(
+                $connection,
+                $contributor_person_id,
+                $postData['cbAffiliation'][$i],
+                $postData['cbpRorIds'][$i] ?? null,
+                'Contributor_Person_has_Affiliation',
+                'Contributor_Person_contributor_person_id'
+            );
         }
 
         // Save roles
