@@ -180,6 +180,8 @@ function saveAuthors($connection, $postData, $resource_id)
             $familyname = trim($familynames[$i] ?? '');
             $givenname = trim($givennames[$i] ?? '');
             $orcid = trim($orcids[$i] ?? '');
+            // Remove ORCID URL prefix if present (defense against frontend bypass)
+            $orcid = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $orcid);
             $affiliation_data = trim($personAffiliations[$i] ?? '');
             $rorId_data = trim($personRorIds[$i] ?? '');
 

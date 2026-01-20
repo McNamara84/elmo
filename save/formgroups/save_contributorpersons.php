@@ -41,6 +41,9 @@ function saveContributorPersons($connection, $postData, $resource_id)
             'orcid' => $postData['cbORCID'][$i] ?? '',
             'roles' => $postData['cbPersonRoles'][$i] ?? ''
         ];
+        // Remove ORCID URL prefix if present (defense against frontend bypass)
+        $entry['orcid'] = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $entry['orcid']);
+        $entry['orcid'] = trim($entry['orcid']);
 
         if (!validateContributorPersonDependencies($entry)) {
             $allSuccessful = false;

@@ -54,7 +54,7 @@ $showFundingReference = true;
 
 $showAuthorInstitution = true;
 // Show license formgroup. if not shown defaults to CC-BY 4.0
-$showLicense = false;
+$showLicense = true;
 $defaultLicense = 'CC-BY-4.0';
 
 
@@ -117,6 +117,9 @@ $smtpPassword = getenv('SMTP_PASSWORD') ?: '';
 $smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
 $smtpSecure = getenv('SMTP_SECURE') ?: '';
 $smtpAuth   = getenv('SMTP_AUTH') ?: '';
+
+// Simulate email (true = skip actual sending, only log. Set to false in production)
+$SIMULATE_EMAIL = filter_var(getenv('SIMULATE_EMAIL') ?: 'false', FILTER_VALIDATE_BOOLEAN);
 
 // Target address for feedback
 $feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
