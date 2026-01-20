@@ -84,8 +84,12 @@ function prepareResourceData($postData)
 
     global $showLicense, $connection, $showGGMsProperties, $defaultLicense;
     
-    // If showLicense is false and no Rights value is provided, use CC-BY 4.0 (rights_id = 1)
-    $rightsId = isset($postData['Rights']) ? (int) $postData['Rights'] : null;
+    // If showLicense is false and no Rights value is provided, use the default license
+    $rightsId = null;
+    if (isset($postData['Rights'])) {
+        $rightsId = (int) $postData['Rights'];
+    }
+
     // this part handles the assignment of license when the license form group is not shown
     if ($rightsId === null && !$showLicense) {
         // Query the database to find the default license provided in settings.php
@@ -111,9 +115,8 @@ function prepareResourceData($postData)
                 error_log("Saving license. fallback activated: Neither default license '$defaultLicense' nor CC-BY-4.0 found, using hardcoded ID 1");
             }
         }
-    } else {
-        $rightsId = (int) $postData['Rights'];
     }
+    
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
         'year' => isset($postData['year']) && trim($postData['year']) !== ''
@@ -128,7 +131,7 @@ function prepareResourceData($postData)
             ? (float) $postData['version'] : null,
         'language' => isset($postData['language']) && trim($postData['language']) !== ''
             ? trim($postData['language']): null,
-        'rights' => (int) $rightsId
+        'rights' => $rightsId
     ];
 }
 
