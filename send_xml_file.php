@@ -18,21 +18,19 @@ if (defined('PHPUNIT_RUNNING')) {
 // Enable error logging but suppress direct output to keep JSON responses clean
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
+session_start();
 
 // Buffer output
 ob_start();
 
-error_log("send_xml_file.php: Script started");
 
 // Include security functions FIRST (before settings.php to avoid duplicate includes)
 require_once __DIR__ . '/api/security.php';
 
-error_log("send_xml_file.php: security.php included");
 
 // Include required files
 require_once __DIR__ . '/settings.php';
 
-error_log("send_xml_file.php: settings.php included");
 
 // Make global variables from settings.php available
 global $connection, $showGGMsProperties;
@@ -102,7 +100,7 @@ function validateSubmitSecurity(array $postData, $connection) {
     $clientIp = getClientIp();
     
     // Check 1: Honeypot - Silent rejection
-    if (validateHoneypot($postData['website'] ?? '')) {
+    if (!validateHoneypot($postData['website'] ?? '')) {
         http_response_code(400);
         ob_clean();
         header('Content-Type: application/json');
@@ -112,6 +110,10 @@ function validateSubmitSecurity(array $postData, $connection) {
         ]);
         exit;
     }
+    // Check 2: CSRF Token validation
+    $csrfToken = $postData['csrf_token'] ?? '';
+    error_log("DEBUG: CSRF token from POST: " . (!empty($csrfToken) ? 'present' : 'MISSING'));
+    error_log("DEBUG: Session token: " . (!empty($_SESSION['csrf_token'] ?? '') ? 'present' : 'MISSING'));
     
     // Check 2: CSRF Token validation
     if (!validateCsrfToken($postData['csrf_token'] ?? '')) {
@@ -440,21 +442,27 @@ if (!$simulateEmail) {
     $mail->send();
     error_log("XML Submit: E-Mail erfolgreich über GFZ SMTP versendet!");
 } else {
-    error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
-}
-
-    error_log("send_xml_file.php: About to return success");
-
-    // Clear any output buffers
-    ob_clean();
-
-    // Return success response
+    error_log("Warning: the email was not sent! ...");
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
-        'message' => 'Backend reports: XML submission email sent successfully.',
-        'resource_id' => $resource_id
+        'message' => '✓ SIMULATED: Email sending was skipped...',
+        'resource_id' => $resource_id,
+        'simulated' => true
     ]);
+    exit;  // ← ADD THIS
+}
+
+// reached in the normal production flow 
+error_log("send_xml_file.php: About to return success");
+ob_clean();
+header('Content-Type: application/json');
+echo json_encode([
+    'success' => true,
+    'message' => 'Backend reports: XML submission email sent successfully.',
+    'resource_id' => $resource_id,
+    'simulated' => false
+]);
 
 } catch (Exception $e) {
     error_log("XML Submit Error: " . $e->getMessage());
