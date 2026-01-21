@@ -194,6 +194,8 @@ class SubmitHandler {
             const data = await response.json();
             if (data.token) {
                 this.$csrfTokenField.val(data.token);
+            } else {
+                console.error('No token in response:', data);
             }
         } catch (error) {
             console.error('Error fetching CSRF token:', error);
@@ -275,6 +277,12 @@ class SubmitHandler {
         }
         
         const submitData = new FormData(this.$form[0]);
+
+        // Explicitly add CSRF token (it's in the modal, not in the main form)
+        const csrfToken = this.$csrfTokenField.val();
+        if (csrfToken) {
+            submitData.set('csrf_token', csrfToken);
+        }
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());
