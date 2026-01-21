@@ -4,26 +4,6 @@ import { navigateToHome, SELECTORS } from '../utils';
 const SAVE_ENDPOINT = '**/save/save_data.php';
 const CSRF_ENDPOINT = '**/api/csrf_token.php';
 
-/**
- * Helper function to fill minimal required fields for save
- */
-async function fillMinimalMetadata(page: Page) {
-  // Fill title (required)
-  const titleInput = page.locator('input[name="title"]').first();
-  await titleInput.fill('Test Save Security Title');
-  
-  // Fill DOI (required)
-  const doiInput = page.locator('input[name="doi"]');
-  if (await doiInput.isVisible()) {
-    await doiInput.fill('10.5880/TEST.SECURITY.SAVE');
-  }
-  
-  // Fill year (required)
-  const yearInput = page.locator('input[name="year"]');
-  if (await yearInput.isVisible()) {
-    await yearInput.fill('2025');
-  }
-}
 
 /**
  * Helper function to find and interact with the save button
@@ -33,7 +13,7 @@ async function getSaveButton(page: Page) {
   const saveBtn = page.locator('button:has-text("Save")').first();
   return saveBtn;
 }
-
+// This test also checks the ability to execute save on an empty form.
 test.describe('Save Operation Security Features', () => {
   test.describe('Honeypot field validation', () => {
     test('honeypot field exists in main form and is empty initially', async ({ page }) => {
@@ -46,7 +26,6 @@ test.describe('Save Operation Security Features', () => {
 
     test('honeypot is reset when save modal opens', async ({ page }) => {
       await navigateToHome(page);
-      await fillMinimalMetadata(page);
       
       // Manually fill honeypot (simulating bot behavior)
       await page.locator('input[name="website"]').fill('bot-filled-value');
@@ -96,7 +75,6 @@ test.describe('Save Operation Security Features', () => {
       });
       
       await navigateToHome(page);
-      await fillMinimalMetadata(page);
       
       // Simulate bot filling honeypot
       await page.locator('input[name="website"]').fill('bot-value');
@@ -152,7 +130,6 @@ test.describe('Save Operation Security Features', () => {
       });
       
       await navigateToHome(page);
-      await fillMinimalMetadata(page);
       
       const saveBtn = await getSaveButton(page);
       if (await saveBtn.isVisible()) {
@@ -170,9 +147,7 @@ test.describe('Save Operation Security Features', () => {
   test.describe('CSRF token protection in save', () => {
     test('save form includes CSRF token field', async ({ page }) => {
       await navigateToHome(page);
-      
-      await fillMinimalMetadata(page);
-      
+            
       // Check for hidden CSRF field
       const csrfField = page.locator('input[name="csrf_token"]');
       
@@ -199,9 +174,7 @@ test.describe('Save Operation Security Features', () => {
       });
       
       await navigateToHome(page);
-      
-      await fillMinimalMetadata(page);
-      
+            
       const saveBtn = await getSaveButton(page);
       if (await saveBtn.isVisible()) {
         await saveBtn.click();
@@ -232,9 +205,7 @@ test.describe('Save Operation Security Features', () => {
       });
       
       await navigateToHome(page);
-      
-      await fillMinimalMetadata(page);
-      
+            
       const saveBtn = await getSaveButton(page);
       if (await saveBtn.isVisible()) {
         await saveBtn.click();
@@ -267,9 +238,7 @@ test.describe('Save Operation Security Features', () => {
       });
       
       await navigateToHome(page);
-      
-      await fillMinimalMetadata(page);
-      
+            
       const saveBtn = await getSaveButton(page);
       if (await saveBtn.isVisible()) {
         await saveBtn.click();
