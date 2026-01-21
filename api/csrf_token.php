@@ -6,6 +6,9 @@
  * The token is stored in the session and must be validated on form submission.
  */
 
+// Start session BEFORE any output
+session_start();
+
 require_once __DIR__ . '/security.php';
 
 header('Content-Type: application/json');
