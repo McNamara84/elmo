@@ -48,8 +48,7 @@ test.describe('Minimal Valid Dataset Test', () => {
 
     const notificationModal = page.locator(SELECTORS.modals.notification);
     await expect(notificationModal).toBeVisible();
-    await expect(notificationModal.locator('.alert-success')).toContainText('Submitted successfully');
-
+    await expect(notificationModal.locator('.alert-success')).toContainText('Thank you for cooperating with us');
     await expect(page.locator('#selected-file-name')).toHaveText(/^[\s\n]*$/);
     await expect(page.locator('#remove-file-btn')).toBeHidden();
 
