@@ -7,8 +7,8 @@ export async function completeMinimalDatasetForm(page: Page) {
   await page.getByRole('textbox', { name: 'Title*' }).fill('A dataset');
 
   await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
-  await page.getByRole('textbox', { name: 'Last Name*' }).fill('Alice');
-  await page.getByRole('textbox', { name: 'First Name*' }).fill('Bob');
+  await page.getByRole('textbox', { name: 'Last Name*' }).fill('Carberry');
+  await page.getByRole('textbox', { name: 'First Name*' }).fill('Josiah');
 
   await page
     .locator('#group-author tags')
@@ -56,8 +56,8 @@ export async function completeExtendedDatasetForm(page: Page) {
   // Add Additional Authors
   await addAuthor(page, 1, {
     orcid: '0000-0001-2345-6789',
-    lastName: 'Smith',
-    firstName: 'John',
+    lastName: 'Isaak',
+    firstName: 'Johann',
     affiliation: 'University of Cambridge',
   });
 }
@@ -69,10 +69,24 @@ export async function completeExtendedDatasetForm(page: Page) {
  */
 async function addFreeKeyword(page: Page, keyword: string) {
   const keywordInput = page.locator('#input-freekeyword');
-  await keywordInput.fill(keyword);
+  
+  // Wait for the input to be visible
+  await keywordInput.waitFor({ state: 'visible' });
+  
+  // Scroll into view
+  await keywordInput.scrollIntoViewIfNeeded();
+  
+  // Wait a moment for scroll to complete
+  await page.waitForTimeout(200);
+  
+  // Use type to input the keyword (more reliable with tagify)
+  await keywordInput.type(keyword, { delay: 50 });
+  
+  // Press Enter to create the tag
   await page.keyboard.press('Enter');
-  // Wait a moment for the tag to be created
-  await page.waitForTimeout(300);
+  
+  // Wait for the tag to be created
+  await page.waitForTimeout(50);
 }
 
 /**
@@ -146,14 +160,14 @@ async function addAuthor(
     await page.waitForTimeout(300); // Wait for DOM to update
   }
 
-  // Fill ORCID
+  // Fill ORCID first
   await page.locator('#input-author-orcid').nth(index).fill(data.orcid);
-
-  // Fill last name
-  await page.locator('#input-author-lastname').nth(index).fill(data.lastName);
 
   // Fill first name
   await page.locator('#input-author-firstname').nth(index).fill(data.firstName);
+
+  // Fill last name
+  await page.locator('#input-author-lastname').nth(index).fill(data.lastName);
 
   // Fill affiliation
   await page.locator('#input-author-affiliation').nth(index).fill(data.affiliation);
@@ -180,7 +194,7 @@ export async function completeExtendedMultipleEntries(page: Page) {
 
   // Add one more author
   await addAuthor(page, 1, {
-    orcid: '0000-0003-4567-8901',
+    orcid: '0000-0001-6352-9161',
     lastName: 'Mueller',
     firstName: 'Hans',
     affiliation: 'ETH Zurich',
