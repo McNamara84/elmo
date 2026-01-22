@@ -1,0 +1,234 @@
+{
+  "?xml": "",
+  "envelope": {
+    "resource": {
+      "identifier": "",
+      "creators": {
+        "creator": {
+          "creatorName": "Carberry, Josiah",
+          "givenName": "Josiah",
+          "familyName": "Carberry",
+          "nameIdentifier": "0000-0002-1825-0097",
+          "affiliation": "GFZ Helmholtz Centre for Geosciences"
+        }
+      },
+      "titles": {
+        "title": "A dataset"
+      },
+      "publisher": "GFZ Data Services",
+      "publicationYear": 2025,
+      "resourceType": "Dataset",
+      "subjects": "",
+      "contributors": {
+        "contributor": {
+          "contributorName": "Carberry, Josiah",
+          "givenName": "Josiah",
+          "familyName": "Carberry",
+          "nameIdentifier": "0000-0002-1825-0097",
+          "affiliation": "GFZ Helmholtz Centre for Geosciences"
+        }
+      },
+      "dates": {
+        "date": "2025-01-01"
+      },
+      "language": "en",
+      "rightsList": {
+        "rights": "Creative Commons Attribution 4.0 International"
+      },
+      "descriptions": {
+        "description": "Necessary abstract"
+      },
+      "geoLocations": ""
+    },
+    "MD_Metadata": {
+      "fileIdentifier": {
+        "gco:CharacterString": "doi:N/A"
+      },
+      "language": {
+        "LanguageCode": "en"
+      },
+      "characterSet": {
+        "MD_CharacterSetCode": ""
+      },
+      "hierarchyLevel": {
+        "MD_ScopeCode": "dataset"
+      },
+      "contact": {
+        "CI_ResponsibleParty": {
+          "organisationName": {
+            "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
+          },
+          "contactInfo": {
+            "CI_Contact": {
+              "address": {
+                "CI_Address": {
+                  "electronicMailAddress": {
+                    "gco:CharacterString": "datapub@gfz.de"
+                  }
+                }
+              },
+              "onlineResource": {
+                "CI_OnlineResource": {
+                  "linkage": {
+                    "URL": "https://www.gfz.de/"
+                  },
+                  "name": {
+                    "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
+                  },
+                  "description": {
+                    "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
+                  },
+                  "function": {
+                    "CI_OnLineFunctionCode": "information"
+                  }
+                }
+              }
+            }
+          },
+          "role": {
+            "CI_RoleCode": "pointOfContact"
+          }
+        }
+      },
+      "dateStamp": {
+        "gco:Date": "2026-01-22"
+      },
+      "referenceSystemInfo": {
+        "MD_ReferenceSystem": {
+          "referenceSystemIdentifier": {
+            "RS_Identifier": {
+              "code": {
+                "gco:CharacterString": "urn:ogc:def:crs:EPSG:4326"
+              }
+            }
+          }
+        }
+      },
+      "identificationInfo": {
+        "MD_DataIdentification": {
+          "citation": {
+            "CI_Citation": {
+              "title": {
+                "gco:CharacterString": "A dataset"
+              },
+              "date": {
+                "CI_Date": {
+                  "date": {
+                    "gco:Date": "2025-01-01"
+                  },
+                  "dateType": {
+                    "CI_DateTypeCode": "creation"
+                  }
+                }
+              }
+            }
+          },
+          "abstract": {
+            "gco:CharacterString": "Necessary abstract"
+          },
+          "pointOfContact": {
+            "CI_ResponsibleParty": {
+              "individualName": {
+                "gco:CharacterString": "Carberry, Josiah"
+              },
+              "organisationName": {
+                "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
+              },
+              "contactInfo": {
+                "CI_Contact": {
+                  "address": {
+                    "CI_Address": {
+                      "electronicMailAddress": {
+                        "gco:CharacterString": "example@gmail.com"
+                      }
+                    }
+                  }
+                }
+              },
+              "role": {
+                "CI_RoleCode": "pointOfContact"
+              }
+            }
+          },
+          "descriptiveKeywords": [
+            "",
+            ""
+          ],
+          "resourceConstraints": [
+            {
+              "MD_Constraints": {
+                "useLimitation": {
+                  "gco:CharacterString": "Creative Commons Attribution 4.0 International"
+                }
+              }
+            },
+            {
+              "MD_LegalConstraints": {
+                "accessConstraints": {
+                  "MD_RestrictionCode": ""
+                },
+                "otherConstraints": {
+                  "gco:CharacterString": "Creative Commons Attribution 4.0 International"
+                }
+              }
+            },
+            {
+              "MD_SecurityConstraints": {
+                "classification": {
+                  "MD_ClassificationCode": ""
+                }
+              }
+            }
+          ],
+          "language": {
+            "gco:CharacterString": "en"
+          },
+          "characterSet": {
+            "MD_CharacterSetCode": ""
+          },
+          "topicCategory": {
+            "MD_TopicCategoryCode": "geoscientificInformation"
+          }
+        }
+      },
+      "distributionInfo": {
+        "MD_Distribution": {
+          "transferOptions": {
+            "MD_DigitalTransferOptions": {
+              "onLine": {
+                "CI_OnlineResource": {
+                  "linkage": {
+                    "URL": "http://doi.org/N/A"
+                  },
+                  "protocol": {
+                    "gco:CharacterString": "WWW:LINK-1.0-http--link"
+                  },
+                  "name": {
+                    "gco:CharacterString": "Download"
+                  },
+                  "description": {
+                    "gco:CharacterString": "Download"
+                  },
+                  "function": {
+                    "CI_OnLineFunctionCode": "information"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "dataQualityInfo": {
+        "DQ_DataQuality": {
+          "scope": {
+            "DQ_Scope": {
+              "level": {
+                "MD_ScopeCode": ""
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
