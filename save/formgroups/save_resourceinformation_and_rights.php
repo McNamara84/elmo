@@ -81,19 +81,33 @@ function saveResourceInformationAndRights($connection, $postData)
  */
 function prepareResourceData($postData)
 {
+    global $connection, $defaultLicense;
 
     $rightsId = null;
     
     // Try to get Rights from POST data
     if (isset($postData['Rights']) && !empty($postData['Rights'])) {
-        $rightsId = (int) $postData['Rights'];
-        // Validate that this rights_id actually exists
-        $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rights_id = ?");
-        $stmt->bind_param("i", $rightsId);
-        $stmt->execute();
-        if ($stmt->get_result()->num_rows === 0) {
-            error_log("Invalid Rights ID provided: $rightsId. Falling back to default.");
+        try {
+            $rightsId = (int) $postData['Rights'];
+            // Check if casting resulted in 0 or invalid value
+            if ($rightsId <= 0) {
+                error_log("Rights value is not a valid positive integer: " . var_export($postData['Rights'], true));
+                $rightsId = null;
+            }
+        } catch (Exception $e) {
+            error_log("Failed to cast Rights to int: " . $e->getMessage() . ". Value: " . var_export($postData['Rights'], true));
             $rightsId = null;
+        }
+        
+        // Validate that this rights_id actually exists
+        if ($rightsId !== null) {
+            $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rights_id = ?");
+            $stmt->bind_param("i", $rightsId);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows === 0) {
+                error_log("Invalid Rights ID provided: $rightsId. Falling back to default.");
+                $rightsId = null;
+            }
         }
     }
     
