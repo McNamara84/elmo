@@ -24,3 +24,32 @@ export async function completeMinimalDatasetForm(page: Page) {
   await page.getByRole('textbox', { name: 'Abstract*' }).fill('Necessary abstract');
   await page.getByRole('textbox', { name: 'Date created*' }).fill('2025-01-01');
 }
+
+export async function completeExtendedDatasetForm(page: Page) {
+  // Start with minimal dataset form (includes author, contact person, and abstract)
+  await completeMinimalDatasetForm(page);
+
+  // Add Related Work (first entry)
+  await page.locator('#input-relatedwork-relation').selectOption({ index: 1 });
+  await page.locator('#input-relatedwork-identifier').fill('https://doi.org/10.5880/GFZ.DMJQ.2025.007');
+  await page.locator('#input-relatedwork-identifiertype').selectOption({ index: 1 });
+
+  // Add Free Keywords (first keyword)
+  await page.locator('#input-freekeyword').fill('seismic data');
+
+  // Add Descriptions - Abstract already filled by completeMinimalDatasetForm
+  // Fill Methods section
+  await page.locator('#input-methods').fill('Data was collected using seismic stations');
+
+  // Fill Technical Information section
+  await page.locator('#input-technicalinfo').fill('Sampling rate: 100 Hz.');
+
+  // Fill Other section
+  await page.locator('#input-other').fill('Additional processing applied');
+
+  // Add Funding Reference (first entry)
+  await page.locator('#input-funder').fill('DFG');
+  await page.locator('#input-grantnumber').fill('DFG-12345');
+  await page.locator('#input-grantname').fill('Seismic Monitoring Network');
+  await page.locator('#input-awarduri').fill('https://gepris.dfg.de/gepris/project/12345');
+}
