@@ -245,6 +245,7 @@ class SubmitHandler {
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());
+        submitData.append('action', 'submit');
 
         const dataDescriptionFile = $('#input-submit-datadescription')[0].files[0];
         if (dataDescriptionFile) {
