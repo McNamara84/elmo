@@ -23,6 +23,11 @@ function getSelectedResourceType() {
   return $('#input-resourceinformation-resourcetype option:selected').text().trim();
 }
 
+/**
+ * Classifies a license list item as 'software' or 'general' scope based on its content and URL
+ * @param {jQuery} $li - The jQuery-wrapped list item element containing license information
+ * @returns {string} Either 'software' or 'general' depending on the license scope
+ */
 function classifyLicenseScope($li) {
   const txt = $li.text().toLowerCase();
   const href = ($li.find('a').attr('href') || '').toLowerCase();
@@ -42,6 +47,11 @@ function classifyLicenseScope($li) {
   return 'general';
 }
 
+/**
+ * Filters the help modal's licenses section based on the selected resource type
+ * Shows only software licenses when resource type is 'Software', general licenses otherwise
+ * @returns {void}
+ */
 function filterHelpRightsByResourceType() {
   const isSoftware = getSelectedResourceType() === 'Software';
   const $modal = $('#helpModal');
