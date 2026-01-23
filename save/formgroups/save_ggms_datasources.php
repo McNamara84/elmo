@@ -473,7 +473,7 @@ function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $dbRow, in
  */
 function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceId): void
 {
-    $action = $postData['action'] ?? 'save';
+    $action = $postData['action'] ?? 'save_and_download';
 
     // 1. Extract rows from POST arrays
     $rows = extractDataSourceRows($postData);

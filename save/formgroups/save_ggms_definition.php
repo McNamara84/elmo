@@ -123,7 +123,7 @@ function insertGGMDefinition(mysqli $connection, array $data, int $resourceId): 
  */
 function saveGGMsDefinition(mysqli $connection, array $postData, int $resourceId): bool
 {
-    $action = $postData['action'] ?? 'save';
+    $action = $postData['action'] ?? 'save_and_download';
 
     // 1) Validate the input data (only on submit)
     if ($action === 'submit') {

@@ -137,7 +137,7 @@ function validateInstitutionAuthors(array $postData): bool
  */
 function saveAuthors($connection, $postData, $resource_id)
 {
-    $action = $postData['action'] ?? 'save';
+    $action = $postData['action'] ?? 'save_and_download';
 
     $hasPersonData = !empty($postData['familynames']) || !empty($postData['givennames']);
     $hasInstitutionData = !empty($postData['authorinstitutionName']);
