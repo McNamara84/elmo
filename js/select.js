@@ -312,8 +312,8 @@ function setupTitleTypeDropdown() {
 */
 function setupLicenseDropdown(isSoftware) {
   const $select = $("#input-rights-license"); // Defined as $select for consistency
-  const top_licenseId = "CC-BY-4.0";
-  const last_licenseId_software = "GPL-3.0-or-later";
+  const top_licenseId = "CC-BY-4.0"; //Should be the first
+  const copyleftLicenses = ['GPL-3.0-or-later', 'EUPL-1.2']; // Should be the last
 
   // 1. Determine the endpoint FIRST
   const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
@@ -333,6 +333,7 @@ function setupLicenseDropdown(isSoftware) {
 
     // Prepare the options for the dropdown menu
     if (!isSoftware) {
+      // Non-software
       processedLicenses = data
         .filter(item => item.forSoftware === "0") // Only non-software
         .sort((a, b) => {
@@ -344,11 +345,16 @@ function setupLicenseDropdown(isSoftware) {
           return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
         });
     } else {
+      // Software
       processedLicenses = data.sort((a, b) => {
-        if (a.rightsIdentifier === last_licenseId_software) return 1;
-        if (b.rightsIdentifier === last_licenseId_software) return -1;
+        const aIsCopyleft = copyleftLicenses.includes(a.rightsIdentifier);
+        const bIsCopyleft = copyleftLicenses.includes(b.rightsIdentifier);
+        
+        if (aIsCopyleft !== bIsCopyleft) {
+          return aIsCopyleft ? 1 : -1; // Non-copyleft first
+        }
         return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
-      }); // Keep original order for software licenses
+      });
     }
     // Clear existing options
     $select.empty()
