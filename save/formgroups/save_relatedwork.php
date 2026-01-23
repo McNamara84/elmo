@@ -75,14 +75,15 @@ function saveRelatedWork($connection, $postData, $resource_id)
  *
  * @return int|null The found relation ID or null if not found.
  */
-function getRelationId(mysqli $connection, string $relationName): ?int
+function getRelationId(mysqli $connection, string $relationId): ?int
 {
-    $stmt = $connection->prepare("SELECT `relation_id` FROM `Relation` WHERE `name` = ?");
+    $stmt = $connection->prepare("SELECT `relation_id` FROM `Relation` WHERE `relation_id` = ?");
     if (!$stmt) {
         error_log("Failed to prepare statement for getRelationId: " . $connection->error);
         return null;
     }
-    $stmt->bind_param("s", $relationName);
+    $id = (int)$relationId;
+    $stmt->bind_param("i", $id);
     if (!$stmt->execute()) {
         error_log("Failed to execute statement for getRelationId: " . $stmt->error);
         $stmt->close();
