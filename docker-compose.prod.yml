@@ -88,6 +88,7 @@ services:
       # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
+      SHOW_MSL_LOGO: "true"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_GCMD_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"

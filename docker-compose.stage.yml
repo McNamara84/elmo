@@ -37,6 +37,7 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      LOCAL_DEVELOPMENT: "true"
       # Database install routine
       INSTALL_ACTION: basic
       DB_INIT_MODE: drop_data
@@ -86,6 +87,7 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      LOCAL_DEVELOPMENT: "true"
       # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
@@ -133,6 +135,7 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      LOCAL_DEVELOPMENT: "true"
       # Flags for ICGEM (GGMs properties enabled)
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"

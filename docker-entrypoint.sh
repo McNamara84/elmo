@@ -16,10 +16,21 @@ if [ ! -d /var/www/html/node_modules ]; then
   npm install --omit=dev
 fi
 
-# Ensure a settings.php exists; in production create it from settings.elmo.php,
-# so that local settings.php (dev) is not needed/overwritten.
-if [ ! -f /var/www/html/settings.php ]; then
-  echo "⚙️  No settings.php found, creating from settings.elmo.php"
+# Ensure a settings.php exists; in production always refresh from settings.elmo.php
+# In local development, keep the existing settings.php
+# Set LOCAL_DEVELOPMENT=true in docker-compose for local deployments
+if [ "${LOCAL_DEVELOPMENT}" = "true" ]; then
+  # Local development mode - keep existing settings.php
+  if [ ! -f /var/www/html/settings.php ]; then
+    echo "⚙️  Local development: settings.php not found, creating from settings.elmo.php"
+    cp /var/www/html/settings.elmo.php /var/www/html/settings.php
+    chown www-data:www-data /var/www/html/settings.php
+  else
+    echo "⚙️  Local development: keeping existing settings.php"
+  fi
+else
+  # Production mode - always refresh settings.php for environment variable changes
+  echo "⚙️  Production mode: refreshing settings.php from settings.elmo.php"
   cp /var/www/html/settings.elmo.php /var/www/html/settings.php
   chown www-data:www-data /var/www/html/settings.php
 fi
