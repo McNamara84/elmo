@@ -52,4 +52,20 @@ test.describe("Licenses and Rights", () => {
     await expect(modal).toBeVisible();
     await expect(modal.locator('.modal-body')).toContainText('Licenses and Rights');
   });
+  test("License dropdown does not contain duplicate entries (#875)", async ({ page }) => {
+    const licenseSelect = page.locator('#input-rights-license');
+    
+    // Wait for licenses to load
+    await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length > 0);
+    
+    const options = licenseSelect.locator("option");
+    const allTextContents = await options.allTextContents();
+    
+    // Filter out empty options
+    const validLicenses = allTextContents.filter(text => text.trim() !== '');
+    
+    // Check for duplicates by comparing length with Set (which removes duplicates)
+    const uniqueLicenses = new Set(validLicenses);
+    expect(validLicenses.length).toBe(uniqueLicenses.size);
+  });
 });
