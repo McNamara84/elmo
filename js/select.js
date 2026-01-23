@@ -377,11 +377,6 @@ function setupLicenseDropdown(isSoftware) {
     // Fallback with CC-BY-4.0 default
     $select.empty().append(
       $("<option>", {
-        value: "",
-        text: "Choose...",
-        "data-translate": "general.choose"
-      }),
-      $("<option>", {
         value: "CC-BY-4.0",
         text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
         selected: true
