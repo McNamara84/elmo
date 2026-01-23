@@ -39,9 +39,14 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      # Flags for Standard ELMO
+      # Flags for Standard ELMO (all form groups enabled)
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
+      SHOW_GGMS_PROPERTIES: "false"
+      SHOW_GCMD_THESAURI: "true"
+      SHOW_FREE_KEYWORDS: "true"
+      SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
+      SHOW_RELATED_WORK: "true"
     depends_on:
       - db
     restart: unless-stopped
@@ -80,9 +85,15 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      # Flags for msl
+      # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
+      SHOW_GGMS_PROPERTIES: "false"
+      SHOW_GCMD_THESAURI: "true"
+      SHOW_FREE_KEYWORDS: "true"
+      SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
+      SHOW_RELATED_WORK: "true"
+      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor 2.0"
     depends_on:
       - db
     restart: unless-stopped

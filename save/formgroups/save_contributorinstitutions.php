@@ -54,28 +54,21 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
             continue;
         }
 
-        if (!linkResourceToContributorInstitution($connection, $resource_id, $contributor_institution_id)) {
-            $allSuccessful = false;
-        }
+        linkResourceToContributorInstitution($connection, $resource_id, $contributor_institution_id);
 
         if (!empty($postData['OrganisationAffiliation'][$i])) {
-            if (
-                !saveAffiliations(
-                    $connection,
-                    $contributor_institution_id,
-                    $postData['OrganisationAffiliation'][$i],
-                    $postData['hiddenOrganisationRorId'][$i] ?? null,
-                    'Contributor_Institution_has_Affiliation',
-                    'Contributor_Institution_contributor_institution_id'
-                )
-            ) {
-                $allSuccessful = false;
-            }
+            saveAffiliations(
+                $connection,
+                $contributor_institution_id,
+                $postData['OrganisationAffiliation'][$i],
+                $postData['hiddenOrganisationRorId'][$i] ?? null,
+                'Contributor_Institution_has_Affiliation',
+                'Contributor_Institution_contributor_institution_id'
+            );
         }
 
-        if (!saveContributorInstitutionRoles($connection, $contributor_institution_id, $entry['roles'], $valid_roles)) {
-            $allSuccessful = false;
-        }
+        saveContributorInstitutionRoles($connection, $contributor_institution_id, $entry['roles'], $valid_roles);
+
     }
 
     return $allSuccessful;

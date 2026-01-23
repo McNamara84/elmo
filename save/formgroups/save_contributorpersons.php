@@ -64,18 +64,14 @@ function saveContributorPersons($connection, $postData, $resource_id)
 
         // Save affiliations
         if (!empty($postData['cbAffiliation'][$i])) {
-            if (
-                !saveAffiliations(
-                    $connection,
-                    $contributor_person_id,
-                    $postData['cbAffiliation'][$i],
-                    $postData['cbpRorIds'][$i] ?? null,
-                    'Contributor_Person_has_Affiliation',
-                    'Contributor_Person_contributor_person_id'
-                )
-            ) {
-                $allSuccessful = false;
-            }
+            saveAffiliations(
+                $connection,
+                $contributor_person_id,
+                $postData['cbAffiliation'][$i],
+                $postData['cbpRorIds'][$i] ?? null,
+                'Contributor_Person_has_Affiliation',
+                'Contributor_Person_contributor_person_id'
+            );
         }
 
         // Save roles
@@ -129,12 +125,24 @@ function saveOrUpdateContributorPerson($connection, $lastname, $firstname, $orci
  *
  * @return void
  */
-function linkResourceToContributorPerson($connection, $resource_id, $contributor_person_id)
+function linkResourceToContributorPerson($connection, $resource_id, $contributor_person_id): bool
 {
     $stmt = $connection->prepare("INSERT IGNORE INTO Resource_has_Contributor_Person (Resource_resource_id, Contributor_Person_contributor_person_id) VALUES (?, ?)");
+    if (!$stmt) {
+        error_log("Failed to prepare linkResourceToContributorPerson: " . $connection->error);
+        return false;
+    }
+
     $stmt->bind_param("ii", $resource_id, $contributor_person_id);
-    $stmt->execute();
+
+    if (!$stmt->execute()) {
+        error_log("Failed to execute linkResourceToContributorPerson: " . $stmt->error);
+        $stmt->close();
+        return false;
+    }
+
     $stmt->close();
+    return true;
 }
 
 /**
@@ -147,7 +155,7 @@ function linkResourceToContributorPerson($connection, $resource_id, $contributor
  *
  * @return void
  */
-function saveContributorPersonRoles($connection, $contributor_person_id, $roles, $valid_roles)
+function saveContributorPersonRoles($connection, $contributor_person_id, $roles, $valid_roles): bool
 {
     // Check whether $roles is a JSON string, and if so, decode it
     if (is_string($roles)) {
@@ -161,8 +169,16 @@ function saveContributorPersonRoles($connection, $contributor_person_id, $roles,
 
     // Delete existing roles
     $stmt = $connection->prepare("DELETE FROM Contributor_Person_has_Role WHERE Contributor_Person_contributor_person_id = ?");
+    if (!$stmt) {
+        error_log("Failed to prepare DELETE in saveContributorPersonRoles: " . $connection->error);
+        return false;
+    }
     $stmt->bind_param("i", $contributor_person_id);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        error_log("Failed to execute DELETE in saveContributorPersonRoles: " . $stmt->error);
+        $stmt->close();
+        return false;
+    }
     $stmt->close();
 
     // Save new roles
@@ -172,11 +188,20 @@ function saveContributorPersonRoles($connection, $contributor_person_id, $roles,
             $role_id = $valid_roles[$role_name];
             error_log("Valid role found. Role ID: $role_id");
             $stmt = $connection->prepare("INSERT INTO Contributor_Person_has_Role (Contributor_Person_contributor_person_id, Role_role_id) VALUES (?, ?)");
+            if (!$stmt) {
+                error_log("Failed to prepare INSERT in saveContributorPersonRoles: " . $connection->error);
+                return false;
+            }
             $stmt->bind_param("ii", $contributor_person_id, $role_id);
-            $stmt->execute();
+            if (!$stmt->execute()) {
+                error_log("Failed to execute INSERT in saveContributorPersonRoles: " . $stmt->error);
+                $stmt->close();
+                return false;
+            }
             $stmt->close();
         } else {
             error_log("Ungültiger Rollenname für Contributor $contributor_person_id: $role_name");
         }
     }
+    return true;
 }

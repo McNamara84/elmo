@@ -4,6 +4,11 @@ $langFiles = glob(__DIR__ . '/lang/*.json');
 $langCodes = array_map(fn($file) => basename($file, '.json'), $langFiles);
 sort($langCodes);
 
+// Fallback for instance title if not defined in settings
+if (!isset($instanceTitle)) {
+    $instanceTitle = getenv('INSTANCE_TITLE') ?: 'ELMO – GFZ Metadata Editor 2.0';
+}
+
 // Determine base href, taking reverse proxy prefixes into account
 $baseHref = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
@@ -119,7 +124,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
   <section role="region" aria-label="Page subheader">
     <div class="bg-white border-bottom shadow-sm">
       <div class="container-fluid py-2 d-flex justify-content-between align-items-center">
-        <div class="fs-5 fw-semibold text-dark">ELMO – GFZ Metadata Editor 2.0</div>
+        <div class="fs-5 fw-semibold text-dark"><?php echo htmlspecialchars($instanceTitle); ?></div>
         <?php if ($showMslLogo) echo $mslLogoHtml; ?>
       </div>
     </div>
