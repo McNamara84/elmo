@@ -473,6 +473,7 @@ function ingestModelDataSourceAsRelatedWork(mysqli $connection, array $dbRow, in
  */
 function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceId): void
 {
+    $action = $postData['action'] ?? 'save_and_download';
 
     // 1. Extract rows from POST arrays
     $rows = extractDataSourceRows($postData);
@@ -498,11 +499,13 @@ function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceI
     }
     // 3. Validate and save each row
     foreach ($allRows as $index => $row) {
-        // Validate
-        $validation = validateDataSourceRow($row);
-        if (!$validation['valid']) {
-            $errorMsg = "Data source row " . ($index + 1) . ": " . implode('; ', $validation['errors']);
-            throw new Exception($errorMsg);
+        // Validate only on submit
+        if ($action === 'submit') {
+            $validation = validateDataSourceRow($row);
+            if (!$validation['valid']) {
+                $errorMsg = "Data source row " . ($index + 1) . ": " . implode('; ', $validation['errors']);
+                throw new Exception($errorMsg);
+            }
         }
         
         // Prepare for database
