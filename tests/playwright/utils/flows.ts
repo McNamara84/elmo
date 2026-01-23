@@ -68,25 +68,19 @@ export async function completeExtendedDatasetForm(page: Page) {
  * Add a free keyword using tagify (Enter key to create tags)
  */
 async function addFreeKeyword(page: Page, keyword: string) {
-  const keywordInput = page.locator('#input-freekeyword');
+  const keywordInput = page.locator('#input-freekeyword, [name="freekeywords[]"]').first();
   
-  // Wait for the input to be visible
-  await keywordInput.waitFor({ state: 'visible' });
-  
-  // Scroll into view
   await keywordInput.scrollIntoViewIfNeeded();
-  
-  // Wait a moment for scroll to complete
-  await page.waitForTimeout(200);
-  
-  // Use type to input the keyword (more reliable with tagify)
-  await keywordInput.type(keyword, { delay: 50 });
+  await keywordInput.waitFor({ state: 'visible' });
+  await keywordInput.click();
+  await keywordInput.clear();
+  await keywordInput.type(keyword, { delay: 100 }); // Use type() instead of fill()
   
   // Press Enter to create the tag
   await page.keyboard.press('Enter');
   
   // Wait for the tag to be created
-  await page.waitForTimeout(50);
+  await page.waitForTimeout(300);
 }
 
 /**
