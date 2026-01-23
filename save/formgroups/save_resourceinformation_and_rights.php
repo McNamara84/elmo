@@ -31,7 +31,7 @@ function saveResourceInformationAndRights($connection, $postData)
     try {        
         // Only require Rights field if license form group is shown
         global $showLicense;
-        $action = $postData['action'] ?? 'submit';
+        $action = $postData['action'] ?? 'save';
         if ($action === 'submit') {
             $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
             $requiredArrayFields = ['title', 'titleType'];

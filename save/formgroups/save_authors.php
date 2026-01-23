@@ -137,7 +137,7 @@ function validateInstitutionAuthors(array $postData): bool
  */
 function saveAuthors($connection, $postData, $resource_id)
 {
-    $action = $postData['action'] ?? 'submit';
+    $action = $postData['action'] ?? 'save';
 
     $hasPersonData = !empty($postData['familynames']) || !empty($postData['givennames']);
     $hasInstitutionData = !empty($postData['authorinstitutionName']);
@@ -147,7 +147,7 @@ function saveAuthors($connection, $postData, $resource_id)
         $validInstitution = $hasInstitutionData ? validateInstitutionAuthors($postData) : false;
 
     if (!$validPerson && !$validInstitution) {
-        // No valid author data
+        // No valid author data. only fails when BOTH are invalid, which is the correct behavior.
         throw new Exception("No valid author data provided");
     }
     }
