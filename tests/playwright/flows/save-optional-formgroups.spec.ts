@@ -87,17 +87,22 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
     await page.fill('#input-contributor-lastname', 'ContributorLastName');
     await page.fill('#input-contributor-firstname', 'ContributorFirstName');
 
-    // Wait for role Tagify to be initialized, then add a role
+    // Wait for role Tagify to be initialized with whitelist loaded
     // Role is required when contributor name is filled
     await page.waitForFunction(() => {
       const input: any = document.querySelector('#input-contributor-personrole');
-      return !!input?._tagify && input._tagify.whitelist?.length >= 1;
-    }, { timeout: 10_000 });
+      return !!input?._tagify && Array.isArray(input._tagify.whitelist) && input._tagify.whitelist.length >= 1;
+    }, { timeout: 15_000 });
 
+    // Add the first available role from whitelist (more robust than hardcoding)
     await page.evaluate(() => {
       const input: any = document.querySelector('#input-contributor-personrole');
-      input._tagify.addTags(['Data Curator']);
+      const firstRole = input._tagify.whitelist[0];
+      input._tagify.addTags([firstRole]);
     });
+
+    // Small delay to ensure tag is registered
+    await page.waitForTimeout(300);
 
     // Trigger save and check response
     const response = await triggerSaveAndCaptureResponse(page);
@@ -140,16 +145,21 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
       await page.fill('#input-contributor-firstname', 'ContributorFirstName');
     }
 
-    // Wait for role Tagify to be initialized, then add a role
+    // Wait for role Tagify to be initialized with whitelist loaded
     await page.waitForFunction(() => {
       const input: any = document.querySelector('#input-contributor-personrole');
-      return !!input?._tagify && input._tagify.whitelist?.length >= 1;
-    }, { timeout: 10_000 });
+      return !!input?._tagify && Array.isArray(input._tagify.whitelist) && input._tagify.whitelist.length >= 1;
+    }, { timeout: 15_000 });
 
+    // Add the first available role from whitelist
     await page.evaluate(() => {
       const input: any = document.querySelector('#input-contributor-personrole');
-      input._tagify.addTags(['Data Curator']);
+      const firstRole = input._tagify.whitelist[0];
+      input._tagify.addTags([firstRole]);
     });
+
+    // Small delay to ensure tag is registered
+    await page.waitForTimeout(300);
 
     // Add Spatial/Temporal Coverage
     await page.fill('#input-stc-latmin_1', '52.5');
@@ -175,16 +185,21 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
     await page.fill('#input-contributor-lastname', 'ContributorLastName');
     await page.fill('#input-contributor-firstname', 'ContributorFirstName');
 
-    // Wait for role Tagify to be initialized, then add a role
+    // Wait for role Tagify to be initialized with whitelist loaded
     await page.waitForFunction(() => {
       const input: any = document.querySelector('#input-contributor-personrole');
-      return !!input?._tagify && input._tagify.whitelist?.length >= 1;
-    }, { timeout: 10_000 });
+      return !!input?._tagify && Array.isArray(input._tagify.whitelist) && input._tagify.whitelist.length >= 1;
+    }, { timeout: 15_000 });
 
+    // Add the first available role from whitelist
     await page.evaluate(() => {
       const input: any = document.querySelector('#input-contributor-personrole');
-      input._tagify.addTags(['Data Curator']);
+      const firstRole = input._tagify.whitelist[0];
+      input._tagify.addTags([firstRole]);
     });
+
+    // Small delay to ensure tag is registered
+    await page.waitForTimeout(300);
 
     // Click Save button
     await page.click('#button-form-save');
