@@ -31,14 +31,23 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
     // Resource Information
     await page.fill('#input-resourceinformation-title', `E2E Test Dataset ${Date.now()}`);
     
-    // Wait for dropdowns to be populated
+    // Wait for Resource Type dropdown to be populated
     await page.waitForFunction(() => {
       const resourceType = document.querySelector('#input-resourceinformation-resourcetype') as HTMLSelectElement;
       return resourceType && resourceType.options.length > 1;
     }, { timeout: 10_000 });
     
-    await page.selectOption('#input-resourceinformation-resourcetype', { index: 1 });
-    await page.selectOption('#input-resourceinformation-language', { index: 1 });
+    // Use explicit option values for stability (matches approach in utils/flows.ts)
+    // Value '5' = Dataset, Value '1' = English
+    await page.selectOption('#input-resourceinformation-resourcetype', '5');
+    
+    // Wait for Language dropdown to be populated
+    await page.waitForFunction(() => {
+      const language = document.querySelector('#input-resourceinformation-language') as HTMLSelectElement;
+      return language && language.options.length > 1;
+    }, { timeout: 10_000 });
+    
+    await page.selectOption('#input-resourceinformation-language', '1');
     await page.fill('#input-resourceinformation-publicationyear', '2026');
 
     // Author - fill directly without ORCID lookup for speed

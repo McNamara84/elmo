@@ -59,7 +59,12 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         $entry['description'] = (trim($entry['description'] ?? '') === '') ? NULL : $entry['description'];
 
         // Check required fields using strict comparison (allows 0 values for coordinates)
-        if ((trim($entry['latitudeMin'] ?? '') === '') || (trim($entry['dateStart'] ?? '') === '')) {
+        // Both latitudeMin and longitudeMin are required for a valid coordinate pair
+        if (
+            (trim($entry['latitudeMin'] ?? '') === '') ||
+            (trim($entry['longitudeMin'] ?? '') === '') ||
+            (trim($entry['dateStart'] ?? '') === '')
+        ) {
             return true;
         }
         // Save STC entry
