@@ -440,4 +440,109 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $this->assertNull($retrievedStc["timeEnd"]);
         $this->assertNull($retrievedStc["timezone"]);
     }
+
+    /**
+     * Tests saving STC with empty dateEnd and description (Bug #2 regression test).
+     * 
+     * This test covers the fix for HTTP 500 error that occurred when:
+     * 1. dateEnd was an empty string (should be converted to NULL)
+     * 2. description was an empty string (should be converted to NULL)
+     * 
+     * Previously, empty strings caused MySQL errors because the date columns
+     * don't accept empty strings, only NULL or valid dates.
+     *
+     * @return void
+     */
+    public function testSaveWithEmptyDateEndAndDescription(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.EMPTY.DATEEND",
+            "year" => 2026,
+            "dateCreated" => "2026-01-24",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Empty DateEnd Coverage"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        // This is the exact scenario that caused HTTP 500 on Stage:
+        // - dateEnd is empty string (not null)
+        // - description is empty string (not null)
+        $postData = [
+            "tscLatitudeMin"  => ["52.5"],
+            "tscLatitudeMax"  => ["52.6"],
+            "tscLongitudeMin" => ["13.3"],
+            "tscLongitudeMax" => ["13.4"],
+            "tscDescription"  => [""],  // Empty string - should be converted to NULL
+            "tscDateStart"    => ["2026-01-01"],
+            "tscTimeStart"    => [""],
+            "tscDateEnd"      => [""],  // Empty string - should be converted to NULL
+            "tscTimeEnd"      => [""],
+            "tscTimezone"     => [""]
+        ];
+
+        // This should NOT throw an error - the fix converts empty strings to NULL
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'Function should return true when dateEnd and description are empty strings');
+
+        // Verify the record was saved with NULL values
+        $stmt = $this->connection->prepare(
+            "SELECT * FROM Spatial_Temporal_Coverage 
+             WHERE latitudeMin = ? AND longitudeMin = ?"
+        );
+        $stmt->bind_param("ss", $postData["tscLatitudeMin"][0], $postData["tscLongitudeMin"][0]);
+        $stmt->execute();
+        $retrievedStc = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotNull($retrievedStc, 'STC entry should be saved even with empty dateEnd/description');
+        $this->assertEquals($postData["tscLatitudeMin"][0], $retrievedStc["latitudeMin"]);
+        $this->assertEquals($postData["tscLatitudeMax"][0], $retrievedStc["latitudeMax"]);
+        $this->assertEquals($postData["tscDateStart"][0], $retrievedStc["dateStart"]);
+        $this->assertNull($retrievedStc["dateEnd"], 'Empty string dateEnd should be saved as NULL');
+        $this->assertNull($retrievedStc["Description"], 'Empty string description should be saved as NULL');
+    }
+
+    /**
+     * Tests saving STC with only coordinates and start date (minimal valid input).
+     * 
+     * This covers the scenario where a user only fills in the required coordinate
+     * fields and a start date, leaving all other optional fields empty.
+     *
+     * @return void
+     */
+    public function testSaveMinimalValidInput(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.MINIMAL.STC",
+            "year" => 2026,
+            "dateCreated" => "2026-01-24",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Minimal STC Input"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        // Minimal input: only coordinates and start date
+        $postData = [
+            "tscLatitudeMin"  => ["-90"],
+            "tscLatitudeMax"  => ["90"],
+            "tscLongitudeMin" => ["-180"],
+            "tscLongitudeMax" => ["180"],
+            "tscDescription"  => [""],
+            "tscDateStart"    => ["2026-01-01"],
+            "tscTimeStart"    => [""],
+            "tscDateEnd"      => [""],
+            "tscTimeEnd"      => [""],
+            "tscTimezone"     => [""]
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'Function should handle minimal valid input correctly');
+    }
 }
