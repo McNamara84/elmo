@@ -168,8 +168,8 @@ jobs:
           echo "\nFinal Server Log:"
           cat server.log
 
-      - name: Generate coverage (PHP 8.4 push builds)
-        if: matrix.php-version == '8.4' && github.event_name == 'push'
+      - name: Generate coverage (PHP 8.4 builds)
+        if: matrix.php-version == '8.4'
         env:
           API_BASE_URL: http://localhost:8000
         run: |
@@ -178,13 +178,13 @@ jobs:
           find . -name "*.xml" -type f | head -10
 
       - name: Prepare output directory
-        if: matrix.php-version == '8.4' && github.event_name == 'push'
+        if: matrix.php-version == '8.4'
         run: |
           mkdir -p output
           touch output/.keep
 
       - name: Make code coverage badge
-        if: matrix.php-version == '8.4' && github.event_name == 'push'
+        if: matrix.php-version == '8.4'
         continue-on-error: true
         uses: timkrase/phpunit-coverage-badge@v1.2.1
         with:
@@ -192,7 +192,7 @@ jobs:
           push_badge: false
 
       - name: Create fallback badge
-        if: matrix.php-version == '8.4' && github.event_name == 'push'
+        if: matrix.php-version == '8.4'
         run: |
           if [ ! -f clover.xml ]; then
             echo "No coverage data found - this indicates a configuration issue."
@@ -229,7 +229,7 @@ jobs:
           fi
 
       - name: Debug badge creation
-        if: matrix.php-version == '8.4' && github.event_name == 'push'
+        if: matrix.php-version == '8.4'
         run: |
           echo "Checking output directory contents:"
           ls -la output/
@@ -242,7 +242,7 @@ jobs:
           fi
 
       - name: Publish coverage badge
-        if: matrix.php-version == '8.4' && github.event_name == 'push'
+        if: matrix.php-version == '8.4'
         continue-on-error: true
         uses: peaceiris/actions-gh-pages@v3
         with:
