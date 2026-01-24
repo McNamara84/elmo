@@ -207,3 +207,14 @@ $(document).ready(function () {
         }
     });
 });
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        loadTranslations,
+        applyTranslations,
+        changeLanguage,
+        getBrowserLanguage,
+        updateActiveLanguage
+    };
+}

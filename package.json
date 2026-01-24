@@ -17,13 +17,22 @@
     "@types/node": "^25.0.0",
     "babel-jest": "^30.1.2",
     "jest": "^30.0.4",
-    "jest-environment-jsdom": "^30.0.4"
+    "jest-environment-jsdom": "^30.0.4",
+    "nyc": "^17.1.0"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test:e2e": "npx playwright test",
+    "test:e2e:coverage": "nyc --reporter=html --reporter=text npx playwright test"
   },
   "overrides": {
     "glob": "^11.1.0",
     "js-yaml": "^3.14.2"
+  },
+  "nyc": {
+    "include": ["js/**/*.js"],
+    "exclude": ["node_modules/**", "tests/**"],
+    "reporter": ["text", "html", "lcov"],
+    "report-dir": "coverage-e2e"
   }
 }
