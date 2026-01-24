@@ -456,7 +456,7 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     public function testSaveWithEmptyDateEndAndDescription(): void
     {
         $resourceData = [
-            "doi" => "10.5880/GFZ.TEST.EMPTY.DATEEND",
+            "doi" => "10.5880/GFZ.TEST.EMPTY.DATEEND." . uniqid(),
             "year" => 2026,
             "dateCreated" => "2026-01-24",
             "resourcetype" => 1,
@@ -488,12 +488,14 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
         $this->assertTrue($result, 'Function should return true when dateEnd and description are empty strings');
 
-        // Verify the record was saved with NULL values
+        // Verify the record was saved - query via link table to ensure we get the correct STC
         $stmt = $this->connection->prepare(
-            "SELECT * FROM Spatial_Temporal_Coverage 
-             WHERE latitudeMin = ? AND longitudeMin = ?"
+            "SELECT stc.* FROM Spatial_Temporal_Coverage stc
+             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc 
+                ON stc.spatial_temporal_coverage_id = rhstc.Spatial_Temporal_Coverage_spatial_temporal_coverage_id
+             WHERE rhstc.Resource_resource_id = ?"
         );
-        $stmt->bind_param("ss", $postData["tscLatitudeMin"][0], $postData["tscLongitudeMin"][0]);
+        $stmt->bind_param("i", $resource_id);
         $stmt->execute();
         $retrievedStc = $stmt->get_result()->fetch_assoc();
 
@@ -502,7 +504,7 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $this->assertEquals($postData["tscLatitudeMax"][0], $retrievedStc["latitudeMax"]);
         $this->assertEquals($postData["tscDateStart"][0], $retrievedStc["dateStart"]);
         $this->assertNull($retrievedStc["dateEnd"], 'Empty string dateEnd should be saved as NULL');
-        $this->assertNull($retrievedStc["Description"], 'Empty string description should be saved as NULL');
+        $this->assertNull($retrievedStc["description"], 'Empty string description should be saved as NULL');
     }
 
     /**
@@ -516,7 +518,7 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     public function testSaveMinimalValidInput(): void
     {
         $resourceData = [
-            "doi" => "10.5880/GFZ.TEST.MINIMAL.STC",
+            "doi" => "10.5880/GFZ.TEST.MINIMAL.STC." . uniqid(),
             "year" => 2026,
             "dateCreated" => "2026-01-24",
             "resourcetype" => 1,
@@ -544,5 +546,118 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
 
         $this->assertTrue($result, 'Function should handle minimal valid input correctly');
+    }
+
+    /**
+     * Tests saving STC when optional keys are completely absent from postData.
+     * 
+     * This covers the scenario where the frontend doesn't include optional fields
+     * at all (keys are missing, not just empty). The backend should handle this
+     * gracefully without errors.
+     *
+     * @return void
+     */
+    public function testSaveWithAbsentOptionalKeys(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.ABSENT.KEYS." . uniqid(),
+            "year" => 2026,
+            "dateCreated" => "2026-01-24",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Absent Optional Keys"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        // Only required fields - optional keys are completely absent
+        $postData = [
+            "tscLatitudeMin"  => ["45.0"],
+            "tscLongitudeMin" => ["10.0"],
+            "tscDateStart"    => ["2026-01-01"]
+            // tscLatitudeMax, tscLongitudeMax, tscDescription, tscDateEnd, 
+            // tscTimeStart, tscTimeEnd, tscTimezone are all absent
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'Function should handle absent optional keys gracefully');
+
+        // Verify the record was saved
+        $stmt = $this->connection->prepare(
+            "SELECT stc.* FROM Spatial_Temporal_Coverage stc
+             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc 
+                ON stc.spatial_temporal_coverage_id = rhstc.Spatial_Temporal_Coverage_spatial_temporal_coverage_id
+             WHERE rhstc.Resource_resource_id = ?"
+        );
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+        $retrievedStc = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotNull($retrievedStc, 'STC entry should be saved with absent optional keys');
+        $this->assertEquals("45.0", $retrievedStc["latitudeMin"]);
+        $this->assertNull($retrievedStc["latitudeMax"], 'Absent latitudeMax should be NULL');
+        $this->assertNull($retrievedStc["longitudeMax"], 'Absent longitudeMax should be NULL');
+        $this->assertNull($retrievedStc["description"], 'Absent description should be NULL');
+        $this->assertNull($retrievedStc["dateEnd"], 'Absent dateEnd should be NULL');
+    }
+
+    /**
+     * Tests that coordinate value 0 (equator/prime meridian) is saved correctly.
+     * 
+     * This test ensures that the empty-string-to-NULL conversion doesn't
+     * incorrectly treat '0' as empty (which empty() would do in PHP).
+     *
+     * @return void
+     */
+    public function testSaveWithZeroCoordinates(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.ZERO.COORDS." . uniqid(),
+            "year" => 2026,
+            "dateCreated" => "2026-01-24",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Zero Coordinates"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        // Coordinates at equator and prime meridian (all zeros)
+        $postData = [
+            "tscLatitudeMin"  => ["0"],
+            "tscLatitudeMax"  => ["0"],
+            "tscLongitudeMin" => ["0"],
+            "tscLongitudeMax" => ["0"],
+            "tscDescription"  => ["Point at equator/prime meridian intersection"],
+            "tscDateStart"    => ["2026-01-01"],
+            "tscTimeStart"    => [""],
+            "tscDateEnd"      => [""],
+            "tscTimeEnd"      => [""],
+            "tscTimezone"     => [""]
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'Function should save coordinate value 0 correctly');
+
+        // Verify 0 values were saved as 0, not NULL
+        $stmt = $this->connection->prepare(
+            "SELECT stc.* FROM Spatial_Temporal_Coverage stc
+             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc 
+                ON stc.spatial_temporal_coverage_id = rhstc.Spatial_Temporal_Coverage_spatial_temporal_coverage_id
+             WHERE rhstc.Resource_resource_id = ?"
+        );
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+        $retrievedStc = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotNull($retrievedStc, 'STC entry should be saved with zero coordinates');
+        $this->assertEquals(0, (float)$retrievedStc["latitudeMin"], 'Zero latitudeMin should be saved as 0, not NULL');
+        $this->assertEquals(0, (float)$retrievedStc["latitudeMax"], 'Zero latitudeMax should be saved as 0, not NULL');
+        $this->assertEquals(0, (float)$retrievedStc["longitudeMin"], 'Zero longitudeMin should be saved as 0, not NULL');
+        $this->assertEquals(0, (float)$retrievedStc["longitudeMax"], 'Zero longitudeMax should be saved as 0, not NULL');
     }
 }

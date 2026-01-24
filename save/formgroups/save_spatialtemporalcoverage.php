@@ -47,16 +47,19 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         }
 
         // Prepare optional fields - convert empty strings to NULL for database
-        $entry['latitudeMin']  = empty($entry['latitudeMin'])  ? NULL : $entry['latitudeMin'];
-        $entry['latitudeMax']  = empty($entry['latitudeMax'])  ? NULL : $entry['latitudeMax'];
-        $entry['longitudeMin'] = empty($entry['longitudeMin']) ? NULL : $entry['longitudeMin'];
-        $entry['longitudeMax'] = empty($entry['longitudeMax']) ? NULL : $entry['longitudeMax'];
-        $entry['timeStart'] = empty($entry['timeStart']) ? NULL : $entry['timeStart'];
-        $entry['timeEnd'] = empty($entry['timeEnd']) ? NULL : $entry['timeEnd'];
-        $entry['dateEnd'] = empty($entry['dateEnd']) ? NULL : $entry['dateEnd'];
-        $entry['description'] = empty($entry['description']) ? NULL : $entry['description'];
+        // Use strict comparison (=== '') instead of empty() because empty('0') returns true,
+        // which would incorrectly convert valid coordinate values like 0 (equator/prime meridian) to NULL
+        $entry['latitudeMin']  = (trim($entry['latitudeMin'] ?? '') === '')  ? NULL : $entry['latitudeMin'];
+        $entry['latitudeMax']  = (trim($entry['latitudeMax'] ?? '') === '')  ? NULL : $entry['latitudeMax'];
+        $entry['longitudeMin'] = (trim($entry['longitudeMin'] ?? '') === '') ? NULL : $entry['longitudeMin'];
+        $entry['longitudeMax'] = (trim($entry['longitudeMax'] ?? '') === '') ? NULL : $entry['longitudeMax'];
+        $entry['timeStart'] = (trim($entry['timeStart'] ?? '') === '') ? NULL : $entry['timeStart'];
+        $entry['timeEnd'] = (trim($entry['timeEnd'] ?? '') === '') ? NULL : $entry['timeEnd'];
+        $entry['dateEnd'] = (trim($entry['dateEnd'] ?? '') === '') ? NULL : $entry['dateEnd'];
+        $entry['description'] = (trim($entry['description'] ?? '') === '') ? NULL : $entry['description'];
 
-        if (empty($entry['latitudeMin']) || empty($entry['dateStart'])) {
+        // Check required fields using strict comparison (allows 0 values for coordinates)
+        if ((trim($entry['latitudeMin'] ?? '') === '') || (trim($entry['dateStart'] ?? '') === '')) {
             return true;
         }
         // Save STC entry

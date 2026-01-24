@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { navigateToHome, SELECTORS } from '../utils';
+import { navigateToHome } from '../utils';
 
 const SAVE_ENDPOINT = '**/save/save_data.php';
 const MOCK_XML_RESPONSE = `<?xml version="1.0" encoding="UTF-8"?>\n<dataset>Test dataset with optional formgroups</dataset>`;
@@ -104,7 +104,7 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
     await page.click('#button-saveas-save');
 
     // Wait for both
-    const [download, response] = await Promise.all([downloadPromise, responsePromise]);
+    const [, response] = await Promise.all([downloadPromise, responsePromise]);
 
     expect(response.status()).toBe(200);
     
