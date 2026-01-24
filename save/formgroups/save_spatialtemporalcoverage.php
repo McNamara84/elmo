@@ -8,16 +8,14 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         !isset($postData['tscDateStart']) || !is_array($postData['tscDateStart']) || count($postData['tscDateStart']) === 0 ) {
         return true;
     }
-    // Basic array field validation
+    // Basic array field validation - only truly required fields
     $requiredArrayFields = [
         'tscLatitudeMin',
         'tscLongitudeMin',
-        'tscDescription',
         'tscDateStart',
-        'tscDateEnd',
     ];
 
-    // Ensure arrays exist
+    // Ensure required arrays exist
     foreach ($requiredArrayFields as $field) {
         if (!isset($postData[$field]) || !is_array($postData[$field])) {
             return false;
@@ -29,9 +27,10 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
     $allSuccessful = true;
 
     for ($i = 0; $i < $len; $i++) {
-        // Extract data for easier handling
+        // Extract data for easier handling - include latitudeMax which was missing
         $entry = [
             'latitudeMin' => $postData['tscLatitudeMin'][$i] ?? NULL,
+            'latitudeMax' => $postData['tscLatitudeMax'][$i] ?? NULL,
             'longitudeMin' => $postData['tscLongitudeMin'][$i] ?? NULL,
             'longitudeMax' => $postData['tscLongitudeMax'][$i] ?? NULL,
             'description' => $postData['tscDescription'][$i] ?? NULL,
@@ -47,13 +46,15 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
             continue;
         }
 
-        // Prepare optional fields
+        // Prepare optional fields - convert empty strings to NULL for database
         $entry['latitudeMin']  = empty($entry['latitudeMin'])  ? NULL : $entry['latitudeMin'];
         $entry['latitudeMax']  = empty($entry['latitudeMax'])  ? NULL : $entry['latitudeMax'];
         $entry['longitudeMin'] = empty($entry['longitudeMin']) ? NULL : $entry['longitudeMin'];
         $entry['longitudeMax'] = empty($entry['longitudeMax']) ? NULL : $entry['longitudeMax'];
         $entry['timeStart'] = empty($entry['timeStart']) ? NULL : $entry['timeStart'];
         $entry['timeEnd'] = empty($entry['timeEnd']) ? NULL : $entry['timeEnd'];
+        $entry['dateEnd'] = empty($entry['dateEnd']) ? NULL : $entry['dateEnd'];
+        $entry['description'] = empty($entry['description']) ? NULL : $entry['description'];
 
         if (empty($entry['latitudeMin']) || empty($entry['dateStart'])) {
             return true;
