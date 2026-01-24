@@ -65,6 +65,9 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
     const saveModal = page.locator('#modal-saveas');
     await expect(saveModal).toBeVisible({ timeout: 10_000 });
 
+    // Fill in the filename (required for save to work)
+    await page.fill('#input-saveas-filename', 'test-save-optional-formgroups');
+
     // Set up response listener before clicking save
     const responsePromise = page.waitForResponse(
       response => response.url().includes('save_data.php'),
