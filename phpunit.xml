@@ -9,7 +9,13 @@
         </testsuite>
     </testsuites>
     
-    <!-- Add Coverage configs -->
+    <!-- Coverage configuration for PHPUnit 12 -->
+    <coverage includeUncoveredFiles="true">
+        <report>
+            <clover outputFile="clover.xml" />
+        </report>
+    </coverage>
+    
     <source>
         <include>
             <directory suffix=".php">.</directory>

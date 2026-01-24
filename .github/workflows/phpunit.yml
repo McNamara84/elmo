@@ -188,6 +188,7 @@ jobs:
         continue-on-error: true
         uses: timkrase/phpunit-coverage-badge@v1.2.1
         with:
+          report: clover.xml
           coverage_badge_path: output/coverage.svg
           push_badge: false
 
