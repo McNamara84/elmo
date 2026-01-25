@@ -12,10 +12,6 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php-version: ['8.5']
     services:
       mysql:
         image: mysql:8.0
@@ -38,7 +34,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: '8.5'
           extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
           coverage: xdebug
 
@@ -50,9 +46,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-php-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-php-8.5-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
+            ${{ runner.os }}-php-8.5-composer-
             ${{ runner.os }}-php-composer-
 
       - name: Set up Node.js
@@ -169,7 +165,7 @@ jobs:
           cat server.log
 
       - name: Generate coverage (PHP 8.5 push builds only)
-        if: matrix.php-version == '8.5' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           API_BASE_URL: http://localhost:8000
           XDEBUG_MODE: coverage
@@ -187,13 +183,13 @@ jobs:
           fi
 
       - name: Prepare output directory
-        if: matrix.php-version == '8.5' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           mkdir -p output
           touch output/.keep
 
       - name: Generate coverage badge from clover.xml
-        if: matrix.php-version == '8.5' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           if [ -f clover.xml ]; then
             echo "Parsing clover.xml for coverage data..."
@@ -247,7 +243,7 @@ jobs:
           fi
 
       - name: Debug badge creation
-        if: matrix.php-version == '8.5' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "Checking output directory contents:"
           ls -la output/
@@ -260,7 +256,7 @@ jobs:
           fi
 
       - name: Publish coverage badge
-        if: matrix.php-version == '8.5' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         continue-on-error: true
         uses: peaceiris/actions-gh-pages@v4
         with:
