@@ -11,7 +11,7 @@ if (!function_exists('handle_log_page_event')) {
      * @param callable|null $nowProvider Time provider; defaults to date('c')
      * @return array{status:string,event?:string,timestamp?:string}
      */
-    function handle_log_page_event(array $post, array $server, callable $logger = null, callable $nowProvider = null): array
+    function handle_log_page_event(array $post, array $server, ?callable $logger = null, ?callable $nowProvider = null): array
     {
         if (($server['REQUEST_METHOD'] ?? '') !== 'POST') {
             return ['status' => 'ignored'];
