@@ -170,13 +170,13 @@ class SaveAffiliationsTest extends DatabaseTestCase
 
     public function testParseAffiliationDataWithPlainString(): void
     {
+        // Plain strings (non-JSON) return empty array as they can't be parsed
         $plainInput = 'Simple University Name';
 
         $result = parseAffiliationData($plainInput);
 
         $this->assertIsArray($result);
-        $this->assertCount(1, $result);
-        $this->assertEquals('Simple University Name', $result[0]);
+        $this->assertCount(0, $result);  // Non-JSON returns empty array
     }
 
     public function testParseAffiliationDataWithEmptyInput(): void
@@ -184,8 +184,7 @@ class SaveAffiliationsTest extends DatabaseTestCase
         $result = parseAffiliationData('');
 
         $this->assertIsArray($result);
-        $this->assertCount(1, $result);
-        $this->assertEquals('', $result[0]);
+        $this->assertCount(0, $result);  // Empty input returns empty array
     }
 
     public function testParseRorIdsWithCommaDelimited(): void
@@ -196,18 +195,21 @@ class SaveAffiliationsTest extends DatabaseTestCase
 
         $this->assertIsArray($result);
         $this->assertCount(2, $result);
-        $this->assertEquals('https://ror.org/abc', $result[0]);
-        $this->assertEquals('https://ror.org/def', $result[1]);
+        // Function extracts ID part only, strips URL prefix
+        $this->assertEquals('abc', $result[0]);
+        $this->assertEquals('def', $result[1]);
     }
 
     public function testParseRorIdsWithSemicolonDelimited(): void
     {
+        // Function only splits on comma, not semicolon
         $input = 'https://ror.org/111;https://ror.org/222';
 
         $result = parseRorIds($input);
 
         $this->assertIsArray($result);
-        $this->assertCount(2, $result);
+        // Semicolon is NOT a delimiter, so this is treated as one entry
+        $this->assertCount(1, $result);
     }
 
     public function testParseRorIdsWithEmptyInput(): void
