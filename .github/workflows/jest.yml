@@ -27,6 +27,7 @@ jobs:
         run: npx jest --config jest.config.js --runInBand --coverage --forceExit
 
       - name: Upload coverage to Codecov
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

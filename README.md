@@ -5,7 +5,7 @@
 ![OpenAPI 3.1](https://img.shields.io/badge/openapi-3.1-6BA539?logo=openapiinitiative)
 [![PHP Coverage](https://codecov.io/gh/McNamara84/elmo/branch/main/graph/badge.svg?flag=php)](https://codecov.io/gh/McNamara84/elmo)
 [![JS Coverage](https://codecov.io/gh/McNamara84/elmo/branch/main/graph/badge.svg?flag=javascript)](https://codecov.io/gh/McNamara84/elmo)
-[![Playwright Tests](https://github.com/McNamara84/elmo/actions/workflows/playwright.yml/badge.svg)](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Optimizer/actions/workflows/playwright.yml)
+[![Playwright Tests](https://github.com/McNamara84/elmo/actions/workflows/playwright.yml/badge.svg)](https://github.com/McNamara84/elmo/actions/workflows/playwright.yml)
 
 # ELMO - Enhanced Laboratory Metadata Organizer
 
