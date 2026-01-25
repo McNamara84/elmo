@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
@@ -182,91 +182,16 @@ jobs:
             echo "ERROR: clover.xml was not created!"
           fi
 
-      - name: Prepare output directory
+      - name: Upload coverage to Codecov
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          mkdir -p output
-          touch output/.keep
-
-      - name: Generate coverage badge from clover.xml
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          if [ -f clover.xml ]; then
-            echo "Parsing clover.xml for coverage data..."
-            # Extract coverage metrics from clover.xml
-            STATEMENTS=$(grep -oP 'statements="\K[0-9]+' clover.xml | head -1)
-            COVERED=$(grep -oP 'coveredstatements="\K[0-9]+' clover.xml | head -1)
-            
-            if [ -n "$STATEMENTS" ] && [ "$STATEMENTS" -gt 0 ]; then
-              COVERAGE=$(echo "scale=1; $COVERED * 100 / $STATEMENTS" | bc)
-              echo "Coverage: $COVERAGE% ($COVERED/$STATEMENTS statements)"
-            else
-              echo "Could not parse coverage from clover.xml, trying alternative method..."
-              # Alternative: use PHP to parse XML
-              COVERAGE=$(php -r "
-                \$xml = simplexml_load_file('clover.xml');
-                \$metrics = \$xml->xpath('//metrics');
-                \$statements = 0;
-                \$covered = 0;
-                foreach (\$metrics as \$m) {
-                  \$statements += (int)\$m['statements'];
-                  \$covered += (int)\$m['coveredstatements'];
-                }
-                echo \$statements > 0 ? round(\$covered / \$statements * 100, 1) : 0;
-              ")
-              echo "Coverage (PHP parsed): $COVERAGE%"
-            fi
-            
-            # Determine badge color
-            if [ $(echo "$COVERAGE >= 90" | bc -l) -eq 1 ]; then
-              COLOR="brightgreen"
-            elif [ $(echo "$COVERAGE >= 75" | bc -l) -eq 1 ]; then
-              COLOR="green"
-            elif [ $(echo "$COVERAGE >= 60" | bc -l) -eq 1 ]; then
-              COLOR="yellow"
-            elif [ $(echo "$COVERAGE >= 45" | bc -l) -eq 1 ]; then
-              COLOR="orange"
-            else
-              COLOR="red"
-            fi
-            
-            echo "Badge color: $COLOR"
-            
-            # Download badge from shields.io
-            curl -s "https://img.shields.io/badge/coverage-${COVERAGE}%25-${COLOR}.svg" > output/coverage.svg
-            echo "Badge created successfully!"
-            cat output/coverage.svg | head -5
-          else
-            echo "ERROR: clover.xml not found!"
-            # Create error badge
-            curl -s "https://img.shields.io/badge/coverage-no%20data-red.svg" > output/coverage.svg
-          fi
-
-      - name: Debug badge creation
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          echo "Checking output directory contents:"
-          ls -la output/
-          if [ -f output/coverage.svg ]; then
-            echo "Coverage badge created successfully!"
-            echo "Badge file size:"
-            wc -c output/coverage.svg
-          else
-            echo "Coverage badge NOT created!"
-          fi
-
-      - name: Publish coverage badge
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        continue-on-error: true
-        uses: peaceiris/actions-gh-pages@v4
+        uses: codecov/codecov-action@v5
         with:
-          publish_dir: ./output
-          publish_branch: image-data
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          keep_files: false
-          force_orphan: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./clover.xml
+          flags: php
+          name: phpunit-coverage
+          fail_ci_if_error: false
+          verbose: true
 
       - name: Stop PHP server
         if: always()
