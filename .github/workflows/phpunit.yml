@@ -12,10 +12,6 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php-version: ['8.3', '8.4']
     services:
       mysql:
         image: mysql:8.0
@@ -38,9 +34,9 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: '8.5'
           extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
-          coverage: ${{ matrix.php-version == '8.4' && 'xdebug' || 'none' }}
+          coverage: xdebug
 
       - name: Determine Composer cache directory
         id: composer-cache
@@ -50,15 +46,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-php-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-php-8.5-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
+            ${{ runner.os }}-php-8.5-composer-
             ${{ runner.os }}-php-composer-
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install PHP dependencies
@@ -168,69 +164,86 @@ jobs:
           echo "\nFinal Server Log:"
           cat server.log
 
-      - name: Generate coverage (PHP 8.4 push builds only)
-        if: matrix.php-version == '8.4' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Generate coverage (PHP 8.5 push builds only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           API_BASE_URL: http://localhost:8000
+          XDEBUG_MODE: coverage
         run: |
-          vendor/bin/phpunit --configuration phpunit.xml --coverage-clover clover.xml --debug
-          echo "\nChecking for any XML files:"
-          find . -name "*.xml" -type f | head -10
+          echo "Checking Xdebug status:"
+          php -m | grep -i xdebug || echo "Xdebug not found!"
+          php -v
+          vendor/bin/phpunit --configuration phpunit.xml --coverage-clover clover.xml
+          echo "\nChecking clover.xml:"
+          if [ -f clover.xml ]; then
+            echo "clover.xml created successfully!"
+            head -20 clover.xml
+          else
+            echo "ERROR: clover.xml was not created!"
+          fi
 
       - name: Prepare output directory
-        if: matrix.php-version == '8.4' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           mkdir -p output
           touch output/.keep
 
-      - name: Make code coverage badge
-        if: matrix.php-version == '8.4' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        continue-on-error: true
-        uses: timkrase/phpunit-coverage-badge@v1.2.1
-        with:
-          report: clover.xml
-          coverage_badge_path: output/coverage.svg
-          push_badge: false
-
-      - name: Create fallback badge
-        if: matrix.php-version == '8.4' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Generate coverage badge from clover.xml
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          if [ ! -f clover.xml ]; then
-            echo "No coverage data found - this indicates a configuration issue."
-            if [ ! -f output/coverage.svg ]; then
-              echo "Creating fallback coverage badge..."
-              mkdir -p output
-              cat > output/coverage.svg <<'SVG'
-          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="20" role="img" aria-label="coverage: no-data">
-            <title>coverage: no-data</title>
-            <linearGradient id="s" x2="0" y2="100%">
-              <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
-              <stop offset="1" stop-opacity=".1"/>
-            </linearGradient>
-            <clipPath id="r">
-              <rect width="140" height="20" rx="3" fill="#fff"/>
-            </clipPath>
-            <g clip-path="url(#r)">
-              <rect width="61" height="20" fill="#555"/>
-              <rect x="61" width="79" height="20" fill="#e05d44"/>
-              <rect width="140" height="20" fill="url(#s)"/>
-            </g>
-            <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110">
-              <text aria-hidden="true" x="315" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="510">coverage</text>
-              <text x="315" y="140" transform="scale(.1)" fill="#fff" textLength="510">coverage</text>
-              <text aria-hidden="true" x="995" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="690">no-data</text>
-              <text x="995" y="140" transform="scale(.1)" fill="#fff" textLength="690">no-data</text>
-            </g>
-          </svg>
-          SVG
-              echo "Fallback badge created (indicates configuration issue)"
+          if [ -f clover.xml ]; then
+            echo "Parsing clover.xml for coverage data..."
+            # Extract coverage metrics from clover.xml
+            STATEMENTS=$(grep -oP 'statements="\K[0-9]+' clover.xml | head -1)
+            COVERED=$(grep -oP 'coveredstatements="\K[0-9]+' clover.xml | head -1)
+            
+            if [ -n "$STATEMENTS" ] && [ "$STATEMENTS" -gt 0 ]; then
+              COVERAGE=$(echo "scale=1; $COVERED * 100 / $STATEMENTS" | bc)
+              echo "Coverage: $COVERAGE% ($COVERED/$STATEMENTS statements)"
+            else
+              echo "Could not parse coverage from clover.xml, trying alternative method..."
+              # Alternative: use PHP to parse XML
+              COVERAGE=$(php -r "
+                \$xml = simplexml_load_file('clover.xml');
+                \$metrics = \$xml->xpath('//metrics');
+                \$statements = 0;
+                \$covered = 0;
+                foreach (\$metrics as \$m) {
+                  \$statements += (int)\$m['statements'];
+                  \$covered += (int)\$m['coveredstatements'];
+                }
+                echo \$statements > 0 ? round(\$covered / \$statements * 100, 1) : 0;
+              ")
+              echo "Coverage (PHP parsed): $COVERAGE%"
             fi
+            
+            # Determine badge color
+            if [ $(echo "$COVERAGE >= 90" | bc -l) -eq 1 ]; then
+              COLOR="brightgreen"
+            elif [ $(echo "$COVERAGE >= 75" | bc -l) -eq 1 ]; then
+              COLOR="green"
+            elif [ $(echo "$COVERAGE >= 60" | bc -l) -eq 1 ]; then
+              COLOR="yellow"
+            elif [ $(echo "$COVERAGE >= 45" | bc -l) -eq 1 ]; then
+              COLOR="orange"
+            else
+              COLOR="red"
+            fi
+            
+            echo "Badge color: $COLOR"
+            
+            # Download badge from shields.io
+            curl -s "https://img.shields.io/badge/coverage-${COVERAGE}%25-${COLOR}.svg" > output/coverage.svg
+            echo "Badge created successfully!"
+            cat output/coverage.svg | head -5
           else
-            echo "Coverage data found, badge should have been created successfully"
+            echo "ERROR: clover.xml not found!"
+            # Create error badge
+            curl -s "https://img.shields.io/badge/coverage-no%20data-red.svg" > output/coverage.svg
           fi
 
       - name: Debug badge creation
-        if: matrix.php-version == '8.4' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "Checking output directory contents:"
           ls -la output/
@@ -243,9 +256,9 @@ jobs:
           fi
 
       - name: Publish coverage badge
-        if: matrix.php-version == '8.4' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         continue-on-error: true
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           publish_dir: ./output
           publish_branch: image-data

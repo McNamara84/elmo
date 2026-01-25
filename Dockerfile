@@ -1,4 +1,13 @@
-FROM php:8.4-apache
+FROM php:8.5-apache
+
+# Install Node.js 24 from NodeSource
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install required packages and enable PHP extensions
 RUN apt-get update && apt-get install -y --no-install-recommends mariadb-client \
@@ -6,8 +15,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends mariadb-client 
         libxslt-dev \
         libzip-dev \
         dos2unix \
-        nodejs \
-        npm \
         git \
         unzip \
     && docker-php-ext-install \
