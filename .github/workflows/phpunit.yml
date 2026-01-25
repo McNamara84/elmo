@@ -172,10 +172,19 @@ jobs:
         if: matrix.php-version == '8.5' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           API_BASE_URL: http://localhost:8000
+          XDEBUG_MODE: coverage
         run: |
-          vendor/bin/phpunit --configuration phpunit.xml --coverage-clover clover.xml --debug
-          echo "\nChecking for any XML files:"
-          find . -name "*.xml" -type f | head -10
+          echo "Checking Xdebug status:"
+          php -m | grep -i xdebug || echo "Xdebug not found!"
+          php -v
+          vendor/bin/phpunit --configuration phpunit.xml --coverage-clover clover.xml
+          echo "\nChecking clover.xml:"
+          if [ -f clover.xml ]; then
+            echo "clover.xml created successfully!"
+            head -20 clover.xml
+          else
+            echo "ERROR: clover.xml was not created!"
+          fi
 
       - name: Prepare output directory
         if: matrix.php-version == '8.5' && github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -245,7 +254,7 @@ jobs:
       - name: Publish coverage badge
         if: matrix.php-version == '8.5' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         continue-on-error: true
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           publish_dir: ./output
           publish_branch: image-data
