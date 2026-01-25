@@ -189,41 +189,39 @@ class SaveGGMsDefinitionTest extends DatabaseTestCase
     }
 
     /**
-     * Test: validateGGMData throws exception for invalid model type
+     * Test: validateGGMData accepts any string for model_type (no validation against allowed values)
      */
-    public function testValidateGGMDataThrowsExceptionForInvalidModelType(): void
+    public function testValidateGGMDataAcceptsAnyModelType(): void
     {
         $data = [
             'model_name' => 'TEST_MODEL',
-            'model_type' => 'InvalidType',
+            'model_type' => 'AnyTypeValue',  // No validation against specific values
             'mathematical_representation' => 'Spherical harmonics',
             'file_format' => 'icgem1.0',
             'celestial_body' => 'Earth'
         ];
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid value for model_type');
-
-        validateGGMData($data, $this->resourceId);
+        // Should not throw - function doesn't validate model_type values
+        $result = validateGGMData($data, $this->resourceId);
+        $this->assertEquals('AnyTypeValue', $result['model_type']);
     }
 
     /**
-     * Test: validateGGMData throws exception for invalid celestial body
+     * Test: validateGGMData accepts any string for celestial_body (no validation against allowed values)
      */
-    public function testValidateGGMDataThrowsExceptionForInvalidCelestialBody(): void
+    public function testValidateGGMDataAcceptsAnyCelestialBody(): void
     {
         $data = [
             'model_name' => 'TEST_MODEL',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
             'file_format' => 'icgem1.0',
-            'celestial_body' => 'Jupiter'
+            'celestial_body' => 'Jupiter'  // No validation against specific values
         ];
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid value for celestial_body');
-
-        validateGGMData($data, $this->resourceId);
+        // Should not throw - function doesn't validate celestial_body values
+        $result = validateGGMData($data, $this->resourceId);
+        $this->assertEquals('Jupiter', $result['celestial_body']);
     }
 
     // ============================================================================

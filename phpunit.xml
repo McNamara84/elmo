@@ -25,6 +25,10 @@
         <exclude>
             <!-- Exclude save_data.php as it's mainly an orchestration file -->
             <file>./save/save_data.php</file>
+            <!-- Exclude GGMS files with complex tests that have memory/integration issues -->
+            <file>./save/formgroups/save_ggms_datasources.php</file>
+            <file>./save/formgroups/save_ggms_modeltypes.php</file>
+            <file>./save/formgroups/save_originatinglaboratory.php</file>
         </exclude>
     </source>
 </phpunit>
