@@ -157,16 +157,6 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     setupRolesDropdown,
     refreshRoleTagifyInstances,
-    personRoles,
-    organizationRoles
-  };
-}
-
-// Export for testing
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    setupRolesDropdown,
-    refreshRoleTagifyInstances,
     getPersonRoles: () => personRoles,
     getOrganizationRoles: () => organizationRoles,
     setPersonRoles: (roles) => { personRoles = roles; },

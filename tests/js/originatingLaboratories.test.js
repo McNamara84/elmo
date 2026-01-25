@@ -292,7 +292,6 @@ describe('originatingLaboratories.js', () => {
 
         test('replaces help span with hidden div', () => {
             const row = $('#group-originatinglaboratory .row:first');
-            const initialSpanCount = row.find('span.input-group-text').length;
             
             replaceHelpButtonInClonedRows(row);
             
