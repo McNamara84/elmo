@@ -126,15 +126,145 @@ describe('upload module coverage', () => {
     });
 
     describe('handleXmlFile', () => {
+        let mockFileReader;
+
+        beforeEach(() => {
+            // Mock loadXmlToForm
+            window.loadXmlToForm = jest.fn().mockResolvedValue(true);
+            
+            // Create a controlled FileReader mock
+            mockFileReader = {
+                readAsText: jest.fn(),
+                onload: null,
+                onerror: null
+            };
+            global.FileReader = jest.fn(() => mockFileReader);
+        });
+
+        afterEach(() => {
+            delete window.loadXmlToForm;
+        });
+
         test('is a function', () => {
             expect(typeof uploadModule.handleXmlFile).toBe('function');
         });
 
-        test('can be called with a file object', () => {
+        test('calls FileReader.readAsText with the file', () => {
             const mockFile = new Blob(['<?xml version="1.0"?><root></root>'], { type: 'text/xml' });
             
-            // Should not throw
-            expect(() => uploadModule.handleXmlFile(mockFile)).not.toThrow();
+            uploadModule.handleXmlFile(mockFile);
+            
+            expect(mockFileReader.readAsText).toHaveBeenCalledWith(mockFile);
+        });
+
+        test('sets up onload handler', () => {
+            const mockFile = new Blob(['test'], { type: 'text/xml' });
+            
+            uploadModule.handleXmlFile(mockFile);
+            
+            expect(mockFileReader.onload).toBeInstanceOf(Function);
+        });
+
+        test('sets up onerror handler', () => {
+            const mockFile = new Blob(['test'], { type: 'text/xml' });
+            
+            uploadModule.handleXmlFile(mockFile);
+            
+            expect(mockFileReader.onerror).toBeInstanceOf(Function);
+        });
+
+        test('shows error status when onerror is triggered', () => {
+            const mockFile = new Blob(['test'], { type: 'text/xml' });
+            
+            uploadModule.handleXmlFile(mockFile);
+            mockFileReader.onerror();
+            
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-danger')).toBe(true);
+            expect(statusElement.text()).toBe('Error reading file');
+        });
+
+        test('processes valid XML in onload handler', async () => {
+            const validXml = '<?xml version="1.0"?><root><data>test</data></root>';
+            const mockFile = new Blob([validXml], { type: 'text/xml' });
+            
+            uploadModule.handleXmlFile(mockFile);
+            
+            // Simulate FileReader onload
+            await mockFileReader.onload({
+                target: { result: validXml }
+            });
+            
+            expect(window.loadXmlToForm).toHaveBeenCalled();
+        });
+
+        test('hides modal on successful XML load', async () => {
+            const validXml = '<?xml version="1.0"?><root></root>';
+            const mockFile = new Blob([validXml], { type: 'text/xml' });
+            
+            uploadModule.handleXmlFile(mockFile);
+            await mockFileReader.onload({
+                target: { result: validXml }
+            });
+            
+            expect($.fn.modal).toHaveBeenCalledWith('hide');
+        });
+
+        test('shows success status after loading valid XML', async () => {
+            const validXml = '<?xml version="1.0"?><root></root>';
+            const mockFile = new Blob([validXml], { type: 'text/xml' });
+            
+            uploadModule.handleXmlFile(mockFile);
+            await mockFileReader.onload({
+                target: { result: validXml }
+            });
+            
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-success')).toBe(true);
+        });
+
+        test('shows error status for invalid XML (parsererror)', async () => {
+            // Mock DOMParser to return parsererror
+            const originalDOMParser = global.DOMParser;
+            global.DOMParser = class {
+                parseFromString() {
+                    const doc = document.implementation.createDocument('', '', null);
+                    const errorEl = document.createElement('parsererror');
+                    doc.appendChild(errorEl);
+                    return doc;
+                }
+            };
+            
+            const invalidXml = 'not valid xml <';
+            const mockFile = new Blob([invalidXml], { type: 'text/xml' });
+            
+            uploadModule.handleXmlFile(mockFile);
+            await mockFileReader.onload({
+                target: { result: invalidXml }
+            });
+            
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-danger')).toBe(true);
+            
+            global.DOMParser = originalDOMParser;
+        });
+
+        test('shows error when loadXmlToForm throws', async () => {
+            window.loadXmlToForm = jest.fn().mockRejectedValue(new Error('Load failed'));
+            
+            const validXml = '<?xml version="1.0"?><root></root>';
+            const mockFile = new Blob([validXml], { type: 'text/xml' });
+            
+            uploadModule.handleXmlFile(mockFile);
+            await mockFileReader.onload({
+                target: { result: validXml }
+            });
+            
+            // Wait for promise rejection to be handled
+            await new Promise(resolve => setTimeout(resolve, 0));
+            
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-danger')).toBe(true);
         });
     });
 

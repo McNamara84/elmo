@@ -128,29 +128,99 @@ describe('language module coverage', () => {
 
     describe('applyTranslations', () => {
         beforeEach(() => {
-            // Mock the resizeTitle function that requires DOM element
-            const mockResizeTitle = jest.fn();
-            // The module internally needs window.$ to be available
-        });
-
-        test('can be called without errors when translations are set', () => {
-            // Use setTranslations to set the module's internal translations variable
+            // Mock required global functions
+            window.resizeTitle = jest.fn();
+            window.adjustButtons = jest.fn();
+            
+            // Set up translations
             window.setTranslations({
                 general: {
                     logoTitle: 'Test Title'
                 },
                 test: {
-                    key: 'Übersetzter Text'
+                    key: 'Übersetzter Text',
+                    placeholder: 'Translated Placeholder',
+                    title: 'Translated Title'
                 }
             });
+        });
 
-            // applyTranslations might fail due to resizeTitle needing specific DOM
-            // Just test that the function exists and can be invoked
-            expect(typeof languageModule.applyTranslations).toBe('function');
+        afterEach(() => {
+            delete window.resizeTitle;
+            delete window.adjustButtons;
+        });
+
+        test('sets document title from translations', () => {
+            languageModule.applyTranslations();
+            expect(document.title).toBe('Test Title');
+        });
+
+        test('updates elements with data-translate attribute', () => {
+            languageModule.applyTranslations();
+            const translatedElement = $('[data-translate="test.key"]');
+            expect(translatedElement.text()).toBe('Übersetzter Text');
+        });
+
+        test('updates placeholder attributes', () => {
+            document.body.innerHTML += '<input data-translate-placeholder="test.placeholder" placeholder="old">';
+            languageModule.applyTranslations();
+            const input = $('[data-translate-placeholder="test.placeholder"]');
+            expect(input.attr('placeholder')).toBe('Translated Placeholder');
+        });
+
+        test('calls resizeTitle after applying translations', () => {
+            languageModule.applyTranslations();
+            expect(window.resizeTitle).toHaveBeenCalled();
+        });
+
+        test('calls adjustButtons after applying translations', () => {
+            languageModule.applyTranslations();
+            expect(window.adjustButtons).toHaveBeenCalled();
+        });
+
+        test('dispatches translationsLoaded custom event', () => {
+            const eventListener = jest.fn();
+            document.addEventListener('translationsLoaded', eventListener);
+            
+            languageModule.applyTranslations();
+            
+            expect(eventListener).toHaveBeenCalled();
+            document.removeEventListener('translationsLoaded', eventListener);
+        });
+
+        test('sets up window.elmo.translate function', () => {
+            languageModule.applyTranslations();
+            
+            expect(typeof window.elmo.translate).toBe('function');
+            expect(window.elmo.translate('test.key')).toBe('Übersetzter Text');
+        });
+
+        test('sets up window.elmo.getTranslations function', () => {
+            languageModule.applyTranslations();
+            
+            expect(typeof window.elmo.getTranslations).toBe('function');
+            const trans = window.elmo.getTranslations();
+            expect(trans.general.logoTitle).toBe('Test Title');
+        });
+
+        test('can be called without errors when translations are set', () => {
+            // applyTranslations should work without throwing
+            expect(() => languageModule.applyTranslations()).not.toThrow();
         });
     });
 
     describe('loadTranslations', () => {
+        beforeEach(() => {
+            // Mock global functions used by applyTranslations
+            window.resizeTitle = jest.fn();
+            window.adjustButtons = jest.fn();
+        });
+
+        afterEach(() => {
+            delete window.resizeTitle;
+            delete window.adjustButtons;
+        });
+
         test('calls $.getJSON with correct URL', () => {
             $.getJSON.mockReturnValue({
                 then: jest.fn(() => ({ fail: jest.fn() }))
@@ -179,6 +249,71 @@ describe('language module coverage', () => {
             languageModule.loadTranslations('fr');
 
             expect($.getJSON).toHaveBeenCalledWith('lang/fr.json');
+        });
+
+        test('applies translations on success', () => {
+            const mockTranslations = {
+                general: { logoTitle: 'Test App' },
+                test: { key: 'Test Value' }
+            };
+            
+            let thenCallback;
+            $.getJSON.mockReturnValue({
+                then: jest.fn((cb) => {
+                    thenCallback = cb;
+                    return { fail: jest.fn() };
+                })
+            });
+
+            languageModule.loadTranslations('de');
+            thenCallback(mockTranslations);
+
+            // applyTranslations should have been called, which sets document.title
+            expect(document.title).toBe('Test App');
+        });
+
+        test('updates active language on success', () => {
+            const mockTranslations = {
+                general: { logoTitle: 'App' }
+            };
+            
+            let thenCallback;
+            $.getJSON.mockReturnValue({
+                then: jest.fn((cb) => {
+                    thenCallback = cb;
+                    return { fail: jest.fn() };
+                })
+            });
+
+            languageModule.loadTranslations('en');
+            thenCallback(mockTranslations);
+
+            const enItem = $('[data-bs-language-value="en"]');
+            expect(enItem.hasClass('active')).toBe(true);
+        });
+
+        test('falls back to English on failure for non-English language', () => {
+            let failCallback;
+            $.getJSON.mockReturnValue({
+                then: jest.fn(() => ({
+                    fail: jest.fn((cb) => {
+                        failCallback = cb;
+                        return { fail: jest.fn() };
+                    })
+                }))
+            });
+
+            languageModule.loadTranslations('xy');
+            
+            // Reset mock to track fallback call
+            $.getJSON.mockClear();
+            $.getJSON.mockReturnValue({
+                then: jest.fn(() => ({ fail: jest.fn() }))
+            });
+            
+            failCallback();
+
+            expect($.getJSON).toHaveBeenCalledWith('lang/en.json');
         });
     });
 
