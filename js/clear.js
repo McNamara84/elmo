@@ -113,3 +113,8 @@ function clearInputFields() {
     $('#input-product-type').prop('selectedIndex', 0).val('Gravity Field');
 
 }
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { clearInputFields };
+}

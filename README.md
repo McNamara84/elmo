@@ -47,14 +47,14 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 
 The installation of ELMO is possible on operating systems such as recent Windows versions (e.g. Windows 10/11) and the most common Linux distributions (e.g. Ubuntu, Debian).
 Following conditions are required for installation:
-- PHP ≥ 8.2 and ≤ 8.4
+- PHP ≥ 8.3 and ≤ 8.4
 	- incl. a webserver able to perform PHP operations (such as Apache or Nginx)
 	- extensions needed: XSL, ZIP
 - MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/8.0/en/installing-and-configuration.html)) or MariaDB
 
 ### Quick installation guide
 
-1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
+1. Ensure a development environment with PHP >8.3 and a MySQL or MariaDB server.
 2. The XSL and ZIP extensions for PHP must be installed and enabled.
 3. Don't forget to start Apache and MySQL.
 4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
@@ -131,14 +131,14 @@ If you encounter problems with the installation, feel free to leave an entry in 
 
   The installation of ELMO is possible on operating systems such as recent Windows versions (e.g. Windows 10/11) and the most common Linux distributions (e.g. Ubuntu, Debian).
   Following conditions are required for installation:
-  - PHP ≥ 8.2 and ≤ 8.4
+  - PHP ≥ 8.3 and ≤ 8.4
     - incl. a webserver able to perform PHP operations (such as Apache or Nginx)
     - extensions needed: XSL, ZIP
   - MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/8.0/en/installing-and-configuration.html)) or MariaDB
 
   ### Quick installation guide
 
-  1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
+  1. Ensure a development environment with PHP >8.3 and a MySQL or MariaDB server.
   2. The XSL and ZIP extensions for PHP must be installed and enabled.
   3. Don't forget to start Apache and MySQL.
   4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
@@ -160,7 +160,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
 
   This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10/11 using PHP and MySQL. For a local development environment, localhost-based access to the server is usually sufficient.
   #### 1. Setting up the development environment
-  - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP > 8.2).
+  - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP > 8.3).
   - Install [MySQL](https://dev.mysql.com/downloads/installer/) or MariaDB.
   - Install and enable the XSL and ZIP extensions for PHP. In order to do that, open the `php.ini` file and uncomment the line for the required extensions.
   #### 2. Starting Apache and MySQL

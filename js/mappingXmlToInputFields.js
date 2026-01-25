@@ -1313,3 +1313,30 @@ async function loadXmlToForm(xmlDoc) {
   // Process Dates
   processDates(xmlDoc, resolver);
 }
+
+// Export for testing (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        processResourceType,
+        extractLicenseIdentifier,
+        mapTitleType,
+        processTitles,
+        getNodeText,
+        processCreators,
+        processContactPersons,
+        findLabNameById,
+        setLabDataInRow,
+        processOriginatingLaboratories,
+        normalizeRole,
+        getOrCreateOrgRow,
+        getOrCreatePersonRow,
+        processContributors,
+        processIndividualContributor,
+        updateContributorMap,
+        getTagifyInstance,
+        populateFormWithContributors,
+        parseTemporalData,
+        getGeoLocationData,
+        fillSpatialFields
+    };
+}

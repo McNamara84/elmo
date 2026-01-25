@@ -239,3 +239,11 @@ $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () 
       });
   }
 });
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    normalizeRorId,
+    collectAffiliation
+  };
+}

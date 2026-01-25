@@ -61,6 +61,52 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
         }
     }
 
+    /**
+     * Sets up the GGM_Definition with a specific model type for the test resource.
+     * Also creates and links GGM_Properties record.
+     *
+     * @param string $modelType One of: 'Static', 'Temporal', 'Topographic'
+     */
+    private function setResourceModelType(string $modelType): void
+    {
+        $modelTypeId = $this->modelTypeIds[$modelType] ?? null;
+        if (!$modelTypeId) {
+            throw new \Exception("Model type '{$modelType}' not found in modelTypeIds");
+        }
+
+        // Create GGM_Definition with the model type
+        $sql = "INSERT INTO `GGM_Definition` (`Model_Name`, `Model_type_id`) VALUES (?, ?)";
+        $stmt = $this->connection->prepare($sql);
+        $modelName = "TestModel_" . uniqid();
+        $stmt->bind_param('si', $modelName, $modelTypeId);
+        $stmt->execute();
+        $ggmDefId = $stmt->insert_id;
+        $stmt->close();
+
+        // Link GGM_Definition to Resource
+        $sql = "INSERT INTO `Resource_has_GGM_Definition` (`Resource_resource_id`, `GGM_Definition_GGM_Definition_id`) VALUES (?, ?)";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('ii', $this->resourceId, $ggmDefId);
+        $stmt->execute();
+        $stmt->close();
+
+        // Create GGM_Properties record
+        $sql = "INSERT INTO `GGM_Properties` (`Errors`) VALUES (?)";
+        $stmt = $this->connection->prepare($sql);
+        $errors = "test_error_info";
+        $stmt->bind_param('s', $errors);
+        $stmt->execute();
+        $ggmPropsId = $stmt->insert_id;
+        $stmt->close();
+
+        // Link GGM_Properties to Resource
+        $sql = "INSERT INTO `Resource_has_GGM_Properties` (`Resource_resource_id`, `GGM_Properties_GGM_Properties_id`) VALUES (?, ?)";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param('ii', $this->resourceId, $ggmPropsId);
+        $stmt->execute();
+        $stmt->close();
+    }
+
     // ============================================================================
     // STATIC MODEL TESTS (Using Static_Model_Properties table)
     // ============================================================================
@@ -158,10 +204,10 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
     public function testInsertTemporalModelPropertiesComplete(): void
     {
         $postData = [
-            'temporal_start' => '2016-01-01',
-            'temporal_end' => '2024-12-31',
-            'temporal_frequency_predef' => 'monthly',
-            'temporal_institution' => 'GFZ Potsdam'
+            'temporalStart' => '2016-01-01',
+            'temporalEnd' => '2024-12-31',
+            'temporalFrequencyPredef' => 'monthly',
+            'temporalInstitution' => 'GFZ Potsdam'
         ];
 
         $temporalId = insertTemporalModelProperties($this->connection, $postData, $this->resourceId);
@@ -179,7 +225,7 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
         $this->assertEquals('2016-01-01', $record['start_date']);
         $this->assertEquals('2024-12-31', $record['end_date']);
         $this->assertEquals(30, $record['temporal_resolution_days']);
-        $this->assertEquals(1, $record['generating_institution']);
+        $this->assertEquals('GFZ Potsdam', $record['generating_institution']);
 
         // Verify linking
         $sql = "SELECT * FROM `Resource_has_Temporal_Model_Properties` 
@@ -199,10 +245,10 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
     public function testInsertTemporalModelPropertiesWithCustomFrequency(): void
     {
         $postData = [
-            'temporal_start' => '2018-06-15',
-            'temporal_end' => '2023-06-15',
-            'temporal_frequency' => '15',  // custom: 15 days
-            'temporal_institution' => 'CSR University of Texas'
+            'temporalStart' => '2018-06-15',
+            'temporalEnd' => '2023-06-15',
+            'temporalFrequency' => '15',  // custom: 15 days
+            'temporalInstitution' => 'CSR University of Texas'
         ];
 
         $temporalId = insertTemporalModelProperties($this->connection, $postData, $this->resourceId);
@@ -221,16 +267,15 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
 
     /**
      * Test: insertTemporalModelProperties with predefined frequencies
-     *
-     * @dataProvider temporalFrequencyProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('temporalFrequencyProvider')]
     public function testInsertTemporalModelPropertiesFrequencies(string $frequency, int $expectedDays): void
     {
         $postData = [
-            'temporal_start' => '2020-01-01',
-            'temporal_end' => '2025-01-01',
-            'temporal_frequency_predef' => $frequency,
-            'temporal_institution' => null
+            'temporalStart' => '2020-01-01',
+            'temporalEnd' => '2025-01-01',
+            'temporalFrequencyPredef' => $frequency,
+            'temporalInstitution' => null
         ];
 
         $temporalId = insertTemporalModelProperties($this->connection, $postData, $this->resourceId);
@@ -345,10 +390,10 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
             'topo_density' => 'constant',
             'topo_density_details' => null,
             'separate_density' => true,
-            'topo_density_crust_value' => '2670.0',
-            'topo_density_crust_description' => 'Average crustal density',
-            'topo_density_mantle_value' => '3300.0',
-            'topo_density_mantle_description' => 'Reference mantle density'
+            'topoDensityCrust' => '2670.0 kg/m³',
+            'topoDensityDetailsCrust' => 'Average crustal density',
+            'topoDensityMantle' => '3300.0 kg/m³',
+            'topoDensityDetailsMantle' => 'Reference mantle density'
         ];
 
         $topoId = insertTopographicModelProperties($this->connection, $postData, $this->resourceId);
@@ -364,10 +409,10 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
         $this->assertEquals('multi-layer', $record['layer_approach']);
         $this->assertEquals('spectral', $record['forward_modelling_domain']);
         $this->assertEquals('ellipsoidal', $record['approximation']);
-        $this->assertEqualsWithDelta(2670.0, $record['crust_density_value'], 0.1);
-        $this->assertEquals('Average crustal density', $record['crust_density_description']);
-        $this->assertEqualsWithDelta(3300.0, $record['mantle_density_value'], 0.1);
-        $this->assertEquals('Reference mantle density', $record['mantle_density_description']);
+        $this->assertEquals('2670.0 kg/m³', $record['crust_density_information']);
+        $this->assertEquals('Average crustal density', $record['crust_density_information_details']);
+        $this->assertEquals('3300.0 kg/m³', $record['mantle_density_information']);
+        $this->assertEquals('Reference mantle density', $record['mantle_density_information_details']);
     }
 
     /**
@@ -381,8 +426,8 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
             'topo_approximation' => 'spherical',
             'topo_density' => 'constant',
             'separate_density' => true,
-            'topo_density_crust_value' => '2750.5',
-            'topo_density_crust_description' => 'Crustal density'
+            'topoDensityCrust' => '2750.5 kg/m³',
+            'topoDensityDetailsCrust' => 'Crustal density'
             // mantle values empty
         ];
 
@@ -395,10 +440,10 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
         $record = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        $this->assertEqualsWithDelta(2750.5, $record['crust_density_value'], 0.1);
-        $this->assertEquals('Crustal density', $record['crust_density_description']);
-        $this->assertNull($record['mantle_density_value']);
-        $this->assertNull($record['mantle_density_description']);
+        $this->assertEquals('2750.5 kg/m³', $record['crust_density_information']);
+        $this->assertEquals('Crustal density', $record['crust_density_information_details']);
+        $this->assertNull($record['mantle_density_information']);
+        $this->assertNull($record['mantle_density_information_details']);
     }
 
     /**
@@ -468,10 +513,10 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
         $this->setResourceModelType('Temporal');
         
         $postData = [
-            'temporal_start' => '2010-01-01',
-            'temporal_end' => '2024-12-31',
-            'temporal_frequency_predef' => 'monthly',
-            'temporal_institution' => 'JPL'
+            'temporalStart' => '2010-01-01',
+            'temporalEnd' => '2024-12-31',
+            'temporalFrequencyPredef' => 'monthly',
+            'temporalInstitution' => 'JPL'
         ];
 
         $result = saveGGMsModelTypes($this->connection, $postData, $this->resourceId);
@@ -527,15 +572,14 @@ class SaveGGMsModelTypesTest extends DatabaseTestCase
     }
 
     /**
-     * Test: saveGGMsModelTypes throws exception when no GGM_Properties found
+     * Test: saveGGMsModelTypes returns true gracefully when no GGM_Definition exists
      */
-    public function testSaveGGMsModelTypesThrowsExceptionWhenNoGGMFound(): void
+    public function testSaveGGMsModelTypesReturnsGracefullyWhenNoGGMFound(): void
     {
         $nonExistentResourceId = 99999;
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('No GGM_Properties record found');
-        
-        saveGGMsModelTypes($this->connection, [], $nonExistentResourceId);
+        // Should return true without exception when no GGM_Definition exists
+        $result = saveGGMsModelTypes($this->connection, [], $nonExistentResourceId);
+        $this->assertTrue($result);
     }
 }

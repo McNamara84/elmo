@@ -142,6 +142,9 @@ abstract class DatabaseTestCase extends TestCase
         // Insert lookup data
         insertLookupData($this->connection);
 
+        // IMPORTANT: Set global $connection for legacy code that uses global variables
+        // Many save functions like save_resourceinformation_and_rights.php use global $connection
+        $GLOBALS['connection'] = $this->connection;
     }
     
     /**
@@ -151,6 +154,8 @@ abstract class DatabaseTestCase extends TestCase
      */
     protected function tearDown(): void
     {
+        // Clean up global connection reference
+        unset($GLOBALS['connection']);
         parent::tearDown();
     }
 

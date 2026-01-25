@@ -151,3 +151,15 @@ document.addEventListener('DOMContentLoaded', function () {
   // Add listener for translation changes
   document.addEventListener('translationsLoaded', refreshRoleTagifyInstances);
 });
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    setupRolesDropdown,
+    refreshRoleTagifyInstances,
+    getPersonRoles: () => personRoles,
+    getOrganizationRoles: () => organizationRoles,
+    setPersonRoles: (roles) => { personRoles = roles; },
+    setOrganizationRoles: (roles) => { organizationRoles = roles; }
+  };
+}

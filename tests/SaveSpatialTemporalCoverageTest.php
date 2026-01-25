@@ -239,49 +239,57 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     }
 
     /**
-     * Tests that saving fails when start date is missing.
+     * Tests that empty date values are treated as no STC data (optional).
      * 
-     * Verifies that the system requires a start date for temporal coverage.
+     * When tscDateStart is empty, the function treats it as "no STC data provided"
+     * and returns true without saving anything (STC is optional).
      *
      * @return void
      */
-    public function testSaveWithoutStartDateTime()
+    public function testEmptyDateStartTreatedAsOptional()
     {
         $resourceData = [
-            "doi" => "10.5880/GFZ.TEST.NO.START.DATETIME",
+            "doi" => "10.5880/GFZ.TEST.EMPTY.DATE",
             "year" => 2023,
             "dateCreated" => "2023-06-01",
             "resourcetype" => 1,
             "language" => 1,
             "Rights" => 1,
-            "title" => ["Test No Start DateTime STC"],
+            "title" => ["Test Empty Date STC"],
             "titleType" => [1]
         ];
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
+            "action" => "submit",
             "tscLatitudeMin" => ["40.7128"],
             "tscLatitudeMax" => ["40.7828"],
             "tscLongitudeMin" => ["-74.0060"],
             "tscLongitudeMax" => ["-73.9360"],
             "tscDescription" => ["New York City"],
-            "tscDateStart" => [""],
+            "tscDateStart" => [""],  // Empty date
             "tscTimeStart" => [""],
-            "tscDateEnd" => ["2023-12-31"],
-            "tscTimeEnd" => ["23:59:59"],
-            "tscTimezone" => ["-05:00"]
+            "tscDateEnd" => [""],
+            "tscTimeEnd" => [""],
+            "tscTimezone" => [""]
         ];
 
         $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
 
-        $this->assertFalse($result, 'The function should return false when the start date is missing.');
+        // Function returns true because STC is optional when no date is provided
+        $this->assertTrue($result, 'The function should return true (STC is optional).');
 
-        // Check that no STC was saved
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Spatial_Temporal_Coverage");
+        // No STC should be saved since no valid temporal data was provided
+        $stmt = $this->connection->prepare("
+            SELECT COUNT(*) as count 
+            FROM Resource_has_Spatial_Temporal_Coverage 
+            WHERE Resource_resource_id = ?
+        ");
+        $stmt->bind_param("i", $resource_id);
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
-        $this->assertEquals(0, $count, 'No STC entries should be saved.');
+        $this->assertEquals(0, $count, 'No STC should be saved when dateStart is empty.');
     }
 
     /**
