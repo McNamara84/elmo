@@ -69,21 +69,33 @@ function saveRelatedWork($connection, $postData, $resource_id)
 }
 
 /**
- * Retrieves the relation id based on name.
+ * Retrieves the relation id based on name or numeric ID.
  * @param mysqli $connection The database connection.
- * @param string $relationName The relation name to search for.
+ * @param string|int $relationNameOrId The relation name or ID to search for.
  *
  * @return int|null The found relation ID or null if not found.
  */
-function getRelationId(mysqli $connection, string $relationId): ?int
+function getRelationId(mysqli $connection, string|int $relationNameOrId): ?int
 {
-    $stmt = $connection->prepare("SELECT `relation_id` FROM `Relation` WHERE `relation_id` = ?");
-    if (!$stmt) {
-        error_log("Failed to prepare statement for getRelationId: " . $connection->error);
-        return null;
+    // If numeric, verify the ID exists
+    if (is_numeric($relationNameOrId)) {
+        $stmt = $connection->prepare("SELECT `relation_id` FROM `Relation` WHERE `relation_id` = ?");
+        if (!$stmt) {
+            error_log("Failed to prepare statement for getRelationId: " . $connection->error);
+            return null;
+        }
+        $id = (int)$relationNameOrId;
+        $stmt->bind_param("i", $id);
+    } else {
+        // Search by name
+        $stmt = $connection->prepare("SELECT `relation_id` FROM `Relation` WHERE `name` = ?");
+        if (!$stmt) {
+            error_log("Failed to prepare statement for getRelationId: " . $connection->error);
+            return null;
+        }
+        $stmt->bind_param("s", $relationNameOrId);
     }
-    $id = (int)$relationId;
-    $stmt->bind_param("i", $id);
+    
     if (!$stmt->execute()) {
         error_log("Failed to execute statement for getRelationId: " . $stmt->error);
         $stmt->close();

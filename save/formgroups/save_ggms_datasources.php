@@ -21,7 +21,8 @@ require_once __DIR__ . '/save_thesauruskeywords.php';
 require_once __DIR__ . '/save_relatedwork.php';
 
 /**
- * Extracts individual data source rows from POST arrays for the case where 1 Data Source on the front-end contains multiple keywords.
+ * Extracts individual data source rows from POST arrays.
+ * Each row in the form contains ALL fields, but only type-specific fields are populated.
  * 
  * @param array $postData Raw POST data with array fields
  * @return array Array of individual data source row objects, indexed 0..N
@@ -42,17 +43,6 @@ function extractDataSourceRows(array $postData): array
         'dName'
     ];
 
-    $counters = array_fill_keys($post_variables, 0);
-
-    // This mask also uses postData variable names
-    $required_masks = [
-        'S' => ['satellite_platform'],
-        'G' => ['datasource_details'],
-        'A' => ['datasource_details'],
-        'T' => ['datasource_details', 'compensation_depth'],
-        'M' => ['datasource_details', 'dIdentifier', 'dIdentifierType', 'dName']
-    ];
-
     $rows = [];
     for ($i = 0; $i < $total_length; $i++) {
         $this_type = $types[$i];
@@ -63,28 +53,11 @@ function extractDataSourceRows(array $postData): array
             'description' => $postData['datasource_description'][$i] ?? null
         ];
 
-        // Get the list of fields that are relevant for this specific type
-        $this_variables = $required_masks[$this_type] ?? [];
-
-        // Iterate through all possible variables to fill the row correctly
-        foreach ($post_variables as $run_variable) {
-            if (in_array($run_variable, $this_variables, true)) {
-                // If this variable is required for the type, get its value
-                $this_variable_counter = $counters[$run_variable];
-                
-                // Check if the value exists in the POST data before accessing it
-                if (isset($postData[$run_variable][$this_variable_counter])) {
-                    $row[$run_variable] = $postData[$run_variable][$this_variable_counter];
-                    // Increment the counter for this specific variable for the next time we see it
-                    $counters[$run_variable]++;
-                } else {
-                    $row[$run_variable] = null; // Set to null if not present
-                }             
-            } else {
-                // If this variable is not for this type, set it to null
-                $row[$run_variable] = null;
-            }
+        // Copy all fields from POST at the same index - each HTML row has all fields
+        foreach ($post_variables as $variable) {
+            $row[$variable] = $postData[$variable][$i] ?? null;
         }
+        
         $rows[] = $row;
     }
 
@@ -206,7 +179,16 @@ function prepareDataSourceForDb(array $row): array
 
         case 'G': // Ground data
         case 'A': // Altimetry
+            // These types only need 'details' which is already set above
+            break;
+            
         case 'T': // Terrain
+            // Set compensation depth if provided
+            if (!empty($row['compensation_depth'])) {
+                $dbRow['T_Isostasy_compensation_depth'] = (int)$row['compensation_depth'];
+            }
+            break;
+            
         case 'M': // Model
             // Note: The name of the model is put in 'details'
             if (!empty($row['dName'])) {
