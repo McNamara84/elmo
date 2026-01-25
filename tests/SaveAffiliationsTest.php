@@ -20,8 +20,8 @@ class SaveAffiliationsTest extends DatabaseTestCase
         $this->connection->query("DELETE FROM Author WHERE author_id >= 1000");
         $this->connection->query("DELETE FROM Author_person WHERE author_person_id >= 1000");
 
-        // Create test author
-        $this->connection->query("INSERT INTO Author_person (author_person_id, familyname, givenname) VALUES (1000, 'TestFamily', 'TestGiven')");
+        // Create test author (including orcid which is NOT NULL)
+        $this->connection->query("INSERT INTO Author_person (author_person_id, familyname, givenname, orcid) VALUES (1000, 'TestFamily', 'TestGiven', '')");
         $this->connection->query("INSERT INTO Author (author_id, Author_Person_author_person_id) VALUES (1000, 1000)");
     }
 
