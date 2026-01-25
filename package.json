@@ -3,7 +3,7 @@
     "@yaireo/tagify": "^4.36.0",
     "bootstrap": "^5.3.7",
     "bootstrap-icons": "^1.13.1",
-    "jquery": "^3.7.1",
+    "jquery": "^4.0.0",
     "jquery-ui": "^1.14.1",
     "jstree": "^3.3.17",
     "mark.js": "^8.11.1",
@@ -30,9 +30,18 @@
     "js-yaml": "^3.14.2"
   },
   "nyc": {
-    "include": ["js/**/*.js"],
-    "exclude": ["node_modules/**", "tests/**"],
-    "reporter": ["text", "html", "lcov"],
+    "include": [
+      "js/**/*.js"
+    ],
+    "exclude": [
+      "node_modules/**",
+      "tests/**"
+    ],
+    "reporter": [
+      "text",
+      "html",
+      "lcov"
+    ],
     "report-dir": "coverage-e2e"
   }
 }

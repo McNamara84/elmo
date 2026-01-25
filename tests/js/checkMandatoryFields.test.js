@@ -63,7 +63,7 @@ describe('validateAuthorInstitutionRequirements', () => {
     // No value - should not be required
     window.validateAuthorInstitutionRequirements();
     await flushMicrotasks();
-    expect(nameInput.attr('required')).toBeUndefined();
+    expect(nameInput.prop('required')).toBe(false);
     expect(nameInput.attr('aria-required')).toBeUndefined();
     expect(nameInput[0].getAttribute('required')).toBeNull();
     expect(nameInput[0].getAttribute('aria-required')).toBeNull();
@@ -76,10 +76,10 @@ describe('validateAuthorInstitutionRequirements', () => {
     window.validateAuthorInstitutionRequirements();
     nameInput[0].required = true;
     await flushMicrotasks();
-    nameInput[0].setAttribute('required', '');
-    nameInput[0].setAttribute('aria-required', '');
+    nameInput[0].setAttribute('required', 'required');
+    nameInput[0].setAttribute('aria-required', 'true');
     await runAnimationFrameQueue();
-    expect(nameInput.attr('required')).toBe('required');
+    expect(nameInput.prop('required')).toBe(true);
     expect(nameInput.attr('aria-required')).toBe('true');
     expect(nameInput[0].getAttribute('required')).toBe('required');
     expect(nameInput[0].getAttribute('aria-required')).toBe('true');
@@ -93,10 +93,10 @@ describe('validateAuthorInstitutionRequirements', () => {
     window.validateAuthorInstitutionRequirements();
     nameInput[0].required = true;
     await flushMicrotasks();
-    nameInput[0].setAttribute('required', '');
-    nameInput[0].setAttribute('aria-required', '');
+    nameInput[0].setAttribute('required', 'required');
+    nameInput[0].setAttribute('aria-required', 'true');
     await runAnimationFrameQueue();
-    expect(nameInput.attr('required')).toBe('required');
+    expect(nameInput.prop('required')).toBe(true);
     expect(nameInput.attr('aria-required')).toBe('true');
     expect(nameInput[0].getAttribute('required')).toBe('required');
     expect(nameInput[0].getAttribute('aria-required')).toBe('true');
@@ -108,7 +108,7 @@ describe('validateAuthorInstitutionRequirements', () => {
     affiliationInput[0].tagify.value = [];
     window.validateAuthorInstitutionRequirements();
     await flushMicrotasks();
-    expect(nameInput.attr('required')).toBeUndefined();
+    expect(nameInput.prop('required')).toBe(false);
     expect(nameInput.attr('aria-required')).toBeUndefined();
     expect(nameInput[0].getAttribute('required')).toBeNull();
     expect(nameInput[0].getAttribute('aria-required')).toBeNull();
@@ -190,15 +190,15 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
     window.validateSpatialTemporalCoverageRequirements();
 
     // datestart and dateend should be required
-    expect(datestart.attr('required')).toBe('required');
-    expect(dateend.attr('required')).toBe('required');
+    expect(datestart.prop('required')).toBe(true);
+    expect(dateend.prop('required')).toBe(true);
 
     // time fields should NOT be required (time is optional)
-    expect(timestart.attr('required')).toBeUndefined();
-    expect(timeend.attr('required')).toBeUndefined();
+    expect(timestart.prop('required')).toBe(false);
+    expect(timeend.prop('required')).toBe(false);
 
     // timezone should NOT be required without time
-    expect(timezone.attr('required')).toBeUndefined();
+    expect(timezone.prop('required')).toBe(false);
   });
 
   test('time provided triggers time and timezone requirements', () => {
@@ -222,8 +222,8 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
     window.validateSpatialTemporalCoverageRequirements();
 
     // Now time fields ARE required (since a time was given)
-    expect(timestart.attr('required')).toBe('required');
-    expect(timeend.attr('required')).toBe('required');
-    expect(timezone.attr('required')).toBe('required');
+    expect(timestart.prop('required')).toBe(true);
+    expect(timeend.prop('required')).toBe(true);
+    expect(timezone.prop('required')).toBe(true);
   });
 });
