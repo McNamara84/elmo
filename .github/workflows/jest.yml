@@ -24,7 +24,7 @@ jobs:
         run: npm install
 
       - name: Run Jest tests with coverage
-        run: npx jest --config jest.config.js --runInBand --coverage
+        run: npx jest --config jest.config.js --runInBand --coverage --forceExit
 
       - name: Create coverage badge
         if: github.event_name == 'push'
