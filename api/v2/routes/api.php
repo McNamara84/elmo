@@ -11,10 +11,14 @@ require_once __DIR__ . '/../controllers/VocabController.php';
 require_once __DIR__ . '/../controllers/ValidationController.php';
 require_once __DIR__ . '/../controllers/DatasetController.php';
 require_once __DIR__ . '/../controllers/DraftController.php';
+require_once __DIR__ . '/../controllers/AffiliationController.php';
 
 return [
     // General endpoints
     ['GET', '/general/alive', [new GeneralController(), 'getAlive']],
+
+    // Affiliation search endpoint (server-side search for performance)
+    ['GET', '/affiliations/search', [new AffiliationController(), 'search']],
 
     // Vocabulary update endpoints
     ['GET', '/update/vocabs/msl/labs', [new VocabController(), 'updateMslLabs']],

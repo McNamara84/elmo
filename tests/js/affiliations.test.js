@@ -3,6 +3,7 @@ const { requireFresh } = require('./utils');
 let $;
 let autocompleteAffiliations;
 let refreshTagifyInstances;
+let searchAffiliationsFromServer;
 
 /**
  * Mock implementation of Tagify used for testing.
@@ -11,10 +12,10 @@ class MockTagify {
   constructor(el, options) {
     this.el = el;
     this.settings = options;
-    this.whitelist = options.whitelist;
+    this.whitelist = options.whitelist || [];
     this.value = [];
     this.DOM = { input: { style: { width: '' } } };
-    this.dropdown = { hide: jest.fn() };
+    this.dropdown = { hide: jest.fn(), show: jest.fn() };
     this._callbacks = {};
   }
   on(event, cb) {
@@ -32,6 +33,9 @@ class MockTagify {
   }
   removeAllTags() {
     this.value = [];
+  }
+  loading(state) {
+    this._loading = state;
   }
   trigger(event, detail) {
     if (event === 'add' && detail?.data) {
@@ -69,7 +73,6 @@ describe('affiliations.js', () => {
     `;
 
     $ = require('jquery');
-    $.getJSON = jest.fn((file, cb) => cb([]));
     global.$ = $;
     global.jQuery = $;
     window.$ = $;
@@ -77,9 +80,17 @@ describe('affiliations.js', () => {
     global.Tagify = MockTagify;
     global.translations = { general: { affiliation: 'affiliation' } };
 
+    // Mock fetch for server-side search
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve([])
+      })
+    );
+
     window.applyTagifyAccessibilityAttributes = jest.fn();
 
-    ({ autocompleteAffiliations, refreshTagifyInstances } = requireFresh('../../js/affiliations.js'));
+    ({ autocompleteAffiliations, refreshTagifyInstances, searchAffiliationsFromServer } = requireFresh('../../js/affiliations.js'));
   });
 
   afterEach(() => {
@@ -90,34 +101,35 @@ describe('affiliations.js', () => {
     delete window.$;
     delete window.jQuery;
     delete window.applyTagifyAccessibilityAttributes;
+    delete global.fetch;
   });
 
   /**
-   * Ensures a Tagify instance is created with the provided whitelist.
+   * Ensures a Tagify instance is created with empty whitelist (server search mode).
    */
-  test('autocompleteAffiliations creates Tagify instance with whitelist', () => {
-    const data = [ { id: '1', name: 'TestOrg', other: ['Alias1', 'Alias2'] } ];
-    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
+  test('autocompleteAffiliations creates Tagify instance with empty whitelist', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
 
     const input = document.getElementById('input-author-affiliation');
     expect(input.tagify).toBeInstanceOf(MockTagify);
-    expect(input.tagify.whitelist).toEqual([
-      { value: 'TestOrg', id: '1', other: ['Alias1', 'Alias2'] }
-    ]);
+    // Whitelist should be empty initially as data comes from server
+    expect(input.tagify.whitelist).toEqual([]);
   });
 
   /**
    * Verifies that adding tags updates the hidden field and hides the dropdown for unknown values.
    */
   test('adding a tag updates hidden field and closes dropdown for non-whitelist', () => {
-    const data = [ { id: '1', name: 'Allowed' } ];
-    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
     const input = document.getElementById('input-author-affiliation');
     const hidden = document.getElementById('input-author-rorid');
 
+    // Simulate adding a tag from whitelist
+    input.tagify.whitelist = [{ value: 'Allowed', id: '1' }];
     input.tagify.trigger('add', { data: { value: 'Allowed', id: '1' } });
     expect(hidden.value).toBe('1');
 
+    // Adding unknown value should close dropdown
     input.tagify.trigger('add', { data: { value: 'Unknown' } });
     expect(input.tagify.dropdown.hide).toHaveBeenCalled();
   });
@@ -126,8 +138,7 @@ describe('affiliations.js', () => {
    * Checks that the remove event clears tags when no contact person is specified.
    */
   test('remove event clears tags when contact person empty', () => {
-    const data = [ { id: '1', name: 'Org' } ];
-    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
     const input = document.getElementById('input-author-affiliation');
 
     input.tagify.addTags('Org');
@@ -138,32 +149,64 @@ describe('affiliations.js', () => {
   });
 
   /**
-   * Confirms that input events resize the tagify input width.
+   * Tests the server-side search function.
    */
-  test('input event resizes input width', () => {
-    const data = [];
-    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
-    const input = document.getElementById('input-author-affiliation');
-
-    input.tagify.trigger('input', { value: 'abcd' });
-    expect(input.tagify.DOM.input.style.width).toBe('40px');
+  test('searchAffiliationsFromServer returns empty array for short query', async () => {
+    const result = await searchAffiliationsFromServer('a');
+    expect(result).toEqual([]);
+    // fetch should not be called for queries shorter than 2 chars
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   /**
-   * Ensures refreshTagifyInstances updates the whitelist while retaining existing tags.
+   * Tests the server-side search function with valid query.
    */
-  test('refreshTagifyInstances updates whitelist and keeps tags', () => {
-    const data = [ { id: '1', name: 'First', other: ['Alt1'] } ];
-    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid', data);
-    const input = document.getElementById('input-author-affiliation');
-    input.tagify.addTags('First');
+  test('searchAffiliationsFromServer fetches from server for valid query', async () => {
+    const mockResults = [
+      { id: 'https://ror.org/123', name: 'Test University', other: ['TU'] }
+    ];
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockResults)
+      })
+    );
 
-    window.affiliationsData = [ { id: '2', name: 'Second', other: ['Alt2'] } ];
+    const result = await searchAffiliationsFromServer('Test');
+    
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('api/v2/affiliations/search?q=Test')
+    );
+    expect(result).toEqual(mockResults);
+  });
+
+  /**
+   * Tests server-side search handles errors gracefully.
+   */
+  test('searchAffiliationsFromServer returns empty array on error', async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: false,
+        status: 500
+      })
+    );
+
+    const result = await searchAffiliationsFromServer('Test');
+    expect(result).toEqual([]);
+  });
+
+  /**
+   * Ensures refreshTagifyInstances updates placeholder and keeps tags.
+   */
+  test('refreshTagifyInstances updates placeholder and keeps tags', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    input.tagify.addTags({ value: 'First', id: '1' });
+
+    global.translations = { general: { affiliation: 'Zugehörigkeit' } };
     refreshTagifyInstances();
 
-     expect(input.tagify.settings.whitelist).toEqual([
-     { value: 'Second', id: '2', other: ['Alt2'] }
-    ]);
+    expect(input.tagify.settings.placeholder).toBe('Zugehörigkeit');
     expect(input.tagify.value[0].value).toBe('First');
   });
 
@@ -171,8 +214,7 @@ describe('affiliations.js', () => {
    * Verifies that author institution name becomes required when affiliations are present.
    */
   test('author institution requirement syncs with Tagify selections', async () => {
-    const data = [ { id: '1', name: 'Helmholtz' } ];
-    autocompleteAffiliations('input-authorinstitution-affiliation', 'input-author-institutionrorid', data);
+    autocompleteAffiliations('input-authorinstitution-affiliation', 'input-author-institutionrorid');
 
     const affiliationInput = document.getElementById('input-authorinstitution-affiliation');
     const nameInput = document.getElementById('input-authorinstitution-name');
