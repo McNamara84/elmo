@@ -760,3 +760,19 @@ $(document).on(
 $(document).on("blur", 'input[name="dIdentifier[]"]', function () {
   updateIdentifierType(this);
 });
+
+// Export for testing (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    initializeTimezoneDropdown,
+    setupResourceTypeDropdown,
+    setupLanguageDropdown,
+    setupTitleTypeDropdown,
+    setupIdentifierTypesDropdown,
+    getIdentifierPriority,
+    updateIdentifierType,
+    debounce,
+    updateIdsAndNames,
+    updateDataSourceIdsAndNames
+  };
+}

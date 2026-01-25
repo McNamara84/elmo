@@ -203,4 +203,82 @@ describe('language module coverage', () => {
             expect($.getJSON).toHaveBeenCalledWith('lang/en.json');
         });
     });
+
+    describe('getNestedValue', () => {
+        test('retrieves shallow nested value', () => {
+            const obj = { test: 'value' };
+            expect(languageModule.getNestedValue(obj, 'test')).toBe('value');
+        });
+
+        test('retrieves deeply nested value', () => {
+            const obj = { level1: { level2: { level3: 'deep value' } } };
+            expect(languageModule.getNestedValue(obj, 'level1.level2.level3')).toBe('deep value');
+        });
+
+        test('returns undefined for non-existent path', () => {
+            const obj = { test: 'value' };
+            expect(languageModule.getNestedValue(obj, 'nonexistent.path')).toBeUndefined();
+        });
+
+        test('handles empty object', () => {
+            expect(languageModule.getNestedValue({}, 'test.path')).toBeUndefined();
+        });
+
+        test('handles null in path', () => {
+            const obj = { test: null };
+            // When accessing test.nested, it returns undefined because test is null
+            const result = languageModule.getNestedValue(obj, 'test.nested');
+            expect(result === undefined || result === null).toBe(true);
+        });
+    });
+
+    describe('translatePlaceholders', () => {
+        beforeEach(() => {
+            document.body.innerHTML = `
+                <div id="container">
+                    <input placeholder="labels.input" id="input1">
+                    <textarea placeholder="labels.textarea" id="textarea1"></textarea>
+                    <input placeholder="notranslation" id="input2">
+                </div>
+            `;
+            
+            // Set up translations
+            window.setTranslations({
+                labels: {
+                    input: 'Translated Input',
+                    textarea: 'Translated Textarea'
+                }
+            });
+        });
+
+        test('translates input placeholder', () => {
+            const container = $('#container');
+            languageModule.translatePlaceholders(container);
+            
+            expect($('#input1').attr('placeholder')).toBe('Translated Input');
+        });
+
+        test('translates textarea placeholder', () => {
+            const container = $('#container');
+            languageModule.translatePlaceholders(container);
+            
+            expect($('#textarea1').attr('placeholder')).toBe('Translated Textarea');
+        });
+
+        test('keeps original placeholder when no translation exists', () => {
+            const container = $('#container');
+            languageModule.translatePlaceholders(container);
+            
+            expect($('#input2').attr('placeholder')).toBe('notranslation');
+        });
+
+        test('handles empty container', () => {
+            const emptyContainer = $('<div></div>');
+            
+            // Should not throw
+            expect(() => {
+                languageModule.translatePlaceholders(emptyContainer);
+            }).not.toThrow();
+        });
+    });
 });

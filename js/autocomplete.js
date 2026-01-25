@@ -247,11 +247,3 @@ if (typeof module !== 'undefined' && module.exports) {
     collectAffiliation
   };
 }
-
-// Export for testing (CommonJS)
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    normalizeRorId,
-    collectAffiliation
-  };
-}

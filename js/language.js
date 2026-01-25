@@ -215,6 +215,8 @@ if (typeof module !== 'undefined' && module.exports) {
         applyTranslations,
         changeLanguage,
         getBrowserLanguage,
-        updateActiveLanguage
+        updateActiveLanguage,
+        getNestedValue,
+        translatePlaceholders
     };
 }
