@@ -5,13 +5,6 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:
-    inputs:
-      test_badge_generation:
-        description: 'Test badge generation (even on non-main branches)'
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: write
@@ -172,7 +165,7 @@ jobs:
           cat server.log
 
       - name: Generate coverage (PHP 8.5 push builds only)
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.test_badge_generation)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           API_BASE_URL: http://localhost:8000
           XDEBUG_MODE: coverage
@@ -190,13 +183,13 @@ jobs:
           fi
 
       - name: Prepare output directory
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.test_badge_generation)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           mkdir -p output
           touch output/.keep
 
       - name: Generate coverage badge from clover.xml
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.test_badge_generation)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           if [ -f clover.xml ]; then
             echo "Parsing clover.xml for coverage data..."
@@ -250,7 +243,7 @@ jobs:
           fi
 
       - name: Debug badge creation
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.test_badge_generation)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "Checking output directory contents:"
           ls -la output/
@@ -263,7 +256,7 @@ jobs:
           fi
 
       - name: Publish coverage badge
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.test_badge_generation)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         continue-on-error: true
         uses: peaceiris/actions-gh-pages@v4
         with:
