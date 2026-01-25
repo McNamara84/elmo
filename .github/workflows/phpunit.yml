@@ -190,7 +190,7 @@ jobs:
           files: ./clover.xml
           flags: php
           name: phpunit-coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
           verbose: true
 
       - name: Stop PHP server

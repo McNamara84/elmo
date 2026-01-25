@@ -34,5 +34,5 @@ jobs:
           files: ./coverage/lcov.info
           flags: javascript
           name: jest-coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
           verbose: true

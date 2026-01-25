@@ -10,24 +10,14 @@ coverage:
       default:
         target: auto
         threshold: 1%
-    patch:
-      default:
-        target: auto
-        threshold: 1%
 
 flags:
   php:
     paths:
-      - api/
-      - includes/
       - save/
+      - includes/
     carryforward: true
   javascript:
     paths:
       - js/
     carryforward: true
-
-comment:
-  layout: "reach,diff,flags,files"
-  behavior: default
-  require_changes: false
