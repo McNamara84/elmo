@@ -239,27 +239,28 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     }
 
     /**
-     * Tests that saving fails when start date is missing.
+     * Tests saving with only spatial data (no temporal data).
      * 
-     * Verifies that the system requires a start date for temporal coverage.
+     * Verifies that coverage can be purely spatial - dateStart is optional.
      *
      * @return void
      */
-    public function testSaveWithoutStartDateTime()
+    public function testSaveWithOnlySpatialData()
     {
         $resourceData = [
-            "doi" => "10.5880/GFZ.TEST.NO.START.DATETIME",
+            "doi" => "10.5880/GFZ.TEST.SPATIAL.ONLY",
             "year" => 2023,
             "dateCreated" => "2023-06-01",
             "resourcetype" => 1,
             "language" => 1,
             "Rights" => 1,
-            "title" => ["Test No Start DateTime STC"],
+            "title" => ["Test Spatial Only STC"],
             "titleType" => [1]
         ];
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
+            "action" => "submit",
             "tscLatitudeMin" => ["40.7128"],
             "tscLatitudeMax" => ["40.7828"],
             "tscLongitudeMin" => ["-74.0060"],
@@ -267,21 +268,25 @@ class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
             "tscDescription" => ["New York City"],
             "tscDateStart" => [""],
             "tscTimeStart" => [""],
-            "tscDateEnd" => ["2023-12-31"],
-            "tscTimeEnd" => ["23:59:59"],
-            "tscTimezone" => ["-05:00"]
+            "tscDateEnd" => [""],
+            "tscTimeEnd" => [""],
+            "tscTimezone" => [""]
         ];
 
         $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
 
-        $this->assertFalse($result, 'The function should return false when the start date is missing.');
+        // Spatial-only coverage should be saved successfully
+        $this->assertTrue($result, 'The function should return true for spatial-only coverage (dateStart is optional).');
 
-        // Check that no STC was saved
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Spatial_Temporal_Coverage");
+        // Check that the STC was saved
+        $stmt = $this->connection->prepare("SELECT * FROM Spatial_Temporal_Coverage WHERE resource_id = ?");
+        $stmt->bind_param("i", $resource_id);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $row = $stmt->get_result()->fetch_assoc();
 
-        $this->assertEquals(0, $count, 'No STC entries should be saved.');
+        $this->assertNotNull($row, 'STC entry should be saved.');
+        $this->assertEquals("40.7128", $row['tscLatitudeMin']);
+        $this->assertNull($row['tscDateStart'], 'Start date should be NULL for spatial-only coverage.');
     }
 
     /**
