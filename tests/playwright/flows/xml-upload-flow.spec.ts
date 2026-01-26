@@ -433,9 +433,20 @@ test.describe('XML Upload Mapping Flow', () => {
     await mockVocabularyRequests(page);
     await mockValidationAndReferenceData(page);
 
-    await page.addInitScript(({ translations }) => {
+    await page.addInitScript(({ translations, baseUrl }) => {
       (window as any).translations = translations;
-    }, { translations: TEST_TRANSLATIONS });
+      
+      // Wrap fetch to resolve relative URLs against the base URL
+      // This is needed because fetch() doesn't respect <base href> for relative URLs
+      const originalFetch = window.fetch;
+      window.fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+        if (typeof input === 'string' && !input.startsWith('http') && !input.startsWith('//')) {
+          // Resolve relative URL against base URL
+          input = new URL(input, baseUrl).href;
+        }
+        return originalFetch.call(this, input, init);
+      };
+    }, { translations: TEST_TRANSLATIONS, baseUrl: APP_BASE_URL });
 
     await page.goto('about:blank');
     await page.setContent(TEST_PAGE_HTML);
@@ -445,6 +456,29 @@ test.describe('XML Upload Mapping Flow', () => {
     await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.css') });
 
     await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery/dist/jquery.min.js') });
+    
+    // Patch jQuery ajax to resolve relative URLs against base URL
+    await page.evaluate((baseUrl) => {
+      const $ = (window as any).jQuery;
+      if ($ && $.ajax) {
+        const originalAjax = $.ajax;
+        $.ajax = function(urlOrSettings: any, settings?: any) {
+          // Handle both $.ajax(url, settings) and $.ajax(settings) signatures
+          if (typeof urlOrSettings === 'string') {
+            if (!urlOrSettings.startsWith('http') && !urlOrSettings.startsWith('//')) {
+              urlOrSettings = new URL(urlOrSettings, baseUrl).href;
+            }
+            return originalAjax.call(this, urlOrSettings, settings);
+          } else if (urlOrSettings && typeof urlOrSettings === 'object' && urlOrSettings.url) {
+            if (!urlOrSettings.url.startsWith('http') && !urlOrSettings.url.startsWith('//')) {
+              urlOrSettings.url = new URL(urlOrSettings.url, baseUrl).href;
+            }
+          }
+          return originalAjax.call(this, urlOrSettings, settings);
+        };
+      }
+    }, APP_BASE_URL);
+    
     await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery-ui/dist/jquery-ui.min.js') });
     await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
     await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.js') });
