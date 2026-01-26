@@ -4,7 +4,6 @@ import {
   completeExtendedDatasetForm,
   completeExtendedMultipleEntries,
   navigateToHome,
-  SELECTORS,
 } from '../utils';
 import * as fs from 'fs';
 import * as path from 'path';

@@ -1,4 +1,6 @@
 import { expect, type Page } from '@playwright/test';
+import { SELECTORS } from './constants';
+
 
 export async function completeMinimalDatasetForm(page: Page) {
   await page.getByRole('textbox', { name: 'Publication Year (YYYY)*' }).fill('2025');
@@ -68,14 +70,10 @@ export async function completeExtendedDatasetForm(page: Page) {
  * Add a free keyword using tagify (Enter key to create tags)
  */
 async function addFreeKeyword(page: Page, keyword: string) {
-  const keywordInput = page.locator('#input-freekeyword, [name="freekeywords[]"]').first();
-  
-  await keywordInput.scrollIntoViewIfNeeded();
-  await keywordInput.waitFor({ state: 'visible' });
-  await keywordInput.click();
-  await keywordInput.clear();
-  await keywordInput.type(keyword, { delay: 100 }); // Use type() instead of fill()
-  
+
+  const tagInput = page.locator(`${SELECTORS.formGroups.freeKeywords} .tagify__input`);
+  await tagInput.click();
+  await tagInput.type(keyword);  
   // Press Enter to create the tag
   await page.keyboard.press('Enter');
   
