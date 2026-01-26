@@ -287,12 +287,12 @@ test.describe('Contributor (Persons) form group', () => {
 
     await page.waitForFunction(() => {
       const input: any = document.querySelector('input[id^="input-contributorpersons-affiliation"]');
-      return input?.tagify?.value?.length === 2;
+      return input?._tagify?.value?.length === 2;
     });
 
     const affiliationValues = await page.evaluate(() => {
       const input: any = document.querySelector('input[id^="input-contributorpersons-affiliation"]');
-      return input.tagify.value.map((tag: { value: string }) => tag.value);
+      return input._tagify.value.map((tag: { value: string }) => tag.value);
     });
 
     expect(affiliationValues).toEqual([
