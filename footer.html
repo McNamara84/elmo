@@ -51,6 +51,22 @@
 </footer>
 
 
+<!-- Feature Toggles for JavaScript - enables conditional loading of resources -->
+<script>
+window.ELMO_FEATURES = {
+    showGcmdThesauri: <?php echo json_encode($showGcmdThesauri ?? true); ?>,
+    showMslVocabs: <?php echo json_encode($showMslVocabs ?? false); ?>,
+    showMslLabs: <?php echo json_encode($showMslLabs ?? false); ?>,
+    showFreeKeywords: <?php echo json_encode($showFreeKeywords ?? true); ?>,
+    showContributorPersons: <?php echo json_encode($showContributorPersons ?? true); ?>,
+    showContributorInstitutions: <?php echo json_encode($showContributorInstitutions ?? true); ?>,
+    showGGMsProperties: <?php echo json_encode($showGGMsProperties ?? false); ?>,
+    showSpatialTemporalCoverage: <?php echo json_encode($showSpatialTemporalCoverage ?? true); ?>,
+    showRelatedWork: <?php echo json_encode($showRelatedWork ?? true); ?>,
+    showFundingReference: <?php echo json_encode($showFundingReference ?? true); ?>
+};
+</script>
+
 <!-- jQuery -->
 <script src="node_modules/jquery/dist/jquery.min.js"></script>
 <!-- jQuery UI -->

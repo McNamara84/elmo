@@ -200,8 +200,8 @@ describe('clear.js - clearInputFields', () => {
 
             // Clear Tagify for affiliations in the first author row
             const firstAffiliationTagify = $('div[data-creator-row]:first').find('input[name="personAffiliation[]"]')[0];
-            if (firstAffiliationTagify && firstAffiliationTagify.tagify) {
-                firstAffiliationTagify.tagify.removeAllTags();
+            if (firstAffiliationTagify && firstAffiliationTagify._tagify) {
+                firstAffiliationTagify._tagify.removeAllTags();
             }
 
             // Removes all author-institution lines except the first one
@@ -211,8 +211,8 @@ describe('clear.js - clearInputFields', () => {
 
             // Clear Tagify for institution affiliations in the first institution row
             const firstInstitutionAffiliationTagify = $('div[data-authorinstitution-row]:first').find('input[name="institutionAffiliation[]"]')[0];
-            if (firstInstitutionAffiliationTagify && firstInstitutionAffiliationTagify.tagify) {
-                firstInstitutionAffiliationTagify.tagify.removeAllTags();
+            if (firstInstitutionAffiliationTagify && firstInstitutionAffiliationTagify._tagify) {
+                firstInstitutionAffiliationTagify._tagify.removeAllTags();
             }
 
             // Clear author ROR IDs

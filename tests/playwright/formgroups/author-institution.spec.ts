@@ -97,8 +97,8 @@ test.describe('Author Institution form group', () => {
     // Add a tag programmatically to test the validation logic
     await page.evaluate(() => {
       const input: any = document.querySelector('#input-authorinstitution-affiliation');
-      if (input?.tagify) {
-        input.tagify.addTags([{
+      if (input?._tagify) {
+        input._tagify.addTags([{
           value: 'Helmholtz Centre Potsdam - GFZ',
           id: 'https://ror.org/04z8jg394'
         }]);
@@ -114,8 +114,8 @@ test.describe('Author Institution form group', () => {
     // Remove the tag programmatically
     await page.evaluate(() => {
       const input: any = document.querySelector('#input-authorinstitution-affiliation');
-      if (input?.tagify) {
-        input.tagify.removeAllTags();
+      if (input?._tagify) {
+        input._tagify.removeAllTags();
       }
     });
     

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Processes the resource type from an XML document and selects the corresponding option
  * in the dropdown based on the visible text matching the `resourceTypeGeneral` attribute.
  *
@@ -270,9 +270,9 @@ function processCreators(xmlDoc, resolver) {
 
       // Handle affiliations with Tagify plugin if initialized
       const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
-      if (tagifyInput && tagifyInput.tagify) {
-        tagifyInput.tagify.removeAllTags(); // Clear existing tags
-        tagifyInput.tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
+      if (tagifyInput && tagifyInput._tagify) {
+        tagifyInput._tagify.removeAllTags(); // Clear existing tags
+        tagifyInput._tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
         $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(",")); // Set ROR IDs as CSV string
       } else {
         // Fallback if Tagify is not used: set affiliations as comma-separated string
@@ -310,9 +310,9 @@ function processCreators(xmlDoc, resolver) {
 
       // Handle institution affiliations with Tagify plugin if present
       const tagifyInput = $instRow.find('input[name="institutionAffiliation[]"]')[0];
-      if (tagifyInput && tagifyInput.tagify) {
-        tagifyInput.tagify.removeAllTags(); // Clear existing tags
-        tagifyInput.tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
+      if (tagifyInput && tagifyInput._tagify) {
+        tagifyInput._tagify.removeAllTags(); // Clear existing tags
+        tagifyInput._tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
       } else {
         // Fallback: set affiliations as comma-separated string if no Tagify
         $instRow.find('input[name="institutionAffiliation[]"]').val(affiliations.join(","));
@@ -674,8 +674,8 @@ function getTagifyInstance(inputElement) {
   if (!inputElement) return null;
 
   // Check for direct property
-  if (inputElement.tagify) {
-    return inputElement.tagify;
+  if (inputElement._tagify) {
+    return inputElement._tagify;
   }
 
   // Check for _tagify property
@@ -684,13 +684,13 @@ function getTagifyInstance(inputElement) {
   }
 
   // Check for jQuery element with tagify
-  if (inputElement[0] && inputElement[0].tagify) {
-    return inputElement[0].tagify;
+  if (inputElement[0] && inputElement[0]._tagify) {
+    return inputElement[0]._tagify;
   }
 
   // Look for data- attribute
-  if (inputElement.dataset && inputElement.dataset.tagify) {
-    return window[inputElement.dataset.tagify];
+  if (inputElement.dataset && inputElement.dataset._tagify) {
+    return window[inputElement.dataset._tagify];
   }
 
   console.log("No existing Tagify instance found for element, returning null", inputElement);

@@ -594,9 +594,9 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(mappingModule.getTagifyInstance(null)).toBeNull();
         });
 
-        test('returns tagify from direct property', () => {
+        test('returns tagify from _tagify property (direct)', () => {
             const mockTagify = { addTags: jest.fn() };
-            const element = { tagify: mockTagify };
+            const element = { _tagify: mockTagify };
             
             expect(mappingModule.getTagifyInstance(element)).toBe(mockTagify);
         });
@@ -608,9 +608,9 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(mappingModule.getTagifyInstance(element)).toBe(mockTagify);
         });
 
-        test('returns tagify from jQuery-like element', () => {
+        test('returns tagify from jQuery-like element with _tagify', () => {
             const mockTagify = { addTags: jest.fn() };
-            const element = { 0: { tagify: mockTagify } };
+            const element = { 0: { _tagify: mockTagify } };
             
             expect(mappingModule.getTagifyInstance(element)).toBe(mockTagify);
         });

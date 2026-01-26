@@ -31,6 +31,11 @@ describe('roles.js', () => {
     global.Tagify = MockTagify;
     global.fetch = jest.fn();
     global.translations = { general: { roleLabel: 'Role' } };
+    // Set default feature toggles (all enabled)
+    window.ELMO_FEATURES = {
+      showContributorPersons: true,
+      showContributorInstitutions: true
+    };
 
     const accessibilityScript = fs.readFileSync(path.resolve(__dirname, '../../js/accessibility.js'), 'utf8');
     window.eval(accessibilityScript);
@@ -44,6 +49,7 @@ describe('roles.js', () => {
     jest.resetAllMocks();
     delete global.personRoles;
     delete global.organizationRoles;
+    delete window.ELMO_FEATURES;
   });
 
   test('initializeTagifyWithRoles attaches Tagify instance', () => {

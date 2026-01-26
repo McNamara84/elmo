@@ -139,10 +139,10 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
 
         // Set Tagify tags
         const affiliationInput = row.find('input[id^="input-author-affiliation"]')[0];
-        if (affiliationInput.tagify) {
-          affiliationInput.tagify.removeAllTags();
+        if (affiliationInput._tagify) {
+          affiliationInput._tagify.removeAllTags();
           if (affiliationObjects.length > 0) {
-            affiliationInput.tagify.addTags(affiliationObjects);
+            affiliationInput._tagify.addTags(affiliationObjects);
           }
         }
 
@@ -223,10 +223,10 @@ $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () 
 
         // Set Tagify tags
         const affiliationInput = row.find('input[id^="input-contributorpersons-affiliation"]')[0];
-        if (affiliationInput.tagify) {
-          affiliationInput.tagify.removeAllTags();
+        if (affiliationInput._tagify) {
+          affiliationInput._tagify.removeAllTags();
           if (affiliationObjects.length > 0) {
-            affiliationInput.tagify.addTags(affiliationObjects);
+            affiliationInput._tagify.addTags(affiliationObjects);
           }
         }
 

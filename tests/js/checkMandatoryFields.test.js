@@ -56,7 +56,7 @@ describe('validateAuthorInstitutionRequirements', () => {
     const applyAccessibilitySpy = jest.fn();
 
     window.applyTagifyAccessibilityAttributes = applyAccessibilitySpy;
-    affiliationInput[0].tagify = { value: [] };
+    affiliationInput[0]._tagify = { value: [] };
 
     expect(typeof window.validateAuthorInstitutionRequirements).toBe('function');
 
@@ -67,7 +67,7 @@ describe('validateAuthorInstitutionRequirements', () => {
     expect(nameInput.attr('aria-required')).toBeUndefined();
     expect(nameInput[0].getAttribute('required')).toBeNull();
     expect(nameInput[0].getAttribute('aria-required')).toBeNull();
-    expect(applyAccessibilitySpy).toHaveBeenCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+    expect(applyAccessibilitySpy).toHaveBeenCalledWith(affiliationInput[0]._tagify, affiliationInput[0], expect.objectContaining({
       isRequired: false
     }));
 
@@ -83,13 +83,13 @@ describe('validateAuthorInstitutionRequirements', () => {
     expect(nameInput.attr('aria-required')).toBe('true');
     expect(nameInput[0].getAttribute('required')).toBe('required');
     expect(nameInput[0].getAttribute('aria-required')).toBe('true');
-    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0]._tagify, affiliationInput[0], expect.objectContaining({
       isRequired: true
     }));
 
     // Clear visible value but simulate Tagify tags
     affiliationInput.val('');
-    affiliationInput[0].tagify = { value: [{ value: 'Helmholtz Centre Potsdam - GFZ' }] };
+    affiliationInput[0]._tagify = { value: [{ value: 'Helmholtz Centre Potsdam - GFZ' }] };
     window.validateAuthorInstitutionRequirements();
     nameInput[0].required = true;
     await flushMicrotasks();
@@ -100,19 +100,19 @@ describe('validateAuthorInstitutionRequirements', () => {
     expect(nameInput.attr('aria-required')).toBe('true');
     expect(nameInput[0].getAttribute('required')).toBe('required');
     expect(nameInput[0].getAttribute('aria-required')).toBe('true');
-    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0]._tagify, affiliationInput[0], expect.objectContaining({
       isRequired: true
     }));
 
     // Remove Tagify tags -> requirement should be cleared
-    affiliationInput[0].tagify.value = [];
+    affiliationInput[0]._tagify.value = [];
     window.validateAuthorInstitutionRequirements();
     await flushMicrotasks();
     expect(nameInput.prop('required')).toBe(false);
     expect(nameInput.attr('aria-required')).toBeUndefined();
     expect(nameInput[0].getAttribute('required')).toBeNull();
     expect(nameInput[0].getAttribute('aria-required')).toBeNull();
-    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0]._tagify, affiliationInput[0], expect.objectContaining({
       isRequired: false
     }));
   });
