@@ -39,12 +39,15 @@ export async function completeExtendedDatasetForm(page: Page) {
 
   // Add Descriptions - Abstract already filled by completeMinimalDatasetForm
   // Fill Methods section
+  await page.locator('button[data-bs-target="#collapse-methods"]').click();
   await page.locator('#input-methods').fill('Data was collected using seismic stations deployed across the region.');
 
   // Fill Technical Information section
+  await page.locator('button[data-bs-target="#collapse-technicalinfo"]').click();
   await page.locator('#input-technicalinfo').fill('Sampling rate: 100 Hz. Data format: miniSEED.');
 
   // Fill Other section
+  await page.locator('button[data-bs-target="#collapse-other"]').click();
   await page.locator('#input-other').fill('Additional processing applied: bandpass filtering between 0.5-25 Hz.');
 
   // Add Funding Reference entries
@@ -88,17 +91,18 @@ async function addRelatedWork(page: Page, index: number, identifier: string) {
   if (index > 0) {
     // Click the add button to create a new row
     await page.locator('#button-relatedwork-add').click();
-    await page.waitForTimeout(300); // Wait for DOM to update
+    // Wait for the new related work fields to be visible
+    await page.locator('[id^="input-relatedwork-relation"]').nth(index).waitFor({ state: 'visible' });
   }
 
   // Select relation (use index to target specific row)
-  await page.locator('#input-relatedwork-relation').nth(index).selectOption({ index: 1 });
+  await page.locator('[id^="input-relatedwork-relation"]').nth(index).selectOption({ index: 1 });
 
-  // Fill identifier
+  // Fill identifier (exact match to avoid matching identifiertype)
   await page.locator('#input-relatedwork-identifier').nth(index).fill(identifier);
 
   // Select identifier type
-  await page.locator('#input-relatedwork-identifiertype').nth(index).selectOption({ index: 1 });
+  await page.locator('[id^="input-relatedwork-identifiertype"]').nth(index).selectOption({ index: 1 });
 }
 
 /**
@@ -117,20 +121,21 @@ async function addFundingReference(
   if (index > 0) {
     // Click the add button to create a new row
     await page.locator('#button-fundingreference-add').click();
-    await page.waitForTimeout(300); // Wait for DOM to update
+    // Wait for the new funding reference fields to be visible
+    await page.locator('[id^="input-funder"]').nth(index).waitFor({ state: 'visible' });
   }
 
   // Fill funder
-  await page.locator('#input-funder').nth(index).fill(data.funder);
+  await page.locator('[id^="input-funder"]').nth(index).fill(data.funder);
 
   // Fill grant number
-  await page.locator('#input-grantnumber').nth(index).fill(data.grantNumber);
+  await page.locator('[id^="input-grantnumber"]').nth(index).fill(data.grantNumber);
 
   // Fill grant name
-  await page.locator('#input-grantname').nth(index).fill(data.grantName);
+  await page.locator('[id^="input-grantname"]').nth(index).fill(data.grantName);
 
   // Fill award URI
-  await page.locator('#input-awarduri').nth(index).fill(data.awardUri);
+  await page.locator('[id^="input-awarduri"]').nth(index).fill(data.awardUri);
 }
 
 /**
@@ -149,20 +154,25 @@ async function addAuthor(
   if (index > 0) {
     // Click the add button to create a new row
     await page.locator('#button-author-add').click();
-    await page.waitForTimeout(300); // Wait for DOM to update
+    // Wait for the new author row to be visible
+    await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index).waitFor({ state: 'visible' });
   }
 
-  // Fill ORCID first
-  await page.locator('#input-author-orcid').nth(index).fill(data.orcid);
+  // Get the specific author row
+  const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index);
 
-  // Fill first name
-  await page.locator('#input-author-firstname').nth(index).fill(data.firstName);
-
+  // Fill ORCID first (using wildcard for appended index)
+  await authorRow.locator('[id^="input-author-orcid"]').fill(data.orcid);
   // Fill last name
-  await page.locator('#input-author-lastname').nth(index).fill(data.lastName);
+  await authorRow.locator('[id^="input-author-lastname"]').fill(data.lastName);
+  // Fill first name
+  await authorRow.locator('[id^="input-author-firstname"]').fill(data.firstName);
 
-  // Fill affiliation
-  await page.locator('#input-author-affiliation').nth(index).fill(data.affiliation);
+  // Fill affiliation using tagify within the author row
+  const affiliationTagifyInput = authorRow.locator('.tagify__input');
+  await affiliationTagifyInput.click();
+  await affiliationTagifyInput.type(data.affiliation);
+  await page.keyboard.press('Enter');
 }
 
 export async function completeExtendedMultipleEntries(page: Page) {
