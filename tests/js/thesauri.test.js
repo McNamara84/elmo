@@ -131,6 +131,11 @@ describe('thesauri.js', () => {
 
     global.Tagify = MockTagify;
     global.translations = { keywords: { thesaurus: { label: 'initial' } } };
+    // Set default feature toggles (GCMD enabled, MSL disabled)
+    window.ELMO_FEATURES = {
+      showGcmdThesauri: true,
+      showMslVocabs: false
+    };
 
     $.getJSON = jest.fn((file, cb) => {
       if (file === 'json/thesauri/gcmdPlatformsKeywords.json') {
@@ -166,6 +171,7 @@ describe('thesauri.js', () => {
     jest.restoreAllMocks();
     delete global.Tagify;
     delete global.translations;
+    delete window.ELMO_FEATURES;
   });
 
   test('initializes Tagify and updates placeholder on translationsLoaded', () => {

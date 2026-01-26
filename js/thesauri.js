@@ -4,8 +4,15 @@
  * which thesaurus JSON and root nodes to use.
  *
  * Also defines MSL-specific root lists (general vs. domain) to separate vocabularies.
+ * 
+ * Feature-toggle aware: Only loads thesauri that are enabled via ELMO_FEATURES.
  */
 $(document).ready(function () {
+    // Read feature toggles (with sensible defaults)
+    const features = window.ELMO_FEATURES || {};
+    const showGcmdThesauri = features.showGcmdThesauri !== false; // default: true
+    const showMslVocabs = features.showMslVocabs === true; // default: false
+
     /**
  * Configuration array for keyword input fields.
  * Each object defines one logical input group (Tagify + jsTree + Search).
@@ -38,47 +45,57 @@ $(document).ready(function () {
         'https://epos-msl.uu.nl/voc/rockphysics/1.3/'
     ];
 
-    var keywordConfigurations = [
-        {
-            inputId: '#input-sciencekeyword',
-            jsonFile: 'json/thesauri/gcmdScienceKeywords.json',
-            jsTreeId: '#jstree-sciencekeyword',
-            searchInputId: '#input-sciencekeyword-thesaurussearch',
-            selectedKeywordsListId: 'selected-keywords-gcmd'
-        },
-        {
-            inputId: '#input-Platforms',
-            jsonFile: 'json/thesauri/gcmdPlatformsKeywords.json',
-            jsTreeId: '#jstree-Platforms',
-            searchInputId: '#input-Platforms-thesaurussearch',
-            selectedKeywordsListId: 'selected-keywords-Platforms-gcmd'
-        },
-        {
-            inputId: '#input-Instruments',
-            jsonFile: 'json/thesauri/gcmdInstrumentsKeywords.json',
-            jsTreeId: '#jstree-instruments',
-            searchInputId: '#input-instruments-thesaurussearch',
-            selectedKeywordsListId: 'selected-keywords-instruments-gcmd'
-        },
+    // Build keyword configurations based on active features
+    var keywordConfigurations = [];
 
-        // MSL Keywords(general and domain specific)
-        {
-            inputId: '#input-mslkeyword',
-            jsonFile: 'json/thesauri/msl-vocabularies.json',
-            jsTreeId: '#jstree-mslkeyword-general',
-            searchInputId: '#input-mslkeyword-thesaurussearch',
-            selectedKeywordsListId: 'selected-keywords-msl',
-            rootNodes: generalRoots 
-        },
-        {
-            inputId: '#input-mslkeyword',
-            jsonFile: 'json/thesauri/msl-vocabularies.json',
-            jsTreeId: '#jstree-mslkeyword-domain',
-            searchInputId: '#input-mslkeyword-thesaurussearch',
-            selectedKeywordsListId: 'selected-keywords-msl',
-            rootNodes: domainRoots
-        }
-    ];
+    // GCMD Keywords - only add if feature is enabled (default: true)
+    if (showGcmdThesauri) {
+        keywordConfigurations.push(
+            {
+                inputId: '#input-sciencekeyword',
+                jsonFile: 'json/thesauri/gcmdScienceKeywords.json',
+                jsTreeId: '#jstree-sciencekeyword',
+                searchInputId: '#input-sciencekeyword-thesaurussearch',
+                selectedKeywordsListId: 'selected-keywords-gcmd'
+            },
+            {
+                inputId: '#input-Platforms',
+                jsonFile: 'json/thesauri/gcmdPlatformsKeywords.json',
+                jsTreeId: '#jstree-Platforms',
+                searchInputId: '#input-Platforms-thesaurussearch',
+                selectedKeywordsListId: 'selected-keywords-Platforms-gcmd'
+            },
+            {
+                inputId: '#input-Instruments',
+                jsonFile: 'json/thesauri/gcmdInstrumentsKeywords.json',
+                jsTreeId: '#jstree-instruments',
+                searchInputId: '#input-instruments-thesaurussearch',
+                selectedKeywordsListId: 'selected-keywords-instruments-gcmd'
+            }
+        );
+    }
+
+    // MSL Keywords - only add if feature is enabled (default: false)
+    if (showMslVocabs) {
+        keywordConfigurations.push(
+            {
+                inputId: '#input-mslkeyword',
+                jsonFile: 'json/thesauri/msl-vocabularies.json',
+                jsTreeId: '#jstree-mslkeyword-general',
+                searchInputId: '#input-mslkeyword-thesaurussearch',
+                selectedKeywordsListId: 'selected-keywords-msl',
+                rootNodes: generalRoots 
+            },
+            {
+                inputId: '#input-mslkeyword',
+                jsonFile: 'json/thesauri/msl-vocabularies.json',
+                jsTreeId: '#jstree-mslkeyword-domain',
+                searchInputId: '#input-mslkeyword-thesaurussearch',
+                selectedKeywordsListId: 'selected-keywords-msl',
+                rootNodes: domainRoots
+            }
+        );
+    }
 
     // Shared state per inputId so multiple trees can cooperate
     const sharedState = {};
