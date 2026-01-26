@@ -24,6 +24,9 @@ class MockTagify {
   removeAllTags() {
     this.value = [];
   }
+  removeTag(tag) {
+    this.value = this.value.filter(v => v.value !== tag);
+  }
   trigger(event, detail) {
     if (event === 'add' && detail?.data) {
       this.addTags(detail.data.value || detail.data);
@@ -43,13 +46,20 @@ describe('thesauri.js', () => {
   beforeEach((done) => {
     document.body.innerHTML = `
       <input id="input-sciencekeyword" />
-      <input id="input-sciencekeyword-search" />
+      <input id="input-sciencekeyword-thesaurussearch" />
       <div id="jstree-sciencekeyword"></div>
       <ul id="selected-keywords-gcmd"></ul>
-      <input id="input-datasource-platforms" />
-      <input id="input-platforms-thesaurussearch-ds" />
-      <div id="jstree-platforms-datasource"></div>
-      <ul id="selected-keywords-platforms-ds"></ul>
+      <div id="modal-sciencekeyword" class="modal"></div>
+      <input id="input-Platforms" />
+      <input id="input-Platforms-thesaurussearch" />
+      <div id="jstree-Platforms"></div>
+      <ul id="selected-keywords-Platforms-gcmd"></ul>
+      <div id="modal-Platforms" class="modal"></div>
+      <input id="input-Instruments" />
+      <input id="input-instruments-thesaurussearch" />
+      <div id="jstree-instruments"></div>
+      <ul id="selected-keywords-instruments-gcmd"></ul>
+      <div id="modal-instruments" class="modal"></div>
     `;
 
     $ = require('jquery');
@@ -130,7 +140,7 @@ describe('thesauri.js', () => {
     })($);
 
     global.Tagify = MockTagify;
-    global.translations = { keywords: { thesaurus: { label: 'initial' } } };
+    global.translations = { keywords: { thesaurus: { label: 'initial' } }, general: { loading: 'Loading...' } };
     // Set default feature toggles (GCMD enabled, MSL disabled)
     window.ELMO_FEATURES = {
       showGcmdThesauri: true,
@@ -153,8 +163,10 @@ describe('thesauri.js', () => {
             ]
           }
         ] });
+        return { fail: jest.fn().mockReturnThis() };
       } else {
         cb({ data: [ { id: 'root', text: 'Root', children: [ { id: 'child', text: 'Child' } ] } ] });
+        return { fail: jest.fn().mockReturnThis() };
       }
     });
 
@@ -174,9 +186,26 @@ describe('thesauri.js', () => {
     delete window.ELMO_FEATURES;
   });
 
-  test('initializes Tagify and updates placeholder on translationsLoaded', () => {
+  /**
+   * Helper function to simulate opening a modal and trigger lazy loading
+   */
+  function openModal(modalId) {
+    const modal = document.querySelector(modalId);
+    if (modal) {
+      modal.dispatchEvent(new Event('show.bs.modal'));
+    }
+  }
+
+  test('initializes Tagify immediately (with lazy loading, before modal opens)', () => {
     const input = document.getElementById('input-sciencekeyword');
     expect(input._tagify).toBeInstanceOf(MockTagify);
+    expect(input._tagify.settings.placeholder).toBe('initial');
+    // enforceWhitelist should be false initially (before thesaurus is loaded)
+    expect(input._tagify.settings.enforceWhitelist).toBe(false);
+  });
+
+  test('updates placeholder on translationsLoaded', () => {
+    const input = document.getElementById('input-sciencekeyword');
     expect(input._tagify.settings.placeholder).toBe('initial');
 
     global.translations.keywords.thesaurus.label = 'updated';
@@ -184,8 +213,29 @@ describe('thesauri.js', () => {
     expect(input._tagify.settings.placeholder).toBe('updated');
   });
 
-  test('syncs selections between jsTree and Tagify', () => {
+  test('loads thesaurus data only when modal is opened (lazy loading)', () => {
+    // Before opening modal, jsTree should not be initialized
+    const tree = $('#jstree-sciencekeyword').jstree(true);
+    expect(tree).toBeUndefined();
+
+    // Open the modal to trigger lazy loading
+    openModal('#modal-sciencekeyword');
+
+    // After opening modal, jsTree should be initialized
+    const treeAfter = $('#jstree-sciencekeyword').jstree(true);
+    expect(treeAfter).toBeDefined();
+
+    // Tagify should now have enforceWhitelist enabled
     const input = document.getElementById('input-sciencekeyword');
+    expect(input._tagify.settings.enforceWhitelist).toBe(true);
+  });
+
+  test('syncs selections between jsTree and Tagify after modal is opened', () => {
+    const input = document.getElementById('input-sciencekeyword');
+    
+    // Open modal to load thesaurus
+    openModal('#modal-sciencekeyword');
+    
     const tree = $('#jstree-sciencekeyword').jstree(true);
 
     expect(input._tagify.value).toHaveLength(0);
@@ -202,6 +252,22 @@ describe('thesauri.js', () => {
 
     input._tagify.trigger('remove', { data: { value: 'Root > Child' } });
     expect(tree.get_selected()).toHaveLength(0);
+  });
+
+  test('does not reload thesaurus data on subsequent modal opens', () => {
+    // Open modal first time
+    openModal('#modal-sciencekeyword');
+    
+    const callCountAfterFirst = $.getJSON.mock.calls.length;
+    
+    // Try to open modal again (but the event listener was set with { once: true })
+    // We need to re-dispatch, but it shouldn't reload since config is marked as loaded
+    const modal = document.querySelector('#modal-sciencekeyword');
+    modal.dispatchEvent(new Event('show.bs.modal'));
+    
+    // Should not have made additional getJSON calls for this specific file
+    // Note: The { once: true } on the event listener means the listener itself won't fire again
+    expect($.getJSON.mock.calls.length).toBe(callCountAfterFirst);
   });
 
 });
