@@ -202,7 +202,21 @@ const MOCK_THESAURI_TREE = [
   },
 ];
 
+const MOCK_TIMEZONES = [
+  { label: 'UTC+00:00 (Africa/Abidjan)' },
+  { label: 'UTC+01:00 (Europe/Berlin)' },
+  { label: 'UTC-05:00 (America/New_York)' },
+];
+
 async function mockVocabularyRequests(page: Page) {
+  // Mock timezones.json (required for parallel dropdown initialization)
+  await page.route('**/json/timezones.json', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(MOCK_TIMEZONES),
+    });
+  });
   await page.route('**/api/v2/vocabs/resourcetypes', async route => {
     await route.fulfill({
       status: 200,

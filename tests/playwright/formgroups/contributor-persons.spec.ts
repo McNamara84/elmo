@@ -374,10 +374,10 @@ test.describe('Contributor (Persons) form group', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // Wait for affiliation field to be initialized with Tagify
-    // Note: Tagify now starts with empty whitelist (server-side search populates it on demand)
+    // Note: Tagify is stored as `element.tagify` (without underscore) in affiliations.js
     await page.waitForFunction(() => {
       const input: any = document.querySelector('#input-contributorpersons-affiliation');
-      return !!input?._tagify;
+      return !!input?.tagify || !!input?._tagify;
     });
 
     // Type search term to trigger server-side search and populate dropdown
