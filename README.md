@@ -36,6 +36,9 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Always up-to-date controlled vocabularies through regular automatic updates.
 - Easy input of authors and contributors using ORCID preload.
 - Fast affiliation search via server-side API (avoiding large client-side data transfers).
+- Optimized page loading with GZIP compression and browser caching for static assets.
+- Lazy loading of thesaurus data (JSON files loaded only when modals are opened).
+- Configurable feature toggles via `ELMO_FEATURES` JavaScript object for conditional resource loading.
 - Submitting of metadata directly to data curators.
 - Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
 - Submission of data descriptions files and link to data is possible.
