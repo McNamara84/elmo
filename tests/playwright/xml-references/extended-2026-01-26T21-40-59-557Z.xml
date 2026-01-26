@@ -9,7 +9,6 @@
       <givenName>Josiah</givenName>
       <familyName>Carberry</familyName>
       <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1825-0097</nameIdentifier>
-      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</affiliation>
     </creator>
   </creators>
   <titles>
@@ -18,27 +17,41 @@
   <publisher xml:lang="en">GFZ Data Services</publisher>
   <publicationYear>2025</publicationYear>
   <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
-  <subjects/>
+  <subjects>
+    <subject>seismic data</subject>
+  </subjects>
   <contributors>
     <contributor contributorType="ContactPerson">
       <contributorName>Carberry, Josiah</contributorName>
       <givenName>Josiah</givenName>
       <familyName>Carberry</familyName>
       <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1825-0097</nameIdentifier>
-      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</affiliation>
     </contributor>
   </contributors>
   <dates>
     <date dateType="Created">2025-01-01</date>
   </dates>
   <language>en</language>
+  <relatedIdentifiers>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="Cites">https://doi.org/10.5880/GFZ.DMJQ.2025.007</relatedIdentifier>
+  </relatedIdentifiers>
   <rightsList>
     <rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</rights>
   </rightsList>
   <descriptions>
     <description descriptionType="Abstract" xml:lang="en">Necessary abstract</description>
+    <description descriptionType="Methods" xml:lang="en">Data was collected using seismic stations deployed across the region.</description>
+    <description descriptionType="TechnicalInformation" xml:lang="en">Sampling rate: 100 Hz. Data format: miniSEED.</description>
+    <description descriptionType="Other" xml:lang="en">Additional processing applied: bandpass filtering between 0.5-25 Hz.</description>
   </descriptions>
   <geoLocations/>
+  <fundingReferences>
+    <fundingReference>
+      <funderName>DFG</funderName>
+      <awardNumber awardURI="https://gepris.dfg.de/gepris/project/12345">DFG-12345</awardNumber>
+      <awardTitle>Seismic Monitoring Network</awardTitle>
+    </fundingReference>
+  </fundingReferences>
 </resource>
 
 
@@ -94,7 +107,7 @@
     </CI_ResponsibleParty>
   </contact>
   <dateStamp>
-    <gco:Date>2026-01-22</gco:Date>
+    <gco:Date>2026-01-26</gco:Date>
   </dateStamp>
   <referenceSystemInfo>
     <MD_ReferenceSystem>
@@ -134,9 +147,6 @@
           <individualName>
             <gco:CharacterString>Carberry, Josiah</gco:CharacterString>
           </individualName>
-          <organisationName>
-            <gco:CharacterString>GFZ Helmholtz Centre for Geosciences</gco:CharacterString>
-          </organisationName>
           <contactInfo>
             <CI_Contact>
               <address>
@@ -146,6 +156,11 @@
                   </electronicMailAddress>
                 </CI_Address>
               </address>
+              <onlineResource>
+                <CI_OnlineResource>
+                  <linkage/>
+                </CI_OnlineResource>
+              </onlineResource>
             </CI_Contact>
           </contactInfo>
           <role>
@@ -155,6 +170,13 @@
       </pointOfContact>
       <descriptiveKeywords/>
       <descriptiveKeywords/>
+      <descriptiveKeywords>
+        <MD_Keywords>
+          <keyword>
+            <gco:CharacterString>seismic data</gco:CharacterString>
+          </keyword>
+        </MD_Keywords>
+      </descriptiveKeywords>
       <resourceConstraints xlink:href="https://creativecommons.org/licenses/by/4.0/legalcode">
         <MD_Constraints>
           <useLimitation>
@@ -179,6 +201,23 @@
           </classification>
         </MD_SecurityConstraints>
       </resourceConstraints>
+      <aggregationInfo>
+        <MD_AggregateInformation>
+          <aggregateDataSetIdentifier>
+            <RS_Identifier>
+              <code>
+                <gco:CharacterString>https://doi.org/10.5880/GFZ.DMJQ.2025.007</gco:CharacterString>
+              </code>
+              <codeSpace>
+                <gco:CharacterString>DOI</gco:CharacterString>
+              </codeSpace>
+            </RS_Identifier>
+          </aggregateDataSetIdentifier>
+          <associationType>
+            <DS_AssociationTypeCode codeList="http://datacite.org/schema/kernel-4" codeListValue="Cites">Cites</DS_AssociationTypeCode>
+          </associationType>
+        </MD_AggregateInformation>
+      </aggregationInfo>
       <language>
         <gco:CharacterString>en</gco:CharacterString>
       </language>

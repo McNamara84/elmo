@@ -91,18 +91,21 @@ async function addRelatedWork(page: Page, index: number, identifier: string) {
   if (index > 0) {
     // Click the add button to create a new row
     await page.locator('#button-relatedwork-add').click();
-    // Wait for the new related work fields to be visible
-    await page.locator('[id^="input-relatedwork-relation"]').nth(index).waitFor({ state: 'visible' });
+    // Wait for the new related work row to be visible
+    await page.locator('[related-work-row]').nth(index).waitFor({ state: 'visible' });
   }
 
-  // Select relation (use index to target specific row)
-  await page.locator('[id^="input-relatedwork-relation"]').nth(index).selectOption({ index: 1 });
+  // Get the specific related work row
+  const relatedWorkRow = page.locator('[related-work-row]').nth(index);
 
-  // Fill identifier (exact match to avoid matching identifiertype)
-  await page.locator('#input-relatedwork-identifier').nth(index).fill(identifier);
+  // Select relation
+  await relatedWorkRow.locator('[id*="input-relatedwork-relation"]').selectOption({ index: 1 });
 
-  // Select identifier type
-  await page.locator('[id^="input-relatedwork-identifiertype"]').nth(index).selectOption({ index: 1 });
+  // Fill identifier (starts with identifier but NOT containing "type" to handle appended numbers)
+  await relatedWorkRow.locator('[id^="input-relatedwork-identifier"]:not([id*="type"])').fill(identifier);
+
+  // Select identifier type (exact match - no dynamic suffix)
+  await relatedWorkRow.locator('[id*="input-relatedwork-identifiertype"]').selectOption({ index: 1 });
 }
 
 /**
@@ -121,21 +124,21 @@ async function addFundingReference(
   if (index > 0) {
     // Click the add button to create a new row
     await page.locator('#button-fundingreference-add').click();
-    // Wait for the new funding reference fields to be visible
-    await page.locator('[id^="input-funder"]').nth(index).waitFor({ state: 'visible' });
+    // Wait for the new funding reference row to be visible
+    await page.locator('#input-funder').nth(index).waitFor({ state: 'visible' });
   }
 
   // Fill funder
-  await page.locator('[id^="input-funder"]').nth(index).fill(data.funder);
+  await page.locator('#input-funder').nth(index).fill(data.funder);
 
   // Fill grant number
-  await page.locator('[id^="input-grantnumber"]').nth(index).fill(data.grantNumber);
+  await page.locator('#input-grantnumber').nth(index).fill(data.grantNumber);
 
   // Fill grant name
-  await page.locator('[id^="input-grantname"]').nth(index).fill(data.grantName);
+  await page.locator('#input-grantname').nth(index).fill(data.grantName);
 
   // Fill award URI
-  await page.locator('[id^="input-awarduri"]').nth(index).fill(data.awardUri);
+  await page.locator('#input-awarduri').nth(index).fill(data.awardUri);
 }
 
 /**

@@ -4,13 +4,20 @@
     "resource": {
       "identifier": "",
       "creators": {
-        "creator": {
-          "creatorName": "Carberry, Josiah",
-          "givenName": "Josiah",
-          "familyName": "Carberry",
-          "nameIdentifier": "0000-0002-1825-0097",
-          "affiliation": "GFZ Helmholtz Centre for Geosciences"
-        }
+        "creator": [
+          {
+            "creatorName": "Carberry, Josiah",
+            "givenName": "Josiah",
+            "familyName": "Carberry",
+            "nameIdentifier": "0000-0002-1825-0097"
+          },
+          {
+            "creatorName": "Mueller, Hans",
+            "givenName": "Hans",
+            "familyName": "Mueller",
+            "nameIdentifier": "0000-0001-6352-9161"
+          }
+        ]
       },
       "titles": {
         "title": "A dataset"
@@ -18,27 +25,57 @@
       "publisher": "GFZ Data Services",
       "publicationYear": 2025,
       "resourceType": "Dataset",
-      "subjects": "",
+      "subjects": {
+        "subject": [
+          "seismic data",
+          "monitoring",
+          "data"
+        ]
+      },
       "contributors": {
         "contributor": {
           "contributorName": "Carberry, Josiah",
           "givenName": "Josiah",
           "familyName": "Carberry",
-          "nameIdentifier": "0000-0002-1825-0097",
-          "affiliation": "GFZ Helmholtz Centre for Geosciences"
+          "nameIdentifier": "0000-0002-1825-0097"
         }
       },
       "dates": {
         "date": "2025-01-01"
       },
       "language": "en",
+      "relatedIdentifiers": {
+        "relatedIdentifier": [
+          "https://doi.org/10.5880/GFZ.DMJQ.2025.007",
+          "https://doi.org/10.5880/GFZ.DMJQ.2025.009"
+        ]
+      },
       "rightsList": {
         "rights": "Creative Commons Attribution 4.0 International"
       },
       "descriptions": {
-        "description": "Necessary abstract"
+        "description": [
+          "Necessary abstract",
+          "Data was collected using seismic stations deployed across the region.",
+          "Sampling rate: 100 Hz. Data format: miniSEED.",
+          "Additional processing applied: bandpass filtering between 0.5-25 Hz."
+        ]
       },
-      "geoLocations": ""
+      "geoLocations": "",
+      "fundingReferences": {
+        "fundingReference": [
+          {
+            "funderName": "DFG",
+            "awardNumber": "DFG-12345",
+            "awardTitle": "Seismic Monitoring Network"
+          },
+          {
+            "funderName": "EU Horizon",
+            "awardNumber": "EU-2025-001",
+            "awardTitle": "European Research Initiative"
+          }
+        ]
+      }
     },
     "MD_Metadata": {
       "fileIdentifier": {
@@ -91,7 +128,7 @@
         }
       },
       "dateStamp": {
-        "gco:Date": "2026-01-22"
+        "gco:Date": "2026-01-26"
       },
       "referenceSystemInfo": {
         "MD_ReferenceSystem": {
@@ -131,9 +168,6 @@
               "individualName": {
                 "gco:CharacterString": "Carberry, Josiah"
               },
-              "organisationName": {
-                "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
-              },
               "contactInfo": {
                 "CI_Contact": {
                   "address": {
@@ -141,6 +175,11 @@
                       "electronicMailAddress": {
                         "gco:CharacterString": "example@gmail.com"
                       }
+                    }
+                  },
+                  "onlineResource": {
+                    "CI_OnlineResource": {
+                      "linkage": ""
                     }
                   }
                 }
@@ -152,7 +191,22 @@
           },
           "descriptiveKeywords": [
             "",
-            ""
+            "",
+            {
+              "MD_Keywords": {
+                "keyword": [
+                  {
+                    "gco:CharacterString": "seismic data"
+                  },
+                  {
+                    "gco:CharacterString": "monitoring"
+                  },
+                  {
+                    "gco:CharacterString": "data"
+                  }
+                ]
+              }
+            }
           ],
           "resourceConstraints": [
             {
@@ -176,6 +230,42 @@
               "MD_SecurityConstraints": {
                 "classification": {
                   "MD_ClassificationCode": ""
+                }
+              }
+            }
+          ],
+          "aggregationInfo": [
+            {
+              "MD_AggregateInformation": {
+                "aggregateDataSetIdentifier": {
+                  "RS_Identifier": {
+                    "code": {
+                      "gco:CharacterString": "https://doi.org/10.5880/GFZ.DMJQ.2025.007"
+                    },
+                    "codeSpace": {
+                      "gco:CharacterString": "DOI"
+                    }
+                  }
+                },
+                "associationType": {
+                  "DS_AssociationTypeCode": "Cites"
+                }
+              }
+            },
+            {
+              "MD_AggregateInformation": {
+                "aggregateDataSetIdentifier": {
+                  "RS_Identifier": {
+                    "code": {
+                      "gco:CharacterString": "https://doi.org/10.5880/GFZ.DMJQ.2025.009"
+                    },
+                    "codeSpace": {
+                      "gco:CharacterString": "DOI"
+                    }
+                  }
+                },
+                "associationType": {
+                  "DS_AssociationTypeCode": "Cites"
                 }
               }
             }
