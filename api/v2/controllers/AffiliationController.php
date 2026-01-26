@@ -9,7 +9,9 @@
 class AffiliationController
 {
     /**
-     * @var array|null Cached affiliations data
+     * Cached affiliations data
+     * 
+     * @var array<int, array{name: string, ror?: string, other?: array<int, string>}>|null
      */
     private ?array $affiliationsData = null;
 
@@ -30,7 +32,7 @@ class AffiliationController
      * Loads affiliations data from JSON file.
      * Data is cached in memory for the duration of the request.
      *
-     * @return array The affiliations data array
+     * @return array<int, array{name: string, ror?: string, other?: array<int, string>}>
      */
     private function loadData(): array
     {
@@ -98,8 +100,8 @@ class AffiliationController
         $altNameMatches = [];
 
         foreach ($data as $item) {
-            // Skip items without a name
-            if (!isset($item['name']) || $item['name'] === '') {
+            // Skip items without a name (defensive check for malformed data)
+            if ($item['name'] === '') {
                 continue;
             }
 
@@ -118,15 +120,11 @@ class AffiliationController
             } else {
                 // Check alternative names - lowest priority
                 $others = $item['other'] ?? [];
-                if (is_array($others)) {
-                    foreach ($others as $altName) {
-                        if (is_string($altName)) {
-                            $altLower = mb_strtolower($altName);
-                            if (str_contains($altLower, $queryLower)) {
-                                $altNameMatches[] = $item;
-                                break; // Don't add same item multiple times
-                            }
-                        }
+                foreach ($others as $altName) {
+                    $altLower = mb_strtolower($altName);
+                    if (str_contains($altLower, $queryLower)) {
+                        $altNameMatches[] = $item;
+                        break; // Don't add same item multiple times
                     }
                 }
             }

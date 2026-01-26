@@ -206,6 +206,24 @@ test.describe('Contributor (Persons) form group', () => {
       });
     });
 
+    // Mock the new server-side affiliations search API endpoint
+    await page.route('**/api/v2/affiliations/search**', async route => {
+      const url = new URL(route.request().url());
+      const query = url.searchParams.get('q')?.toLowerCase() || '';
+      
+      // Filter affiliations based on search query
+      const filtered = affiliationFixtures.filter((aff: any) => 
+        aff.name.toLowerCase().includes(query) ||
+        (aff.other || []).some((alt: string) => alt.toLowerCase().includes(query))
+      );
+      
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(filtered.slice(0, 20))
+      });
+    });
+
     await page.route('**/test-harness', async route => {
       await route.fulfill({
         status: 200,
@@ -356,17 +374,18 @@ test.describe('Contributor (Persons) form group', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // Wait for affiliation field to be initialized with Tagify
+    // Note: Tagify now starts with empty whitelist (server-side search populates it on demand)
     await page.waitForFunction(() => {
       const input: any = document.querySelector('#input-contributorpersons-affiliation');
-      return !!input?.tagify && input.tagify.whitelist?.length > 0;
+      return !!input?._tagify;
     });
 
-    // Trigger dropdown programmatically with a search term that returns multiple results
-    // Using "University" as it's common and returns multiple institutions
-    await page.evaluate(() => {
-      const input: any = document.querySelector('#input-contributorpersons-affiliation');
-      input.tagify.dropdown.show('University');
-    });
+    // Type search term to trigger server-side search and populate dropdown
+    const affiliationInput = page.locator('#input-contributorpersons-affiliation').locator('..').locator('.tagify__input');
+    await affiliationInput.click();
+    await affiliationInput.fill('University');
+    
+    // Wait for dropdown to appear after server search
     
     // Wait for dropdown to appear
     const dropdown = page.locator('.tagify__dropdown.affiliation');
