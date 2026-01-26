@@ -312,40 +312,18 @@ async function mockValidationAndReferenceData(page: Page) {
 async function waitForEditorReady(page: Page) {
   await expect(page.locator('#input-resourceinformation-doi')).toBeVisible({ timeout: 15000 });
 
-  // Wait for language dropdown to be populated (with timeout and debug)
-  try {
-    await page.waitForFunction(() => {
-      const select = document.querySelector<HTMLSelectElement>('#input-resourceinformation-language');
-      return Boolean(select && select.options.length > 2);
-    }, { timeout: 30000 });
-  } catch (error) {
-    // Debug: Log dropdown state on failure
-    const dropdownState = await page.evaluate(() => {
-      const select = document.querySelector<HTMLSelectElement>('#input-resourceinformation-language');
-      return {
-        exists: Boolean(select),
-        optionsCount: select?.options.length ?? 0,
-        options: select ? Array.from(select.options).map(o => ({ value: o.value, text: o.text })) : []
-      };
-    });
-    console.error('Language dropdown not ready:', JSON.stringify(dropdownState, null, 2));
-    throw error;
-  }
+  // Wait for language dropdown to be populated
+  await page.waitForFunction(() => {
+    const select = document.querySelector<HTMLSelectElement>('#input-resourceinformation-language');
+    return Boolean(select && select.options.length > 2);
+  }, { timeout: 30000 });
 
   await page.waitForFunction(() => {
     const tagify = (document.querySelector('#input-freekeyword') as any)?._tagify;
     return Boolean(tagify);
   }, { timeout: 15000 });
 
-  // Only wait for lab select if the feature is enabled (check if the select exists and has options)
-  // The lab select may not be populated if showMslLabs is false
-  await page.waitForFunction(() => {
-    const select = document.querySelector<HTMLSelectElement>('select[name="laboratoryName[]"]');
-    // Accept either: select doesn't exist, or it exists with Sample Lab option
-    return !select || Array.from(select.options).some(option => option.value === 'Sample Lab');
-  }, { timeout: 10000 }).catch(() => {
-    // Ignore timeout - labs may not be available if feature is disabled
-  });
+  // Labs are mocked and enabled via ELMO_FEATURES
 }
 
 async function uploadSampleXml(page: Page) {
@@ -385,30 +363,95 @@ async function uploadSampleXml(page: Page) {
 
 test.describe('XML Upload Mapping Flow', () => {
   test.beforeEach(async ({ page }) => {
+    // Register route mocks (may not work for about:blank pages)
     await mockVocabularyRequests(page);
     await mockValidationAndReferenceData(page);
 
     await page.addInitScript(({ translations }) => {
       (window as any).translations = translations;
+      // Enable MSL Labs feature for test
+      (window as any).ELMO_FEATURES = {
+        showMslLabs: true,
+        showMslVocabs: false,
+        showGGMsProperties: false
+      };
     }, { translations: TEST_TRANSLATIONS });
 
     await page.goto('about:blank');
     await page.setContent(TEST_PAGE_HTML);
 
-    // Wrap fetch to resolve relative URLs against the base URL
-    // This must be done AFTER setContent but BEFORE loading app scripts
-    await page.evaluate((baseUrl) => {
-      const originalFetch = window.fetch;
+    // Create mock data object that will be used to intercept fetch/ajax calls
+    const mockData = {
+      'json/timezones.json': MOCK_TIMEZONES,
+      'api/v2/vocabs/resourcetypes': MOCK_RESOURCE_TYPES,
+      'api/v2/vocabs/languages': MOCK_LANGUAGES,
+      'api/v2/vocabs/titletypes': MOCK_TITLE_TYPES,
+      'api/v2/vocabs/licenses/all': MOCK_LICENSES,
+      'api/v2/vocabs/licenses/software': MOCK_LICENSES,
+      'api/v2/vocabs/relations': MOCK_RELATIONS,
+      'api/v2/vocabs/freekeywords/curated': MOCK_FREE_KEYWORDS,
+      'api/v2/validation/identifiertypes/active': MOCK_IDENTIFIER_TYPES,
+      'json/funders.json': MOCK_FUNDERS,
+      'json/msl-labs.json': MOCK_LABS,
+    };
+
+    // Inject mock fetch that returns data directly instead of making network requests
+    await page.evaluate((data) => {
+      const mockDataMap = new Map(Object.entries(data.mockData));
+      
+      // Mock fetch to return data directly
+      (window as any).__originalFetch = window.fetch;
       (window as any).__fetchCalls = [];
       window.fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-        let resolvedUrl = input;
-        if (typeof input === 'string' && !input.startsWith('http') && !input.startsWith('//')) {
-          resolvedUrl = new URL(input, baseUrl).href;
+        const url = typeof input === 'string' ? input : input.toString();
+        (window as any).__fetchCalls.push({ url, resolved: url });
+        
+        // Check if we have mock data for this URL
+        for (const [pattern, responseData] of mockDataMap.entries()) {
+          if (url.includes(pattern)) {
+            return Promise.resolve(new Response(JSON.stringify(responseData), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            }));
+          }
         }
-        (window as any).__fetchCalls.push({ original: String(input), resolved: String(resolvedUrl) });
-        return originalFetch.call(this, resolvedUrl, init);
+        
+        // For validation patterns, return a generic pattern
+        if (url.includes('api/v2/validation/patterns/')) {
+          return Promise.resolve(new Response(JSON.stringify({ pattern: '.*' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }));
+        }
+        
+        // For thesauri, return mock tree data
+        if (url.includes('json/thesauri/')) {
+          return Promise.resolve(new Response(JSON.stringify({ data: data.mockThesauri }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }));
+        }
+        
+        // For affiliations search, return mock data
+        if (url.includes('api/v2/affiliations/search')) {
+          return Promise.resolve(new Response(JSON.stringify([{
+            name: 'GFZ German Research Centre for Geosciences',
+            ror: 'https://ror.org/04z8jg394',
+            other: ['GFZ', 'Helmholtz Centre Potsdam'],
+          }]), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }));
+        }
+        
+        // Fallback: return empty array for unknown URLs
+        console.warn('Unmocked fetch URL:', url);
+        return Promise.resolve(new Response('[]', {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }));
       };
-    }, APP_BASE_URL);
+    }, { mockData, mockThesauri: MOCK_THESAURI_TREE });
 
     await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
     await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css') });
@@ -416,36 +459,63 @@ test.describe('XML Upload Mapping Flow', () => {
 
     await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery/dist/jquery.min.js') });
     
-    // Patch jQuery ajax to resolve relative URLs against base URL
-    await page.evaluate((baseUrl) => {
+    // Patch jQuery $.ajax and $.getJSON to return mock data directly
+    await page.evaluate((data) => {
+      const mockDataMap = new Map(Object.entries(data.mockData));
       const $ = (window as any).jQuery;
+      
       if ($ && $.ajax) {
         const originalAjax = $.ajax;
         $.ajax = function(urlOrSettings: any, settings?: any) {
           // Handle both $.ajax(url, settings) and $.ajax(settings) signatures
+          let url: string;
+          let opts: any;
           if (typeof urlOrSettings === 'string') {
-            if (!urlOrSettings.startsWith('http') && !urlOrSettings.startsWith('//')) {
-              urlOrSettings = new URL(urlOrSettings, baseUrl).href;
-            }
-            return originalAjax.call(this, urlOrSettings, settings);
-          } else if (urlOrSettings && typeof urlOrSettings === 'object' && urlOrSettings.url) {
-            if (!urlOrSettings.url.startsWith('http') && !urlOrSettings.url.startsWith('//')) {
-              urlOrSettings.url = new URL(urlOrSettings.url, baseUrl).href;
+            url = urlOrSettings;
+            opts = settings || {};
+          } else {
+            url = urlOrSettings?.url || '';
+            opts = urlOrSettings || {};
+          }
+          
+          // Check if we have mock data for this URL
+          for (const [pattern, responseData] of mockDataMap.entries()) {
+            if (url.includes(pattern)) {
+              // Create a deferred object that mimics jQuery's $.ajax return value
+              const deferred = $.Deferred();
+              setTimeout(() => {
+                if (opts.success) opts.success(responseData, 'success', {});
+                if (opts.complete) opts.complete({}, 'success');
+                deferred.resolve(responseData);
+              }, 0);
+              return deferred.promise();
             }
           }
+          
+          // Fallback to original ajax for unhandled URLs
           return originalAjax.call(this, urlOrSettings, settings);
         };
         
-        // Also patch $.getJSON explicitly for safety
+        // Also patch $.getJSON
         const originalGetJSON = $.getJSON;
         $.getJSON = function(url: string, ...args: any[]) {
-          if (url && !url.startsWith('http') && !url.startsWith('//')) {
-            url = new URL(url, baseUrl).href;
+          // Check if we have mock data for this URL
+          for (const [pattern, responseData] of mockDataMap.entries()) {
+            if (url.includes(pattern)) {
+              const deferred = $.Deferred();
+              setTimeout(() => {
+                // Check if second argument is a callback
+                const callback = typeof args[0] === 'function' ? args[0] : args[1];
+                if (callback) callback(responseData);
+                deferred.resolve(responseData);
+              }, 0);
+              return deferred.promise();
+            }
           }
           return originalGetJSON.call(this, url, ...args);
         };
       }
-    }, APP_BASE_URL);
+    }, { mockData, mockThesauri: MOCK_THESAURI_TREE });
     
     await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery-ui/dist/jquery-ui.min.js') });
     await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
@@ -488,14 +558,8 @@ test.describe('XML Upload Mapping Flow', () => {
       document.dispatchEvent(new Event('translationsLoaded'));
     });
 
-    // Log fetch calls for debugging
-    const fetchCalls = await page.evaluate(() => (window as any).__fetchCalls || []);
-    if (fetchCalls.length > 0) {
-      console.log('Fetch calls made:', JSON.stringify(fetchCalls, null, 2));
-    }
-
     await page.evaluate(() => {
-      const selectors = ['#input-sciencekeyword', '#input-Platforms', '#input-Instruments', '#input-mslkeyword'];
+      const selectors = ['#input-sciencekeyword', '#input-Platforms', '#input-Instruments', '#input-mslkeyword', '#input-freekeyword'];
       selectors.forEach((selector) => {
         const element = document.querySelector(selector) as any;
         if (element && !element._tagify && (window as any).Tagify) {
