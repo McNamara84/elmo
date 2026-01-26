@@ -208,145 +208,80 @@ const MOCK_TIMEZONES = [
   { label: 'UTC-05:00 (America/New_York)' },
 ];
 
+/**
+ * Helper to register route mocks for both glob patterns and absolute URLs.
+ * This is needed because when using page.setContent() on about:blank with
+ * a <base href>, fetch calls may not be properly intercepted by glob patterns.
+ */
+async function mockRoute(page: Page, urlPath: string, responseBody: any, contentType = 'application/json') {
+  const handler = async (route: any) => {
+    await route.fulfill({
+      status: 200,
+      contentType,
+      body: JSON.stringify(responseBody),
+    });
+  };
+  
+  // Register glob pattern for normal navigation
+  await page.route(`**/${urlPath}`, handler);
+  // Also register the exact URL that will be used with the base href
+  await page.route(`${APP_BASE_URL}${urlPath}`, handler);
+}
+
 async function mockVocabularyRequests(page: Page) {
   // Mock timezones.json (required for parallel dropdown initialization)
-  await page.route('**/json/timezones.json', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_TIMEZONES),
-    });
-  });
-  await page.route('**/api/v2/vocabs/resourcetypes', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_RESOURCE_TYPES),
-    });
-  });
+  await mockRoute(page, 'json/timezones.json', MOCK_TIMEZONES);
+  await mockRoute(page, 'api/v2/vocabs/resourcetypes', MOCK_RESOURCE_TYPES);
+  await mockRoute(page, 'api/v2/vocabs/languages', MOCK_LANGUAGES);
+  await mockRoute(page, 'api/v2/vocabs/titletypes', MOCK_TITLE_TYPES);
+  await mockRoute(page, 'api/v2/vocabs/licenses/all', MOCK_LICENSES);
+  await mockRoute(page, 'api/v2/vocabs/licenses/software', MOCK_LICENSES);
 
-  await page.route('**/api/v2/vocabs/languages', async route => {
+  // Roles need query string handling
+  const rolesHandler = (roleType: string, data: any) => async (route: any) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(MOCK_LANGUAGES),
+      body: JSON.stringify(data),
     });
-  });
+  };
+  await page.route('**/api/v2/vocabs/roles?type=person', rolesHandler('person', MOCK_ROLES.person));
+  await page.route(`${APP_BASE_URL}api/v2/vocabs/roles?type=person`, rolesHandler('person', MOCK_ROLES.person));
+  await page.route('**/api/v2/vocabs/roles?type=institution', rolesHandler('institution', MOCK_ROLES.institution));
+  await page.route(`${APP_BASE_URL}api/v2/vocabs/roles?type=institution`, rolesHandler('institution', MOCK_ROLES.institution));
+  await page.route('**/api/v2/vocabs/roles?type=both', rolesHandler('both', MOCK_ROLES.both));
+  await page.route(`${APP_BASE_URL}api/v2/vocabs/roles?type=both`, rolesHandler('both', MOCK_ROLES.both));
 
-  await page.route('**/api/v2/vocabs/titletypes', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_TITLE_TYPES),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/licenses/all', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_LICENSES),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/licenses/software', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_LICENSES),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/roles?type=person', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_ROLES.person),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/roles?type=institution', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_ROLES.institution),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/roles?type=both', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_ROLES.both),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/relations', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_RELATIONS),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/freekeywords/curated', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_FREE_KEYWORDS),
-    });
-  });
+  await mockRoute(page, 'api/v2/vocabs/relations', MOCK_RELATIONS);
+  await mockRoute(page, 'api/v2/vocabs/freekeywords/curated', MOCK_FREE_KEYWORDS);
 }
 
 async function mockValidationAndReferenceData(page: Page) {
-  await page.route('**/api/v2/validation/identifiertypes/active', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_IDENTIFIER_TYPES),
-    });
-  });
-
-  await page.route('**/api/v2/validation/patterns/**', async route => {
+  await mockRoute(page, 'api/v2/validation/identifiertypes/active', MOCK_IDENTIFIER_TYPES);
+  
+  // Pattern matching for validation patterns - need both glob and absolute
+  const patternHandler = async (route: any) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ pattern: '.*' }),
     });
-  });
+  };
+  await page.route('**/api/v2/validation/patterns/**', patternHandler);
+  await page.route(`${APP_BASE_URL}api/v2/validation/patterns/**`, patternHandler);
 
-  await page.route('**/json/funders.json', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_FUNDERS),
-    });
-  });
-
-  await page.route('**/json/msl-labs.json', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_LABS),
-    });
-  });
-
-  await page.route('**/json/affiliations.json', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          id: 'aff-1',
-          name: 'GFZ German Research Centre for Geosciences',
-          other: ['GFZ'],
-        },
-      ]),
-    });
-  });
+  await mockRoute(page, 'json/funders.json', MOCK_FUNDERS);
+  await mockRoute(page, 'json/msl-labs.json', MOCK_LABS);
+  
+  const affiliationsData = [{
+    id: 'aff-1',
+    name: 'GFZ German Research Centre for Geosciences',
+    other: ['GFZ'],
+  }];
+  await mockRoute(page, 'json/affiliations.json', affiliationsData);
 
   // Mock the new server-side affiliations search API endpoint
-  await page.route('**/api/v2/affiliations/search**', async route => {
+  const affiliationsSearchHandler = async (route: any) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -358,15 +293,20 @@ async function mockValidationAndReferenceData(page: Page) {
         },
       ]),
     });
-  });
+  };
+  await page.route('**/api/v2/affiliations/search**', affiliationsSearchHandler);
+  await page.route(`${APP_BASE_URL}api/v2/affiliations/search**`, affiliationsSearchHandler);
 
-  await page.route('**/json/thesauri/**', async route => {
+  // Thesauri data
+  const thesauriHandler = async (route: any) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ data: MOCK_THESAURI_TREE }),
     });
-  });
+  };
+  await page.route('**/json/thesauri/**', thesauriHandler);
+  await page.route(`${APP_BASE_URL}json/thesauri/**`, thesauriHandler);
 }
 
 async function waitForEditorReady(page: Page) {
