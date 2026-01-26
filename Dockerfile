@@ -27,7 +27,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends mariadb-client 
 # Set Apache document root and enable rewrite module
 ENV APACHE_DOCUMENT_ROOT=/var/www/html
 RUN sed -i 's|/var/www/html|${APACHE_DOCUMENT_ROOT}|g' /etc/apache2/sites-available/000-default.conf \
-    && a2enmod rewrite
+    && a2enmod rewrite \
+    && a2enmod deflate \
+    && a2enmod headers \
+    && a2enmod expires
+
+# Copy custom Apache GZIP compression configuration
+COPY docker/apache-gzip.conf /etc/apache2/conf-available/gzip.conf
+RUN a2enconf gzip
 
 # Set the working directory for subsequent commands
 WORKDIR /var/www/html
