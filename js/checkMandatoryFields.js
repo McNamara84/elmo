@@ -95,15 +95,16 @@ function validateContributorOrganisationRequirements() {
         };
 
         // Checks if any field in the row is filled
+        fields.name.removeAttr('required').removeClass('js-required-on-submit');
+        fields.role.removeAttr('required').removeClass('js-required-on-submit');
+
+        // Ist irgendetwas in der Zeile befüllt?
         var isAnyFieldFilled = Object.values(fields).some(field => field.val() && field.val().trim() !== '');
 
         // Sets or removes the 'required' attribute based on the fill status
         if (isAnyFieldFilled) {
-            fields.name.attr('required', 'required');
-            fields.role.attr('required', 'required');
-        } else {
-            fields.name.removeAttr('required');
-            fields.role.removeAttr('required');
+            fields.name.addClass('js-required-on-submit');
+            fields.role.addClass('js-required-on-submit');
         }
 
     });

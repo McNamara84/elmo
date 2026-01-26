@@ -159,6 +159,7 @@ $(document).ready(function () {
       validateFundingReferenceRequirements();
       validateRelatedWorkRequirements();
       validateSpatialTemporalCoverageRequirements();
+      validateContributorOrganisationRequirements();
 
       form.querySelectorAll('.js-required-on-submit').forEach(el => {
         el.setAttribute('required', 'required');
