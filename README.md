@@ -35,6 +35,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Multilingualism through the use of language files. Add your own language file and ELMO will detect it automatically.
 - Always up-to-date controlled vocabularies through regular automatic updates.
 - Easy input of authors and contributors using ORCID preload.
+- Fast affiliation search via server-side API (avoiding large client-side data transfers).
 - Submitting of metadata directly to data curators.
 - Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
 - Submission of data descriptions files and link to data is possible.
