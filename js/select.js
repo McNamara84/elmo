@@ -724,12 +724,6 @@ function populateIdentifierTypesDropdownWithData(response) {
 window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
 
 $(document).ready(function () {
-<<<<<<< HEAD
-  initializeTimezoneDropdown();
-  setupResourceTypeDropdown();
-  setupLanguageDropdown();
-  setupTitleTypeDropdown();
-=======
   // Use parallel initialization for faster page load
   initializeAllDropdownsParallel();
   
@@ -771,7 +765,6 @@ $(document).ready(function () {
       $("#input-rights-license").trigger("change");
     });
   }
->>>>>>> main
 
   // Initialize the license dropdown
   setupLicenseDropdown(false);
