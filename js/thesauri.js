@@ -351,7 +351,7 @@ $(document).ready(function () {
                     else console.warn('root not found:', rootId, 'in', config.jsonFile);
                 });
                 if (collected.length === 0) {
-                    console.error('Keine gültigen rootNodes in', config.jsonFile);
+                    console.error('No valid rootNodes found in', config.jsonFile);
                     return;
                 }
                 filteredData = collected;
@@ -456,13 +456,6 @@ $(document).ready(function () {
 
         // When this tree changes, update shared selectedPaths and Tagify accordingly
         $(config.jsTreeId).on("changed.jstree", function (e, data) {
-            // get selected nodes in THIS tree
-            var selectedNodes = $(config.jsTreeId).jstree("get_selected", true);
-            // convert to full-path strings using this tree instance
-            var selectedPathsFromThisTree = selectedNodes.map(function (node) {
-                return data.instance.get_path(node, " > ");
-            });
-
             // Recompute central selectedPaths:
             // Approach: keep existing selectedPaths from other trees, replace entries that originate from this tree.
             // Simpler and robust: rebuild central selectedPaths as union of all trees' selections.

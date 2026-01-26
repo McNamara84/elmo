@@ -111,9 +111,9 @@ describe('affiliations.js', () => {
     autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
 
     const input = document.getElementById('input-author-affiliation');
-    expect(input.tagify).toBeInstanceOf(MockTagify);
+    expect(input._tagify).toBeInstanceOf(MockTagify);
     // Whitelist should be empty initially as data comes from server
-    expect(input.tagify.whitelist).toEqual([]);
+    expect(input._tagify.whitelist).toEqual([]);
   });
 
   /**
@@ -125,13 +125,13 @@ describe('affiliations.js', () => {
     const hidden = document.getElementById('input-author-rorid');
 
     // Simulate adding a tag from whitelist
-    input.tagify.whitelist = [{ value: 'Allowed', id: '1' }];
-    input.tagify.trigger('add', { data: { value: 'Allowed', id: '1' } });
+    input._tagify.whitelist = [{ value: 'Allowed', id: '1' }];
+    input._tagify.trigger('add', { data: { value: 'Allowed', id: '1' } });
     expect(hidden.value).toBe('1');
 
     // Adding unknown value should close dropdown
-    input.tagify.trigger('add', { data: { value: 'Unknown' } });
-    expect(input.tagify.dropdown.hide).toHaveBeenCalled();
+    input._tagify.trigger('add', { data: { value: 'Unknown' } });
+    expect(input._tagify.dropdown.hide).toHaveBeenCalled();
   });
 
   /**
@@ -141,11 +141,11 @@ describe('affiliations.js', () => {
     autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
     const input = document.getElementById('input-author-affiliation');
 
-    input.tagify.addTags('Org');
-    expect(input.tagify.value.length).toBe(1);
+    input._tagify.addTags('Org');
+    expect(input._tagify.value.length).toBe(1);
 
-    input.tagify.trigger('remove');
-    expect(input.tagify.value.length).toBe(0);
+    input._tagify.trigger('remove');
+    expect(input._tagify.value.length).toBe(0);
   });
 
   /**
@@ -201,13 +201,13 @@ describe('affiliations.js', () => {
   test('refreshTagifyInstances updates placeholder and keeps tags', () => {
     autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
     const input = document.getElementById('input-author-affiliation');
-    input.tagify.addTags({ value: 'First', id: '1' });
+    input._tagify.addTags({ value: 'First', id: '1' });
 
     global.translations = { general: { affiliation: 'Zugehörigkeit' } };
     refreshTagifyInstances();
 
-    expect(input.tagify.settings.placeholder).toBe('Zugehörigkeit');
-    expect(input.tagify.value[0].value).toBe('First');
+    expect(input._tagify.settings.placeholder).toBe('Zugehörigkeit');
+    expect(input._tagify.value[0].value).toBe('First');
   });
 
   /**
@@ -222,7 +222,7 @@ describe('affiliations.js', () => {
     expect(nameInput.hasAttribute('required')).toBe(false);
     expect(nameInput.hasAttribute('aria-required')).toBe(false);
 
-    affiliationInput.tagify.trigger('add', { data: { value: 'Helmholtz', id: '1' } });
+    affiliationInput._tagify.trigger('add', { data: { value: 'Helmholtz', id: '1' } });
     nameInput.required = true;
     await Promise.resolve();
 
@@ -230,13 +230,13 @@ describe('affiliations.js', () => {
     expect(nameInput.getAttribute('aria-required')).toBe('true');
 
     const addCall = window.applyTagifyAccessibilityAttributes.mock.calls.at(-1);
-    expect(addCall[0]).toBe(affiliationInput.tagify);
+    expect(addCall[0]).toBe(affiliationInput._tagify);
     expect(addCall[1]).toBe(affiliationInput);
     expect(addCall[2]).toMatchObject({ isRequired: true });
 
     window.applyTagifyAccessibilityAttributes.mockClear();
 
-    affiliationInput.tagify.trigger('remove');
+    affiliationInput._tagify.trigger('remove');
     await Promise.resolve();
 
     expect(nameInput.hasAttribute('required')).toBe(false);

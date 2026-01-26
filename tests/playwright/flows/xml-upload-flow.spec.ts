@@ -209,105 +209,36 @@ const MOCK_TIMEZONES = [
 ];
 
 /**
- * Helper to register route mocks for both glob patterns and absolute URLs.
- * This is needed because when using page.setContent() on about:blank with
- * a <base href>, fetch calls may not be properly intercepted by glob patterns.
+ * Central mock data configuration for all API endpoints.
+ * This is used by the browser-level fetch/ajax mocking in beforeEach.
+ * Note: page.route() does NOT work for about:blank pages, so we mock
+ * fetch() and $.ajax() directly in the browser context instead.
  */
-async function mockRoute(page: Page, urlPath: string, responseBody: any, contentType = 'application/json') {
-  const handler = async (route: any) => {
-    await route.fulfill({
-      status: 200,
-      contentType,
-      body: JSON.stringify(responseBody),
-    });
-  };
-  
-  // Register glob pattern for normal navigation
-  await page.route(`**/${urlPath}`, handler);
-  // Also register the exact URL that will be used with the base href
-  await page.route(`${APP_BASE_URL}${urlPath}`, handler);
-}
-
-async function mockVocabularyRequests(page: Page) {
-  // Mock timezones.json (required for parallel dropdown initialization)
-  await mockRoute(page, 'json/timezones.json', MOCK_TIMEZONES);
-  await mockRoute(page, 'api/v2/vocabs/resourcetypes', MOCK_RESOURCE_TYPES);
-  await mockRoute(page, 'api/v2/vocabs/languages', MOCK_LANGUAGES);
-  await mockRoute(page, 'api/v2/vocabs/titletypes', MOCK_TITLE_TYPES);
-  await mockRoute(page, 'api/v2/vocabs/licenses/all', MOCK_LICENSES);
-  await mockRoute(page, 'api/v2/vocabs/licenses/software', MOCK_LICENSES);
-
-  // Roles need query string handling
-  const rolesHandler = (roleType: string, data: any) => async (route: any) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(data),
-    });
-  };
-  await page.route('**/api/v2/vocabs/roles?type=person', rolesHandler('person', MOCK_ROLES.person));
-  await page.route(`${APP_BASE_URL}api/v2/vocabs/roles?type=person`, rolesHandler('person', MOCK_ROLES.person));
-  await page.route('**/api/v2/vocabs/roles?type=institution', rolesHandler('institution', MOCK_ROLES.institution));
-  await page.route(`${APP_BASE_URL}api/v2/vocabs/roles?type=institution`, rolesHandler('institution', MOCK_ROLES.institution));
-  await page.route('**/api/v2/vocabs/roles?type=both', rolesHandler('both', MOCK_ROLES.both));
-  await page.route(`${APP_BASE_URL}api/v2/vocabs/roles?type=both`, rolesHandler('both', MOCK_ROLES.both));
-
-  await mockRoute(page, 'api/v2/vocabs/relations', MOCK_RELATIONS);
-  await mockRoute(page, 'api/v2/vocabs/freekeywords/curated', MOCK_FREE_KEYWORDS);
-}
-
-async function mockValidationAndReferenceData(page: Page) {
-  await mockRoute(page, 'api/v2/validation/identifiertypes/active', MOCK_IDENTIFIER_TYPES);
-  
-  // Pattern matching for validation patterns - need both glob and absolute
-  const patternHandler = async (route: any) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ pattern: '.*' }),
-    });
-  };
-  await page.route('**/api/v2/validation/patterns/**', patternHandler);
-  await page.route(`${APP_BASE_URL}api/v2/validation/patterns/**`, patternHandler);
-
-  await mockRoute(page, 'json/funders.json', MOCK_FUNDERS);
-  await mockRoute(page, 'json/msl-labs.json', MOCK_LABS);
-  
-  const affiliationsData = [{
+const MOCK_API_DATA: Record<string, any> = {
+  'json/timezones.json': [
+    { label: 'UTC+00:00 (Africa/Abidjan)' },
+    { label: 'UTC+01:00 (Europe/Berlin)' },
+    { label: 'UTC-05:00 (America/New_York)' },
+  ],
+  'api/v2/vocabs/resourcetypes': MOCK_RESOURCE_TYPES,
+  'api/v2/vocabs/languages': MOCK_LANGUAGES,
+  'api/v2/vocabs/titletypes': MOCK_TITLE_TYPES,
+  'api/v2/vocabs/licenses/all': MOCK_LICENSES,
+  'api/v2/vocabs/licenses/software': MOCK_LICENSES,
+  'api/v2/vocabs/roles?type=person': MOCK_ROLES.person,
+  'api/v2/vocabs/roles?type=institution': MOCK_ROLES.institution,
+  'api/v2/vocabs/roles?type=both': MOCK_ROLES.both,
+  'api/v2/vocabs/relations': MOCK_RELATIONS,
+  'api/v2/vocabs/freekeywords/curated': MOCK_FREE_KEYWORDS,
+  'api/v2/validation/identifiertypes/active': MOCK_IDENTIFIER_TYPES,
+  'json/funders.json': MOCK_FUNDERS,
+  'json/msl-labs.json': MOCK_LABS,
+  'json/affiliations.json': [{
     id: 'aff-1',
     name: 'GFZ German Research Centre for Geosciences',
     other: ['GFZ'],
-  }];
-  await mockRoute(page, 'json/affiliations.json', affiliationsData);
-
-  // Mock the new server-side affiliations search API endpoint
-  const affiliationsSearchHandler = async (route: any) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          name: 'GFZ German Research Centre for Geosciences',
-          ror: 'https://ror.org/04z8jg394',
-          other: ['GFZ', 'Helmholtz Centre Potsdam'],
-        },
-      ]),
-    });
-  };
-  await page.route('**/api/v2/affiliations/search**', affiliationsSearchHandler);
-  await page.route(`${APP_BASE_URL}api/v2/affiliations/search**`, affiliationsSearchHandler);
-
-  // Thesauri data
-  const thesauriHandler = async (route: any) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: MOCK_THESAURI_TREE }),
-    });
-  };
-  await page.route('**/json/thesauri/**', thesauriHandler);
-  await page.route(`${APP_BASE_URL}json/thesauri/**`, thesauriHandler);
-}
+  }],
+};
 
 async function waitForEditorReady(page: Page) {
   await expect(page.locator('#input-resourceinformation-doi')).toBeVisible({ timeout: 15000 });
@@ -363,9 +294,8 @@ async function uploadSampleXml(page: Page) {
 
 test.describe('XML Upload Mapping Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Register route mocks (may not work for about:blank pages)
-    await mockVocabularyRequests(page);
-    await mockValidationAndReferenceData(page);
+    // Note: page.route() does NOT work for about:blank pages, so we mock
+    // fetch() and $.ajax() directly in the browser context below.
 
     await page.addInitScript(({ translations }) => {
       (window as any).translations = translations;
@@ -380,22 +310,8 @@ test.describe('XML Upload Mapping Flow', () => {
     await page.goto('about:blank');
     await page.setContent(TEST_PAGE_HTML);
 
-    // Create mock data object that will be used to intercept fetch/ajax calls
-    const mockData = {
-      'json/timezones.json': MOCK_TIMEZONES,
-      'api/v2/vocabs/resourcetypes': MOCK_RESOURCE_TYPES,
-      'api/v2/vocabs/languages': MOCK_LANGUAGES,
-      'api/v2/vocabs/titletypes': MOCK_TITLE_TYPES,
-      'api/v2/vocabs/licenses/all': MOCK_LICENSES,
-      'api/v2/vocabs/licenses/software': MOCK_LICENSES,
-      'api/v2/vocabs/relations': MOCK_RELATIONS,
-      'api/v2/vocabs/freekeywords/curated': MOCK_FREE_KEYWORDS,
-      'api/v2/validation/identifiertypes/active': MOCK_IDENTIFIER_TYPES,
-      'json/funders.json': MOCK_FUNDERS,
-      'json/msl-labs.json': MOCK_LABS,
-    };
-
     // Inject mock fetch that returns data directly instead of making network requests
+    // Uses the central MOCK_API_DATA configuration defined above
     await page.evaluate((data) => {
       const mockDataMap = new Map(Object.entries(data.mockData));
       
@@ -451,7 +367,7 @@ test.describe('XML Upload Mapping Flow', () => {
           headers: { 'Content-Type': 'application/json' }
         }));
       };
-    }, { mockData, mockThesauri: MOCK_THESAURI_TREE });
+    }, { mockData: MOCK_API_DATA, mockThesauri: MOCK_THESAURI_TREE });
 
     await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
     await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css') });
@@ -515,7 +431,7 @@ test.describe('XML Upload Mapping Flow', () => {
           return originalGetJSON.call(this, url, ...args);
         };
       }
-    }, { mockData, mockThesauri: MOCK_THESAURI_TREE });
+    }, { mockData: MOCK_API_DATA, mockThesauri: MOCK_THESAURI_TREE });
     
     await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery-ui/dist/jquery-ui.min.js') });
     await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
@@ -559,6 +475,8 @@ test.describe('XML Upload Mapping Flow', () => {
     });
 
     await page.evaluate(() => {
+      // Initialize Tagify for keyword input fields that need it for the test
+      // Note: #input-freekeyword is included because waitForEditorReady() checks for it
       const selectors = ['#input-sciencekeyword', '#input-Platforms', '#input-Instruments', '#input-mslkeyword', '#input-freekeyword'];
       selectors.forEach((selector) => {
         const element = document.querySelector(selector) as any;
@@ -597,7 +515,7 @@ test.describe('XML Upload Mapping Flow', () => {
     await expect
       .poll(async () => page.evaluate(() => {
         const input = document.querySelector('input[name="personAffiliation[]"]') as any;
-        return input?.tagify ? input.tagify.value.map((tag: any) => tag.value) : [];
+        return input?._tagify ? input._tagify.value.map((tag: any) => tag.value) : [];
       }))
       .toEqual(['GFZ German Research Centre for Geosciences']);
 

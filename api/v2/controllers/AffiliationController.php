@@ -101,7 +101,7 @@ class AffiliationController
 
         foreach ($data as $item) {
             // Skip items without a name (defensive check for malformed data)
-            if ($item['name'] === '') {
+            if (empty($item['name'])) {
                 continue;
             }
 

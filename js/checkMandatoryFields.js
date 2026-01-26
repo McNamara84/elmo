@@ -331,7 +331,7 @@ function validateAuthorInstitutionRequirements() {
 
         // Check whether the Author-Institution-Affiliation field has a visible value or Tagify tags assigned.
         var affVal = (fields.authorinstitutionAffiliation.val() || '').trim();
-        var tagifyInstance = fields.authorinstitutionAffiliation.get(0)?.tagify;
+        var tagifyInstance = fields.authorinstitutionAffiliation.get(0)?._tagify;
         var hasTagifyAffiliations = Array.isArray(tagifyInstance?.value) && tagifyInstance.value.length > 0;
         var isauthorinstitutionAffiliationFilled = affVal !== '' || hasTagifyAffiliations;
 
@@ -345,7 +345,7 @@ function validateAuthorInstitutionRequirements() {
                 return;
             }
 
-            const tagifyInstance = this.tagify;
+            const tagifyInstance = this._tagify;
             if (!tagifyInstance) {
                 return;
             }

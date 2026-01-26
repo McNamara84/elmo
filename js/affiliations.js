@@ -1,9 +1,6 @@
 // Global array to store affiliations data (kept for compatibility, but now empty initially)
 var affiliationsData = [];
 
-// Debounce timeout for search requests
-let affiliationSearchTimeout = null;
-
 /**
  * Searches affiliations via the server-side API endpoint.
  * This avoids loading the full 23MB affiliations.json file.
@@ -46,14 +43,14 @@ function refreshTagifyInstances() {
 
   allPairs.forEach(pair => {
     const inputElement = document.getElementById(pair.input);
-    if (!inputElement || !inputElement.tagify) return;
+    if (!inputElement || !inputElement._tagify) return;
 
     // Save current values
-    const currentValues = [...inputElement.tagify.value]; // Create a copy
+    const currentValues = [...inputElement._tagify.value]; // Create a copy
 
     // Update placeholder if translations are available
     if (translations?.general?.affiliation) {
-      inputElement.tagify.settings.placeholder = translations.general.affiliation;
+      inputElement._tagify.settings.placeholder = translations.general.affiliation;
       const placeholderElement = inputElement.parentElement.querySelector('.tagify__input');
       if (placeholderElement) {
         placeholderElement.setAttribute('data-placeholder', translations.general.affiliation);
@@ -61,14 +58,14 @@ function refreshTagifyInstances() {
     }
 
     if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
-      window.applyTagifyAccessibilityAttributes(inputElement.tagify, inputElement, {
-        placeholder: inputElement.tagify.settings.placeholder
+      window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
+        placeholder: inputElement._tagify.settings.placeholder
       });
     }
 
     // Restore previously selected values
-    inputElement.tagify.removeAllTags();
-    inputElement.tagify.addTags(currentValues);
+    inputElement._tagify.removeAllTags();
+    inputElement._tagify.addTags(currentValues);
   });
 }
 
@@ -378,7 +375,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
   });
 
   // Store the Tagify instance in the DOM element for later access
-  inputElement[0].tagify = tagify;
+  // Using _tagify prefix for consistency with other modules (roles.js, freekeywordTags.js, etc.)
+  inputElement[0]._tagify = tagify;
   updateTagifyAccessibilityState(false);
   scheduleRequirementSync();
   syncAuthorInstitutionRequirement();
