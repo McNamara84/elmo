@@ -311,11 +311,334 @@ window.setupLanguageDropdown = setupLanguageDropdown;
 window.setupResourceTypeDropdown = setupResourceTypeDropdown;
 window.setupTitleTypeDropdown = setupTitleTypeDropdown;
 
+/**
+ * Initializes all dropdowns in parallel for faster page load.
+ * Uses Promise.all to fetch all data simultaneously instead of sequentially.
+ * Falls back to sequential initialization if fetch API is not available (e.g., in test environment).
+ * @async
+ * @returns {Promise<void>}
+ */
+async function initializeAllDropdownsParallel() {
+  // Check if fetch is available (not available in some test environments)
+  if (typeof fetch !== 'function') {
+    // Fallback to sequential initialization
+    initializeTimezoneDropdown();
+    setupResourceTypeDropdown();
+    setupLanguageDropdown();
+    setupTitleTypeDropdown();
+    return;
+  }
+
+  // Show loading state for all dropdowns immediately
+  const dropdownSelectors = {
+    resourceType: $("#input-resourceinformation-resourcetype"),
+    language: $("#input-resourceinformation-language"),
+    titleType: $("#input-resourceinformation-titletype"),
+    license: $("#input-rights-license"),
+    relation: $("#input-relatedwork-relation"),
+    identifierType: $("#input-relatedwork-identifiertype")
+  };
+
+  // Set loading state for existing dropdowns
+  Object.values(dropdownSelectors).forEach($el => {
+    if ($el.length) {
+      $el.prop('disabled', true).empty().append(
+        $("<option>", { value: "", text: "Loading..." })
+      );
+    }
+  });
+
+  // Define all fetch operations
+  const fetchOperations = {
+    timezones: fetch('json/timezones.json')
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => []),
+    
+    resourceTypes: fetch('api/v2/vocabs/resourcetypes')
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => []),
+    
+    languages: fetch('api/v2/vocabs/languages')
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => []),
+    
+    titleTypes: fetch('api/v2/vocabs/titletypes')
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => []),
+    
+    licenses: fetch('api/v2/vocabs/licenses/all')
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => []),
+    
+    relations: fetch('api/v2/vocabs/relations')
+      .then(r => r.ok ? r.json() : { relations: [] })
+      .catch(() => ({ relations: [] })),
+    
+    identifierTypes: fetch('api/v2/validation/identifiertypes/active')
+      .then(r => r.ok ? r.json() : { identifierTypes: [] })
+      .catch(() => ({ identifierTypes: [] })),
+    
+    funders: fetch('json/funders.json')
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => [])
+  };
+
+  try {
+    // Execute all fetches in parallel
+    const results = await Promise.all(
+      Object.entries(fetchOperations).map(async ([key, promise]) => {
+        const data = await promise;
+        return [key, data];
+      })
+    );
+
+    // Convert results array to object
+    const data = Object.fromEntries(results);
+
+    // Populate all dropdowns with fetched data
+    populateTimezoneDropdownWithData(data.timezones);
+    populateResourceTypeDropdownWithData(data.resourceTypes);
+    populateLanguageDropdownWithData(data.languages);
+    populateTitleTypeDropdownWithData(data.titleTypes);
+    populateLicenseDropdownWithData(data.licenses);
+    populateRelationsDropdownWithData(data.relations);
+    populateIdentifierTypesDropdownWithData(data.identifierTypes);
+    
+    // Store funders data globally and initialize autocomplete
+    window.fundersData = data.funders;
+    $(".inputFunder").each(function () {
+      window.setUpAutocompleteFunder(this);
+    });
+
+    // Dispatch event to signal dropdowns are ready
+    document.dispatchEvent(new CustomEvent('dropdownsReady'));
+    
+  } catch (error) {
+    console.error('Error initializing dropdowns in parallel:', error);
+    // Fallback: try individual initialization
+    initializeTimezoneDropdown();
+    setupResourceTypeDropdown();
+    setupLanguageDropdown();
+    setupTitleTypeDropdown();
+  }
+}
+
+/**
+ * Populates timezone dropdown with pre-fetched data
+ * @param {Array} timezones - Array of timezone objects
+ */
+function populateTimezoneDropdownWithData(timezones) {
+  const $dropdown = $('#input-stc-timezone');
+  if (!$dropdown.length || !timezones.length) return;
+
+  function extractUTCOffset(label) {
+    const match = label.match(/UTC([+-]\d{2}:\d{2})/);
+    return match ? match[1] : '';
+  }
+
+  $dropdown.empty();
+  timezones.forEach(timezone => {
+    $dropdown.append(
+      $('<option>', {
+        value: extractUTCOffset(timezone.label),
+        text: timezone.label
+      })
+    );
+  });
+
+  // Set browser timezone
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (browserTimezone) {
+    const allOptions = Array.from($dropdown.find('option'));
+    const exactMatch = allOptions.find(option => option.text.includes(`(${browserTimezone})`));
+    if (exactMatch) {
+      $(exactMatch).prop('selected', true);
+    }
+  }
+}
+
+/**
+ * Populates resource type dropdown with pre-fetched data
+ * @param {Array} types - Array of resource type objects
+ */
+function populateResourceTypeDropdownWithData(types) {
+  const $select = $("#input-resourceinformation-resourcetype");
+  if (!$select.length) return;
+
+  $select.empty().append(
+    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
+  );
+
+  if (Array.isArray(types)) {
+    types.forEach(type => {
+      $select.append(
+        $("<option>", {
+          value: type.id,
+          text: type.resource_type_general,
+          title: type.description
+        })
+      );
+    });
+  }
+  $select.prop('disabled', false).trigger("change");
+}
+
+/**
+ * Populates language dropdown with pre-fetched data
+ * @param {Array} languages - Array of language objects
+ */
+function populateLanguageDropdownWithData(languages) {
+  const $select = $("#input-resourceinformation-language");
+  if (!$select.length) return;
+
+  $select.empty().append(
+    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
+  );
+
+  if (Array.isArray(languages)) {
+    languages.forEach(lang => {
+      $select.append(
+        $("<option>", {
+          value: lang.id,
+          text: lang.name,
+          title: lang.code
+        })
+      );
+    });
+  }
+  $select.prop('disabled', false);
+}
+
+/**
+ * Populates title type dropdown with pre-fetched data
+ * @param {Array} types - Array of title type objects
+ */
+function populateTitleTypeDropdownWithData(types) {
+  const $select = $("#input-resourceinformation-titletype");
+  if (!$select.length) return;
+
+  $select.empty().append(
+    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
+  );
+
+  let mainTitleId = "";
+
+  if (Array.isArray(types)) {
+    types.forEach(type => {
+      $select.append(
+        $("<option>", {
+          value: type.id,
+          text: type.name
+        })
+      );
+      if (type.name.toLowerCase() === "main title") {
+        mainTitleId = type.id.toString();
+      }
+    });
+  }
+
+  if (mainTitleId) {
+    $select.val(mainTitleId);
+    window.mainTitleTypeId = mainTitleId;
+  }
+  window.titleTypeOptionsHtml = $select.html();
+  $select.prop('disabled', false);
+}
+
+/**
+ * Populates license dropdown with pre-fetched data
+ * @param {Array} licenses - Array of license objects
+ */
+function populateLicenseDropdownWithData(licenses) {
+  const $select = $("#input-rights-license");
+  if (!$select.length) return;
+
+  $select.empty();
+
+  if (Array.isArray(licenses) && licenses.length > 0) {
+    licenses.forEach(val => {
+      const $option = $("<option>", {
+        value: val.rights_id,
+        text: val.text + " (" + val.rightsIdentifier + ")"
+      });
+      if (val.rightsIdentifier === "CC-BY-4.0") {
+        $option.prop("selected", true);
+      }
+      $select.append($option);
+    });
+  } else {
+    // Fallback
+    $select.append($("<option>", {
+      value: "CC-BY-4.0",
+      text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
+      selected: true
+    }));
+  }
+  $select.prop('disabled', false).trigger("change");
+}
+
+/**
+ * Populates relations dropdown with pre-fetched data
+ * @param {Object} response - Response object containing relations array
+ */
+function populateRelationsDropdownWithData(response) {
+  const $select = $("#input-relatedwork-relation");
+  if (!$select.length) return;
+
+  $select.empty().append(
+    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
+  );
+
+  if (response && response.relations && response.relations.length > 0) {
+    response.relations
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach(relation => {
+        $select.append(
+          $("<option>", {
+            value: relation.id,
+            text: relation.name,
+            title: relation.description
+          })
+        );
+      });
+  }
+  $select.prop('disabled', false);
+}
+
+/**
+ * Populates identifier types dropdown with pre-fetched data
+ * @param {Object} response - Response object containing identifierTypes array
+ */
+function populateIdentifierTypesDropdownWithData(response) {
+  const $select = $("#input-relatedwork-identifiertype");
+  if (!$select.length) return;
+
+  $select.empty().append(
+    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
+  );
+
+  if (response && response.identifierTypes) {
+    response.identifierTypes.forEach(type => {
+      $select.append(
+        $("<option>", {
+          value: type.name,
+          text: type.name,
+          title: type.description
+        })
+      );
+    });
+  }
+  $select.prop('disabled', false);
+  $(".chosen-select").trigger("chosen:updated");
+}
+
+// Make parallel initialization function available globally
+window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
+
 $(document).ready(function () {
-  initializeTimezoneDropdown();
-  setupResourceTypeDropdown();
-  setupLanguageDropdown();
-  setupTitleTypeDropdown();
+  // Use parallel initialization for faster page load
+  initializeAllDropdownsParallel();
+  
   /**
   * Populates the select field with ID input-rights-license with options created via an API call.
   * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
@@ -371,27 +694,13 @@ $(document).ready(function () {
   });
 
   /**
-   * Global variable to store funder data.
-   * @type {Array<Object>}
-   */
-  let fundersData = [];
-
-  // Load funder data and set up autocomplete for funder inputs
-  $.getJSON("json/funders.json", function (data) {
-    fundersData = data;
-    $(".inputFunder").each(function () {
-      setUpAutocompleteFunder(this);
-    });
-  }).fail(function () {
-    console.error("Error loading funders.json");
-  });
-
-  /**
    * Sets up the autocomplete functionality for funder input elements.
    * Optimized to prevent performance issues with large datasets.
    * @param {HTMLElement} inputElement - The input element to attach autocomplete to.
    */
   window.setUpAutocompleteFunder = function (inputElement) {
+    // Use globally stored fundersData from parallel load
+    const fundersData = window.fundersData || [];
     let searchTimeout;
     const MAX_RESULTS = 30; // Limit dropdown results
     const MIN_LENGTH = 2; // Minimum characters before search
@@ -455,70 +764,7 @@ $(document).ready(function () {
       };
   };
 
-  // Populate the relation dropdown field
-  $.ajax({
-    url: "api/v2/vocabs/relations",
-    method: "GET",
-    dataType: "json",
-    beforeSend: function () {
-      var select = $("#input-relatedwork-relation");
-      select.prop('disabled', true);
-      select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Loading...",
-        })
-      );
-    },
-    success: function (response) {
-      var select = $("#input-relatedwork-relation");
-      select.empty();
-
-      // Placeholder option
-      select.append(
-        $("<option>", {
-          value: "",
-          text: "Choose...",
-          "data-translate": "general.choose"
-        })
-      );
-
-      if (response && response.relations && response.relations.length > 0) {
-        // Sortiere die Relationen alphabetisch nach Namen
-        response.relations
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .forEach(function (relation) {
-            select.append(
-              $("<option>", {
-                value: relation.id,
-                text: relation.name,
-                title: relation.description
-              })
-            );
-          });
-      } else {
-        select.append(
-          $("<option>", {
-            value: "",
-            text: "No relations available",
-          })
-        );
-      }
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      console.error("Error loading relations:", textStatus, errorThrown);
-      var select = $("#input-relatedwork-relation");
-      select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Error loading relations",
-        })
-      );
-    },
-    complete: function () {
-      $("#input-relatedwork-relation").prop('disabled', false);
-    }
-  });
+  // Note: Relations dropdown is now populated by initializeAllDropdownsParallel()
 
   /**
    * Updates the validation pattern of the identifier input field based on the selected identifier type.
@@ -724,7 +970,7 @@ function updateIdsAndNames() {
       .attr("id", "input-relatedwork-identifiertype" + index);
   });
 }
-setupIdentifierTypesDropdown("#input-relatedwork-identifiertype");
+// Note: Identifier types dropdown is now populated by initializeAllDropdownsParallel()
 
 function updateDataSourceIdsAndNames() {
   $("#group-datasources .row").each(function (index) {
@@ -765,10 +1011,18 @@ $(document).on("blur", 'input[name="dIdentifier[]"]', function () {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     initializeTimezoneDropdown,
+    initializeAllDropdownsParallel,
     setupResourceTypeDropdown,
     setupLanguageDropdown,
     setupTitleTypeDropdown,
     setupIdentifierTypesDropdown,
+    populateTimezoneDropdownWithData,
+    populateResourceTypeDropdownWithData,
+    populateLanguageDropdownWithData,
+    populateTitleTypeDropdownWithData,
+    populateLicenseDropdownWithData,
+    populateRelationsDropdownWithData,
+    populateIdentifierTypesDropdownWithData,
     getIdentifierPriority,
     updateIdentifierType,
     debounce,

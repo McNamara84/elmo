@@ -5,8 +5,15 @@ const flushPromises = () => new Promise(res => setTimeout(res, 0));
 
 describe('select.js', () => {
   let $;
+  let originalFetch;
+  
   beforeEach(() => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
+    
+    // Save and remove fetch to trigger fallback mode in initializeAllDropdownsParallel
+    originalFetch = global.fetch;
+    delete global.fetch;
+    
     document.body.innerHTML = `
       <select id="input-relatedwork-identifiertype"></select>
       <select id="test-select"></select>
@@ -57,6 +64,10 @@ describe('select.js', () => {
     jest.useRealTimers();
     console.error.mockRestore();
     jest.resetAllMocks();
+    // Restore fetch
+    if (originalFetch) {
+      global.fetch = originalFetch;
+    }
   });
 
   test('setupIdentifierTypesDropdown populates options', () => {
