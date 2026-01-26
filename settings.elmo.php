@@ -54,7 +54,7 @@ $showFundingReference = true;
 
 $showAuthorInstitution = true;
 // Show license formgroup. if not shown defaults to CC-BY 4.0
-$showLicense = false;
+$showLicense = true;
 $defaultLicense = 'CC-BY-4.0';
 
 
@@ -87,6 +87,25 @@ if ($envShowGGMsProperties !== false) {
     $showGGMsProperties = filter_var($envShowGGMsProperties, FILTER_VALIDATE_BOOLEAN);
 }
 
+// Environment variable overrides for additional form groups
+$envShowGcmdThesauri = getenv('SHOW_GCMD_THESAURI');
+$envShowFreeKeywords = getenv('SHOW_FREE_KEYWORDS');
+$envShowSpatialTemporalCoverage = getenv('SHOW_SPATIAL_TEMPORAL_COVERAGE');
+$envShowRelatedWork = getenv('SHOW_RELATED_WORK');
+
+if ($envShowGcmdThesauri !== false) {
+    $showGcmdThesauri = filter_var($envShowGcmdThesauri, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowFreeKeywords !== false) {
+    $showFreeKeywords = filter_var($envShowFreeKeywords, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowSpatialTemporalCoverage !== false) {
+    $showSpatialTemporalCoverage = filter_var($envShowSpatialTemporalCoverage, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowRelatedWork !== false) {
+    $showRelatedWork = filter_var($envShowRelatedWork, FILTER_VALIDATE_BOOLEAN);
+}
+
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
 
@@ -98,6 +117,9 @@ $smtpPassword = getenv('SMTP_PASSWORD') ?: '';
 $smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
 $smtpSecure = getenv('SMTP_SECURE') ?: '';
 $smtpAuth   = getenv('SMTP_AUTH') ?: '';
+
+// Simulate email (true = skip actual sending, only log. Set to false in production)
+$SIMULATE_EMAIL = filter_var(getenv('SIMULATE_EMAIL') ?: 'false', FILTER_VALIDATE_BOOLEAN);
 
 // Target address for feedback
 $feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
@@ -136,6 +158,9 @@ if (isset($_GET['setting'])) {
     getSettings($_GET['setting']);
     exit;
 }
+
+// Instance title for header (can be overridden via environment variable)
+$instanceTitle = getenv('INSTANCE_TITLE') ?: 'ELMO – GFZ Metadata Editor 2.0';
 
 // Initialize logging
 function elmo_log($msg) {

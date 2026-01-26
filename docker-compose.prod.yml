@@ -24,7 +24,7 @@ services:
       DB_NAME: ${DB_NAME}
       # Database install routine
       INSTALL_ACTION: basic
-      DB_INIT_MODE: keep_data
+      DB_INIT_MODE: drop_data
 
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -35,12 +35,18 @@ services:
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
+      SIMULATE_EMAIL: "false"
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      # Flags for Standard ELMO
+      # Flags for Standard ELMO (all form groups enabled)
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
+      SHOW_GGMS_PROPERTIES: "false"
+      SHOW_GCMD_THESAURI: "true"
+      SHOW_FREE_KEYWORDS: "true"
+      SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
+      SHOW_RELATED_WORK: "true"
     depends_on:
       - db
     restart: unless-stopped
@@ -65,9 +71,6 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-      # No install routine
-      INSTALL_ACTION: skip
-      DB_INIT_MODE: keep_data
 
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -78,12 +81,19 @@ services:
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_MSL}
+      SIMULATE_EMAIL: "false"
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      # Flags for msl
+      # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
+      SHOW_GGMS_PROPERTIES: "false"
+      SHOW_GCMD_THESAURI: "true"
+      SHOW_FREE_KEYWORDS: "true"
+      SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
+      SHOW_RELATED_WORK: "true"
+      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor 2.0"
     depends_on:
       - db
     restart: unless-stopped
