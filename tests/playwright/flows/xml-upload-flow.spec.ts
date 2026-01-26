@@ -372,15 +372,30 @@ async function mockValidationAndReferenceData(page: Page) {
 async function waitForEditorReady(page: Page) {
   await expect(page.locator('#input-resourceinformation-doi')).toBeVisible({ timeout: 15000 });
 
-  await page.waitForFunction(() => {
-    const select = document.querySelector<HTMLSelectElement>('#input-resourceinformation-language');
-    return Boolean(select && select.options.length > 2);
-  });
+  // Wait for language dropdown to be populated (with timeout and debug)
+  try {
+    await page.waitForFunction(() => {
+      const select = document.querySelector<HTMLSelectElement>('#input-resourceinformation-language');
+      return Boolean(select && select.options.length > 2);
+    }, { timeout: 30000 });
+  } catch (error) {
+    // Debug: Log dropdown state on failure
+    const dropdownState = await page.evaluate(() => {
+      const select = document.querySelector<HTMLSelectElement>('#input-resourceinformation-language');
+      return {
+        exists: Boolean(select),
+        optionsCount: select?.options.length ?? 0,
+        options: select ? Array.from(select.options).map(o => ({ value: o.value, text: o.text })) : []
+      };
+    });
+    console.error('Language dropdown not ready:', JSON.stringify(dropdownState, null, 2));
+    throw error;
+  }
 
   await page.waitForFunction(() => {
     const tagify = (document.querySelector('#input-freekeyword') as any)?._tagify;
     return Boolean(tagify);
-  });
+  }, { timeout: 15000 });
 
   // Only wait for lab select if the feature is enabled (check if the select exists and has options)
   // The lab select may not be populated if showMslLabs is false
@@ -433,23 +448,27 @@ test.describe('XML Upload Mapping Flow', () => {
     await mockVocabularyRequests(page);
     await mockValidationAndReferenceData(page);
 
-    await page.addInitScript(({ translations, baseUrl }) => {
+    await page.addInitScript(({ translations }) => {
       (window as any).translations = translations;
-      
-      // Wrap fetch to resolve relative URLs against the base URL
-      // This is needed because fetch() doesn't respect <base href> for relative URLs
-      const originalFetch = window.fetch;
-      window.fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-        if (typeof input === 'string' && !input.startsWith('http') && !input.startsWith('//')) {
-          // Resolve relative URL against base URL
-          input = new URL(input, baseUrl).href;
-        }
-        return originalFetch.call(this, input, init);
-      };
-    }, { translations: TEST_TRANSLATIONS, baseUrl: APP_BASE_URL });
+    }, { translations: TEST_TRANSLATIONS });
 
     await page.goto('about:blank');
     await page.setContent(TEST_PAGE_HTML);
+
+    // Wrap fetch to resolve relative URLs against the base URL
+    // This must be done AFTER setContent but BEFORE loading app scripts
+    await page.evaluate((baseUrl) => {
+      const originalFetch = window.fetch;
+      (window as any).__fetchCalls = [];
+      window.fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+        let resolvedUrl = input;
+        if (typeof input === 'string' && !input.startsWith('http') && !input.startsWith('//')) {
+          resolvedUrl = new URL(input, baseUrl).href;
+        }
+        (window as any).__fetchCalls.push({ original: String(input), resolved: String(resolvedUrl) });
+        return originalFetch.call(this, resolvedUrl, init);
+      };
+    }, APP_BASE_URL);
 
     await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
     await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css') });
@@ -475,6 +494,15 @@ test.describe('XML Upload Mapping Flow', () => {
             }
           }
           return originalAjax.call(this, urlOrSettings, settings);
+        };
+        
+        // Also patch $.getJSON explicitly for safety
+        const originalGetJSON = $.getJSON;
+        $.getJSON = function(url: string, ...args: any[]) {
+          if (url && !url.startsWith('http') && !url.startsWith('//')) {
+            url = new URL(url, baseUrl).href;
+          }
+          return originalGetJSON.call(this, url, ...args);
         };
       }
     }, APP_BASE_URL);
@@ -519,6 +547,12 @@ test.describe('XML Upload Mapping Flow', () => {
       window.dispatchEvent(new Event('load'));
       document.dispatchEvent(new Event('translationsLoaded'));
     });
+
+    // Log fetch calls for debugging
+    const fetchCalls = await page.evaluate(() => (window as any).__fetchCalls || []);
+    if (fetchCalls.length > 0) {
+      console.log('Fetch calls made:', JSON.stringify(fetchCalls, null, 2));
+    }
 
     await page.evaluate(() => {
       const selectors = ['#input-sciencekeyword', '#input-Platforms', '#input-Instruments', '#input-mslkeyword'];
