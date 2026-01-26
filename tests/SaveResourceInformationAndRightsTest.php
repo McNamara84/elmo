@@ -192,6 +192,7 @@ class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         }
 
         $postData = [
+            "action" => "submit",
             "doi" => null,
             "year" => null,
             "dateCreated" => null,

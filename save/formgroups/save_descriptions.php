@@ -13,7 +13,7 @@ require_once __DIR__ . '/../validation.php';
 function saveDescriptions($connection, $postData, $resource_id)
 {
     // Validate that abstract is present
-    $action = $postData['action'] ?? 'submit';
+    $action = $postData['action'] ?? 'save_and_download';
 
     if ($action === 'submit') {
         $requiredFields = ['descriptionAbstract'];

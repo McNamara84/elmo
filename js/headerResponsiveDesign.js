@@ -79,3 +79,11 @@ $(document).ready(function () {
         adjustButtons();
     });
 });
+
+// Export for testing (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        resizeTitle,
+        adjustButtons
+    };
+}

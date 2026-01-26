@@ -33,3 +33,8 @@ document.addEventListener('DOMContentLoaded', () => logEvent('page loaded'));
 // DOM already loaded, fire immediately
 logEvent('page loaded');
 }
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { logEvent };
+}

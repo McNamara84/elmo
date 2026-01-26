@@ -99,3 +99,8 @@ function showUploadStatus(message, type) {
         statusElement.addClass('d-none');
     }, 10000);
 }
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { handleXmlFile, showUploadStatus };
+}

@@ -24,10 +24,12 @@ require_once __DIR__ . '/save_ggms_definition.php';
  */
 function getGGMAndModelType(mysqli $connection, int $resourceId): array
 {
-    $sql = "SELECT r.Model_type_id, rg.GGM_Properties_GGM_Properties_id
-            FROM `Resource` r
-            LEFT JOIN `Resource_has_GGM_Properties` rg ON r.resource_id = rg.Resource_resource_id
-            WHERE r.resource_id = ?
+    // Model_type_id is in GGM_Definition, linked via Resource_has_GGM_Definition
+    $sql = "SELECT gd.Model_type_id, rg.GGM_Properties_GGM_Properties_id
+            FROM `Resource_has_GGM_Definition` rhgd
+            JOIN `GGM_Definition` gd ON rhgd.GGM_Definition_GGM_Definition_id = gd.GGM_Definition_id
+            LEFT JOIN `Resource_has_GGM_Properties` rg ON rhgd.Resource_resource_id = rg.Resource_resource_id
+            WHERE rhgd.Resource_resource_id = ?
             LIMIT 1";
     
     $stmt = $connection->prepare($sql);
@@ -312,8 +314,21 @@ function insertTopographicModelProperties(mysqli $connection, array $postData, i
  */
 function saveGGMsModelTypes(mysqli $connection, array $postData, int $resourceId): bool
 {
-    // 1) Retrieve Model_type_id
-    $modelTypeId = lookupForeignKeyId($connection, 'Model_Type', 'Model_type_id', 'name', $postData['model_type']);
+    // 1) Get the model type from GGM_Definition (or postData if provided)
+    $modelTypeId = null;
+    
+    if (!empty($postData['model_type'])) {
+        $modelTypeId = lookupForeignKeyId($connection, 'Model_Type', 'Model_type_id', 'name', $postData['model_type']);
+    } else {
+        // Try to get from GGM_Definition linked to this resource
+        try {
+            $ggmInfo = getGGMAndModelType($connection, $resourceId);
+            $modelTypeId = $ggmInfo['model_type_id'];
+        } catch (Exception $e) {
+            // No GGM_Definition exists yet - nothing to process
+            return true;
+        }
+    }
 
     // If no model type is set, no need to save model-specific properties
     if ($modelTypeId === null) {
