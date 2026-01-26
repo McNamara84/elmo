@@ -52,7 +52,7 @@ $(document).ready(function () {
  * Validates the Contributor Person section of the form.
  * Ensures the "Last Name", "First Name", and "Role" fields are required if any field in the row is filled.
  */
-function validateContributorPersonRequirements	() {
+function validateContributorPersonRequirements() {
     $('#group-contributorperson').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contributor Person section
@@ -64,18 +64,18 @@ function validateContributorPersonRequirements	() {
             affiliation: row.find('[id^="input-contributorpersons-affiliation"]')
         };
 
+        fields.lastname.removeAttr('required').removeClass('js-required-on-submit');
+        fields.firstname.removeAttr('required').removeClass('js-required-on-submit');
+        fields.role.removeAttr('required').removeClass('js-required-on-submit');
+
         // Checks if any field in the row is filled
-        var isAnyFieldFilled = Object.values(fields).some(field => field.val() && field.val().trim() !== '');
+        var isAnyFieldFilled = Object.values(fields).some(function (field) { return field.val() && field.val().trim() !== ''; });
 
         // Sets or removes the 'required' attribute based on the fill status
         if (isAnyFieldFilled) {
-            fields.lastname.attr('required', 'required');
-            fields.firstname.attr('required', 'required');
-            fields.role.attr('required', 'required');
-        } else {
-            fields.lastname.removeAttr('required');
-            fields.firstname.removeAttr('required');
-            fields.role.removeAttr('required');
+            fields.lastname.addClass('js-required-on-submit');
+            fields.firstname.addClass('js-required-on-submit');
+            fields.role.addClass('js-required-on-submit');
         };
     });
 }

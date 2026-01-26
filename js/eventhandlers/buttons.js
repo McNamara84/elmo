@@ -160,6 +160,7 @@ $(document).ready(function () {
       validateRelatedWorkRequirements();
       validateSpatialTemporalCoverageRequirements();
       validateContributorOrganisationRequirements();
+      validateContributorPersonRequirements();
 
       form.querySelectorAll('.js-required-on-submit').forEach(el => {
         el.setAttribute('required', 'required');
