@@ -679,7 +679,14 @@ $(document).ready(function () {
   }
 
   // Event handler to monitor if the resource type is changed
+  // Only reload licenses when user actually selects a resource type (not on initial load)
   $("#input-resourceinformation-resourcetype").change(function () {
+    var selectedValue = $(this).val();
+    // Skip if no value selected (e.g., "Choose..." or initial trigger)
+    if (!selectedValue) {
+      return;
+    }
+    
     var selectedResourceType = $("#input-resourceinformation-resourcetype option:selected").text().trim();
 
     // Check if "Software" is selected
