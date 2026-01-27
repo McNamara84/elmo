@@ -166,8 +166,13 @@ async function addAuthor(
 
   // Fill ORCID first (using wildcard for appended index)
   await authorRow.locator('[id^="input-author-orcid"]').fill(data.orcid);
-  // Fill last name
-  await authorRow.locator('[id^="input-author-lastname"]').fill(data.lastName);
+  // Fill last name (clear first to handle any auto-clearing behavior)
+  const lastNameField = authorRow.locator('[id^="input-author-lastname"]');
+  // Special debugging for that field 
+  await lastNameField.click();
+  await page.waitForTimeout(300);
+  await lastNameField.clear();
+  await lastNameField.fill(data.lastName);
   // Fill first name
   await authorRow.locator('[id^="input-author-firstname"]').fill(data.firstName);
 
