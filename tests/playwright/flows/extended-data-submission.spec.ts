@@ -27,13 +27,7 @@ test.describe('Dataset Save with XML Verification', () => {
   test('minimal dataset - save and verify XML', async ({ page }) => {
     await navigateToHome(page);
     await completeMinimalDatasetForm(page);
-    
-    // Save XML
-    const { xmlContent, parsedXml } = await downloadAndSaveXml(page, 'minimal');
-    
-    // Verify XML
-    const refRoot = loadReferenceXml('minimal').envelope.resource;
-    const actualRoot = parsedXml.envelope.resource;
+    const { refRoot, actualRoot, refEnvelope, actualEnvelope } = await prepareReferencaeAndActualXml(page, 'minimal');
 
     // Assert title
     expect(actualRoot.titles.title).toBe(refRoot.titles.title);
@@ -57,8 +51,8 @@ test.describe('Dataset Save with XML Verification', () => {
     expect(actualRoot.descriptions.description).toBe(refRoot.descriptions.description);
     
     // Assert contact person email
-    expect(actualRoot.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
-      refRoot.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']
+    expect(actualEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
+      refEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']
     );
 
     console.log('✓ Minimal dataset XML verification passed');
@@ -67,39 +61,53 @@ test.describe('Dataset Save with XML Verification', () => {
   test('extended dataset - save and verify XML', async ({ page }) => {
     await navigateToHome(page);
     await completeExtendedDatasetForm(page);
-    
-    // Save XML
-    const { xmlContent, parsedXml } = await downloadAndSaveXml(page, 'extended');
-    
-    // Verify XML
-    const referenceXml = loadReferenceXml('extended');
+    const { refRoot, actualRoot, refEnvelope, actualEnvelope } = await prepareReferencaeAndActualXml(page, 'extended');
 
-    // Assert root element
-    expect(parsedXml).toHaveProperty('resource');
-    
     // Assert title
-    const actualTitle = parsedXml.resource.titles?.title;
-    const referenceTitle = referenceXml.resource.titles?.title;
-    expect(actualTitle).toBe(referenceTitle);
+    expect(actualRoot.titles.title).toBe(refRoot.titles.title);
+    
+    // Assert author name
+    expect(actualRoot.creators.creator.creatorName).toBe(refRoot.creators.creator.creatorName);
+    
+    // Assert author ORCID
+    expect(actualRoot.creators.creator.nameIdentifier).toBe(refRoot.creators.creator.nameIdentifier);
+    
+    // Assert author affiliation
+    expect(actualRoot.creators.creator.affiliation).toBe(refRoot.creators.creator.affiliation);
+    
+    // Assert publication year
+    expect(actualRoot.publicationYear).toBe(refRoot.publicationYear);
 
-    // Assert descriptions present
-    expect(parsedXml.resource.descriptions?.description).toBeDefined();
+    // Assert resource type
+    expect(actualRoot.resourceType).toBe(refRoot.resourceType);
 
-    // Assert methods in description
-    const descriptions = Array.isArray(parsedXml.resource.descriptions.description)
-      ? parsedXml.resource.descriptions.description
-      : [parsedXml.resource.descriptions.description];
-    const methodsDesc = descriptions.find((d: any) => d['@_descriptionType'] === 'Methods');
-    expect(methodsDesc).toBeDefined();
+    // Compare all the descriptions
+    const descriptions = Array.isArray(actualRoot.descriptions.description)
+      ? actualRoot.descriptions.description
+      : [actualRoot.descriptions.description];
+    const refDescriptions = Array.isArray(refRoot.descriptions.description)
+      ? refRoot.descriptions.description
+      : [refRoot.descriptions.description];
+    expect(descriptions.length).toBe(refDescriptions.length);
+    for (let i = 0; i < descriptions.length; i++) {
+      expect(descriptions[i]).toBe(refDescriptions[i]);
+    }
 
     // Assert keywords present
-    expect(parsedXml.resource.subjects?.subject).toBeDefined();
+    expect(actualRoot.subjects.subject).toBe(refRoot.subjects.subject);
 
-    // Assert related works present
-    expect(parsedXml.resource.relatedIdentifiers?.relatedIdentifier).toBeDefined();
+    // Assert related identifiers present
+    expect(actualRoot.relatedIdentifiers.relatedIdentifier).toBe(refRoot.relatedIdentifiers.relatedIdentifier);
 
-    // Assert funding references present
-    expect(parsedXml.resource.fundingReferences?.fundingReference).toBeDefined();
+    // Assert funding references
+    expect(actualRoot.fundingReferences.fundingReference.funderName).toBe(refRoot.fundingReferences.fundingReference.funderName);
+    expect(actualRoot.fundingReferences.fundingReference.awardNumber).toBe(refRoot.fundingReferences.fundingReference.awardNumber);
+    expect(actualRoot.fundingReferences.fundingReference.awardTitle).toBe(refRoot.fundingReferences.fundingReference.awardTitle);
+
+    // Assert contact person email
+    expect(actualEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
+      refEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']
+    );
 
     console.log('✓ Extended dataset XML verification passed');
   });
@@ -107,46 +115,52 @@ test.describe('Dataset Save with XML Verification', () => {
   test('extended with multiple entries - save and verify XML', async ({ page }) => {
     await navigateToHome(page);
     await completeExtendedMultipleEntries(page);
-    
-    // Save XML
-    const { xmlContent, parsedXml } = await downloadAndSaveXml(page, 'extended-multiple');
-    
-    // Verify XML
-    const referenceXml = loadReferenceXml('extended-multiple');
-
-    // Assert root element
-    expect(parsedXml).toHaveProperty('resource');
+    const { refRoot, actualRoot, refEnvelope, actualEnvelope } = await prepareReferencaeAndActualXml(page, 'extended-multiple');
 
     // Assert multiple authors
-    const actualAuthors = Array.isArray(parsedXml.resource.creators?.creator)
-      ? parsedXml.resource.creators.creator
-      : [parsedXml.resource.creators?.creator];
-    const referenceAuthors = Array.isArray(referenceXml.resource.creators?.creator)
-      ? referenceXml.resource.creators.creator
-      : [referenceXml.resource.creators?.creator];
+    const actualAuthors = Array.isArray(actualRoot.creators?.creator)
+      ? actualRoot.creators.creator
+      : [actualRoot.creators?.creator];
+    const referenceAuthors = Array.isArray(refRoot.creators?.creator)
+      ? refRoot.creators.creator
+      : [refRoot.creators?.creator];
     expect(actualAuthors.length).toBe(referenceAuthors.length);
 
     // Assert multiple keywords
-    const actualKeywords = Array.isArray(parsedXml.resource.subjects?.subject)
-      ? parsedXml.resource.subjects.subject
-      : [parsedXml.resource.subjects?.subject];
-    const referenceKeywords = Array.isArray(referenceXml.resource.subjects?.subject)
-      ? referenceXml.resource.subjects.subject
-      : [referenceXml.resource.subjects?.subject];
+    const actualKeywords = Array.isArray(actualRoot.subjects?.subject)
+      ? actualRoot.subjects.subject
+      : [actualRoot.subjects?.subject];
+    const referenceKeywords = Array.isArray(refRoot.subjects?.subject)
+      ? refRoot.subjects.subject
+      : [refRoot.subjects?.subject];
     expect(actualKeywords.length).toBe(referenceKeywords.length);
 
     // Assert multiple related works
-    const actualRelated = Array.isArray(parsedXml.resource.relatedIdentifiers?.relatedIdentifier)
-      ? parsedXml.resource.relatedIdentifiers.relatedIdentifier
-      : [parsedXml.resource.relatedIdentifiers?.relatedIdentifier];
-    const referenceRelated = Array.isArray(referenceXml.resource.relatedIdentifiers?.relatedIdentifier)
-      ? referenceXml.resource.relatedIdentifiers.relatedIdentifier
-      : [referenceXml.resource.relatedIdentifiers?.relatedIdentifier];
+    const actualRelated = Array.isArray(actualRoot.relatedIdentifiers?.relatedIdentifier)
+      ? actualRoot.relatedIdentifiers.relatedIdentifier
+      : [actualRoot.relatedIdentifiers?.relatedIdentifier];
+    const referenceRelated = Array.isArray(refRoot.relatedIdentifiers?.relatedIdentifier)
+      ? refRoot.relatedIdentifiers.relatedIdentifier
+      : [refRoot.relatedIdentifiers?.relatedIdentifier];
     expect(actualRelated.length).toBe(referenceRelated.length);
 
     console.log('✓ Extended multiple entries XML verification passed');
   });
 });
+
+async function prepareReferencaeAndActualXml(page: Page, type: string) {
+    // Save XML
+    const { xmlContent, parsedXml } = await downloadAndSaveXml(page, type);
+    
+    // Verify XML
+    const refRoot = loadReferenceXml(type).envelope.resource;
+    const actualRoot = parsedXml.envelope.resource;
+
+    const refEnvelope = loadReferenceXml(type).envelope;
+    const actualEnvelope = parsedXml.envelope;
+
+    return { refRoot, actualRoot, refEnvelope, actualEnvelope };
+}
 
 /**
  * Load reference XML for comparison
