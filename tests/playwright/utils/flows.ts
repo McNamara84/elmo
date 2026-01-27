@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import { SELECTORS } from './constants';
+import exampleData from './inputDataEndToEnd.json';
 
 
 export async function completeMinimalDatasetForm(page: Page) {
@@ -87,7 +88,11 @@ async function addFreeKeyword(page: Page, keyword: string) {
 /**
  * Add a related work entry
  */
-async function addRelatedWork(page: Page, index: number, identifier: string) {
+async function addRelatedWork(
+  page: Page,
+  index: number,
+  data: { identifier: string; type: string; relation: string }
+) {
   if (index > 0) {
     // Click the add button to create a new row
     await page.locator('#button-relatedwork-add').click();
@@ -99,13 +104,20 @@ async function addRelatedWork(page: Page, index: number, identifier: string) {
   const relatedWorkRow = page.locator('[related-work-row]').nth(index);
 
   // Select relation
-  await relatedWorkRow.locator('[id*="input-relatedwork-relation"]').selectOption({ index: 1 });
+  await relatedWorkRow
+    .locator('[id*="input-relatedwork-relation"]')
+    .selectOption({ label: data.relation });
 
-  // Fill identifier (starts with identifier but NOT containing "type" to handle appended numbers)
-  await relatedWorkRow.locator('[id^="input-relatedwork-identifier"]:not([id*="type"])').fill(identifier);
+  // Fill identifier
+  await relatedWorkRow
+    .locator('[id^="input-relatedwork-identifier"]:not([id*="type"])')
+    .fill(data.identifier);
 
-  // Select identifier type (exact match - no dynamic suffix)
-  await relatedWorkRow.locator('[id*="input-relatedwork-identifiertype"]').selectOption({ index: 1 });
+  // Auto-detect or use provided type and select it
+  const identifierType = data.type
+  await relatedWorkRow
+    .locator('[id*="input-relatedwork-identifiertype"]')
+    .selectOption({ label: identifierType });
 }
 
 /**
@@ -188,25 +200,17 @@ export async function completeExtendedMultipleEntries(page: Page) {
   await completeExtendedDatasetForm(page);
 
   // Add more related works
-  await addRelatedWork(page, 1, 'https://doi.org/10.5880/GFZ.DMJQ.2025.009');
+  await addRelatedWork(page, 1, exampleData.extendedMultiple.relatedWorks[1]);
 
   // Add more keywords
   await addFreeKeyword(page, 'monitoring');
   await addFreeKeyword(page, 'data');
 
   // Add more funding references
-  await addFundingReference(page, 1, {
-    funder: 'EU Horizon',
-    grantNumber: 'EU-2025-001',
-    grantName: 'European Research Initiative',
-    awardUri: 'https://cordis.europa.eu/project/id/2025001',
-  });
+  await addFundingReference(page, 1, exampleData.extendedMultiple.fundingReferences[1]);
 
   // Add one more author
-  await addAuthor(page, 1, {
-    orcid: '0000-0001-6352-9161',
-    lastName: 'Mueller',
-    firstName: 'Hans',
-    affiliation: 'ETH Zurich',
-  });
+  await addAuthor(page, 1, exampleData.extendedMultiple.authors[1]);
 }
+
+export { exampleData };
