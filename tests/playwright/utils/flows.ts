@@ -33,39 +33,29 @@ export async function completeExtendedDatasetForm(page: Page) {
   await completeMinimalDatasetForm(page);
 
   // Add Related Work entries
-  await addRelatedWork(page, 0, 'https://doi.org/10.5880/GFZ.DMJQ.2025.007');
+  await addRelatedWork(page, 0, exampleData.extended.relatedWorks[0]);
 
   // Add Free Keywords (using tagify - Enter key)
-  await addFreeKeyword(page, 'seismic data');
+  await addFreeKeyword(page, exampleData.extended.keywords[0]);
 
   // Add Descriptions - Abstract already filled by completeMinimalDatasetForm
   // Fill Methods section
   await page.locator('button[data-bs-target="#collapse-methods"]').click();
-  await page.locator('#input-methods').fill('Data was collected using seismic stations deployed across the region.');
+  await page.locator('#input-methods').fill(exampleData.extended.descriptions.methods);
 
   // Fill Technical Information section
   await page.locator('button[data-bs-target="#collapse-technicalinfo"]').click();
-  await page.locator('#input-technicalinfo').fill('Sampling rate: 100 Hz. Data format: miniSEED.');
+  await page.locator('#input-technicalinfo').fill(exampleData.extended.descriptions.technicalInfo);
 
   // Fill Other section
   await page.locator('button[data-bs-target="#collapse-other"]').click();
-  await page.locator('#input-other').fill('Additional processing applied: bandpass filtering between 0.5-25 Hz.');
+  await page.locator('#input-other').fill(exampleData.extended.descriptions.other);
 
   // Add Funding Reference entries
-  await addFundingReference(page, 0, {
-    funder: 'DFG',
-    grantNumber: 'DFG-12345',
-    grantName: 'Seismic Monitoring Network',
-    awardUri: 'https://gepris.dfg.de/gepris/project/12345',
-  });
+  await addFundingReference(page, 0, exampleData.extended.fundingReferences[0]);
 
   // Add Additional Authors
-  await addAuthor(page, 1, {
-    orcid: '0000-0001-2345-6789',
-    lastName: 'Isaak',
-    firstName: 'Johann',
-    affiliation: 'University of Cambridge',
-  });
+  await addAuthor(page, 1, exampleData.extended.authors[0]);
 }
 
 // ============ Helper Functions ============
@@ -114,7 +104,7 @@ async function addRelatedWork(
     .fill(data.identifier);
 
   // Auto-detect or use provided type and select it
-  const identifierType = data.type
+  const identifierType = data.type;
   await relatedWorkRow
     .locator('[id*="input-relatedwork-identifiertype"]')
     .selectOption({ label: identifierType });
