@@ -263,8 +263,11 @@ async function downloadAndSaveXml(
   const xmlContent = fs.readFileSync(filePath, 'utf-8');
   console.log(`Downloaded XML for ${testName}:`, xmlContent);
 
-  // Parse XML using fast-xml-parser
-  const parser = new XMLParser();
+  // Parse XML using fast-xml-parser with attribute parsing enabled
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: ''
+  });
   const parsedXml = parser.parse(xmlContent);
 
   console.log(`Parsed XML structure for ${testName}:`, JSON.stringify(parsedXml, null, 2));
