@@ -367,8 +367,8 @@ function createDatabaseStructure($connection): array
         "Related_Work" => "CREATE TABLE IF NOT EXISTS `Related_Work` (
     `related_work_id` INT NOT NULL AUTO_INCREMENT,
     `Identifier` VARCHAR(245) NOT NULL,
-    `relation_fk` INT NOT NULL,
-    `identifier_type_fk`INT NOT NULL,
+    `relation_fk` INT NULL,
+    `identifier_type_fk`INT NULL,
     PRIMARY KEY (`related_work_id`),
     FOREIGN KEY (`relation_fk`)
     REFERENCES `Relation` (`relation_id`),
