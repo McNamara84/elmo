@@ -117,7 +117,7 @@ test.describe('Dataset Save with XML Verification', () => {
     await completeExtendedMultipleEntries(page);
     const { refRoot, actualRoot, refEnvelope, actualEnvelope } = await prepareReferencaeAndActualXml(page, 'extended-multiple');
 
-    // Assert multiple authors
+    // Assert multiple authors - check length and each property
     const actualAuthors = Array.isArray(actualRoot.creators?.creator)
       ? actualRoot.creators.creator
       : [actualRoot.creators?.creator];
@@ -125,8 +125,15 @@ test.describe('Dataset Save with XML Verification', () => {
       ? refRoot.creators.creator
       : [refRoot.creators?.creator];
     expect(actualAuthors.length).toBe(referenceAuthors.length);
+    for (let i = 0; i < actualAuthors.length; i++) {
+      expect(actualAuthors[i].creatorName).toBe(referenceAuthors[i].creatorName);
+      expect(actualAuthors[i].givenName).toBe(referenceAuthors[i].givenName);
+      expect(actualAuthors[i].familyName).toBe(referenceAuthors[i].familyName);
+      expect(actualAuthors[i].nameIdentifier).toBe(referenceAuthors[i].nameIdentifier);
+      expect(actualAuthors[i].affiliation).toBe(referenceAuthors[i].affiliation);
+    }
 
-    // Assert multiple keywords
+    // Assert multiple keywords - check length and each value
     const actualKeywords = Array.isArray(actualRoot.subjects?.subject)
       ? actualRoot.subjects.subject
       : [actualRoot.subjects?.subject];
@@ -134,8 +141,11 @@ test.describe('Dataset Save with XML Verification', () => {
       ? refRoot.subjects.subject
       : [refRoot.subjects?.subject];
     expect(actualKeywords.length).toBe(referenceKeywords.length);
+    for (let i = 0; i < actualKeywords.length; i++) {
+      expect(actualKeywords[i]).toBe(referenceKeywords[i]);
+    }
 
-    // Assert multiple related works
+    // Assert multiple related works - check length and each value
     const actualRelated = Array.isArray(actualRoot.relatedIdentifiers?.relatedIdentifier)
       ? actualRoot.relatedIdentifiers.relatedIdentifier
       : [actualRoot.relatedIdentifiers?.relatedIdentifier];
@@ -143,6 +153,23 @@ test.describe('Dataset Save with XML Verification', () => {
       ? refRoot.relatedIdentifiers.relatedIdentifier
       : [refRoot.relatedIdentifiers?.relatedIdentifier];
     expect(actualRelated.length).toBe(referenceRelated.length);
+    for (let i = 0; i < actualRelated.length; i++) {
+      expect(actualRelated[i]).toBe(referenceRelated[i]);
+    }
+
+    // Assert multiple funding references - check length and each property
+    const actualFunding = Array.isArray(actualRoot.fundingReferences?.fundingReference)
+      ? actualRoot.fundingReferences.fundingReference
+      : [actualRoot.fundingReferences?.fundingReference];
+    const referenceFunding = Array.isArray(refRoot.fundingReferences?.fundingReference)
+      ? refRoot.fundingReferences.fundingReference
+      : [refRoot.fundingReferences?.fundingReference];
+    expect(actualFunding.length).toBe(referenceFunding.length);
+    for (let i = 0; i < actualFunding.length; i++) {
+      expect(actualFunding[i].funderName).toBe(referenceFunding[i].funderName);
+      expect(actualFunding[i].awardNumber).toBe(referenceFunding[i].awardNumber);
+      expect(actualFunding[i].awardTitle).toBe(referenceFunding[i].awardTitle);
+    }
 
     console.log('✓ Extended multiple entries XML verification passed');
   });
