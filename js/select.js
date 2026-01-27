@@ -678,9 +678,6 @@ $(document).ready(function () {
     });
   }
 
-  // Initialize the license dropdown
-  setupLicenseDropdown(false);
-
   // Event handler to monitor if the resource type is changed
   $("#input-resourceinformation-resourcetype").change(function () {
     var selectedResourceType = $("#input-resourceinformation-resourcetype option:selected").text().trim();
