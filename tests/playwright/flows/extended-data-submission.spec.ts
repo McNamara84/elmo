@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { XMLParser } from 'fast-xml-parser';
 
-const XML_REFERENCE_DIR = path.join(__dirname, './outputDataEndToEnd');
+const XML_REFERENCE_DIR = path.join(__dirname, './outputDataReference');
 const XML_ACTUAL_DIR = path.join(__dirname, './outputDataActual');
 
 test.describe('Dataset Save with XML Verification', () => {
