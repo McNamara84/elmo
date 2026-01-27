@@ -16,6 +16,7 @@
       <givenName>Hans</givenName>
       <familyName>Mueller</familyName>
       <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-6352-9161</nameIdentifier>
+      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/03nqkz164">ETH Zürich Foundation</affiliation>
     </creator>
   </creators>
   <titles>

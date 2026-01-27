@@ -171,6 +171,18 @@ test.describe('Dataset Save with XML Verification', () => {
       expect(actualKeywords[i]).toBe(referenceKeywords[i]);
     }
 
+    // Assert multiple descriptions - check length and each value
+    const actualDescriptions = Array.isArray(actualRoot.descriptions?.description)
+      ? actualRoot.descriptions.description
+      : [actualRoot.descriptions?.description];
+    const referenceDescriptions = Array.isArray(refRoot.descriptions?.description)
+      ? refRoot.descriptions.description
+      : [refRoot.descriptions?.description];
+    expect(actualDescriptions.length).toBe(referenceDescriptions.length);
+    for (let i = 0; i < actualDescriptions.length; i++) {
+      expect(actualDescriptions[i]['#text']).toBe(referenceDescriptions[i]['#text']);
+    }
+
     // Assert multiple related works - check length and each value with attributes
     const actualRelated = Array.isArray(actualRoot.relatedIdentifiers?.relatedIdentifier)
       ? actualRoot.relatedIdentifiers.relatedIdentifier
