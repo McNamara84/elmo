@@ -8,7 +8,8 @@
           "creatorName": "Carberry, Josiah",
           "givenName": "Josiah",
           "familyName": "Carberry",
-          "nameIdentifier": "0000-0002-1825-0097"
+          "nameIdentifier": "0000-0002-1825-0097",
+          "affiliation": "GFZ Helmholtz Centre for Geosciences"
         }
       },
       "titles": {
@@ -17,43 +18,27 @@
       "publisher": "GFZ Data Services",
       "publicationYear": 2025,
       "resourceType": "Dataset",
-      "subjects": {
-        "subject": "seismic data"
-      },
+      "subjects": "",
       "contributors": {
         "contributor": {
           "contributorName": "Carberry, Josiah",
           "givenName": "Josiah",
           "familyName": "Carberry",
-          "nameIdentifier": "0000-0002-1825-0097"
+          "nameIdentifier": "0000-0002-1825-0097",
+          "affiliation": "GFZ Helmholtz Centre for Geosciences"
         }
       },
       "dates": {
         "date": "2025-01-01"
       },
       "language": "en",
-      "relatedIdentifiers": {
-        "relatedIdentifier": "https://doi.org/10.5880/GFZ.DMJQ.2025.007"
-      },
       "rightsList": {
         "rights": "Creative Commons Attribution 4.0 International"
       },
       "descriptions": {
-        "description": [
-          "Necessary abstract",
-          "Data was collected using seismic stations deployed across the region.",
-          "Sampling rate: 100 Hz. Data format: miniSEED.",
-          "Additional processing applied: bandpass filtering between 0.5-25 Hz."
-        ]
+        "description": "Necessary abstract"
       },
-      "geoLocations": "",
-      "fundingReferences": {
-        "fundingReference": {
-          "funderName": "DFG",
-          "awardNumber": "DFG-12345",
-          "awardTitle": "Seismic Monitoring Network"
-        }
-      }
+      "geoLocations": ""
     },
     "MD_Metadata": {
       "fileIdentifier": {
@@ -106,7 +91,7 @@
         }
       },
       "dateStamp": {
-        "gco:Date": "2026-01-26"
+        "gco:Date": "2026-01-27"
       },
       "referenceSystemInfo": {
         "MD_ReferenceSystem": {
@@ -146,6 +131,9 @@
               "individualName": {
                 "gco:CharacterString": "Carberry, Josiah"
               },
+              "organisationName": {
+                "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
+              },
               "contactInfo": {
                 "CI_Contact": {
                   "address": {
@@ -153,11 +141,6 @@
                       "electronicMailAddress": {
                         "gco:CharacterString": "example@gmail.com"
                       }
-                    }
-                  },
-                  "onlineResource": {
-                    "CI_OnlineResource": {
-                      "linkage": ""
                     }
                   }
                 }
@@ -169,14 +152,7 @@
           },
           "descriptiveKeywords": [
             "",
-            "",
-            {
-              "MD_Keywords": {
-                "keyword": {
-                  "gco:CharacterString": "seismic data"
-                }
-              }
-            }
+            ""
           ],
           "resourceConstraints": [
             {
@@ -204,23 +180,6 @@
               }
             }
           ],
-          "aggregationInfo": {
-            "MD_AggregateInformation": {
-              "aggregateDataSetIdentifier": {
-                "RS_Identifier": {
-                  "code": {
-                    "gco:CharacterString": "https://doi.org/10.5880/GFZ.DMJQ.2025.007"
-                  },
-                  "codeSpace": {
-                    "gco:CharacterString": "DOI"
-                  }
-                }
-              },
-              "associationType": {
-                "DS_AssociationTypeCode": "Cites"
-              }
-            }
-          },
           "language": {
             "gco:CharacterString": "en"
           },

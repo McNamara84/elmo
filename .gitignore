@@ -15,6 +15,7 @@ playwright-report/
 blob-report/
 playwright/.cache/
 debug-page.png
+tests/playwright/flows/outputDataActual/*
 
 # Autosave files
 storage/drafts/

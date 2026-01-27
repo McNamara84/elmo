@@ -9,6 +9,7 @@
       <givenName>Josiah</givenName>
       <familyName>Carberry</familyName>
       <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1825-0097</nameIdentifier>
+      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</affiliation>
     </creator>
   </creators>
   <titles>
@@ -26,6 +27,7 @@
       <givenName>Josiah</givenName>
       <familyName>Carberry</familyName>
       <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1825-0097</nameIdentifier>
+      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</affiliation>
     </contributor>
   </contributors>
   <dates>
@@ -33,7 +35,7 @@
   </dates>
   <language>en</language>
   <relatedIdentifiers>
-    <relatedIdentifier relatedIdentifierType="DOI" relationType="Cites">https://doi.org/10.5880/GFZ.DMJQ.2025.007</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.5880/GFZ.DMJQ.2025.007</relatedIdentifier>
   </relatedIdentifiers>
   <rightsList>
     <rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</rights>
@@ -107,7 +109,7 @@
     </CI_ResponsibleParty>
   </contact>
   <dateStamp>
-    <gco:Date>2026-01-26</gco:Date>
+    <gco:Date>2026-01-27</gco:Date>
   </dateStamp>
   <referenceSystemInfo>
     <MD_ReferenceSystem>
@@ -147,6 +149,9 @@
           <individualName>
             <gco:CharacterString>Carberry, Josiah</gco:CharacterString>
           </individualName>
+          <organisationName>
+            <gco:CharacterString>GFZ Helmholtz Centre for Geosciences</gco:CharacterString>
+          </organisationName>
           <contactInfo>
             <CI_Contact>
               <address>
@@ -156,11 +161,6 @@
                   </electronicMailAddress>
                 </CI_Address>
               </address>
-              <onlineResource>
-                <CI_OnlineResource>
-                  <linkage/>
-                </CI_OnlineResource>
-              </onlineResource>
             </CI_Contact>
           </contactInfo>
           <role>
@@ -206,7 +206,7 @@
           <aggregateDataSetIdentifier>
             <RS_Identifier>
               <code>
-                <gco:CharacterString>https://doi.org/10.5880/GFZ.DMJQ.2025.007</gco:CharacterString>
+                <gco:CharacterString>10.5880/GFZ.DMJQ.2025.007</gco:CharacterString>
               </code>
               <codeSpace>
                 <gco:CharacterString>DOI</gco:CharacterString>
@@ -214,7 +214,7 @@
             </RS_Identifier>
           </aggregateDataSetIdentifier>
           <associationType>
-            <DS_AssociationTypeCode codeList="http://datacite.org/schema/kernel-4" codeListValue="Cites">Cites</DS_AssociationTypeCode>
+            <DS_AssociationTypeCode codeList="http://datacite.org/schema/kernel-4" codeListValue="References">References</DS_AssociationTypeCode>
           </associationType>
         </MD_AggregateInformation>
       </aggregationInfo>
