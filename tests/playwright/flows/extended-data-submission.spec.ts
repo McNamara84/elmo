@@ -77,31 +77,33 @@ test.describe('Dataset Save with XML Verification', () => {
     const { refRoot, actualRoot, refEnvelope, actualEnvelope } = await prepareReferencaeAndActualXml(page, 'extended');
 
     // Assert title
-    expect(actualRoot.titles.title).toBe(refRoot.titles.title);
+    expect(actualRoot.titles.title['#text']).toBe(refRoot.titles.title['#text']);
     
     // Assert author name
-    expect(actualRoot.creators.creator.creatorName).toBe(refRoot.creators.creator.creatorName);
+    const actualCreators = Array.isArray(actualRoot.creators.creator) 
+      ? actualRoot.creators.creator 
+      : [actualRoot.creators.creator];
+    const refCreators = Array.isArray(refRoot.creators.creator) 
+      ? refRoot.creators.creator 
+      : [refRoot.creators.creator];
     
-    // Assert author ORCID
-    expect(actualRoot.creators.creator.nameIdentifier).toBe(refRoot.creators.creator.nameIdentifier);
-    
-    // Assert author affiliation
-    expect(actualRoot.creators.creator.affiliation).toBe(refRoot.creators.creator.affiliation);
-    
-    // Assert author givenName
-    expect(actualRoot.creators.creator.givenName).toBe(refRoot.creators.creator.givenName);
-    
-    // Assert author familyName
-    expect(actualRoot.creators.creator.familyName).toBe(refRoot.creators.creator.familyName);
+    for (let i = 0; i < actualCreators.length; i++) {
+      expect(actualCreators[i].creatorName['#text']).toBe(refCreators[i].creatorName['#text']);
+      expect(actualCreators[i].nameIdentifier['#text']).toBe(refCreators[i].nameIdentifier['#text']);
+      expect(actualCreators[i].affiliation['#text']).toBe(refCreators[i].affiliation['#text']);
+      expect(actualCreators[i].givenName).toBe(refCreators[i].givenName);
+      expect(actualCreators[i].familyName).toBe(refCreators[i].familyName);
+    }
     
     // Assert publication year
     expect(actualRoot.publicationYear).toBe(refRoot.publicationYear);
 
     // Assert resource type
-    expect(actualRoot.resourceType).toBe(refRoot.resourceType);
+    expect(actualRoot.resourceType['#text']).toBe(refRoot.resourceType['#text']);
     
     // Assert dataset language
     expect(actualRoot.language).toBe(refRoot.language);
+    
     // Compare all the descriptions
     const descriptions = Array.isArray(actualRoot.descriptions.description)
       ? actualRoot.descriptions.description
@@ -111,23 +113,22 @@ test.describe('Dataset Save with XML Verification', () => {
       : [refRoot.descriptions.description];
     expect(descriptions.length).toBe(refDescriptions.length);
     for (let i = 0; i < descriptions.length; i++) {
-      expect(descriptions[i]).toBe(refDescriptions[i]);
+      expect(descriptions[i]['#text']).toBe(refDescriptions[i]['#text']);
     }
 
     // Assert keywords present
     expect(actualRoot.subjects.subject).toBe(refRoot.subjects.subject);
 
-    // Assert related identifiers present
-    expect(actualRoot.relatedIdentifiers.relatedIdentifier).toBe(refRoot.relatedIdentifiers.relatedIdentifier);
-    // Assert related work identifier type 
+    // Assert related identifiers with detailed attributes
+    expect(actualRoot.relatedIdentifiers.relatedIdentifier['#text']).toBe(refRoot.relatedIdentifiers.relatedIdentifier['#text']);
+    expect(actualRoot.relatedIdentifiers.relatedIdentifier.relatedIdentifierType).toBe(refRoot.relatedIdentifiers.relatedIdentifier.relatedIdentifierType);
+    expect(actualRoot.relatedIdentifiers.relatedIdentifier.relationType).toBe(refRoot.relatedIdentifiers.relatedIdentifier.relationType);
 
-    // Assert related work relation type
-
-    // Assert funding references
+    // Assert funding references with detailed attributes
     expect(actualRoot.fundingReferences.fundingReference.funderName).toBe(refRoot.fundingReferences.fundingReference.funderName);
-    expect(actualRoot.fundingReferences.fundingReference.awardNumber).toBe(refRoot.fundingReferences.fundingReference.awardNumber);
+    expect(actualRoot.fundingReferences.fundingReference.awardNumber['#text']).toBe(refRoot.fundingReferences.fundingReference.awardNumber['#text']);
+    expect(actualRoot.fundingReferences.fundingReference.awardNumber.awardURI).toBe(refRoot.fundingReferences.fundingReference.awardNumber.awardURI);
     expect(actualRoot.fundingReferences.fundingReference.awardTitle).toBe(refRoot.fundingReferences.fundingReference.awardTitle);
-    // Assert award URI 
 
     // Assert contact person email
     expect(actualEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
@@ -151,11 +152,11 @@ test.describe('Dataset Save with XML Verification', () => {
       : [refRoot.creators?.creator];
     expect(actualAuthors.length).toBe(referenceAuthors.length);
     for (let i = 0; i < actualAuthors.length; i++) {
-      expect(actualAuthors[i].creatorName).toBe(referenceAuthors[i].creatorName);
+      expect(actualAuthors[i].creatorName['#text']).toBe(referenceAuthors[i].creatorName['#text']);
       expect(actualAuthors[i].givenName).toBe(referenceAuthors[i].givenName);
       expect(actualAuthors[i].familyName).toBe(referenceAuthors[i].familyName);
-      expect(actualAuthors[i].nameIdentifier).toBe(referenceAuthors[i].nameIdentifier);
-      expect(actualAuthors[i].affiliation).toBe(referenceAuthors[i].affiliation);
+      expect(actualAuthors[i].nameIdentifier['#text']).toBe(referenceAuthors[i].nameIdentifier['#text']);
+      expect(actualAuthors[i].affiliation['#text']).toBe(referenceAuthors[i].affiliation['#text']);
     }
 
     // Assert multiple keywords - check length and each value
@@ -170,7 +171,7 @@ test.describe('Dataset Save with XML Verification', () => {
       expect(actualKeywords[i]).toBe(referenceKeywords[i]);
     }
 
-    // Assert multiple related works - check length and each value
+    // Assert multiple related works - check length and each value with attributes
     const actualRelated = Array.isArray(actualRoot.relatedIdentifiers?.relatedIdentifier)
       ? actualRoot.relatedIdentifiers.relatedIdentifier
       : [actualRoot.relatedIdentifiers?.relatedIdentifier];
@@ -179,14 +180,12 @@ test.describe('Dataset Save with XML Verification', () => {
       : [refRoot.relatedIdentifiers?.relatedIdentifier];
     expect(actualRelated.length).toBe(referenceRelated.length);
     for (let i = 0; i < actualRelated.length; i++) {
-      // Assert related identifier, identifier type and relation 
-      expect(actualRelated[i]).toBe(referenceRelated[i]);
-
-
-      
+      expect(actualRelated[i]['#text']).toBe(referenceRelated[i]['#text']);
+      expect(actualRelated[i].relatedIdentifierType).toBe(referenceRelated[i].relatedIdentifierType);
+      expect(actualRelated[i].relationType).toBe(referenceRelated[i].relationType);
     }
 
-    // Assert multiple funding references - check length and each property
+    // Assert multiple funding references - check length and each property with attributes
     const actualFunding = Array.isArray(actualRoot.fundingReferences?.fundingReference)
       ? actualRoot.fundingReferences.fundingReference
       : [actualRoot.fundingReferences?.fundingReference];
@@ -196,7 +195,8 @@ test.describe('Dataset Save with XML Verification', () => {
     expect(actualFunding.length).toBe(referenceFunding.length);
     for (let i = 0; i < actualFunding.length; i++) {
       expect(actualFunding[i].funderName).toBe(referenceFunding[i].funderName);
-      expect(actualFunding[i].awardNumber).toBe(referenceFunding[i].awardNumber);
+      expect(actualFunding[i].awardNumber['#text']).toBe(referenceFunding[i].awardNumber['#text']);
+      expect(actualFunding[i].awardNumber.awardURI).toBe(referenceFunding[i].awardNumber.awardURI);
       expect(actualFunding[i].awardTitle).toBe(referenceFunding[i].awardTitle);
     }
 
