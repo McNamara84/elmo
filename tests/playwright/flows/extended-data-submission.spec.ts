@@ -32,8 +32,12 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert title
     expect(actualRoot.titles.title).toBe(refRoot.titles.title);
     
-    // Assert author name
+    // Assert author name: combined 
     expect(actualRoot.creators.creator.creatorName).toBe(refRoot.creators.creator.creatorName);
+    
+    // Assert author name: first and last name separately  
+    expect(actualRoot.creators.creator.givenName).toBe(refRoot.creators.creator.givenName);
+    expect(actualRoot.creators.creator.familyName).toBe(refRoot.creators.creator.familyName);
     
     // Assert author ORCID
     expect(actualRoot.creators.creator.nameIdentifier).toBe(refRoot.creators.creator.nameIdentifier);
@@ -41,11 +45,20 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert author affiliation
     expect(actualRoot.creators.creator.affiliation).toBe(refRoot.creators.creator.affiliation);
     
+    // Assert contact person is also a contributor 
+    expect(actualRoot.contributors.contributor.contributorName).toBe(refRoot.contributors.contributor.contributorName);
+
     // Assert publication year
     expect(actualRoot.publicationYear).toBe(refRoot.publicationYear);
 
+    // Assert date created
+    expect(actualRoot.dates.date).toBe(refRoot.dates.date);
+
     // Assert resource type
     expect(actualRoot.resourceType).toBe(refRoot.resourceType);
+    
+    // Assert language
+    expect(actualRoot.language).toBe(refRoot.language);
     
     // Assert abstract/description
     expect(actualRoot.descriptions.description).toBe(refRoot.descriptions.description);
@@ -75,12 +88,20 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert author affiliation
     expect(actualRoot.creators.creator.affiliation).toBe(refRoot.creators.creator.affiliation);
     
+    // Assert author givenName
+    expect(actualRoot.creators.creator.givenName).toBe(refRoot.creators.creator.givenName);
+    
+    // Assert author familyName
+    expect(actualRoot.creators.creator.familyName).toBe(refRoot.creators.creator.familyName);
+    
     // Assert publication year
     expect(actualRoot.publicationYear).toBe(refRoot.publicationYear);
 
     // Assert resource type
     expect(actualRoot.resourceType).toBe(refRoot.resourceType);
-
+    
+    // Assert dataset language
+    expect(actualRoot.language).toBe(refRoot.language);
     // Compare all the descriptions
     const descriptions = Array.isArray(actualRoot.descriptions.description)
       ? actualRoot.descriptions.description
@@ -98,11 +119,15 @@ test.describe('Dataset Save with XML Verification', () => {
 
     // Assert related identifiers present
     expect(actualRoot.relatedIdentifiers.relatedIdentifier).toBe(refRoot.relatedIdentifiers.relatedIdentifier);
+    // Assert related work identifier type 
+
+    // Assert related work relation type
 
     // Assert funding references
     expect(actualRoot.fundingReferences.fundingReference.funderName).toBe(refRoot.fundingReferences.fundingReference.funderName);
     expect(actualRoot.fundingReferences.fundingReference.awardNumber).toBe(refRoot.fundingReferences.fundingReference.awardNumber);
     expect(actualRoot.fundingReferences.fundingReference.awardTitle).toBe(refRoot.fundingReferences.fundingReference.awardTitle);
+    // Assert award URI 
 
     // Assert contact person email
     expect(actualEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
@@ -154,7 +179,11 @@ test.describe('Dataset Save with XML Verification', () => {
       : [refRoot.relatedIdentifiers?.relatedIdentifier];
     expect(actualRelated.length).toBe(referenceRelated.length);
     for (let i = 0; i < actualRelated.length; i++) {
+      // Assert related identifier, identifier type and relation 
       expect(actualRelated[i]).toBe(referenceRelated[i]);
+
+
+      
     }
 
     // Assert multiple funding references - check length and each property
@@ -175,6 +204,10 @@ test.describe('Dataset Save with XML Verification', () => {
   });
 });
 
+/**
+ * Combine the following 2 functions to load the parsed XMLs -- the reference and the actual -- for comparison
+ * and return their roots. the envelopes are also returned to check the metadata outside the Datacite Scheme.
+ */
 async function prepareReferencaeAndActualXml(page: Page, type: string) {
     // Save XML
     const { xmlContent, parsedXml } = await downloadAndSaveXml(page, type);
