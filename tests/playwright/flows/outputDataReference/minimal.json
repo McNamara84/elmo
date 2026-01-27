@@ -1,57 +1,121 @@
 {
-  "?xml": "",
+  "?xml": {
+    "version": "1.0",
+    "encoding": "UTF-8"
+  },
   "envelope": {
     "resource": {
-      "identifier": "",
+      "identifier": {
+        "identifierType": "DOI"
+      },
       "creators": {
         "creator": {
-          "creatorName": "Carberry, Josiah",
+          "creatorName": {
+            "#text": "Carberry, Josiah",
+            "nameType": "Personal"
+          },
           "givenName": "Josiah",
           "familyName": "Carberry",
-          "nameIdentifier": "0000-0002-1825-0097",
-          "affiliation": "GFZ Helmholtz Centre for Geosciences"
+          "nameIdentifier": {
+            "#text": "0000-0002-1825-0097",
+            "nameIdentifierScheme": "ORCID",
+            "schemeURI": "https://orcid.org/"
+          },
+          "affiliation": {
+            "#text": "GFZ Helmholtz Centre for Geosciences",
+            "affiliationIdentifierScheme": "ROR",
+            "schemeURI": "https://ror.org/",
+            "affiliationIdentifier": "https://ror.org/04z8jg394"
+          }
         }
       },
       "titles": {
-        "title": "A dataset"
+        "title": {
+          "#text": "A dataset",
+          "xml:lang": "en"
+        }
       },
-      "publisher": "GFZ Data Services",
+      "publisher": {
+        "#text": "GFZ Data Services",
+        "xml:lang": "en"
+      },
       "publicationYear": 2025,
-      "resourceType": "Dataset",
+      "resourceType": {
+        "#text": "Dataset",
+        "resourceTypeGeneral": "Dataset"
+      },
       "subjects": "",
       "contributors": {
         "contributor": {
           "contributorName": "Carberry, Josiah",
           "givenName": "Josiah",
           "familyName": "Carberry",
-          "nameIdentifier": "0000-0002-1825-0097",
-          "affiliation": "GFZ Helmholtz Centre for Geosciences"
+          "nameIdentifier": {
+            "#text": "0000-0002-1825-0097",
+            "nameIdentifierScheme": "ORCID",
+            "schemeURI": "https://orcid.org/"
+          },
+          "affiliation": {
+            "#text": "GFZ Helmholtz Centre for Geosciences",
+            "affiliationIdentifierScheme": "ROR",
+            "schemeURI": "https://ror.org",
+            "affiliationIdentifier": "https://ror.org/04z8jg394"
+          },
+          "contributorType": "ContactPerson"
         }
       },
       "dates": {
-        "date": "2025-01-01"
+        "date": {
+          "#text": "2025-01-01",
+          "dateType": "Created"
+        }
       },
       "language": "en",
       "rightsList": {
-        "rights": "Creative Commons Attribution 4.0 International"
+        "rights": {
+          "#text": "Creative Commons Attribution 4.0 International",
+          "rightsURI": "https://creativecommons.org/licenses/by/4.0/legalcode",
+          "rightsIdentifier": "CC-BY-4.0",
+          "rightsIdentifierScheme": "SPDX",
+          "schemeURI": "https://spdx.org/licenses/",
+          "xml:lang": "en"
+        }
       },
       "descriptions": {
-        "description": "Necessary abstract"
+        "description": {
+          "#text": "Necessary abstract",
+          "descriptionType": "Abstract",
+          "xml:lang": "en"
+        }
       },
-      "geoLocations": ""
+      "geoLocations": "",
+      "xmlns": "http://datacite.org/schema/kernel-4",
+      "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "xsi:schemaLocation": "http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/elmo/schemas/DataCite/DataCiteSchema45.xsd"
     },
     "MD_Metadata": {
       "fileIdentifier": {
         "gco:CharacterString": "doi:N/A"
       },
       "language": {
-        "LanguageCode": "en"
+        "LanguageCode": {
+          "#text": "en",
+          "codeList": "http://www.loc.gov/standards/iso639-1/",
+          "codeListValue": "en"
+        }
       },
       "characterSet": {
-        "MD_CharacterSetCode": ""
+        "MD_CharacterSetCode": {
+          "codeList": "http://www.isotc211.org/2005/resources/codeList.xml#MD_CharacterSetCode",
+          "codeListValue": "utf8"
+        }
       },
       "hierarchyLevel": {
-        "MD_ScopeCode": "dataset"
+        "MD_ScopeCode": {
+          "#text": "dataset",
+          "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode",
+          "codeListValue": "dataset"
+        }
       },
       "contact": {
         "CI_ResponsibleParty": {
@@ -79,14 +143,22 @@
                     "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
                   },
                   "function": {
-                    "CI_OnLineFunctionCode": "information"
+                    "CI_OnLineFunctionCode": {
+                      "#text": "information",
+                      "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode",
+                      "codeListValue": "information"
+                    }
                   }
                 }
               }
             }
           },
           "role": {
-            "CI_RoleCode": "pointOfContact"
+            "CI_RoleCode": {
+              "#text": "pointOfContact",
+              "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode",
+              "codeListValue": "pointOfContact"
+            }
           }
         }
       },
@@ -117,7 +189,11 @@
                     "gco:Date": "2025-01-01"
                   },
                   "dateType": {
-                    "CI_DateTypeCode": "creation"
+                    "CI_DateTypeCode": {
+                      "#text": "creation",
+                      "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode",
+                      "codeListValue": "creation"
+                    }
                   }
                 }
               }
@@ -146,7 +222,11 @@
                 }
               },
               "role": {
-                "CI_RoleCode": "pointOfContact"
+                "CI_RoleCode": {
+                  "#text": "pointOfContact",
+                  "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode",
+                  "codeListValue": "pointOfContact"
+                }
               }
             }
           },
@@ -160,12 +240,16 @@
                 "useLimitation": {
                   "gco:CharacterString": "Creative Commons Attribution 4.0 International"
                 }
-              }
+              },
+              "xlink:href": "https://creativecommons.org/licenses/by/4.0/legalcode"
             },
             {
               "MD_LegalConstraints": {
                 "accessConstraints": {
-                  "MD_RestrictionCode": ""
+                  "MD_RestrictionCode": {
+                    "codeList": "http://www.isotc211.org/2005/resources/codeList.xml#MD_RestrictionCode",
+                    "codeListValue": "otherRestrictions"
+                  }
                 },
                 "otherConstraints": {
                   "gco:CharacterString": "Creative Commons Attribution 4.0 International"
@@ -175,7 +259,10 @@
             {
               "MD_SecurityConstraints": {
                 "classification": {
-                  "MD_ClassificationCode": ""
+                  "MD_ClassificationCode": {
+                    "codeList": "http://www.isotc211.org/2005/resources/codeList.xml#MD_ClassificationCode",
+                    "codeListValue": "unclassified"
+                  }
                 }
               }
             }
@@ -184,7 +271,10 @@
             "gco:CharacterString": "en"
           },
           "characterSet": {
-            "MD_CharacterSetCode": ""
+            "MD_CharacterSetCode": {
+              "codeList": "http://www.isotc211.org/2005/resources/codeList.xml#MD_CharacterSetCode",
+              "codeListValue": "utf8"
+            }
           },
           "topicCategory": {
             "MD_TopicCategoryCode": "geoscientificInformation"
@@ -210,7 +300,11 @@
                     "gco:CharacterString": "Download"
                   },
                   "function": {
-                    "CI_OnLineFunctionCode": "information"
+                    "CI_OnLineFunctionCode": {
+                      "#text": "information",
+                      "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode",
+                      "codeListValue": "information"
+                    }
                   }
                 }
               }
@@ -223,12 +317,24 @@
           "scope": {
             "DQ_Scope": {
               "level": {
-                "MD_ScopeCode": ""
+                "MD_ScopeCode": {
+                  "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode",
+                  "codeListValue": "dataset"
+                }
               }
             }
           }
         }
-      }
+      },
+      "xmlns": "http://www.isotc211.org/2005/gmd",
+      "xmlns:gco": "http://www.isotc211.org/2005/gco",
+      "xmlns:gsr": "http://www.isotc211.org/2005/gsr",
+      "xmlns:gss": "http://www.isotc211.org/2005/gss",
+      "xmlns:gts": "http://www.isotc211.org/2005/gts",
+      "xmlns:gml": "http://www.opengis.net/gml",
+      "xmlns:xlink": "http://www.w3.org/1999/xlink",
+      "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "xsi:schemaLocation": "http://www.isotc211.org/2005/gmd file:///C:/xampp/htdocs/msl-mde/schemas/ISO/gmd.xsd"
     }
   }
 }

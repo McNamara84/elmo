@@ -30,20 +30,20 @@ test.describe('Dataset Save with XML Verification', () => {
     const { refRoot, actualRoot, refEnvelope, actualEnvelope } = await prepareReferencaeAndActualXml(page, 'minimal');
 
     // Assert title
-    expect(actualRoot.titles.title).toBe(refRoot.titles.title);
+    expect(actualRoot.titles.title['#text']).toBe(refRoot.titles.title['#text']);
     
     // Assert author name: combined 
-    expect(actualRoot.creators.creator.creatorName).toBe(refRoot.creators.creator.creatorName);
+    expect(actualRoot.creators.creator.creatorName['#text']).toBe(refRoot.creators.creator.creatorName['#text']);
     
     // Assert author name: first and last name separately  
     expect(actualRoot.creators.creator.givenName).toBe(refRoot.creators.creator.givenName);
     expect(actualRoot.creators.creator.familyName).toBe(refRoot.creators.creator.familyName);
     
     // Assert author ORCID
-    expect(actualRoot.creators.creator.nameIdentifier).toBe(refRoot.creators.creator.nameIdentifier);
+    expect(actualRoot.creators.creator.nameIdentifier['#text']).toBe(refRoot.creators.creator.nameIdentifier['#text']);
     
     // Assert author affiliation
-    expect(actualRoot.creators.creator.affiliation).toBe(refRoot.creators.creator.affiliation);
+    expect(actualRoot.creators.creator.affiliation['#text']).toBe(refRoot.creators.creator.affiliation['#text']);
     
     // Assert contact person is also a contributor 
     expect(actualRoot.contributors.contributor.contributorName).toBe(refRoot.contributors.contributor.contributorName);
@@ -52,16 +52,16 @@ test.describe('Dataset Save with XML Verification', () => {
     expect(actualRoot.publicationYear).toBe(refRoot.publicationYear);
 
     // Assert date created
-    expect(actualRoot.dates.date).toBe(refRoot.dates.date);
+    expect(actualRoot.dates.date['#text']).toBe(refRoot.dates.date['#text']);
 
     // Assert resource type
-    expect(actualRoot.resourceType).toBe(refRoot.resourceType);
+    expect(actualRoot.resourceType['#text']).toBe(refRoot.resourceType['#text']);
     
     // Assert language
     expect(actualRoot.language).toBe(refRoot.language);
     
     // Assert abstract/description
-    expect(actualRoot.descriptions.description).toBe(refRoot.descriptions.description);
+    expect(actualRoot.descriptions.description['#text']).toBe(refRoot.descriptions.description['#text']);
     
     // Assert contact person email
     expect(actualEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
