@@ -52,17 +52,21 @@ function prepareFunderIdDetails($funderId)
  *
  * @return bool True on success, false otherwise.
  */
-function saveFundingReferenceEntry($connection, $entry, $resource_id)
+function saveFundingReferenceEntry($connection, $entry, $resource_id, $action = 'submit')
 {
-    if (!validateFundingReferenceDependencies($entry)) {
-        return false;
+    // Only perform strict validation on SUBMIT
+    if ($action === 'submit') {
+        if (!validateFundingReferenceDependencies($entry)) {
+            return false;
+        }
     }
 
     if (
         empty($entry['funder']) &&
         empty($entry['funderId']) &&
         empty($entry['grantNumber']) &&
-        empty($entry['grantName'])
+        empty($entry['grantName']) &&
+        empty($entry['awardUri'])
     ) {
         return true;
     }
@@ -111,6 +115,7 @@ function saveFundingReferences($connection, $postData, $resource_id)
     if (!fundingReferenceArraysExist($postData)) {
         return true; // No data provided is valid
     }
+    $action = $postData['action'] ?? 'save_and_download';
 
     $allSuccessful = true;
     $len = count($postData['funder']);
@@ -124,7 +129,7 @@ function saveFundingReferences($connection, $postData, $resource_id)
             'awardUri' => $postData['awardURI'][$i] ?? ''
         ];
 
-        if (!saveFundingReferenceEntry($connection, $entry, $resource_id)) {
+        if (!saveFundingReferenceEntry($connection, $entry, $resource_id, $action)) {
             $allSuccessful = false;
         }
     }
