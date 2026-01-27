@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { expectNavbarVisible, navigateToHome } from '../utils';
 
 /**
  * Test to verify that licenses are not duplicated in the dropdown.
@@ -6,10 +7,9 @@ import { test, expect } from '@playwright/test';
  */
 test.describe("License Dropdown - No Duplicates", () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate directly to the application
-    await page.goto('');
-    // Wait for the license dropdown to be visible
-    await expect(page.locator('#input-rights-license')).toBeVisible({ timeout: 10_000 });
+    await navigateToHome(page);
+    await expectNavbarVisible(page);
+    await expect(page.locator('#input-rights-license')).toBeVisible();
   });
 
   test("License dropdown should not contain duplicate entries", async ({ page }) => {
