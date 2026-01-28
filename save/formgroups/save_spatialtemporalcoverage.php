@@ -3,9 +3,13 @@ require_once __DIR__ . '/../validation.php';
 
 function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
 {
+    $action = $postData['action'] ?? 'save_and_download';
+
     // If no STC data provided, treat as successful (it's optional)
-    if (!isset($postData['tscLatitudeMin']) || !is_array($postData['tscLatitudeMin']) || count($postData['tscLatitudeMin']) === 0 ||
-        !isset($postData['tscDateStart']) || !is_array($postData['tscDateStart']) || count($postData['tscDateStart']) === 0 ) {
+    if (
+        !isset($postData['tscLatitudeMin']) || !is_array($postData['tscLatitudeMin']) || count($postData['tscLatitudeMin']) === 0 ||
+        !isset($postData['tscDateStart']) || !is_array($postData['tscDateStart']) || count($postData['tscDateStart']) === 0
+    ) {
         return true;
     }
     // Basic array field validation - only truly required fields
@@ -41,32 +45,64 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
             'timezone' => $postData['tscTimezone'][$i] ?? NULL
         ];
 
-        if (!validateSTCDependencies($entry)) {
-            $allSuccessful = false;
+        // Skip completely empty lines
+        if (
+            trim((string) ($entry['latitudeMin'] ?? '')) === '' &&
+            trim((string) ($entry['latitudeMax'] ?? '')) === '' &&
+            trim((string) ($entry['longitudeMin'] ?? '')) === '' &&
+            trim((string) ($entry['longitudeMax'] ?? '')) === '' &&
+            trim((string) ($entry['description'] ?? '')) === '' &&
+            trim((string) ($entry['dateStart'] ?? '')) === '' &&
+            trim((string) ($entry['dateEnd'] ?? '')) === '' &&
+            trim((string) ($entry['timeStart'] ?? '')) === '' &&
+            trim((string) ($entry['timeEnd'] ?? '')) === '' &&
+            trim((string) ($entry['timezone'] ?? '')) === ''
+        ) {
             continue;
         }
 
         // Prepare optional fields - convert empty strings to NULL for database
         // Use strict comparison (=== '') instead of empty() because empty('0') returns true,
         // which would incorrectly convert valid coordinate values like 0 (equator/prime meridian) to NULL
-        $entry['latitudeMin']  = (trim($entry['latitudeMin'] ?? '') === '')  ? NULL : $entry['latitudeMin'];
-        $entry['latitudeMax']  = (trim($entry['latitudeMax'] ?? '') === '')  ? NULL : $entry['latitudeMax'];
+        $entry['latitudeMin'] = (trim($entry['latitudeMin'] ?? '') === '') ? NULL : $entry['latitudeMin'];
+        $entry['latitudeMax'] = (trim($entry['latitudeMax'] ?? '') === '') ? NULL : $entry['latitudeMax'];
         $entry['longitudeMin'] = (trim($entry['longitudeMin'] ?? '') === '') ? NULL : $entry['longitudeMin'];
         $entry['longitudeMax'] = (trim($entry['longitudeMax'] ?? '') === '') ? NULL : $entry['longitudeMax'];
         $entry['timeStart'] = (trim($entry['timeStart'] ?? '') === '') ? NULL : $entry['timeStart'];
         $entry['timeEnd'] = (trim($entry['timeEnd'] ?? '') === '') ? NULL : $entry['timeEnd'];
         $entry['dateEnd'] = (trim($entry['dateEnd'] ?? '') === '') ? NULL : $entry['dateEnd'];
         $entry['description'] = (trim($entry['description'] ?? '') === '') ? NULL : $entry['description'];
+        $entry['dateStart'] = (trim($entry['dateStart'] ?? '') === '') ? NULL : $entry['dateStart'];
+
+        // SUBMIT vs SAVE validations
+        if ($action === 'submit') {
+            // 1) Dependencies
+            if (!validateSTCDependencies($entry)) {
+                $allSuccessful = false;
+                continue;
+            }
+
+            // 2) Completeness
+            if (!validateSTCCompletenessOnSubmit($entry)) {
+                $allSuccessful = false;
+                continue;
+            }
+        }
 
         // Check required fields using strict comparison (allows 0 values for coordinates)
         // Both latitudeMin and longitudeMin are required for a valid coordinate pair
-        if (
-            (trim($entry['latitudeMin'] ?? '') === '') ||
-            (trim($entry['longitudeMin'] ?? '') === '') ||
-            (trim($entry['dateStart'] ?? '') === '')
-        ) {
-            return true;
+        // Required fields NUR bei SUBMIT erzwingen
+        if ($action === 'submit') {
+            if (
+                (trim($entry['latitudeMin'] ?? '') === '') ||
+                (trim($entry['longitudeMin'] ?? '') === '') ||
+                (trim($entry['dateStart'] ?? '') === '')
+            ) {
+                $allSuccessful = false;
+                continue;
+            }
         }
+
         // Save STC entry
         $stc_id = insertSpatialTemporalCoverage($connection, $entry);
         if ($stc_id) {
