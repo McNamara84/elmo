@@ -171,6 +171,67 @@ function validateSTCDependencies($entry)
 
     return true;
 }
+function validateSTCCompletenessOnSubmit(array $entry): bool
+{
+    // Build "filled" map (treat NULL as not filled)
+    $filled = [
+        'latmin'      => $entry['latitudeMin']  !== NULL,
+        'latmax'      => $entry['latitudeMax']  !== NULL,
+        'longmin'     => $entry['longitudeMin'] !== NULL,
+        'longmax'     => $entry['longitudeMax'] !== NULL,
+        'description' => $entry['description']  !== NULL,
+        'datestart'   => $entry['dateStart']    !== NULL,
+        'dateend'     => $entry['dateEnd']      !== NULL,
+        'timestart'   => $entry['timeStart']    !== NULL,
+        'timeend'     => $entry['timeEnd']      !== NULL,
+        'timezone'    => $entry['timezone']     !== NULL,
+    ];
+
+    // Bounding box: any max implies full bbox + description + dates
+    if ($filled['latmax'] || $filled['longmax']) {
+        if (
+            !$filled['latmin'] || !$filled['longmin'] || !$filled['latmax'] || !$filled['longmax'] ||
+            !$filled['description'] || !$filled['datestart'] || !$filled['dateend']
+        ) {
+            return false;
+        }
+    }
+
+    // If any of latMin/longMin/description is filled -> require dates + latMin + longMin + description
+    if ($filled['latmin'] || $filled['longmin'] || $filled['description']) {
+        if (
+            !$filled['latmin'] || !$filled['longmin'] || !$filled['description'] ||
+            !$filled['datestart'] || !$filled['dateend']
+        ) {
+            return false;
+        }
+    }
+
+    // If any date is filled -> require both dates + latMin + longMin + description
+    if ($filled['datestart'] || $filled['dateend']) {
+        if (
+            !$filled['datestart'] || !$filled['dateend'] ||
+            !$filled['latmin'] || !$filled['longmin'] || !$filled['description']
+        ) {
+            return false;
+        }
+    }
+
+    // If any time is filled -> require both times + both dates + timezone + basics
+    if ($filled['timestart'] || $filled['timeend']) {
+        if (
+            !$filled['timestart'] || !$filled['timeend'] ||
+            !$filled['datestart'] || !$filled['dateend'] ||
+            !$filled['latmin'] || !$filled['longmin'] || !$filled['description'] ||
+            !$filled['timezone']
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
 /**
  * Validates related work entries.
