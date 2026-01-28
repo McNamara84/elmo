@@ -171,6 +171,19 @@ function validateSTCDependencies($entry)
 
     return true;
 }
+/**
+ * Validates "completeness" rules for a single STC row.
+ * This is stricter than validateSTCDependencies() and is meant for SUBMIT.
+ *
+ * Rules:
+ * - Bounding box max values require min values + description + dateStart + dateEnd
+ * - If any of latMin/longMin/description is filled -> require dateStart + dateEnd + latMin + longMin + description
+ * - If either dateStart or dateEnd is filled -> require both dates + latMin + longMin + description
+ * - If either timeStart or timeEnd is filled -> require both times + both dates + latMin + longMin + description + timezone
+ *
+ * @param array $entry One STC row (already normalized: empty strings to NULL recommended)
+ * @return bool True if valid, false otherwise
+ */
 function validateSTCCompletenessOnSubmit(array $entry): bool
 {
     // Build "filled" map (treat NULL as not filled)
