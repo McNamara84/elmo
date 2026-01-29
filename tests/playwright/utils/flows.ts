@@ -105,8 +105,11 @@ async function addAuthorInstitution(
   // Fill institution name
   await institutionRow.locator('#input-authorinstitution-name').fill(data.institutionName);
 
-  // Fill affiliation
-  await institutionRow.locator('#input-authorinstitution-affiliation').fill(data.affiliation);
+  // Fill affiliation using tagify
+  const affiliationTagifyInput = institutionRow.locator('.tagify__input[title="Affiliation(s)"]');
+  await affiliationTagifyInput.click();
+  await affiliationTagifyInput.type(data.affiliation);
+  await page.keyboard.press('Enter');
 }
 
 /**
@@ -153,13 +156,17 @@ async function addContributorPerson(
   await contributorRow.locator('#input-contributor-firstname').fill(data.firstName);
 
   // Fill role using tagify
-  const roleTagifyInput = contributorRow.locator('#input-contributor-personrole').locator('input[type="text"]');
+  const roleTagifyInput = contributorRow.locator('.tagify__input[title="Role"]');
   await roleTagifyInput.click();
+  await page.waitForTimeout(300);
   await roleTagifyInput.type(data.role);
   await page.keyboard.press('Enter');
 
-  // Fill affiliation
-  await contributorRow.locator('#input-contributorpersons-affiliation').fill(data.affiliation);
+  // Fill affiliation using tagify
+  const affiliationTagifyInput = contributorRow.locator('.tagify__input[title="Affiliation"]');
+  await affiliationTagifyInput.click();
+  await affiliationTagifyInput.type(data.affiliation);
+  await page.keyboard.press('Enter');
 }
 
 /**
@@ -195,14 +202,17 @@ async function addContributorInstitution(
   // Fill organization name
   await institutionRow.locator('#input-contributor-name').fill(data.organizationName);
 
-  // Fill role using tagify
-  const roleTagifyInput = institutionRow.locator('#input-contributor-organisationrole').locator('input[type="text"]');
+  // Fill the role into tha tagify field 
+  const roleTagifyInput = institutionRow.locator('.tagify__input[title="Role(s)"]');
   await roleTagifyInput.click();
   await roleTagifyInput.type(data.role);
   await page.keyboard.press('Enter');
 
-  // Fill affiliation
-  await institutionRow.locator('#input-contributor-organisationaffiliation').fill(data.affiliation);
+  // Fill the affiliation into the tagify field 
+  const affiliationTagifyInput = institutionRow.locator('.tagify__input[title="Affiliation(s)"]');
+  await affiliationTagifyInput.click();
+  await affiliationTagifyInput.type(data.affiliation);
+  await page.keyboard.press('Enter');
 }
 
 /**
@@ -393,14 +403,17 @@ export async function completeExtendedMultipleEntries(page: Page) {
  * @returns {Promise<void>}
  */
 export async function completeContributorsAI(page: Page) {
+
+  // Add Contributor Institutions
+  await addContributorInstitution(page, 0, exampleData.extended.contributorInstitutions[0]);
+
   // Add Author Institutions
   await addAuthorInstitution(page, 0, exampleData.extended.authorInstitutions[0]);
 
   // Add Contributor Persons
   await addContributorPerson(page, 0, exampleData.extended.contributorPersons[0]);
 
-  // Add Contributor Institutions
-  await addContributorInstitution(page, 0, exampleData.extended.contributorInstitutions[0]);
+
 }
 
 export { exampleData };
