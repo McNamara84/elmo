@@ -3,6 +3,13 @@ import { SELECTORS } from './constants';
 import exampleData from './inputDataEndToEnd.json';
 
 
+/**
+ * Fills in the minimal required fields for a dataset form.
+ * Completes: publication year, resource type, language, title, author details (ORCID, name),
+ * affiliation, contact person email, abstract, and date created.
+ * @param {Page} page - The Playwright page object to interact with
+ * @returns {Promise<void>}
+ */
 export async function completeMinimalDatasetForm(page: Page) {
   await page.getByRole('textbox', { name: 'Publication Year (YYYY)*' }).fill('2025');
   await page.getByLabel('Resource Type*').selectOption('5');
@@ -28,6 +35,13 @@ export async function completeMinimalDatasetForm(page: Page) {
   await page.getByRole('textbox', { name: 'Date created*' }).fill('2025-01-01');
 }
 
+/**
+ * Fills in an extended dataset form with additional optional fields.
+ * Includes all minimal fields plus: related works, free keywords, methods description,
+ * technical information, other descriptions, funding references, and additional authors.
+ * @param {Page} page - The Playwright page object to interact with
+ * @returns {Promise<void>}
+ */
 export async function completeExtendedDatasetForm(page: Page) {
   // Start with minimal dataset form (includes author, contact person, and abstract)
   await completeMinimalDatasetForm(page);
@@ -61,7 +75,11 @@ export async function completeExtendedDatasetForm(page: Page) {
 // ============ Helper Functions ============
 
 /**
- * Add a free keyword using tagify (Enter key to create tags)
+ * Adds a free keyword tag using tagify input.
+ * Clicks the keyword input field, types the keyword, and presses Enter to create the tag.
+ * @param {Page} page - The Playwright page object to interact with
+ * @param {string} keyword - The keyword text to add
+ * @returns {Promise<void>}
  */
 async function addFreeKeyword(page: Page, keyword: string) {
 
@@ -76,7 +94,15 @@ async function addFreeKeyword(page: Page, keyword: string) {
 }
 
 /**
- * Add a related work entry
+ * Adds a related work entry with relation, identifier, and identifier type.
+ * Creates a new row if index > 0, then fills in the related work details.
+ * @param {Page} page - The Playwright page object to interact with
+ * @param {number} index - The row index for the related work entry (0-based)
+ * @param {Object} data - The related work data object
+ * @param {string} data.identifier - The identifier value (e.g., DOI, URL)
+ * @param {string} data.type - The identifier type label (e.g., 'DOI', 'URL')
+ * @param {string} data.relation - The relation type label (e.g., 'cites', 'references')
+ * @returns {Promise<void>}
  */
 async function addRelatedWork(
   page: Page,
@@ -111,7 +137,16 @@ async function addRelatedWork(
 }
 
 /**
- * Add a funding reference entry
+ * Adds a funding reference entry with funder, grant number, name, and award URI.
+ * Creates a new row if index > 0, then fills in the funding reference details.
+ * @param {Page} page - The Playwright page object to interact with
+ * @param {number} index - The row index for the funding reference entry (0-based)
+ * @param {Object} data - The funding reference data object
+ * @param {string} data.funder - The funder name
+ * @param {string} data.grantNumber - The grant number or identifier
+ * @param {string} data.grantName - The grant title or name
+ * @param {string} data.awardUri - The URI/URL of the award or grant
+ * @returns {Promise<void>} = "This function returns a Promise that resolves to nothing."
  */
 async function addFundingReference(
   page: Page,
@@ -144,7 +179,17 @@ async function addFundingReference(
 }
 
 /**
- * Add an author entry
+ * Adds an author entry with ORCID, name, and affiliation.
+ * Creates a new row if index > 0, then fills in the author details.
+ * Affiliation is added as a tagify tag (requires Enter key press).
+ * @param {Page} page - The Playwright page object to interact with
+ * @param {number} index - The row index for the author entry (0-based)
+ * @param {Object} data - The author data object
+ * @param {string} data.orcid - The author's ORCID identifier
+ * @param {string} data.lastName - The author's last name
+ * @param {string} data.firstName - The author's first name
+ * @param {string} data.affiliation - The author's affiliation/institution name
+ * @returns {Promise<void>} - "This function returns a Promise that resolves to nothing."
  */
 async function addAuthor(
   page: Page,
@@ -185,6 +230,13 @@ async function addAuthor(
   await page.keyboard.press('Enter');
 }
 
+/**
+ * Completes an extended dataset form with multiple entries for related works,
+ * keywords, funding references, and authors.
+ * Builds on the extended form and adds additional entries for testing multiple item handling.
+ * @param {Page} page - The Playwright page object to interact with
+ * @returns {Promise<void>}
+ */
 export async function completeExtendedMultipleEntries(page: Page) {
   // Start with extended dataset form
   await completeExtendedDatasetForm(page);
