@@ -17,6 +17,19 @@ test.describe('Dataset Save with XML Verification', () => {
   });
 
   test.beforeEach(() => {
+    // Check prerequisites: verify all reference files exist
+    const requiredReferenceFiles = ['minimal.json', 'extended.json', 'extended-multiple.json'];
+    for (const file of requiredReferenceFiles) {
+      const filePath = path.join(XML_REFERENCE_DIR, file);
+      if (!fs.existsSync(filePath)) {
+        throw new Error(
+          `PREREQUISITE ERROR: Reference file missing: ${filePath}\n` +
+          `Required reference files for XML verification tests:\n` +
+          requiredReferenceFiles.map(f => `  - ${path.join(XML_REFERENCE_DIR, f)}`).join('\n')
+        );
+      }
+    }
+
     // Clean actual output directory before each test
     if (fs.existsSync(XML_ACTUAL_DIR)) {
       fs.rmSync(XML_ACTUAL_DIR, { recursive: true, force: true });
