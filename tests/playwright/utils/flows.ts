@@ -70,6 +70,40 @@ export async function completeExtendedDatasetForm(page: Page) {
 
   // Add Additional Authors
   await addAuthor(page, 1, exampleData.extended.authors[0]);
+
+    // Add Contributor Institutions
+  await addContributorInstitution(page, 0, exampleData.extended.contributorInstitutions[0]);
+
+  // Add Author Institutions
+  await addAuthorInstitution(page, 0, exampleData.extended.authorInstitutions[0]);
+
+  // Add Contributor Persons
+  await addContributorPerson(page, 0, exampleData.extended.contributorPersons[0]);
+}
+
+/**
+ * Completes an extended dataset form with multiple entries for related works,
+ * keywords, funding references, and authors.
+ * Builds on the extended form and adds additional entries for testing multiple item handling.
+ * @param {Page} page - The Playwright page object to interact with
+ * @returns {Promise<void>}
+ */
+export async function completeExtendedMultipleEntries(page: Page) {
+  // Start with extended dataset form
+  await completeExtendedDatasetForm(page);
+
+  // Add more related works
+  await addRelatedWork(page, 1, exampleData.extendedMultiple.relatedWorks[1]);
+
+  // Add more keywords
+  await addFreeKeyword(page, 'monitoring');
+  await addFreeKeyword(page, 'data');
+
+  // Add more funding references
+  await addFundingReference(page, 1, exampleData.extendedMultiple.fundingReferences[1]);
+
+  // Add one more author
+  await addAuthor(page, 1, exampleData.extendedMultiple.authors[1]);
 }
 
 // ============ Helper Functions ============
@@ -374,38 +408,12 @@ async function addAuthor(
 }
 
 /**
- * Completes an extended dataset form with multiple entries for related works,
- * keywords, funding references, and authors.
- * Builds on the extended form and adds additional entries for testing multiple item handling.
- * @param {Page} page - The Playwright page object to interact with
- * @returns {Promise<void>}
- */
-export async function completeExtendedMultipleEntries(page: Page) {
-  // Start with extended dataset form
-  await completeExtendedDatasetForm(page);
-
-  // Add more related works
-  await addRelatedWork(page, 1, exampleData.extendedMultiple.relatedWorks[1]);
-
-  // Add more keywords
-  await addFreeKeyword(page, 'monitoring');
-  await addFreeKeyword(page, 'data');
-
-  // Add more funding references
-  await addFundingReference(page, 1, exampleData.extendedMultiple.fundingReferences[1]);
-
-  // Add one more author
-  await addAuthor(page, 1, exampleData.extendedMultiple.authors[1]);
-}
-
-/**
  * Completes only the contributors and author institutions form groups.
  * Tests the three new form input functions: addAuthorInstitution, addContributorPerson, addContributorInstitution.
  * @param {Page} page - The Playwright page object to interact with
  * @returns {Promise<void>}
  */
 export async function completeContributorsAI(page: Page) {
-
   // Add Contributor Institutions
   await addContributorInstitution(page, 0, exampleData.extended.contributorInstitutions[0]);
 
@@ -414,8 +422,6 @@ export async function completeContributorsAI(page: Page) {
 
   // Add Contributor Persons
   await addContributorPerson(page, 0, exampleData.extended.contributorPersons[0]);
-
-
 }
 
 export { exampleData };
