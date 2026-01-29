@@ -75,6 +75,137 @@ export async function completeExtendedDatasetForm(page: Page) {
 // ============ Helper Functions ============
 
 /**
+ * Adds an author institution entry with institution name and affiliation.
+ * Creates a new row if index > 0, then fills in the institution details.
+ * @param {Page} page - The Playwright page object to interact with
+ * @param {number} index - The row index for the author institution entry (0-based)
+ * @param {Object} data - The author institution data object
+ * @param {string} data.institutionName - The institution name
+ * @param {string} data.affiliation - The institution affiliation/ROR identifier
+ * @returns {Promise<void>}
+ */
+async function addAuthorInstitution(
+  page: Page,
+  index: number,
+  data: {
+    institutionName: string;
+    affiliation: string;
+  }
+) {
+  if (index > 0) {
+    // Click the add button to create a new row
+    await page.locator('#button-authorinstitution-add').click();
+    // Wait for the new author institution row to be visible
+    await page.locator('[data-authorinstitution-row]').nth(index).waitFor({ state: 'visible' });
+  }
+
+  // Get the specific author institution row
+  const institutionRow = page.locator('[data-authorinstitution-row]').nth(index);
+
+  // Fill institution name
+  await institutionRow.locator('#input-authorinstitution-name').fill(data.institutionName);
+
+  // Fill affiliation
+  await institutionRow.locator('#input-authorinstitution-affiliation').fill(data.affiliation);
+}
+
+/**
+ * Adds a contributor person entry with ORCID, name, role, and affiliation.
+ * Creates a new row if index > 0, then fills in the contributor details.
+ * @param {Page} page - The Playwright page object to interact with
+ * @param {number} index - The row index for the contributor person entry (0-based)
+ * @param {Object} data - The contributor person data object
+ * @param {string} data.orcid - The contributor's ORCID identifier
+ * @param {string} data.lastName - The contributor's last name
+ * @param {string} data.firstName - The contributor's first name
+ * @param {string} data.role - The contributor's role (e.g., 'DataCurator', 'Editor')
+ * @param {string} data.affiliation - The contributor's affiliation/institution name
+ * @returns {Promise<void>}
+ */
+async function addContributorPerson(
+  page: Page,
+  index: number,
+  data: {
+    orcid: string;
+    lastName: string;
+    firstName: string;
+    role: string;
+    affiliation: string;
+  }
+) {
+  if (index > 0) {
+    // Click the add button to create a new row
+    await page.locator('#button-contributor-addperson').click();
+    // Wait for the new contributor person row to be visible
+    await page.locator('[contributor-person-row]').nth(index).waitFor({ state: 'visible' });
+  }
+
+  // Get the specific contributor person row
+  const contributorRow = page.locator('[contributor-person-row]').nth(index);
+
+  // Fill ORCID
+  await contributorRow.locator('#input-contributor-orcid').fill(data.orcid);
+
+  // Fill last name
+  await contributorRow.locator('#input-contributor-lastname').fill(data.lastName);
+
+  // Fill first name
+  await contributorRow.locator('#input-contributor-firstname').fill(data.firstName);
+
+  // Fill role using tagify
+  const roleTagifyInput = contributorRow.locator('#input-contributor-personrole').locator('input[type="text"]');
+  await roleTagifyInput.click();
+  await roleTagifyInput.type(data.role);
+  await page.keyboard.press('Enter');
+
+  // Fill affiliation
+  await contributorRow.locator('#input-contributorpersons-affiliation').fill(data.affiliation);
+}
+
+/**
+ * Adds a contributor institution entry with organization name, role, and affiliation.
+ * Creates a new row if index > 0, then fills in the contributor institution details.
+ * @param {Page} page - The Playwright page object to interact with
+ * @param {number} index - The row index for the contributor institution entry (0-based)
+ * @param {Object} data - The contributor institution data object
+ * @param {string} data.organizationName - The organization name
+ * @param {string} data.role - The organization's role (e.g., 'Sponsor', 'HostingInstitution')
+ * @param {string} data.affiliation - The organization affiliation/ROR identifier
+ * @returns {Promise<void>}
+ */
+async function addContributorInstitution(
+  page: Page,
+  index: number,
+  data: {
+    organizationName: string;
+    role: string;
+    affiliation: string;
+  }
+) {
+  if (index > 0) {
+    // Click the add button to create a new row
+    await page.locator('#button-contributor-addorganisation').click();
+    // Wait for the new contributor institution row to be visible
+    await page.locator('[contributors-row]').nth(index).waitFor({ state: 'visible' });
+  }
+
+  // Get the specific contributor institution row
+  const institutionRow = page.locator('[contributors-row]').nth(index);
+
+  // Fill organization name
+  await institutionRow.locator('#input-contributor-name').fill(data.organizationName);
+
+  // Fill role using tagify
+  const roleTagifyInput = institutionRow.locator('#input-contributor-organisationrole').locator('input[type="text"]');
+  await roleTagifyInput.click();
+  await roleTagifyInput.type(data.role);
+  await page.keyboard.press('Enter');
+
+  // Fill affiliation
+  await institutionRow.locator('#input-contributor-organisationaffiliation').fill(data.affiliation);
+}
+
+/**
  * Adds a free keyword tag using tagify input.
  * Clicks the keyword input field, types the keyword, and presses Enter to create the tag.
  * @param {Page} page - The Playwright page object to interact with
@@ -253,6 +384,23 @@ export async function completeExtendedMultipleEntries(page: Page) {
 
   // Add one more author
   await addAuthor(page, 1, exampleData.extendedMultiple.authors[1]);
+}
+
+/**
+ * Completes only the contributors and author institutions form groups.
+ * Tests the three new form input functions: addAuthorInstitution, addContributorPerson, addContributorInstitution.
+ * @param {Page} page - The Playwright page object to interact with
+ * @returns {Promise<void>}
+ */
+export async function completeContributorsAI(page: Page) {
+  // Add Author Institutions
+  await addAuthorInstitution(page, 0, exampleData.extended.authorInstitutions[0]);
+
+  // Add Contributor Persons
+  await addContributorPerson(page, 0, exampleData.extended.contributorPersons[0]);
+
+  // Add Contributor Institutions
+  await addContributorInstitution(page, 0, exampleData.extended.contributorInstitutions[0]);
 }
 
 export { exampleData };

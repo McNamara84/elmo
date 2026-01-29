@@ -45,6 +45,28 @@
         "firstName": "Johann",
         "affiliation": "University of Cambridge"
       }
+    ],
+    "authorInstitutions": [
+      {
+        "institutionName": "GFZ Helmholtz Centre for Geosciences",
+        "affiliation": "https://ror.org/04z8jg394"
+      }
+    ],
+    "contributorPersons": [
+      {
+        "orcid": "0000-0001-5109-3700",
+        "lastName": "Smith",
+        "firstName": "Alice",
+        "role": "DataCurator",
+        "affiliation": "British Geological Survey"
+      }
+    ],
+    "contributorInstitutions": [
+      {
+        "organizationName": "USGS",
+        "role": "Sponsor",
+        "affiliation": "https://ror.org/035a68863"
+      }
     ]
   },
   "extendedMultiple": {
@@ -87,6 +109,44 @@
         "lastName": "Mueller",
         "firstName": "Hans",
         "affiliation": "ETH Zurich"
+      }
+    ],
+    "authorInstitutions": [
+      {
+        "institutionName": "GFZ Helmholtz Centre for Geosciences",
+        "affiliation": "https://ror.org/04z8jg394"
+      },
+      {
+        "institutionName": "ETH Zürich Foundation",
+        "affiliation": "https://ror.org/03nqkz164"
+      }
+    ],
+    "contributorPersons": [
+      {
+        "orcid": "0000-0001-5109-3700",
+        "lastName": "Smith",
+        "firstName": "Alice",
+        "role": "DataCurator",
+        "affiliation": "British Geological Survey"
+      },
+      {
+        "orcid": "0000-0003-4234-5678",
+        "lastName": "Johnson",
+        "firstName": "Robert",
+        "role": "Editor",
+        "affiliation": "NOAA"
+      }
+    ],
+    "contributorInstitutions": [
+      {
+        "organizationName": "USGS",
+        "role": "Sponsor",
+        "affiliation": "https://ror.org/035a68863"
+      },
+      {
+        "organizationName": "UNESCO",
+        "role": "HostingInstitution",
+        "affiliation": "https://ror.org/04wxnsj81"
       }
     ]
   }
