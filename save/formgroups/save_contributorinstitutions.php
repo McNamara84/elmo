@@ -15,6 +15,10 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
 {
     $valid_roles = getValidRoles($connection);
 
+    // Validate only on submit
+    $action = $postData['action'] ?? 'save_and_download';
+    $validateOnSubmit = ($action === 'submit');
+
     if (
         !isset(
         $postData['cbOrganisationName'],
@@ -37,13 +41,13 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
             'roles' => $postData['cbOrganisationRoles'][$i] ?? ''
         ];
 
-        if (!validateContributorInstitutionDependencies($entry)) {
-            $allSuccessful = false;
+        // Skip if no data provided
+        if (empty($entry['name']) && (empty($entry['roles']) || $entry['roles'] === '[]')) {
             continue;
         }
 
-        // Skip if no data provided
-        if (empty($entry['name']) && empty($entry['roles'])) {
+        if ($validateOnSubmit && !validateContributorInstitutionDependencies($entry)) {
+            $allSuccessful = false;
             continue;
         }
 
