@@ -9,7 +9,13 @@
       <givenName>Josiah</givenName>
       <familyName>Carberry</familyName>
       <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1825-0097</nameIdentifier>
-      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</affiliation>
+    </creator>
+    <creator>
+      <creatorName nameType="Personal">Isaak, Johann</creatorName>
+      <givenName>Johann</givenName>
+      <familyName>Isaak</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-2345-6789</nameIdentifier>
+      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/013meh722">University of Cambridge</affiliation>
     </creator>
     <creator>
       <creatorName nameType="Personal">Mueller, Hans</creatorName>
@@ -17,6 +23,14 @@
       <familyName>Mueller</familyName>
       <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-6352-9161</nameIdentifier>
       <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/03nqkz164">ETH Zürich Foundation</affiliation>
+    </creator>
+    <creator>
+      <creatorName nameType="Organizational">GFZ Helmholtz Centre for Geosciences</creatorName>
+      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</affiliation>
+    </creator>
+    <creator>
+      <creatorName nameType="Organizational">Research Institute for Sustainability</creatorName>
+      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/01vvnmw35">Research Institute for Sustainability at GFZ</affiliation>
     </creator>
   </creators>
   <titles>
@@ -27,6 +41,7 @@
   <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
   <subjects>
     <subject>seismic data</subject>
+    <subject>nowcasting</subject>
     <subject>monitoring</subject>
     <subject>data</subject>
   </subjects>
@@ -36,7 +51,27 @@
       <givenName>Josiah</givenName>
       <familyName>Carberry</familyName>
       <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1825-0097</nameIdentifier>
-      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</affiliation>
+    </contributor>
+    <contributor contributorType="DataCollector">
+      <contributorName nameType="Personal">Haak, Laurel</contributorName>
+      <givenName>Laurel</givenName>
+      <familyName>Haak</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-5109-3700</nameIdentifier>
+    </contributor>
+    <contributor contributorType="Researcher">
+      <contributorName nameType="Personal">Eze, Ifeoma</contributorName>
+      <givenName>Ifeoma</givenName>
+      <familyName>Eze</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3915-1872</nameIdentifier>
+      <affiliation>The Shepherd MediCentre</affiliation>
+    </contributor>
+    <contributor contributorType="Translator">
+      <contributorName nameType="Organizational">FFFF</contributorName>
+      <affiliation>Florida Forest Friends Fund</affiliation>
+    </contributor>
+    <contributor contributorType="Sponsor">
+      <contributorName nameType="Organizational">THE Japan Thailand Association</contributorName>
+      <affiliation>Japan Thailand Association</affiliation>
     </contributor>
   </contributors>
   <dates>
@@ -45,6 +80,7 @@
   <language>en</language>
   <relatedIdentifiers>
     <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.5880/GFZ.DMJQ.2025.007</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.5880/GFZ.DMJQ.2025.008</relatedIdentifier>
     <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.5880/GFZ.DMJQ.2025.009</relatedIdentifier>
   </relatedIdentifiers>
   <rightsList>
@@ -62,6 +98,11 @@
       <funderName>DFG</funderName>
       <awardNumber awardURI="https://gepris.dfg.de/gepris/project/12345">DFG-12345</awardNumber>
       <awardTitle>Seismic Monitoring Network</awardTitle>
+    </fundingReference>
+    <fundingReference>
+      <funderName>NSF</funderName>
+      <awardNumber awardURI="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2067890">NSF-67890</awardNumber>
+      <awardTitle>Climate Data Analytics Initiative</awardTitle>
     </fundingReference>
     <fundingReference>
       <funderName>EU Horizon</funderName>
@@ -124,7 +165,7 @@
     </CI_ResponsibleParty>
   </contact>
   <dateStamp>
-    <gco:Date>2026-01-27</gco:Date>
+    <gco:Date>2026-01-30</gco:Date>
   </dateStamp>
   <referenceSystemInfo>
     <MD_ReferenceSystem>
@@ -164,9 +205,6 @@
           <individualName>
             <gco:CharacterString>Carberry, Josiah</gco:CharacterString>
           </individualName>
-          <organisationName>
-            <gco:CharacterString>GFZ Helmholtz Centre for Geosciences</gco:CharacterString>
-          </organisationName>
           <contactInfo>
             <CI_Contact>
               <address>
@@ -176,6 +214,11 @@
                   </electronicMailAddress>
                 </CI_Address>
               </address>
+              <onlineResource>
+                <CI_OnlineResource>
+                  <linkage/>
+                </CI_OnlineResource>
+              </onlineResource>
             </CI_Contact>
           </contactInfo>
           <role>
@@ -189,6 +232,9 @@
         <MD_Keywords>
           <keyword>
             <gco:CharacterString>seismic data</gco:CharacterString>
+          </keyword>
+          <keyword>
+            <gco:CharacterString>nowcasting</gco:CharacterString>
           </keyword>
           <keyword>
             <gco:CharacterString>monitoring</gco:CharacterString>
@@ -228,6 +274,23 @@
             <RS_Identifier>
               <code>
                 <gco:CharacterString>10.5880/GFZ.DMJQ.2025.007</gco:CharacterString>
+              </code>
+              <codeSpace>
+                <gco:CharacterString>DOI</gco:CharacterString>
+              </codeSpace>
+            </RS_Identifier>
+          </aggregateDataSetIdentifier>
+          <associationType>
+            <DS_AssociationTypeCode codeList="http://datacite.org/schema/kernel-4" codeListValue="References">References</DS_AssociationTypeCode>
+          </associationType>
+        </MD_AggregateInformation>
+      </aggregationInfo>
+      <aggregationInfo>
+        <MD_AggregateInformation>
+          <aggregateDataSetIdentifier>
+            <RS_Identifier>
+              <code>
+                <gco:CharacterString>10.5880/GFZ.DMJQ.2025.008</gco:CharacterString>
               </code>
               <codeSpace>
                 <gco:CharacterString>DOI</gco:CharacterString>

@@ -21,12 +21,25 @@
               "#text": "0000-0002-1825-0097",
               "nameIdentifierScheme": "ORCID",
               "schemeURI": "https://orcid.org/"
+            }
+          },
+          {
+            "creatorName": {
+              "#text": "Isaak, Johann",
+              "nameType": "Personal"
+            },
+            "givenName": "Johann",
+            "familyName": "Isaak",
+            "nameIdentifier": {
+              "#text": "0000-0001-2345-6789",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
             },
             "affiliation": {
-              "#text": "GFZ Helmholtz Centre for Geosciences",
+              "#text": "University of Cambridge",
               "affiliationIdentifierScheme": "ROR",
               "schemeURI": "https://ror.org/",
-              "affiliationIdentifier": "https://ror.org/04z8jg394"
+              "affiliationIdentifier": "https://ror.org/013meh722"
             }
           },
           {
@@ -46,6 +59,30 @@
               "affiliationIdentifierScheme": "ROR",
               "schemeURI": "https://ror.org/",
               "affiliationIdentifier": "https://ror.org/03nqkz164"
+            }
+          },
+          {
+            "creatorName": {
+              "#text": "GFZ Helmholtz Centre for Geosciences",
+              "nameType": "Organizational"
+            },
+            "affiliation": {
+              "#text": "GFZ Helmholtz Centre for Geosciences",
+              "affiliationIdentifierScheme": "ROR",
+              "schemeURI": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/04z8jg394"
+            }
+          },
+          {
+            "creatorName": {
+              "#text": "Research Institute for Sustainability",
+              "nameType": "Organizational"
+            },
+            "affiliation": {
+              "#text": "Research Institute for Sustainability at GFZ",
+              "affiliationIdentifierScheme": "ROR",
+              "schemeURI": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/01vvnmw35"
             }
           }
         ]
@@ -68,28 +105,70 @@
       "subjects": {
         "subject": [
           "seismic data",
+          "nowcasting",
           "monitoring",
           "data"
         ]
       },
       "contributors": {
-        "contributor": {
-          "contributorName": "Carberry, Josiah",
-          "givenName": "Josiah",
-          "familyName": "Carberry",
-          "nameIdentifier": {
-            "#text": "0000-0002-1825-0097",
-            "nameIdentifierScheme": "ORCID",
-            "schemeURI": "https://orcid.org/"
+        "contributor": [
+          {
+            "contributorName": "Carberry, Josiah",
+            "givenName": "Josiah",
+            "familyName": "Carberry",
+            "nameIdentifier": {
+              "#text": "0000-0002-1825-0097",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            },
+            "contributorType": "ContactPerson"
           },
-          "affiliation": {
-            "#text": "GFZ Helmholtz Centre for Geosciences",
-            "affiliationIdentifierScheme": "ROR",
-            "schemeURI": "https://ror.org",
-            "affiliationIdentifier": "https://ror.org/04z8jg394"
+          {
+            "contributorName": {
+              "#text": "Haak, Laurel",
+              "nameType": "Personal"
+            },
+            "givenName": "Laurel",
+            "familyName": "Haak",
+            "nameIdentifier": {
+              "#text": "0000-0001-5109-3700",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            },
+            "contributorType": "DataCollector"
           },
-          "contributorType": "ContactPerson"
-        }
+          {
+            "contributorName": {
+              "#text": "Eze, Ifeoma",
+              "nameType": "Personal"
+            },
+            "givenName": "Ifeoma",
+            "familyName": "Eze",
+            "nameIdentifier": {
+              "#text": "0000-0002-3915-1872",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            },
+            "affiliation": "The Shepherd MediCentre",
+            "contributorType": "Researcher"
+          },
+          {
+            "contributorName": {
+              "#text": "FFFF",
+              "nameType": "Organizational"
+            },
+            "affiliation": "Florida Forest Friends Fund",
+            "contributorType": "Translator"
+          },
+          {
+            "contributorName": {
+              "#text": "THE Japan Thailand Association",
+              "nameType": "Organizational"
+            },
+            "affiliation": "Japan Thailand Association",
+            "contributorType": "Sponsor"
+          }
+        ]
       },
       "dates": {
         "date": {
@@ -102,6 +181,11 @@
         "relatedIdentifier": [
           {
             "#text": "10.5880/GFZ.DMJQ.2025.007",
+            "relatedIdentifierType": "DOI",
+            "relationType": "References"
+          },
+          {
+            "#text": "10.5880/GFZ.DMJQ.2025.008",
             "relatedIdentifierType": "DOI",
             "relationType": "References"
           },
@@ -156,6 +240,14 @@
               "awardURI": "https://gepris.dfg.de/gepris/project/12345"
             },
             "awardTitle": "Seismic Monitoring Network"
+          },
+          {
+            "funderName": "NSF",
+            "awardNumber": {
+              "#text": "NSF-67890",
+              "awardURI": "https://www.nsf.gov/awardsearch/showAward?AWD_ID=2067890"
+            },
+            "awardTitle": "Climate Data Analytics Initiative"
           },
           {
             "funderName": "EU Horizon",
@@ -241,7 +333,7 @@
         }
       },
       "dateStamp": {
-        "gco:Date": "2026-01-27"
+        "gco:Date": "2026-01-30"
       },
       "referenceSystemInfo": {
         "MD_ReferenceSystem": {
@@ -285,9 +377,6 @@
               "individualName": {
                 "gco:CharacterString": "Carberry, Josiah"
               },
-              "organisationName": {
-                "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
-              },
               "contactInfo": {
                 "CI_Contact": {
                   "address": {
@@ -295,6 +384,11 @@
                       "electronicMailAddress": {
                         "gco:CharacterString": "example@gmail.com"
                       }
+                    }
+                  },
+                  "onlineResource": {
+                    "CI_OnlineResource": {
+                      "linkage": ""
                     }
                   }
                 }
@@ -316,6 +410,9 @@
                 "keyword": [
                   {
                     "gco:CharacterString": "seismic data"
+                  },
+                  {
+                    "gco:CharacterString": "nowcasting"
                   },
                   {
                     "gco:CharacterString": "monitoring"
@@ -367,6 +464,27 @@
                   "RS_Identifier": {
                     "code": {
                       "gco:CharacterString": "10.5880/GFZ.DMJQ.2025.007"
+                    },
+                    "codeSpace": {
+                      "gco:CharacterString": "DOI"
+                    }
+                  }
+                },
+                "associationType": {
+                  "DS_AssociationTypeCode": {
+                    "#text": "References",
+                    "codeList": "http://datacite.org/schema/kernel-4",
+                    "codeListValue": "References"
+                  }
+                }
+              }
+            },
+            {
+              "MD_AggregateInformation": {
+                "aggregateDataSetIdentifier": {
+                  "RS_Identifier": {
+                    "code": {
+                      "gco:CharacterString": "10.5880/GFZ.DMJQ.2025.008"
                     },
                     "codeSpace": {
                       "gco:CharacterString": "DOI"

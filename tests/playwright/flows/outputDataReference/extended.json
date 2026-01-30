@@ -21,31 +21,18 @@
               "#text": "0000-0002-1825-0097",
               "nameIdentifierScheme": "ORCID",
               "schemeURI": "https://orcid.org/"
+            }
+          },
+          {
+            "creatorName": {
+              "#text": "GFZ Helmholtz Centre for Geosciences",
+              "nameType": "Organizational"
             },
             "affiliation": {
               "#text": "GFZ Helmholtz Centre for Geosciences",
               "affiliationIdentifierScheme": "ROR",
               "schemeURI": "https://ror.org/",
               "affiliationIdentifier": "https://ror.org/04z8jg394"
-            }
-          },
-          {
-            "creatorName": {
-              "#text": "Isaak, Johann",
-              "nameType": "Personal"
-            },
-            "givenName": "Johann",
-            "familyName": "Isaak",
-            "nameIdentifier": {
-              "#text": "0000-0001-2345-6789",
-              "nameIdentifierScheme": "ORCID",
-              "schemeURI": "https://orcid.org/"
-            },
-            "affiliation": {
-              "#text": "University of Cambridge",
-              "affiliationIdentifierScheme": "ROR",
-              "schemeURI": "https://ror.org/",
-              "affiliationIdentifier": "https://ror.org/013meh722"
             }
           }
         ]
@@ -69,23 +56,41 @@
         "subject": "seismic data"
       },
       "contributors": {
-        "contributor": {
-          "contributorName": "Carberry, Josiah",
-          "givenName": "Josiah",
-          "familyName": "Carberry",
-          "nameIdentifier": {
-            "#text": "0000-0002-1825-0097",
-            "nameIdentifierScheme": "ORCID",
-            "schemeURI": "https://orcid.org/"
+        "contributor": [
+          {
+            "contributorName": "Carberry, Josiah",
+            "givenName": "Josiah",
+            "familyName": "Carberry",
+            "nameIdentifier": {
+              "#text": "0000-0002-1825-0097",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            },
+            "contributorType": "ContactPerson"
           },
-          "affiliation": {
-            "#text": "GFZ Helmholtz Centre for Geosciences",
-            "affiliationIdentifierScheme": "ROR",
-            "schemeURI": "https://ror.org",
-            "affiliationIdentifier": "https://ror.org/04z8jg394"
+          {
+            "contributorName": {
+              "#text": "Haak, Laurel",
+              "nameType": "Personal"
+            },
+            "givenName": "Laurel",
+            "familyName": "Haak",
+            "nameIdentifier": {
+              "#text": "0000-0001-5109-3700",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            },
+            "contributorType": "DataCollector"
           },
-          "contributorType": "ContactPerson"
-        }
+          {
+            "contributorName": {
+              "#text": "FFFF",
+              "nameType": "Organizational"
+            },
+            "affiliation": "Florida Forest Friends Fund",
+            "contributorType": "Translator"
+          }
+        ]
       },
       "dates": {
         "date": {
@@ -220,7 +225,7 @@
         }
       },
       "dateStamp": {
-        "gco:Date": "2026-01-27"
+        "gco:Date": "2026-01-30"
       },
       "referenceSystemInfo": {
         "MD_ReferenceSystem": {
@@ -264,9 +269,6 @@
               "individualName": {
                 "gco:CharacterString": "Carberry, Josiah"
               },
-              "organisationName": {
-                "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
-              },
               "contactInfo": {
                 "CI_Contact": {
                   "address": {
@@ -274,6 +276,11 @@
                       "electronicMailAddress": {
                         "gco:CharacterString": "example@gmail.com"
                       }
+                    }
+                  },
+                  "onlineResource": {
+                    "CI_OnlineResource": {
+                      "linkage": ""
                     }
                   }
                 }

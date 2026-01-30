@@ -9,14 +9,10 @@
       <givenName>Josiah</givenName>
       <familyName>Carberry</familyName>
       <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1825-0097</nameIdentifier>
-      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</affiliation>
     </creator>
     <creator>
-      <creatorName nameType="Personal">Isaak, Johann</creatorName>
-      <givenName>Johann</givenName>
-      <familyName>Isaak</familyName>
-      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-2345-6789</nameIdentifier>
-      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/013meh722">University of Cambridge</affiliation>
+      <creatorName nameType="Organizational">GFZ Helmholtz Centre for Geosciences</creatorName>
+      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</affiliation>
     </creator>
   </creators>
   <titles>
@@ -34,7 +30,16 @@
       <givenName>Josiah</givenName>
       <familyName>Carberry</familyName>
       <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1825-0097</nameIdentifier>
-      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</affiliation>
+    </contributor>
+    <contributor contributorType="DataCollector">
+      <contributorName nameType="Personal">Haak, Laurel</contributorName>
+      <givenName>Laurel</givenName>
+      <familyName>Haak</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-5109-3700</nameIdentifier>
+    </contributor>
+    <contributor contributorType="Translator">
+      <contributorName nameType="Organizational">FFFF</contributorName>
+      <affiliation>Florida Forest Friends Fund</affiliation>
     </contributor>
   </contributors>
   <dates>
@@ -116,7 +121,7 @@
     </CI_ResponsibleParty>
   </contact>
   <dateStamp>
-    <gco:Date>2026-01-27</gco:Date>
+    <gco:Date>2026-01-30</gco:Date>
   </dateStamp>
   <referenceSystemInfo>
     <MD_ReferenceSystem>
@@ -156,9 +161,6 @@
           <individualName>
             <gco:CharacterString>Carberry, Josiah</gco:CharacterString>
           </individualName>
-          <organisationName>
-            <gco:CharacterString>GFZ Helmholtz Centre for Geosciences</gco:CharacterString>
-          </organisationName>
           <contactInfo>
             <CI_Contact>
               <address>
@@ -168,6 +170,11 @@
                   </electronicMailAddress>
                 </CI_Address>
               </address>
+              <onlineResource>
+                <CI_OnlineResource>
+                  <linkage/>
+                </CI_OnlineResource>
+              </onlineResource>
             </CI_Contact>
           </contactInfo>
           <role>
