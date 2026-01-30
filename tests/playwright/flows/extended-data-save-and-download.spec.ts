@@ -164,8 +164,8 @@ test.describe('Dataset Save with XML Verification', () => {
     expect(orgCreators.length).toBe(refOrgCreators.length);
     for (let i = 0; i < orgCreators.length; i++) {
       expect(orgCreators[i].creatorName['#text']).toBe(refOrgCreators[i].creatorName['#text']);
-      // Organization affiliations are arrays - just check structure exists
-      expect(Array.isArray(orgCreators[i].affiliation)).toBe(true);
+      // Organization affiliations can be strings or arrays
+      expect(Array.isArray(orgCreators[i].affiliation) || typeof orgCreators[i].affiliation === 'string').toBe(true);
     }
 
     // Assert multiple keywords - check length and each value
@@ -248,7 +248,7 @@ test.describe('Dataset Save with XML Verification', () => {
     for (let i = 0; i < actualContributorInstitutions.length; i++) {
       expect(actualContributorInstitutions[i].contributorName['#text']).toBe(refContributorInstitutions[i].contributorName['#text']);
       expect(actualContributorInstitutions[i].contributorType).toBe(refContributorInstitutions[i].contributorType);
-      expect(Array.isArray(actualContributorInstitutions[i].affiliation) || typeof actualContributorInstitutions[i].affiliation === 'string').toBe(true);
+      expect(actualContributorInstitutions[i].affiliation).toBe(refContributorInstitutions[i].affiliation);
     }
 
     console.log('✓ Extended multiple entries XML verification passed');
