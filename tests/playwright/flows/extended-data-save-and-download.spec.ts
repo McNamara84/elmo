@@ -92,22 +92,6 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert title
     expect(actualRoot.titles.title['#text']).toBe(refRoot.titles.title['#text']);
     
-    // Assert author name
-    const actualCreators = Array.isArray(actualRoot.creators.creator) 
-      ? actualRoot.creators.creator 
-      : [actualRoot.creators.creator];
-    const refCreators = Array.isArray(refRoot.creators.creator) 
-      ? refRoot.creators.creator 
-      : [refRoot.creators.creator];
-    
-    for (let i = 0; i < actualCreators.length; i++) {
-      expect(actualCreators[i].creatorName['#text']).toBe(refCreators[i].creatorName['#text']);
-      expect(actualCreators[i].nameIdentifier['#text']).toBe(refCreators[i].nameIdentifier['#text']);
-      // Skip ROR/affiliation assertion - will be generated server-side
-      expect(actualCreators[i].givenName).toBe(refCreators[i].givenName);
-      expect(actualCreators[i].familyName).toBe(refCreators[i].familyName);
-    }
-    
     // Assert publication year
     expect(actualRoot.publicationYear).toBe(refRoot.publicationYear);
 

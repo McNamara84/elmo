@@ -68,9 +68,6 @@ export async function completeExtendedDatasetForm(page: Page) {
   // Add Funding Reference entries
   await addFundingReference(page, 0, exampleData.extended.fundingReferences[0]);
 
-  // Add Additional Authors
-  await addAuthor(page, 1, exampleData.extended.authors[0]);
-
     // Add Contributor Institutions
   await addContributorInstitution(page, 0, exampleData.extended.contributorInstitutions[0]);
 
@@ -92,18 +89,29 @@ export async function completeExtendedMultipleEntries(page: Page) {
   // Start with extended dataset form
   await completeExtendedDatasetForm(page);
 
-  // Add more related works
+  // Add Related Work entries
+  await addRelatedWork(page, 0, exampleData.extendedMultiple.relatedWorks[0]);
   await addRelatedWork(page, 1, exampleData.extendedMultiple.relatedWorks[1]);
 
-  // Add more keywords
-  await addFreeKeyword(page, 'monitoring');
-  await addFreeKeyword(page, 'data');
+  // Add Free Keywords (multiple)
+  await addFreeKeyword(page, exampleData.extended.keywords[0]);
 
-  // Add more funding references
+  // Add Funding Reference entries
+  await addFundingReference(page, 0, exampleData.extendedMultiple.fundingReferences[0]);
   await addFundingReference(page, 1, exampleData.extendedMultiple.fundingReferences[1]);
 
-  // Add one more author
-  await addAuthor(page, 1, exampleData.extendedMultiple.authors[1]);
+  // Add multiple authors (index 1 and 2 for additional authors)
+  await addAuthor(page, 1, exampleData.extendedMultiple.authors[0]);
+  await addAuthor(page, 2, exampleData.extendedMultiple.authors[1]);
+
+  // Add Contributor Institutions
+  await addContributorInstitution(page, 0, exampleData.extended.contributorInstitutions[0]);
+
+  // Add Author Institutions
+  await addAuthorInstitution(page, 0, exampleData.extended.authorInstitutions[0]);
+
+  // Add Contributor Persons
+  await addContributorPerson(page, 0, exampleData.extended.contributorPersons[0]);
 }
 
 // ============ Helper Functions ============

@@ -38,14 +38,6 @@
         "awardUri": "https://gepris.dfg.de/gepris/project/12345"
       }
     ],
-    "authors": [
-      {
-        "orcid": "0000-0001-2345-6789",
-        "lastName": "Isaak",
-        "firstName": "Johann",
-        "affiliation": "University of Cambridge"
-      }
-    ],
     "authorInstitutions": [
       {
         "institutionName": "GFZ Helmholtz Centre for Geosciences",
