@@ -147,13 +147,25 @@ test.describe('Dataset Save with XML Verification', () => {
     const referenceAuthors = Array.isArray(refRoot.creators?.creator)
       ? refRoot.creators.creator
       : [refRoot.creators?.creator];
-    expect(actualAuthors.length).toBe(referenceAuthors.length);
-    for (let i = 0; i < actualAuthors.length; i++) {
-      expect(actualAuthors[i].creatorName['#text']).toBe(referenceAuthors[i].creatorName['#text']);
-      expect(actualAuthors[i].givenName).toBe(referenceAuthors[i].givenName);
-      expect(actualAuthors[i].familyName).toBe(referenceAuthors[i].familyName);
-      expect(actualAuthors[i].nameIdentifier['#text']).toBe(referenceAuthors[i].nameIdentifier['#text']);
-      // Skip ROR/affiliation assertion - will be generated server-side
+    // Assert multiple personal authors (persons)
+    const personalCreators = actualAuthors.filter((c: any) => c.creatorName.nameType === 'Personal');
+    const refPersonalCreators = referenceAuthors.filter((c: any) => c.creatorName.nameType === 'Personal');
+    expect(personalCreators.length).toBe(refPersonalCreators.length);
+    for (let i = 0; i < personalCreators.length; i++) {
+      expect(personalCreators[i].creatorName['#text']).toBe(refPersonalCreators[i].creatorName['#text']);
+      expect(personalCreators[i].givenName).toBe(refPersonalCreators[i].givenName);
+      expect(personalCreators[i].familyName).toBe(refPersonalCreators[i].familyName);
+      expect(personalCreators[i].nameIdentifier['#text']).toBe(refPersonalCreators[i].nameIdentifier['#text']);
+    }
+
+    // Assert organizational authors (institutions)
+    const orgCreators = actualAuthors.filter((c: any) => c.creatorName.nameType === 'Organizational');
+    const refOrgCreators = referenceAuthors.filter((c: any) => c.creatorName.nameType === 'Organizational');
+    expect(orgCreators.length).toBe(refOrgCreators.length);
+    for (let i = 0; i < orgCreators.length; i++) {
+      expect(orgCreators[i].creatorName['#text']).toBe(refOrgCreators[i].creatorName['#text']);
+      // Organization affiliations are arrays - just check structure exists
+      expect(Array.isArray(orgCreators[i].affiliation)).toBe(true);
     }
 
     // Assert multiple keywords - check length and each value
