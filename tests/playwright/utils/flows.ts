@@ -142,7 +142,7 @@ async function addAuthorInstitution(
   const institutionRow = page.locator('[data-authorinstitution-row]').nth(index);
 
   // Fill institution name
-  await institutionRow.locator('#input-authorinstitution-name').fill(data.institutionName);
+  await institutionRow.locator('[id^="input-authorinstitution-name"]').fill(data.institutionName);
 
   // Fill affiliation using tagify
   const affiliationTagifyInput = institutionRow.locator('.tagify__input[title="Affiliation"]');
@@ -186,13 +186,13 @@ async function addContributorPerson(
   const contributorRow = page.locator('[contributor-person-row]').nth(index);
 
   // Fill ORCID
-  await contributorRow.locator('#input-contributor-orcid').fill(data.orcid);
+  await contributorRow.locator('[id^="input-contributor-orcid"]').fill(data.orcid);
 
   // Fill last name
-  await contributorRow.locator('#input-contributor-lastname').fill(data.lastName);
+  await contributorRow.locator('[id^="input-contributor-lastname"]').fill(data.lastName);
 
   // Fill first name
-  await contributorRow.locator('#input-contributor-firstname').fill(data.firstName);
+  await contributorRow.locator('[id^="input-contributor-firstname"]').fill(data.firstName);
 
   // Fill role using tagify
   // The title for this field is Role(s) 
@@ -204,7 +204,7 @@ async function addContributorPerson(
 
   // Fill affiliation using tagify
   // While for this field the title for this field is Affiliation. Without (s) 
-  const affiliationTagifyInput = contributorRow.locator('.tagify__input[title="Affiliation"]');
+  const affiliationTagifyInput = contributorRow.locator('.tagify__input[title^="Affiliation"]');
   await affiliationTagifyInput.click();
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');
@@ -241,7 +241,7 @@ async function addContributorInstitution(
   const institutionRow = page.locator('[contributors-row]').nth(index);
 
   // Fill organization name
-  await institutionRow.locator('#input-contributor-name').fill(data.organizationName);
+  await institutionRow.locator('[id^="input-contributor-name"]').fill(data.organizationName);
 
   // Fill the role into tha tagify field 
   const roleTagifyInput = institutionRow.locator('.tagify__input[title="Role(s)"]');

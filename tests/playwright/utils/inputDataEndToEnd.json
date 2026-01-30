@@ -64,7 +64,7 @@
   "extendedMultiple": {
     "relatedWorks": [
       {
-        "identifier": "10.5880/GFZ.DMJQ.2025.007",
+        "identifier": "10.5880/GFZ.DMJQ.2025.008",
         "type": "DOI",
         "relation": "References"
       },
@@ -74,13 +74,13 @@
         "relation": "References"
       }
     ],
-    "keywords": ["seismic data", "monitoring", "data"],
+    "keywords": ["nowcasting", "monitoring", "data"],
     "fundingReferences": [
       {
-        "funder": "DFG",
-        "grantNumber": "DFG-12345",
-        "grantName": "Seismic Monitoring Network",
-        "awardUri": "https://gepris.dfg.de/gepris/project/12345"
+        "funder": "NSF",
+        "grantNumber": "NSF-67890",
+        "grantName": "Climate Data Analytics Initiative",
+        "awardUri": "https://www.nsf.gov/awardsearch/showAward?AWD_ID=2067890"
       },
       {
         "funder": "EU Horizon",
@@ -105,8 +105,8 @@
     ],
     "authorInstitutions": [
       {
-        "institutionName": "GFZ Helmholtz Centre for Geosciences",
-        "affiliation": "German Research Centre for Geosciences"
+        "institutionName": "Research Institute for Sustainability",
+        "affiliation": "RIFS Research Institute for Sustainability"
       },
       {
         "institutionName": "ETH Zürich Foundation",
