@@ -49,23 +49,23 @@
     "authorInstitutions": [
       {
         "institutionName": "GFZ Helmholtz Centre for Geosciences",
-        "affiliation": "https://ror.org/04z8jg394"
+        "affiliation": "GFZ Helmholtz Centre for Geosciences"
       }
     ],
     "contributorPersons": [
       {
         "orcid": "0000-0001-5109-3700",
-        "lastName": "Smith",
-        "firstName": "Alice",
-        "role": "DataCurator",
-        "affiliation": "British Geological Survey"
+        "lastName": "Haak",
+        "firstName": "Laurel",
+        "role": "Data Collector",
+        "affiliation": "Japanese Geological Survey"
       }
     ],
     "contributorInstitutions": [
       {
         "organizationName": "USGS",
-        "role": "Sponsor",
-        "affiliation": "https://ror.org/035a68863"
+        "role": "Translator",
+        "affiliation": "United States Geological Survey"
       }
     ]
   },
@@ -123,29 +123,29 @@
     ],
     "contributorPersons": [
       {
-        "orcid": "0000-0001-5109-3700",
-        "lastName": "Smith",
-        "firstName": "Alice",
-        "role": "DataCurator",
-        "affiliation": "British Geological Survey"
+        "orcid": "0000-0002-3915-1872",
+        "lastName": "Eze",
+        "firstName": "Ifeoma",
+        "role": "Researcher",
+        "affiliation": "The Shepherd MediCentre"
       },
       {
-        "orcid": "0000-0003-4234-5678",
-        "lastName": "Johnson",
-        "firstName": "Robert",
+        "orcid": "0000-0002-8022-6178",
+        "lastName": "Turabyan",
+        "firstName": "Astghik",
         "role": "Editor",
-        "affiliation": "NOAA"
+        "affiliation": "Yerevan State University"
       }
     ],
     "contributorInstitutions": [
       {
-        "organizationName": "USGS",
+        "organizationName": "THE Japan Thailand Association",
         "role": "Sponsor",
-        "affiliation": "https://ror.org/035a68863"
+        "affiliation": "https://ror.org/014paee57"
       },
       {
-        "organizationName": "UNESCO",
-        "role": "HostingInstitution",
+        "organizationName": "DataCite",
+        "role": "Hosting Institution",
         "affiliation": "https://ror.org/04wxnsj81"
       }
     ]
