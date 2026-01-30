@@ -37,7 +37,8 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
     for ($i = 0; $i < $len; $i++) {
         $entry = [
             'name' => $postData['cbOrganisationName'][$i] ?? '',
-            'roles' => $postData['cbOrganisationRoles'][$i] ?? ''
+            'roles' => $postData['cbOrganisationRoles'][$i] ?? '',
+            'affiliation' => $postData['OrganisationAffiliation'][$i] ?? ''
         ];
 
 
@@ -49,7 +50,7 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
         }
 
         // Skip if no data provided
-        if (empty($entry['name']) && empty($entry['roles'])) {
+        if (empty($entry['name']) && empty($entry['roles']) && empty($entry['affiliation'])) {
             continue;
         }
 
