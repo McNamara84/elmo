@@ -94,7 +94,9 @@ export async function completeExtendedMultipleEntries(page: Page) {
   await addRelatedWork(page, 2, exampleData.extendedMultiple.relatedWorks[1]);
 
   // Add Free Keywords (multiple)
-  await addFreeKeyword(page, exampleData.extended.keywords[0]);
+  await addFreeKeyword(page, exampleData.extendedMultiple.keywords[0]); // "nowcasting"
+  await addFreeKeyword(page, exampleData.extendedMultiple.keywords[1]); // "monitoring"  
+  await addFreeKeyword(page, exampleData.extendedMultiple.keywords[2]); // "data"
 
   // Add Funding Reference entries
   await addFundingReference(page, 1, exampleData.extendedMultiple.fundingReferences[0]);
