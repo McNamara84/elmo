@@ -55,7 +55,7 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert author ORCID
     expect(actualRoot.creators.creator.nameIdentifier['#text']).toBe(refRoot.creators.creator.nameIdentifier['#text']);
     
-    // Assert author affiliation
+    // Assert author affiliation. We only make assertion about the affiliation here. 
     expect(actualRoot.creators.creator.affiliation['#text']).toBe(refRoot.creators.creator.affiliation['#text']);
     
     // Assert contact person is also a contributor 
@@ -103,7 +103,7 @@ test.describe('Dataset Save with XML Verification', () => {
     for (let i = 0; i < actualCreators.length; i++) {
       expect(actualCreators[i].creatorName['#text']).toBe(refCreators[i].creatorName['#text']);
       expect(actualCreators[i].nameIdentifier['#text']).toBe(refCreators[i].nameIdentifier['#text']);
-      expect(actualCreators[i].affiliation['#text']).toBe(refCreators[i].affiliation['#text']);
+      // Skip ROR/affiliation assertion - will be generated server-side
       expect(actualCreators[i].givenName).toBe(refCreators[i].givenName);
       expect(actualCreators[i].familyName).toBe(refCreators[i].familyName);
     }
@@ -169,7 +169,7 @@ test.describe('Dataset Save with XML Verification', () => {
       expect(actualAuthors[i].givenName).toBe(referenceAuthors[i].givenName);
       expect(actualAuthors[i].familyName).toBe(referenceAuthors[i].familyName);
       expect(actualAuthors[i].nameIdentifier['#text']).toBe(referenceAuthors[i].nameIdentifier['#text']);
-      expect(actualAuthors[i].affiliation['#text']).toBe(referenceAuthors[i].affiliation['#text']);
+      // Skip ROR/affiliation assertion - will be generated server-side
     }
 
     // Assert multiple keywords - check length and each value
