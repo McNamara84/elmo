@@ -727,57 +727,15 @@ $(document).ready(function () {
   // Use parallel initialization for faster page load
   initializeAllDropdownsParallel();
   
-  /**
-  * Populates the select field with ID input-rights-license with options created via an API call.
-  * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
-  */
-  function setupLicenseDropdown(isSoftware) {
-    $("#input-rights-license").empty();
-
-    const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
-    $.getJSON(`./api/v2/${endpoint}`, function (data) {
-      var defaultOptionSet = false;
-
-      $.each(data, function (key, val) {
-        var option = $("<option>", {
-          value: val.rights_id,
-          text: val.text + " (" + val.rightsIdentifier + ")",
-        });
-
-        if (val.rightsIdentifier === "CC-BY-4.0") {
-          option.prop("selected", true);
-          defaultOptionSet = true;
-        }
-
-        $("#input-rights-license").append(option);
-      });
-
-      // Trigger change event to ensure any listeners are notified
-      $("#input-rights-license").trigger("change");
-    }).fail(function (jqXHR, textStatus, errorThrown) {
-      console.error("Fehler beim Laden der Lizenzen:", textStatus, errorThrown);
-      // Fallback: Default-Option hinzufügen
-      $("#input-rights-license").append($("<option>", {
-        value: "CC-BY-4.0",
-        text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
-        selected: true,
-      }));
-      $("#input-rights-license").trigger("change");
-    });
-  }
-
-  // Initialize the license dropdown
-  setupLicenseDropdown(false);
-
   // Event handler to monitor if the resource type is changed
   $("#input-resourceinformation-resourcetype").change(function () {
     var selectedResourceType = $("#input-resourceinformation-resourcetype option:selected").text().trim();
 
     // Check if "Software" is selected
     if (selectedResourceType === "Software") {
-      setupLicenseDropdown(true);
+      window.setupLicenseDropdown(true);
     } else {
-      setupLicenseDropdown(false);
+      window.setupLicenseDropdown(false);
     }
   });
 
