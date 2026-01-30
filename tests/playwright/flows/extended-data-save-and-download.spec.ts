@@ -221,6 +221,36 @@ test.describe('Dataset Save with XML Verification', () => {
       expect(actualFunding[i].awardTitle).toBe(referenceFunding[i].awardTitle);
     }
 
+    // Assert contributor persons - check length and each property
+    const actualContributorPersons = Array.isArray(actualRoot.contributors?.contributor)
+      ? actualRoot.contributors.contributor.filter((c: any) => c.nameIdentifier)
+      : [actualRoot.contributors?.contributor].filter((c: any) => c.nameIdentifier);
+    const refContributorPersons = Array.isArray(refRoot.contributors?.contributor)
+      ? refRoot.contributors.contributor.filter((c: any) => c.nameIdentifier)
+      : [refRoot.contributors?.contributor].filter((c: any) => c.nameIdentifier);
+    expect(actualContributorPersons.length).toBe(refContributorPersons.length);
+    for (let i = 0; i < actualContributorPersons.length; i++) {
+      expect(actualContributorPersons[i].contributorName['#text']).toBe(refContributorPersons[i].contributorName['#text']);
+      expect(actualContributorPersons[i].givenName).toBe(refContributorPersons[i].givenName);
+      expect(actualContributorPersons[i].familyName).toBe(refContributorPersons[i].familyName);
+      expect(actualContributorPersons[i].nameIdentifier['#text']).toBe(refContributorPersons[i].nameIdentifier['#text']);
+      expect(actualContributorPersons[i].contributorType).toBe(refContributorPersons[i].contributorType);
+    }
+
+    // Assert contributor institutions - check length and each property
+    const actualContributorInstitutions = Array.isArray(actualRoot.contributors?.contributor)
+      ? actualRoot.contributors.contributor.filter((c: any) => !c.nameIdentifier)
+      : [actualRoot.contributors?.contributor].filter((c: any) => !c.nameIdentifier);
+    const refContributorInstitutions = Array.isArray(refRoot.contributors?.contributor)
+      ? refRoot.contributors.contributor.filter((c: any) => !c.nameIdentifier)
+      : [refRoot.contributors?.contributor].filter((c: any) => !c.nameIdentifier);
+    expect(actualContributorInstitutions.length).toBe(refContributorInstitutions.length);
+    for (let i = 0; i < actualContributorInstitutions.length; i++) {
+      expect(actualContributorInstitutions[i].contributorName['#text']).toBe(refContributorInstitutions[i].contributorName['#text']);
+      expect(actualContributorInstitutions[i].contributorType).toBe(refContributorInstitutions[i].contributorType);
+      expect(Array.isArray(actualContributorInstitutions[i].affiliation) || typeof actualContributorInstitutions[i].affiliation === 'string').toBe(true);
+    }
+
     console.log('✓ Extended multiple entries XML verification passed');
   });
 });
