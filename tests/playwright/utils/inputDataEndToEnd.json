@@ -106,11 +106,11 @@
     "authorInstitutions": [
       {
         "institutionName": "GFZ Helmholtz Centre for Geosciences",
-        "affiliation": "https://ror.org/04z8jg394"
+        "affiliation": "German Research Centre for Geosciences"
       },
       {
         "institutionName": "ETH Zürich Foundation",
-        "affiliation": "https://ror.org/03nqkz164"
+        "affiliation": "Swiss Federal Institute of Technology"
       }
     ],
     "contributorPersons": [
@@ -133,12 +133,12 @@
       {
         "organizationName": "THE Japan Thailand Association",
         "role": "Sponsor",
-        "affiliation": "https://ror.org/014paee57"
+        "affiliation": "Japan Thailand Association"
       },
       {
         "organizationName": "DataCite",
         "role": "Hosting Institution",
-        "affiliation": "https://ror.org/04wxnsj81"
+        "affiliation": "DataCite"
       }
     ]
   }

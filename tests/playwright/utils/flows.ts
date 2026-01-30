@@ -90,28 +90,25 @@ export async function completeExtendedMultipleEntries(page: Page) {
   await completeExtendedDatasetForm(page);
 
   // Add Related Work entries
-  await addRelatedWork(page, 0, exampleData.extendedMultiple.relatedWorks[0]);
-  await addRelatedWork(page, 1, exampleData.extendedMultiple.relatedWorks[1]);
+  await addRelatedWork(page, 1, exampleData.extendedMultiple.relatedWorks[0]);
+  await addRelatedWork(page, 2, exampleData.extendedMultiple.relatedWorks[1]);
 
   // Add Free Keywords (multiple)
   await addFreeKeyword(page, exampleData.extended.keywords[0]);
 
   // Add Funding Reference entries
-  await addFundingReference(page, 0, exampleData.extendedMultiple.fundingReferences[0]);
-  await addFundingReference(page, 1, exampleData.extendedMultiple.fundingReferences[1]);
+  await addFundingReference(page, 1, exampleData.extendedMultiple.fundingReferences[0]);
+  await addFundingReference(page, 2, exampleData.extendedMultiple.fundingReferences[1]);
 
   // Add multiple authors (index 1 and 2 for additional authors)
   await addAuthor(page, 1, exampleData.extendedMultiple.authors[0]);
   await addAuthor(page, 2, exampleData.extendedMultiple.authors[1]);
 
-  // Add Contributor Institutions
-  await addContributorInstitution(page, 0, exampleData.extended.contributorInstitutions[0]);
-
-  // Add Author Institutions
-  await addAuthorInstitution(page, 0, exampleData.extended.authorInstitutions[0]);
-
-  // Add Contributor Persons
-  await addContributorPerson(page, 0, exampleData.extended.contributorPersons[0]);
+  // Add additional form group entries at index 1
+  // (index 0 entries already added by completeExtendedDatasetForm)
+  await addContributorInstitution(page, 1, exampleData.extendedMultiple.contributorInstitutions[0]);
+  await addAuthorInstitution(page, 1, exampleData.extendedMultiple.authorInstitutions[0]);
+  await addContributorPerson(page, 1, exampleData.extendedMultiple.contributorPersons[0]);
 }
 
 // ============ Helper Functions ============
@@ -414,22 +411,4 @@ async function addAuthor(
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');
 }
-
-/**
- * Completes only the contributors and author institutions form groups.
- * Tests the three new form input functions: addAuthorInstitution, addContributorPerson, addContributorInstitution.
- * @param {Page} page - The Playwright page object to interact with
- * @returns {Promise<void>}
- */
-export async function completeContributorsAI(page: Page) {
-  // Add Contributor Institutions
-  await addContributorInstitution(page, 0, exampleData.extended.contributorInstitutions[0]);
-
-  // Add Author Institutions
-  await addAuthorInstitution(page, 0, exampleData.extended.authorInstitutions[0]);
-
-  // Add Contributor Persons
-  await addContributorPerson(page, 0, exampleData.extended.contributorPersons[0]);
-}
-
 export { exampleData };
