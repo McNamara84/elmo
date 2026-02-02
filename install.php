@@ -121,10 +121,12 @@ function createDatabaseStructure($connection): array
     $tables = [
         "Resource_Type" => "CREATE TABLE IF NOT EXISTS `Resource_Type` (
     `resource_name_id` INT NOT NULL AUTO_INCREMENT,
+    `ernie_id` INT NULL,
     `resource_type_general` VARCHAR(30) NULL,
     `description` TEXT(5000) NULL,
     PRIMARY KEY (`resource_name_id`),
-    UNIQUE KEY `unique_name` (`resource_type_general`)
+    UNIQUE KEY `unique_name` (`resource_type_general`),
+    UNIQUE KEY `unique_ernie_id` (`ernie_id`)
     );",
 
         "Rights" => "CREATE TABLE IF NOT EXISTS `Rights` (

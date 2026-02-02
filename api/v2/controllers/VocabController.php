@@ -1509,33 +1509,274 @@ class VocabController
     }
 
     /**
-     * Retrieves all resource types from the database
+     * Retrieves resource types - first tries ERNIE with cache, then falls back to local DB
      *
      * @return void Outputs JSON response directly
      */
     public function getResourceTypes(): void
     {
         try {
-            global $connection;
-            $stmt = $connection->prepare('SELECT resource_name_id as id, resource_type_general, description FROM Resource_Type ORDER BY resource_type_general');
+            require_once __DIR__ . '/../services/ErnieService.php';
 
-            if (!$stmt) {
-                throw new Exception("Failed to prepare statement: " . $connection->error);
+            $ernieService = new ErnieService();
+
+            // Only try ERNIE if it's configured
+            if ($ernieService->isConfigured()) {
+                $ernieTypes = $ernieService->getResourceTypesWithCache();
+
+                if (!empty($ernieTypes)) {
+                    // Sync to local DB for storage purposes
+                    $this->syncResourceTypesToDb($ernieTypes);
+
+                    // Return ERNIE data with local IDs
+                    $types = $this->mapErnieToLocalIds($ernieTypes);
+                    header('Content-Type: application/json');
+                    echo json_encode($types);
+                    return;
+                }
             }
 
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            $types = [];
-            while ($row = $result->fetch_assoc()) {
-                $types[] = $row;
-            }
-
-            header('Content-Type: application/json');
-            echo json_encode($types);
+            // Fallback: Load from local database
+            $this->getResourceTypesFromDb();
 
         } catch (Exception $e) {
             error_log("API Error in getResourceTypes: " . $e->getMessage());
+            // Fallback to local DB on any error
+            $this->getResourceTypesFromDb();
+        }
+    }
+
+    /**
+     * Fetches resource types directly from local database
+     *
+     * @return void Outputs JSON response directly
+     */
+    private function getResourceTypesFromDb(): void
+    {
+        global $connection;
+
+        $stmt = $connection->prepare(
+            'SELECT resource_name_id as id, resource_type_general, description 
+             FROM Resource_Type 
+             ORDER BY resource_type_general'
+        );
+
+        if (!$stmt) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Failed to prepare statement: ' . $connection->error]);
+            return;
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $types = [];
+        while ($row = $result->fetch_assoc()) {
+            $types[] = $row;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($types);
+    }
+
+    /**
+     * Syncs ERNIE resource types to local database
+     * 
+     * This method ensures that all resource types from ERNIE exist in the local
+     * database with their ernie_id mapping. Existing records are updated,
+     * new records are inserted.
+     *
+     * @param array<array{id: int, name: string, description: string|null}> $ernieTypes Resource types from ERNIE
+     * @return void
+     */
+    private function syncResourceTypesToDb(array $ernieTypes): void
+    {
+        global $connection;
+
+        foreach ($ernieTypes as $type) {
+            $ernieId = $type['id'] ?? null;
+            $name = $type['name'] ?? null;
+            $description = $type['description'] ?? null;
+
+            if (!$ernieId || !$name) {
+                continue;
+            }
+
+            // First, try to find existing record by ernie_id
+            $stmt = $connection->prepare(
+                'SELECT resource_name_id FROM Resource_Type WHERE ernie_id = ?'
+            );
+            $stmt->bind_param('i', $ernieId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                // Update existing record by ernie_id
+                $updateStmt = $connection->prepare(
+                    'UPDATE Resource_Type 
+                     SET resource_type_general = ?, description = ? 
+                     WHERE ernie_id = ?'
+                );
+                $updateStmt->bind_param('ssi', $name, $description, $ernieId);
+                $updateStmt->execute();
+                continue;
+            }
+
+            // Check if record exists by name (for migrating existing data)
+            $stmt = $connection->prepare(
+                'SELECT resource_name_id FROM Resource_Type WHERE resource_type_general = ?'
+            );
+            $stmt->bind_param('s', $name);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                // Update existing record to add ernie_id
+                $row = $result->fetch_assoc();
+                $updateStmt = $connection->prepare(
+                    'UPDATE Resource_Type 
+                     SET ernie_id = ?, description = ? 
+                     WHERE resource_name_id = ?'
+                );
+                $updateStmt->bind_param('isi', $ernieId, $description, $row['resource_name_id']);
+                $updateStmt->execute();
+            } else {
+                // Insert new record
+                $insertStmt = $connection->prepare(
+                    'INSERT INTO Resource_Type (ernie_id, resource_type_general, description) 
+                     VALUES (?, ?, ?)'
+                );
+                $insertStmt->bind_param('iss', $ernieId, $name, $description);
+                $insertStmt->execute();
+            }
+        }
+    }
+
+    /**
+     * Maps ERNIE data to local database IDs
+     * 
+     * Transforms ERNIE response format to the format expected by the frontend,
+     * using local database IDs for storage compatibility.
+     *
+     * @param array<array{id: int, name: string, description: string|null}> $ernieTypes Resource types from ERNIE
+     * @return array<array{id: int|null, ernie_id: int, resource_type_general: string, description: string}> Mapped resource types
+     */
+    private function mapErnieToLocalIds(array $ernieTypes): array
+    {
+        global $connection;
+
+        $result = [];
+
+        foreach ($ernieTypes as $type) {
+            $ernieId = $type['id'] ?? null;
+            $name = $type['name'] ?? '';
+
+            // Get local ID
+            $stmt = $connection->prepare(
+                'SELECT resource_name_id FROM Resource_Type WHERE ernie_id = ?'
+            );
+            $stmt->bind_param('i', $ernieId);
+            $stmt->execute();
+            $dbResult = $stmt->get_result();
+
+            $localId = null;
+            if ($row = $dbResult->fetch_assoc()) {
+                $localId = (int) $row['resource_name_id'];
+            }
+
+            $result[] = [
+                'id' => $localId,
+                'ernie_id' => $ernieId,
+                'resource_type_general' => $name,
+                'description' => $type['description'] ?? ''
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Manually refreshes the ERNIE resource types cache
+     * 
+     * Requires API key authentication.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshResourceTypesCache(): void
+    {
+        if (!$this->validateApiKey()) {
+            return;
+        }
+
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+
+            $ernieService = new ErnieService();
+
+            if (!$ernieService->isConfigured()) {
+                http_response_code(400);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'ERNIE service is not configured'
+                ]);
+                return;
+            }
+
+            $success = $ernieService->refreshCache();
+
+            header('Content-Type: application/json');
+
+            if ($success) {
+                // Also sync to database
+                $ernieTypes = $ernieService->getResourceTypesWithCache();
+                if (!empty($ernieTypes)) {
+                    $this->syncResourceTypesToDb($ernieTypes);
+                }
+
+                $status = $ernieService->getCacheStatus();
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Resource types cache refreshed successfully',
+                    'itemCount' => $status['itemCount'],
+                    'lastUpdated' => $status['lastUpdated']
+                ]);
+            } else {
+                http_response_code(502);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to fetch data from ERNIE'
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("Error refreshing resource types cache: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Gets the status of the ERNIE resource types cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getResourceTypesCacheStatus(): void
+    {
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+
+            $ernieService = new ErnieService();
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'configured' => $ernieService->isConfigured(),
+                'cache' => $ernieService->getCacheStatus()
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error getting cache status: " . $e->getMessage());
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
