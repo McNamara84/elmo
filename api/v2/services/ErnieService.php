@@ -7,7 +7,10 @@
  * with caching support to minimize API calls and provide fallback when ERNIE is unavailable.
  */
 
-require_once __DIR__ . '/../../../settings.php';
+// Only require settings.php if not in a test environment that already defined the globals
+if (!defined('ERNIE_SERVICE_TEST_MODE')) {
+    require_once __DIR__ . '/../../../settings.php';
+}
 
 class ErnieService
 {
@@ -44,6 +47,16 @@ class ErnieService
         $this->apiKey = $ernieApiKey ?? '';
         $this->cacheTtl = $ernieResourceTypesCacheTtl ?? 21600; // Default: 6 hours
         $this->cacheFile = __DIR__ . '/../../../storage/cache/ernie_resource_types.json';
+    }
+
+    /**
+     * Gets the cache file path
+     * 
+     * @return string Path to the cache file
+     */
+    protected function getCacheFile(): string
+    {
+        return $this->cacheFile;
     }
 
     /**
@@ -169,11 +182,12 @@ class ErnieService
      */
     private function isCacheValid(): bool
     {
-        if (!file_exists($this->cacheFile)) {
+        $cacheFile = $this->getCacheFile();
+        if (!file_exists($cacheFile)) {
             return false;
         }
 
-        $content = @file_get_contents($this->cacheFile);
+        $content = @file_get_contents($cacheFile);
         if ($content === false) {
             return false;
         }
@@ -202,11 +216,12 @@ class ErnieService
      */
     private function readCache(bool $ignoreExpiry = false): array
     {
-        if (!file_exists($this->cacheFile)) {
+        $cacheFile = $this->getCacheFile();
+        if (!file_exists($cacheFile)) {
             return [];
         }
 
-        $content = @file_get_contents($this->cacheFile);
+        $content = @file_get_contents($cacheFile);
         if ($content === false) {
             return [];
         }
@@ -228,7 +243,8 @@ class ErnieService
      */
     private function writeCache(array $data): bool
     {
-        $cacheDir = dirname($this->cacheFile);
+        $cacheFile = $this->getCacheFile();
+        $cacheDir = dirname($cacheFile);
 
         if (!is_dir($cacheDir)) {
             if (!mkdir($cacheDir, 0755, true)) {
@@ -245,12 +261,12 @@ class ErnieService
         ];
 
         $result = file_put_contents(
-            $this->cacheFile,
+            $cacheFile,
             json_encode($cache, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
         );
 
         if ($result === false) {
-            error_log("ERNIE: Failed to write cache file: $this->cacheFile");
+            error_log("ERNIE: Failed to write cache file: $cacheFile");
             return false;
         }
 
@@ -280,7 +296,8 @@ class ErnieService
      */
     public function getCacheStatus(): array
     {
-        if (!file_exists($this->cacheFile)) {
+        $cacheFile = $this->getCacheFile();
+        if (!file_exists($cacheFile)) {
             return [
                 'exists' => false,
                 'valid' => false,
@@ -290,7 +307,7 @@ class ErnieService
             ];
         }
 
-        $content = @file_get_contents($this->cacheFile);
+        $content = @file_get_contents($cacheFile);
         if ($content === false) {
             return [
                 'exists' => true,
