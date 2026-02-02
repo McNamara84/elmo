@@ -264,6 +264,9 @@ To install them: npm install
   - `$showRelatedWork`: Specifies whether the form group Related Work should be displayed (true/false).
   - `$showFundingReference`: Specifies whether the form group Funding Reference should be displayed (true/false).
   - `$showGGMsProperties`: specific for implementation for the ICGEM platform. Specifies whether ICGEM form groups (GGMs Properties and Characteristics of the model) should be displayed (true/false).
+  - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types are fetched from ERNIE instead of the local database.
+  - `$ernieApiKey`: API key for authenticating with the ERNIE service.
+  - `$ernieResourceTypesCacheTtl`: Cache time-to-live in seconds for ERNIE resource types (default: 21600 = 6 hours).
 
 </details>
 
