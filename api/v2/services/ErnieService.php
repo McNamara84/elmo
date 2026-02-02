@@ -59,7 +59,7 @@ class ErnieService
     /**
      * Fetches resource types from ERNIE API
      * 
-     * @return array|null Array of resource types or null on failure
+     * @return array<array{id: int, name: string, description: string|null}>|null Array of resource types or null on failure
      */
     public function fetchResourceTypes(): ?array
     {
@@ -93,9 +93,11 @@ class ErnieService
             return null;
         }
 
-        // Check HTTP status code
-        if (isset($http_response_header)) {
-            $statusLine = $http_response_header[0] ?? '';
+        // Check HTTP status code - $http_response_header is set by file_get_contents
+        // @phpstan-ignore-next-line - $http_response_header is a magic PHP variable
+        $responseHeaders = $http_response_header ?? [];
+        if (!empty($responseHeaders)) {
+            $statusLine = $responseHeaders[0];
             if (preg_match('/HTTP\/\d\.\d\s+(\d+)/', $statusLine, $matches)) {
                 $statusCode = (int) $matches[1];
                 if ($statusCode !== 200) {
@@ -130,7 +132,7 @@ class ErnieService
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Empty array (last resort)
      * 
-     * @return array Resource types from cache or ERNIE
+     * @return array<array{id: int, name: string, description: string|null}> Resource types from cache or ERNIE
      */
     public function getResourceTypesWithCache(): array
     {
@@ -196,7 +198,7 @@ class ErnieService
      * Reads cache file
      * 
      * @param bool $ignoreExpiry Whether to read cache even if expired
-     * @return array Cached data or empty array
+     * @return array<array{id: int, name: string, description: string|null}> Cached data or empty array
      */
     private function readCache(bool $ignoreExpiry = false): array
     {
@@ -221,7 +223,7 @@ class ErnieService
     /**
      * Writes data to cache file
      * 
-     * @param array $data Resource types to cache
+     * @param array<array{id: int, name: string, description: string|null}> $data Resource types to cache
      * @return bool True if cache was written successfully
      */
     private function writeCache(array $data): bool
@@ -274,7 +276,7 @@ class ErnieService
     /**
      * Gets cache status information
      * 
-     * @return array Cache status including validity, age, and item count
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status including validity, age, and item count
      */
     public function getCacheStatus(): array
     {

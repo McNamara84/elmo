@@ -1595,9 +1595,9 @@ class VocabController
         global $connection;
 
         foreach ($ernieTypes as $type) {
-            $ernieId = $type['id'] ?? null;
-            $name = $type['name'] ?? null;
-            $description = $type['description'] ?? null;
+            $ernieId = $type['id'];
+            $name = $type['name'];
+            $description = $type['description'];
 
             if (!$ernieId || !$name) {
                 continue;
@@ -1669,8 +1669,8 @@ class VocabController
         $result = [];
 
         foreach ($ernieTypes as $type) {
-            $ernieId = $type['id'] ?? null;
-            $name = $type['name'] ?? '';
+            $ernieId = $type['id'];
+            $name = $type['name'];
 
             // Get local ID
             $stmt = $connection->prepare(
