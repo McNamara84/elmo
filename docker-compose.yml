@@ -14,7 +14,7 @@ services:
   web:
     build: .
     ports:
-      - "8080:80"
+      - "8081:80"
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
