@@ -341,7 +341,6 @@ async function downloadAndSaveXml(
 
   // Read the XML file
   const xmlContent = fs.readFileSync(filePath, 'utf-8');
-  console.log(`Downloaded XML for ${testName}:`, xmlContent);
 
   // Parse XML using fast-xml-parser with attribute parsing enabled
   const parser = new XMLParser({
@@ -350,12 +349,9 @@ async function downloadAndSaveXml(
   });
   const parsedXml = parser.parse(xmlContent);
 
-  console.log(`Parsed XML structure for ${testName}:`, JSON.stringify(parsedXml, null, 2));
-
   // Save raw XML to actual output directory with "test-result" prefix
   const xmlActualPath = path.join(XML_ACTUAL_DIR, `test-result-${testName}.xml`);
   fs.writeFileSync(xmlActualPath, xmlContent, 'utf-8');
-  console.log(`XML saved to: ${xmlActualPath}`);
 
   // Save parsed structure as JSON for easy inspection
   const jsonActualPath = path.join(XML_ACTUAL_DIR, `test-result-${testName}.json`);
