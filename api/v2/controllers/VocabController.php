@@ -1520,8 +1520,8 @@ class VocabController
 
             $ernieService = new ErnieService();
 
-            // Only try ERNIE if it's configured
-            if ($ernieService->isConfigured()) {
+            // Only try ERNIE if it's configured (log configuration status)
+            if ($ernieService->isConfigured(logResult: true)) {
                 $ernieTypes = $ernieService->getResourceTypesWithCache();
 
                 if (!empty($ernieTypes)) {
@@ -1530,6 +1530,7 @@ class VocabController
 
                     // Return ERNIE data with local IDs
                     $types = $this->mapErnieToLocalIds($ernieTypes);
+                    error_log("Resource Types: Serving " . count($types) . " types from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($types);
                     return;
@@ -1537,11 +1538,13 @@ class VocabController
             }
 
             // Fallback: Load from local database
+            error_log("Resource Types: Falling back to local database");
             $this->getResourceTypesFromDb();
 
         } catch (Exception $e) {
             error_log("API Error in getResourceTypes: " . $e->getMessage());
             // Fallback to local DB on any error
+            error_log("Resource Types: Falling back to local database due to error");
             $this->getResourceTypesFromDb();
         }
     }
@@ -1585,71 +1588,86 @@ class VocabController
      * 
      * This method ensures that all resource types from ERNIE exist in the local
      * database with their ernie_id mapping. Existing records are updated,
-     * new records are inserted.
+     * new records are inserted. Uses a transaction to ensure data consistency.
      *
      * @param array<array{id: int, name: string, description: string|null}> $ernieTypes Resource types from ERNIE
-     * @return void
+     * @return bool True if sync was successful, false otherwise
      */
-    private function syncResourceTypesToDb(array $ernieTypes): void
+    private function syncResourceTypesToDb(array $ernieTypes): bool
     {
         global $connection;
 
-        foreach ($ernieTypes as $type) {
-            $ernieId = $type['id'];
-            $name = $type['name'];
-            $description = $type['description'];
+        // Start transaction for atomic sync
+        $connection->begin_transaction();
 
-            if (!$ernieId || !$name) {
-                continue;
+        try {
+            foreach ($ernieTypes as $type) {
+                $ernieId = $type['id'];
+                $name = $type['name'];
+                $description = $type['description'];
+
+                if (!$ernieId || !$name) {
+                    continue;
+                }
+
+                // First, try to find existing record by ernie_id
+                $stmt = $connection->prepare(
+                    'SELECT resource_name_id FROM Resource_Type WHERE ernie_id = ?'
+                );
+                $stmt->bind_param('i', $ernieId);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows > 0) {
+                    // Update existing record by ernie_id
+                    $updateStmt = $connection->prepare(
+                        'UPDATE Resource_Type 
+                         SET resource_type_general = ?, description = ? 
+                         WHERE ernie_id = ?'
+                    );
+                    $updateStmt->bind_param('ssi', $name, $description, $ernieId);
+                    $updateStmt->execute();
+                    continue;
+                }
+
+                // Check if record exists by name (for migrating existing data)
+                $stmt = $connection->prepare(
+                    'SELECT resource_name_id FROM Resource_Type WHERE resource_type_general = ?'
+                );
+                $stmt->bind_param('s', $name);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows > 0) {
+                    // Update existing record to add ernie_id
+                    $row = $result->fetch_assoc();
+                    $updateStmt = $connection->prepare(
+                        'UPDATE Resource_Type 
+                         SET ernie_id = ?, description = ? 
+                         WHERE resource_name_id = ?'
+                    );
+                    $updateStmt->bind_param('isi', $ernieId, $description, $row['resource_name_id']);
+                    $updateStmt->execute();
+                } else {
+                    // Insert new record
+                    $insertStmt = $connection->prepare(
+                        'INSERT INTO Resource_Type (ernie_id, resource_type_general, description) 
+                         VALUES (?, ?, ?)'
+                    );
+                    $insertStmt->bind_param('iss', $ernieId, $name, $description);
+                    $insertStmt->execute();
+                }
             }
 
-            // First, try to find existing record by ernie_id
-            $stmt = $connection->prepare(
-                'SELECT resource_name_id FROM Resource_Type WHERE ernie_id = ?'
-            );
-            $stmt->bind_param('i', $ernieId);
-            $stmt->execute();
-            $result = $stmt->get_result();
+            // Commit transaction
+            $connection->commit();
+            return true;
 
-            if ($result->num_rows > 0) {
-                // Update existing record by ernie_id
-                $updateStmt = $connection->prepare(
-                    'UPDATE Resource_Type 
-                     SET resource_type_general = ?, description = ? 
-                     WHERE ernie_id = ?'
-                );
-                $updateStmt->bind_param('ssi', $name, $description, $ernieId);
-                $updateStmt->execute();
-                continue;
-            }
-
-            // Check if record exists by name (for migrating existing data)
-            $stmt = $connection->prepare(
-                'SELECT resource_name_id FROM Resource_Type WHERE resource_type_general = ?'
-            );
-            $stmt->bind_param('s', $name);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result->num_rows > 0) {
-                // Update existing record to add ernie_id
-                $row = $result->fetch_assoc();
-                $updateStmt = $connection->prepare(
-                    'UPDATE Resource_Type 
-                     SET ernie_id = ?, description = ? 
-                     WHERE resource_name_id = ?'
-                );
-                $updateStmt->bind_param('isi', $ernieId, $description, $row['resource_name_id']);
-                $updateStmt->execute();
-            } else {
-                // Insert new record
-                $insertStmt = $connection->prepare(
-                    'INSERT INTO Resource_Type (ernie_id, resource_type_general, description) 
-                     VALUES (?, ?, ?)'
-                );
-                $insertStmt->bind_param('iss', $ernieId, $name, $description);
-                $insertStmt->execute();
-            }
+        } catch (\Exception $e) {
+            // Rollback on error
+            $connection->rollback();
+            error_log("ERNIE sync failed, rolled back transaction: " . $e->getMessage());
+            return false;
         }
     }
 
@@ -1660,7 +1678,7 @@ class VocabController
      * using local database IDs for storage compatibility.
      *
      * @param array<array{id: int, name: string, description: string|null}> $ernieTypes Resource types from ERNIE
-     * @return array<array{id: int|null, ernie_id: int, resource_type_general: string, description: string}> Mapped resource types
+     * @return array<array{id: int|null, resource_type_general: string, description: string}> Mapped resource types
      */
     private function mapErnieToLocalIds(array $ernieTypes): array
     {
@@ -1687,7 +1705,6 @@ class VocabController
 
             $result[] = [
                 'id' => $localId,
-                'ernie_id' => $ernieId,
                 'resource_type_general' => $name,
                 'description' => $type['description'] ?? ''
             ];

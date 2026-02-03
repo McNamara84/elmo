@@ -95,19 +95,17 @@ test.describe('Resource Type Dropdown - ERNIE Integration', () => {
     }
   });
 
-  test('Resource Type options have ernie_id when ERNIE is configured', async ({ page }) => {
-    // Test the API endpoint for ERNIE integration
+  test('Resource Type API response does not expose ernie_id', async ({ page }) => {
+    // Test the API endpoint - ernie_id should NOT be in the response
     const response = await page.request.get('/api/v2/vocabs/resourcetypes');
     
     expect(response.ok()).toBe(true);
     const data = await response.json();
     
-    // If ERNIE is configured, items should have ernie_id
-    if (data.length > 0 && data[0].ernie_id !== undefined) {
-      // Verify all items have ernie_id when ERNIE is enabled
+    // ernie_id should not be exposed in API response (internal use only)
+    if (data.length > 0) {
       for (const item of data) {
-        expect(item).toHaveProperty('ernie_id');
-        expect(typeof item.ernie_id).toBe('number');
+        expect(item).not.toHaveProperty('ernie_id');
       }
     }
   });

@@ -174,7 +174,7 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
     }
 
     /**
-     * Test mapErnieToLocalIds returns correct structure
+     * Test mapErnieToLocalIds returns correct structure (without ernie_id in output)
      */
     public function testMapErnieToLocalIdsReturnsCorrectStructure(): void
     {
@@ -200,9 +200,37 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
 
         $this->assertCount(1, $result);
         $this->assertEquals($localId, $result[0]['id']);
-        $this->assertEquals(10, $result[0]['ernie_id']);
+        // ernie_id should NOT be in the output (removed per review)
+        $this->assertArrayNotHasKey('ernie_id', $result[0]);
         $this->assertEquals('Dataset', $result[0]['resource_type_general']);
         $this->assertEquals('Test', $result[0]['description']);
+    }
+
+    /**
+     * Test that syncResourceTypesToDb returns boolean and uses transaction
+     */
+    public function testSyncResourceTypesToDbReturnsBoolean(): void
+    {
+        $ernieData = [
+            ['id' => 999, 'name' => 'TestType', 'description' => 'Test'],
+        ];
+
+        require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
+        $controller = new \VocabController();
+
+        $reflection = new \ReflectionClass($controller);
+        $method = $reflection->getMethod('syncResourceTypesToDb');
+        $method->setAccessible(true);
+        $result = $method->invoke($controller, $ernieData);
+
+        $this->assertIsBool($result);
+        $this->assertTrue($result);
+
+        // Verify data was inserted
+        $dbResult = $this->connection->query(
+            "SELECT * FROM Resource_Type WHERE ernie_id = 999"
+        );
+        $this->assertEquals(1, $dbResult->num_rows);
     }
 
     /**

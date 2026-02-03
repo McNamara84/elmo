@@ -60,13 +60,24 @@ class ErnieService
     }
 
     /**
-     * Checks if the ERNIE service is configured
+     * Checks if the ERNIE service is configured and logs the result
      * 
+     * @param bool $logResult Whether to log the configuration status (default: false)
      * @return bool True if both URL and API key are configured
      */
-    public function isConfigured(): bool
+    public function isConfigured(bool $logResult = false): bool
     {
-        return !empty($this->baseUrl) && !empty($this->apiKey);
+        $configured = !empty($this->baseUrl) && !empty($this->apiKey);
+        
+        if ($logResult) {
+            if ($configured) {
+                error_log("ERNIE: Service is configured (URL: " . $this->baseUrl . ")");
+            } else {
+                error_log("ERNIE: Service is NOT configured - will use local database");
+            }
+        }
+        
+        return $configured;
     }
 
     /**
@@ -143,7 +154,7 @@ class ErnieService
      * 1. Valid cache (not expired)
      * 2. Fresh data from ERNIE
      * 3. Stale cache (if ERNIE unavailable)
-     * 4. Empty array (last resort)
+     * 4. Hardcoded fallback (Dataset, Other) as last resort
      * 
      * @return array<array{id: int, name: string, description: string|null}> Resource types from cache or ERNIE
      */
@@ -172,7 +183,35 @@ class ErnieService
             return $staleCache;
         }
 
-        return [];
+        // Last resort: hardcoded fallback to ensure ELMO can always submit
+        // Dataset and Other are stable DataCite values unlikely to change
+        error_log("ERNIE: Using hardcoded fallback (Dataset, Other) - all other sources unavailable");
+        return $this->getHardcodedFallback();
+    }
+
+    /**
+     * Returns hardcoded fallback resource types
+     * 
+     * This is the absolute last resort when ERNIE, cache, and stale cache are all unavailable.
+     * Dataset and Other are the most common and stable DataCite resource types.
+     * Without at least one resource type, ELMO cannot submit metadata.
+     * 
+     * @return array<array{id: int, name: string, description: string|null}> Minimal fallback resource types
+     */
+    private function getHardcodedFallback(): array
+    {
+        return [
+            [
+                'id' => 10,  // ERNIE ID for Dataset
+                'name' => 'Dataset',
+                'description' => 'Data encoded in a defined structure'
+            ],
+            [
+                'id' => 21,  // ERNIE ID for Other
+                'name' => 'Other',
+                'description' => 'Other resource type not covered by the available options'
+            ]
+        ];
     }
 
     /**

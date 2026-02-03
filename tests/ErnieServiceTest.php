@@ -234,15 +234,18 @@ class ErnieServiceTest extends TestCase
     // ==================== getResourceTypesWithCache() Tests ====================
 
     /**
-     * Test that getResourceTypesWithCache returns empty array when not configured and no cache
+     * Test that getResourceTypesWithCache returns hardcoded fallback when not configured and no cache
      */
-    public function testGetResourceTypesWithCacheReturnsEmptyWhenNotConfigured(): void
+    public function testGetResourceTypesWithCacheReturnsHardcodedFallbackWhenNotConfigured(): void
     {
         $service = $this->createTestableService('', '');
         $result = $service->getResourceTypesWithCache();
 
         $this->assertIsArray($result);
-        $this->assertEmpty($result);
+        // Should return hardcoded fallback (Dataset and Other)
+        $this->assertCount(2, $result);
+        $this->assertEquals('Dataset', $result[0]['name']);
+        $this->assertEquals('Other', $result[1]['name']);
     }
 
     /**
@@ -474,6 +477,45 @@ class ErnieServiceTest extends TestCase
         $status2 = $service2->getCacheStatus();
 
         $this->assertFalse($status2['valid']);
+    }
+
+    // ==================== Hardcoded Fallback Tests ====================
+
+    /**
+     * Test that hardcoded fallback returns Dataset and Other
+     */
+    public function testHardcodedFallbackContainsDatasetAndOther(): void
+    {
+        // No cache, no config - should use hardcoded fallback
+        $service = $this->createTestableService('', '');
+        $result = $service->getResourceTypesWithCache();
+
+        $this->assertCount(2, $result);
+        
+        // Verify Dataset
+        $this->assertEquals(10, $result[0]['id']);
+        $this->assertEquals('Dataset', $result[0]['name']);
+        $this->assertNotEmpty($result[0]['description']);
+        
+        // Verify Other
+        $this->assertEquals(21, $result[1]['id']);
+        $this->assertEquals('Other', $result[1]['name']);
+        $this->assertNotEmpty($result[1]['description']);
+    }
+
+    /**
+     * Test that hardcoded fallback is used when ERNIE fails and no cache exists
+     */
+    public function testHardcodedFallbackUsedWhenErnieFailsAndNoCache(): void
+    {
+        // Invalid URL, no cache
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->getResourceTypesWithCache();
+
+        // Should use hardcoded fallback
+        $this->assertCount(2, $result);
+        $this->assertEquals('Dataset', $result[0]['name']);
+        $this->assertEquals('Other', $result[1]['name']);
     }
 }
 
