@@ -1,38 +1,31 @@
 <!-- Changelog Content -->
 <div class="accordion" id="accordion-changelog">
-    <!-- Version 2.0.5 -->
+    <!-- Version 2.0.6 -->
     <div class="accordion-item">
-        <h2 class="accordion-header" id="heading-changelog-version10">
+        <h2 class="accordion-header" id="heading-changelog-version11">
             <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse-changelog-version10" aria-expanded="true"
-                aria-controls="collapse-changelog-version10">
-                Version 2.0.5 - 2026/01/29
+                data-bs-target="#collapse-changelog-version11" aria-expanded="true"
+                aria-controls="collapse-changelog-version11">
+                Version 2.0.6 - 2026/00/00
             </button>
         </h2>
-        <div id="collapse-changelog-version10" class="accordion-collapse collapse show"
-            aria-labelledby="heading-changelog-version10" data-bs-parent="#accordion-changelog">
+        <div id="collapse-changelog-version11" class="accordion-collapse collapse show"
+            aria-labelledby="heading-changelog-version11" data-bs-parent="#accordion-changelog">
             <div class="accordion-body">
                 <ul>
                     <li><strong>Features:</strong>
                         <ul>
-                            <li>Extended the existing footer with Legal Notice, Privacy Policy, and Elmo Guide links</li>
-                            <li>Hide the Licenses and Rights formgroups and provide CC-BY-4.0 by default</li>
-                            <li>A clearer communication of metadata submission to give users a "sense of completion"</li>
-                            <li>Save button now stores drafts without triggering form validation, while Submit still enforces all required fields</li>
-                            <li>Added save and file export functionality for the ELMO-GEM version</li>
+                            <li>Resource Types dropdown now fetches values from ERNIE API for centralized vocabulary management</li>
+                            <li>Caching Resource Types with configurable TTL (default: 6 hours)</li>
                         </ul>
                     </li>
                     <li><strong>Fixes:</strong>
                         <ul>
-                            <li>Spatial and Temporal Coverage: Time fields are now optional; entries with date-only are allowed</li>
-                            <li>Fixed footer buttons overlapping form content at page bottom, preventing interaction with add buttons</li>
-                            <li>Fixed Funding Reference add button layout across all screen sizes</li>
-                            <li>Adjusted footer to work on all screen sizes</li>
                         </ul>
                     </li>
                     <li><strong>Documentation:</strong>
                         <ul>
-                            <li>Implemented logging of page events</li>
+                            <li>Dynamic help for Resource Types in ELMO Guide</li>
                         </ul>
                     </li>
                     <li><strong>Chore:</strong>
@@ -43,10 +36,47 @@
             </div>
         </div>
     </div>
+    <!-- Version 2.0.5 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-changelog-version10">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse-changelog-version10" aria-expanded="false"
+                aria-controls="collapse-changelog-version10">
+                Version 2.0.5 - 2026/01/27
+            </button>
+        </h2>
+        <div id="collapse-changelog-version10" class="accordion-collapse collapse"
+            aria-labelledby="heading-changelog-version10" data-bs-parent="#accordion-changelog">
+            <div class="accordion-body">
+                <ul>
+                    <li><strong>Features:</strong>
+                        <ul>
+                            <li>Extended the existing footer with Legal Notice, Privacy Policy, and ELMO Guide links</li>
+                            <li>Provide CC-BY-4.0 as default license</li>
+                            <li>Better user feedback when submission of metadata to curation is successful</li>
+                            <li>Save button now stores drafts without triggering form validation, while Submit still enforces all required fields</li>
+                            <li>Added save and file export functionality for the ELMO-GEM version</li>
+                        </ul>
+                    </li>
+                    <li><strong>Fixes:</strong>
+                        <ul>
+                            <li>Spatial and Temporal Coverage: Fixed HTTP 500 error when saving with empty end date or description fields</li>
+                            <li>Spatial and Temporal Coverage: Time fields are now optional; entries with date-only are allowed</li>
+                            <li>Search of funder institutions works faster and does not freeze the whole page</li>
+                            <li>Fixed feedback button, preventing overlap with other buttons</li>
+                            <li>Optimised the button layout for mobile devices</li>
+                            <li>Adjusted footer to work on all screen sizes</li>
+                            <li>Fixed duplicate licenses appearing in License dropdown due to race condition during page load</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
     <!-- Version 2.0.4 -->
     <div class="accordion-item">
         <h2 class="accordion-header" id="heading-changelog-version9">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                 data-bs-target="#collapse-changelog-version9" aria-expanded="false"
                 aria-controls="collapse-changelog-version9">
                 Version 2.0.4 - 2025/12/15
@@ -79,7 +109,7 @@
                             <li>Clear function now works in "Originating Laboratory"</li>
                             <li>Added valid `gml:id` attribute to `gml:TimePeriod` in ISO 19139 transformation (#273)</li>
                             <li>Fixed Tagify dropdown text overlap on slim screens #686</li>
-                            <li>Extended the existing footer with Legal Notice, Privacy Policy, and Elmo Guide links</li>
+                            <li>Extended the existing footer with Legal Notice, Privacy Policy, and ELMO Guide links</li>
                             <li>Fixed redundant Sortable initialization on row addition #705</li>
                             <li>Fixed footer buttons overlapping form content at page bottom, preventing interaction with add buttons</li>
                             <li>Fixed Funding Reference add button layout across all screen sizes</li>

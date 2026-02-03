@@ -20,6 +20,10 @@ tests/playwright/flows/outputDataActual/*
 # Autosave files
 storage/drafts/
 
+# ERNIE cache files
+storage/cache/*.json
+!storage/cache/.gitkeep
+
 # PHPUnit logs
 test.log
 

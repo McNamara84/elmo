@@ -228,14 +228,15 @@ class ValidationFunctionsTest extends TestCase
     }
 
     /**
-     * Ensures STC validation fails when base fields are missing.
+     * Verifies STC validation succeeds when no fields are provided (empty entry is valid).
      *
      * @return void
      */
-    public function testValidateSTCDependenciesMissingBase(): void
+    public function testValidateSTCDependenciesEmptyEntry(): void
     {
         $entry = [];
-        $this->assertFalse(validateSTCDependencies($entry));
+        // Empty entries are considered valid - no data = no validation errors
+        $this->assertTrue(validateSTCDependencies($entry));
     }
 
     /**

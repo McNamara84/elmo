@@ -5,6 +5,7 @@ namespace Tests;
 use PHPUnit\Framework\TestCase;
 use mysqli_sql_exception;
 
+require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_contactperson.php';
 
 /**

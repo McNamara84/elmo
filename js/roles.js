@@ -144,10 +144,31 @@ function initializeTagifyWithRoles(inputSelector, roles) {
 
 // Initialize on DOM content loaded
 document.addEventListener('DOMContentLoaded', function () {
-  // Set up initial role dropdowns
-  setupRolesDropdown(["person", "both"], "#input-contributor-personrole");
-  setupRolesDropdown(["institution", "both"], "#input-contributor-organisationrole");
+  // Read feature toggles
+  const features = window.ELMO_FEATURES || {};
+  
+  // Set up Contributor Persons role dropdown only if feature is enabled
+  if (features.showContributorPersons !== false) {
+    setupRolesDropdown(["person", "both"], "#input-contributor-personrole");
+  }
+  
+  // Set up Contributor Institutions role dropdown only if feature is enabled  
+  if (features.showContributorInstitutions !== false) {
+    setupRolesDropdown(["institution", "both"], "#input-contributor-organisationrole");
+  }
 
   // Add listener for translation changes
   document.addEventListener('translationsLoaded', refreshRoleTagifyInstances);
 });
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    setupRolesDropdown,
+    refreshRoleTagifyInstances,
+    getPersonRoles: () => personRoles,
+    getOrganizationRoles: () => organizationRoles,
+    setPersonRoles: (roles) => { personRoles = roles; },
+    setOrganizationRoles: (roles) => { organizationRoles = roles; }
+  };
+}

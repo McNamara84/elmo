@@ -120,6 +120,35 @@ function saveOrUpdateOriginatingLaboratory($connection, $labName, $labId)
 
 
 /**
+ * Gets cached affiliations data to avoid loading the large JSON file multiple times.
+ * 
+ * @return array|null The affiliations array or null on failure
+ */
+function getAffiliationsCache()
+{
+    static $affiliationsCache = null;
+    
+    if ($affiliationsCache === null) {
+        $jsonPath = __DIR__ . '/../../json/affiliations.json';
+        if (!file_exists($jsonPath)) {
+            error_log("Affiliations JSON file not found at: " . $jsonPath);
+            return null;
+        }
+
+        $affiliationsJson = file_get_contents($jsonPath);
+        $affiliationsCache = json_decode($affiliationsJson, true);
+
+        if (!$affiliationsCache) {
+            error_log("Failed to parse affiliations JSON");
+            $affiliationsCache = []; // Set to empty array to prevent repeated load attempts
+            return null;
+        }
+    }
+    
+    return $affiliationsCache;
+}
+
+/**
  * Saves an affiliation into the database using the preferred name from ROR.
  * Handles ROR ID processing and avoids duplicate entries.
  *
@@ -138,18 +167,9 @@ function saveLabAffiliation($connection, $affiliation_name, $rorId)
             return false;
         }
 
-        // Load the affiliations JSON file
-        $jsonPath = __DIR__ . '/../../json/affiliations.json';
-        if (!file_exists($jsonPath)) {
-            error_log("Affiliations JSON file not found at: " . $jsonPath);
-            return false;
-        }
-
-        $affiliationsJson = file_get_contents($jsonPath);
-        $affiliations = json_decode($affiliationsJson, true);
-
-        if (!$affiliations) {
-            error_log("Failed to parse affiliations JSON");
+        // Get cached affiliations data
+        $affiliations = getAffiliationsCache();
+        if ($affiliations === null) {
             return false;
         }
 

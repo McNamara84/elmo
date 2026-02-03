@@ -361,6 +361,7 @@ class SaveAuthorsTest extends DatabaseTestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $authorData = [
+            "action" => "submit",
             "familynames" => ["OnlyLastName"],
             "givennames" => [""],
             "orcids" => [""],
@@ -388,6 +389,7 @@ class SaveAuthorsTest extends DatabaseTestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $authorData = [
+            "action" => "submit",
             "authorinstitutionName" => [""],
             "institutionAffiliation" => [''],
             "authorInstitutionRorIds" => ['']
@@ -420,6 +422,7 @@ class SaveAuthorsTest extends DatabaseTestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $authorData = [
+            "action" => "submit",
             "familynames" => [],
             "givennames" => [],
             "orcids" => [],
@@ -447,6 +450,7 @@ class SaveAuthorsTest extends DatabaseTestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $authorData = [
+            "action" => "submit",
             "authorinstitutionName" => [],
             "institutionAffiliation" => [],
             "authorInstitutionRorIds" => []

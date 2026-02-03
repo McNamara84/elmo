@@ -14,7 +14,7 @@ require_once __DIR__ . '/../save/formgroups/save_ggms_datasources.php';
  * - Multiple satellite platforms expansion
  * - All 5 types combined in a single save operation
  */
-class SaveDataSourcesTest extends DatabaseTestCase
+class SaveGGMsDataSourcesTest extends DatabaseTestCase
 {
     // ============================================================================
     // MOCK DATA GENERATION METHODS
@@ -206,9 +206,10 @@ class SaveDataSourcesTest extends DatabaseTestCase
     private function getThesaurusKeywordsForResource(int $resourceId): array
     {
         $sql = "SELECT tk.* FROM `Thesaurus_Keywords` tk
-                JOIN `Resource_has_Thesaurus_Keywords` rhtk ON tk.id = rhtk.thesaurus_keywords_id
-                WHERE rhtk.resource_id = ?
-                ORDER BY tk.id ASC";
+                JOIN `Resource_has_Thesaurus_Keywords` rhtk 
+                    ON tk.thesaurus_keywords_id = rhtk.Thesaurus_Keywords_thesaurus_keywords_id
+                WHERE rhtk.Resource_resource_id = ?
+                ORDER BY tk.thesaurus_keywords_id ASC";
         
         $stmt = $this->connection->prepare($sql);
         $stmt->bind_param('i', $resourceId);
@@ -225,10 +226,11 @@ class SaveDataSourcesTest extends DatabaseTestCase
      */
     private function getRelatedWorksForResource(int $resourceId): array
     {
-        $sql = "SELECT rw.* FROM `Related_Works` rw
-                JOIN `Resource_has_Related_Works` rhrw ON rw.id = rhrw.related_works_id
-                WHERE rhrw.resource_id = ?
-                ORDER BY rw.id ASC";
+        $sql = "SELECT rw.* FROM `Related_Work` rw
+                JOIN `Resource_has_Related_Work` rhrw 
+                    ON rw.related_work_id = rhrw.Related_Work_related_work_id
+                WHERE rhrw.Resource_resource_id = ?
+                ORDER BY rw.related_work_id ASC";
         
         $stmt = $this->connection->prepare($sql);
         $stmt->bind_param('i', $resourceId);
@@ -256,7 +258,7 @@ class SaveDataSourcesTest extends DatabaseTestCase
         $postData = self::rowsToPostData([$mockData]);
         
         // Save the data source
-        saveDataSources($this->connection, $postData, $resource_id);
+        \saveGGMsDataSources($this->connection, $postData, $resource_id);
         
         // Retrieve from database
         $dbRecord = $this->getDataSourceFromDb(
@@ -268,13 +270,12 @@ class SaveDataSourcesTest extends DatabaseTestCase
         $this->assertNotNull($dbRecord, 'Data source should be saved');
         $this->assertEquals('G', $dbRecord['type']);
         $this->assertEquals('Land-based gravity observations', $dbRecord['description']);
-        $this->assertEquals('Terrestrial gravity stations', $dbRecord['G_details']);
+        $this->assertEquals('Terrestrial gravity stations', $dbRecord['details']);
         
-        // Assert that non-G fields are NULL
+        // Assert that satellite-specific fields are NULL for type G
         $this->assertNull($dbRecord['S_value_name'], 'S_value_name should be NULL for type G');
-        $this->assertNull($dbRecord['A_details'], 'A_details should be NULL for type G');
-        $this->assertNull($dbRecord['T_details'], 'T_details should be NULL for type G');
-        $this->assertNull($dbRecord['M_details'], 'M_details should be NULL for type G');
+        $this->assertNull($dbRecord['T_Isostasy_compensation_depth'], 'T_Isostasy_compensation_depth should be NULL for type G');
+        $this->assertNull($dbRecord['M_identifier'], 'M_identifier should be NULL for type G');
     }
     
     /**
@@ -288,7 +289,7 @@ class SaveDataSourcesTest extends DatabaseTestCase
         $mockData = self::altimetryRow();
         $postData = self::rowsToPostData([$mockData]);
         
-        saveDataSources($this->connection, $postData, $resource_id);
+        \saveGGMsDataSources($this->connection, $postData, $resource_id);
         
         $dbRecord = $this->getDataSourceFromDb(
             $resource_id,
@@ -298,12 +299,12 @@ class SaveDataSourcesTest extends DatabaseTestCase
         
         $this->assertNotNull($dbRecord);
         $this->assertEquals('A', $dbRecord['type']);
-        $this->assertEquals('Direct observations from altimetry satellites', $dbRecord['A_details']);
+        $this->assertEquals('Direct observations from altimetry satellites', $dbRecord['details']);
         
-        // Assert that non-A fields are NULL
-        $this->assertNull($dbRecord['G_details']);
-        $this->assertNull($dbRecord['T_details']);
-        $this->assertNull($dbRecord['M_details']);
+        // Assert that other type-specific fields are NULL for type A
+        $this->assertNull($dbRecord['S_value_name']);
+        $this->assertNull($dbRecord['T_Isostasy_compensation_depth']);
+        $this->assertNull($dbRecord['M_identifier']);
     }
     
     /**
@@ -317,7 +318,7 @@ class SaveDataSourcesTest extends DatabaseTestCase
         $mockData = self::terrainRow(750);
         $postData = self::rowsToPostData([$mockData]);
         
-        saveDataSources($this->connection, $postData, $resource_id);
+        \saveGGMsDataSources($this->connection, $postData, $resource_id);
         
         $dbRecord = $this->getDataSourceFromDb(
             $resource_id,
@@ -327,13 +328,12 @@ class SaveDataSourcesTest extends DatabaseTestCase
         
         $this->assertNotNull($dbRecord);
         $this->assertEquals('T', $dbRecord['type']);
-        $this->assertEquals('Digital Elevation Model (DEM/DTM)', $dbRecord['T_details']);
+        $this->assertEquals('Digital Elevation Model (DEM/DTM)', $dbRecord['details']);
         $this->assertEquals(750, $dbRecord['T_Isostasy_compensation_depth']);
         
-        // Assert that non-T fields are NULL
-        $this->assertNull($dbRecord['G_details']);
-        $this->assertNull($dbRecord['A_details']);
-        $this->assertNull($dbRecord['M_details']);
+        // Assert that other type-specific fields are NULL for type T
+        $this->assertNull($dbRecord['S_value_name']);
+        $this->assertNull($dbRecord['M_identifier']);
     }
     
     /**
@@ -347,7 +347,7 @@ class SaveDataSourcesTest extends DatabaseTestCase
         $mockData = self::satelliteRow(['GRACE']);
         $postData = self::rowsToPostData([$mockData]);
         
-        saveDataSources($this->connection, $postData, $resource_id);
+        \saveGGMsDataSources($this->connection, $postData, $resource_id);
         
         // Get data source
         $dataSources = $this->getDataSourcesForResource($resource_id);
@@ -355,17 +355,15 @@ class SaveDataSourcesTest extends DatabaseTestCase
         
         $ds = $dataSources[0];
         $this->assertEquals('S', $ds['type']);
-        $this->assertNull($ds['G_details']);
-        $this->assertNull($ds['A_details']);
-        $this->assertNull($ds['T_details']);
-        $this->assertNull($ds['M_details']);
+        $this->assertNull($ds['details']); // Satellite type has no details
+        $this->assertNotNull($ds['S_value_name']); // Should have satellite platform
         
         // Get thesaurus keywords
         $keywords = $this->getThesaurusKeywordsForResource($resource_id);
         $this->assertCount(1, $keywords, 'Should have 1 thesaurus keyword');
         
         $keyword = $keywords[0];
-        $this->assertStringContainsString('GRACE', $keyword['keyword_value']);
+        $this->assertStringContainsString('GRACE', $keyword['keyword']);
     }
     
     /**
@@ -380,7 +378,7 @@ class SaveDataSourcesTest extends DatabaseTestCase
         $mockData = self::satelliteRow($platforms);
         $postData = self::rowsToPostData([$mockData]);
         
-        saveDataSources($this->connection, $postData, $resource_id);
+        \saveGGMsDataSources($this->connection, $postData, $resource_id);
         
         // Get all data sources - should be 3 (one per platform)
         $dataSources = $this->getDataSourcesForResource($resource_id);
@@ -397,7 +395,7 @@ class SaveDataSourcesTest extends DatabaseTestCase
         $this->assertCount(3, $keywords, 'Should have 3 thesaurus keywords');
         
         // Verify keywords contain platform names
-        $keywordValues = array_column($keywords, 'keyword_value');
+        $keywordValues = array_column($keywords, 'keyword');
         foreach ($platforms as $platform) {
             $found = false;
             foreach ($keywordValues as $kv) {
@@ -421,7 +419,7 @@ class SaveDataSourcesTest extends DatabaseTestCase
         $mockData = self::modelRow('DOI');
         $postData = self::rowsToPostData([$mockData]);
         
-        saveDataSources($this->connection, $postData, $resource_id);
+        \saveGGMsDataSources($this->connection, $postData, $resource_id);
         
         // Get data source
         $dataSources = $this->getDataSourcesForResource($resource_id);
@@ -431,16 +429,14 @@ class SaveDataSourcesTest extends DatabaseTestCase
         $this->assertEquals('M', $ds['type']);
         $this->assertEquals('10.5880/icgem.2024.001', $ds['M_identifier']);
         $this->assertEquals('DOI', $ds['M_identifier_type']);
-        $this->assertNull($ds['G_details']);
-        $this->assertNull($ds['A_details']);
-        $this->assertNull($ds['T_details']);
+        $this->assertEquals('Global Gravitational Model', $ds['details']); // Model type can have details too
         
         // Get related works
         $relatedWorks = $this->getRelatedWorksForResource($resource_id);
         $this->assertCount(1, $relatedWorks, 'Should have 1 related work');
         
         $rw = $relatedWorks[0];
-        $this->assertEquals('10.5880/icgem.2024.001', $rw['identifier']);
+        $this->assertEquals('10.5880/icgem.2024.001', $rw['Identifier']);
     }
     
     /**
@@ -472,7 +468,7 @@ class SaveDataSourcesTest extends DatabaseTestCase
         $postData = self::rowsToPostData($rows);
         
         // Save all at once
-        saveDataSources($this->connection, $postData, $resource_id);
+        \saveGGMsDataSources($this->connection, $postData, $resource_id);
         
         // ========== ASSERTIONS ==========
         
@@ -490,42 +486,36 @@ class SaveDataSourcesTest extends DatabaseTestCase
         
         // 3. Verify Ground type has correct fields
         $gRecord = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'G'))[0];
-        $this->assertEquals('Terrestrial gravity stations', $gRecord['G_details']);
-        $this->assertNull($gRecord['A_details']);
-        $this->assertNull($gRecord['T_details']);
-        $this->assertNull($gRecord['M_details']);
+        $this->assertEquals('Terrestrial gravity stations', $gRecord['details']);
+        $this->assertNull($gRecord['S_value_name']);
+        $this->assertNull($gRecord['M_identifier']);
         
         // 4. Verify Altimetry type has correct fields
         $aRecord = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'A'))[0];
-        $this->assertEquals('Direct observations from altimetry satellites', $aRecord['A_details']);
-        $this->assertNull($aRecord['G_details']);
-        $this->assertNull($aRecord['T_details']);
-        $this->assertNull($aRecord['M_details']);
+        $this->assertEquals('Direct observations from altimetry satellites', $aRecord['details']);
+        $this->assertNull($aRecord['S_value_name']);
+        $this->assertNull($aRecord['M_identifier']);
         
         // 5. Verify Terrain type has correct fields and compensation depth
         $tRecord = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'T'))[0];
-        $this->assertEquals('Digital Elevation Model (DEM/DTM)', $tRecord['T_details']);
+        $this->assertEquals('Digital Elevation Model (DEM/DTM)', $tRecord['details']);
         $this->assertEquals(600, $tRecord['T_Isostasy_compensation_depth']);
-        $this->assertNull($tRecord['G_details']);
-        $this->assertNull($tRecord['A_details']);
-        $this->assertNull($tRecord['M_details']);
+        $this->assertNull($tRecord['S_value_name']);
+        $this->assertNull($tRecord['M_identifier']);
         
         // 6. Verify Model type has correct fields
         $mRecord = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'M'))[0];
         $this->assertEquals('10.5880/icgem.2024.001', $mRecord['M_identifier']);
         $this->assertEquals('DOI', $mRecord['M_identifier_type']);
-        $this->assertNull($mRecord['G_details']);
-        $this->assertNull($mRecord['A_details']);
-        $this->assertNull($mRecord['T_details']);
+        $this->assertEquals('Global Gravitational Model', $mRecord['details']); // Model has details too
+        $this->assertNull($mRecord['S_value_name']);
         
         // 7. Verify Satellite types have platform values
         $sRecords = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'S'));
         foreach ($sRecords as $sRecord) {
             $this->assertNotNull($sRecord['S_value_name']);
-            $this->assertNull($sRecord['G_details']);
-            $this->assertNull($sRecord['A_details']);
-            $this->assertNull($sRecord['T_details']);
-            $this->assertNull($sRecord['M_details']);
+            $this->assertNull($sRecord['details']); // Satellite uses S_ columns
+            $this->assertNull($sRecord['M_identifier']);
         }
         
         // 8. Verify 3 thesaurus keywords created from satellite platforms
@@ -535,6 +525,6 @@ class SaveDataSourcesTest extends DatabaseTestCase
         // 9. Verify 1 related work created from model
         $relatedWorks = $this->getRelatedWorksForResource($resource_id);
         $this->assertCount(1, $relatedWorks, 'Should have 1 related work from model');
-        $this->assertEquals('10.5880/icgem.2024.001', $relatedWorks[0]['identifier']);
+        $this->assertEquals('10.5880/icgem.2024.001', $relatedWorks[0]['Identifier']);
     }
 }

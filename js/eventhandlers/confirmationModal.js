@@ -105,3 +105,8 @@ window.showConfirmationModal = showConfirmationModal;
 
 // Export for ES module compatibility
 export { showConfirmationModal };
+
+// Export for CommonJS testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { showConfirmationModal };
+}

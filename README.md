@@ -1,11 +1,11 @@
-![PHP 8.4](https://img.shields.io/badge/php-8.4-blue?logo=php)
+![PHP 8.5](https://img.shields.io/badge/php-8.5-blue?logo=php)
 ![MySQL 8.4](https://img.shields.io/badge/mysql-8.4-orange?logo=mysql&logoColor=white)
-![jQuery 3.7](https://img.shields.io/badge/jquery-3.7-0769ad?logo=jquery)
+![jQuery 4.0](https://img.shields.io/badge/jquery-4.0-0769ad?logo=jquery)
 ![Bootstrap 5.3](https://img.shields.io/badge/bootstrap-5.3-563d7c?logo=bootstrap)
 ![OpenAPI 3.1](https://img.shields.io/badge/openapi-3.1-6BA539?logo=openapiinitiative)
-![Coverage](https://github.com/McNamara84/elmo/blob/image-data/coverage.svg?raw=true)
-![JS Coverage](https://github.com/McNamara84/elmo/blob/image-data-js/js-coverage.svg?raw=true)
-[![Playwright Tests](https://github.com/McNamara84/elmo/actions/workflows/playwright.yml/badge.svg)](https://github.com/McNamara84/ELMO-Enhanced-Laboratory-Metadata-Optimizer/actions/workflows/playwright.yml)
+[![PHP Coverage](https://codecov.io/gh/McNamara84/elmo/branch/main/graph/badge.svg?flag=php)](https://codecov.io/gh/McNamara84/elmo)
+[![JS Coverage](https://codecov.io/gh/McNamara84/elmo/branch/main/graph/badge.svg?flag=javascript)](https://codecov.io/gh/McNamara84/elmo)
+[![Playwright Tests](https://github.com/McNamara84/elmo/actions/workflows/playwright.yml/badge.svg)](https://github.com/McNamara84/elmo/actions/workflows/playwright.yml)
 
 # ELMO - Enhanced Laboratory Metadata Organizer
 
@@ -35,6 +35,10 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Multilingualism through the use of language files. Add your own language file and ELMO will detect it automatically.
 - Always up-to-date controlled vocabularies through regular automatic updates.
 - Easy input of authors and contributors using ORCID preload.
+- Fast affiliation search via server-side API (avoiding large client-side data transfers).
+- Optimized page loading with GZIP compression and browser caching for static assets.
+- Lazy loading of thesaurus data (JSON files loaded only when modals are opened).
+- Configurable feature toggles via `ELMO_FEATURES` JavaScript object for conditional resource loading.
 - Submitting of metadata directly to data curators.
 - Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
 - Submission of data descriptions files and link to data is possible.
@@ -47,14 +51,14 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 
 The installation of ELMO is possible on operating systems such as recent Windows versions (e.g. Windows 10/11) and the most common Linux distributions (e.g. Ubuntu, Debian).
 Following conditions are required for installation:
-- PHP ≥ 8.2 and ≤ 8.4
+- PHP ≥ 8.3 and ≤ 8.5
 	- incl. a webserver able to perform PHP operations (such as Apache or Nginx)
 	- extensions needed: XSL, ZIP
 - MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/8.0/en/installing-and-configuration.html)) or MariaDB
 
 ### Quick installation guide
 
-1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
+1. Ensure a development environment with PHP ≥8.3 (recommended: 8.5) and a MySQL or MariaDB server.
 2. The XSL and ZIP extensions for PHP must be installed and enabled.
 3. Don't forget to start Apache and MySQL.
 4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
@@ -90,7 +94,7 @@ This section outlines the automatic processes handled by the Docker environment 
   - `web`: Built from the `Dockerfile`.
 
 **2. `Dockerfile`** 
-- **Base Image:** Installs `php 8.4-apache` and essential dependencies, including the database client.
+- **Base Image:** Installs `php 8.5-apache` and essential dependencies, including the database client.
 - **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html`), setting appropriate ownership for the standard Apache user (`www-data`). I fyou don't want something to be copied into container, include it into .dockerignore (performance might be affected)
 - **Entrypoint:** Executes the `docker-entrypoint.sh` script.
 
@@ -131,14 +135,14 @@ If you encounter problems with the installation, feel free to leave an entry in 
 
   The installation of ELMO is possible on operating systems such as recent Windows versions (e.g. Windows 10/11) and the most common Linux distributions (e.g. Ubuntu, Debian).
   Following conditions are required for installation:
-  - PHP ≥ 8.2 and ≤ 8.4
+  - PHP ≥ 8.3 and ≤ 8.5
     - incl. a webserver able to perform PHP operations (such as Apache or Nginx)
     - extensions needed: XSL, ZIP
   - MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/8.0/en/installing-and-configuration.html)) or MariaDB
 
   ### Quick installation guide
 
-  1. Ensure a development environment with PHP >8.2 and a MySQL or MariaDB server.
+  1. Ensure a development environment with PHP ≥8.3 (recommended: 8.5) and a MySQL or MariaDB server.
   2. The XSL and ZIP extensions for PHP must be installed and enabled.
   3. Don't forget to start Apache and MySQL.
   4. Create a new empty sql database in (e.g. using phpMyAdmin) and copy the name of the database.
@@ -160,7 +164,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
 
   This section will further explain the installation of the metadata editor with the help of a more detailed step-by-step guide on how to install the metadata editor on Windows 10/11 using PHP and MySQL. For a local development environment, localhost-based access to the server is usually sufficient.
   #### 1. Setting up the development environment
-  - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP > 8.2).
+  - Download and run the installer from the official [PHP website](https://www.php.net/downloads.php) (PHP ≥8.3, recommended: 8.5).
   - Install [MySQL](https://dev.mysql.com/downloads/installer/) or MariaDB.
   - Install and enable the XSL and ZIP extensions for PHP. In order to do that, open the `php.ini` file and uncomment the line for the required extensions.
   #### 2. Starting Apache and MySQL
@@ -260,6 +264,27 @@ To install them: npm install
   - `$showRelatedWork`: Specifies whether the form group Related Work should be displayed (true/false).
   - `$showFundingReference`: Specifies whether the form group Funding Reference should be displayed (true/false).
   - `$showGGMsProperties`: specific for implementation for the ICGEM platform. Specifies whether ICGEM form groups (GGMs Properties and Characteristics of the model) should be displayed (true/false).
+
+  ### ERNIE Integration (Bidirectional Communication)
+  
+  ELMO and ERNIE communicate in both directions using separate API keys:
+
+  ```
+  ELMO → ERNIE (fetch vocabularies)
+  ├─ ELMO GETs: GET https://ernie.../api/v1/resource-types/elmo
+  ├─ Header: X-API-KEY: [ERNIE_API_KEY from ELMO's .env]
+  └─ ERNIE verifies the key on its side
+
+  ELMO ← ERNIE (on-demand cache refresh)
+  ├─ ERNIE POSTs: POST /api/v2/admin/cache/resourcetypes/refresh
+  ├─ Header: X-API-KEY: [ELMO_API_KEY from ERNIE's config]
+  └─ ELMO verifies against $apiKeyElmo in ELMO's .env
+  ```
+
+  - `$apiKeyElmo`: API key that external services (including ERNIE) use to authenticate with ELMO's admin endpoints. **Direction: ERNIE → ELMO**
+  - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types are fetched from ERNIE instead of the local database.
+  - `$ernieApiKey`: API key for ELMO to authenticate with the ERNIE service. **Direction: ELMO → ERNIE**
+  - `$ernieResourceTypesCacheTtl`: Cache time-to-live in seconds for ERNIE resource types (default: 21600 = 6 hours). Also determines the automatic refresh interval.
 
 </details>
 

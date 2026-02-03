@@ -222,8 +222,8 @@ test.describe('Contributor (Institutions) form group', () => {
   test('updates hidden ROR identifier when affiliations change', async ({ page }) => {
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
-      affiliationInput.tagify.removeAllTags();
-      affiliationInput.tagify.addTags([
+      affiliationInput._tagify.removeAllTags();
+      affiliationInput._tagify.addTags([
         { value: 'Fraunhofer Institute for Open Communication Systems FOKUS', id: 'https://ror.org/019wvm592' },
         { value: 'Brown University', id: 'https://ror.org/05p8bnz29' }
       ]);
@@ -233,7 +233,7 @@ test.describe('Contributor (Institutions) form group', () => {
 
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
-      affiliationInput.tagify.removeAllTags();
+      affiliationInput._tagify.removeAllTags();
     });
 
     await expect(page.locator('#input-contributor-organisationrorid')).toHaveValue('');
@@ -248,7 +248,7 @@ test.describe('Contributor (Institutions) form group', () => {
 
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
-      affiliationInput.tagify.addTags([{ value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' }]);
+      affiliationInput._tagify.addTags([{ value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' }]);
       (window as any).validateAllMandatoryFields();
     });
 
@@ -257,7 +257,7 @@ test.describe('Contributor (Institutions) form group', () => {
 
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
-      affiliationInput.tagify.removeAllTags();
+      affiliationInput._tagify.removeAllTags();
       (window as any).validateAllMandatoryFields();
     });
 

@@ -133,6 +133,7 @@ class SaveDescriptionsTest extends DatabaseTestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
+            "action" => "submit",
             "descriptionAbstract" => "",
             "descriptionMethods" => "These are the methods.",
             "descriptionTechnical" => "",

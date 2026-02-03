@@ -31,7 +31,7 @@ function saveResourceInformationAndRights($connection, $postData)
     try {        
         // Only require Rights field if license form group is shown
         global $showLicense;
-        $action = $postData['action'] ?? 'submit';
+        $action = $postData['action'] ?? 'save_and_download';
         if ($action === 'submit') {
             $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
             $requiredArrayFields = ['title', 'titleType'];
@@ -81,38 +81,57 @@ function saveResourceInformationAndRights($connection, $postData)
  */
 function prepareResourceData($postData)
 {
+    global $connection, $defaultLicense;
 
-    global $showLicense, $connection, $showGGMsProperties, $defaultLicense;
+    $rightsId = null;
     
-    // If showLicense is false and no Rights value is provided, use CC-BY 4.0 (rights_id = 1)
-    $rightsId = isset($postData['Rights']) ? (int) $postData['Rights'] : null;
-    // this part handles the assignment of license when the license form group is not shown
-    if ($rightsId === null && !$showLicense) {
-        // Query the database to find the default license provided in settings.php
-        $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ?");
+    // Try to get Rights from POST data
+    if (isset($postData['Rights']) && !empty($postData['Rights'])) {
+        try {
+            $rightsId = (int) $postData['Rights'];
+            // Check if casting resulted in 0 or invalid value
+            if ($rightsId <= 0) {
+                error_log("Rights value is not a valid positive integer: " . var_export($postData['Rights'], true));
+                $rightsId = null;
+            }
+        } catch (Exception $e) {
+            error_log("Failed to cast Rights to int: " . $e->getMessage() . ". Value: " . var_export($postData['Rights'], true));
+            $rightsId = null;
+        }
+        
+        // Validate that this rights_id actually exists
+        if ($rightsId !== null) {
+            $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rights_id = ?");
+            $stmt->bind_param("i", $rightsId);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows === 0) {
+                error_log("Invalid Rights ID provided: $rightsId. Falling back to default.");
+                $rightsId = null;
+            }
+        }
+    }
+    
+    // If no valid Rights from POST, use default
+    if ($rightsId === null) {
+        $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ? LIMIT 1");
         $stmt->bind_param("s", $defaultLicense);
         $stmt->execute();
         $result = $stmt->get_result();
         if ($row = $result->fetch_assoc()) {
             $rightsId = $row['rights_id'];
         } else {
-            // Fallback: try to find CC-BY-4.0 if default license not found
-            $fallbackLicense = "CC-BY-4.0";
-            $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ?");
-            $stmt->bind_param("s", $fallbackLicense);
+            // Fallback to first available rights (not hardcoded ID)
+            $stmt = $connection->prepare("SELECT rights_id FROM Rights ORDER BY rights_id ASC LIMIT 1");
             $stmt->execute();
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
                 $rightsId = $row['rights_id'];
-                error_log("Saving license. fallback activated: Default license '$defaultLicense' not found, using CC-BY-4.0 fallback");
+                error_log("Default license '$defaultLicense' not found. Using first available: {$rightsId}");
             } else {
-                // Final fallback to ID 1 if CC-BY-4.0 also not found
-                $rightsId = 1;
-                error_log("Saving license. fallback activated: Neither default license '$defaultLicense' nor CC-BY-4.0 found, using hardcoded ID 1");
+                error_log("CRITICAL: No Rights records exist in database!");
+                return true; // Cannot proceed without a valid rights_id
             }
         }
-    } else {
-        $rightsId = (int) $postData['Rights'];
     }
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
