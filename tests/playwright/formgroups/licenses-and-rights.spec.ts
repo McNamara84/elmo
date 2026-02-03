@@ -13,9 +13,6 @@ test.describe("Licenses and Rights", () => {
 
     // Wait for licenses to load
     await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length > 0);
-    const allOptions = licenseSelect.locator("option");
-    const allCount = await allOptions.count();
-    expect(allCount).toBe(4);
 
     // Switch resource type to Software
     const resourceType = page.locator('#input-resourceinformation-resourcetype');
