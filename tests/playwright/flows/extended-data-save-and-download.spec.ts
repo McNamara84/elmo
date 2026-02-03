@@ -256,8 +256,17 @@ test.describe('Dataset Save with XML Verification', () => {
 });
 
 /**
- * Combine the following 2 functions to load the parsed XMLs -- the reference and the actual -- for comparison
- * and return their roots. the envelopes are also returned to check the metadata outside the Datacite Scheme.
+ * Loads and prepares both reference and actual XML files for comparison.
+ * 
+ * Downloads the XML from the form submission, parses it, and compares it against
+ * the reference XML file. Returns both the DataCite resource roots and full envelopes
+ * for comprehensive XML verification.
+ * 
+ * @param {Page} page - Playwright page object for browser interaction
+ * @param {string} type - Test type identifier ('minimal', 'extended', or 'extended-multiple')
+ * @returns {Promise<{refRoot: any, actualRoot: any, refEnvelope: any, actualEnvelope: any}>} 
+ *          Object containing DataCite resource roots and full envelopes for both reference and actual XMLs
+ * @throws {Error} If reference file not found or XML parsing fails
  */
 async function prepareReferencaeAndActualXml(page: Page, type: string) {
     // Save XML
@@ -274,7 +283,14 @@ async function prepareReferencaeAndActualXml(page: Page, type: string) {
 }
 
 /**
- * Load reference XML for comparison
+ * Loads and parses a reference XML file from the output reference directory.
+ * 
+ * Maps test type identifiers to their corresponding JSON files and reads the
+ * pre-stored reference data for comparison with actual form output.
+ * 
+ * @param {string} testName - Test type identifier ('minimal', 'extended', or 'extended-multiple')
+ * @returns {any} Parsed JSON object containing the complete envelope with DataCite resource and ISO metadata
+ * @throws {Error} If the reference file does not exist or cannot be parsed
  */
 function loadReferenceXml(testName: string): any {
   const filenameMap: Record<string, string> = {
@@ -289,7 +305,20 @@ function loadReferenceXml(testName: string): any {
 }
 
 /**
- * Download XML from form and save to actual output directory
+ * Downloads XML from the form save dialog and saves it for verification.
+ * 
+ * Triggers the form save flow (Save button → Save modal confirmation), waits for the
+ * browser download, parses the XML using fast-xml-parser with attribute support,
+ * and saves both raw XML and parsed JSON representations to the actual output directory.
+ * 
+ * The parser configuration preserves XML attributes without prefixes, enabling direct
+ * comparison with reference files.
+ * 
+ * @param {Page} page - Playwright page object for browser interaction
+ * @param {string} testName - Test type identifier for file naming ('minimal', 'extended', or 'extended-multiple')
+ * @returns {Promise<{xmlContent: string, parsedXml: any}>} 
+ *          Object containing raw XML content and parsed JSON structure
+ * @throws {Error} If download fails, file cannot be read, or XML parsing fails
  */
 async function downloadAndSaveXml(
   page: Page,
