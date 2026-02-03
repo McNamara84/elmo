@@ -103,13 +103,15 @@ describe('setupLicenseDropdown', () => {
     expect($select.val()).toBe('rid-ccb4');
   });
 
-  test('software licenses: sorted alphabetically by rightsIdentifier, no CC-BY-4.0 required', () => {
+  test('software licenses: filters for software-only and sorts with copyleft licenses last', () => {
     const softwareData = [
-      { rights_id: 'rid-mit', rightsIdentifier: 'MIT', text: 'MIT License' },
-      { rights_id: 'rid-apache', rightsIdentifier: 'Apache-2.0', text: 'Apache License 2.0' },
-      { rights_id: 'rid-gpl', rightsIdentifier: 'GPL-3.0-or-later', text: 'GNU General Public License v3.0 or later' },
-      { rights_id: 'rid-bsd', rightsIdentifier: 'BSD-3-Clause', text: 'BSD 3-Clause License' }
-      ];
+      { rights_id: 'rid-mit', rightsIdentifier: 'MIT', text: 'MIT License', forSoftware: '1' },
+      { rights_id: 'rid-apache', rightsIdentifier: 'Apache-2.0', text: 'Apache License 2.0', forSoftware: '1' },
+      { rights_id: 'rid-gpl', rightsIdentifier: 'GPL-3.0-or-later', text: 'GNU General Public License v3.0 or later', forSoftware: '1' },
+      { rights_id: 'rid-bsd', rightsIdentifier: 'BSD-3-Clause', text: 'BSD 3-Clause License', forSoftware: '1' },
+      // These should be filtered out even if present
+      { rights_id: 'rid-ccb4', rightsIdentifier: 'CC-BY-4.0', text: 'Creative Commons Attribution 4.0 International', forSoftware: '0' }
+    ];
 
     mockGetJSONForBothEndpoints({ allData: [], softwareData });
 
@@ -123,7 +125,10 @@ describe('setupLicenseDropdown', () => {
     // No "Choose..." placeholder
     expect(texts.some(t => t.includes('Choose'))).toBe(false);
 
-    // Sorted by rightsIdentifier
+    // Should only have software licenses (forSoftware === '1')
+    expect(texts.length).toBe(4);
+
+    // Non-copyleft licenses first (Apache, BSD, MIT), then copyleft (GPL) at end
     expect(texts).toEqual([
       'Apache License 2.0 (Apache-2.0)',
       'BSD 3-Clause License (BSD-3-Clause)',
