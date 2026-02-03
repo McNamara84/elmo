@@ -265,6 +265,27 @@ To install them: npm install
   - `$showFundingReference`: Specifies whether the form group Funding Reference should be displayed (true/false).
   - `$showGGMsProperties`: specific for implementation for the ICGEM platform. Specifies whether ICGEM form groups (GGMs Properties and Characteristics of the model) should be displayed (true/false).
 
+  ### ERNIE Integration (Bidirectional Communication)
+  
+  ELMO and ERNIE communicate in both directions using separate API keys:
+
+  ```
+  ELMO → ERNIE (fetch vocabularies)
+  ├─ ELMO GETs: GET https://ernie.../api/v1/resource-types/elmo
+  ├─ Header: X-API-KEY: [ERNIE_API_KEY from ELMO's .env]
+  └─ ERNIE verifies the key on its side
+
+  ELMO ← ERNIE (on-demand cache refresh)
+  ├─ ERNIE POSTs: POST /api/v2/admin/cache/resourcetypes/refresh
+  ├─ Header: X-API-KEY: [ELMO_API_KEY from ERNIE's config]
+  └─ ELMO verifies against $apiKeyElmo in ELMO's .env
+  ```
+
+  - `$apiKeyElmo`: API key that external services (including ERNIE) use to authenticate with ELMO's admin endpoints. **Direction: ERNIE → ELMO**
+  - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types are fetched from ERNIE instead of the local database.
+  - `$ernieApiKey`: API key for ELMO to authenticate with the ERNIE service. **Direction: ELMO → ERNIE**
+  - `$ernieResourceTypesCacheTtl`: Cache time-to-live in seconds for ERNIE resource types (default: 21600 = 6 hours). Also determines the automatic refresh interval.
+
 </details>
 
 ## [API documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/)

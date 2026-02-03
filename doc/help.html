@@ -186,11 +186,35 @@ include_once "../settings.php";
                 </div>
                 <div id="help-resourceinformation-resourcetype">
                     <h4>Resource Type</h4>
-                    <p>Please specify the type of Dataset here. See <a
-                            href="https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/"
-                            target="_blank">DataCite Documentation</a> for definition of the controlled list and
-                        examples.</p>
-
+                    <p>Please specify the type of Dataset here.</p>
+                    <p>Available Resource Types are:</p>
+                    <?php
+                    // Fetch resource types directly from ERNIE API
+                    require_once __DIR__ . '/../api/v2/services/ErnieService.php';
+                    
+                    try {
+                        $ernieService = new ErnieService();
+                        $resourceTypes = $ernieService->getResourceTypesWithCache();
+                        
+                        if (is_array($resourceTypes) && count($resourceTypes) > 0) {
+                            echo '<ul class="resource-types-list">';
+                            foreach ($resourceTypes as $type) {
+                                $name = htmlspecialchars($type['name'] ?? '');
+                                $description = htmlspecialchars($type['description'] ?? '');
+                                echo '<li><strong>' . $name . '</strong>';
+                                if (!empty($description)) {
+                                    echo ': ' . $description;
+                                }
+                                echo '</li>';
+                            }
+                            echo '</ul>';
+                        } else {
+                            echo '<p><em>No resource types available.</em></p>';
+                        }
+                    } catch (Exception $e) {
+                        echo '<p><em>Resource types list could not be loaded. Please refer to the dropdown in the form.</em></p>';
+                    }
+                    ?>
                 </div>
                 <div id="help-resourceinformation-version">
                     <h4>Version</h4>

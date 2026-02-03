@@ -70,5 +70,9 @@ return [
     ['PUT', '/drafts/{id}', [new DraftController(), 'update']],
     ['DELETE', '/drafts/{id}', [new DraftController(), 'delete']],
     ['GET', '/drafts/session/latest', [new DraftController(), 'latestForSession']],
-    ['GET', '/drafts/{id}', [new DraftController(), 'get']]
+    ['GET', '/drafts/{id}', [new DraftController(), 'get']],
+
+    // ERNIE cache management endpoints
+    ['POST', '/admin/cache/resourcetypes/refresh', [new VocabController(), 'refreshResourceTypesCache']],
+    ['GET', '/admin/cache/resourcetypes/status', [new VocabController(), 'getResourceTypesCacheStatus']]
 ];
