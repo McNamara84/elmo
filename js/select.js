@@ -346,15 +346,17 @@ function setupLicenseDropdown(isSoftware) {
         });
     } else {
       // Software
-      processedLicenses = data.sort((a, b) => {
-        const aIsCopyleft = copyleftLicenses.includes(a.rightsIdentifier);
-        const bIsCopyleft = copyleftLicenses.includes(b.rightsIdentifier);
-        
-        if (aIsCopyleft !== bIsCopyleft) {
-          return aIsCopyleft ? 1 : -1; // Non-copyleft first
-        }
-        return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
-      });
+      processedLicenses = data
+        .filter(item => item.forSoftware === "1") // Only software licenses
+        .sort((a, b) => {
+          const aIsCopyleft = copyleftLicenses.includes(a.rightsIdentifier);
+          const bIsCopyleft = copyleftLicenses.includes(b.rightsIdentifier);
+          
+          if (aIsCopyleft !== bIsCopyleft) {
+            return aIsCopyleft ? 1 : -1; // Non-copyleft first
+          }
+          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
+        });
     }
     // Clear existing options
     $select.empty()
