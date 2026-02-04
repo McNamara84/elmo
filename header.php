@@ -23,15 +23,15 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
   <base href="<?php echo htmlspecialchars($baseHref); ?>">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Local Bootstrap CSS -->
-  <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <!-- Local jQuery UI CSS -->
-  <link rel="stylesheet" href="node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css" />
+  <link rel="stylesheet" href="assets/vendor/jquery-ui/themes/base/jquery-ui.min.css" />
   <!-- Local Bootstrap Icons CSS -->
-  <link rel="stylesheet" href="node_modules/bootstrap-icons/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="assets/vendor/bootstrap-icons/bootstrap-icons.min.css" />
   <!-- Local Tagify CSS -->
-  <link href="node_modules/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
+  <link href="assets/vendor/tagify/tagify.css" rel="stylesheet" type="text/css" />
   <!-- Local jsTree CSS -->
-  <link rel="stylesheet" href="node_modules/jstree/dist/themes/default/style.min.css" />
+  <link rel="stylesheet" href="assets/vendor/jstree/themes/default/style.min.css" />
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/gfz-cd.css">
   <link rel="stylesheet" href="./css/tagify-adj.css">

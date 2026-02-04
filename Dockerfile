@@ -22,6 +22,16 @@ RUN composer install --no-dev --prefer-dist --optimize-autoloader
 # Copy Node dependencies from node builder
 COPY --from=node-builder /app/node_modules /var/www/html/node_modules
 
+# Create runtime vendor assets and remove node_modules from runtime image later
+RUN mkdir -p /var/www/html/assets/vendor \
+    && cp -R /var/www/html/node_modules/bootstrap/dist /var/www/html/assets/vendor/bootstrap \
+    && cp -R /var/www/html/node_modules/jquery/dist /var/www/html/assets/vendor/jquery \
+    && cp -R /var/www/html/node_modules/jquery-ui/dist /var/www/html/assets/vendor/jquery-ui \
+    && cp -R /var/www/html/node_modules/bootstrap-icons/font /var/www/html/assets/vendor/bootstrap-icons \
+    && cp -R /var/www/html/node_modules/@yaireo/tagify/dist /var/www/html/assets/vendor/tagify \
+    && cp -R /var/www/html/node_modules/jstree/dist /var/www/html/assets/vendor/jstree \
+    && cp -R /var/www/html/node_modules/mark.js/dist /var/www/html/assets/vendor/markjs
+
 FROM php:8.5-fpm-alpine AS runtime
 
 # Install required packages and enable PHP extensions
@@ -56,7 +66,7 @@ COPY --from=builder /var/www/html /var/www/html
 RUN chown -R www-data:www-data /var/www/html
 
 # Remove test artifacts from runtime image
-RUN rm -rf /var/www/html/tests /var/www/html/phpunit.xml
+RUN rm -rf /var/www/html/tests /var/www/html/phpunit.xml /var/www/html/node_modules
 
 # Install database schema and set entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
@@ -72,3 +82,6 @@ RUN apk add --no-cache nodejs npm
 
 # Install dev PHP dependencies for tests
 RUN composer install --prefer-dist --optimize-autoloader
+
+# Install Node dependencies including dev dependencies for tests
+RUN npm install
