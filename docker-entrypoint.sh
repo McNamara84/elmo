@@ -83,4 +83,6 @@ fi
 # Clean up install files (optional)
 rm -f /var/www/html/install.{php,html} || true
 
-exec apache2-foreground
+# Start PHP-FPM and Nginx
+php-fpm -D
+exec nginx -g "daemon off;"

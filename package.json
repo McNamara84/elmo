@@ -1,4 +1,5 @@
 {
+  "name": "elmo",
   "dependencies": {
     "@yaireo/tagify": "^4.36.0",
     "bootstrap": "^5.3.7",
