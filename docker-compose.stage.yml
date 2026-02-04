@@ -216,6 +216,22 @@ services:
       - "traefik.http.services.elmo-igsn-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
 
+  tests:
+    build:
+      context: .
+      target: test
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      TZ: Europe/Berlin
+    depends_on:
+      - db
+    command: sh -c "./vendor/bin/phpunit -c phpunit.xml --no-coverage && npm test"
+    networks:
+      - internal
+
 volumes:
   db_data:
 

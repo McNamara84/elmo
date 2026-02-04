@@ -55,6 +55,8 @@ config.local.*
 # Ensure essential files are not ignored
 !api/
 !save/
+!tests/
+!phpunit.xml
 
 
 xml_submit_backup.txt

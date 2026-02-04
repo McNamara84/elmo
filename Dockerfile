@@ -1,7 +1,7 @@
-FROM php:8.5-apache
+FROM php:8.5-apache AS builder
 
 # Install Node.js 24 from NodeSource
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg git unzip \
     && mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
     && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
@@ -9,14 +9,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
+# Set the working directory for subsequent commands
+WORKDIR /var/www/html
+
+COPY . .
+
+# Install Node dependencies
+RUN npm install
+
+# Install PHP dependencies
+RUN composer install --no-dev --prefer-dist --optimize-autoloader
+
+FROM php:8.5-apache AS runtime
+
 # Install required packages and enable PHP extensions
 RUN apt-get update && apt-get install -y --no-install-recommends mariadb-client \
         libxml2-dev \
         libxslt-dev \
         libzip-dev \
         dos2unix \
-        git \
-        unzip \
     && docker-php-ext-install \
         mysqli \
         pdo_mysql \
@@ -39,19 +53,13 @@ RUN a2enconf gzip
 # Set the working directory for subsequent commands
 WORKDIR /var/www/html
 
-COPY . .
-
-# Install Node dependencies
-RUN npm install
-
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
-
-# Install PHP dependencies
-RUN composer install --no-dev --prefer-dist --optimize-autoloader
+COPY --from=builder /var/www/html /var/www/html
 
 # Ensure that the standard user www-data has ownership of the application files
 RUN chown -R www-data:www-data /var/www/html
+
+# Remove test artifacts from runtime image
+RUN rm -rf /var/www/html/tests /var/www/html/phpunit.xml
 
 # Install database schema and set entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
@@ -60,3 +68,11 @@ RUN dos2unix /usr/local/bin/docker-entrypoint.sh \
     
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
+
+FROM builder AS test
+
+# Install dev PHP dependencies for tests
+RUN composer install --prefer-dist --optimize-autoloader
+
+# Install Node dependencies including dev dependencies for tests
+RUN npm install
