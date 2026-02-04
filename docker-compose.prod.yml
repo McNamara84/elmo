@@ -15,8 +15,8 @@ services:
 
   web:
     build: .
-    ports:
-      - "8080:80"
+    expose:
+      - "9000"
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
@@ -54,20 +54,11 @@ services:
     restart: unless-stopped
     networks:
       - internal
-      - frontend
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.elmo-router.rule=Host(`env.rz-vm499.gfz.de`) && PathPrefix(`/elmo`)"
-      - "traefik.http.routers.elmo-router.entrypoints=https"
-      - "traefik.http.routers.elmo-router.middlewares=elmo-stripprefix"
-      - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
-      - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
-      - "traefik.docker.network=traefik"
 
   web-msl:
     build: .
-    ports:
-      - "8081:80"
+    expose:
+      - "9000"
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
@@ -102,6 +93,41 @@ services:
     depends_on:
       - db
     restart: unless-stopped
+    networks:
+      - internal
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    environment:
+      PHP_FPM_HOST: web
+    volumes:
+      - ./docker/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+    depends_on:
+      - web
+    networks:
+      - internal
+      - frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.elmo-router.rule=Host(`env.rz-vm499.gfz.de`) && PathPrefix(`/elmo`)"
+      - "traefik.http.routers.elmo-router.entrypoints=https"
+      - "traefik.http.routers.elmo-router.middlewares=elmo-stripprefix"
+      - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
+      - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik"
+
+  nginx-msl:
+    image: nginx:alpine
+    ports:
+      - "8081:80"
+    environment:
+      PHP_FPM_HOST: web-msl
+    volumes:
+      - ./docker/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+    depends_on:
+      - web-msl
     networks:
       - internal
       - frontend

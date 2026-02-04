@@ -36,8 +36,6 @@ FROM php:8.5-fpm-alpine AS runtime
 
 # Install required packages and enable PHP extensions
 RUN apk add --no-cache \
-        mariadb-client \
-        nginx \
         dos2unix \
         libxml2 \
         libxslt \
@@ -53,9 +51,6 @@ RUN apk add --no-cache \
         xsl \
         zip \
     && apk del .build-deps
-
-# Configure Nginx
-COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 
 # Set the working directory for subsequent commands
 WORKDIR /var/www/html
@@ -74,7 +69,7 @@ RUN dos2unix /usr/local/bin/docker-entrypoint.sh \
     && chmod +x /usr/local/bin/docker-entrypoint.sh 
     
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["php-fpm", "-F"]
 
 FROM builder AS test
 

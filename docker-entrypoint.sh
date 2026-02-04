@@ -35,20 +35,50 @@ else
   chown www-data:www-data /var/www/html/settings.php
 fi
 
-# Wait for the DB using mysqladmin ping (more reliable)
+# Wait for the DB using PHP mysqli (no DB client needed)
 wait_for_db() {
   echo "⏳  Waiting for MariaDB at ${DB_HOST}..."
-  until mysqladmin ping -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" --silent >/dev/null 2>&1; do
-    echo "… still waiting"
-    sleep 2
-  done
+  php -r '
+$host = getenv("DB_HOST");
+$user = getenv("DB_USER");
+$pass = getenv("DB_PASSWORD");
+$max = 60;
+$i = 0;
+while ($i < $max) {
+  $mysqli = @new mysqli($host, $user, $pass);
+  if ($mysqli && $mysqli->connect_errno === 0) {
+    $mysqli->close();
+    exit(0);
+  }
+  echo "… still waiting\n";
+  sleep(2);
+  $i++;
+}
+exit(1);
+'
   echo "✅  MariaDB reachable"
 }
 
 # Check if tables already exist in the target schema
 db_has_tables() {
-  TABLE_COUNT=$(mysql -N -s -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" \
-    -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME}';" 2>/dev/null || echo "0")
+  TABLE_COUNT=$(php -r '
+$host = getenv("DB_HOST");
+$user = getenv("DB_USER");
+$pass = getenv("DB_PASSWORD");
+$db = getenv("DB_NAME");
+$mysqli = @new mysqli($host, $user, $pass, $db);
+if (!$mysqli || $mysqli->connect_errno !== 0) {
+  echo "0";
+  exit(0);
+}
+$result = $mysqli->query("SELECT COUNT(*) AS cnt FROM information_schema.tables WHERE table_schema='" . $mysqli->real_escape_string($db) . "';");
+if (!$result) {
+  echo "0";
+  exit(0);
+}
+$row = $result->fetch_assoc();
+echo $row["cnt"] ?? "0";
+');
   if [ -z "${TABLE_COUNT}" ]; then
     TABLE_COUNT=0
   fi
@@ -83,6 +113,5 @@ fi
 # Clean up install files (optional)
 rm -f /var/www/html/install.{php,html} || true
 
-# Start PHP-FPM and Nginx
-php-fpm -D
-exec nginx -g "daemon off;"
+# Start PHP-FPM
+exec php-fpm -F
