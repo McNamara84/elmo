@@ -221,7 +221,7 @@ test.describe('Dataset Save with XML Verification', () => {
       expect(actualFunding[i].awardTitle).toBe(referenceFunding[i].awardTitle);
     }
 
-    // Assert contributor persons - check length and each property
+        // Assert contributor persons - check length and each property
     const actualContributorPersons = Array.isArray(actualRoot.contributors?.contributor)
       ? actualRoot.contributors.contributor.filter((c: any) => c.nameIdentifier)
       : [actualRoot.contributors?.contributor].filter((c: any) => c.nameIdentifier);

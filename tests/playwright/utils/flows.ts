@@ -20,10 +20,13 @@ export async function completeMinimalDatasetForm(page: Page) {
   await page.getByRole('textbox', { name: 'Last Name*' }).fill('Carberry');
   await page.getByRole('textbox', { name: 'First Name*' }).fill('Josiah');
 
-  await page
-    .locator('#group-author tags')
-    .getByRole('textbox')
-    .fill('GFZ Helmholtz Centre for Geosciences');
+  // Fill affiliation using tagify - click, type, press Enter
+  const affiliationTagifyInput = page
+    .locator('#group-author .tagify__input');
+  await affiliationTagifyInput.click();
+  await page.waitForTimeout(300);
+  await affiliationTagifyInput.type('GFZ Helmholtz Centre for Geosciences');
+  await page.keyboard.press('Enter');
 
   await page.getByText('ContactPerson?').click();
 
