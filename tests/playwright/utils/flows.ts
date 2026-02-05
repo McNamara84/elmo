@@ -276,11 +276,15 @@ async function addFreeKeyword(page: Page, keyword: string) {
   // Press Enter to create the tag
   await page.keyboard.press('Enter');
   
-  // Wait for the tag to be created and visible in the DOM
-  const tagElement = page.locator(`${SELECTORS.formGroups.freeKeywords} .tagify__tag`, { 
-    has: page.locator(`text=${keyword}`)
-  });
-  await tagElement.last().waitFor({ state: 'visible', timeout: 2000 });
+  // Wait for the keyword to be added to the tagify instance's value array
+  await page.waitForFunction(
+    (kw) => { //callback
+      const input = document.querySelector('input[name="freekeywords[]"]') as any;
+      return input?._tagify?.value?.some((tag: any) => tag.value === kw);
+    },
+    keyword,  //argument to the callback
+    { timeout: 5000 }//options
+  );
 }
 
 /**
