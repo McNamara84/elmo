@@ -132,16 +132,38 @@ test.describe('Dataset Save with XML Verification', () => {
       expect(actualKeywords).toEqual(refKeywords);
     }
 
-    // Assert related identifiers with detailed attributes
-    expect(actualRoot.relatedIdentifiers.relatedIdentifier['#text']).toBe(refRoot.relatedIdentifiers.relatedIdentifier['#text']);
-    expect(actualRoot.relatedIdentifiers.relatedIdentifier.relatedIdentifierType).toBe(refRoot.relatedIdentifiers.relatedIdentifier.relatedIdentifierType);
-    expect(actualRoot.relatedIdentifiers.relatedIdentifier.relationType).toBe(refRoot.relatedIdentifiers.relatedIdentifier.relationType);
+    // Assert related identifiers with detailed attributes - handle both object and array formats
+    if (actualRoot.relatedIdentifiers && refRoot.relatedIdentifiers) {
+      const actualRelated = Array.isArray(actualRoot.relatedIdentifiers.relatedIdentifier)
+        ? actualRoot.relatedIdentifiers.relatedIdentifier
+        : [actualRoot.relatedIdentifiers.relatedIdentifier];
+      const refRelated = Array.isArray(refRoot.relatedIdentifiers.relatedIdentifier)
+        ? refRoot.relatedIdentifiers.relatedIdentifier
+        : [refRoot.relatedIdentifiers.relatedIdentifier];
+      expect(actualRelated.length).toBe(refRelated.length);
+      for (let i = 0; i < actualRelated.length; i++) {
+        expect(actualRelated[i]['#text']).toBe(refRelated[i]['#text']);
+        expect(actualRelated[i].relatedIdentifierType).toBe(refRelated[i].relatedIdentifierType);
+        expect(actualRelated[i].relationType).toBe(refRelated[i].relationType);
+      }
+    }
 
-    // Assert funding references with detailed attributes
-    expect(actualRoot.fundingReferences.fundingReference.funderName).toBe(refRoot.fundingReferences.fundingReference.funderName);
-    expect(actualRoot.fundingReferences.fundingReference.awardNumber['#text']).toBe(refRoot.fundingReferences.fundingReference.awardNumber['#text']);
-    expect(actualRoot.fundingReferences.fundingReference.awardNumber.awardURI).toBe(refRoot.fundingReferences.fundingReference.awardNumber.awardURI);
-    expect(actualRoot.fundingReferences.fundingReference.awardTitle).toBe(refRoot.fundingReferences.fundingReference.awardTitle);
+    // Assert funding references with detailed attributes - handle both object and array formats
+    if (actualRoot.fundingReferences && refRoot.fundingReferences) {
+      const actualFunding = Array.isArray(actualRoot.fundingReferences.fundingReference)
+        ? actualRoot.fundingReferences.fundingReference
+        : [actualRoot.fundingReferences.fundingReference];
+      const refFunding = Array.isArray(refRoot.fundingReferences.fundingReference)
+        ? refRoot.fundingReferences.fundingReference
+        : [refRoot.fundingReferences.fundingReference];
+      expect(actualFunding.length).toBe(refFunding.length);
+      for (let i = 0; i < actualFunding.length; i++) {
+        expect(actualFunding[i].funderName).toBe(refFunding[i].funderName);
+        expect(actualFunding[i].awardNumber['#text']).toBe(refFunding[i].awardNumber['#text']);
+        expect(actualFunding[i].awardNumber.awardURI).toBe(refFunding[i].awardNumber.awardURI);
+        expect(actualFunding[i].awardTitle).toBe(refFunding[i].awardTitle);
+      }
+    }
 
     // Assert contact person email
     expect(actualEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
