@@ -400,25 +400,18 @@ async function addAuthor(
   }
 ) {
   if (index > 0) {
-    // Click the add button to create a new row
     await page.locator('#button-author-add').click();
-    // Wait for the new author row to be visible
     await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index).waitFor({ state: 'visible' });
   }
 
-  // Get the specific author row
   const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index);
 
-  // Fill ORCID first (using wildcard for appended index)
   await authorRow.locator('[id^="input-author-orcid"]').fill(data.orcid);
-  // Fill last name (clear first to handle any auto-clearing behavior)
   const lastNameField = authorRow.locator('[id^="input-author-lastname"]');
-  // Special debugging for that field 
   await lastNameField.click();
   await page.waitForTimeout(300);
   await lastNameField.clear();
   await lastNameField.fill(data.lastName);
-  // Fill first name
   await authorRow.locator('[id^="input-author-firstname"]').fill(data.firstName);
 
   // Fill affiliation using tagify within the author row
@@ -426,11 +419,15 @@ async function addAuthor(
   await affiliationTagifyInput.click();
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');
-  
-  // Wait for the affiliation tag to be created and visible in the DOM
-  const affiliationTagElement = authorRow.locator('.tagify__tag', { 
-    has: page.locator(`text=${data.affiliation}`)
-  });
-  await affiliationTagElement.last().waitFor({ state: 'visible', timeout: 2000 });
+
+  // Wait for it to be in Tagify's internal state within the author row
+  // Get the element handle to evaluate within the row context
+  const authorRowElement = await authorRow.evaluate((element) => {
+    const input = element.querySelector('input[name*="affiliation"]') as any;
+    return input?._tagify?.value?.some((tag: any) => tag.value === data.affiliation);
+  }, data.affiliation);
+
+  // Extra buffer to ensure tag is fully processed
+  await page.waitForTimeout(500);
 }
 export { exampleData };

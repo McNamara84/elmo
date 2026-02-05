@@ -110,12 +110,8 @@ test.describe('Dataset Save with XML Verification', () => {
     expect(actualRoot.language).toBe(refRoot.language);
     
     // Compare all the descriptions
-    const descriptions = Array.isArray(actualRoot.descriptions.description)
-      ? actualRoot.descriptions.description
-      : [actualRoot.descriptions.description];
-    const refDescriptions = Array.isArray(refRoot.descriptions.description)
-      ? refRoot.descriptions.description
-      : [refRoot.descriptions.description];
+    const descriptions = toArray(actualRoot.descriptions.description);
+    const refDescriptions = toArray(refRoot.descriptions.description);
     expect(descriptions.length).toBe(refDescriptions.length);
     for (let i = 0; i < descriptions.length; i++) {
       expect(descriptions[i]['#text']).toBe(refDescriptions[i]['#text']);
@@ -123,23 +119,15 @@ test.describe('Dataset Save with XML Verification', () => {
 
     // Assert keywords present - handle both string and array formats
     if (actualRoot.subjects && refRoot.subjects) {
-      const actualKeywords = Array.isArray(actualRoot.subjects.subject)
-        ? actualRoot.subjects.subject
-        : actualRoot.subjects.subject ? [actualRoot.subjects.subject] : [];
-      const refKeywords = Array.isArray(refRoot.subjects.subject)
-        ? refRoot.subjects.subject
-        : refRoot.subjects.subject ? [refRoot.subjects.subject] : [];
+      const actualKeywords = toArray(actualRoot.subjects.subject);
+      const refKeywords = toArray(refRoot.subjects.subject);
       expect(actualKeywords).toEqual(refKeywords);
     }
 
     // Assert related identifiers with detailed attributes - handle both object and array formats
     if (actualRoot.relatedIdentifiers && refRoot.relatedIdentifiers) {
-      const actualRelated = Array.isArray(actualRoot.relatedIdentifiers.relatedIdentifier)
-        ? actualRoot.relatedIdentifiers.relatedIdentifier
-        : [actualRoot.relatedIdentifiers.relatedIdentifier];
-      const refRelated = Array.isArray(refRoot.relatedIdentifiers.relatedIdentifier)
-        ? refRoot.relatedIdentifiers.relatedIdentifier
-        : [refRoot.relatedIdentifiers.relatedIdentifier];
+      const actualRelated = toArray(actualRoot.relatedIdentifiers.relatedIdentifier);
+      const refRelated = toArray(refRoot.relatedIdentifiers.relatedIdentifier);
       expect(actualRelated.length).toBe(refRelated.length);
       for (let i = 0; i < actualRelated.length; i++) {
         expect(actualRelated[i]['#text']).toBe(refRelated[i]['#text']);
@@ -150,12 +138,8 @@ test.describe('Dataset Save with XML Verification', () => {
 
     // Assert funding references with detailed attributes - handle both object and array formats
     if (actualRoot.fundingReferences && refRoot.fundingReferences) {
-      const actualFunding = Array.isArray(actualRoot.fundingReferences.fundingReference)
-        ? actualRoot.fundingReferences.fundingReference
-        : [actualRoot.fundingReferences.fundingReference];
-      const refFunding = Array.isArray(refRoot.fundingReferences.fundingReference)
-        ? refRoot.fundingReferences.fundingReference
-        : [refRoot.fundingReferences.fundingReference];
+      const actualFunding = toArray(actualRoot.fundingReferences.fundingReference);
+      const refFunding = toArray(refRoot.fundingReferences.fundingReference);
       expect(actualFunding.length).toBe(refFunding.length);
       for (let i = 0; i < actualFunding.length; i++) {
         expect(actualFunding[i].funderName).toBe(refFunding[i].funderName);
@@ -179,12 +163,8 @@ test.describe('Dataset Save with XML Verification', () => {
     const { refRoot, actualRoot, refEnvelope, actualEnvelope } = await prepareReferencaeAndActualXml(page, 'extended-multiple');
 
     // Assert multiple authors - check length and each property
-    const actualAuthors = Array.isArray(actualRoot.creators?.creator)
-      ? actualRoot.creators.creator
-      : [actualRoot.creators?.creator];
-    const referenceAuthors = Array.isArray(refRoot.creators?.creator)
-      ? refRoot.creators.creator
-      : [refRoot.creators?.creator];
+    const actualAuthors = toArray(actualRoot.creators?.creator);
+    const referenceAuthors = toArray(refRoot.creators?.creator);
     // Assert multiple personal authors (persons)
     const personalCreators = actualAuthors.filter((c: any) => c.creatorName.nameType === 'Personal');
     const refPersonalCreators = referenceAuthors.filter((c: any) => c.creatorName.nameType === 'Personal');
@@ -215,36 +195,24 @@ test.describe('Dataset Save with XML Verification', () => {
     }
 
     // Assert multiple keywords - check length and each value
-    const actualKeywords = Array.isArray(actualRoot.subjects?.subject)
-      ? actualRoot.subjects.subject
-      : [actualRoot.subjects?.subject];
-    const referenceKeywords = Array.isArray(refRoot.subjects?.subject)
-      ? refRoot.subjects.subject
-      : [refRoot.subjects?.subject];
+    const actualKeywords = toArray(actualRoot.subjects?.subject);
+    const referenceKeywords = toArray(refRoot.subjects?.subject);
     expect(actualKeywords.length).toBe(referenceKeywords.length);
     for (let i = 0; i < actualKeywords.length; i++) {
       expect(actualKeywords[i]).toBe(referenceKeywords[i]);
     }
 
     // Assert multiple descriptions - check length and each value
-    const actualDescriptions = Array.isArray(actualRoot.descriptions?.description)
-      ? actualRoot.descriptions.description
-      : [actualRoot.descriptions?.description];
-    const referenceDescriptions = Array.isArray(refRoot.descriptions?.description)
-      ? refRoot.descriptions.description
-      : [refRoot.descriptions?.description];
+    const actualDescriptions = toArray(actualRoot.descriptions?.description);
+    const referenceDescriptions = toArray(refRoot.descriptions?.description);
     expect(actualDescriptions.length).toBe(referenceDescriptions.length);
     for (let i = 0; i < actualDescriptions.length; i++) {
       expect(actualDescriptions[i]['#text']).toBe(referenceDescriptions[i]['#text']);
     }
 
     // Assert multiple related works - check length and each value with attributes
-    const actualRelated = Array.isArray(actualRoot.relatedIdentifiers?.relatedIdentifier)
-      ? actualRoot.relatedIdentifiers.relatedIdentifier
-      : [actualRoot.relatedIdentifiers?.relatedIdentifier];
-    const referenceRelated = Array.isArray(refRoot.relatedIdentifiers?.relatedIdentifier)
-      ? refRoot.relatedIdentifiers.relatedIdentifier
-      : [refRoot.relatedIdentifiers?.relatedIdentifier];
+    const actualRelated = toArray(actualRoot.relatedIdentifiers?.relatedIdentifier);
+    const referenceRelated = toArray(refRoot.relatedIdentifiers?.relatedIdentifier);
     expect(actualRelated.length).toBe(referenceRelated.length);
     for (let i = 0; i < actualRelated.length; i++) {
       expect(actualRelated[i]['#text']).toBe(referenceRelated[i]['#text']);
@@ -253,12 +221,8 @@ test.describe('Dataset Save with XML Verification', () => {
     }
 
     // Assert multiple funding references - check length and each property with attributes
-    const actualFunding = Array.isArray(actualRoot.fundingReferences?.fundingReference)
-      ? actualRoot.fundingReferences.fundingReference
-      : [actualRoot.fundingReferences?.fundingReference];
-    const referenceFunding = Array.isArray(refRoot.fundingReferences?.fundingReference)
-      ? refRoot.fundingReferences.fundingReference
-      : [refRoot.fundingReferences?.fundingReference];
+    const actualFunding = toArray(actualRoot.fundingReferences?.fundingReference);
+    const referenceFunding = toArray(refRoot.fundingReferences?.fundingReference);
     expect(actualFunding.length).toBe(referenceFunding.length);
     for (let i = 0; i < actualFunding.length; i++) {
       expect(actualFunding[i].funderName).toBe(referenceFunding[i].funderName);
@@ -268,12 +232,8 @@ test.describe('Dataset Save with XML Verification', () => {
     }
 
         // Assert contributor persons - check length and each property
-    const actualContributorPersons = Array.isArray(actualRoot.contributors?.contributor)
-      ? actualRoot.contributors.contributor.filter((c: any) => c.nameIdentifier)
-      : [actualRoot.contributors?.contributor].filter((c: any) => c.nameIdentifier);
-    const refContributorPersons = Array.isArray(refRoot.contributors?.contributor)
-      ? refRoot.contributors.contributor.filter((c: any) => c.nameIdentifier)
-      : [refRoot.contributors?.contributor].filter((c: any) => c.nameIdentifier);
+    const actualContributorPersons = toArray(actualRoot.contributors?.contributor).filter((c: any) => c.nameIdentifier);
+    const refContributorPersons = toArray(refRoot.contributors?.contributor).filter((c: any) => c.nameIdentifier);
     expect(actualContributorPersons.length).toBe(refContributorPersons.length);
     for (let i = 0; i < actualContributorPersons.length; i++) {
       expect(actualContributorPersons[i].contributorName['#text']).toBe(refContributorPersons[i].contributorName['#text']);
@@ -284,12 +244,8 @@ test.describe('Dataset Save with XML Verification', () => {
     }
 
     // Assert contributor institutions - check length and each property
-    const actualContributorInstitutions = Array.isArray(actualRoot.contributors?.contributor)
-      ? actualRoot.contributors.contributor.filter((c: any) => !c.nameIdentifier)
-      : [actualRoot.contributors?.contributor].filter((c: any) => !c.nameIdentifier);
-    const refContributorInstitutions = Array.isArray(refRoot.contributors?.contributor)
-      ? refRoot.contributors.contributor.filter((c: any) => !c.nameIdentifier)
-      : [refRoot.contributors?.contributor].filter((c: any) => !c.nameIdentifier);
+    const actualContributorInstitutions = toArray(actualRoot.contributors?.contributor).filter((c: any) => !c.nameIdentifier);
+    const refContributorInstitutions = toArray(refRoot.contributors?.contributor).filter((c: any) => !c.nameIdentifier);
     expect(actualContributorInstitutions.length).toBe(refContributorInstitutions.length);
     for (let i = 0; i < actualContributorInstitutions.length; i++) {
       expect(actualContributorInstitutions[i].contributorName['#text']).toBe(refContributorInstitutions[i].contributorName['#text']);
@@ -419,79 +375,30 @@ async function downloadAndSaveXml(
 
   return { xmlContent, parsedXml };
 }
+
 /**
- * Smart assertion utility for comparing polymorphic XML-parsed data structures.
+ * Normalizes XML-parsed data to always return an array.
  * 
- * Handles the common XML parsing quirk where single elements become objects and
- * multiple elements become arrays. Normalizes both actual and reference data,
- * compares lengths, and validates each item's properties with support for both
- * direct values (strings) and nested #text attributes.
+ * Handles the XML parser quirk where single elements become objects and
+ * multiple elements become arrays. Converts both to a consistent array format.
  * 
- * @param {any} actualArray - The actual data (can be single object or array)
- * @param {any} referenceArray - The reference data (can be single object or array)
- * @param {Array<{key: string, textKey?: boolean}>} comparisonKeys - Properties to compare
- *   - key: property name to compare (e.g., 'funderName', 'creatorName')
- *   - textKey: if true, extracts the '#text' attribute; if false, compares the value directly
- *   Example: [{ key: 'funderName' }, { key: 'creatorName', textKey: true }, { key: 'affiliation', flexibleText: true }]
- * @param {string} [itemName='item'] - Descriptive name for error messages
- * @returns {void} - Throws expect() assertions on mismatch
+ * @param {any} structure - A value that can be an array, single object, or undefined
+ * @returns {Array<any>} Always returns an array:
+ *   - If input is already an array → returns as-is
+ *   - If input is a single object → wraps in array
+ *   - If input is undefined/null → returns empty array
  * 
  * @example
- * // Simple string properties
- * smartAssertArray(actualRoot.fundingReferences?.fundingReference, refRoot.fundingReferences?.fundingReference, 
- *   [{ key: 'funderName' }, { key: 'awardTitle' }]
- * );
- * 
- * @example
- * // Properties with #text attributes
- * smartAssertArray(actualRoot.creators?.creator, refRoot.creators?.creator,
- *   [{ key: 'creatorName', textKey: true }, { key: 'nameIdentifier', textKey: true }]
- * );
- * 
- * @example
- * // Flexible properties that can be strings OR objects with #text
- * smartAssertArray(actualContributorInst, refContributorInst,
- *   [{ key: 'contributorName', textKey: true }, { key: 'affiliation', flexibleText: true }]
- * );
+ * toArray(undefined)           // Returns: []
+ * toArray({name: 'test'})      // Returns: [{name: 'test'}]
+ * toArray([{...}, {...}])      // Returns: [{...}, {...}]
  */
-function smartAssertArray(
-  actualData: any,
-  referenceData: any,
-  comparisonKeys: Array<{ key: string; textKey?: boolean; flexibleText?: boolean }>,
-  itemName: string = 'item'
-): void {
-  // Normalize both actual and reference to arrays
-  const actualArray = Array.isArray(actualData) ? actualData : actualData ? [actualData] : [];
-  const referenceArray = Array.isArray(referenceData) ? referenceData : referenceData ? [referenceData] : [];
-
-  // Assert lengths match
-  expect(actualArray.length).toBe(referenceArray.length);
-
-  // Compare each item
-  for (let i = 0; i < actualArray.length; i++) {
-    const actual = actualArray[i];
-    const reference = referenceArray[i];
-
-    for (const { key, textKey = false, flexibleText = false } of comparisonKeys) {
-      let actualValue = actual[key];
-      let referenceValue = reference[key];
-
-      // Extract #text if specified
-      if (textKey) {
-        actualValue = actualValue?.['#text'] || actualValue;
-        referenceValue = referenceValue?.['#text'] || referenceValue;
-      }
-
-      // Handle flexible text (can be string or object with #text)
-      if (flexibleText) {
-        actualValue = typeof actualValue === 'string' ? actualValue : actualValue?.['#text'];
-        referenceValue = typeof referenceValue === 'string' ? referenceValue : referenceValue?.['#text'];
-      }
-
-      // Only assert if both values exist
-      if (actualValue !== undefined && referenceValue !== undefined) {
-        expect(actualValue).toBe(referenceValue);
-      }
-    }
+function toArray(structure: any): Array<any> {
+  if (Array.isArray(structure)) {
+    return structure;
+  } else if (structure) {
+    return [structure];
+  } else {
+    return [];
   }
 }
