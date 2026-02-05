@@ -276,8 +276,11 @@ async function addFreeKeyword(page: Page, keyword: string) {
   // Press Enter to create the tag
   await page.keyboard.press('Enter');
   
-  // Wait for the tag to be created
-  await page.waitForTimeout(300);
+  // Wait for the tag to be created and visible in the DOM
+  const tagElement = page.locator(`${SELECTORS.formGroups.freeKeywords} .tagify__tag`, { 
+    has: page.locator(`text=${keyword}`)
+  });
+  await tagElement.last().waitFor({ state: 'visible', timeout: 2000 });
 }
 
 /**

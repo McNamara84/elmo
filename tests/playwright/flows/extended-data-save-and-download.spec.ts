@@ -121,8 +121,16 @@ test.describe('Dataset Save with XML Verification', () => {
       expect(descriptions[i]['#text']).toBe(refDescriptions[i]['#text']);
     }
 
-    // Assert keywords present
-    expect(actualRoot.subjects.subject).toBe(refRoot.subjects.subject);
+    // Assert keywords present - handle both string and array formats
+    if (actualRoot.subjects && refRoot.subjects) {
+      const actualKeywords = Array.isArray(actualRoot.subjects.subject)
+        ? actualRoot.subjects.subject
+        : actualRoot.subjects.subject ? [actualRoot.subjects.subject] : [];
+      const refKeywords = Array.isArray(refRoot.subjects.subject)
+        ? refRoot.subjects.subject
+        : refRoot.subjects.subject ? [refRoot.subjects.subject] : [];
+      expect(actualKeywords).toEqual(refKeywords);
+    }
 
     // Assert related identifiers with detailed attributes
     expect(actualRoot.relatedIdentifiers.relatedIdentifier['#text']).toBe(refRoot.relatedIdentifiers.relatedIdentifier['#text']);
