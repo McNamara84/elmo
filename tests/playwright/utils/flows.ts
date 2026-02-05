@@ -275,8 +275,12 @@ async function addFreeKeyword(page: Page, keyword: string) {
   await tagInput.type(keyword);  
   // Press Enter to create the tag
   await page.keyboard.press('Enter');
+
+  // Wait for the tag to appear in the DOM using exact title match
+  const tagElement = page.getByTitle(keyword, { exact: true });
+  await tagElement.waitFor({ state: 'visible', timeout: 5000 });
   
-  // Wait for the keyword to be added to the tagify instance's value array
+  // Wait for the keyword to be added to the tagify instance's value array with exact match
   await page.waitForFunction(
     (kw) => { //callback
       const input = document.querySelector('input[name="freekeywords[]"]') as any;
