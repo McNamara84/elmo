@@ -418,5 +418,11 @@ async function addAuthor(
   await affiliationTagifyInput.click();
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');
+  
+  // Wait for the affiliation tag to be created and visible in the DOM
+  const affiliationTagElement = authorRow.locator('.tagify__tag', { 
+    has: page.locator(`text=${data.affiliation}`)
+  });
+  await affiliationTagElement.last().waitFor({ state: 'visible', timeout: 2000 });
 }
 export { exampleData };
