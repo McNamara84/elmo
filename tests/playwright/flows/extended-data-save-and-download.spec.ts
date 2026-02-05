@@ -349,17 +349,16 @@ async function downloadAndSaveXml(
   page: Page,
   testName: string
 ): Promise<{ xmlContent: string; parsedXml: any }> {
-  // Wait for download event
-  const downloadPromise = page.waitForEvent('download');
+  // Wait for Save button to be visible, then click to open the save modal
+  const saveButton = page.getByRole('button', { name: 'Save' });
+  await saveButton.waitFor({ state: 'visible', timeout: 2000 });
+  await saveButton.click();
 
-  // Click Save button in the form
-  await page.getByRole('button', { name: 'Save' }).click();
-
-  // Click Save button in the save modal
-  await page.locator('#button-saveas-save').click();
-
-  // Wait for download to complete
-  const download = await downloadPromise;
+  // Use Promise.all to start listening for download and click confirmation button simultaneously
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#button-saveas-save').click(),
+  ]);
 
   // Get the downloaded file path
   const filePath = await download.path();
