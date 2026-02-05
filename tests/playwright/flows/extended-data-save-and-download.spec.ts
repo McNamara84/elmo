@@ -56,12 +56,8 @@ test.describe('Dataset Save with XML Verification', () => {
     expect(actualRoot.creators.creator.nameIdentifier['#text']).toBe(refRoot.creators.creator.nameIdentifier['#text']);
     
     // Assert author affiliation - can be a string or object with #text
-    const actualAff = typeof actualRoot.creators.creator.affiliation === 'string'
-      ? actualRoot.creators.creator.affiliation
-      : actualRoot.creators.creator.affiliation?.['#text'];
-    const refAff = typeof refRoot.creators.creator.affiliation === 'string'
-      ? refRoot.creators.creator.affiliation
-      : refRoot.creators.creator.affiliation?.['#text'];
+    const actualAff = extractText(actualRoot.creators.creator.affiliation);
+    const refAff = extractText(refRoot.creators.creator.affiliation);
     if (actualAff && refAff) {
       expect(actualAff).toBe(refAff);
     }
@@ -183,12 +179,8 @@ test.describe('Dataset Save with XML Verification', () => {
     for (let i = 0; i < orgCreators.length; i++) {
       expect(orgCreators[i].creatorName['#text']).toBe(refOrgCreators[i].creatorName['#text']);
       // Organization affiliations can be strings or objects with #text
-      const actualOrgAff = typeof orgCreators[i].affiliation === 'string'
-        ? orgCreators[i].affiliation
-        : orgCreators[i].affiliation?.['#text'];
-      const refOrgAff = typeof refOrgCreators[i].affiliation === 'string'
-        ? refOrgCreators[i].affiliation
-        : refOrgCreators[i].affiliation?.['#text'];
+      const actualOrgAff = extractText(orgCreators[i].affiliation);
+      const refOrgAff = extractText(refOrgCreators[i].affiliation);
       if (actualOrgAff && refOrgAff) {
         expect(actualOrgAff).toBe(refOrgAff);
       }
@@ -251,12 +243,8 @@ test.describe('Dataset Save with XML Verification', () => {
       expect(actualContributorInstitutions[i].contributorName['#text']).toBe(refContributorInstitutions[i].contributorName['#text']);
       expect(actualContributorInstitutions[i].contributorType).toBe(refContributorInstitutions[i].contributorType);
       // Affiliation can be a string or object with #text
-      const actualContribAff = typeof actualContributorInstitutions[i].affiliation === 'string'
-        ? actualContributorInstitutions[i].affiliation
-        : actualContributorInstitutions[i].affiliation?.['#text'];
-      const refContribAff = typeof refContributorInstitutions[i].affiliation === 'string'
-        ? refContributorInstitutions[i].affiliation
-        : refContributorInstitutions[i].affiliation?.['#text'];
+      const actualContribAff = extractText(actualContributorInstitutions[i].affiliation);
+      const refContribAff = extractText(refContributorInstitutions[i].affiliation);
       if (actualContribAff && refContribAff) {
         expect(actualContribAff).toBe(refContribAff);
       }
@@ -401,4 +389,26 @@ function toArray(structure: any): Array<any> {
   } else {
     return [];
   }
+}
+/**
+ * Extracts a text value from XML-parsed data.
+ * 
+ * Handles both simple string values and objects with a '#text' property.
+ * This is necessary because the XML parser returns different structures:
+ * - Simple values become strings: "value"
+ * - Complex elements become objects with '#text': { '#text': 'value', otherProp: '...' }
+ * 
+ * @param {any} value - A value that can be a string or object with '#text' property
+ * @returns {string | undefined} The extracted text value or undefined if not found
+ * 
+ * @example
+ * extractText("simple")                    // Returns: "simple"
+ * extractText({ '#text': 'complex' })     // Returns: "complex"
+ * extractText(undefined)                   // Returns: undefined
+ */
+function extractText(value: any): string | undefined {
+  if (typeof value === 'string') {
+    return value;
+  }
+  return value?.['#text'];
 }
