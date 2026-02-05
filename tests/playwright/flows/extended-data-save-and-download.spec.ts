@@ -419,3 +419,79 @@ async function downloadAndSaveXml(
 
   return { xmlContent, parsedXml };
 }
+/**
+ * Smart assertion utility for comparing polymorphic XML-parsed data structures.
+ * 
+ * Handles the common XML parsing quirk where single elements become objects and
+ * multiple elements become arrays. Normalizes both actual and reference data,
+ * compares lengths, and validates each item's properties with support for both
+ * direct values (strings) and nested #text attributes.
+ * 
+ * @param {any} actualArray - The actual data (can be single object or array)
+ * @param {any} referenceArray - The reference data (can be single object or array)
+ * @param {Array<{key: string, textKey?: boolean}>} comparisonKeys - Properties to compare
+ *   - key: property name to compare (e.g., 'funderName', 'creatorName')
+ *   - textKey: if true, extracts the '#text' attribute; if false, compares the value directly
+ *   Example: [{ key: 'funderName' }, { key: 'creatorName', textKey: true }, { key: 'affiliation', flexibleText: true }]
+ * @param {string} [itemName='item'] - Descriptive name for error messages
+ * @returns {void} - Throws expect() assertions on mismatch
+ * 
+ * @example
+ * // Simple string properties
+ * smartAssertArray(actualRoot.fundingReferences?.fundingReference, refRoot.fundingReferences?.fundingReference, 
+ *   [{ key: 'funderName' }, { key: 'awardTitle' }]
+ * );
+ * 
+ * @example
+ * // Properties with #text attributes
+ * smartAssertArray(actualRoot.creators?.creator, refRoot.creators?.creator,
+ *   [{ key: 'creatorName', textKey: true }, { key: 'nameIdentifier', textKey: true }]
+ * );
+ * 
+ * @example
+ * // Flexible properties that can be strings OR objects with #text
+ * smartAssertArray(actualContributorInst, refContributorInst,
+ *   [{ key: 'contributorName', textKey: true }, { key: 'affiliation', flexibleText: true }]
+ * );
+ */
+function smartAssertArray(
+  actualData: any,
+  referenceData: any,
+  comparisonKeys: Array<{ key: string; textKey?: boolean; flexibleText?: boolean }>,
+  itemName: string = 'item'
+): void {
+  // Normalize both actual and reference to arrays
+  const actualArray = Array.isArray(actualData) ? actualData : actualData ? [actualData] : [];
+  const referenceArray = Array.isArray(referenceData) ? referenceData : referenceData ? [referenceData] : [];
+
+  // Assert lengths match
+  expect(actualArray.length).toBe(referenceArray.length);
+
+  // Compare each item
+  for (let i = 0; i < actualArray.length; i++) {
+    const actual = actualArray[i];
+    const reference = referenceArray[i];
+
+    for (const { key, textKey = false, flexibleText = false } of comparisonKeys) {
+      let actualValue = actual[key];
+      let referenceValue = reference[key];
+
+      // Extract #text if specified
+      if (textKey) {
+        actualValue = actualValue?.['#text'] || actualValue;
+        referenceValue = referenceValue?.['#text'] || referenceValue;
+      }
+
+      // Handle flexible text (can be string or object with #text)
+      if (flexibleText) {
+        actualValue = typeof actualValue === 'string' ? actualValue : actualValue?.['#text'];
+        referenceValue = typeof referenceValue === 'string' ? referenceValue : referenceValue?.['#text'];
+      }
+
+      // Only assert if both values exist
+      if (actualValue !== undefined && referenceValue !== undefined) {
+        expect(actualValue).toBe(referenceValue);
+      }
+    }
+  }
+}
