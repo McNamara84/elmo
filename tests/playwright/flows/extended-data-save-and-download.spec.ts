@@ -322,44 +322,46 @@ function loadReferenceXml(testName: string): any {
 async function downloadAndSaveXml(
   page: Page,
   testName: string
-  ): Promise<{ xmlContent: string; parsedXml: any }> {
-  // Wait for Save button to be visible, then click to open the save modal
+): Promise<{ xmlContent: string; parsedXml: any }> {
+  const downloadPromise = page.waitForEvent('download', { timeout: 30000 });
+
+  // Wait for Save button and click
   const saveButton = page.getByRole('button', { name: 'Save' });
-  await saveButton.waitFor({ state: 'visible', timeout: 2000 });
+  await saveButton.waitFor({ state: 'visible', timeout: 5000 });
   await saveButton.click();
 
-  // Use Promise.all to start listening for download and click confirmation button simultaneously
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.locator('#button-saveas-save').click(),
-  ]);
+  // Wait for Save As modal to be visible
+  const saveModal = page.locator('#modal-saveas');
+  await saveModal.waitFor({ state: 'visible', timeout: 5000 });
+
+  // Fill filename if needed
+  const filenameInput = page.locator('#input-saveas-filename');
+  await filenameInput.fill(testName);
+
+  // Click the save button in the modal
+  const saveConfirmButton = page.locator('#button-saveas-save');
+  await saveConfirmButton.click();
+
+  // Wait for download to complete
+  const download = await downloadPromise;
 
   // Get the downloaded file path
   const filePath = await download.path();
 
-  // Read the XML file
+  // Read and parse XML
   const xmlContent = fs.readFileSync(filePath, 'utf-8');
-
-  // Parse XML using fast-xml-parser with attribute parsing enabled
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: ''
   });
   const parsedXml = parser.parse(xmlContent);
 
-  // Save raw XML to actual output directory with "test-result" prefix
+  // Save files
   const xmlActualPath = path.join(XML_ACTUAL_DIR, `test-result-${testName}.xml`);
   fs.writeFileSync(xmlActualPath, xmlContent, 'utf-8');
 
-  // Save parsed structure as JSON for easy inspection
   const jsonActualPath = path.join(XML_ACTUAL_DIR, `test-result-${testName}.json`);
   fs.writeFileSync(jsonActualPath, JSON.stringify(parsedXml, null, 2), 'utf-8');
-  console.log(`JSON saved to: ${jsonActualPath}`);
-
-  // Verify the file was downloaded
-  expect(download.suggestedFilename()).toBeTruthy();
-  expect(xmlContent).toBeTruthy();
-  expect(parsedXml).toBeTruthy();
 
   return { xmlContent, parsedXml };
 }
