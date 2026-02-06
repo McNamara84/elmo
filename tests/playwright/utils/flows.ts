@@ -16,17 +16,13 @@ export async function completeMinimalDatasetForm(page: Page) {
   await page.getByLabel('Language of dataset*').selectOption('1');
   await page.getByRole('textbox', { name: 'Title*' }).fill('A dataset');
 
-  await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
-  await page.getByRole('textbox', { name: 'Last Name*' }).fill('Carberry');
-  await page.getByRole('textbox', { name: 'First Name*' }).fill('Josiah');
-
-  // Fill affiliation using tagify - click, type, press Enter
-  const affiliationTagifyInput = page
-    .locator('#group-author .tagify__input');
-  await affiliationTagifyInput.click();
-  await page.waitForTimeout(300);
-  await affiliationTagifyInput.type('GFZ Helmholtz Centre for Geosciences');
-  await page.keyboard.press('Enter');
+  // Fill author using the robust addAuthor function
+  await addAuthor(page, 0, {
+    orcid: '0000-0002-1825-0097',
+    lastName: 'Carberry',
+    firstName: 'Josiah',
+    affiliation: 'GFZ Helmholtz Centre for Geosciences',
+  });
 
   await page.getByText('ContactPerson?').click();
 
