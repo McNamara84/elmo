@@ -2,6 +2,9 @@
 
 class ICGEMController
 {
+    private const ICGEM_NAMESPACE_PREFIX = 'icgv';
+    private const ICGEM_NAMESPACE_URI = 'http://icgem.gfz.de/schema';
+
     protected mysqli $connection;
     protected mixed $logger;
 
@@ -233,296 +236,335 @@ class ICGEMController
         $result = $stmt->get_result();
         return $result->fetch_all(MYSQLI_ASSOC);
     }
+
     /**
-     * Inserts GGM properties into the XML.
+     * Retrieves descriptions for a given resource.
+     *
+     * @param mysqli $connection The database connection.
+     * @param int $resource_id The ID of the resource.
+     * @return array<mixed> An array of descriptions with section information.
+     */
+    function getDescriptions(mysqli $connection, int $resource_id): array
+    {
+        $descriptions = [];
+        $stmt = $connection->prepare("
+        SELECT 
+            rd.section as section,
+            rd.description as description
+        FROM Resource_Description rd
+        WHERE rd.resource_id = ?
+        ORDER BY rd.section ASC
+        ");
+        if (!$stmt) {
+            $this->logger && $this->logger->error("Prepare failed for Resource Descriptions: " . $connection->error);
+            return [];
+        }
+        $stmt->bind_param('i', $resource_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $descriptions[] = $row;
+        }
+        return $descriptions;
+    }
+    /**
+     * Inserts descriptions into the XML at root level.
      *
      * @param SimpleXMLElement $xml The XML element to insert into.
-     * @param array<string, mixed> $ggmData The GGM data to insert.
+     * @param array<int, array<string, mixed>> $descriptions The descriptions to insert.
      */
-    protected function insertGgmProperties(SimpleXMLElement $xml, ?array $ggmData): void
+    protected function insertDescriptions(SimpleXMLElement $xml, array $descriptions): void
     {
-        if ($ggmData) {
-            $ggmPropertiesXml = $xml->addChild('ggm_properties');
-            if (!empty($ggmData['model_name'])) {
-                $ggmPropertiesXml->addChild('modelName', htmlspecialchars($ggmData['model_name']));
-            }
-            if (!empty($ggmData['celestial_body'])) {
-                $ggmPropertiesXml->addChild('celestialBody', htmlspecialchars($ggmData['celestial_body']));
-            }
-            if (!empty($ggmData['product_type'])) {
-                $ggmPropertiesXml->addChild('productType', htmlspecialchars($ggmData['product_type']));
-            }
-            if (!empty($ggmData['errors'])) {
-                $ggmPropertiesXml->addChild('errors', htmlspecialchars($ggmData['errors']));
-            }
-            if (!empty($ggmData['error_handling_approach'])) {
-                $ggmPropertiesXml->addChild('errorHandlingApproach', htmlspecialchars($ggmData['error_handling_approach']));
-            }
-            if (!empty($ggmData['error_description'])) {
-                $ggmPropertiesXml->addChild('errorDescription', htmlspecialchars($ggmData['error_description']));
-            }
-            if (!empty($ggmData['tide_system'])) {
-                $ggmPropertiesXml->addChild('tideSystem', htmlspecialchars($ggmData['tide_system']));
-            }
-            if (!empty($ggmData['degree'])) {
-                $ggmPropertiesXml->addChild('degree', htmlspecialchars($ggmData['degree']));
-            }
-            if (!empty($ggmData['radius'])) {
-                $ggmPropertiesXml->addChild('radius', htmlspecialchars($ggmData['radius']));
-            }
-            if (!empty($ggmData['earth_gravity_constant'])) {
-                $ggmPropertiesXml->addChild('earthGravityConstant', htmlspecialchars($ggmData['earth_gravity_constant']));
-            }
-            if (!empty($ggmData['model_type_name'])) {
-                $ggmPropertiesXml->addChild('modelType', htmlspecialchars($ggmData['model_type_name']));
-            }
-            if (!empty($ggmData['mathematical_representation_name'])) {
-                $ggmPropertiesXml->addChild('mathematicalRepresentation', htmlspecialchars($ggmData['mathematical_representation_name']));
-            }
-            if (!empty($ggmData['file_format_name'])) {
-                $ggmPropertiesXml->addChild('fileFormat', htmlspecialchars($ggmData['file_format_name']));
+        if ($descriptions) {
+            foreach ($descriptions as $desc) {
+                if (!empty($desc['description'])) {
+                    $descElement = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', htmlspecialchars($desc['description']), self::ICGEM_NAMESPACE_URI);
+                    $section = !empty($desc['section']) ? htmlspecialchars($desc['section']) : 'General model description';
+                    $descElement->addAttribute('section', $section);
+                }
             }
         }
     }
+
     /**
-     * Inserts data source elements into the XML.
+     * Inserts spherical harmonic model core properties into the sphericalHarmonicModel element.
+     *
+     * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
+     * @param array<string, mixed> $ggmData The GGM data to insert.
+     */
+    protected function insertSphericalHarmonicModelProperties(SimpleXMLElement $shm, ?array $ggmData): void
+    {
+        if ($ggmData) {
+            if (!empty($ggmData['model_name'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelName', htmlspecialchars($ggmData['model_name']), self::ICGEM_NAMESPACE_URI);
+            }
+            // Note: publicationYear should come from Resource table
+            // $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':publicationYear', ..., self::ICGEM_NAMESPACE_URI);
+            if (!empty($ggmData['model_type_name'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelType', htmlspecialchars($ggmData['model_type_name']), self::ICGEM_NAMESPACE_URI);
+            }
+            if (!empty($ggmData['mathematical_representation_name'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mathematicalRepresentation', htmlspecialchars($ggmData['mathematical_representation_name']), self::ICGEM_NAMESPACE_URI);
+            }
+            if (!empty($ggmData['product_type'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':productType', htmlspecialchars($ggmData['product_type']), self::ICGEM_NAMESPACE_URI);
+            }
+            if (!empty($ggmData['file_format_name'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':fileFormat', htmlspecialchars($ggmData['file_format_name']), self::ICGEM_NAMESPACE_URI);
+            }
+            if (!empty($ggmData['tide_system'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':tideSystem', htmlspecialchars($ggmData['tide_system']), self::ICGEM_NAMESPACE_URI);
+            }
+            if (!empty($ggmData['degree'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':degreeOrderMax', htmlspecialchars($ggmData['degree']), self::ICGEM_NAMESPACE_URI);
+            }
+            if (!empty($ggmData['earth_gravity_constant'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':earthGravityConstant', htmlspecialchars($ggmData['earth_gravity_constant']), self::ICGEM_NAMESPACE_URI);
+            }
+            if (!empty($ggmData['radius'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':radius', htmlspecialchars($ggmData['radius']), self::ICGEM_NAMESPACE_URI);
+            }
+        }
+    }
+
+    /**
+     * Inserts errors element into the spherical harmonic model.
+     *
+     * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
+     * @param array<string, mixed> $ggmData The GGM data.
+     */
+    protected function insertErrors(SimpleXMLElement $shm, array $ggmData): void
+    {
+        if (!empty($ggmData['errors'])) {
+            $errorsElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errors', null, self::ICGEM_NAMESPACE_URI);
+            $errorsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorsType', htmlspecialchars($ggmData['errors']), self::ICGEM_NAMESPACE_URI);
+        }
+    }
+
+    /**
+     * Inserts error handling element into the spherical harmonic model.
+     *
+     * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
+     * @param array<string, mixed> $ggmData The GGM data.
+     */
+    protected function insertErrorHandling(SimpleXMLElement $shm, array $ggmData): void
+    {
+        if (!empty($ggmData['error_handling_approach'])) {
+            $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorHandling', htmlspecialchars($ggmData['error_handling_approach']), self::ICGEM_NAMESPACE_URI);
+        }
+    }
+    /**
+     * Inserts input data source elements into the XML at root level.
      *
      * @param SimpleXMLElement $xml The XML element to insert into.
      * @param array<int, array<string, mixed>> $dataSources The data sources to insert.
      */
-    protected function insertDataSources(SimpleXMLElement $xml, array $dataSources): void
+    protected function insertInputDataSources(SimpleXMLElement $xml, array $dataSources): void
     {
+        $typeMap = [
+            'S' => 'Satellite',
+            'G' => 'Ground data',
+            'A' => 'Altimetry',
+            'T' => 'Topographic',
+            'M' => 'Model'
+        ];
+
         if ($dataSources) {
-            $dataSourcesXml = $xml->addChild('DataSources');
             foreach ($dataSources as $dataSource) {
-                $dataSourceXml = $dataSourcesXml->addChild('DataSource');
+                $dsElement = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSources', null, self::ICGEM_NAMESPACE_URI);
                 
-                // Core identification
-                $dataSourceXml->addChild('sourceId', htmlspecialchars($dataSource['data_source_id']));
-                $dataSourceXml->addChild('sourceType', htmlspecialchars($dataSource['type']));
+                // Map type code to human-readable name
+                $sourceType = $typeMap[$dataSource['type']] ?? $dataSource['type'];
+                $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSourceType', htmlspecialchars($sourceType), self::ICGEM_NAMESPACE_URI);
+                
                 if (!empty($dataSource['description'])) {
-                    $dataSourceXml->addChild('description', htmlspecialchars($dataSource['description']));
+                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', htmlspecialchars($dataSource['description']), self::ICGEM_NAMESPACE_URI);
                 }
                 
+                // Satellite-specific fields
                 if (!empty($dataSource['S_value_name'])) {
-                    $dataSourceXml->addChild('SatelliteValueName', htmlspecialchars($dataSource['S_value_name']));
+                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteValueName', htmlspecialchars($dataSource['S_value_name']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($dataSource['S_value_uri'])) {
-                    $dataSourceXml->addChild('SatelliteValueUri', htmlspecialchars($dataSource['S_value_uri']));
+                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteValueUri', htmlspecialchars($dataSource['S_value_uri']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($dataSource['S_scheme_name'])) {
-                    $dataSourceXml->addChild('SatelliteSchemeName', htmlspecialchars($dataSource['S_scheme_name']));
+                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteSchemeName', htmlspecialchars($dataSource['S_scheme_name']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($dataSource['S_scheme_uri'])) {
-                    $dataSourceXml->addChild('SatelliteSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']));
-                }
-                
-                if (!empty($dataSource['details'])) {
-                    $dataSourceXml->addChild('Details', htmlspecialchars($dataSource['details']));
-                }
-                if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
-                    $dataSourceXml->addChild('IsostasyCompensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']));
-                }
-                if (!empty($dataSource['M_identifier'])) {
-                    $dataSourceXml->addChild('M_Identifier', htmlspecialchars($dataSource['M_identifier']));
-                }
-                if (!empty($dataSource['M_identifier_type'])) {
-                    $dataSourceXml->addChild('M_Identifier_Type', htmlspecialchars($dataSource['M_identifier_type']));
-                }
-                if (!empty($dataSource['M_name'])) {
-                    $dataSourceXml->addChild('M_Name', htmlspecialchars($dataSource['M_name']));
+                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
     }
     /**
-     * Inserts topographic model properties into the XML.
+     * Inserts topographic model properties into spherical harmonic model.
      *
-     * @param SimpleXMLElement $xml The XML element to insert into.
-     * @param array<string, mixed> $topographicProperties The topographic model properties to insert.
+     * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
+     * @param array<int, array<string, mixed>> $topographicProperties The topographic model properties to insert.
      */
-    protected function insertTopographicModelProperties(SimpleXMLElement $xml, array $topographicProperties): void
+    protected function insertTopographicModelPropertiesIcgem(SimpleXMLElement $shm, array $topographicProperties): void
     {
         if ($topographicProperties) {
-            $topographicPropertiesXml = $xml->addChild('TopographicModelProperties');
             foreach ($topographicProperties as $property) {
-                $propertyXml = $topographicPropertiesXml->addChild('TopographicProperty');
+                $tmpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':topographicModelProperties', null, self::ICGEM_NAMESPACE_URI);
                 
                 if (!empty($property['layer_approach'])) {
-                    $propertyXml->addChild('layerApproach', htmlspecialchars($property['layer_approach']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':layerApproach', htmlspecialchars($property['layer_approach']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['forward_modelling_domain'])) {
-                    $propertyXml->addChild('forwardModellingDomain', htmlspecialchars($property['forward_modelling_domain']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':forwardModellingDomain', htmlspecialchars($property['forward_modelling_domain']), self::ICGEM_NAMESPACE_URI);
                 }
-                    if (!empty($property['approximation'])) {
-                    $propertyXml->addChild('approximation', htmlspecialchars($property['approximation']));
+                if (!empty($property['approximation'])) {
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':approximation', htmlspecialchars($property['approximation']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['density_information'])) {
-                    $propertyXml->addChild('densityInformation', htmlspecialchars($property['density_information']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformation', htmlspecialchars($property['density_information']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['density_information_details'])) {
-                    $propertyXml->addChild('densityInformationDetails', htmlspecialchars($property['density_information_details']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformationDetails', htmlspecialchars($property['density_information_details']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['mantle_density_information'])) {
-                    $propertyXml->addChild('mantleDensityInformation', htmlspecialchars($property['mantle_density_information']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformation', htmlspecialchars($property['mantle_density_information']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['mantle_density_information_details'])) {
-                    $propertyXml->addChild('mantleDensityInformationDetails', htmlspecialchars($property['mantle_density_information_details']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformationDetails', htmlspecialchars($property['mantle_density_information_details']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['crust_density_information'])) {
-                    $propertyXml->addChild('crustDensityInformation', htmlspecialchars($property['crust_density_information']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformation', htmlspecialchars($property['crust_density_information']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['crust_density_information_details'])) {
-                    $propertyXml->addChild('crustDensityInformationDetails', htmlspecialchars($property['crust_density_information_details']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformationDetails', htmlspecialchars($property['crust_density_information_details']), self::ICGEM_NAMESPACE_URI);
                 }
-
             }
         }
     }
     /**
-     * Inserts temporal model properties into the XML.
+     * Inserts temporal model properties into spherical harmonic model.
      *
-     * @param SimpleXMLElement $xml The XML element to insert into.
-     * @param array<string, mixed> $temporalProperties The temporal model properties to insert.
+     * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
+     * @param array<int, array<string, mixed>> $temporalProperties The temporal model properties to insert.
      */
-    protected function insertTemporalModelProperties(SimpleXMLElement $xml, array $temporalProperties): void
+    protected function insertTemporalModelPropertiesIcgem(SimpleXMLElement $shm, array $temporalProperties): void
     {
         if ($temporalProperties) {
-            $temporalPropertiesXml = $xml->addChild('TemporalModelProperties');
             foreach ($temporalProperties as $property) {
-                $propertyXml = $temporalPropertiesXml->addChild('TemporalProperty');
+                $tmpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalModelProperties', null, self::ICGEM_NAMESPACE_URI);
                 
-                if (!empty($property['generating_institution'])) {
-                    $propertyXml->addChild('generatingInstitution', htmlspecialchars($property['generating_institution']));
-                }
-                if (!empty($property['temporal_resolution_days'])) {
-                    $propertyXml->addChild('temporalResolutionDays', htmlspecialchars($property['temporal_resolution_days']));
-                }
                 if (!empty($property['start_date'])) {
-                    $propertyXml->addChild('startDate', htmlspecialchars($property['start_date']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':startDate', htmlspecialchars($property['start_date']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['end_date'])) {
-                    $propertyXml->addChild('endDate', htmlspecialchars($property['end_date']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':stopDate', htmlspecialchars($property['end_date']), self::ICGEM_NAMESPACE_URI);
+                }
+                if (!empty($property['generating_institution'])) {
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':generatingInstitution', htmlspecialchars($property['generating_institution']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['release'])) {
-                    $propertyXml->addChild('release', htmlspecialchars($property['release']));
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':release', htmlspecialchars($property['release']), self::ICGEM_NAMESPACE_URI);
+                }
+                if (!empty($property['temporal_resolution_days'])) {
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolutionDays', htmlspecialchars($property['temporal_resolution_days']), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
     }
     /**
-     * Inserts static model properties into the XML.
+     * Inserts static model properties into spherical harmonic model.
      *
-     * @param SimpleXMLElement $xml The XML element to insert into.
-     * @param array<string, mixed> $staticProperties The static model properties to insert.
+     * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
+     * @param array<int, array<string, mixed>> $staticProperties The static model properties to insert.
      */
-    protected function insertStaticModelProperties(SimpleXMLElement $xml, array $staticProperties): void
+    protected function insertStaticModelPropertiesIcgem(SimpleXMLElement $shm, array $staticProperties): void
     {
         if ($staticProperties) {
-            $staticPropertiesXml = $xml->addChild('StaticModelProperties');
             foreach ($staticProperties as $property) {
-                $propertyXml = $staticPropertiesXml->addChild('StaticProperty');
+                $smpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':staticModelProperties', null, self::ICGEM_NAMESPACE_URI);
                 
                 if (!empty($property['info_time_variable_coefficients'])) {
-                    $propertyXml->addChild('infoTimeVariableCoefficients', htmlspecialchars($property['info_time_variable_coefficients']));
+                    $smpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':infoTimeVariableCoefficients', htmlspecialchars($property['info_time_variable_coefficients']), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
     }
 
     /**
-     * Inserts ellipsoidal parameters into the XML.
+     * Inserts ellipsoidal parameters into spherical harmonic model.
      *
-     * @param SimpleXMLElement $xml The XML element to insert into.
-     * @param array<string, mixed> $ellipsoidalParameters The ellipsoidal parameters to insert.
+     * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
+     * @param array<int, array<string, mixed>> $ellipsoidalParameters The ellipsoidal parameters to insert.
      */
-    protected function insertEllipsoidalParameters(SimpleXMLElement $xml, array $ellipsoidalParameters): void
+    protected function insertEllipsoidalParametersIcgem(SimpleXMLElement $shm, array $ellipsoidalParameters): void
     {
         if ($ellipsoidalParameters) {
-            $ellipsoidalParametersXml = $xml->addChild('EllipsoidalParameters');
+            $epElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':ellipsoidalParameters', null, self::ICGEM_NAMESPACE_URI);
             foreach ($ellipsoidalParameters as $parameter) {
-                $parameterXml = $ellipsoidalParametersXml->addChild('EllipsoidalParameter');
-                
                 if (!empty($parameter['semimajor_axis_a'])) {
-                    $parameterXml->addChild('semimajorAxisA', htmlspecialchars($parameter['semimajor_axis_a']));
+                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':semimajorAxisA', htmlspecialchars($parameter['semimajor_axis_a']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($parameter['semiminor_axis_b'])) {
-                    $parameterXml->addChild('semiminorAxisB', htmlspecialchars($parameter['semiminor_axis_b']));
+                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':semiminorAxisB', htmlspecialchars($parameter['semiminor_axis_b']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($parameter['flattening'])) {
-                    $parameterXml->addChild('flattening', htmlspecialchars($parameter['flattening']));
+                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':flattening', htmlspecialchars($parameter['flattening']), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($parameter['reciprocal_flattening'])) {
-                    $parameterXml->addChild('reciprocalFlattening', htmlspecialchars($parameter['reciprocal_flattening']));
-                }
-                if (!empty($parameter['description'])) {
-                    $parameterXml->addChild('description', htmlspecialchars($parameter['description']));
-                }
-                if (!empty($parameter['excentricity'])) {
-                    $parameterXml->addChild('excentricity', htmlspecialchars($parameter['excentricity']));
+                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':reciprocalFlattening', htmlspecialchars($parameter['reciprocal_flattening']), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
     }
-        /**
-     * Creates an ICGEM-specific XML by extending the DataCite XML with additional properties.
+    /**
+     * Creates an ICGEM-specific XML file according to the ICGEM schema.
      *
      * @param int $id The ID of the resource.
-     * @return string The combined XML as a string.
-     * @throws Exception If XML transformation or data fetching fails.
+     * @return string The ICGEM XML as a string.
+     * @throws Exception If GGM data is missing or data fetching fails.
      */
     public function createICGEMxml(int $id): string
     {
-        // 1. Check if the resource has actual GGM data.
+        // 1. Verify that the resource has GGM data
         $ggmData = $this->getGGMData($this->connection, $id);
         if (empty($ggmData) || empty($ggmData['model_name'])) {
             throw new Exception("Resource with ID $id does not contain GGM data required for ICGEM XML.");
         }
 
-        // 2. Get the base DataCite XML as a string.
-        $datasetController = new DatasetController();
-        $dataciteXmlString = $datasetController->transformAndSaveOrDownloadXml($id, 'datacite', false);
-
-        // 3. Create the envelope root element
-        $envelope = new SimpleXMLElement('<envelope/>');
-
-        // 4. Import DataCite XML as <resource> with namespace
-        $resourceXml = $envelope->addChild(
-            'resource',
-            null,
-            'http://datacite.org/schema/kernel-4'
-        );
-        $resourceXml->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-        $resourceXml->addAttribute(
-            'xsi:schemaLocation',
-            'http://datacite.org/schema/kernel-4 '
+        // 2. Create the root globalGravityProduct element with proper namespaces
+        $xml = new SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<' . self::ICGEM_NAMESPACE_PREFIX . ':globalGravityProduct xmlns:' . self::ICGEM_NAMESPACE_PREFIX . '="' . self::ICGEM_NAMESPACE_URI . '" ' .
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' .
+            'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' globalGravityProduct.xsd"/>'
         );
 
-        $dataciteXml = new SimpleXMLElement($dataciteXmlString);
-        foreach ($dataciteXml->children() as $child) {
-            $this->simplexmlAppend($resourceXml, $child);
-        }
-
-        // 5. Add icgem_metadata element
-        $icgemSpecificXml = $envelope->addChild('icgem_metadata');
-
-        // 6. Fetch all the ICGEM-specific data
+        // 3. Fetch all the ICGEM-specific data
+        $descriptions = $this->getDescriptions($this->connection, $id);
         $dataSources = $this->getDataSources($this->connection, $id);
         $topographicProperties = $this->getTopographicModelProperties($this->connection, $id);
         $temporalProperties = $this->getTemporalModelProperties($this->connection, $id);
         $staticProperties = $this->getStaticModelProperties($this->connection, $id);
         $ellipsoidalParameters = $this->getEllipsoidalParameters($this->connection, $id);
 
-        // 7. Insert the fetched data into <icgem_metadata>
-        $this->insertGgmProperties($icgemSpecificXml, $ggmData);
-        $this->insertDataSources($icgemSpecificXml, $dataSources);
-        $this->insertTopographicModelProperties($icgemSpecificXml, $topographicProperties);
-        $this->insertTemporalModelProperties($icgemSpecificXml, $temporalProperties);
-        $this->insertStaticModelProperties($icgemSpecificXml, $staticProperties);
-        $this->insertEllipsoidalParameters($icgemSpecificXml, $ellipsoidalParameters);
+        // 4. Insert descriptions at root level
+        $this->insertDescriptions($xml, $descriptions);
 
-        // 8. Format and return the final XML as a string.
-        $dom = dom_import_simplexml($envelope)->ownerDocument;
+        // 5. Create sphericalHarmonicModel container
+        $shm = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':sphericalHarmonicModel', null, self::ICGEM_NAMESPACE_URI);
+
+        // 6. Insert core GGM properties into sphericalHarmonicModel
+        $this->insertSphericalHarmonicModelProperties($shm, $ggmData);
+        $this->insertErrors($shm, $ggmData);
+        $this->insertErrorHandling($shm, $ggmData);
+        $this->insertTemporalModelPropertiesIcgem($shm, $temporalProperties);
+        $this->insertTopographicModelPropertiesIcgem($shm, $topographicProperties);
+        $this->insertStaticModelPropertiesIcgem($shm, $staticProperties);
+        $this->insertEllipsoidalParametersIcgem($shm, $ellipsoidalParameters);
+
+        // 7. Insert data sources at root level
+        $this->insertInputDataSources($xml, $dataSources);
+
+        // 8. Format and return the final XML as a string
+        $dom = dom_import_simplexml($xml)->ownerDocument;
         $dom->formatOutput = true;
         return $dom->saveXML();
     }
