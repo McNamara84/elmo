@@ -166,7 +166,12 @@ function setupResourceTypeDropdown() {
       );
 
       if (Array.isArray(data)) {
-        data.forEach(function (type) {
+        // Filter to only show "Dataset" if showGGMsProperties is enabled
+        const filteredData = window.ELMO_FEATURES?.showGGMsProperties 
+          ? data.filter(type => type.resource_type_general === "Dataset")
+          : data;
+
+        filteredData.forEach(function (type) {
           select.append(
             $("<option>", {
               value: type.id,
@@ -217,7 +222,12 @@ function setupLanguageDropdown() {
       );
 
       if (Array.isArray(data)) {
-        data.forEach(function (lang) {
+        // Filter to only show "English" if showGGMsProperties is enabled
+        const filteredData = window.ELMO_FEATURES?.showGGMsProperties 
+          ? data.filter(lang => lang.name === "English")
+          : data;
+
+        filteredData.forEach(function (lang) {
           select.append(
             $("<option>", {
               value: lang.id,
@@ -464,13 +474,26 @@ function populateTimezoneDropdownWithData(timezones) {
 function populateResourceTypeDropdownWithData(types) {
   const $select = $("#input-resourceinformation-resourcetype");
   if (!$select.length) return;
-
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
-
+  isGEM = window.ELMO_FEATURES?.showGGMsProperties
+  
+  // Always empty to remove "Loading..." option
+  $select.empty();
+  
+  // Only add "Choose..." placeholder for non-GEM versions
+  if (!isGEM) {
+    $select.append(
+      $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
+    );
+  }
+  
   if (Array.isArray(types)) {
-    types.forEach(type => {
+    // Filter to only show "Dataset" if showGGMsProperties is enabled
+    const filteredData = isGEM
+      ? types.filter(type => type.resource_type_general === "Dataset")
+      : types;
+    console.log("Filtered resource types:", filteredData);
+    
+    filteredData.forEach(type => {
       $select.append(
         $("<option>", {
           value: type.id,
@@ -491,12 +514,25 @@ function populateLanguageDropdownWithData(languages) {
   const $select = $("#input-resourceinformation-language");
   if (!$select.length) return;
 
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
-
+  isGEM = window.ELMO_FEATURES?.showGGMsProperties 
+  
+  // Always empty to remove "Loading..." option
+  $select.empty();
+  
+  // Only add "Choose..." placeholder for non-GEM versions
+  if (!isGEM) {
+    $select.append(
+      $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
+    );
+  }
+  
   if (Array.isArray(languages)) {
-    languages.forEach(lang => {
+    // Filter to only show "English" if showGGMsProperties is enabled
+    const filteredData = isGEM
+      ? languages.filter(lang => lang.name === "English")
+      : languages;
+    
+    filteredData.forEach(lang => {
       $select.append(
         $("<option>", {
           value: lang.id,
