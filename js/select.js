@@ -491,7 +491,6 @@ function populateResourceTypeDropdownWithData(types) {
     const filteredData = isGEM
       ? types.filter(type => type.resource_type_general === "Dataset")
       : types;
-    console.log("Filtered resource types:", filteredData);
     
     filteredData.forEach(type => {
       $select.append(
