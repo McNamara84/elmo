@@ -172,8 +172,6 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
   });
 
 
-  // ___________________________________________________________________________
-
   test('date without time is allowed (time not required)', () => {
     const datestart = $('#input-stc-datestart');
     const dateend = $('#input-stc-dateend');
@@ -234,8 +232,5 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
     expect(timeend.prop('required')).toBe(true);
     expect(timezone.prop('required')).toBe(true);
   });
-
-
-  // ___________________________________________________________________________
 
 });
