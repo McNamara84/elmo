@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { simulateSubmitValidation } = require('../../js/utils'); 
 
 describe('validateAuthorInstitutionRequirements', () => {
   let $;
@@ -170,6 +171,9 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
     delete global.requestAnimationFrame;
   });
 
+
+  // ___________________________________________________________________________
+
   test('date without time is allowed (time not required)', () => {
     const datestart = $('#input-stc-datestart');
     const dateend = $('#input-stc-dateend');
@@ -188,6 +192,8 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
     description.val('Test location');
 
     window.validateSpatialTemporalCoverageRequirements();
+
+    simulateSubmitValidation();
 
     // datestart and dateend should be required
     expect(datestart.prop('required')).toBe(true);
@@ -221,9 +227,15 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
 
     window.validateSpatialTemporalCoverageRequirements();
 
+    simulateSubmitValidation();
+
     // Now time fields ARE required (since a time was given)
     expect(timestart.prop('required')).toBe(true);
     expect(timeend.prop('required')).toBe(true);
     expect(timezone.prop('required')).toBe(true);
   });
+
+
+  // ___________________________________________________________________________
+
 });
