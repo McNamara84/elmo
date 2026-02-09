@@ -1141,6 +1141,21 @@ The following relates to ELMO-GEM — the ELMO implementation for the ICGEM plat
   - The corresponding field in the database is `earth_gravity_constant` in the `GGM_Properties` table.
   - Mapping: mapped to `<earthGravityConstant>` in the XML export
 
+#### Description Types
+
+ICGEM datasets support dual-layer description handling:
+
+- **DataCite Export**: Uses standard types (Abstract, Methods, TechnicalInfo, Other)
+- **ICGEM Metadata**: Preserves all custom types:
+  - Abstract (standard)
+  - General Model Description (custom ICGEM)
+  - Input Data (custom ICGEM)
+  - Processing Procedures (custom ICGEM)
+  - Specific Features of Resulting Gravity Field (custom ICGEM)
+  - Other (standard)
+
+Custom description types (Input Data, Processing Procedures, Specific Features) are mapped to `TechnicalInfo` in DataCite exports to ensure schema compliance, while the full original types are retained in the ICGEM metadata section.
+
 #### Topographic Model Properties
 Concepts specific to models, where model type is topographic masses.
 
