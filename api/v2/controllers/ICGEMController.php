@@ -464,6 +464,38 @@ class ICGEMController
             }
         }
     }
+
+    /**
+     * Retrieves and inserts all descriptions (including custom types) into ICGEM metadata.
+     *
+     * @param SimpleXMLElement $xml The XML element to insert into.
+     * @param int $id The resource ID.
+     */
+    protected function insertDescriptions(SimpleXMLElement $xml, int $id): void
+    {
+        $query = "SELECT type, description FROM Description WHERE resource_id = ? ORDER BY description_id";
+        $stmt = $this->connection->prepare($query);
+        if (!$stmt) {
+            return; // Exit gracefully if query fails
+        }
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $descriptions = [];
+        while ($row = $result->fetch_assoc()) {
+            $descriptions[] = $row;
+        }
+        $stmt->close();
+
+        if (!empty($descriptions)) {
+            $descriptionsXml = $xml->addChild('descriptions');
+            foreach ($descriptions as $description) {
+                $descriptionXml = $descriptionsXml->addChild('description', htmlspecialchars($description['description']));
+                $descriptionXml->addAttribute('type', htmlspecialchars($description['type']));
+            }
+        }
+    }
         /**
      * Creates an ICGEM-specific XML by extending the DataCite XML with additional properties.
      *
@@ -515,6 +547,7 @@ class ICGEMController
 
         // 7. Insert the fetched data into <icgem_metadata>
         $this->insertGgmProperties($icgemSpecificXml, $ggmData);
+        $this->insertDescriptions($icgemSpecificXml, $id);
         $this->insertDataSources($icgemSpecificXml, $dataSources);
         $this->insertTopographicModelProperties($icgemSpecificXml, $topographicProperties);
         $this->insertTemporalModelProperties($icgemSpecificXml, $temporalProperties);
