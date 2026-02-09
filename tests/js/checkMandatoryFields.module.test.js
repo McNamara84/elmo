@@ -235,6 +235,7 @@ describe('checkMandatoryFields module coverage', () => {
             $('#input-contributor-orcid').val('0000-0001-2345-6789');
 
             checkMandatoryFields.validateAllMandatoryFields();
+            simulateSubmitValidation();
 
             expect($('#input-contributor-lastname').attr('required')).toBe('required');
         });
@@ -243,6 +244,7 @@ describe('checkMandatoryFields module coverage', () => {
             $('#input-relatedwork-identifier').val('10.1234/test');
 
             checkMandatoryFields.validateAllMandatoryFields();
+            simulateSubmitValidation();
 
             expect($('#input-relatedwork-relation').attr('required')).toBe('required');
         });
@@ -269,6 +271,7 @@ describe('checkMandatoryFields module coverage', () => {
             $('#input-contributor-orcid').val('0000-0001-2345-6789');
 
             checkMandatoryFields.validateAllMandatoryFields();
+            simulateSubmitValidation();
 
             // Both should be validated
             expect($('#input-contactperson-email').attr('required')).toBe('required');
