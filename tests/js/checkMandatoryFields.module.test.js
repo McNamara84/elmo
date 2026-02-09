@@ -1,3 +1,7 @@
+const { simulateSubmitValidation } = require('../../js/utils'); 
+
+
+
 /**
  * @jest-environment jsdom
  * 
@@ -125,6 +129,7 @@ describe('checkMandatoryFields module coverage', () => {
         test('can be called without errors', () => {
             expect(() => {
                 checkMandatoryFields.validateSpatialTemporalCoverageRequirements();
+                simulateSubmitValidation();
             }).not.toThrow();
         });
 
@@ -135,6 +140,7 @@ describe('checkMandatoryFields module coverage', () => {
             $('#input-stc-longmax_1').val('14.0');
             
             checkMandatoryFields.validateSpatialTemporalCoverageRequirements();
+            simulateSubmitValidation();
             
             expect($('#input-stc-datestart').attr('required')).toBe('required');
             expect($('#input-stc-dateend').attr('required')).toBe('required');
@@ -145,6 +151,7 @@ describe('checkMandatoryFields module coverage', () => {
             $('#input-stc-datestart').val('2025-01-01');
             
             checkMandatoryFields.validateSpatialTemporalCoverageRequirements();
+            simulateSubmitValidation();
             
             // Time is optional
             expect($('#input-stc-timestart').attr('required')).toBeUndefined();
@@ -157,6 +164,7 @@ describe('checkMandatoryFields module coverage', () => {
             $('#input-stc-timestart').val('08:00');
             
             checkMandatoryFields.validateSpatialTemporalCoverageRequirements();
+            simulateSubmitValidation();
             
             expect($('#input-stc-timezone').attr('required')).toBe('required');
         });
@@ -165,6 +173,7 @@ describe('checkMandatoryFields module coverage', () => {
             // First set requirements
             $('#input-stc-latmin_1').val('52.0');
             checkMandatoryFields.validateSpatialTemporalCoverageRequirements();
+            simulateSubmitValidation();
             
             // Then clear all values
             $('#input-stc-latmin_1').val('');
@@ -176,6 +185,7 @@ describe('checkMandatoryFields module coverage', () => {
             $('#input-stc-dateend').val('');
             
             checkMandatoryFields.validateSpatialTemporalCoverageRequirements();
+            simulateSubmitValidation();
             
             expect($('#input-stc-latmin_1').attr('required')).toBeUndefined();
         });
