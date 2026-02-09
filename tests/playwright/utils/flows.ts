@@ -24,3 +24,17 @@ export async function completeMinimalDatasetForm(page: Page) {
   await page.getByRole('textbox', { name: 'Abstract*' }).fill('Necessary abstract');
   await page.getByRole('textbox', { name: 'Date created*' }).fill('2025-01-01');
 }
+
+
+/**
+ * Simulates the Submit handler behavior for submit-only required fields.
+ * This mirrors the real UI logic where `.js-required-on-submit` becomes `required`
+ * only during Submit, not during Save.
+ */
+export async function simulateSubmitValidation(page: Page) {
+  await page.evaluate(() => {
+    document.querySelectorAll('.js-required-on-submit').forEach(el => {
+      el.setAttribute('required', 'required');
+    });
+  });
+}
