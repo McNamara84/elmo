@@ -919,13 +919,17 @@ class DatasetController extends ICGEMController
             }
         }
 
-        // Descriptions
+        // Descriptions (only valid DataCite types)
         $descriptions = $this->getDescriptions($connection, $id);
+        $validDescriptionTypes = ['Abstract', 'Methods', 'SeriesInformation', 'TableOfContents', 'TechnicalInfo', 'Other'];
         $descriptionsXml = $xml->addChild('Descriptions');
         foreach ($descriptions as $description) {
-            $descriptionXml = $descriptionsXml->addChild('Description');
-            $descriptionXml->addChild('type', htmlspecialchars($description['type']));
-            $descriptionXml->addChild('description', htmlspecialchars($description['description']));
+            // Only include descriptions with valid DataCite types
+            if (in_array($description['type'], $validDescriptionTypes)) {
+                $descriptionXml = $descriptionsXml->addChild('Description');
+                $descriptionXml->addChild('type', htmlspecialchars($description['type']));
+                $descriptionXml->addChild('description', htmlspecialchars($description['description']));
+            }
         }
 
         // Thesaurus Keywords
