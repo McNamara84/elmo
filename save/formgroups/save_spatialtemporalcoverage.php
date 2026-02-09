@@ -63,9 +63,10 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         $entry['latitudeMax']  = (trim($entry['latitudeMax'] ?? '') === '')  ? NULL : $entry['latitudeMax'];
         $entry['longitudeMin'] = (trim($entry['longitudeMin'] ?? '') === '') ? NULL : $entry['longitudeMin'];
         $entry['longitudeMax'] = (trim($entry['longitudeMax'] ?? '') === '') ? NULL : $entry['longitudeMax'];
+        $entry['dateStart'] = (trim($entry['dateStart'] ?? '') === '') ? NULL : $entry['dateStart'];
+        $entry['dateEnd'] = (trim($entry['dateEnd'] ?? '') === '') ? NULL : $entry['dateEnd'];
         $entry['timeStart'] = (trim($entry['timeStart'] ?? '') === '') ? NULL : $entry['timeStart'];
         $entry['timeEnd'] = (trim($entry['timeEnd'] ?? '') === '') ? NULL : $entry['timeEnd'];
-        $entry['dateEnd'] = (trim($entry['dateEnd'] ?? '') === '') ? NULL : $entry['dateEnd'];
         $entry['description'] = (trim($entry['description'] ?? '') === '') ? NULL : $entry['description'];
 
         // Save STC entry
