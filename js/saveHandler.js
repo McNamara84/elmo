@@ -114,6 +114,24 @@ class SaveHandler {
             translations.alerts.savingInfo);
 
         try {
+            /**
+            * Reset form validation state before saving.
+            * Prevents submit validation styles from persisting on save.
+            */
+            const formEl = this.$form[0];
+            formEl.classList.remove('was-validated');
+
+            formEl.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+                el.classList.remove('is-invalid', 'is-valid');
+                el.removeAttribute('aria-invalid');
+            });
+
+            formEl.querySelectorAll('.js-required-on-submit').forEach(el => {
+                el.removeAttribute('required');
+            });
+
+            $(formEl).find('.tagify').removeClass('is-invalid is-valid');
+            
             const formData = new FormData(this.$form[0]);
             formData.append('filename', filename);
             formData.append('action', 'save_and_download');
