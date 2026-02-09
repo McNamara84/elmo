@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { simulateSubmitValidation } = require('../../js/utils'); 
+const { simulateSubmitValidation } = require('./utils');
+
 
 describe('validateAuthorInstitutionRequirements', () => {
   let $;
