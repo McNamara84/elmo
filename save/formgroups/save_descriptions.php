@@ -25,6 +25,8 @@ function saveDescriptions($connection, $postData, $resource_id)
 
     $descriptionTypes = [
         'Abstract' => 'descriptionAbstract',
+        'Methods' => 'descriptionMethods',
+        'TechnicalInfo' => 'descriptionTechnical',
         'General Model Description' => 'descriptionGeneralModelDescription',
         'Input Data' => 'descriptionInputData',
         'Processing Procedures' => 'descriptionProcessingProcedures',
