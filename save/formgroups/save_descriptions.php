@@ -25,8 +25,10 @@ function saveDescriptions($connection, $postData, $resource_id)
 
     $descriptionTypes = [
         'Abstract' => 'descriptionAbstract',
-        'Methods' => 'descriptionMethods',
-        'Technical Information' => 'descriptionTechnical',
+        'General Model Description' => 'descriptionGeneralModelDescription',
+        'Input Data' => 'descriptionInputData',
+        'Processing Procedures' => 'descriptionProcessingProcedures',
+        'Specific Features of Resulting Gravity Field' => 'descriptionSpecificFeaturesOfResultingGravityField',
         'Other' => 'descriptionOther'
     ];
 
