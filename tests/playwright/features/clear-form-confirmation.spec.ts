@@ -14,7 +14,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Clear form confirmation dialog', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to ELMO and wait for page to be ready
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.goto('', { waitUntil: 'domcontentloaded' });
   });
 
   test('shows confirmation modal when clear button is clicked', async ({ page }) => {
