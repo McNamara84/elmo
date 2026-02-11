@@ -92,8 +92,11 @@ function showConfirmationModal(titleKey, messageKey, cancelKey, confirmKey, onCo
     });
     
     // Focus management: move focus to confirm button when modal opens
+    // Use requestAnimationFrame to handle webkit timing differences
     modalElement.addEventListener('shown.bs.modal', function focusConfirmButton() {
-        freshConfirmButton.focus();
+        requestAnimationFrame(() => {
+            freshConfirmButton.focus();
+        });
     }, { once: true });
     
     // Show modal
