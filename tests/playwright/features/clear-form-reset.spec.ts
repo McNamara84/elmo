@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import path from 'node:path';
 import { completeMinimalDatasetForm, REPO_ROOT, SELECTORS } from '../utils';
+import { injectScript } from '../utils/assets';
 
 type TagifyInputElement = HTMLInputElement & {
   _tagify?: {
@@ -312,8 +313,8 @@ test.describe('Metadata form reset', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('about:blank');
     await page.setContent(TEST_FORM_HTML);
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery/dist/jquery.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'js/clear.js') });
+    await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
+    await injectScript(page, 'js/clear.js');
     await page.addScriptTag({ content: FIXTURE_SETUP_SCRIPT });
   });
 
