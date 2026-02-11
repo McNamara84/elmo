@@ -132,8 +132,8 @@ test.describe('Clear form confirmation dialog', () => {
     // Click cancel button
     await page.click('#button-confirm-cancel');
     
-    // Modal should be hidden
-    await expect(page.locator('#modal-confirm')).not.toBeVisible();
+    // Wait for modal to complete hide animation (best practice)
+    await page.locator('#modal-confirm.show').waitFor({ state: 'hidden' });
     
     // Form data should still be there
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue(testYear);
