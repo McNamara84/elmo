@@ -238,9 +238,9 @@ function createDatabaseStructure($connection): array
         "Title" => "CREATE TABLE IF NOT EXISTS `Title` (
     `title_id` INT NOT NULL AUTO_INCREMENT,
     `text` VARCHAR(256) NOT NULL,
-    `Title_Type_fk` INT NOT NULL,
+    `Title_Type_fk` INT NULL,
     `Resource_resource_id` INT NOT NULL,
-    PRIMARY KEY (`title_id`, `Title_Type_fk`, `Resource_resource_id`),
+    PRIMARY KEY (`title_id`),
     FOREIGN KEY (`Title_Type_fk`)
     REFERENCES `Title_Type` (`title_type_id`),
     FOREIGN KEY (`Resource_resource_id`)
