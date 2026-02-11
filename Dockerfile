@@ -42,6 +42,7 @@ RUN apk add --no-cache \
         libzip \
     && apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
+        mariadb-connector-c-dev \
         libxml2-dev \
         libxslt-dev \
         libzip-dev \

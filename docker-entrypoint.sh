@@ -10,11 +10,7 @@ if [ ! -d /var/www/html/vendor ]; then
   composer install --no-dev --prefer-dist --optimize-autoloader
 fi
 
-# Ensure Node dependencies are installed
-if [ ! -d /var/www/html/node_modules ]; then
-  echo "📦  Installing Node dependencies"
-  npm install --omit=dev
-fi
+# Node dependencies are bundled into assets/vendor during build.
 
 # Ensure a settings.php exists; in production always refresh from settings.elmo.php
 # In local development, keep the existing settings.php
