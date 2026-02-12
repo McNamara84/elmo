@@ -290,10 +290,10 @@ function isTitleTypeValid($connection, $title_type_id)
 /**
  * Saves titles for a resource, handling duplicates.
  * Allows saving:
- * - Titles with text only (titleType can be empty/NULL)
  * - Titles with both text and titleType
  *
  * Will SKIP without a failure:
+ * - Titles with text only (type must be present)
  * - Titles with titleType only (text must be present if type is present)
  * - Entirely empty entries (both text and type are empty)
  *
@@ -320,64 +320,54 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes)
             continue;
         }
         
-        // Skip if type is present but text is empty (type without text is not allowed)
-        if (empty($title_text) && !empty($title_type_str)) {
-            error_log("Skipping title entry at index $i: type is present ('$title_type_str') but text is empty. Title text is required when title type is specified.");
+        // Skip if text is empty (text is required)
+        if (empty($title_text)) {
+            error_log("Skipping title entry at index $i: text is empty. Title text is required.");
+            continue;
+        }
+        
+        // Skip if type is empty (type is required)
+        if (empty($title_type_str)) {
+            error_log("Skipping title entry at index $i: type is empty. Title type is required.");
             continue;
         }
         
         // Convert title_type string to integer if present
-        $title_type_int = null;
-        if (!empty($title_type_str)) {
-            $title_type_int = intval($title_type_str);
-            
-            // Validate the title type exists in the database
-            if (!isTitleTypeValid($connection, $title_type_int)) {
-                error_log("Invalid title type at index $i. Type ID '$title_type_int' does not exist in Title_Type table. Skipping.");
-                continue;
-            }
+        $title_type_int = intval($title_type_str);
+        
+        // Validate the title type exists in the database
+        if (!isTitleTypeValid($connection, $title_type_int)) {
+            error_log("Invalid title type at index $i. Type ID '$title_type_int' does not exist in Title_Type table. Skipping.");
+            continue;
         }
         
         // Create unique key for deduplication
-        $key = $title_text . '|' . ($title_type_int ?? 'NULL');
+        $key = $title_text . '|' . $title_type_int;
         if (!isset($uniqueTitles[$key])) {
             $uniqueTitles[$key] = [
                 'text' => $title_text,
                 'type' => $title_type_int
             ];
-            error_log("Added title to save: text='$title_text', type=" . ($title_type_int ?? 'NULL'));
+            error_log("Added title to save: text='$title_text', type=$title_type_int");
         }
     }
 
     foreach ($uniqueTitles as $title) {
-        if ($title['type'] === null) {
-            // Insert title without type (type will be NULL)
-            $stmt = $connection->prepare("INSERT INTO Title 
-                (`text`, `Title_Type_fk`, `Resource_resource_id`) 
-                VALUES (?, NULL, ?)");
-            $stmt->bind_param(
-                "si",
-                $title['text'],
-                $resource_id
-            );
-        } else {
-            // Insert title with type as integer
-            $stmt = $connection->prepare("INSERT INTO Title 
-                (`text`, `Title_Type_fk`, `Resource_resource_id`) 
-                VALUES (?, ?, ?)");
-            $stmt->bind_param(
-                "sii",
-                $title['text'],
-                $title['type'],
-                $resource_id
-            );
-        }
+        $stmt = $connection->prepare("INSERT INTO Title 
+            (`text`, `Title_Type_fk`, `Resource_resource_id`) 
+            VALUES (?, ?, ?)");
+        $stmt->bind_param(
+            "sii",
+            $title['text'],
+            $title['type'],
+            $resource_id
+        );
         
         if (!$stmt->execute()) {
             error_log("Failed to insert title: " . $stmt->error);
             return false;
         }
-        error_log("Successfully inserted title: text='" . $title['text'] . "', type=" . ($title['type'] ?? 'NULL'));
+        error_log("Successfully inserted title: text='" . $title['text'] . "', type=" . $title['type']);
     }
 
     return true;
