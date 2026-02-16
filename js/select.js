@@ -379,13 +379,11 @@ function setupLicenseDropdown(isSoftware) {
     $select.prop("disabled", false).trigger("change");
 
   }).fail(function (jqXHR, textStatus, errorThrown) {
-    // Fallback: use CC-BY-4.0 if API call fails
+    // Fallback: use CC-BY-4.0 (rights_id=1) if API call fails
     console.error("Error loading licenses:", textStatus, errorThrown);
-
-    // Fallback with CC-BY-4.0 default
     $select.empty().append(
       $("<option>", {
-        value: "CC-BY-4.0",
+        value: "1",
         text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
         selected: true
       })
@@ -657,9 +655,9 @@ function populateLicenseDropdownWithData(licenses) {
       $select.append($option);
     });
   } else {
-    // Fallback
+    // Fallback: use CC-BY-4.0 (rights_id=1)
     $select.append($("<option>", {
-      value: "CC-BY-4.0",
+      value: "1",
       text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
       selected: true
     }));
