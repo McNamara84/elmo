@@ -132,7 +132,7 @@ const MOCK_TITLE_TYPES = [
 
 const MOCK_LICENSES = [
   {
-    rights_id: 'cc-by-4.0',
+    rights_id: 1,
     text: 'Creative Commons Attribution 4.0 International',
     rightsIdentifier: 'CC-BY-4.0',
     forSoftware: '0',
