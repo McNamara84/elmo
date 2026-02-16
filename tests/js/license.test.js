@@ -58,7 +58,7 @@ describe('setupLicenseDropdown', () => {
       { rights_id: 'rid-gpl', rightsIdentifier: 'GPL-3.0-or-later', text: 'GNU General Public License v3.0 or later', forSoftware: '1' },
 
       // non-software
-      { rights_id: 'rid-eul', rightsIdentifier: 'EUPL-1.2', text: 'European Union Public License 2.0', forSoftware: '1' },
+      { rights_id: 'rid-eul', rightsIdentifier: 'EUPL-1.2', text: 'European Union Public License 2.0', forSoftware: '0' },
       {
         rights_id: 'rid-ccb4',
         rightsIdentifier: 'CC-BY-4.0',
