@@ -62,6 +62,11 @@ class ICGEMController
         $result = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
+        /**
+         * Filters out null values from the result array and populates the ggmData array.
+         * Iterates through each key-value pair in the result array and only adds non-null values
+         * to the ggmData array, effectively removing any null entries.
+         */
         if ($result) {
             foreach ($result as $key => $value) {
                 if ($value !== null) {
@@ -108,6 +113,7 @@ class ICGEMController
         $stmt->bind_param('i', $resource_id);
         $stmt->execute();
         $result = $stmt->get_result();
+        // Puts each individual data source into an array one by one. 
         while ($row = $result->fetch_assoc()) {
             $dataSources[] = $row;
         }
@@ -466,7 +472,29 @@ class ICGEMController
     }
 
     /**
-     * Retrieves and inserts all descriptions (including custom types) into ICGEM metadata.
+     * ICGEM-compliant description types enumeration.
+     * Only these types are valid for ICGEM XML output.
+     * 
+     * @var array<string>
+     */
+    private const ICGEM_DESCRIPTION_TYPES = [
+        'Abstract',
+        'General model description',
+        'Input data',
+        'Processing procedures',
+        'Specific features of resulting gravity field',
+        'Other'
+    ];
+
+    /**
+     * Retrieves and inserts all descriptions into ICGEM metadata.
+     * 
+     * Validates that description types match ICGEM schema enumeration,
+     * converts them to sentence case (first letter uppercase, rest lowercase),
+     * and adds them to the XML.
+     * 
+     * Types not in the ICGEM enumeration (e.g., 'Methods', 'TechnicalInfo') 
+     * are filtered out and logged.
      *
      * @param SimpleXMLElement $xml The XML element to insert into.
      * @param int $id The resource ID.
@@ -476,6 +504,7 @@ class ICGEMController
         $query = "SELECT type, description FROM Description WHERE resource_id = ? ORDER BY description_id";
         $stmt = $this->connection->prepare($query);
         if (!$stmt) {
+            error_log("ICGEMController.insertDescriptions: Failed to prepare statement: " . $this->connection->error);
             return; // Exit gracefully if query fails
         }
         $stmt->bind_param('i', $id);
@@ -491,8 +520,20 @@ class ICGEMController
         if (!empty($descriptions)) {
             $descriptionsXml = $xml->addChild('descriptions');
             foreach ($descriptions as $description) {
+                $dbType = $description['type'];
+                
+                // Convert to sentence case (first letter uppercase, rest lowercase)
+                $sentenceCaseType = ucfirst(strtolower($dbType));
+                
+                // Validate against ICGEM enumeration
+                if (!in_array($sentenceCaseType, self::ICGEM_DESCRIPTION_TYPES, true)) {
+                    error_log("Description type '$dbType' (normalized: '$sentenceCaseType') not in ICGEM schema for resource $id, skipping");
+                    continue;
+                }
+                
+                // Add to XML with validated, sentence-case type
                 $descriptionXml = $descriptionsXml->addChild('description', htmlspecialchars($description['description']));
-                $descriptionXml->addAttribute('type', htmlspecialchars($description['type']));
+                $descriptionXml->addAttribute('type', $sentenceCaseType);
             }
         }
     }
