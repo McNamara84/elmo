@@ -501,6 +501,7 @@ class ICGEMController
      */
     protected function insertDescriptions(SimpleXMLElement $xml, int $id): void
     {
+        // find all descriptions for the resource
         $query = "SELECT type, description FROM Description WHERE resource_id = ? ORDER BY description_id";
         $stmt = $this->connection->prepare($query);
         if (!$stmt) {
@@ -510,7 +511,7 @@ class ICGEMController
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+        // Collect descriptions into an array
         $descriptions = [];
         while ($row = $result->fetch_assoc()) {
             $descriptions[] = $row;
