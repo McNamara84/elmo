@@ -132,7 +132,7 @@ const MOCK_TITLE_TYPES = [
 
 const MOCK_LICENSES = [
   {
-    rights_id: 'cc-by-4.0',
+    rights_id: 1,
     text: 'Creative Commons Attribution 4.0 International',
     rightsIdentifier: 'CC-BY-4.0',
     forSoftware: '0',
@@ -503,7 +503,7 @@ test.describe('XML Upload Mapping Flow', () => {
     await expect(page.locator('#input-resourceinformation-language')).toHaveValue('1');
     await expect(page.locator('#input-resourceinformation-title')).toHaveValue('ELMO Upload Flow');
 
-    await expect(page.locator('#input-rights-license')).toHaveValue('cc-by-4.0');
+    await expect(page.locator('#input-rights-license')).toHaveValue('1');
 
     const familyName = page.locator('input[name="familynames[]"]').first();
     const givenName = page.locator('input[name="givennames[]"]').first();
