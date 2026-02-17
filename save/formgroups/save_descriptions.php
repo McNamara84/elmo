@@ -12,6 +12,8 @@ require_once __DIR__ . '/../validation.php';
  */
 function saveDescriptions($connection, $postData, $resource_id)
 {
+    global $showGGMsProperties;
+    
     // Validate that abstract is present
     $action = $postData['action'] ?? 'save_and_download';
 
@@ -23,44 +25,61 @@ function saveDescriptions($connection, $postData, $resource_id)
         }
     }
 
-    $descriptionTypes = [
+    // Generic description types (always available)
+    $genericDescriptionTypes = [
         'Abstract' => 'descriptionAbstract',
         'Methods' => 'descriptionMethods',
         'TechnicalInfo' => 'descriptionTechnical',
-        'General model description' => 'descriptionGeneralModelDescription',   // ELMOGEM specific
-        'Input data' => 'descriptionInputData',                               // ELMOGEM specific 
-        'Processing procedures' => 'descriptionProcessingProcedures',        // ELMOGEM specific                                   
-        'Specific features of resulting gravity field' => 'descriptionSpecificFeaturesOfResultingGravityField', // ELMOGEM specific
         'Other' => 'descriptionOther'
     ];
 
-    $elmogem_specific_types = [
-        'General model description',
-        'Input data',
-        'Processing procedures',
-        'Specific features of resulting gravity field'
-    ];
-    
-    $elmogem_texts = [];
-
-    // Iterate over each description type and insert if present
-    foreach ($descriptionTypes as $type => $postKey) {
+    // Save generic descriptions (excluding Abstract, which is handled separately)
+    foreach ($genericDescriptionTypes as $type => $postKey) {
+        if ($type === 'Abstract') {
+            continue; // Handle Abstract separately below
+        }
+        
         if (isset($postData[$postKey]) && !empty($postData[$postKey])) {
             $text = trim($postData[$postKey]);
             insertDescription($connection, $type, $text, $resource_id);
-            
-            // Collect ELMOGEM-specific texts to append to abstract
-            if (in_array($type, $elmogem_specific_types, true)) {
-                $elmogem_texts[] = $text;
-            }
         }
     }
 
-    // Append ELMOGEM-specific descriptions to Abstract for DataCite indexing
-    if (!empty($elmogem_texts)) {
-        $abstract_text = isset($postData['descriptionAbstract']) ? trim($postData['descriptionAbstract']) : '';
-        $combined_abstract = $abstract_text . "\n\n" . implode("\n\n", $elmogem_texts);
-        insertDescription($connection, 'Abstract', $combined_abstract, $resource_id);
+    // ELMOGEM-specific handling (if enabled)
+    $abstract_text = isset($postData['descriptionAbstract']) ? trim($postData['descriptionAbstract']) : '';
+    
+    if ($showGGMsProperties) {
+        // ELMOGEM-specific description types
+        $elmogem_description_types = [
+            'General model description' => 'descriptionGeneralModelDescription',
+            'Input data' => 'descriptionInputData',
+            'Processing procedures' => 'descriptionProcessingProcedures',
+            'Specific features of resulting gravity field' => 'descriptionSpecificFeaturesOfResultingGravityField'
+        ];
+        
+        $elmogem_texts = [];
+
+        // Save ELMOGEM-specific descriptions and collect them for appending to abstract
+        foreach ($elmogem_description_types as $type => $postKey) {
+            if (isset($postData[$postKey]) && !empty($postData[$postKey])) {
+                $text = trim($postData[$postKey]);
+                insertDescription($connection, $type, $text, $resource_id);
+                $elmogem_texts[] = $text;
+            }
+        }
+
+        // Insert combined Abstract with ELMOGEM texts appended for DataCite indexing
+        if (!empty($elmogem_texts)) {
+            $combined_abstract = $abstract_text . "\n\n" . implode("\n\n", $elmogem_texts);
+            insertDescription($connection, 'Abstract', $combined_abstract, $resource_id);
+        } elseif (!empty($abstract_text)) {
+            insertDescription($connection, 'Abstract', $abstract_text, $resource_id);
+        }
+    } else {
+        // Non-ELMOGEM mode: just save the abstract as-is
+        if (!empty($abstract_text)) {
+            insertDescription($connection, 'Abstract', $abstract_text, $resource_id);
+        }
     }
 
     return true;
