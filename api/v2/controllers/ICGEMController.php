@@ -487,11 +487,24 @@ class ICGEMController
     ];
 
     /**
+     * Normalizes a description type to sentence case (first letter uppercase, rest lowercase).
+     * This ensures consistent comparison regardless of how the value is stored in the database.
+     *
+     * @param string $type The description type to normalize.
+     * @return string The normalized type in sentence case.
+     */
+    private function normalizeDescriptionType(string $type): string
+    {
+        return ucfirst(strtolower($type));
+    }
+
+    /**
      * Retrieves and inserts all descriptions into ICGEM metadata.
      * 
-     * Validates that description types match ICGEM schema enumeration,
-     * converts them to sentence case (first letter uppercase, rest lowercase),
-     * and adds them to the XML.
+     * Validates that description types match ICGEM schema enumeration using
+     * case-insensitive comparison. Both the database value and the enumerated
+     * constants are normalized to sentence case before comparison, ensuring
+     * robustness against variations in storage casing.
      * 
      * Types not in the ICGEM enumeration (e.g., 'Methods', 'TechnicalInfo') 
      * are filtered out and logged.
@@ -520,21 +533,28 @@ class ICGEMController
 
         if (!empty($descriptions)) {
             $descriptionsXml = $xml->addChild('descriptions');
+            
+            // Normalize all valid types for robust comparison
+            $normalizedValidTypes = array_map(
+                fn($type) => $this->normalizeDescriptionType($type),
+                self::ICGEM_DESCRIPTION_TYPES
+            );
+            
             foreach ($descriptions as $description) {
                 $dbType = $description['type'];
                 
-                // Convert to sentence case (first letter uppercase, rest lowercase)
-                $sentenceCaseType = ucfirst(strtolower($dbType));
+                // Normalize the database value using the same function
+                $normalizedDbType = $this->normalizeDescriptionType($dbType);
                 
-                // Validate against ICGEM enumeration
-                if (!in_array($sentenceCaseType, self::ICGEM_DESCRIPTION_TYPES, true)) {
-                    error_log("Description type '$dbType' (normalized: '$sentenceCaseType') not in ICGEM schema for resource $id, skipping");
+                // Validate against ICGEM enumeration (case-insensitive comparison)
+                if (!in_array($normalizedDbType, $normalizedValidTypes, true)) {
+                    error_log("Description type '$dbType' (normalized: '$normalizedDbType') not in ICGEM schema for resource $id, skipping");
                     continue;
                 }
                 
-                // Add to XML with validated, sentence-case type
+                // Add to XML with validated, normalized type
                 $descriptionXml = $descriptionsXml->addChild('description', htmlspecialchars($description['description']));
-                $descriptionXml->addAttribute('type', $sentenceCaseType);
+                $descriptionXml->addAttribute('type', $normalizedDbType);
             }
         }
     }

@@ -27,10 +27,10 @@ function saveDescriptions($connection, $postData, $resource_id)
         'Abstract' => 'descriptionAbstract',
         'Methods' => 'descriptionMethods',
         'TechnicalInfo' => 'descriptionTechnical',
-        'General Model Description' => 'descriptionGeneralModelDescription',
-        'Input Data' => 'descriptionInputData',
-        'Processing Procedures' => 'descriptionProcessingProcedures',
-        'Specific Features of Resulting Gravity Field' => 'descriptionSpecificFeaturesOfResultingGravityField',
+        'General model description' => 'descriptionGeneralModelDescription',   // ELMOGEM specific
+        'Input data' => 'descriptionInputData',                               // ELMOGEM specific 
+        'Processing procedures' => 'descriptionProcessingProcedures',        // ELMOGEM specific                                   
+        'Specific features of resulting gravity field' => 'descriptionSpecificFeaturesOfResultingGravityField', // ELMOGEM specific
         'Other' => 'descriptionOther'
     ];
 
