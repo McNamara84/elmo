@@ -155,6 +155,13 @@ $(document).ready(function () {
     $('#button-form-submit').on('click', function (e) {
       resetSubmitOnlyFields();
 
+      // Apply specific rules
+      validateFundingReferenceRequirements();
+      validateRelatedWorkRequirements();
+      validateSpatialTemporalCoverageRequirements();
+      validateContributorOrganisationRequirements();
+      validateContributorPersonRequirements();
+
       form.querySelectorAll('.js-required-on-submit').forEach(el => {
         el.setAttribute('required', 'required');
       });

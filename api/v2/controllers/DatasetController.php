@@ -1004,11 +1004,38 @@ class DatasetController extends ICGEMController
             $relatedWorksXml = $xml->addChild('RelatedWorks');
             foreach ($relatedWorks as $work) {
                 $workXml = $relatedWorksXml->addChild('RelatedWork');
-                $workXml->addChild('Identifier', htmlspecialchars($work['Identifier']));
+                $identifier = $work['Identifier'] ?? '';
+                $workXml->addChild(
+                    'Identifier',
+                    htmlspecialchars((string) $identifier, ENT_XML1, 'UTF-8')
+                );
+                $relationName = '';
+                if (isset($work['Relation'])) {
+                    if (is_array($work['Relation'])) {
+                        $relationName = $work['Relation']['name'] ?? '';
+                    } else {
+                        $relationName = $work['Relation'];
+                    }
+                }
                 $relationXml = $workXml->addChild('Relation');
-                $relationXml->addChild('name', htmlspecialchars($work['Relation']['name']));
+                $relationXml->addChild(
+                    'name',
+                    htmlspecialchars((string) $relationName, ENT_XML1, 'UTF-8')
+                );
+                $identifierTypeName = '';
+                if (isset($work['IdentifierType'])) {
+                    if (is_array($work['IdentifierType'])) {
+                        $identifierTypeName = $work['IdentifierType']['name'] ?? '';
+                    } else {
+                        $identifierTypeName = $work['IdentifierType'];
+                    }
+                }
+
                 $identifierTypeXml = $workXml->addChild('IdentifierType');
-                $identifierTypeXml->addChild('name', htmlspecialchars($work['IdentifierType']['name']));
+                $identifierTypeXml->addChild(
+                    'name',
+                    htmlspecialchars((string) $identifierTypeName, ENT_XML1, 'UTF-8')
+                );
             }
         }
 
