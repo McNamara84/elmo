@@ -18,6 +18,7 @@ async function navigateToFeedbackModal(page: Page) {
   await feedbackButton.click();
 
   const feedbackModal = page.locator(SELECTORS.modals.feedback);
+  // Rely on Playwright's default assertion timeout to avoid flakiness on slower environments
   await expect(feedbackModal).toBeVisible();
   await expect(feedbackModal.locator('#form-feedback')).toBeVisible();
 

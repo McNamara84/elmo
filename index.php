@@ -53,10 +53,6 @@ $baseDir = __DIR__ . '/';
 include $baseDir . 'header.php';
 include $baseDir . 'formgroups/resourceInformation.html';
 
-if ($showLicense) {
-    include $baseDir . 'formgroups/rights.html';
-}
-
 include $baseDir . 'formgroups/authors.html';
 
 if ($showAuthorInstitution) {
@@ -100,6 +96,9 @@ if ($showRelatedWork) {
 }
 if ($showFundingReference) {
     include $baseDir . 'formgroups/fundingreference.html';
+}
+if ($showLicense) {
+    include $baseDir . 'formgroups/rights.html';
 }
 include $baseDir . 'modals.html';
 include $baseDir . 'footer.html';

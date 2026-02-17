@@ -77,7 +77,7 @@ test.describe('Homepage performance', () => {
       const runMetrics = await test.step(`load measurement run ${attempt}`, async () => {
         const start = Date.now();
 
-        const response = await page.goto('/', {
+        const response = await page.goto('', {
           waitUntil: 'domcontentloaded',
         });
 
