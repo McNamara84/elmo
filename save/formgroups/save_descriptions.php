@@ -27,18 +27,12 @@ function saveDescriptions($connection, $postData, $resource_id)
 
     // Generic description types (always available)
     $genericDescriptionTypes = [
-        'Abstract' => 'descriptionAbstract',
         'Methods' => 'descriptionMethods',
-        'TechnicalInfo' => 'descriptionTechnical',
-        'Other' => 'descriptionOther'
+        'TechnicalInfo' => 'descriptionTechnical'
     ];
 
-    // Save generic descriptions (excluding Abstract, which is handled separately)
+    // Save generic descriptions (excluding Abstract and Other, which are handled separately)
     foreach ($genericDescriptionTypes as $type => $postKey) {
-        if ($type === 'Abstract') {
-            continue; // Handle Abstract separately below
-        }
-        
         if (isset($postData[$postKey]) && !empty($postData[$postKey])) {
             $text = trim($postData[$postKey]);
             insertDescription($connection, $type, $text, $resource_id);
@@ -80,6 +74,12 @@ function saveDescriptions($connection, $postData, $resource_id)
         if (!empty($abstract_text)) {
             insertDescription($connection, 'Abstract', $abstract_text, $resource_id);
         }
+    }
+
+    // Save Other
+    if (isset($postData['descriptionOther']) && !empty($postData['descriptionOther'])) {
+        $text = trim($postData['descriptionOther']);
+        insertDescription($connection, 'Other', $text, $resource_id);
     }
 
     return true;
