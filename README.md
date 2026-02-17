@@ -1148,13 +1148,13 @@ ICGEM datasets support dual-layer description handling:
 - **DataCite Export**: Uses standard types (Abstract, Methods, TechnicalInfo, Other)
 - **ICGEM Metadata**: Preserves all custom types:
   - Abstract (standard)
-  - General Model Description (custom ICGEM)
-  - Input Data (custom ICGEM)
-  - Processing Procedures (custom ICGEM)
-  - Specific Features of Resulting Gravity Field (custom ICGEM)
+  - General model description (custom ICGEM)
+  - Input data (custom ICGEM)
+  - Processing procedures (custom ICGEM)
+  - Specific features of resulting gravity field (custom ICGEM)
   - Other (standard)
 
-Custom description types (Input Data, Processing Procedures, Specific Features) are mapped to `TechnicalInfo` in DataCite exports to ensure schema compliance, while the full original types are retained in the ICGEM metadata section.
+Custom description types (Input Data, Processing Procedures, Specific Features) are mapped to `Abstract` in DataCite exports to ensure schema compliance, while the full original types are retained in the ICGEM metadata section.
 
 #### Topographic Model Properties
 Concepts specific to models, where model type is topographic masses.

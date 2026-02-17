@@ -34,11 +34,33 @@ function saveDescriptions($connection, $postData, $resource_id)
         'Other' => 'descriptionOther'
     ];
 
+    $elmogem_specific_types = [
+        'General model description',
+        'Input data',
+        'Processing procedures',
+        'Specific features of resulting gravity field'
+    ];
+    
+    $elmogem_texts = [];
+
     // Iterate over each description type and insert if present
     foreach ($descriptionTypes as $type => $postKey) {
         if (isset($postData[$postKey]) && !empty($postData[$postKey])) {
-            insertDescription($connection, $type, $postData[$postKey], $resource_id);
+            $text = trim($postData[$postKey]);
+            insertDescription($connection, $type, $text, $resource_id);
+            
+            // Collect ELMOGEM-specific texts to append to abstract
+            if (in_array($type, $elmogem_specific_types, true)) {
+                $elmogem_texts[] = $text;
+            }
         }
+    }
+
+    // Append ELMOGEM-specific descriptions to Abstract for DataCite indexing
+    if (!empty($elmogem_texts)) {
+        $abstract_text = isset($postData['descriptionAbstract']) ? trim($postData['descriptionAbstract']) : '';
+        $combined_abstract = $abstract_text . "\n\n" . implode("\n\n", $elmogem_texts);
+        insertDescription($connection, 'Abstract', $combined_abstract, $resource_id);
     }
 
     return true;

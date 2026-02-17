@@ -487,6 +487,19 @@ class ICGEMController
     ];
 
     /**
+     * ELMOGEM-specific description types whose text is appended to Abstract during save.
+     * These texts should be removed from Abstract in ICGEM output to avoid duplication.
+     * 
+     * @var array<string>
+     */
+    private const ELMOGEM_SPECIFIC_DESCRIPTION_TYPES = [
+        'General model description',
+        'Input data',
+        'Processing procedures',
+        'Specific features of resulting gravity field'
+    ];
+
+    /**
      * Normalizes a description type to sentence case (first letter uppercase, rest lowercase).
      * This ensures consistent comparison regardless of how the value is stored in the database.
      *
@@ -499,12 +512,40 @@ class ICGEMController
     }
 
     /**
+     * Removes ELMOGEM-specific text blocks from Abstract to avoid duplication.
+     * 
+     * Removes each ELMOGEM-specific description text from the Abstract,
+     * cleaning up leading/trailing whitespace and extra line breaks.
+     *
+     * @param string $abstract The Abstract text to clean.
+     * @param array<string> $elmogem_texts Array of ELMOGEM-specific description texts.
+     * @return string The cleaned Abstract with ELMOGEM texts removed.
+     */
+    private function removeElmogEmTextFromAbstract(string $abstract, array $elmogem_texts): string
+    {
+        foreach ($elmogem_texts as $text) {
+            // Remove exact text occurrences
+            $abstract = str_replace($text, '', $abstract);
+        }
+        
+        // Clean up extra whitespace/line breaks left behind
+        $abstract = preg_replace('/\n\s*\n\s*\n+/', "\n\n", $abstract);
+        $abstract = trim($abstract);
+        
+        return $abstract;
+    }
+
+    /**
      * Retrieves and inserts all descriptions into ICGEM metadata.
      * 
      * Validates that description types match ICGEM schema enumeration using
      * case-insensitive comparison. Both the database value and the enumerated
      * constants are normalized to sentence case before comparison, ensuring
      * robustness against variations in storage casing.
+     * 
+     * For Abstract descriptions, removes any text that appears in ELMOGEM-specific
+     * description types to avoid duplication in ICGEM output (since ELMOGEM-specific
+     * texts were appended to Abstract during save for DataCite indexing).
      * 
      * Types not in the ICGEM enumeration (e.g., 'Methods', 'TechnicalInfo') 
      * are filtered out and logged.
@@ -540,8 +581,17 @@ class ICGEMController
                 self::ICGEM_DESCRIPTION_TYPES
             );
             
+            // Collect ELMOGEM-specific texts for deduplication from Abstract
+            $elmogem_texts = [];
+            foreach ($descriptions as $description) {
+                if (in_array($description['type'], self::ELMOGEM_SPECIFIC_DESCRIPTION_TYPES, true)) {
+                    $elmogem_texts[] = $description['description'];
+                }
+            }
+            
             foreach ($descriptions as $description) {
                 $dbType = $description['type'];
+                $descriptionText = $description['description'];
                 
                 // Normalize the database value using the same function
                 $normalizedDbType = $this->normalizeDescriptionType($dbType);
@@ -552,8 +602,13 @@ class ICGEMController
                     continue;
                 }
                 
+                // For Abstract, remove text that appears in ELMOGEM-specific descriptions
+                if ($normalizedDbType === 'Abstract' && !empty($elmogem_texts)) {
+                    $descriptionText = $this->removeElmogEmTextFromAbstract($descriptionText, $elmogem_texts);
+                }
+                
                 // Add to XML with validated, normalized type
-                $descriptionXml = $descriptionsXml->addChild('description', htmlspecialchars($description['description']));
+                $descriptionXml = $descriptionsXml->addChild('description', htmlspecialchars($descriptionText));
                 $descriptionXml->addAttribute('type', $normalizedDbType);
             }
         }
