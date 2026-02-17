@@ -306,7 +306,95 @@ function setupTitleTypeDropdown() {
   });
 }
 
+/**
+* Populates the select field with ID input-rights-license with options created via an API call.
+* @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
+*/
+function setupLicenseDropdown(isSoftware) {
+  const $select = $("#input-rights-license"); // Defined as $select for consistency
+  const top_licenseId = "CC-BY-4.0"; //Should be the first
+  const copyleftLicenses = ['GPL-3.0-or-later', 'EUPL-1.2']; // Should be the last
+
+  // 1. Determine the endpoint FIRST
+  const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
+
+  // Loading state
+  $select.prop("disabled", true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+      "data-translate": "general.loading",
+    })
+  );
+
+  // 2. Start the API call
+  $.getJSON(`./api/v2/${endpoint}`, function (data) {
+    let processedLicenses = [];
+
+    // Prepare the options for the dropdown menu
+    if (!isSoftware) {
+      // Non-software
+      processedLicenses = data
+        .filter(item => item.forSoftware === "0") // Only non-software
+        .sort((a, b) => {
+          // Custom Priority: If it's our target ID, move it to the top (-1)
+          if (a.rightsIdentifier === top_licenseId) return -1;
+          if (b.rightsIdentifier === top_licenseId) return 1;
+
+          // Otherwise: Standard alphabetical sort
+          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
+        });
+    } else {
+      // Software
+      processedLicenses = data
+        .filter(item => item.forSoftware === "1") // Only software licenses
+        .sort((a, b) => {
+          const aIsCopyleft = copyleftLicenses.includes(a.rightsIdentifier);
+          const bIsCopyleft = copyleftLicenses.includes(b.rightsIdentifier);
+          
+          if (aIsCopyleft !== bIsCopyleft) {
+            return aIsCopyleft ? 1 : -1; // Non-copyleft first
+          }
+          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
+        });
+    }
+    // Clear existing options
+    $select.empty()
+
+    // Include them into the dropdown
+    processedLicenses.forEach(license => {
+      const option = $("<option>", {
+        value: license.rights_id,
+        text: `${license.text} (${license.rightsIdentifier})`,
+        title: license.description || license.text
+      });
+
+      if (license.rightsIdentifier === "CC-BY-4.0") {
+        option.prop("selected", true);
+      }
+
+      $select.append(option);
+    });
+
+    $select.prop("disabled", false).trigger("change");
+
+  }).fail(function (jqXHR, textStatus, errorThrown) {
+    // Fallback: use CC-BY-4.0 (rights_id=1) if API call fails
+    console.error("Error loading licenses:", textStatus, errorThrown);
+    $select.empty().append(
+      $("<option>", {
+        value: "1",
+        text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
+        selected: true
+      })
+    );
+
+    $select.prop("disabled", false).trigger("change");
+  });
+}
+
 // Make functions available globally (important for tests)
+window.setupLicenseDropdown = setupLicenseDropdown;
 window.setupLanguageDropdown = setupLanguageDropdown;
 window.setupResourceTypeDropdown = setupResourceTypeDropdown;
 window.setupTitleTypeDropdown = setupTitleTypeDropdown;
@@ -567,9 +655,9 @@ function populateLicenseDropdownWithData(licenses) {
       $select.append($option);
     });
   } else {
-    // Fallback
+    // Fallback: use CC-BY-4.0 (rights_id=1)
     $select.append($("<option>", {
-      value: "CC-BY-4.0",
+      value: "1",
       text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
       selected: true
     }));
@@ -639,45 +727,6 @@ $(document).ready(function () {
   // Use parallel initialization for faster page load
   initializeAllDropdownsParallel();
   
-  /**
-  * Populates the select field with ID input-rights-license with options created via an API call.
-  * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
-  */
-  function setupLicenseDropdown(isSoftware) {
-    $("#input-rights-license").empty();
-
-    const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
-    $.getJSON(`./api/v2/${endpoint}`, function (data) {
-      var defaultOptionSet = false;
-
-      $.each(data, function (key, val) {
-        var option = $("<option>", {
-          value: val.rights_id,
-          text: val.text + " (" + val.rightsIdentifier + ")",
-        });
-
-        if (val.rightsIdentifier === "CC-BY-4.0") {
-          option.prop("selected", true);
-          defaultOptionSet = true;
-        }
-
-        $("#input-rights-license").append(option);
-      });
-
-      // Trigger change event to ensure any listeners are notified
-      $("#input-rights-license").trigger("change");
-    }).fail(function (jqXHR, textStatus, errorThrown) {
-      console.error("Fehler beim Laden der Lizenzen:", textStatus, errorThrown);
-      // Fallback: Default-Option hinzufügen
-      $("#input-rights-license").append($("<option>", {
-        value: "CC-BY-4.0",
-        text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
-        selected: true,
-      }));
-      $("#input-rights-license").trigger("change");
-    });
-  }
-
   // Event handler to monitor if the resource type is changed
   // Only reload licenses when user actually selects a resource type (not on initial load)
   $("#input-resourceinformation-resourcetype").change(function () {
@@ -691,9 +740,9 @@ $(document).ready(function () {
 
     // Check if "Software" is selected
     if (selectedResourceType === "Software") {
-      setupLicenseDropdown(true);
+      window.setupLicenseDropdown(true);
     } else {
-      setupLicenseDropdown(false);
+      window.setupLicenseDropdown(false);
     }
   });
 

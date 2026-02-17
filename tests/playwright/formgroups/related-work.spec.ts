@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { promises as fs, readFileSync } from 'node:fs';
-import { APP_BASE_URL, registerStaticAssetRoutes, REPO_ROOT, SELECTORS } from '../utils';
+// import { APP_BASE_URL, registerStaticAssetRoutes, REPO_ROOT, SELECTORS } from '../utils';
+import { APP_BASE_URL, registerStaticAssetRoutes, REPO_ROOT, simulateSubmitValidation, SELECTORS } from '../utils';
 
 const relationsFixture = {
   relations: [
@@ -190,6 +191,7 @@ test.describe('Related work form group', () => {
     await identifierInput.blur();
     await page.waitForTimeout(400);
 
+    await simulateSubmitValidation(page);
     await expect(relationSelect).toHaveAttribute('required', 'required');
     await expect(identifierInput).toHaveAttribute('required', 'required');
     await expect(identifierTypeSelect).toHaveAttribute('required', 'required');

@@ -238,9 +238,9 @@ function createDatabaseStructure($connection): array
         "Title" => "CREATE TABLE IF NOT EXISTS `Title` (
     `title_id` INT NOT NULL AUTO_INCREMENT,
     `text` VARCHAR(256) NOT NULL,
-    `Title_Type_fk` INT NOT NULL,
+    `Title_Type_fk` INT NULL,
     `Resource_resource_id` INT NOT NULL,
-    PRIMARY KEY (`title_id`, `Title_Type_fk`, `Resource_resource_id`),
+    PRIMARY KEY (`title_id`),
     FOREIGN KEY (`Title_Type_fk`)
     REFERENCES `Title_Type` (`title_type_id`),
     FOREIGN KEY (`Resource_resource_id`)
@@ -369,8 +369,8 @@ function createDatabaseStructure($connection): array
         "Related_Work" => "CREATE TABLE IF NOT EXISTS `Related_Work` (
     `related_work_id` INT NOT NULL AUTO_INCREMENT,
     `Identifier` VARCHAR(245) NOT NULL,
-    `relation_fk` INT NOT NULL,
-    `identifier_type_fk`INT NOT NULL,
+    `relation_fk` INT NULL,
+    `identifier_type_fk`INT NULL,
     PRIMARY KEY (`related_work_id`),
     FOREIGN KEY (`relation_fk`)
     REFERENCES `Relation` (`relation_id`),
