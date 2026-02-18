@@ -135,6 +135,7 @@ const MOCK_LICENSES = [
     rights_id: 1,
     text: 'Creative Commons Attribution 4.0 International',
     rightsIdentifier: 'CC-BY-4.0',
+    forSoftware: '0',
   },
 ];
 
