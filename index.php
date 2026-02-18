@@ -73,7 +73,11 @@ if ($showContributorInstitutions) {
 if ($showMslLabs) {
     include $baseDir . 'formgroups/originatingLaboratory.html';
 }
-include $baseDir . 'formgroups/descriptions.html';
+if ($showGGMsProperties) {
+    include $baseDir . 'formgroups/GGMsDescriptions.html';
+} else {
+    include $baseDir . 'formgroups/descriptions.html';
+}
 if ($showMslVocabs) {
     include $baseDir . 'formgroups/mslKeywords.html';
 }
