@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { REPO_ROOT, SELECTORS } from '../utils';
+import { injectScript, injectStylesheet } from '../utils/assets';
 
 declare const translations: any;
 
@@ -80,14 +81,14 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
 
     await page.goto(TEST_ROUTE_PATH);
 
-    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
-    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.css') });
-    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/jstree/dist/themes/default/style.min.css') });
+    await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
+    await injectStylesheet(page, 'node_modules/@yaireo/tagify/dist/tagify.css');
+    await injectStylesheet(page, 'node_modules/jstree/dist/themes/default/style.min.css');
 
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery/dist/jquery.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jstree/dist/jstree.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.js') });
+    await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
+    await injectScript(page, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js');
+    await injectScript(page, 'node_modules/jstree/dist/jstree.min.js');
+    await injectScript(page, 'node_modules/@yaireo/tagify/dist/tagify.js');
 
     await page.evaluate(() => {
       (window as any).translations = {
@@ -114,7 +115,7 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
       };
     });
 
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'js/thesauri.js') });
+    await injectScript(page, 'js/thesauri.js');
 
     await page.evaluate(() => {
       if (typeof (window as any).__setupLanguageHandlers === 'function') {
