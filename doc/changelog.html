@@ -6,7 +6,7 @@
             <button class="accordion-button" type="button" data-bs-toggle="collapse"
                 data-bs-target="#collapse-changelog-version11" aria-expanded="true"
                 aria-controls="collapse-changelog-version11">
-                Version 2.0.6 - 2026/00/00
+                Version 2.0.6 - 2026/02/17
             </button>
         </h2>
         <div id="collapse-changelog-version11" class="accordion-collapse collapse show"
@@ -17,21 +17,22 @@
                         <ul>
                             <li>Resource Types dropdown now fetches values from ERNIE API for centralized vocabulary management</li>
                             <li>Caching Resource Types with configurable TTL (default: 6 hours)</li>
+                            <li>Simplified the license choice: the selection and help section changes dynamically based on the resource type.</li>
                         </ul>
                     </li>
                     <li><strong>Fixes:</strong>
                         <ul>
                             <li>ICGEM description types now properly captured: Methods, TechnicalInfo, and custom GGM types (Input Data, Processing Procedures, Specific Features of Resulting Gravity Field)</li>
                             <li>Debugged Titles and Title Types in the Resource Information from group</li>
+                            <li>Debugged Spatio-temporal coverage form group: backend and database scripts. Validation is entirely skipped on save.</li>                            
+                            <li>Debugged Titles and Title Types in the Resource Information from group. Validation is entirely skipped on save.</li>
+                            <li>Improved the logic for back-end validation</li>
+
                         </ul>
                     </li>
                     <li><strong>Documentation:</strong>
                         <ul>
                             <li>Dynamic help for Resource Types in ELMO Guide</li>
-                        </ul>
-                    </li>
-                    <li><strong>Chore:</strong>
-                        <ul>
                         </ul>
                     </li>
                 </ul>
