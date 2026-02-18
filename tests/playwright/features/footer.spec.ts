@@ -43,18 +43,14 @@ test.describe('Footer Tests', () => {
     await elmoGuide.click();
   });
 
-  test('Verify legal notice button opens correct link', async ({ page }) => {
+  test('Verify legal notice button opens correct link', async ({ page, context }) => {
     await page.goto('');
     
     const legalNoticeButton = page.locator('#buttonLegalNotice');
     
-    const pagePromise = page.context().waitForEvent('page');
-    await legalNoticeButton.click();
-    const legalNoticePage = await pagePromise;
-    
-    await legalNoticePage.waitForLoadState('domcontentloaded');
-    await expect(legalNoticePage).toHaveURL(/legal-notice/);
-    await legalNoticePage.close();
+    // For external links, we verify the href attribute instead of navigating
+    await expect(legalNoticeButton).toHaveAttribute('href', /https:\/\/dataservices\.gfz\.de.*legal-notice/);
+    await expect(legalNoticeButton).toHaveAttribute('target', '_blank');
   });
 
   test('Verify privacy policy button opens correct link', async ({ page }) => {
