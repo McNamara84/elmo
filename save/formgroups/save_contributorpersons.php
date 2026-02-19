@@ -16,6 +16,10 @@ function saveContributorPersons($connection, $postData, $resource_id)
 
     $valid_roles = getValidRoles($connection);
 
+    // Validate only on submit
+    $action = $postData['action'] ?? 'save_and_download';
+
+
     if (
         !isset(
         $postData['cbPersonLastname'],
@@ -45,9 +49,11 @@ function saveContributorPersons($connection, $postData, $resource_id)
         $entry['orcid'] = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $entry['orcid']);
         $entry['orcid'] = trim($entry['orcid']);
 
-        if (!validateContributorPersonDependencies($entry)) {
-            $allSuccessful = false;
-            continue;
+        if ($action === 'submit') {
+            if (!validateContributorPersonDependencies($entry)) {
+                $allSuccessful = false;
+                continue;
+            }
         }
         // Skip if no data provided
         if (empty($entry['lastname']) && empty($entry['firstname']) && empty($entry['orcid']) && empty($entry['roles'])) {

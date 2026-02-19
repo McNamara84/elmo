@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Header Tests', () => {
 
   test('header contains GFZ and Data Services logos', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('');
 
     // Check GFZ logo
     const gfzLogo = page.locator('header img[alt="GFZ Logo"]');
@@ -15,7 +15,7 @@ test.describe('Header Tests', () => {
   });
 
   test('header contains help, mode and language dropdowns', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('');
 
     const helpButton = page.locator('#bd-help');
     const modeButton = page.locator('#bd-theme');
@@ -27,7 +27,7 @@ test.describe('Header Tests', () => {
   });
 
   test('subheader displays instance title', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('');
 
     // The subheader should contain the instance title
     const subheader = page.locator('section[aria-label="Page subheader"] .fs-5');
@@ -38,7 +38,7 @@ test.describe('Header Tests', () => {
   });
 
   test('subheader title matches expected format', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('');
 
     const subheader = page.locator('section[aria-label="Page subheader"] .fs-5');
     const titleText = await subheader.textContent();
@@ -55,7 +55,7 @@ test.describe('Header Tests', () => {
   });
 
   test('GFZ logo links to gfz.de', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('');
 
     const gfzLogoLink = page.locator('header a[href="https://www.gfz.de/"]');
     await expect(gfzLogoLink).toBeVisible();
@@ -63,7 +63,7 @@ test.describe('Header Tests', () => {
   });
 
   test('Data Services logo links to dataservices.gfz.de', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('');
 
     const dataServicesLink = page.locator('header a[href="https://dataservices.gfz.de/web/"]');
     await expect(dataServicesLink).toBeVisible();

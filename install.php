@@ -238,9 +238,9 @@ function createDatabaseStructure($connection): array
         "Title" => "CREATE TABLE IF NOT EXISTS `Title` (
     `title_id` INT NOT NULL AUTO_INCREMENT,
     `text` VARCHAR(256) NOT NULL,
-    `Title_Type_fk` INT NOT NULL,
+    `Title_Type_fk` INT NULL,
     `Resource_resource_id` INT NOT NULL,
-    PRIMARY KEY (`title_id`, `Title_Type_fk`, `Resource_resource_id`),
+    PRIMARY KEY (`title_id`),
     FOREIGN KEY (`Title_Type_fk`)
     REFERENCES `Title_Type` (`title_type_id`),
     FOREIGN KEY (`Resource_resource_id`)
@@ -295,7 +295,7 @@ function createDatabaseStructure($connection): array
 
         "Description" => "CREATE TABLE IF NOT EXISTS `Description` (
     `description_id` INT NOT NULL AUTO_INCREMENT,
-    `type` VARCHAR(22) NOT NULL,
+    `type` VARCHAR(127) NOT NULL,
     `description` TEXT NOT NULL,
     `resource_id` INT NOT NULL,
     PRIMARY KEY (`description_id`),
@@ -369,8 +369,8 @@ function createDatabaseStructure($connection): array
         "Related_Work" => "CREATE TABLE IF NOT EXISTS `Related_Work` (
     `related_work_id` INT NOT NULL AUTO_INCREMENT,
     `Identifier` VARCHAR(245) NOT NULL,
-    `relation_fk` INT NOT NULL,
-    `identifier_type_fk`INT NOT NULL,
+    `relation_fk` INT NULL,
+    `identifier_type_fk`INT NULL,
     PRIMARY KEY (`related_work_id`),
     FOREIGN KEY (`relation_fk`)
     REFERENCES `Relation` (`relation_id`),
@@ -1064,13 +1064,13 @@ function insertTestResourceData($connection)
         ],
 
         "GGM_Definition" => [
-            ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field"],
-            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field"]
+            ["Model_Name" => "GRACE-FO Geopotential GSM Coefficients GFZ RL06.3", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Model_type_id" => 2, "Mathematical_representation_id" => 1, "File_format_id" => 1],
+            ["Model_Name" => "ROLI_EllApprox_SphN_3660", "Celestial_Body" => "Earth", "Product_Type" => "gravity_field", "Model_type_id" => 3, "Mathematical_representation_id" => 1, "File_format_id" => 1]
         ],
 
         "GGM_Properties" => [
-            ["Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide", "degree" => 60, "radius" => null, "earth_gravity_constant" => null, "Model_type_id" => 2, "Mathematical_representation_id" => 1, "File_format_id" => 1],
-            ["Errors" => "no", "Error_Handling_Approach" => null, "Tide_System" => "unknown", "degree" => 3660, "radius" => null, "earth_gravity_constant" => null, "Model_type_id" => 3, "Mathematical_representation_id" => 1, "File_format_id" => 1]
+            ["Errors" => "formal", "Error_Handling_Approach" => null, "Tide_System" => "zero-tide", "degree" => 60, "radius" => 6371.009, "earth_gravity_constant" => 3.986004415e+14],
+            ["Errors" => "no", "Error_Handling_Approach" => null, "Tide_System" => "unknown", "degree" => 3660, "radius" => 6371.200, "earth_gravity_constant" => 3.986004418e+14]
         ],
     ];
 

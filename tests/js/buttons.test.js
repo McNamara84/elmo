@@ -49,6 +49,12 @@ describe('buttons.js', () => {
     window.showConfirmationModal = jest.fn();
     window.open = jest.fn();
     localStorage.clear();
+
+    window.validateFundingReferenceRequirements = jest.fn();
+    window.validateRelatedWorkRequirements = jest.fn();
+    window.validateSpatialTemporalCoverageRequirements = jest.fn();
+    window.validateContributorOrganisationRequirements = jest.fn();
+    window.validateContributorPersonRequirements = jest.fn();
   });
 
   afterEach(() => {
@@ -161,6 +167,13 @@ describe('buttons.js', () => {
     expect(field2.hasAttribute('required')).toBe(false);
     expect(field1.classList.contains('is-invalid')).toBe(false);
     expect(field2.classList.contains('is-invalid')).toBe(false);
+
+    // Save must NOT trigger submit validators
+    expect(window.validateFundingReferenceRequirements).not.toHaveBeenCalled();
+    expect(window.validateRelatedWorkRequirements).not.toHaveBeenCalled();
+    expect(window.validateSpatialTemporalCoverageRequirements).not.toHaveBeenCalled();
+    expect(window.validateContributorOrganisationRequirements).not.toHaveBeenCalled();
+    expect(window.validateContributorPersonRequirements).not.toHaveBeenCalled();
   });
 
   test('Submit button enforces required on js-required-on-submit fields and triggers HTML5 validation', () => {
@@ -178,6 +191,13 @@ describe('buttons.js', () => {
     expect(field2.hasAttribute('required')).toBe(true);
     expect(clickEvent.isDefaultPrevented()).toBe(true);
     expect(form.classList.contains('was-validated')).toBe(true);
+
+    // Validators must run on Submit
+    expect(window.validateFundingReferenceRequirements).toHaveBeenCalledTimes(1);
+    expect(window.validateRelatedWorkRequirements).toHaveBeenCalledTimes(1);
+    expect(window.validateSpatialTemporalCoverageRequirements).toHaveBeenCalledTimes(1);
+    expect(window.validateContributorOrganisationRequirements).toHaveBeenCalledTimes(1);
+    expect(window.validateContributorPersonRequirements).toHaveBeenCalledTimes(1);
 
     checkSpy.mockRestore();
   });
