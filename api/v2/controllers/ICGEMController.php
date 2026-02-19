@@ -250,11 +250,11 @@ class ICGEMController
         $descriptions = [];
         $stmt = $connection->prepare("
         SELECT 
-            rd.section as section,
-            rd.description as description
-        FROM Resource_Description rd
-        WHERE rd.resource_id = ?
-        ORDER BY rd.section ASC
+            d.type as section,
+            d.description as description
+        FROM Description d
+        WHERE d.resource_id = ?
+        ORDER BY d.type ASC
         ");
         if (!$stmt) {
             $this->logger && $this->logger->error("Prepare failed for Resource Descriptions: " . $connection->error);
@@ -383,18 +383,54 @@ class ICGEMController
                     $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', htmlspecialchars($dataSource['description']), self::ICGEM_NAMESPACE_URI);
                 }
                 
-                // Satellite-specific fields
-                if (!empty($dataSource['S_value_name'])) {
-                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteValueName', htmlspecialchars($dataSource['S_value_name']), self::ICGEM_NAMESPACE_URI);
-                }
-                if (!empty($dataSource['S_value_uri'])) {
-                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteValueUri', htmlspecialchars($dataSource['S_value_uri']), self::ICGEM_NAMESPACE_URI);
-                }
-                if (!empty($dataSource['S_scheme_name'])) {
-                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteSchemeName', htmlspecialchars($dataSource['S_scheme_name']), self::ICGEM_NAMESPACE_URI);
-                }
-                if (!empty($dataSource['S_scheme_uri'])) {
-                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteSchemeUri', htmlspecialchars($dataSource['S_scheme_uri']), self::ICGEM_NAMESPACE_URI);
+                // Handle different source types
+                switch ($dataSource['type']) {
+                    case 'S': // Satellite
+                        if (!empty($dataSource['S_value_name'])) {
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteValueName', htmlspecialchars($dataSource['S_value_name']), self::ICGEM_NAMESPACE_URI);
+                        }
+                        if (!empty($dataSource['S_value_uri'])) {
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteValueUri', htmlspecialchars($dataSource['S_value_uri']), self::ICGEM_NAMESPACE_URI);
+                        }
+                        if (!empty($dataSource['S_scheme_name'])) {
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteSchemeName', htmlspecialchars($dataSource['S_scheme_name']), self::ICGEM_NAMESPACE_URI);
+                        }
+                        break;
+                    
+                    case 'G': // Ground data
+                        if (!empty($dataSource['details'])) {
+                            $groundDetailElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':groundDetail', null, self::ICGEM_NAMESPACE_URI);
+                            $groundDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', htmlspecialchars($dataSource['details']), self::ICGEM_NAMESPACE_URI);
+                        }
+                        break;
+                    
+                    case 'A': // Altimetry
+                        if (!empty($dataSource['details'])) {
+                            $altimetryDetailElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':altimetryDetail', null, self::ICGEM_NAMESPACE_URI);
+                            $altimetryDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', htmlspecialchars($dataSource['details']), self::ICGEM_NAMESPACE_URI);
+                        }
+                        break;
+                    
+                    case 'T': // Topographic/Elevation Terrain
+                        if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
+                            $elevTerrainElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':elevationTerrainDetail', null, self::ICGEM_NAMESPACE_URI);
+                            $compDepthElement = $elevTerrainElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']), self::ICGEM_NAMESPACE_URI);
+                            $compDepthElement->addAttribute('uom', 'm');
+                        }
+                        break;
+                    
+                    case 'M': // Model
+                        $modelDetailElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelDetail', null, self::ICGEM_NAMESPACE_URI);
+                        if (!empty($dataSource['M_identifier'])) {
+                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifier', htmlspecialchars($dataSource['M_identifier']), self::ICGEM_NAMESPACE_URI);
+                        }
+                        if (!empty($dataSource['M_identifier_type'])) {
+                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifierType', htmlspecialchars($dataSource['M_identifier_type']), self::ICGEM_NAMESPACE_URI);
+                        }
+                        if (!empty($dataSource['M_name'])) {
+                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':name', htmlspecialchars($dataSource['M_name']), self::ICGEM_NAMESPACE_URI);
+                        }
+                        break;
                 }
             }
         }
