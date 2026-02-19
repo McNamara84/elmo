@@ -11,8 +11,6 @@ import exampleData from './inputDataEndToEnd.json';
  * @returns {Promise<void>}
  */
 export async function completeMinimalDatasetForm(page: Page) {
-  // Wait for page to fully load with all assets and styles
-  await page.waitForLoadState('networkidle');
   
   await page.getByRole('textbox', { name: 'Publication Year (YYYY)*' }).fill('2025');
   await page.getByLabel('Resource Type*').selectOption('5');

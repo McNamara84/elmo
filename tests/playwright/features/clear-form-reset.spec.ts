@@ -319,7 +319,6 @@ test.describe('Metadata form reset', () => {
   });
 
   test('clears populated form groups and restores a pristine state', async ({ page }) => {
-    await completeMinimalDatasetForm(page);
 
     const authorRows = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`);
     const firstAuthorRow = authorRows.first();
