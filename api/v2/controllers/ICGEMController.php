@@ -28,6 +28,7 @@ class ICGEMController
         // Get all GGM data in one query
         $stmt = $connection->prepare("
             SELECT 
+                r.year as publication_year,
                 mt.name as model_type_name, 
                 mr.name as mathematical_representation_name, 
                 ff.name as file_format_name,
@@ -298,8 +299,9 @@ class ICGEMController
             if (!empty($ggmData['model_name'])) {
                 $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelName', htmlspecialchars($ggmData['model_name']), self::ICGEM_NAMESPACE_URI);
             }
-            // Note: publicationYear should come from Resource table
-            // $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':publicationYear', ..., self::ICGEM_NAMESPACE_URI);
+            if (!empty($ggmData['publication_year'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':publicationYear', htmlspecialchars($ggmData['publication_year']), self::ICGEM_NAMESPACE_URI);
+            }
             if (!empty($ggmData['model_type_name'])) {
                 $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelType', htmlspecialchars($ggmData['model_type_name']), self::ICGEM_NAMESPACE_URI);
             }
