@@ -411,7 +411,7 @@ async function addAuthor(
   await authorRow.locator('[id^="input-author-firstname"]').fill(data.firstName);
 
   // Fill affiliation using tagify within the author row
-  const affiliationTagifyInput = authorRow.locator('.tagify__input');
+  const affiliationTagifyInput = authorRow.locator('.tagify__input[title="Affiliation"]');
   await affiliationTagifyInput.click();
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');
