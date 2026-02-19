@@ -11,6 +11,9 @@ import exampleData from './inputDataEndToEnd.json';
  * @returns {Promise<void>}
  */
 export async function completeMinimalDatasetForm(page: Page) {
+  // Wait for page to fully load with all assets and styles
+  await page.waitForLoadState('networkidle');
+  
   await page.getByRole('textbox', { name: 'Publication Year (YYYY)*' }).fill('2025');
   await page.getByLabel('Resource Type*').selectOption('5');
   await page.getByLabel('Language of dataset*').selectOption('1');
@@ -412,6 +415,7 @@ async function addAuthor(
 
   // Fill affiliation using tagify within the author row
   const affiliationTagifyInput = authorRow.locator('.tagify__input[title="Affiliation"]');
+  await affiliationTagifyInput.waitFor({ state: 'visible', timeout: 5000 });
   await affiliationTagifyInput.click();
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');
