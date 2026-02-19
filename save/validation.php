@@ -172,6 +172,7 @@ function validateSTCDependencies($entry)
     return true;
 }
 
+
 /**
  * Validates related work entries.
  * If any field in a row is filled, all fields in that row must be filled.

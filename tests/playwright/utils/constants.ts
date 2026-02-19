@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-export const APP_BASE_URL = process.env.CI ? 'http://localhost/elmo/' : 'http://localhost:8080/';
+export const APP_BASE_URL = process.env.APP_BASE_URL || (process.env.CI ? 'http://localhost/elmo/' : 'http://localhost:8080/');
 
 export const SELECTORS = {
   navigation: {

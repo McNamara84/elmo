@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { APP_BASE_URL, registerStaticAssetRoutes, SELECTORS } from '../utils';
+import { APP_BASE_URL, registerStaticAssetRoutes, SELECTORS, simulateSubmitValidation  } from '../utils';
 
 const contributorInstitutionsMarkup = String.raw`
 <div class="card mb-2">
@@ -252,6 +252,8 @@ test.describe('Contributor (Institutions) form group', () => {
       (window as any).validateAllMandatoryFields();
     });
 
+    await simulateSubmitValidation(page); 
+
     await expect(nameInput).toHaveAttribute('required', 'required');
     await expect(roleInput).toHaveAttribute('required', 'required');
 
@@ -260,6 +262,8 @@ test.describe('Contributor (Institutions) form group', () => {
       affiliationInput._tagify.removeAllTags();
       (window as any).validateAllMandatoryFields();
     });
+
+    await simulateSubmitValidation(page); 
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');
     await expect(roleInput).not.toHaveAttribute('required', 'required');
