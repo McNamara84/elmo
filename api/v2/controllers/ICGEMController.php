@@ -331,7 +331,7 @@ class ICGEMController
 
         if ($dataSources) {
             foreach ($dataSources as $dataSource) {
-                $dsElement = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSources', null, self::ICGEM_NAMESPACE_URI);
+                $dsElement = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSource', null, self::ICGEM_NAMESPACE_URI);
                 
                 // Map type code to human-readable name
                 $sourceType = $typeMap[$dataSource['type']] ?? $dataSource['type'];
