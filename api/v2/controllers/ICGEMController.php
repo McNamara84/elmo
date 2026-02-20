@@ -245,55 +245,6 @@ class ICGEMController
     }
 
     /**
-     * Retrieves descriptions for a given resource.
-     *
-     * @param mysqli $connection The database connection.
-     * @param int $resource_id The ID of the resource.
-     * @return array<mixed> An array of descriptions with section information.
-     */
-    function getDescriptions(mysqli $connection, int $resource_id): array
-    {
-        $descriptions = [];
-        $stmt = $connection->prepare("
-        SELECT 
-            d.type as section,
-            d.description as description
-        FROM Description d
-        WHERE d.resource_id = ?
-        ORDER BY d.type ASC
-        ");
-        if (!$stmt) {
-            $this->logger && $this->logger->error("Prepare failed for Resource Descriptions: " . $connection->error);
-            return [];
-        }
-        $stmt->bind_param('i', $resource_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        while ($row = $result->fetch_assoc()) {
-            $descriptions[] = $row;
-        }
-        return $descriptions;
-    }
-    /**
-     * Inserts descriptions into the XML at root level.
-     *
-     * @param SimpleXMLElement $xml The XML element to insert into.
-     * @param array<int, array<string, mixed>> $descriptions The descriptions to insert.
-     */
-    protected function insertDescriptions(SimpleXMLElement $xml, array $descriptions): void
-    {
-        if ($descriptions) {
-            foreach ($descriptions as $desc) {
-                if (!empty($desc['description'])) {
-                    $descElement = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', htmlspecialchars($desc['description']), self::ICGEM_NAMESPACE_URI);
-                    $section = !empty($desc['section']) ? htmlspecialchars($desc['section']) : 'General model description';
-                    $descElement->addAttribute('section', $section);
-                }
-            }
-        }
-    }
-
-    /**
      * Inserts spherical harmonic model core properties into the sphericalHarmonicModel element.
      *
      * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
@@ -725,7 +676,6 @@ class ICGEMController
         );
 
         // 3. Fetch all the ICGEM-specific data
-        $descriptions = $this->getDescriptions($this->connection, $id);
         $dataSources = $this->getDataSources($this->connection, $id);
         $topographicProperties = $this->getTopographicModelProperties($this->connection, $id);
         $temporalProperties = $this->getTemporalModelProperties($this->connection, $id);
@@ -733,7 +683,7 @@ class ICGEMController
         $ellipsoidalParameters = $this->getEllipsoidalParameters($this->connection, $id);
 
         // 4. Insert descriptions at root level
-        $this->insertDescriptions($xml, $descriptions);
+        $this->insertDescriptions($xml, $id);
 
         // 5. Create sphericalHarmonicModel container
         $shm = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':sphericalHarmonicModel', null, self::ICGEM_NAMESPACE_URI);
