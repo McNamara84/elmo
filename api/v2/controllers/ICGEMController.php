@@ -14,6 +14,7 @@ class ICGEMController
         $this->connection = $connection;
         $this->logger = null; // Optional logger
     }
+//----------------------------------DATA RETRIEVAL FUNCTIONS FOR ICGEM XML CREATION---------------------------------    
     /**
      * Retrieves GGM essential variables for a given resource id
      *
@@ -243,7 +244,7 @@ class ICGEMController
         $result = $stmt->get_result();
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-
+// ---------------------------------INSERTION FUNCTIONS FOR ICGEM XML CREATION--------------------------------- 
     /**
      * Inserts spherical harmonic model core properties into the sphericalHarmonicModel element.
      *
@@ -254,34 +255,34 @@ class ICGEMController
     {
         if ($ggmData) {
             if (!empty($ggmData['model_name'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelName', htmlspecialchars($ggmData['model_name']), self::ICGEM_NAMESPACE_URI);
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelName', $this->prepare($ggmData['model_name'], 'modelName'), self::ICGEM_NAMESPACE_URI);
             }
             if (!empty($ggmData['publication_year'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':publicationYear', htmlspecialchars($ggmData['publication_year']), self::ICGEM_NAMESPACE_URI);
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':publicationYear', $this->prepare($ggmData['publication_year'], 'publicationYear'), self::ICGEM_NAMESPACE_URI);
             }
             if (!empty($ggmData['model_type_name'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelType', htmlspecialchars($ggmData['model_type_name']), self::ICGEM_NAMESPACE_URI);
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelType', $this->prepare($ggmData['model_type_name'], 'modelType'), self::ICGEM_NAMESPACE_URI);
             }
             if (!empty($ggmData['mathematical_representation_name'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mathematicalRepresentation', htmlspecialchars($ggmData['mathematical_representation_name']), self::ICGEM_NAMESPACE_URI);
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mathematicalRepresentation', $this->prepare($ggmData['mathematical_representation_name'], 'mathematicalRepresentation'), self::ICGEM_NAMESPACE_URI);
             }
             if (!empty($ggmData['product_type'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':productType', htmlspecialchars($ggmData['product_type']), self::ICGEM_NAMESPACE_URI);
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':productType', $this->prepare($ggmData['product_type'], 'productType'), self::ICGEM_NAMESPACE_URI);
             }
             if (!empty($ggmData['file_format_name'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':fileFormat', htmlspecialchars($ggmData['file_format_name']), self::ICGEM_NAMESPACE_URI);
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':fileFormat', $this->prepare($ggmData['file_format_name'], 'fileFormat'), self::ICGEM_NAMESPACE_URI);
             }
             if (!empty($ggmData['tide_system'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':tideSystem', htmlspecialchars($ggmData['tide_system']), self::ICGEM_NAMESPACE_URI);
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':tideSystem', $this->prepare($ggmData['tide_system'], 'tideSystem'), self::ICGEM_NAMESPACE_URI);
             }
             if (!empty($ggmData['degree'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':degreeOrderMax', htmlspecialchars($ggmData['degree']), self::ICGEM_NAMESPACE_URI);
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':degreeOrderMax', $this->prepare($ggmData['degree'], 'degreeOrderMax'), self::ICGEM_NAMESPACE_URI);
             }
             if (!empty($ggmData['earth_gravity_constant'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':earthGravityConstant', htmlspecialchars($ggmData['earth_gravity_constant']), self::ICGEM_NAMESPACE_URI);
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':earthGravityConstant', $this->prepare($ggmData['earth_gravity_constant'], 'earthGravityConstant'), self::ICGEM_NAMESPACE_URI);
             }
             if (!empty($ggmData['radius'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':radius', htmlspecialchars($ggmData['radius']), self::ICGEM_NAMESPACE_URI);
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':radius', $this->prepare($ggmData['radius'], 'radius'), self::ICGEM_NAMESPACE_URI);
             }
         }
     }
@@ -296,7 +297,7 @@ class ICGEMController
     {
         if (!empty($ggmData['errors'])) {
             $errorsElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errors', null, self::ICGEM_NAMESPACE_URI);
-            $errorsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorsType', htmlspecialchars($ggmData['errors']), self::ICGEM_NAMESPACE_URI);
+            $errorsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorsType', $this->prepare($ggmData['errors'], 'errorsType'), self::ICGEM_NAMESPACE_URI);
         }
     }
 
@@ -309,7 +310,7 @@ class ICGEMController
     protected function insertErrorHandling(SimpleXMLElement $shm, array $ggmData): void
     {
         if (!empty($ggmData['error_handling_approach'])) {
-            $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorHandling', htmlspecialchars($ggmData['error_handling_approach']), self::ICGEM_NAMESPACE_URI);
+            $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorHandling', $this->prepare($ggmData['error_handling_approach'], 'errorHandling'), self::ICGEM_NAMESPACE_URI);
         }
     }
     /**
@@ -334,44 +335,44 @@ class ICGEMController
                 
                 // Map type code to human-readable name
                 $sourceType = $typeMap[$dataSource['type']] ?? $dataSource['type'];
-                $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSourceType', htmlspecialchars($sourceType), self::ICGEM_NAMESPACE_URI);
+                $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSourceType', $this->prepare($sourceType, 'inputDataSourceType'), self::ICGEM_NAMESPACE_URI);
                 
                 if (!empty($dataSource['description'])) {
-                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', htmlspecialchars($dataSource['description']), self::ICGEM_NAMESPACE_URI);
+                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['description'], 'description'), self::ICGEM_NAMESPACE_URI);
                 }
                 
                 // Handle different source types
                 switch ($dataSource['type']) {
                     case 'S': // Satellite
                         if (!empty($dataSource['S_value_name'])) {
-                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteValueName', htmlspecialchars($dataSource['S_value_name']), self::ICGEM_NAMESPACE_URI);
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteValueName', $this->prepare($dataSource['S_value_name'], 'satelliteValueName'), self::ICGEM_NAMESPACE_URI);
                         }
                         if (!empty($dataSource['S_value_uri'])) {
-                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteValueUri', htmlspecialchars($dataSource['S_value_uri']), self::ICGEM_NAMESPACE_URI);
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteValueUri', $this->prepare($dataSource['S_value_uri'], 'satelliteValueUri'), self::ICGEM_NAMESPACE_URI);
                         }
                         if (!empty($dataSource['S_scheme_name'])) {
-                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteSchemeName', htmlspecialchars($dataSource['S_scheme_name']), self::ICGEM_NAMESPACE_URI);
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteSchemeName', $this->prepare($dataSource['S_scheme_name'], 'satelliteSchemeName'), self::ICGEM_NAMESPACE_URI);
                         }
                         break;
                     
                     case 'G': // Ground data
                         if (!empty($dataSource['details'])) {
                             $groundDetailElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':groundDetail', null, self::ICGEM_NAMESPACE_URI);
-                            $groundDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', htmlspecialchars($dataSource['details']), self::ICGEM_NAMESPACE_URI);
+                            $groundDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
                         }
                         break;
                     
                     case 'A': // Altimetry
                         if (!empty($dataSource['details'])) {
                             $altimetryDetailElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':altimetryDetail', null, self::ICGEM_NAMESPACE_URI);
-                            $altimetryDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', htmlspecialchars($dataSource['details']), self::ICGEM_NAMESPACE_URI);
+                            $altimetryDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
                         }
                         break;
                     
                     case 'T': // Topographic/Elevation Terrain
                         if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
                             $elevTerrainElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':elevationTerrainDetail', null, self::ICGEM_NAMESPACE_URI);
-                            $compDepthElement = $elevTerrainElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', htmlspecialchars($dataSource['T_Isostasy_compensation_depth']), self::ICGEM_NAMESPACE_URI);
+                            $compDepthElement = $elevTerrainElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', $this->prepare($dataSource['T_Isostasy_compensation_depth'], 'compensationDepth'), self::ICGEM_NAMESPACE_URI);
                             $compDepthElement->addAttribute('uom', 'm');
                         }
                         break;
@@ -379,13 +380,13 @@ class ICGEMController
                     case 'M': // Model
                         $modelDetailElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelDetail', null, self::ICGEM_NAMESPACE_URI);
                         if (!empty($dataSource['M_identifier'])) {
-                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifier', htmlspecialchars($dataSource['M_identifier']), self::ICGEM_NAMESPACE_URI);
+                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifier', $this->prepare($dataSource['M_identifier'], 'identifier'), self::ICGEM_NAMESPACE_URI);
                         }
                         if (!empty($dataSource['M_identifier_type'])) {
-                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifierType', htmlspecialchars($dataSource['M_identifier_type']), self::ICGEM_NAMESPACE_URI);
+                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifierType', $this->prepare($dataSource['M_identifier_type'], 'identifierType'), self::ICGEM_NAMESPACE_URI);
                         }
                         if (!empty($dataSource['M_name'])) {
-                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':name', htmlspecialchars($dataSource['M_name']), self::ICGEM_NAMESPACE_URI);
+                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':name', $this->prepare($dataSource['M_name'], 'name'), self::ICGEM_NAMESPACE_URI);
                         }
                         break;
                 }
@@ -405,31 +406,31 @@ class ICGEMController
                 $tmpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':topographicModelProperties', null, self::ICGEM_NAMESPACE_URI);
                 
                 if (!empty($property['layer_approach'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':layerApproach', htmlspecialchars($property['layer_approach']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':layerApproach', $this->prepare($property['layer_approach'], 'layerApproach'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['forward_modelling_domain'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':forwardModellingDomain', htmlspecialchars($property['forward_modelling_domain']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':forwardModellingDomain', $this->prepare($property['forward_modelling_domain'], 'forwardModellingDomain'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['approximation'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':approximation', htmlspecialchars($property['approximation']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':approximation', $this->prepare($property['approximation'], 'approximation'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['density_information'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformation', htmlspecialchars($property['density_information']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformation', $this->prepare($property['density_information'], 'densityInformation'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['density_information_details'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformationDetails', htmlspecialchars($property['density_information_details']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformationDetails', $this->prepare($property['density_information_details'], 'densityInformationDetails'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['mantle_density_information'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformation', htmlspecialchars($property['mantle_density_information']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformation', $this->prepare($property['mantle_density_information'], 'mantleDensityInformation'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['mantle_density_information_details'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformationDetails', htmlspecialchars($property['mantle_density_information_details']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformationDetails', $this->prepare($property['mantle_density_information_details'], 'mantleDensityInformationDetails'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['crust_density_information'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformation', htmlspecialchars($property['crust_density_information']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformation', $this->prepare($property['crust_density_information'], 'crustDensityInformation'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['crust_density_information_details'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformationDetails', htmlspecialchars($property['crust_density_information_details']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformationDetails', $this->prepare($property['crust_density_information_details'], 'crustDensityInformationDetails'), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
@@ -447,19 +448,19 @@ class ICGEMController
                 $tmpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalModelProperties', null, self::ICGEM_NAMESPACE_URI);
                 
                 if (!empty($property['start_date'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':startDate', htmlspecialchars($property['start_date']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':startDate', $this->prepare($property['start_date'], 'startDate'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['end_date'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':stopDate', htmlspecialchars($property['end_date']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':stopDate', $this->prepare($property['end_date'], 'stopDate'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['generating_institution'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':generatingInstitution', htmlspecialchars($property['generating_institution']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':generatingInstitution', $this->prepare($property['generating_institution'], 'generatingInstitution'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['release'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':release', htmlspecialchars($property['release']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':release', $this->prepare($property['release'], 'release'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['temporal_resolution_days'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolutionDays', htmlspecialchars($property['temporal_resolution_days']), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolutionDays', $this->prepare($property['temporal_resolution_days'], 'temporalResolutionDays'), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
@@ -477,7 +478,7 @@ class ICGEMController
                 $smpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':staticModelProperties', null, self::ICGEM_NAMESPACE_URI);
                 
                 if (!empty($property['info_time_variable_coefficients'])) {
-                    $smpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':infoTimeVariableCoefficients', htmlspecialchars($property['info_time_variable_coefficients']), self::ICGEM_NAMESPACE_URI);
+                    $smpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':infoTimeVariableCoefficients', $this->prepare($property['info_time_variable_coefficients'], 'infoTimeVariableCoefficients'), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
@@ -495,16 +496,16 @@ class ICGEMController
             $epElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':ellipsoidalParameters', null, self::ICGEM_NAMESPACE_URI);
             foreach ($ellipsoidalParameters as $parameter) {
                 if (!empty($parameter['semimajor_axis_a'])) {
-                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':semimajorAxisA', htmlspecialchars($parameter['semimajor_axis_a']), self::ICGEM_NAMESPACE_URI);
+                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':semimajorAxisA', $this->prepare($parameter['semimajor_axis_a'], 'semimajorAxisA'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($parameter['semiminor_axis_b'])) {
-                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':semiminorAxisB', htmlspecialchars($parameter['semiminor_axis_b']), self::ICGEM_NAMESPACE_URI);
+                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':semiminorAxisB', $this->prepare($parameter['semiminor_axis_b'], 'semiminorAxisB'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($parameter['flattening'])) {
-                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':flattening', htmlspecialchars($parameter['flattening']), self::ICGEM_NAMESPACE_URI);
+                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':flattening', $this->prepare($parameter['flattening'], 'flattening'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($parameter['reciprocal_flattening'])) {
-                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':reciprocalFlattening', htmlspecialchars($parameter['reciprocal_flattening']), self::ICGEM_NAMESPACE_URI);
+                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':reciprocalFlattening', $this->prepare($parameter['reciprocal_flattening'], 'reciprocalFlattening'), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
@@ -516,6 +517,23 @@ class ICGEMController
      * 
      * @var array<string>
      */
+    /**
+     * Fields that require enumeration-style normalization (first letter capital).
+     * These correspond to ICGEM XSD enumeration types.
+     * Non-enumeration fields (numeric values, URIs) are excluded.
+     * 
+     * @var array<string>
+     */
+    private const ENUMERATION_FIELDS = [
+        'errorsType', 
+        'descriptionSection', 
+        'modelType', 
+        'groundDetails', 
+        'inputDataSourceType', 
+        'tideSystem', 
+        'mathematicalRepresentation'
+    ];
+
     private const ICGEM_DESCRIPTION_TYPES = [
         'Abstract',
         'General model description',
@@ -524,6 +542,29 @@ class ICGEMController
         'Specific features of resulting gravity field',
         'Other'
     ];
+
+    /**
+     * Prepares a value for XML output by escaping and optionally capitalizing.
+     * 
+     * Enumeration fields (defined in ENUMERATION_FIELDS) are capitalized
+     * (first letter uppercase, rest as-is) to match XSD enumeration requirements.
+     * All other fields are passed through as-is (but always HTML-escaped).
+     *
+     * @param string $value The value to prepare.
+     * @param string $fieldName The XML field name to determine if normalization applies.
+     * @return string The prepared value, HTML-escaped and possibly capitalized.
+     */
+    private function prepare(string $value, string $fieldName): string
+    {
+        $trimmed = trim($value);
+        
+        // Capitalize if this is an enumeration field
+        if (in_array($fieldName, self::ENUMERATION_FIELDS, true)) {
+            $trimmed = ucfirst($trimmed);
+        }
+        
+        return htmlspecialchars($trimmed);
+    }
 
     /**
      * ELMOGEM-specific description types whose text is appended to Abstract during save.
@@ -647,7 +688,7 @@ class ICGEMController
                 }
                 
                 // Add to XML with validated, normalized type
-                $descriptionXml = $descriptionsXml->addChild('description', htmlspecialchars($descriptionText));
+                $descriptionXml = $descriptionsXml->addChild('description', $this->prepare($descriptionText, 'description'));
                 $descriptionXml->addAttribute('type', $normalizedDbType);
             }
         }
