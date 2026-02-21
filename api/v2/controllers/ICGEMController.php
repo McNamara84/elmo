@@ -689,7 +689,7 @@ class ICGEMController
                 
                 // Add to XML with validated, normalized type
                 $descriptionXml = $descriptionsXml->addChild('description', $this->prepare($descriptionText, 'description'));
-                $descriptionXml->addAttribute('type', $normalizedDbType);
+                $descriptionXml->addAttribute('section', $normalizedDbType);
             }
         }
     }
@@ -727,7 +727,7 @@ class ICGEMController
         $this->insertDescriptions($xml, $id);
 
         // 5. Create sphericalHarmonicModel container
-        $shm = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':sphericalHarmonicModel', null, self::ICGEM_NAMESPACE_URI);
+        $shm = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':gravityFieldModel', null, self::ICGEM_NAMESPACE_URI);
 
         // 6. Insert core GGM properties into sphericalHarmonicModel
         $this->insertSphericalHarmonicModelProperties($shm, $ggmData);
