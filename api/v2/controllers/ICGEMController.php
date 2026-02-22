@@ -1,18 +1,14 @@
 <?php
+require_once __DIR__ . '/DatasetController.php';
 
-class ICGEMController
+class ICGEMController extends DatasetController
 {
     private const ICGEM_NAMESPACE_PREFIX = 'icgv';
     private const ICGEM_NAMESPACE_URI = 'http://icgem.gfz.de/schema';
 
-    protected mysqli $connection;
-    protected mixed $logger;
-
     public function __construct()
     {
-        global $connection;
-        $this->connection = $connection;
-        $this->logger = null; // Optional logger
+        parent::__construct();
     }
 //----------------------------------DATA RETRIEVAL FUNCTIONS FOR ICGEM XML CREATION---------------------------------    
     /**
