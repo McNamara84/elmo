@@ -1,9 +1,14 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
-class LogPageEventTest extends TestCase
+#[CoversNothing]
+final class LogPageEventTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {

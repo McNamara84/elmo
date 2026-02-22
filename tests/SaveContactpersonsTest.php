@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
+use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_contactperson.php';
@@ -14,7 +15,8 @@ require_once __DIR__ . '/../save/formgroups/save_contactperson.php';
  * This class contains test cases to verify the correct saving and validation
  * of contact person information in different scenarios.
  */
-class SaveContactpersonsTest extends DatabaseTestCase
+#[CoversNothing]
+final class SaveContactpersonsTest extends DatabaseTestCase
 {
     /**
      * Test saving a single contact person with all fields populated

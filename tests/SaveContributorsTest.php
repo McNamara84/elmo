@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
+
+use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_contributorpersons.php';
@@ -13,7 +16,8 @@ require_once __DIR__ . '/../save/formgroups/save_contributorinstitutions.php';
  * Tests the saving of contributor persons and institutions with various scenarios 
  * including required fields, optional fields, and multiple contributors
  */
-class SaveContributorsTest extends DatabaseTestCase
+#[CoversNothing]
+final class SaveContributorsTest extends DatabaseTestCase
 {
     /**
      * Test saving a contributor person with all fields populated

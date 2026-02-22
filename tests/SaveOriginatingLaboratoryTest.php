@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
+
+use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_originatinglaboratory.php';
 
-class SaveOriginatingLaboratoryTest extends DatabaseTestCase
+#[CoversNothing]
+final class SaveOriginatingLaboratoryTest extends DatabaseTestCase
 {
     /**
      * Test saving of a single Originating Laboratory.

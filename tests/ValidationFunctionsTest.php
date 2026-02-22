@@ -1,6 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../save/validation.php';
@@ -11,7 +15,8 @@ require_once __DIR__ . '/../save/validation.php';
  * These tests ensure that the validation logic for required fields,
  * dependencies and data structures behaves as expected.
  */
-class ValidationFunctionsTest extends TestCase
+#[CoversNothing]
+final class ValidationFunctionsTest extends TestCase
 {
     /**
      * Validates that all required fields being present returns true.
