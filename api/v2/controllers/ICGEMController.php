@@ -278,11 +278,11 @@ class ICGEMController
             if (!empty($ggmData['degree'])) {
                 $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':degreeOrderMax', $this->prepare($ggmData['degree'], 'degreeOrderMax'), self::ICGEM_NAMESPACE_URI);
             }
-            if (!empty($ggmData['earth_gravity_constant'])) {
-                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':earthGravityConstant', $this->prepare($ggmData['earth_gravity_constant'], 'earthGravityConstant'), self::ICGEM_NAMESPACE_URI);
-            }
             if (!empty($ggmData['radius'])) {
                 $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':radius', $this->prepare($ggmData['radius'], 'radius'), self::ICGEM_NAMESPACE_URI);
+            }
+            if (!empty($ggmData['earth_gravity_constant'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':earthGravityConstant', $this->prepare($ggmData['earth_gravity_constant'], 'earthGravityConstant'), self::ICGEM_NAMESPACE_URI);
             }
         }
     }
