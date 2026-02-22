@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 // Define test mode to prevent settings.php from being loaded
@@ -46,6 +47,7 @@ class TestableErnieService extends \ErnieService
  * Note: These tests mock the global configuration variables to avoid
  * database connections during unit testing.
  */
+#[CoversClass(\ErnieService::class)]
 final class ErnieServiceTest extends TestCase
 {
     /**

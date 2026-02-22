@@ -3,12 +3,14 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use EasyRdf\Graph;
 use EasyRdf\RdfNamespace;
 
 require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
 
+#[CoversClass(\VocabController::class)]
 final class VocabControllerTest extends TestCase
 {
     private function getController(): \VocabController

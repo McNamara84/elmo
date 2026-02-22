@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 
+#[CoversFunction('resolveFeatureToggle')]
 final class FeatureToggleDefaultsTest extends TestCase
 {
     protected function setUp(): void

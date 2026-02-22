@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 use PHPMailer\PHPMailer\PHPMailer;
 
@@ -18,6 +19,7 @@ require_once __DIR__ . '/../send_xml_file.php';
  * including author name, title truncation and space handling.
  *
  */
+#[CoversFunction('createAndAttachXmlFile')]
 final class GenerateXmlFilenameTest extends TestCase
 {
 
