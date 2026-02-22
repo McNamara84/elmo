@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../api/v2/controllers/AffiliationController.php';
@@ -14,7 +13,6 @@ require_once __DIR__ . '/../api/v2/controllers/AffiliationController.php';
  * 
  * Tests the server-side affiliation search functionality
  */
-#[CoversNothing]
 final class AffiliationControllerTest extends TestCase
 {
     private \AffiliationController $controller;

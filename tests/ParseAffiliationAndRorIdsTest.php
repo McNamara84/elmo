@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../save/formgroups/save_affiliations.php';
@@ -14,7 +13,6 @@ require_once __DIR__ . '/../save/formgroups/save_affiliations.php';
  * @package Tests
  */
 
-#[CoversNothing]
 final class ParseAffiliationAndRorIdsTest extends TestCase
 {
     /**

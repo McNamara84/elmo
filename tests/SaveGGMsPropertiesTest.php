@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/formgroups/save_ggms_properties.php';
 
@@ -15,7 +14,6 @@ require_once __DIR__ . '/../save/formgroups/save_ggms_properties.php';
  * - saveGGMsProperties: directly inserts GGM_Properties record
  * - insertEllipsoidalParameters: handles ellipsoidal parameters
  */
-#[CoversNothing]
 final class SaveGGMsPropertiesTest extends DatabaseTestCase
 {
     private $resourceId;

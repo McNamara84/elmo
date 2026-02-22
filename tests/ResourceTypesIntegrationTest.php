@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/DatabaseTestCase.php';
 
 /**
  * Integration tests for Resource Types functionality with ERNIE integration
  */
-#[CoversNothing]
 final class ResourceTypesIntegrationTest extends DatabaseTestCase
 {
     /**

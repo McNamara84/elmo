@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 
 /**
  * Testklasse für die Funktionalität zum Speichern von Ressourceninformationen und Rechten.
@@ -12,7 +11,6 @@ use PHPUnit\Framework\Attributes\CoversNothing;
  * Diese Klasse enthält verschiedene Testfälle, die die korrekte Funktionsweise
  * der saveResourceInformationAndRights-Funktion unter verschiedenen Bedingungen überprüfen.
  */
-#[CoversNothing]
 final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
 {
     /**

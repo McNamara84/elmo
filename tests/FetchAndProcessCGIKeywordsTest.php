@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use EasyRdf\Http;
 use EasyRdf\Http\Response;
@@ -17,7 +16,6 @@ require_once __DIR__ . '/../api_functions.php';
  * These tests verify that CGI keywords are fetched and processed into the
  * expected hierarchical structure.
  */
-#[CoversNothing]
 final class FetchAndProcessCGIKeywordsTest extends TestCase
 {
     private $originalClient;

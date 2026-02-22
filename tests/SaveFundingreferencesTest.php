@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_fundingreferences.php';
 
-#[CoversNothing]
 final class SaveFundingreferencesTest extends DatabaseTestCase
 {
     /**

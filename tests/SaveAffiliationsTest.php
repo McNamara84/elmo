@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/formgroups/save_affiliations.php';
 
@@ -13,7 +12,6 @@ require_once __DIR__ . '/../save/formgroups/save_affiliations.php';
  * 
  * Tests the affiliation saving and parsing functions
  */
-#[CoversNothing]
 final class SaveAffiliationsTest extends DatabaseTestCase
 {
     protected function setUp(): void

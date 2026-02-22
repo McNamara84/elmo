@@ -14,9 +14,7 @@ declare(strict_types=1);
  */
 
 use PHPUnit\Framework\TestCase;
-use PHPUnit\Framework\Attributes\CoversNothing;
 
-#[CoversNothing]
 final class IsoTimePeriodXsltTest extends TestCase
 {
     /**

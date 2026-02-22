@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/formgroups/save_ggms_modeltypes.php';
 require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
@@ -17,7 +16,6 @@ require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
  * - Temporal models: dates, resolution, institution
  * - Topographic models: layer approach, domain, density (single and separate crust/mantle)
  */
-#[CoversNothing]
 final class SaveGGMsModelTypesTest extends DatabaseTestCase
 {
     private $resourceId;

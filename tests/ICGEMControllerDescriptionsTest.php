@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
@@ -16,7 +15,6 @@ require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
  * - Properly escaped for XML
  * - Only valid types are included in output
  */
-#[CoversNothing]
 final class ICGEMControllerDescriptionsTest extends TestCase
 {
     private ICGEMController $controller;

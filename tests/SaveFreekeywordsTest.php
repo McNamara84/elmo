@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_freekeywords.php';
@@ -12,7 +11,6 @@ require_once __DIR__ . '/../save/formgroups/save_freekeywords.php';
 /**
  * Test suite for saving free keywords.
  */
-#[CoversNothing]
 final class SaveFreekeywordsTest extends DatabaseTestCase
 {
     /**

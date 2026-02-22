@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
 
@@ -16,7 +15,6 @@ require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
  * - validateGGMData validation
  * - saveGGMsDefinition complete flow
  */
-#[CoversNothing]
 final class SaveGGMsDefinitionTest extends DatabaseTestCase
 {
     private $resourceId;
