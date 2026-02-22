@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -17,11 +19,10 @@ class VocabControllerTest extends TestCase
         return new \VocabController();
     }
 
-    private function invoke($object, string $method, array $args = [])
+    private function invoke(object $object, string $method, array $args = []): mixed
     {
         $ref = new \ReflectionClass($object);
         $m = $ref->getMethod($method);
-        $m->setAccessible(true);
         return $m->invokeArgs($object, $args);
     }
 

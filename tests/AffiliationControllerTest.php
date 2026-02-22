@@ -57,7 +57,6 @@ class AffiliationControllerTest extends \PHPUnit\Framework\TestCase
         // Use reflection to set the private cacheFile property
         $reflection = new \ReflectionClass($this->controller);
         $property = $reflection->getProperty('cacheFile');
-        $property->setAccessible(true);
         $property->setValue($this->controller, $this->testJsonPath);
     }
 
@@ -205,7 +204,6 @@ class AffiliationControllerTest extends \PHPUnit\Framework\TestCase
         $controller = new \AffiliationController();
         $reflection = new \ReflectionClass($controller);
         $property = $reflection->getProperty('cacheFile');
-        $property->setAccessible(true);
         $property->setValue($controller, $this->testJsonPath);
         
         $_GET['q'] = 'Test';

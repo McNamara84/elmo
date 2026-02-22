@@ -79,7 +79,6 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
 
         $reflection = new \ReflectionClass($controller);
         $method = $reflection->getMethod('syncResourceTypesToDb');
-        $method->setAccessible(true);
         $method->invoke($controller, $ernieData);
 
         // Verify data was inserted
@@ -121,7 +120,6 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
 
         $reflection = new \ReflectionClass($controller);
         $method = $reflection->getMethod('syncResourceTypesToDb');
-        $method->setAccessible(true);
         $method->invoke($controller, $ernieData);
 
         // Verify data was updated
@@ -159,7 +157,6 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
 
         $reflection = new \ReflectionClass($controller);
         $method = $reflection->getMethod('syncResourceTypesToDb');
-        $method->setAccessible(true);
         $method->invoke($controller, $ernieData);
 
         // Verify ernie_id was linked to existing record
@@ -195,7 +192,6 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
 
         $reflection = new \ReflectionClass($controller);
         $method = $reflection->getMethod('mapErnieToLocalIds');
-        $method->setAccessible(true);
         $result = $method->invoke($controller, $ernieData);
 
         $this->assertCount(1, $result);
@@ -220,7 +216,6 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
 
         $reflection = new \ReflectionClass($controller);
         $method = $reflection->getMethod('syncResourceTypesToDb');
-        $method->setAccessible(true);
         $result = $method->invoke($controller, $ernieData);
 
         $this->assertIsBool($result);
