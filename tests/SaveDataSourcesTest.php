@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/formgroups/save_ggms_datasources.php';
 
@@ -14,7 +17,8 @@ require_once __DIR__ . '/../save/formgroups/save_ggms_datasources.php';
  * - Multiple satellite platforms expansion
  * - All 5 types combined in a single save operation
  */
-class SaveDataSourcesTest extends DatabaseTestCase
+#[CoversNothing]
+final class SaveDataSourcesTest extends DatabaseTestCase
 {
     // ============================================================================
     // MOCK DATA GENERATION METHODS

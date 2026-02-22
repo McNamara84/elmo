@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../save/save_data.php';
 
@@ -9,7 +12,8 @@ require_once __DIR__ . '/../save/save_data.php';
  * Tests concurrent full save operations to verify transaction isolation and data integrity.
  * Simulates two simultaneous complete form submissions from the front-end using separate database connections.
  */
-class ConcurrentRequestsTest extends DatabaseTestCase
+#[CoversNothing]
+final class ConcurrentRequestsTest extends DatabaseTestCase
 {
     private $connection2;
     private $postData1;

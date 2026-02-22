@@ -1,5 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
+
+use PHPUnit\Framework\Attributes\CoversNothing;
 
 require_once __DIR__ . '/../api/v2/controllers/ValidationController.php';
 
@@ -8,7 +13,8 @@ require_once __DIR__ . '/../api/v2/controllers/ValidationController.php';
  * 
  * Tests the controller methods for identifier type validation
  */
-class ValidationControllerTest extends DatabaseTestCase
+#[CoversNothing]
+final class ValidationControllerTest extends DatabaseTestCase
 {
     private \ValidationController $controller;
 

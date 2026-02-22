@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Exception;
@@ -9,7 +12,8 @@ use Exception;
 /**
  * Test class for the API endpoints
  */
-class ApiTest extends DatabaseTestCase
+#[CoversNothing]
+final class ApiTest extends DatabaseTestCase
 {
     /**
      * @var Client HTTP client instance

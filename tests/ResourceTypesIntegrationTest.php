@@ -12,7 +12,7 @@ require_once __DIR__ . '/DatabaseTestCase.php';
  * Integration tests for Resource Types functionality with ERNIE integration
  */
 #[CoversNothing]
-class ResourceTypesIntegrationTest extends DatabaseTestCase
+final class ResourceTypesIntegrationTest extends DatabaseTestCase
 {
     /**
      * Test that getResourceTypes endpoint returns valid JSON
