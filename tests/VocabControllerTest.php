@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 use EasyRdf\Graph;
 use EasyRdf\RdfNamespace;
 
+if (!defined('UNIT_TESTING')) {
+    define('UNIT_TESTING', true);
+}
 require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
 
 #[CoversClass(\VocabController::class)]
