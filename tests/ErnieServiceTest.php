@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 // Define test mode to prevent settings.php from being loaded
@@ -46,7 +47,8 @@ class TestableErnieService extends \ErnieService
  * Note: These tests mock the global configuration variables to avoid
  * database connections during unit testing.
  */
-class ErnieServiceTest extends TestCase
+#[CoversNothing]
+final class ErnieServiceTest extends TestCase
 {
     /**
      * @var string Path to test cache directory
@@ -185,7 +187,7 @@ class ErnieServiceTest extends TestCase
         $this->assertFalse($status['valid']);
         $this->assertNull($status['lastUpdated']);
         $this->assertNull($status['age']);
-        $this->assertEquals(0, $status['itemCount']);
+        $this->assertSame(0, $status['itemCount']);
     }
 
     /**
@@ -206,7 +208,7 @@ class ErnieServiceTest extends TestCase
         $this->assertTrue($status['valid']);
         $this->assertNotNull($status['lastUpdated']);
         $this->assertIsInt($status['age']);
-        $this->assertEquals(2, $status['itemCount']);
+        $this->assertSame(2, $status['itemCount']);
         $this->assertArrayHasKey('ageFormatted', $status);
         $this->assertArrayHasKey('ttl', $status);
     }
@@ -228,7 +230,7 @@ class ErnieServiceTest extends TestCase
 
         $this->assertTrue($status['exists']);
         $this->assertFalse($status['valid']);
-        $this->assertEquals(1, $status['itemCount']);
+        $this->assertSame(1, $status['itemCount']);
     }
 
     // ==================== getResourceTypesWithCache() Tests ====================
@@ -244,8 +246,8 @@ class ErnieServiceTest extends TestCase
         $this->assertIsArray($result);
         // Should return hardcoded fallback (Dataset and Other)
         $this->assertCount(2, $result);
-        $this->assertEquals('Dataset', $result[0]['name']);
-        $this->assertEquals('Other', $result[1]['name']);
+        $this->assertSame('Dataset', $result[0]['name']);
+        $this->assertSame('Other', $result[1]['name']);
     }
 
     /**
@@ -263,8 +265,8 @@ class ErnieServiceTest extends TestCase
         $result = $service->getResourceTypesWithCache();
 
         $this->assertCount(2, $result);
-        $this->assertEquals('Dataset', $result[0]['name']);
-        $this->assertEquals('Software', $result[1]['name']);
+        $this->assertSame('Dataset', $result[0]['name']);
+        $this->assertSame('Software', $result[1]['name']);
     }
 
     /**
@@ -285,7 +287,7 @@ class ErnieServiceTest extends TestCase
 
         // Should return stale cache data
         $this->assertCount(1, $result);
-        $this->assertEquals('Collection', $result[0]['name']);
+        $this->assertSame('Collection', $result[0]['name']);
     }
 
     // ==================== fetchResourceTypes() Tests ====================
@@ -493,13 +495,13 @@ class ErnieServiceTest extends TestCase
         $this->assertCount(2, $result);
         
         // Verify Dataset
-        $this->assertEquals(10, $result[0]['id']);
-        $this->assertEquals('Dataset', $result[0]['name']);
+        $this->assertSame(10, $result[0]['id']);
+        $this->assertSame('Dataset', $result[0]['name']);
         $this->assertNotEmpty($result[0]['description']);
         
         // Verify Other
-        $this->assertEquals(21, $result[1]['id']);
-        $this->assertEquals('Other', $result[1]['name']);
+        $this->assertSame(21, $result[1]['id']);
+        $this->assertSame('Other', $result[1]['name']);
         $this->assertNotEmpty($result[1]['description']);
     }
 
@@ -514,8 +516,8 @@ class ErnieServiceTest extends TestCase
 
         // Should use hardcoded fallback
         $this->assertCount(2, $result);
-        $this->assertEquals('Dataset', $result[0]['name']);
-        $this->assertEquals('Other', $result[1]['name']);
+        $this->assertSame('Dataset', $result[0]['name']);
+        $this->assertSame('Other', $result[1]['name']);
     }
 }
 

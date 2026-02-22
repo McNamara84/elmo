@@ -109,8 +109,8 @@ final class AffiliationControllerTest extends TestCase
         $results = $this->captureSearchOutput('Test University');
         
         $this->assertNotEmpty($results);
-        $this->assertEquals('Test University', $results[0]['name']);
-        $this->assertEquals('https://ror.org/012345678', $results[0]['id']);
+        $this->assertSame('Test University', $results[0]['name']);
+        $this->assertSame('https://ror.org/012345678', $results[0]['id']);
     }
 
     public function testSearchFindsByAlternativeName(): void
@@ -118,7 +118,7 @@ final class AffiliationControllerTest extends TestCase
         $results = $this->captureSearchOutput('GFZ Potsdam');
         
         $this->assertNotEmpty($results);
-        $this->assertEquals('GFZ German Research Centre for Geosciences', $results[0]['name']);
+        $this->assertSame('GFZ German Research Centre for Geosciences', $results[0]['name']);
     }
 
     public function testSearchFindsByAbbreviation(): void
@@ -142,7 +142,7 @@ final class AffiliationControllerTest extends TestCase
         $results = $this->captureSearchOutput('test university');
         
         $this->assertNotEmpty($results);
-        $this->assertEquals('Test University', $results[0]['name']);
+        $this->assertSame('Test University', $results[0]['name']);
     }
 
     public function testSearchReturnsMultipleMatches(): void
@@ -157,7 +157,7 @@ final class AffiliationControllerTest extends TestCase
         $results = $this->captureSearchOutput('Test University');
         
         // Exact match should be first
-        $this->assertEquals('Test University', $results[0]['name']);
+        $this->assertSame('Test University', $results[0]['name']);
     }
 
     public function testSearchRespectsLimit(): void

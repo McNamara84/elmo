@@ -84,12 +84,12 @@ final class ICGEMControllerDescriptionsTest extends TestCase
         $this->assertCount(2, $xml->descriptions->description, 'Should have 2 descriptions (1 invalid filtered out)');
         
         // Check first description
-        $this->assertEquals('Abstract', (string)$xml->descriptions->description[0]['type']);
-        $this->assertEquals('Test abstract', (string)$xml->descriptions->description[0]);
+        $this->assertSame('Abstract', (string)$xml->descriptions->description[0]['type']);
+        $this->assertSame('Test abstract', (string)$xml->descriptions->description[0]);
         
         // Check second description (should be converted to sentence case)
-        $this->assertEquals('Input data', (string)$xml->descriptions->description[1]['type']);
-        $this->assertEquals('Test input', (string)$xml->descriptions->description[1]);
+        $this->assertSame('Input data', (string)$xml->descriptions->description[1]['type']);
+        $this->assertSame('Test input', (string)$xml->descriptions->description[1]);
         
         // Verify that the invalid type is NOT in the output
         $xmlString = $xml->asXML();
@@ -141,8 +141,8 @@ final class ICGEMControllerDescriptionsTest extends TestCase
         
         // Only valid types should be in the XML
         $this->assertCount(1, $xml->descriptions->description, 'Only 1 valid description should be included');
-        $this->assertEquals('Abstract', (string)$xml->descriptions->description[0]['type']);
-        $this->assertEquals('Valid description', (string)$xml->descriptions->description[0]);
+        $this->assertSame('Abstract', (string)$xml->descriptions->description[0]['type']);
+        $this->assertSame('Valid description', (string)$xml->descriptions->description[0]);
     }
 
     /**
@@ -188,9 +188,9 @@ final class ICGEMControllerDescriptionsTest extends TestCase
         $method->invoke($this->controller, $xml, 3);
         
         // All should be converted to proper sentence case
-        $this->assertEquals('Abstract', (string)$xml->descriptions->description[0]['type']);
-        $this->assertEquals('General model description', (string)$xml->descriptions->description[1]['type']);
-        $this->assertEquals('Processing procedures', (string)$xml->descriptions->description[2]['type']);
+        $this->assertSame('Abstract', (string)$xml->descriptions->description[0]['type']);
+        $this->assertSame('General model description', (string)$xml->descriptions->description[1]['type']);
+        $this->assertSame('Processing procedures', (string)$xml->descriptions->description[2]['type']);
     }
 
     /**
