@@ -690,10 +690,10 @@ class ICGEMController extends DatasetController
         }
     }
         /**
-     * Creates an ICGEM-specific XML by extending the DataCite XML with additional properties.
+     * Creates an ICGEM-specific XML by combining DataCite and ICGEM metadata in an envelope.
      *
      * @param int $id The ID of the resource.
-     * @return string The ICGEM XML as a string.
+     * @return string The combined XML as a string with envelope containing DataCite and ICGEM children.
      * @throws Exception If GGM data is missing or data fetching fails.
      */
     public function createICGEMxml(int $id): string
@@ -703,29 +703,41 @@ class ICGEMController extends DatasetController
         if (empty($ggmData) || empty($ggmData['model_name'])) {
             throw new Exception("Resource with ID $id does not contain GGM data required for ICGEM XML.");
         }
-
-        // 2. Create the root globalGravityProduct element with proper namespaces
-        $xml = new SimpleXMLElement(
+        
+        // 2. Get DataCite XML as string
+        $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, "datacite");
+        
+        // 3. Create envelope root with 2 namespaces (DataCite and ICGEM)
+        $envelope = new SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<' . self::ICGEM_NAMESPACE_PREFIX . ':globalGravityProduct xmlns:' . self::ICGEM_NAMESPACE_PREFIX . '="' . self::ICGEM_NAMESPACE_URI . '" ' .
-            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' .
-            'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' globalGravityProduct.xsd"/>'
+            '<envelope xmlns:dc="http://datacite.org/schema/kernel-4" xmlns:' . self::ICGEM_NAMESPACE_PREFIX . '="' . self::ICGEM_NAMESPACE_URI . '"/>'
         );
-
-        // 3. Fetch all the ICGEM-specific data
+        
+        // 4. Parse DataCite XML and append it to envelope
+        try {
+            $dataciteXml = new SimpleXMLElement($dataciteXmlString);
+            $this->simplexmlAppend($envelope, $dataciteXml);
+        } catch (Exception $e) {
+            throw new Exception("Failed to parse DataCite XML: " . $e->getMessage());
+        }
+        
+        // 5. Fetch all the ICGEM-specific data
         $dataSources = $this->getDataSources($this->connection, $id);
         $topographicProperties = $this->getTopographicModelProperties($this->connection, $id);
         $temporalProperties = $this->getTemporalModelProperties($this->connection, $id);
         $staticProperties = $this->getStaticModelProperties($this->connection, $id);
         $ellipsoidalParameters = $this->getEllipsoidalParameters($this->connection, $id);
-
-        // 4. Insert descriptions at root level
-        $this->insertDescriptions($xml, $id);
-
-        // 5. Create sphericalHarmonicModel container
-        $shm = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':gravityFieldModel', null, self::ICGEM_NAMESPACE_URI);
-
-        // 6. Insert core GGM properties into sphericalHarmonicModel
+        
+        // 6. Create ICGEM globalGravityProduct as child of envelope
+        $icgempart = $envelope->addChild(self::ICGEM_NAMESPACE_PREFIX . ':globalGravityProduct', null, self::ICGEM_NAMESPACE_URI);
+        
+        // 7. Insert descriptions at root level of ICGEM part
+        $this->insertDescriptions($icgempart, $id);
+        
+        // 8. Create sphericalHarmonicModel container
+        $shm = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':gravityFieldModel', null, self::ICGEM_NAMESPACE_URI);
+        
+        // 9. Insert core GGM properties into sphericalHarmonicModel
         $this->insertSphericalHarmonicModelProperties($shm, $ggmData);
         $this->insertErrors($shm, $ggmData);
         $this->insertErrorHandling($shm, $ggmData);
@@ -733,12 +745,12 @@ class ICGEMController extends DatasetController
         $this->insertTopographicModelPropertiesIcgem($shm, $topographicProperties);
         $this->insertStaticModelPropertiesIcgem($shm, $staticProperties);
         $this->insertEllipsoidalParametersIcgem($shm, $ellipsoidalParameters);
-
-        // 7. Insert data sources at root level
-        $this->insertInputDataSources($xml, $dataSources);
-
-        // 8. Format and return the final XML as a string
-        $dom = dom_import_simplexml($xml)->ownerDocument;
+        
+        // 10. Insert data sources at root level of ICGEM part
+        $this->insertInputDataSources($icgempart, $dataSources);
+        
+        // 11. Format and return the combined envelope XML
+        $dom = dom_import_simplexml($envelope)->ownerDocument;
         $dom->formatOutput = true;
         return $dom->saveXML();
     }
