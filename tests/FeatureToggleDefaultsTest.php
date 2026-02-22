@@ -1,9 +1,14 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
-class FeatureToggleDefaultsTest extends TestCase
+#[CoversNothing]
+final class FeatureToggleDefaultsTest extends TestCase
 {
     protected function setUp(): void
     {
