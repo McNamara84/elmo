@@ -64,7 +64,7 @@ include_once "../settings.php";
                             <a class="nav-link" href="#help-resourceinformation" data-bs-dismiss="offcanvas">Resource
                                 Information</a>
                         </li>
-                         <?php if ($showLicense ?? true): ?>
+                        <?php if ($showLicense ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-rights" data-bs-dismiss="offcanvas">Licenses and rights</a>
                         </li>
@@ -230,7 +230,7 @@ include_once "../settings.php";
                         } else {
                             echo '<p><em>No resource types available.</em></p>';
                         }
-                    } catch (Exception $e) {
+                    } catch (Throwable $e) {
                         echo '<p><em>Resource types list could not be loaded. Please refer to the dropdown in the form.</em></p>';
                     }
                     ?>
@@ -802,8 +802,8 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>
             <?php endif; ?>
-            <!-- formgroup descriptions -->
-            >
+            <!-- formgroup free keywords -->
+            <?php if ($showFreeKeywords ?? true): ?>
             <div id="help-freeKeywords" class="section-content">
                 <h3>Free Keywords</h3>
                 <p>Free keywords are user-defined tags that complement predefined thesaurus terms.
@@ -814,7 +814,7 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
-            <?ph<?php if ($showFreeKeywords ?? true): ?p endif; ?>
+            <?php endif; ?>
             <!-- formgroup descriptions -->
             <div id="help-dates" class="section-content">
                 <div id="help-dates-fg">
@@ -849,7 +849,7 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>
             <!-- formgroup temporal and spacial coverage -->
-            <?php if ($showSpatialTemporalCoverage ?? true): ?
+            <?php if ($showSpatialTemporalCoverage ?? true): ?>
             <div id="help-tsc" class="section-content">
                 <div id="help-stc-fg">
                     <h3>Spatial and Temporal coverage</h3>
@@ -920,7 +920,7 @@ include_once "../settings.php";
             <hr>
             <?php endif; ?>
             <!-- formgroup related work-->
-            <?php if ($showRelatedWork ?? true): ?
+            <?php if ($showRelatedWork ?? true): ?>
             <div id="help-relatedwork" class="section-content">
                 <div id="help-relatedwork-fg">
                     <h3>Related Work</h3>
@@ -1024,7 +1024,7 @@ include_once "../settings.php";
             <hr>
             <?php endif; ?>
             <!-- formgroup funding reference -->
-            <?php if ($showFundingReference ?? true): ?
+            <?php if ($showFundingReference ?? true): ?>
             <div id="help-fundingreference" class="section-content">
                 <div id="help-fundingreference-fg">
                     <h3>Funding Reference</h3>

@@ -6,7 +6,7 @@
  */
 
 // Include the settings.php file to access configuration variables
-include_once "../settings.php";
+include_once __DIR__ . '/../settings.php';
 
 // Include the help.html file to display the help content
-include "help.html";
+include __DIR__ . '/help.html';
