@@ -1,9 +1,12 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
 
-class PhpstanConfigTest extends TestCase
+final class PhpstanConfigTest extends TestCase
 {
     public function testNodeModulesExcludePathIsMarkedOptional(): void
     {

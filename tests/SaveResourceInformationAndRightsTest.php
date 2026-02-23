@@ -1,7 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
+
 
 /**
  * Testklasse für die Funktionalität zum Speichern von Ressourceninformationen und Rechten.
@@ -9,7 +11,7 @@ use mysqli_sql_exception;
  * Diese Klasse enthält verschiedene Testfälle, die die korrekte Funktionsweise
  * der saveResourceInformationAndRights-Funktion unter verschiedenen Bedingungen überprüfen.
  */
-class SaveResourceInformationAndRightsTest extends DatabaseTestCase
+final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
 {
     /**
      * Testet das Speichern von Ressourceninformationen und Rechten mit allen Feldern.
