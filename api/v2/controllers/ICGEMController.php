@@ -407,19 +407,19 @@ class ICGEMController extends DatasetController
                     $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformation', $this->prepare($property['density_information'], 'densityInformation'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['density_information_details'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformationDetails', $this->prepare($property['density_information_details'], 'densityInformationDetails'), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformationDescription', $this->prepare($property['density_information_details'], 'densityInformationDescription'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['mantle_density_information'])) {
                     $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformation', $this->prepare($property['mantle_density_information'], 'mantleDensityInformation'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['mantle_density_information_details'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformationDetails', $this->prepare($property['mantle_density_information_details'], 'mantleDensityInformationDetails'), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformationDescription', $this->prepare($property['mantle_density_information_details'], 'mantleDensityInformationDescription'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['crust_density_information'])) {
                     $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformation', $this->prepare($property['crust_density_information'], 'crustDensityInformation'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['crust_density_information_details'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformationDetails', $this->prepare($property['crust_density_information_details'], 'crustDensityInformationDetails'), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformationDescription', $this->prepare($property['crust_density_information_details'], 'crustDensityInformationDescription'), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
