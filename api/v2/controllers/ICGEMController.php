@@ -683,6 +683,26 @@ class ICGEMController extends DatasetController
         }
     }
         /**
+     * Replaces hardcoded local file paths in DataCite XML with proper remote schema URLs.
+     * The XSLT that generates DataCite XML includes hardcoded Windows file paths
+     * which need to be replaced for production environments.
+     *
+     * @param string $dataciteXmlString The DataCite XML string with potentially hardcoded paths.
+     * @return string The cleaned XML with proper schema URLs.
+     */
+    private function cleanDataCiteSchemaLocation(string $dataciteXmlString): string
+    {
+        // Replace hardcoded Windows file paths with the official DataCite schema URL
+        $dataciteXmlString = preg_replace(
+            '/file:.*?DataCiteSchema45\.xsd/',
+            'http://schema.datacite.org/meta/kernel-4/metadata.xsd',
+            $dataciteXmlString
+        );
+        
+        return $dataciteXmlString;
+    }
+
+    /**
      * Creates an ICGEM-specific XML by combining DataCite and ICGEM metadata in an envelope.
      *
      * @param int $id The ID of the resource.
@@ -697,8 +717,9 @@ class ICGEMController extends DatasetController
             throw new Exception("Resource with ID $id does not contain GGM data required for ICGEM XML.");
         }
         
-        // 2. Get DataCite XML as string
+        // 2. Get DataCite XML as string and clean schema location
         $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, "datacite");
+        $dataciteXmlString = $this->cleanDataCiteSchemaLocation($dataciteXmlString);
         
         // 3. Create envelope root with ICGEM as primary namespace and DataCite as secondary
         $envelope = new SimpleXMLElement(
@@ -706,7 +727,7 @@ class ICGEMController extends DatasetController
             '<icgv:envelope xmlns:icgv="' . self::ICGEM_NAMESPACE_URI . '" ' .
             'xmlns:dc="http://datacite.org/schema/kernel-4" ' .
             'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' .
-            'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' schema.xsd"/>'
+            'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' http://icgem.gfz.de/schema/schema.xsd"/>'
         );
         
         // 4. Parse DataCite XML and append it to envelope
