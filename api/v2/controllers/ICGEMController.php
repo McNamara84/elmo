@@ -285,6 +285,7 @@ class ICGEMController extends DatasetController
 
     /**
      * Inserts errors element into the spherical harmonic model.
+     * Error handling is included as a child element within errors per the XSD schema.
      *
      * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
      * @param array<string, mixed> $ggmData The GGM data.
@@ -293,20 +294,12 @@ class ICGEMController extends DatasetController
     {
         if (!empty($ggmData['errors'])) {
             $errorsElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errors', null, self::ICGEM_NAMESPACE_URI);
-            $errorsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorsType', $this->prepare($ggmData['errors'], 'errorsType'), self::ICGEM_NAMESPACE_URI);
-        }
-    }
-
-    /**
-     * Inserts error handling element into the spherical harmonic model.
-     *
-     * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
-     * @param array<string, mixed> $ggmData The GGM data.
-     */
-    protected function insertErrorHandling(SimpleXMLElement $shm, array $ggmData): void
-    {
-        if (!empty($ggmData['error_handling_approach'])) {
-            $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorHandling', $this->prepare($ggmData['error_handling_approach'], 'errorHandling'), self::ICGEM_NAMESPACE_URI);
+            $errorsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorType', $this->prepare($ggmData['errors'], 'errorsType'), self::ICGEM_NAMESPACE_URI);
+            
+            // Add errorHandling inside errors element if it exists
+            if (!empty($ggmData['error_handling_approach'])) {
+                $errorsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorHandling', $this->prepare($ggmData['error_handling_approach'], 'errorHandling'), self::ICGEM_NAMESPACE_URI);
+            }
         }
     }
     /**
@@ -740,7 +733,6 @@ class ICGEMController extends DatasetController
         // 8. Insert core GGM properties into gravityFieldModel
         $this->insertSphericalHarmonicModelProperties($shm, $ggmData);
         $this->insertErrors($shm, $ggmData);
-        $this->insertErrorHandling($shm, $ggmData);
         $this->insertTemporalModelPropertiesIcgem($shm, $temporalProperties);
         $this->insertTopographicModelPropertiesIcgem($shm, $topographicProperties);
         $this->insertStaticModelPropertiesIcgem($shm, $staticProperties);
