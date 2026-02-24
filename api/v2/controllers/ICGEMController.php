@@ -449,7 +449,7 @@ class ICGEMController extends DatasetController
                     $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':release', $this->prepare($property['release'], 'release'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['temporal_resolution_days'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolutionDays', $this->prepare($property['temporal_resolution_days'], 'temporalResolutionDays'), self::ICGEM_NAMESPACE_URI);
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolution', $this->prepare($property['temporal_resolution_days'], 'temporalResolution'), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
@@ -546,6 +546,11 @@ class ICGEMController extends DatasetController
     private function prepare(string $value, string $fieldName): string
     {
         $trimmed = trim($value);
+        
+        // Replace spaces with dashes in tide system
+        if ($fieldName === 'tideSystem') {
+            $trimmed = str_replace(' ', '-', $trimmed);
+        }
         
         // Capitalize if this is an enumeration field
         if (in_array($fieldName, self::ENUMERATION_FIELDS, true)) {
