@@ -707,10 +707,13 @@ class ICGEMController extends DatasetController
         // 2. Get DataCite XML as string
         $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, "datacite");
         
-        // 3. Create envelope root with 2 namespaces (DataCite and ICGEM)
+        // 3. Create envelope root with ICGEM as primary namespace and DataCite as secondary
         $envelope = new SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<envelope xmlns:dc="http://datacite.org/schema/kernel-4" xmlns:' . self::ICGEM_NAMESPACE_PREFIX . '="' . self::ICGEM_NAMESPACE_URI . '"/>'
+            '<icgv:envelope xmlns:icgv="' . self::ICGEM_NAMESPACE_URI . '" ' .
+            'xmlns:dc="http://datacite.org/schema/kernel-4" ' .
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' .
+            'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' schema.xsd"/>'
         );
         
         // 4. Parse DataCite XML and append it to envelope
