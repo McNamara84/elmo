@@ -734,13 +734,10 @@ class ICGEMController extends DatasetController
         // 6. Create ICGEM globalGravityProduct as child of envelope
         $icgempart = $envelope->addChild(self::ICGEM_NAMESPACE_PREFIX . ':globalGravityProduct', null, self::ICGEM_NAMESPACE_URI);
         
-        // 7. Insert descriptions at root level of ICGEM part
-        $this->insertDescriptions($icgempart, $id);
-        
-        // 8. Create sphericalHarmonicModel container
+        // 7. Create gravityFieldModel container (FIRST per XSD sequence)
         $shm = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':gravityFieldModel', null, self::ICGEM_NAMESPACE_URI);
         
-        // 9. Insert core GGM properties into sphericalHarmonicModel
+        // 8. Insert core GGM properties into gravityFieldModel
         $this->insertSphericalHarmonicModelProperties($shm, $ggmData);
         $this->insertErrors($shm, $ggmData);
         $this->insertErrorHandling($shm, $ggmData);
@@ -749,8 +746,11 @@ class ICGEMController extends DatasetController
         $this->insertStaticModelPropertiesIcgem($shm, $staticProperties);
         $this->insertEllipsoidalParametersIcgem($shm, $ellipsoidalParameters);
         
-        // 10. Insert data sources at root level of ICGEM part
+        // 9. Insert data sources (SECOND per XSD sequence)
         $this->insertInputDataSources($icgempart, $dataSources);
+        
+        // 10. Insert descriptions (THIRD per XSD sequence)
+        $this->insertDescriptions($icgempart, $id);
         
         // 11. Format and return the combined envelope XML
         $dom = dom_import_simplexml($envelope)->ownerDocument;
