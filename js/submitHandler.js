@@ -287,7 +287,7 @@ class SubmitHandler {
                     // Append primary data upload hint if URL is configured
                     const uploadUrl = window.ELMO_FEATURES?.dataUploadUrl;
                     if (uploadUrl) {
-                        const mainTitle = $('#input-resourceinformation-title-1').val() || '';
+                        const mainTitle = $('#input-resourceinformation-title').val() || '';
                         const hint = this.buildDataUploadHint(uploadUrl, mainTitle);
                         $('#modal-notification-body').append(hint);
                         $('#modal-notification .modal-dialog').addClass('modal-lg');
