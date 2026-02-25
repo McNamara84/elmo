@@ -52,7 +52,11 @@
         "submitError": "Failed to submit dataset.",
         "errorHeading": "Error",
         "successHeading": "Success! Your metadata has been submitted.",
-        "successMessage": "Thank you for cooperating with us. You will be contacted via email by the data curation team of GFZ Data Services shortly."
+        "successMessage": "Thank you for cooperating with us. You will be contacted via email by the data curation team of GFZ Data Services shortly.",
+        "dataUploadTitle": "Upload primary data",
+        "dataUploadMessage": "Only the <strong>metadata</strong> has been submitted to GFZ Data Services. Please upload your primary data (research data) via the following link to the Nextcloud:",
+        "dataUploadLinkText": "Upload primary data here",
+        "dataUploadFileNameHint": "Please name your file(s) according to the title of your dataset:"
     },
     "autosave": {
         "status": {
