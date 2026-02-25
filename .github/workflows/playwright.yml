@@ -125,9 +125,32 @@ jobs:
 
     - name: Start PHP built-in web server
       run: |
+        echo "Starting PHP server without router script..."
         php -S localhost:8000 -t . 2>&1 > server.log &
         echo $! > server.pid
-        sleep 5
+        sleep 10
+        
+        echo "Listing files in current directory:"
+        ls -la | head -20
+        
+        echo "\nChecking for common entry files:"
+        ls -la index.* || echo "No index files found"
+        ls -la main.* || echo "No main files found"
+        ls -la app.* || echo "No app files found"
+        
+        echo "\nTesting server connectivity:"
+        curl -v http://localhost:8000/ || echo "Root test failed"
+        
+        echo "\nTesting direct file access:"
+        curl -v http://localhost:8000/index.php || echo "index.php test failed"
+        
+        echo "\nServer log contents:"
+        cat server.log
+        
+        echo "\nTesting if server serves static files:"
+        echo "<html><body><h1>Test</h1></body></html>" > test.html
+        curl -v http://localhost:8000/test.html || echo "Static file test failed"
+        rm test.html
 
     - name: Cache Playwright browsers
       id: playwright-cache

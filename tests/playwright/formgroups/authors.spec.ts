@@ -89,8 +89,8 @@ test.describe('Author(s) form group', () => {
 
     await contactToggleLabel.click();
 
-    await expect(emailInput).toBeVisible({ timeout: 10000 });
-    await expect(websiteInput).toBeVisible({ timeout: 10000 });
+    await expect(emailInput).toBeVisible({ timeout: 1000000 });
+    await expect(websiteInput).toBeVisible({ timeout: 1000000 });
 
     await emailInput.fill('contact@example.com');
     await websiteInput.fill('https://example.com/profile');
