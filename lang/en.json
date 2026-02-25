@@ -100,12 +100,12 @@
         "licenseTitle": "License"
     },
     "authors": {
-        "title": "Author(s)",
+        "title": "Author: Persons",
         "affiliationInvalid": "Please provide an affiliation.",
         "InstitutionsNameInvalid": "Please provide an Institution name."
     },
     "authorsInstitutions": {
-        "title": "Author Institution",
+        "title": "Author: Institutions",
         "name": "Author Institution name"
     },
     "contactPersons": {
@@ -117,10 +117,10 @@
         "websiteInvalid": "Please provide a valid URL."
     },
     "contributorPersons": {
-        "title": "Contributor (Persons)"
+        "title": "Contributor: Persons"
     },
     "contributorInstitutions": {
-        "title": "Contributor (Institutions)",
+        "title": "Contributor: Institutions",
         "organization": "Organisation name",
         "organizationInvalid": "Please enter a valid organization name."
     },
