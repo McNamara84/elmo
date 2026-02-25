@@ -20,7 +20,7 @@
         "lastNameInvalid": "Veuillez saisir un nom. Seules les lettres sont autorisées.",
         "firstNameInvalid": "Veuillez saisir un prénom. Seules les lettres sont autorisées.",
         "firstName": "Prénom",
-        "affiliation": "Affiliation(s)",
+        "affiliation": "Affiliation",
         "roleLabel": "Rôle(s)",
         "add": "+",
         "cancel": "Annuler",

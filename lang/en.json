@@ -20,7 +20,7 @@
         "lastNameInvalid": "Please provide a lastname. Only letters are allowed.",
         "firstNameInvalid": "Please provide a firstname. Only letters are allowed.",
         "firstName": "First Name",
-        "affiliation": "Affiliation(s)",
+        "affiliation": "Affiliation",
         "roleLabel": "Role(s)",
         "add": "+",
         "cancel": "Cancel",

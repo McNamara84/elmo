@@ -20,7 +20,7 @@
         "lastNameInvalid": "Bitte geben Sie einen Nachnamen ein. Nur Buchstaben sind erlaubt.",
         "firstNameInvalid": "Bitte geben Sie einen Vornamen ein. Nur Buchstaben sind erlaubt.",
         "firstName": "Vorname",
-        "affiliation": "Zugehörigkeit(en)",
+        "affiliation": "Affiliation",
         "roleLabel": "Rolle(n)",
         "add": "+",
         "cancel": "Abbrechen",
