@@ -121,7 +121,7 @@
     },
     "contributorInstitutions": {
         "title": "Contributor: Institutions",
-        "organization": "Organisation name",
+        "organization": "Institution name",
         "organizationInvalid": "Please enter a valid organization name."
     },
     "laboratory": {

@@ -122,7 +122,7 @@
     },
     "contributorInstitutions": {
         "title": "Beitragende: Institutionen",
-        "organization": "Name der Organisation",
+        "organization": "Name der Institution",
         "organizationInvalid": "Bitte geben Sie einen gültigen Organisationsnamen ein."
     },
     "laboratory": {
