@@ -120,7 +120,11 @@ test.describe('Theme toggle', () => {
     });
   });
 
-  test('allows switching themes and respects auto mode preference', async ({ page }) => {
+  test('allows switching themes and respects auto mode preference', async ({ page }, testInfo) => {
+    // This test performs 1 initial load + 3 page.reload() cycles.
+    // Each Chromium page load takes 8-13s in CI, so 45s is not enough.
+    testInfo.setTimeout(90_000);
+
     await navigateToHome(page);
 
     const html = page.locator('html');
