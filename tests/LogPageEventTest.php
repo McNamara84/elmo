@@ -1,18 +1,20 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 
-class LogPageEventTest extends TestCase
-{
-    public static function setUpBeforeClass(): void
-    {
-        if (!defined('UNIT_TESTING')) {
-            define('UNIT_TESTING', true);
-        }
-        require_once dirname(__DIR__) . '/log_page_event.php';
-    }
+if (!defined('UNIT_TESTING')) {
+    define('UNIT_TESTING', true);
+}
+require_once dirname(__DIR__) . '/log_page_event.php';
 
+#[CoversFunction('handle_log_page_event')]
+final class LogPageEventTest extends TestCase
+{
     public function testLogsValidEventAndTimestamp(): void
     {
         $logs = [];

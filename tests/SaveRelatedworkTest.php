@@ -1,12 +1,14 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
+
 
 require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_relatedwork.php';
 
-class SaveRelatedworkTest extends DatabaseTestCase
+final class SaveRelatedworkTest extends DatabaseTestCase
 {
     /**
      * Nur ARK wurde als Identifier Type ausgewählt und alle anderen Felder bleiben leer

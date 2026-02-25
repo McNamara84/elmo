@@ -91,10 +91,35 @@ function showConfirmationModal(titleKey, messageKey, cancelKey, confirmKey, onCo
         modal.hide();
     });
     
-    // Focus management: move focus to confirm button when modal opens
-    modalElement.addEventListener('shown.bs.modal', function focusConfirmButton() {
-        freshConfirmButton.focus();
-    }, { once: true });
+    // Focus management: move focus into the modal when it opens.
+    // WebKit can occasionally keep focus on the triggering button unless we retry.
+    const moveFocusIntoModal = () => {
+        try {
+            if (freshConfirmButton && typeof freshConfirmButton.focus === 'function') {
+                freshConfirmButton.focus({ preventScroll: true });
+            }
+
+            const activeElement = document.activeElement;
+            const isFocusInModal = modalElement && activeElement && modalElement.contains(activeElement);
+            if (!isFocusInModal && modalElement && typeof modalElement.focus === 'function') {
+                modalElement.focus({ preventScroll: true });
+            }
+        } catch (e) {
+            // Ignore focus errors (e.g., in rare browser edge cases)
+        }
+    };
+
+    const scheduleFocusRetries = () => {
+        moveFocusIntoModal();
+        if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(moveFocusIntoModal);
+        }
+        setTimeout(moveFocusIntoModal, 0);
+        setTimeout(moveFocusIntoModal, 50);
+    };
+
+    modalElement.addEventListener('show.bs.modal', scheduleFocusRetries, { once: true });
+    modalElement.addEventListener('shown.bs.modal', scheduleFocusRetries, { once: true });
     
     // Show modal
     modal.show();

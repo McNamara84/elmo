@@ -94,7 +94,7 @@ async function mockFeedbackEndpoint(
 }
 
 test.describe('Feedback modal interactions', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Axe audit covered in Chromium');
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Axe audit (accessibility audits) covered in Chromium. The results are the same across browsers');
   test('shows success feedback flow when the backend responds with 200', async ({ page }) => {
     const { feedbackButton, feedbackModal } = await navigateToFeedbackModal(page);
     const feedbackForm = feedbackModal.locator('#form-feedback');

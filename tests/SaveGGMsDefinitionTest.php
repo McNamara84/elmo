@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
 
@@ -14,7 +15,7 @@ require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
  * - validateGGMData validation
  * - saveGGMsDefinition complete flow
  */
-class SaveGGMsDefinitionTest extends DatabaseTestCase
+final class SaveGGMsDefinitionTest extends DatabaseTestCase
 {
     private $resourceId;
 
