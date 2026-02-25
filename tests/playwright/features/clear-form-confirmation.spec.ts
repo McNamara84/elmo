@@ -242,29 +242,19 @@ test.describe('Clear form confirmation dialog', () => {
     // Wait for modal to be visible
     await expect(page.locator('#modal-confirm')).toBeVisible();
     
-    // Wait a moment for focus to settle
-    await page.waitForTimeout(200);
+    // Wait for Bootstrap modal transition to complete and focus to settle.
+    // In CI environments (especially Chromium), this can take longer than 200ms.
+    await page.waitForTimeout(500);
     
-    // Check that focus has moved away from the original button
-    // (The important accessibility behavior is that focus moves into the modal context)
-    const focusInfo = await page.evaluate(() => {
-      const activeElement = document.activeElement;
-      const resetButton = document.querySelector('#button-form-reset');
-      const modal = document.querySelector('#modal-confirm');
-      const isInsideModal = modal && modal.contains(activeElement);
-      const isOnResetButton = activeElement === resetButton;
-      
-      return {
-        id: activeElement?.id || '',
-        tagName: activeElement?.tagName || '',
-        isInsideModal: isInsideModal,
-        isOnResetButton: isOnResetButton
-      };
-    });
-    
-    // The main accessibility requirement: focus should NOT remain on the reset button
-    // Focus may be on the modal itself (body element) or any element within it
-    expect(focusInfo.isOnResetButton).toBe(false);
+    // Poll for focus to move away from the reset button, as Bootstrap's
+    // modal focus trap may need extra time on slower CI runners.
+    await expect.poll(async () => {
+      return page.evaluate(() => {
+        const activeElement = document.activeElement;
+        const resetButton = document.querySelector('#button-form-reset');
+        return activeElement !== resetButton;
+      });
+    }, { timeout: 5000 }).toBeTruthy();
   });
 
   test('multiple rapid clicks do not cause issues', async ({ page }) => {

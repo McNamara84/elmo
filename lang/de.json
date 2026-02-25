@@ -52,7 +52,11 @@
         "submitError": "Datensatz konnte nicht übermittelt werden.",
         "errorHeading": "Fehler",
         "successHeading": "Erfolg! Ihre Metadaten wurden übermittelt.",
-        "successMessage": "Vielen Dank für Ihre Kooperation. Sie werden in Kürze per E-Mail vom Datenkuratierungsteam der GFZ Data Services kontaktiert."
+        "successMessage": "Vielen Dank für Ihre Kooperation. Sie werden in Kürze per E-Mail vom Datenkuratierungsteam der GFZ Data Services kontaktiert.",
+        "dataUploadTitle": "Primärdaten hochladen",
+        "dataUploadMessage": "Es wurden nur die <strong>Metadaten</strong> an GFZ Data Services übermittelt. Bitte laden Sie Ihre Primärdaten (Forschungsdaten) über den folgenden Link in der Nextcloud hoch:",
+        "dataUploadLinkText": "Primärdaten hier hochladen",
+        "dataUploadFileNameHint": "Bitte benennen Sie Ihre Datei(en) passend zum Titel Ihres Datensatzes:"
 
     },
     "autosave": {

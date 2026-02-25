@@ -292,4 +292,214 @@ describe('submitHandler.js', () => {
     body = $('#modal-notification-body').html();
     expect(body).toContain('alert-danger');
   });
+
+  // ── buildDataUploadHint tests ──────────────────────────────────────
+
+  describe('buildDataUploadHint', () => {
+    beforeEach(() => {
+      global.translations.alerts.dataUploadTitle = 'Upload primary data';
+      global.translations.alerts.dataUploadMessage = 'Only <strong>metadata</strong> submitted.';
+      global.translations.alerts.dataUploadLinkText = 'Upload here';
+      global.translations.alerts.dataUploadFileNameHint = 'Name your file:';
+    });
+
+    test('returns alert-warning block with correct URL and target=_blank', () => {
+      const html = handler.buildDataUploadHint('https://nextcloud.example.com/share', 'My Dataset');
+      expect(html).toContain('alert-warning');
+      expect(html).toContain('href="https://nextcloud.example.com/share"');
+      expect(html).toContain('target="_blank"');
+      expect(html).toContain('rel="noopener noreferrer"');
+    });
+
+    test('displays translated title and message', () => {
+      const html = handler.buildDataUploadHint('https://example.com', 'Test');
+      expect(html).toContain('Upload primary data');
+      expect(html).toContain('Only <strong>metadata</strong> submitted.');
+      expect(html).toContain('Upload here');
+    });
+
+    test('includes main title as filename suggestion when provided', () => {
+      const html = handler.buildDataUploadHint('https://example.com', 'My Important Research Dataset');
+      expect(html).toContain('My Important Research Dataset');
+      expect(html).toContain('Name your file:');
+      expect(html).toContain('font-monospace');
+    });
+
+    test('omits filename suggestion when main title is empty', () => {
+      const html = handler.buildDataUploadHint('https://example.com', '');
+      expect(html).not.toContain('Name your file:');
+      expect(html).not.toContain('font-monospace');
+    });
+
+    test('escapes HTML in main title to prevent XSS', () => {
+      const html = handler.buildDataUploadHint('https://example.com', '<script>alert("xss")</script>');
+      expect(html).not.toContain('<script>');
+      expect(html).toContain('&lt;script&gt;');
+    });
+
+    test('escapes HTML in upload URL to prevent XSS', () => {
+      const html = handler.buildDataUploadHint('https://example.com/"><script>alert(1)</script>', 'Title');
+      expect(html).not.toContain('"><script>');
+      expect(html).toContain('&quot;&gt;&lt;script&gt;');
+    });
+
+    test('handles special characters in title correctly', () => {
+      const html = handler.buildDataUploadHint('https://example.com', 'Müller & Schröder\'s Data "2025"');
+      expect(html).toContain('Müller &amp; Schröder&#39;s Data &quot;2025&quot;');
+    });
+
+    test('renders the upload link as a button with btn-warning class', () => {
+      const html = handler.buildDataUploadHint('https://example.com', 'Test');
+      expect(html).toContain('btn btn-warning btn-sm fw-bold');
+      expect(html).toContain('bi-box-arrow-up-right');
+    });
+
+    test('renders the cloud upload icon in the heading', () => {
+      const html = handler.buildDataUploadHint('https://example.com', 'Test');
+      expect(html).toContain('bi-cloud-arrow-up-fill');
+    });
+  });
+
+  // ── submitViaAjax data upload hint integration tests ───────────────
+
+  describe('submitViaAjax data upload hint', () => {
+    beforeEach(() => {
+      global.translations.alerts.dataUploadTitle = 'Upload primary data';
+      global.translations.alerts.dataUploadMessage = 'Only metadata submitted.';
+      global.translations.alerts.dataUploadLinkText = 'Upload here';
+      global.translations.alerts.dataUploadFileNameHint = 'Name your file:';
+
+      // Add title input and modal-dialog to DOM
+      document.body.innerHTML += `
+        <input id="input-resourceinformation-title" value="My Research Dataset" />
+        <div id="modal-notification">
+          <div class="modal-dialog">
+            <div id="modal-notification-label"></div>
+            <div id="modal-notification-body"></div>
+          </div>
+        </div>
+      `;
+    });
+
+    afterEach(() => {
+      delete window.ELMO_FEATURES;
+    });
+
+    test('appends upload hint when ELMO_FEATURES.dataUploadUrl is set', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: 'https://nextcloud.example.com/upload' };
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        const body = $('#modal-notification-body').html();
+        expect(body).toContain('alert-warning');
+        expect(body).toContain('https://nextcloud.example.com/upload');
+        expect(body).toContain('My Research Dataset');
+        expect(body).toContain('Upload primary data');
+        done();
+      }, 100);
+    });
+
+    test('does not append upload hint when ELMO_FEATURES.dataUploadUrl is empty', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: '' };
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        const body = $('#modal-notification-body').html();
+        expect(body).not.toContain('alert-warning');
+        done();
+      }, 100);
+    });
+
+    test('does not append upload hint when ELMO_FEATURES is undefined', (done) => {
+      delete window.ELMO_FEATURES;
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        const body = $('#modal-notification-body').html();
+        expect(body).not.toContain('alert-warning');
+        done();
+      }, 100);
+    });
+
+    test('adds modal-lg class when upload hint is appended', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: 'https://nextcloud.example.com' };
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        expect($('#modal-notification .modal-dialog').hasClass('modal-lg')).toBe(true);
+        done();
+      }, 100);
+    });
+
+    test('does not add modal-lg class when no upload URL configured', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: '' };
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        expect($('#modal-notification .modal-dialog').hasClass('modal-lg')).toBe(false);
+        done();
+      }, 100);
+    });
+
+    test('does not append upload hint on error response', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: 'https://nextcloud.example.com' };
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: false, message: 'Failed' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        const body = $('#modal-notification-body').html();
+        expect(body).not.toContain('alert-warning');
+        expect(body).toContain('alert-danger');
+        done();
+      }, 100);
+    });
+
+    test('uses empty string for title when title input is empty', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: 'https://nextcloud.example.com' };
+      $('#input-resourceinformation-title').val('');
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        const body = $('#modal-notification-body').html();
+        expect(body).toContain('alert-warning');
+        // Should not contain filename hint when title is empty
+        expect(body).not.toContain('Name your file:');
+        done();
+      }, 100);
+    });
+  });
 });

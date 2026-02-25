@@ -52,7 +52,11 @@
         "submitError": "Échec de la soumission de l'ensemble de données.",
         "errorHeading": "Erreur",
         "successHeading": "Succès ! Vos métadonnées ont été soumises.",
-        "successMessage": "Merci de votre coopération. Vous serez contacté par email par l'équipe de curation des données des GFZ Data Services sous peu."
+        "successMessage": "Merci de votre coopération. Vous serez contacté par email par l'équipe de curation des données des GFZ Data Services sous peu.",
+        "dataUploadTitle": "Télécharger les données primaires",
+        "dataUploadMessage": "Seules les <strong>métadonnées</strong> ont été soumises aux GFZ Data Services. Veuillez télécharger vos données primaires (données de recherche) via le lien suivant vers le Nextcloud :",
+        "dataUploadLinkText": "Télécharger les données primaires ici",
+        "dataUploadFileNameHint": "Veuillez nommer vos fichiers selon le titre de votre jeu de données :"
 
     },
     "autosave": {
