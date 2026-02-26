@@ -233,7 +233,6 @@ test.describe('Contributor (Persons) form group', () => {
     });
 
     await page.goto(`${APP_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => {
       const roleInput: any = document.querySelector('#input-contributor-personrole');
       const affiliationInput: any = document.querySelector('#input-contributorpersons-affiliation');

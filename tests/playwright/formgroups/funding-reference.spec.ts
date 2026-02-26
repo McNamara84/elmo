@@ -91,7 +91,6 @@ test.describe('Funding Reference form group', () => {
     });
 
     await page.goto(`${APP_BASE_URL}${TEST_ROUTE}`, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
 
     await page.waitForFunction(() => {
       const $ = (window as any).jQuery;

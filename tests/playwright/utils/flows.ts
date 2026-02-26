@@ -200,7 +200,7 @@ async function addContributorPerson(
   // The title for this field is Role(s) 
   const roleTagifyInput = contributorRow.locator('.tagify__input[title="Role(s)"]');
   await roleTagifyInput.click();
-  await page.waitForTimeout(300);
+  await expect(roleTagifyInput).toBeFocused();
   await roleTagifyInput.type(data.role);
   await page.keyboard.press('Enter');
 
@@ -406,7 +406,7 @@ async function addAuthor(
   await authorRow.locator('[id^="input-author-orcid"]').fill(data.orcid);
   const lastNameField = authorRow.locator('[id^="input-author-lastname"]');
   await lastNameField.click();
-  await page.waitForTimeout(300);
+  await expect(lastNameField).toBeFocused();
   await lastNameField.clear();
   await lastNameField.fill(data.lastName);
   await authorRow.locator('[id^="input-author-firstname"]').fill(data.firstName);
@@ -425,8 +425,8 @@ async function addAuthor(
     return input?._tagify?.value?.some((tag: any) => tag.value === data.affiliation);
   }, data.affiliation);
 
-  // Extra buffer to ensure tag is fully processed
-  await page.waitForTimeout(500);
+  // Wait for the tag to be fully rendered in the DOM
+  await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible' });
 }
 export { exampleData };
 

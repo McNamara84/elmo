@@ -119,7 +119,8 @@ test.describe('Resource Information Form Tests', () => {
     await expect(page.locator('[data-help-section-id="help-resourceinformation-resourcetype"]')).toBeVisible();
 
     await disableHelp(page);
-    await page.waitForTimeout(1500);
+    // Wait for help icons to be hidden
+    await expect(page.locator('[data-help-section-id="help-resourceinformation-doi"]')).not.toBeVisible();
     await enableHelp(page);
 
     await expect(helpIcons.first()).toBeVisible();
