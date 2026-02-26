@@ -145,61 +145,15 @@ jobs:
 
     - name: Verify server is running
       run: |
-        echo "Checking if server is running..."
-        ps aux | grep php || echo "No PHP processes found"
-        
-        echo "Testing server connectivity..."
         for i in {1..10}; do
-          if curl -s http://localhost:8000/index.php > /dev/null; then
-            echo "Server is responding to index.php on attempt $i"
+          if curl -sf http://localhost:8000/index.php > /dev/null; then
+            echo "Server is responding on attempt $i"
             break
-          elif curl -s http://localhost:8000/ > /dev/null; then
-            echo "Server is responding to root on attempt $i"
-            break
-          else
-            echo "Server not responding on attempt $i, waiting..."
-            sleep 2
           fi
+          echo "Waiting for server... ($i)"
+          sleep 2
         done
-        
-        echo "Final connectivity test:"
-        curl -v http://localhost:8000/index.php || echo "index.php still not reachable"
-        curl -v http://localhost:8000/ || echo "Root still not reachable"
-
-    - name: Create debugging test
-      run: |
-        cat << 'EOF' > tests/playwright/debug.spec.js
-        import { test, expect } from '@playwright/test';
-        
-        test('Debug server response', async ({ page }) => {
-          console.log('Testing direct server access...');
-          
-          // Test different URLs
-          const urls = ['/', '/index.php', '/index.html'];
-          
-          for (const url of urls) {
-            try {
-              console.log(`\nTrying URL: ${url}`);
-              const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 5000 });
-              console.log(`Status: ${response.status()}`);
-              console.log(`URL after navigation: ${page.url()}`);
-              
-              const title = await page.title();
-              console.log(`Page title: ${title}`);
-              
-              const bodyText = await page.locator('body').textContent().catch(() => 'No body found');
-              console.log(`Body text (first 100 chars): ${bodyText.substring(0, 100)}`);
-              
-              if (response.ok()) {
-                console.log(`✅ Success with ${url}`);
-                break;
-              }
-            } catch (error) {
-              console.log(`❌ Error with ${url}: ${error.message}`);
-            }
-          }
-        });
-        EOF
+        curl -sf http://localhost:8000/index.php > /dev/null || { echo "Server not reachable"; exit 1; }
 
     - name: Run Playwright tests
       id: run_playwright_tests
@@ -405,16 +359,6 @@ jobs:
       run: |
         echo "=== Debugging what the browser gets ==="
         curl -s http://localhost:8000/ | head -50
-        echo "\n=== Testing if any HTML is returned ==="
-        curl -s http://localhost:8000/ | grep -i "html\|body\|navbar" || echo "No HTML tags found"
-
-    - name: Debug what the browser actually sees
-      if: failure()
-      run: |
-        echo "=== Debugging what the browser gets ==="
-        curl -s http://localhost:8000/ | head -50
-        echo "\n=== Testing if any HTML is returned ==="
-        curl -s http://localhost:8000/ | grep -i "html\|body\|navbar" || echo "No HTML tags found"
 
     - name: Upload Playwright Report
       uses: actions/upload-artifact@v4
