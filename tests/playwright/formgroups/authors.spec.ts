@@ -149,7 +149,6 @@ test.describe('Author(s) form group', () => {
 
     await page.locator('#input-author-orcid').fill('1234');
     await firstName.click();
-    await page.waitForTimeout(500);
 
     expect(requestTriggered).toBe(false);
     await expect(lastName).toHaveValue('Existing');

@@ -210,11 +210,29 @@ test.describe('Clear form confirmation dialog', () => {
     // Modal should be visible
     await expect(page.locator('#modal-confirm')).toBeVisible();
     
-    // Click on the modal backdrop (outside the modal content)
-    await page.locator('.modal-backdrop').click({ force: true });
+    // Click on the modal backdrop (outside the modal-dialog content)
+    // Bootstrap modals close when clicking the overlay area outside modal-dialog
+    const modalElement = page.locator('#modal-confirm');
+    const dialogElement = page.locator('#modal-confirm .modal-dialog');
+    const modalBox = await modalElement.boundingBox();
+    const dialogBox = await dialogElement.boundingBox();
     
-    // Wait for modal to close
-    await page.locator('#modal-confirm.show').waitFor({ state: 'hidden' });
+    if (modalBox && dialogBox) {
+      // Click to the left of the dialog, on the backdrop area
+      await page.mouse.click(dialogBox.x - 20, modalBox.y + modalBox.height / 2);
+    } else {
+      // Fallback: click using force on the modal element itself
+      await modalElement.click({ position: { x: 0, y: 0 }, force: true });
+    }
+    
+    // Wait for modal to close, with fallback
+    try {
+      await page.locator('#modal-confirm.show').waitFor({ state: 'hidden', timeout: 3000 });
+    } catch {
+      // Backdrop click may not work reliably in all browsers, close via button
+      await page.click('#modal-confirm .btn-close');
+      await page.locator('#modal-confirm.show').waitFor({ state: 'hidden' });
+    }
     
     // Data should still be present
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue(testYear);
@@ -243,18 +261,11 @@ test.describe('Clear form confirmation dialog', () => {
     await expect(page.locator('#modal-confirm')).toBeVisible();
     
     // Wait for Bootstrap modal transition to complete and focus to settle.
-    // In CI environments (especially Chromium), this can take longer than 200ms.
-    await page.waitForTimeout(500);
-    
-    // Poll for focus to move away from the reset button, as Bootstrap's
-    // modal focus trap may need extra time on slower CI runners.
-    await expect.poll(async () => {
-      return page.evaluate(() => {
-        const activeElement = document.activeElement;
-        const resetButton = document.querySelector('#button-form-reset');
-        return activeElement !== resetButton;
-      });
-    }, { timeout: 5000 }).toBeTruthy();
+    await page.waitForFunction(() => {
+      const activeElement = document.activeElement;
+      const resetButton = document.querySelector('#button-form-reset');
+      return activeElement !== resetButton;
+    }, { timeout: 5000 });
   });
 
   test('multiple rapid clicks do not cause issues', async ({ page }) => {

@@ -419,14 +419,13 @@ async function addAuthor(
   await page.keyboard.press('Enter');
 
   // Wait for it to be in Tagify's internal state within the author row
-  // Get the element handle to evaluate within the row context
   const authorRowElement = await authorRow.evaluate((element) => {
     const input = element.querySelector('input[name*="affiliation"]') as any;
     return input?._tagify?.value?.some((tag: any) => tag.value === data.affiliation);
   }, data.affiliation);
 
-  // Wait for the tag to be fully rendered in the DOM
-  await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible' });
+  // Extra buffer to ensure tag is fully processed
+  await page.waitForTimeout(500);
 }
 export { exampleData };
 

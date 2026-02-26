@@ -339,7 +339,6 @@ test.describe('Contributor (Persons) form group', () => {
 
     await page.locator('#input-contributor-orcid').fill('1234');
     await page.locator('#input-contributor-firstname').click();
-    await page.waitForTimeout(400);
 
     expect(requests).toHaveLength(0);
     await expect(page.locator('#input-contributor-lastname')).toHaveValue('Existing');
