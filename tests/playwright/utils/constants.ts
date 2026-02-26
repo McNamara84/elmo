@@ -37,8 +37,11 @@ export const STATIC_ASSET_ROUTE_PATTERNS = [
   '**/node_modules/**',
   '**/js/**',
   '**/*.css',
+  '**/*.json',
   '**/*.map',
   '**/*.svg',
+  '**/*.png',
+  '**/*.ico',
 ];
 
 export const CONTENT_TYPES: Record<string, string> = {
@@ -49,6 +52,8 @@ export const CONTENT_TYPES: Record<string, string> = {
   '.mjs': 'application/javascript; charset=utf-8',
   '.cjs': 'application/javascript; charset=utf-8',
   '.svg': 'image/svg+xml; charset=utf-8',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
 };
 
 export const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
