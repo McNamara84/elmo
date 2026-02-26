@@ -15,10 +15,12 @@ export async function navigateToHome(page: Page) {
     // single-threaded PHP built-in server only handles API calls.
     await registerStaticAssetRoutes(page);
 
-    // Block fire-and-forget logging POST – not needed in tests.
-    await page.route('**/log_page_event.php', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
-    );
+    // Suppress fire-and-forget logging POST – not needed in most tests.
+    // Use fallback() to delegate to any prior handler (e.g. the mock in
+    // page-event-logging.spec.ts) before the request reaches the server.
+    // When no prior mock exists the request goes to the PHP server, but
+    // that single small POST is negligible.
+    await page.route('**/log_page_event.php', route => route.fallback());
 
     pagesWithRoutes.add(page);
   }
