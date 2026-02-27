@@ -562,7 +562,7 @@ function populateTimezoneDropdownWithData(timezones) {
 function populateResourceTypeDropdownWithData(types) {
   const $select = $("#input-resourceinformation-resourcetype");
   if (!$select.length) return;
-  isGEM = window.ELMO_FEATURES?.showGGMsProperties
+  const isGEM = window.ELMO_FEATURES?.showGGMsProperties
   
   // Always empty to remove "Loading..." option
   $select.empty();
@@ -601,7 +601,7 @@ function populateLanguageDropdownWithData(languages) {
   const $select = $("#input-resourceinformation-language");
   if (!$select.length) return;
 
-  isGEM = window.ELMO_FEATURES?.showGGMsProperties 
+  const isGEM = window.ELMO_FEATURES?.showGGMsProperties 
   
   // Always empty to remove "Loading..." option
   $select.empty();
