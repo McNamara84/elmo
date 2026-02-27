@@ -20,7 +20,7 @@
         "lastNameInvalid": "Bitte geben Sie einen Nachnamen ein. Nur Buchstaben sind erlaubt.",
         "firstNameInvalid": "Bitte geben Sie einen Vornamen ein. Nur Buchstaben sind erlaubt.",
         "firstName": "Vorname",
-        "affiliation": "Zugehörigkeit(en)",
+        "affiliation": "Affiliation",
         "roleLabel": "Rolle(n)",
         "add": "+",
         "cancel": "Abbrechen",
@@ -105,12 +105,12 @@
         "licenseTitle": "Lizenz"
     },
     "authors": {
-        "title": "Autor(en)",
+        "title": "Autor: Personen",
         "affiliationInvalid": "Bitte geben Sie eine Zugehörigkeit an.",
         "InstitutionsNameInvalid": "Bitte geben Sie den Namen der Institution an."
     },
     "authorsInstitutions": {
-        "title": "Autor Institution",
+        "title": "Autor: Institutionen",
         "name": "Name der Autor Institution"
     },
     "contactPersons": {
@@ -122,11 +122,11 @@
         "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
     },
     "contributorPersons": {
-        "title": "Beitragende (Personen)"
+        "title": "Beitragende: Personen"
     },
     "contributorInstitutions": {
-        "title": "Beitragende (Organisationen)",
-        "organization": "Name der Organisation",
+        "title": "Beitragende: Institutionen",
+        "organization": "Name der Institution",
         "organizationInvalid": "Bitte geben Sie einen gültigen Organisationsnamen ein."
     },
     "laboratory": {
