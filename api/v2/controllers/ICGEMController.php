@@ -403,25 +403,79 @@ class ICGEMController extends DatasetController
                 if (!empty($property['approximation'])) {
                     $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':approximation', $this->prepare($property['approximation'], 'approximation'), self::ICGEM_NAMESPACE_URI);
                 }
+                
+                // Insert nested densityInformation elements for each domain (Whole, Mantle, Crust)
+                // Domain: Whole
                 if (!empty($property['density_information'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformation', $this->prepare($property['density_information'], 'densityInformation'), self::ICGEM_NAMESPACE_URI);
+                    $this->insertDensityInformationElement(
+                        $tmpElement,
+                        'Whole',
+                        $property['density_information'],
+                        $property['density_information_details'] ?? null
+                    );
                 }
-                if (!empty($property['density_information_details'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformationDescription', $this->prepare($property['density_information_details'], 'densityInformationDescription'), self::ICGEM_NAMESPACE_URI);
-                }
+                
+                // Domain: Mantle
                 if (!empty($property['mantle_density_information'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformation', $this->prepare($property['mantle_density_information'], 'mantleDensityInformation'), self::ICGEM_NAMESPACE_URI);
+                    $this->insertDensityInformationElement(
+                        $tmpElement,
+                        'Mantle',
+                        $property['mantle_density_information'],
+                        $property['mantle_density_information_details'] ?? null
+                    );
                 }
-                if (!empty($property['mantle_density_information_details'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':mantleDensityInformationDescription', $this->prepare($property['mantle_density_information_details'], 'mantleDensityInformationDescription'), self::ICGEM_NAMESPACE_URI);
-                }
+                
+                // Domain: Crust
                 if (!empty($property['crust_density_information'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformation', $this->prepare($property['crust_density_information'], 'crustDensityInformation'), self::ICGEM_NAMESPACE_URI);
-                }
-                if (!empty($property['crust_density_information_details'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':crustDensityInformationDescription', $this->prepare($property['crust_density_information_details'], 'crustDensityInformationDescription'), self::ICGEM_NAMESPACE_URI);
+                    $this->insertDensityInformationElement(
+                        $tmpElement,
+                        'Crust',
+                        $property['crust_density_information'],
+                        $property['crust_density_information_details'] ?? null
+                    );
                 }
             }
+        }
+    }
+
+    /**
+     * Inserts a single densityInformation element with required child elements.
+     *
+     * @param SimpleXMLElement $parentElement The parent element to insert into.
+     * @param string $domain The density information domain (Whole, Mantle, or Crust).
+     * @param string $informationType The type of density information (enumeration value).
+     * @param string|null $description Optional description of the density information.
+     */
+    private function insertDensityInformationElement(
+        SimpleXMLElement $parentElement,
+        string $domain,
+        string $informationType,
+        ?string $description
+    ): void
+    {
+        $densityElement = $parentElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':densityInformation', null, self::ICGEM_NAMESPACE_URI);
+        
+        // Add required domain element
+        $densityElement->addChild(
+            self::ICGEM_NAMESPACE_PREFIX . ':densityInformationDomain',
+            $this->prepare($domain, 'densityInformationDomain'),
+            self::ICGEM_NAMESPACE_URI
+        );
+        
+        // Add required type element
+        $densityElement->addChild(
+            self::ICGEM_NAMESPACE_PREFIX . ':densityInformationType',
+            $this->prepare($informationType, 'densityInformationType'),
+            self::ICGEM_NAMESPACE_URI
+        );
+        
+        // Add optional description element
+        if (!empty($description)) {
+            $densityElement->addChild(
+                self::ICGEM_NAMESPACE_PREFIX . ':densityInformationDescription',
+                $this->prepare($description, 'densityInformationDescription'),
+                self::ICGEM_NAMESPACE_URI
+            );
         }
     }
     /**
@@ -528,7 +582,9 @@ class ICGEMController extends DatasetController
         'modelDetails',
         'altimetryDetails',
         'elevationTerrainDetails',
-        'inputDataSourceType'
+        'inputDataSourceType',
+        'densityInformationType',
+        'densityInformationDomain'
     ];
 
     private const ICGEM_DESCRIPTION_TYPES = [
