@@ -157,16 +157,14 @@ function setupResourceTypeDropdown() {
     method: "GET",
     dataType: "json",
     success: function (data) {
-      select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Choose...",
-          "data-translate": "general.choose",
-        })
-      );
+      select.empty();
+      addPlaceholder(select, true);
 
       if (Array.isArray(data)) {
-        data.forEach(function (type) {
+        const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
+        const filteredData = filterDataByGEM(data, 'resourceType', isGEM);
+
+        filteredData.forEach(function (type) {
           select.append(
             $("<option>", {
               value: type.id,
@@ -208,16 +206,14 @@ function setupLanguageDropdown() {
     method: "GET",
     dataType: "json",
     success: function (data) {
-      select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Choose...",
-          "data-translate": "general.choose",
-        })
-      );
+      select.empty();
+      addPlaceholder(select, true);
 
       if (Array.isArray(data)) {
-        data.forEach(function (lang) {
+        const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
+        const filteredData = filterDataByGEM(data, 'language', isGEM);
+
+        filteredData.forEach(function (lang) {
           select.append(
             $("<option>", {
               value: lang.id,
@@ -393,6 +389,45 @@ function setupLicenseDropdown(isSoftware) {
   });
 }
 
+/**
+ * Adds a "Choose..." placeholder option to a dropdown
+ * For ICGEM-specific dropdowns, skips placeholder when ICGEM mode is enabled
+ * @param {jQuery} $select - The jQuery select element
+ * @param {boolean} isGEMDropdown - Whether this is a ICGEM-specific dropdown (skips placeholder if ICGEM enabled)
+ */
+function addPlaceholder($select, isGEMDropdown = false) {
+  const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
+  
+  // For GEM dropdowns, don't add placeholder when GEM is enabled. For others, always add.
+  if (isGEMDropdown && isGEM) return;
+  
+  $select.append(
+    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
+  );
+}
+
+/**
+ * Filters data based on GEM feature flag
+ * @param {Array} data - Array of data objects to filter
+ * @param {string} type - Type of filter: "resourceType" or "language"
+ * @param {boolean} isGEM - Whether ICGEM mode is enabled (see showGGMsProperties flag)
+ * @returns {Array} Filtered data array
+ */
+function filterDataByGEM(data, type, isGEM) {
+  if (!isGEM || !Array.isArray(data)) {
+    return data;
+  }
+
+  switch (type) {
+    case 'resourceType':
+      return data.filter(item => item.resource_type_general === "Dataset");
+    case 'language':
+      return data.filter(item => item.name === "English");
+    default:
+      return data;
+  }
+}
+
 // Make functions available globally (important for tests)
 window.setupLicenseDropdown = setupLicenseDropdown;
 window.setupLanguageDropdown = setupLanguageDropdown;
@@ -552,13 +587,19 @@ function populateTimezoneDropdownWithData(timezones) {
 function populateResourceTypeDropdownWithData(types) {
   const $select = $("#input-resourceinformation-resourcetype");
   if (!$select.length) return;
-
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
-
+    
+  // Always empty to remove "Loading..." option
+  $select.empty();
+  
+  // Handle placeholder logic
+  addPlaceholder($select, true);
+  
   if (Array.isArray(types)) {
-    types.forEach(type => {
+    // Filter data based on GEM flag
+    const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
+    const filteredData = filterDataByGEM(types, 'resourceType', isGEM);
+    
+    filteredData.forEach(type => {
       $select.append(
         $("<option>", {
           value: type.id,
@@ -578,13 +619,19 @@ function populateResourceTypeDropdownWithData(types) {
 function populateLanguageDropdownWithData(languages) {
   const $select = $("#input-resourceinformation-language");
   if (!$select.length) return;
-
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
-
+  
+  // Always empty to remove "Loading..." option
+  $select.empty();
+  
+  // Handle placeholder logic
+  addPlaceholder($select, true);
+  
   if (Array.isArray(languages)) {
-    languages.forEach(lang => {
+    // Filter data based on GEM flag
+    const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
+    const filteredData = filterDataByGEM(languages, 'language', isGEM);
+    
+    filteredData.forEach(lang => {
       $select.append(
         $("<option>", {
           value: lang.id,
@@ -605,9 +652,8 @@ function populateTitleTypeDropdownWithData(types) {
   const $select = $("#input-resourceinformation-titletype");
   if (!$select.length) return;
 
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
+  $select.empty();
+  addPlaceholder($select);
 
   let mainTitleId = "";
 
@@ -673,9 +719,8 @@ function populateRelationsDropdownWithData(response) {
   const $select = $("#input-relatedwork-relation");
   if (!$select.length) return;
 
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
+  $select.empty();
+  addPlaceholder($select);
 
   if (response && response.relations && response.relations.length > 0) {
     response.relations
@@ -701,9 +746,8 @@ function populateIdentifierTypesDropdownWithData(response) {
   const $select = $("#input-relatedwork-identifiertype");
   if (!$select.length) return;
 
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
+  $select.empty();
+  addPlaceholder($select);
 
   if (response && response.identifierTypes) {
     response.identifierTypes.forEach(type => {
@@ -1076,6 +1120,8 @@ if (typeof module !== 'undefined' && module.exports) {
     populateLicenseDropdownWithData,
     populateRelationsDropdownWithData,
     populateIdentifierTypesDropdownWithData,
+    addPlaceholder,
+    filterDataByGEM,
     getIdentifierPriority,
     updateIdentifierType,
     debounce,
