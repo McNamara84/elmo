@@ -89,6 +89,12 @@ test.describe('Resource Information Form Tests', () => {
   });
 
   test('Test title type dropdown options', async ({ page }) => {
+    // Wait for title type dropdown options to be loaded from API before cloning
+    await page.waitForFunction(() => {
+      const select = document.querySelector('#input-resourceinformation-titletype');
+      return select && select.querySelectorAll('option[value]').length > 1;
+    }, { timeout: 15000 });
+
     await page.locator('#button-resourceinformation-addtitle').click();
 
     const titleTypeSelect = page.locator('#input-resourceinformation-titletype').nth(1);
@@ -97,14 +103,21 @@ test.describe('Resource Information Form Tests', () => {
     const titleOptionCount = await titleTypeOptions.count();
     expect(titleOptionCount).toBeGreaterThanOrEqual(2);
 
-    await expect(titleTypeSelect.locator('option[value="2"]').first()).toHaveText('Alternative Title');
-    await expect(titleTypeSelect.locator('option[value="3"]').first()).toHaveText('Translated Title');
+    // Check for title types by name (IDs are dynamic with ERNIE integration)
+    const optionTexts = await titleTypeOptions.allTextContents();
+    expect(optionTexts.some(t => t === 'Alternative Title')).toBe(true);
+    expect(optionTexts.some(t => t === 'Translated Title')).toBe(true);
+    // Main Title should NOT be in the cloned dropdown (reserved for first title)
+    expect(optionTexts.some(t => t === 'Main Title')).toBe(false);
 
-    await titleTypeSelect.selectOption('2');
-    await expect(titleTypeSelect).toHaveValue('2');
+    // Select by label and verify selection works
+    await titleTypeSelect.selectOption({ label: 'Alternative Title' });
+    const altValue = await titleTypeSelect.inputValue();
+    expect(altValue).not.toBe('');
 
-    await titleTypeSelect.selectOption('3');
-    await expect(titleTypeSelect).toHaveValue('3');
+    await titleTypeSelect.selectOption({ label: 'Translated Title' });
+    const transValue = await titleTypeSelect.inputValue();
+    expect(transValue).not.toBe('');
   });
 
   test('Test help icons visibility toggle', async ({ page }) => {

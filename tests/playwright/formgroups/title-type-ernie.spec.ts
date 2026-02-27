@@ -8,14 +8,16 @@ test.describe('Title Type Dropdown - ERNIE Integration', () => {
   });
 
   test('Title Type dropdown loads options from API', async ({ page }) => {
-    const titleTypeSelect = page.locator('#input-resourceinformation-titletype');
-    await expect(titleTypeSelect).toBeVisible();
-
-    // Wait for options to be populated (beyond just the placeholder)
+    // Wait for the hidden first select to be populated with options from the API
     await page.waitForFunction(() => {
       const select = document.querySelector('#input-resourceinformation-titletype');
-      return select && select.querySelectorAll('option').length > 1;
-    }, { timeout: 10000 });
+      return select && select.querySelectorAll('option[value]').length > 1;
+    }, { timeout: 15000 });
+
+    // Click Add Title to get a visible dropdown
+    await page.locator('#button-resourceinformation-addtitle').click();
+    const titleTypeSelect = page.locator('#input-resourceinformation-titletype').nth(1);
+    await expect(titleTypeSelect).toBeVisible();
 
     // Get all option values
     const options = await titleTypeSelect.locator('option').allTextContents();
@@ -24,35 +26,41 @@ test.describe('Title Type Dropdown - ERNIE Integration', () => {
     expect(options.length).toBeGreaterThan(1);
   });
 
-  test('Title Type dropdown contains Main Title', async ({ page }) => {
-    const titleTypeSelect = page.locator('#input-resourceinformation-titletype');
-    await expect(titleTypeSelect).toBeVisible();
-
-    // Wait for options to load
+  test('Title Type dropdown contains expected types', async ({ page }) => {
+    // Wait for options to load in hidden first select
     await page.waitForFunction(() => {
       const select = document.querySelector('#input-resourceinformation-titletype');
-      return select && select.querySelectorAll('option').length > 1;
-    }, { timeout: 10000 });
+      return select && select.querySelectorAll('option[value]').length > 1;
+    }, { timeout: 15000 });
+
+    // Click Add Title to get a visible dropdown
+    await page.locator('#button-resourceinformation-addtitle').click();
+    const titleTypeSelect = page.locator('#input-resourceinformation-titletype').nth(1);
+    await expect(titleTypeSelect).toBeVisible();
 
     const optionTexts = await titleTypeSelect.locator('option').allTextContents();
 
-    // Must contain Main Title (always required)
-    const hasMainTitle = optionTexts.some(text => text.includes('Main Title'));
-    expect(hasMainTitle).toBe(true);
+    // Cloned dropdown should contain Alternative Title and Translated Title
+    expect(optionTexts.some(text => text.includes('Alternative Title'))).toBe(true);
+    expect(optionTexts.some(text => text.includes('Translated Title'))).toBe(true);
+    // Main Title should NOT be in the cloned dropdown (reserved for first title)
+    expect(optionTexts.some(text => text === 'Main Title')).toBe(false);
   });
 
   test('First title is always set to Main Title', async ({ page }) => {
-    const titleTypeSelect = page.locator('#input-resourceinformation-titletype').first();
-    await expect(titleTypeSelect).toBeVisible();
-
-    // Wait for options to load
+    // Wait for the hidden first select to be populated
     await page.waitForFunction(() => {
       const select = document.querySelector('#input-resourceinformation-titletype');
-      return select && select.querySelectorAll('option').length > 1;
-    }, { timeout: 10000 });
+      return select && select.querySelectorAll('option[value]').length > 1;
+    }, { timeout: 15000 });
 
-    // First title should be set to Main Title
-    const selectedText = await titleTypeSelect.locator('option:checked').textContent();
+    // Check the hidden first select's value via JS evaluation (it's intentionally hidden)
+    const selectedText = await page.evaluate(() => {
+      const select = document.querySelector('#input-resourceinformation-titletype') as HTMLSelectElement;
+      if (!select || select.selectedIndex < 0) return '';
+      return select.options[select.selectedIndex]?.text || '';
+    });
+
     expect(selectedText).toContain('Main Title');
   });
 
