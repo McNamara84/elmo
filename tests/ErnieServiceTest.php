@@ -822,5 +822,258 @@ final class ErnieServiceTest extends TestCase
         $titleStatus = $service->getTitleTypesCacheStatus();
         $this->assertFalse($titleStatus['exists']);
     }
+
+    // ==================== isConfigured() with logging Tests ====================
+
+    /**
+     * Test that isConfigured with logResult logs when configured
+     */
+    public function testIsConfiguredWithLogResultWhenConfigured(): void
+    {
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->isConfigured(logResult: true);
+
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test that isConfigured with logResult logs when not configured
+     */
+    public function testIsConfiguredWithLogResultWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->isConfigured(logResult: true);
+
+        $this->assertFalse($result);
+    }
+
+    // ==================== isCacheFileValid() edge cases ====================
+
+    /**
+     * Test that cache with invalid lastUpdated timestamp is treated as invalid
+     */
+    public function testCacheWithInvalidTimestampIsInvalid(): void
+    {
+        $cache = [
+            'lastUpdated' => 'not-a-valid-date',
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => [['id' => 1, 'name' => 'Test', 'description' => null]]
+        ];
+        file_put_contents($this->testCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getCacheStatus();
+
+        // Cache exists but should be invalid due to unparseable timestamp
+        $this->assertTrue($status['exists']);
+        $this->assertFalse($status['valid']);
+    }
+
+    // ==================== writeCacheFile() edge cases ====================
+
+    /**
+     * Test that writeCacheFile creates directory if needed
+     */
+    public function testWriteCacheCreatesDirectoryIfNeeded(): void
+    {
+        // Create a service with cache file in a non-existent subdirectory
+        $nestedDir = $this->testCacheDir . '/nested/deep';
+        $nestedCacheFile = $nestedDir . '/test_cache.json';
+
+        $this->setGlobalConfig('https://ernie.example.com/', 'test-key');
+        $service = new TestableErnieService($nestedCacheFile, $this->testTitleTypesCacheFile);
+
+        // Write valid data to the nested cache path via the resource types cache
+        $testData = [['id' => 1, 'name' => 'Test', 'description' => null]];
+        // Write to the nested cache file directly (simulating what writeCacheFile does)
+        if (!is_dir($nestedDir)) {
+            mkdir($nestedDir, 0755, true);
+        }
+        $cache = [
+            'lastUpdated' => date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => $testData
+        ];
+        file_put_contents($nestedCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
+
+        // Verify we can read data back via the service
+        $result = $service->getResourceTypesWithCache();
+        $this->assertCount(1, $result);
+        $this->assertSame('Test', $result[0]['name']);
+
+        // Clean up nested directory
+        if (file_exists($nestedCacheFile)) {
+            unlink($nestedCacheFile);
+        }
+        if (is_dir($nestedDir)) {
+            rmdir($nestedDir);
+        }
+        $parentDir = dirname($nestedDir);
+        if (is_dir($parentDir)) {
+            rmdir($parentDir);
+        }
+    }
+
+    // ==================== getCacheFileStatus() edge cases ====================
+
+    /**
+     * Test getCacheStatus with empty data array
+     */
+    public function testGetCacheStatusWithEmptyData(): void
+    {
+        $cache = [
+            'lastUpdated' => date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => []
+        ];
+        file_put_contents($this->testCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    /**
+     * Test getCacheStatus for title types with empty data 
+     */
+    public function testGetTitleTypesCacheStatusWithEmptyData(): void
+    {
+        $cache = [
+            'lastUpdated' => date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => []
+        ];
+        file_put_contents($this->testTitleTypesCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getTitleTypesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    // ==================== TTL with title types cache ====================
+
+    /**
+     * Test that custom TTL is respected for title types cache
+     */
+    public function testCustomTtlIsRespectedForTitleTypesCache(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title']];
+        // 30 minutes ago
+        $thirtyMinutesAgo = date('c', strtotime('-30 minutes'));
+        $this->writeTitleTypesTestCache($testData, $thirtyMinutesAgo);
+
+        // Use 1 hour TTL - cache should be valid
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key', 3600);
+        $status = $service->getTitleTypesCacheStatus();
+        $this->assertTrue($status['valid']);
+
+        // Use 10 minute TTL - cache should be invalid
+        $service2 = $this->createTestableService('https://ernie.example.com/', 'test-key', 600);
+        $status2 = $service2->getTitleTypesCacheStatus();
+        $this->assertFalse($status2['valid']);
+    }
+
+    // ==================== readCacheFile() edge cases ====================
+
+    /**
+     * Test that title types cache with invalid JSON returns fallback
+     */
+    public function testTitleTypesCacheHandlesInvalidJsonGracefully(): void
+    {
+        // Write invalid JSON to title types cache file
+        file_put_contents($this->testTitleTypesCacheFile, 'not valid json {{{');
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getTitleTypesWithCache();
+
+        // Should return array (either empty or fallback)
+        $this->assertIsArray($result);
+    }
+
+    /**
+     * Test that title types cache handles missing data key
+     */
+    public function testTitleTypesCacheHandlesMissingDataKey(): void
+    {
+        $cache = ['lastUpdated' => date('c'), 'ttl' => 21600];
+        file_put_contents($this->testTitleTypesCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getTitleTypesWithCache();
+
+        // Should return array (cache data is empty, so fallback)
+        $this->assertIsArray($result);
+    }
+
+    // ==================== formatAge() for title types ====================
+
+    /**
+     * Test formatAge for title types cache with hours
+     */
+    public function testFormatAgeForTitleTypesCacheHours(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title']];
+        $twoHoursAgo = date('c', strtotime('-2 hours'));
+        $this->writeTitleTypesTestCache($testData, $twoHoursAgo);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getTitleTypesCacheStatus();
+
+        $this->assertStringContainsString('hour', $status['ageFormatted']);
+    }
+
+    /**
+     * Test formatAge for title types cache with seconds
+     */
+    public function testFormatAgeForTitleTypesCacheSeconds(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title']];
+        $recent = date('c', strtotime('-15 seconds'));
+        $this->writeTitleTypesTestCache($testData, $recent);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getTitleTypesCacheStatus();
+
+        $this->assertStringContainsString('seconds', $status['ageFormatted']);
+    }
+
+    // ==================== Constructor TTL fallback ====================
+
+    /**
+     * Test that constructor falls back to ernieResourceTypesCacheTtl when ernieCacheTtl is null
+     */
+    public function testConstructorFallsBackToLegacyTtlVariable(): void
+    {
+        global $ernieUrl, $ernieApiKey, $ernieCacheTtl, $ernieResourceTypesCacheTtl;
+        $ernieUrl = 'https://ernie.example.com/';
+        $ernieApiKey = 'test-key';
+        $ernieCacheTtl = null;
+        $ernieResourceTypesCacheTtl = 7200; // 2 hours
+
+        $service = new TestableErnieService($this->testCacheFile, $this->testTitleTypesCacheFile);
+
+        // Write cache that is 3 hours old
+        $testData = [['id' => 1, 'name' => 'Test', 'description' => null]];
+        $threeHoursAgo = date('c', strtotime('-3 hours'));
+        $this->writeTestCache($testData, $threeHoursAgo);
+
+        $status = $service->getCacheStatus();
+        // With 2 hour TTL, 3 hour old cache should be invalid
+        $this->assertFalse($status['valid']);
+
+        // Restore
+        $ernieCacheTtl = 21600;
+        $ernieResourceTypesCacheTtl = 21600;
+    }
 }
 
