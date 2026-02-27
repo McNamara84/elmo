@@ -510,17 +510,25 @@ class ICGEMController extends DatasetController
      * Fields that require enumeration-style normalization (first letter capital).
      * These correspond to ICGEM XSD enumeration types.
      * Non-enumeration fields (numeric values, URIs) are excluded.
-     * 
+     * This basically has to list all the variables with enum values in the schema 
      * @var array<string>
      */
     private const ENUMERATION_FIELDS = [
-        'errorsType', 
+        'errorType', 
         'descriptionSection', 
         'modelType', 
         'groundDetails', 
         'inputDataSourceType', 
         'tideSystem', 
-        'mathematicalRepresentation'
+        'mathematicalRepresentation',
+        'forwardModellingDomain',
+        'approximation',
+        'layerApproach',
+        'descriptionSection',
+        'modelDetails',
+        'altimetryDetails',
+        'elevationTerrainDetails',
+        'inputDataSourceType'
     ];
 
     private const ICGEM_DESCRIPTION_TYPES = [
