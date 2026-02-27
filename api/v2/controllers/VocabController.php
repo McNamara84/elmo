@@ -1837,33 +1837,286 @@ class VocabController
     }
 
     /**
-     * Retrieves all title types from the database
+     * Retrieves all title types, preferring ERNIE data with local DB fallback
+     *
+     * When ERNIE is configured, fetches title types from ERNIE (with caching),
+     * syncs to local DB, and returns data with local IDs.
+     * Falls back to local database if ERNIE is unavailable.
      *
      * @return void Outputs JSON response directly
      */
     public function getTitleTypes(): void
     {
         try {
-            global $connection;
-            $stmt = $connection->prepare('SELECT title_type_id as id, name FROM Title_Type ORDER BY name');
+            require_once __DIR__ . '/../services/ErnieService.php';
 
-            if (!$stmt) {
-                throw new Exception("Failed to prepare statement: " . $connection->error);
+            $ernieService = new ErnieService();
+
+            // Only try ERNIE if it's configured (log configuration status)
+            if ($ernieService->isConfigured(logResult: true)) {
+                $ernieTypes = $ernieService->getTitleTypesWithCache();
+
+                if (!empty($ernieTypes)) {
+                    // Sync to local DB for storage purposes
+                    $this->syncTitleTypesToDb($ernieTypes);
+
+                    // Return ERNIE data with local IDs
+                    $types = $this->mapTitleTypeErnieToLocalIds($ernieTypes);
+                    error_log("Title Types: Serving " . count($types) . " types from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($types);
+                    return;
+                }
             }
 
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            $types = [];
-            while ($row = $result->fetch_assoc()) {
-                $types[] = $row;
-            }
-
-            header('Content-Type: application/json');
-            echo json_encode($types);
+            // Fallback: Load from local database
+            error_log("Title Types: Falling back to local database");
+            $this->getTitleTypesFromDb();
 
         } catch (Exception $e) {
             error_log("API Error in getTitleTypes: " . $e->getMessage());
+            // Fallback to local DB on any error
+            error_log("Title Types: Falling back to local database due to error");
+            $this->getTitleTypesFromDb();
+        }
+    }
+
+    /**
+     * Fetches title types directly from local database
+     *
+     * @return void Outputs JSON response directly
+     */
+    private function getTitleTypesFromDb(): void
+    {
+        global $connection;
+
+        $stmt = $connection->prepare(
+            'SELECT title_type_id as id, name FROM Title_Type ORDER BY name'
+        );
+
+        if (!$stmt) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Failed to prepare statement: ' . $connection->error]);
+            return;
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $types = [];
+        while ($row = $result->fetch_assoc()) {
+            $types[] = $row;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($types);
+    }
+
+    /**
+     * Syncs ERNIE title types to local database
+     * 
+     * This method ensures that all title types from ERNIE exist in the local
+     * database with their ernie_id mapping. Existing records are updated,
+     * new records are inserted. Uses a transaction to ensure data consistency.
+     *
+     * @param array<array{id: int, name: string, slug: string}> $ernieTypes Title types from ERNIE
+     * @return bool True if sync was successful, false otherwise
+     */
+    private function syncTitleTypesToDb(array $ernieTypes): bool
+    {
+        global $connection;
+
+        // Start transaction for atomic sync
+        $connection->begin_transaction();
+
+        try {
+            foreach ($ernieTypes as $type) {
+                $ernieId = $type['id'];
+                $name = $type['name'];
+
+                if (!$ernieId || !$name) {
+                    continue;
+                }
+
+                // First, try to find existing record by ernie_id
+                $stmt = $connection->prepare(
+                    'SELECT title_type_id FROM Title_Type WHERE ernie_id = ?'
+                );
+                $stmt->bind_param('i', $ernieId);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows > 0) {
+                    // Update existing record by ernie_id
+                    $updateStmt = $connection->prepare(
+                        'UPDATE Title_Type SET name = ? WHERE ernie_id = ?'
+                    );
+                    $updateStmt->bind_param('si', $name, $ernieId);
+                    $updateStmt->execute();
+                    continue;
+                }
+
+                // Check if record exists by name (for migrating existing data)
+                $stmt = $connection->prepare(
+                    'SELECT title_type_id FROM Title_Type WHERE name = ?'
+                );
+                $stmt->bind_param('s', $name);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows > 0) {
+                    // Update existing record to add ernie_id
+                    $row = $result->fetch_assoc();
+                    $updateStmt = $connection->prepare(
+                        'UPDATE Title_Type SET ernie_id = ? WHERE title_type_id = ?'
+                    );
+                    $updateStmt->bind_param('ii', $ernieId, $row['title_type_id']);
+                    $updateStmt->execute();
+                } else {
+                    // Insert new record
+                    $insertStmt = $connection->prepare(
+                        'INSERT INTO Title_Type (ernie_id, name) VALUES (?, ?)'
+                    );
+                    $insertStmt->bind_param('is', $ernieId, $name);
+                    $insertStmt->execute();
+                }
+            }
+
+            // Commit transaction
+            $connection->commit();
+            return true;
+
+        } catch (\Exception $e) {
+            // Rollback on error
+            $connection->rollback();
+            error_log("ERNIE title types sync failed, rolled back transaction: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Maps ERNIE title type data to local database IDs
+     * 
+     * Transforms ERNIE response format to the format expected by the frontend,
+     * using local database IDs for storage compatibility.
+     *
+     * @param array<array{id: int, name: string, slug: string}> $ernieTypes Title types from ERNIE
+     * @return array<array{id: int|null, name: string}> Mapped title types with local IDs
+     */
+    private function mapTitleTypeErnieToLocalIds(array $ernieTypes): array
+    {
+        global $connection;
+
+        $result = [];
+
+        foreach ($ernieTypes as $type) {
+            $ernieId = $type['id'];
+            $name = $type['name'];
+
+            // Get local ID
+            $stmt = $connection->prepare(
+                'SELECT title_type_id FROM Title_Type WHERE ernie_id = ?'
+            );
+            $stmt->bind_param('i', $ernieId);
+            $stmt->execute();
+            $dbResult = $stmt->get_result();
+
+            $localId = null;
+            if ($row = $dbResult->fetch_assoc()) {
+                $localId = (int) $row['title_type_id'];
+            }
+
+            $result[] = [
+                'id' => $localId,
+                'name' => $name
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Manually refreshes the ERNIE title types cache
+     * 
+     * Requires API key authentication.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshTitleTypesCache(): void
+    {
+        if (!$this->validateApiKey()) {
+            return;
+        }
+
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+
+            $ernieService = new ErnieService();
+
+            if (!$ernieService->isConfigured()) {
+                http_response_code(400);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'ERNIE service is not configured'
+                ]);
+                return;
+            }
+
+            $success = $ernieService->refreshTitleTypesCache();
+
+            header('Content-Type: application/json');
+
+            if ($success) {
+                // Also sync to database
+                $ernieTypes = $ernieService->getTitleTypesWithCache();
+                if (!empty($ernieTypes)) {
+                    $this->syncTitleTypesToDb($ernieTypes);
+                }
+
+                $status = $ernieService->getTitleTypesCacheStatus();
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Title types cache refreshed successfully',
+                    'itemCount' => $status['itemCount'],
+                    'lastUpdated' => $status['lastUpdated']
+                ]);
+            } else {
+                http_response_code(502);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to fetch title types data from ERNIE'
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("Error refreshing title types cache: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Gets the status of the ERNIE title types cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getTitleTypesCacheStatus(): void
+    {
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+
+            $ernieService = new ErnieService();
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'configured' => $ernieService->isConfigured(),
+                'cache' => $ernieService->getTitleTypesCacheStatus()
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error getting title types cache status: " . $e->getMessage());
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);

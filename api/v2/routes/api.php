@@ -74,5 +74,7 @@ return [
 
     // ERNIE cache management endpoints
     ['POST', '/admin/cache/resourcetypes/refresh', [new VocabController(), 'refreshResourceTypesCache']],
-    ['GET', '/admin/cache/resourcetypes/status', [new VocabController(), 'getResourceTypesCacheStatus']]
+    ['GET', '/admin/cache/resourcetypes/status', [new VocabController(), 'getResourceTypesCacheStatus']],
+    ['POST', '/admin/cache/titletypes/refresh', [new VocabController(), 'refreshTitleTypesCache']],
+    ['GET', '/admin/cache/titletypes/status', [new VocabController(), 'getTitleTypesCacheStatus']]
 ];
