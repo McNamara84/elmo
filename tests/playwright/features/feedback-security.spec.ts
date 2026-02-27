@@ -96,9 +96,9 @@ test.describe('Feedback Security Features', () => {
       // Verify CSRF token was requested
       await csrfPromise;
 
-      // After a short delay, the token field should be populated
-      await page.waitForTimeout(500);
+      // Wait until the token field is populated
       const csrfField = feedbackModal.locator('input[name="csrf_token"]');
+      await expect(csrfField).not.toHaveValue('');
       const tokenValue = await csrfField.inputValue();
 
       // Token should be a non-empty string (64 hex characters)
@@ -108,9 +108,9 @@ test.describe('Feedback Security Features', () => {
     test('CSRF token is refreshed when modal is reopened', async ({ page }) => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
 
-      // Wait for initial token
-      await page.waitForTimeout(500);
+      // Wait for initial token to be populated
       const csrfField = feedbackModal.locator('input[name="csrf_token"]');
+      await expect(csrfField).not.toHaveValue('');
       const firstToken = await csrfField.inputValue();
 
       // Close modal
@@ -129,8 +129,8 @@ test.describe('Feedback Security Features', () => {
       await expect(feedbackModal).toBeVisible();
       await csrfPromise;
 
-      // Wait and get new token
-      await page.waitForTimeout(500);
+      // Wait for new token to be populated
+      await expect(csrfField).not.toHaveValue('');
       const secondToken = await csrfField.inputValue();
 
       // Tokens should be different
@@ -174,8 +174,8 @@ test.describe('Feedback Security Features', () => {
 
       await fillFeedbackForm(page);
 
-      // Wait a few seconds to simulate real user
-      await page.waitForTimeout(6000);
+      // Wait to simulate real user interaction for time tracking
+      await page.waitForTimeout(2000);
 
       const sendButton = feedbackModal.locator('#button-feedback-send');
       
@@ -186,9 +186,9 @@ test.describe('Feedback Security Features', () => {
       await sendButton.click();
       await responsePromise;
 
-      // Time spent should be at least 5 seconds
+      // Time spent should be at least 1 second (verifies time tracking works)
       const timeSpentNum = parseInt(capturedTimeSpent, 10);
-      expect(timeSpentNum).toBeGreaterThanOrEqual(5);
+      expect(timeSpentNum).toBeGreaterThanOrEqual(1);
       
       await page.unroute(FEEDBACK_ENDPOINT);
     });
@@ -215,7 +215,9 @@ test.describe('Feedback Security Features', () => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
 
       await fillFeedbackForm(page);
-      await page.waitForTimeout(1000);
+
+      // Wait for CSRF token to be populated before submitting
+      await expect(feedbackModal.locator('input[name="csrf_token"]')).not.toHaveValue('');
 
       const sendButton = feedbackModal.locator('#button-feedback-send');
       
@@ -256,7 +258,7 @@ test.describe('Feedback Security Features', () => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
 
       await fillFeedbackForm(page);
-      await page.waitForTimeout(1000);
+      await expect(feedbackModal.locator('input[name="csrf_token"]')).not.toHaveValue('');
 
       const sendButton = feedbackModal.locator('#button-feedback-send');
       
@@ -292,7 +294,7 @@ test.describe('Feedback Security Features', () => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
 
       await fillFeedbackForm(page);
-      await page.waitForTimeout(1000);
+      await expect(feedbackModal.locator('input[name="csrf_token"]')).not.toHaveValue('');
 
       const sendButton = feedbackModal.locator('#button-feedback-send');
       

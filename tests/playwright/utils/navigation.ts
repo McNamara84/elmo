@@ -1,8 +1,30 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { registerStaticAssetRoutes } from './assets';
 import { SELECTORS } from './constants';
 
+/**
+ * Pages that already have static-asset & perf routes registered.
+ * Prevents duplicate route handlers when navigateToHome is called
+ * more than once on the same page instance.
+ */
+const pagesWithRoutes = new WeakSet<Page>();
+
 export async function navigateToHome(page: Page) {
-  await page.goto('');
+  if (!pagesWithRoutes.has(page)) {
+    // Serve JS, CSS, JSON, images directly from disk so the
+    // single-threaded PHP built-in server only handles API calls.
+    await registerStaticAssetRoutes(page);
+
+    // Suppress fire-and-forget logging POST – not needed in most tests.
+    // Use fallback() to delegate to any prior handler (e.g. the mock in
+    // page-event-logging.spec.ts) before the request reaches the server.
+    // When no prior mock exists the request goes to the PHP server, but
+    // that single small POST is negligible.
+    await page.route('**/log_page_event.php', route => route.fallback());
+
+    pagesWithRoutes.add(page);
+  }
+  await page.goto('', { waitUntil: 'domcontentloaded' });
 }
 
 export async function expectNavbarVisible(page: Page) {

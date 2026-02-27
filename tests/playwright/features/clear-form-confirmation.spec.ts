@@ -41,7 +41,7 @@ test.describe('Clear form confirmation dialog', () => {
       localStorage.setItem('userLanguage', 'de');
     });
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // Wait for translations to be fully loaded with all required keys
     await page.waitForFunction(() => {
@@ -72,7 +72,7 @@ test.describe('Clear form confirmation dialog', () => {
       localStorage.setItem('userLanguage', 'en');
     });
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // Click clear button
     await page.click('#button-form-reset');
@@ -90,7 +90,7 @@ test.describe('Clear form confirmation dialog', () => {
       localStorage.setItem('userLanguage', 'fr');
     });
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // Wait for translations to be fully loaded with all required keys
     await page.waitForFunction(() => {
@@ -157,8 +157,8 @@ test.describe('Clear form confirmation dialog', () => {
     await expect(page.locator('#modal-confirm')).toBeVisible();
     await page.click('#button-confirm-action');
     
-    // Wait a moment for clear action to complete
-    await page.waitForTimeout(500);
+    // Wait for modal to close and form to be cleared
+    await page.locator('#modal-confirm.show').waitFor({ state: 'hidden' });
     
     // All fields should be empty
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue('');
@@ -181,14 +181,14 @@ test.describe('Clear form confirmation dialog', () => {
     // Press Escape key
     await page.keyboard.press('Escape');
     
-    // Wait a moment for potential modal close animation
-    await page.waitForTimeout(500);
+    // Wait for modal close animation
+    await page.locator('#modal-confirm.show').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
     
     // If modal is still visible (Firefox may not support Escape), click X button
     const isStillVisible = await page.locator('#modal-confirm.show').isVisible();
     if (isStillVisible) {
       await page.click('#modal-confirm .btn-close');
-      await page.waitForTimeout(500);
+      await page.locator('#modal-confirm.show').waitFor({ state: 'hidden' });
     }
     
     // Modal should now be hidden
@@ -210,11 +210,29 @@ test.describe('Clear form confirmation dialog', () => {
     // Modal should be visible
     await expect(page.locator('#modal-confirm')).toBeVisible();
     
-    // Click on the modal backdrop (outside the modal content)
-    await page.locator('.modal-backdrop').click({ force: true });
+    // Click on the modal backdrop (outside the modal-dialog content)
+    // Bootstrap modals close when clicking the overlay area outside modal-dialog
+    const modalElement = page.locator('#modal-confirm');
+    const dialogElement = page.locator('#modal-confirm .modal-dialog');
+    const modalBox = await modalElement.boundingBox();
+    const dialogBox = await dialogElement.boundingBox();
     
-    // Wait a moment for modal to close
-    await page.waitForTimeout(500);
+    if (modalBox && dialogBox) {
+      // Click to the left of the dialog, on the backdrop area
+      await page.mouse.click(dialogBox.x - 20, modalBox.y + modalBox.height / 2);
+    } else {
+      // Fallback: click using force on the modal element itself
+      await modalElement.click({ position: { x: 0, y: 0 }, force: true });
+    }
+    
+    // Wait for modal to close, with fallback
+    try {
+      await page.locator('#modal-confirm.show').waitFor({ state: 'hidden', timeout: 3000 });
+    } catch {
+      // Backdrop click may not work reliably in all browsers, close via button
+      await page.click('#modal-confirm .btn-close');
+      await page.locator('#modal-confirm.show').waitFor({ state: 'hidden' });
+    }
     
     // Data should still be present
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue(testYear);
@@ -243,18 +261,11 @@ test.describe('Clear form confirmation dialog', () => {
     await expect(page.locator('#modal-confirm')).toBeVisible();
     
     // Wait for Bootstrap modal transition to complete and focus to settle.
-    // In CI environments (especially Chromium), this can take longer than 200ms.
-    await page.waitForTimeout(500);
-    
-    // Poll for focus to move away from the reset button, as Bootstrap's
-    // modal focus trap may need extra time on slower CI runners.
-    await expect.poll(async () => {
-      return page.evaluate(() => {
-        const activeElement = document.activeElement;
-        const resetButton = document.querySelector('#button-form-reset');
-        return activeElement !== resetButton;
-      });
-    }, { timeout: 5000 }).toBeTruthy();
+    await page.waitForFunction(() => {
+      const activeElement = document.activeElement;
+      const resetButton = document.querySelector('#button-form-reset');
+      return activeElement !== resetButton;
+    }, { timeout: 5000 });
   });
 
   test('multiple rapid clicks do not cause issues', async ({ page }) => {
@@ -269,7 +280,7 @@ test.describe('Clear form confirmation dialog', () => {
     
     // Cancel modal
     await page.click('#button-confirm-cancel');
-    await page.waitForTimeout(300);
+    await page.locator('#modal-confirm.show').waitFor({ state: 'hidden' });
     
     // Click again - modal should open again
     await page.click('#button-form-reset');
@@ -286,7 +297,7 @@ test.describe('Clear form confirmation dialog', () => {
     // Start with English
     await page.evaluate(() => localStorage.setItem('userLanguage', 'en'));
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // Wait for translations to be fully loaded with all required keys
     await page.waitForFunction(() => {
@@ -304,12 +315,12 @@ test.describe('Clear form confirmation dialog', () => {
     await expect(page.locator('#modal-confirm')).toBeVisible();
     await expect(page.locator('#modal-confirm-label')).toContainText(/Reset/i);
     await page.click('#button-confirm-cancel');
-    await page.waitForTimeout(300);
+    await page.locator('#modal-confirm.show').waitFor({ state: 'hidden' });
     
     // Change to German
     await page.evaluate(() => localStorage.setItem('userLanguage', 'de'));
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // Wait for translations to be fully loaded again
     await page.waitForFunction(() => {

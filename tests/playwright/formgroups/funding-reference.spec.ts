@@ -91,7 +91,6 @@ test.describe('Funding Reference form group', () => {
     });
 
     await page.goto(`${APP_BASE_URL}${TEST_ROUTE}`, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
 
     await page.waitForFunction(() => {
       const $ = (window as any).jQuery;
@@ -209,9 +208,6 @@ test.describe('Funding Reference form group', () => {
 
     for (const bp of breakpoints) {
       await page.setViewportSize({ width: bp.width, height: bp.height });
-
-      // Wait for layout to stabilize after viewport change
-      await page.waitForTimeout(100);
 
       // Scroll to the add button to ensure it's in view
       const addButton = page.locator('#button-fundingreference-add');

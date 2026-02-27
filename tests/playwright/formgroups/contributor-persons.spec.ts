@@ -233,7 +233,6 @@ test.describe('Contributor (Persons) form group', () => {
     });
 
     await page.goto(`${APP_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => {
       const roleInput: any = document.querySelector('#input-contributor-personrole');
       const affiliationInput: any = document.querySelector('#input-contributorpersons-affiliation');
@@ -340,7 +339,6 @@ test.describe('Contributor (Persons) form group', () => {
 
     await page.locator('#input-contributor-orcid').fill('1234');
     await page.locator('#input-contributor-firstname').click();
-    await page.waitForTimeout(400);
 
     expect(requests).toHaveLength(0);
     await expect(page.locator('#input-contributor-lastname')).toHaveValue('Existing');

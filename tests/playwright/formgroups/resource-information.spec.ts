@@ -81,8 +81,6 @@ test.describe('Resource Information Form Tests', () => {
     await expect(addTitleButton).toBeVisible();
     await addTitleButton.click();
 
-    await page.waitForTimeout(500);
-
     const secondContainer = titleTypeContainers.nth(1);
     await expect(secondContainer).toBeVisible();
 
@@ -92,9 +90,9 @@ test.describe('Resource Information Form Tests', () => {
 
   test('Test title type dropdown options', async ({ page }) => {
     await page.locator('#button-resourceinformation-addtitle').click();
-    await page.waitForTimeout(500);
 
     const titleTypeSelect = page.locator('#input-resourceinformation-titletype').nth(1);
+    await expect(titleTypeSelect).toBeVisible();
     const titleTypeOptions = titleTypeSelect.locator('option');
     const titleOptionCount = await titleTypeOptions.count();
     expect(titleOptionCount).toBeGreaterThanOrEqual(2);
@@ -119,7 +117,8 @@ test.describe('Resource Information Form Tests', () => {
     await expect(page.locator('[data-help-section-id="help-resourceinformation-resourcetype"]')).toBeVisible();
 
     await disableHelp(page);
-    await page.waitForTimeout(1500);
+    // Wait for help icons to be hidden
+    await expect(page.locator('[data-help-section-id="help-resourceinformation-doi"]')).not.toBeVisible();
     await enableHelp(page);
 
     await expect(helpIcons.first()).toBeVisible();

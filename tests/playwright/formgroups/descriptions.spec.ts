@@ -166,8 +166,8 @@ test.describe('Descriptions Form Group', () => {
 
     await openLanguageMenu(page);
     await page.locator('[data-bs-language-value="de"]').click();
-    await page.waitForTimeout(1000);
-
+    
+    // Wait for translation to be applied
     await expect(abstractField).toHaveAttribute(
       'placeholder',
       'Bitte ein Abstract zu den Daten einreichen. Bitte nicht das Abstract der dazugehörigen Publikation wiederholen, sondern die Daten an sich beschreiben.'
@@ -179,6 +179,10 @@ test.describe('Descriptions Form Group', () => {
 
     await openLanguageMenu(page);
     await page.locator('[data-bs-language-value="en"]').click();
-    await page.waitForTimeout(500);
+    // Wait for language switch to complete
+    await expect(abstractField).toHaveAttribute(
+      'placeholder',
+      'Please enter an abstract of the data. Please do not repeat the abstract of a paper, but describe the data itself.'
+    );
   });
 });

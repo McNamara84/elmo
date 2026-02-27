@@ -41,7 +41,6 @@ test.describe("Licenses and Rights", () => {
   test("Help button displays rights help", async ({ page }) => {
     // Ensure help is on
     await enableHelp(page);
-    await page.waitForTimeout(500);
 
     // Open help for rights section
     await page.locator('[data-help-section-id="help-rights"]').click();

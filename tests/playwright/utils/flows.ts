@@ -200,7 +200,7 @@ async function addContributorPerson(
   // The title for this field is Role(s) 
   const roleTagifyInput = contributorRow.locator('.tagify__input[title="Role(s)"]');
   await roleTagifyInput.click();
-  await page.waitForTimeout(300);
+  await expect(roleTagifyInput).toBeFocused();
   await roleTagifyInput.type(data.role);
   await page.keyboard.press('Enter');
 
@@ -406,7 +406,7 @@ async function addAuthor(
   await authorRow.locator('[id^="input-author-orcid"]').fill(data.orcid);
   const lastNameField = authorRow.locator('[id^="input-author-lastname"]');
   await lastNameField.click();
-  await page.waitForTimeout(300);
+  await expect(lastNameField).toBeFocused();
   await lastNameField.clear();
   await lastNameField.fill(data.lastName);
   await authorRow.locator('[id^="input-author-firstname"]').fill(data.firstName);
@@ -419,7 +419,6 @@ async function addAuthor(
   await page.keyboard.press('Enter');
 
   // Wait for it to be in Tagify's internal state within the author row
-  // Get the element handle to evaluate within the row context
   const authorRowElement = await authorRow.evaluate((element) => {
     const input = element.querySelector('input[name*="affiliation"]') as any;
     return input?._tagify?.value?.some((tag: any) => tag.value === data.affiliation);
