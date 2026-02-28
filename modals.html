@@ -35,6 +35,39 @@
         </div>
     </div>
 </div>
+<!-- Validation Failed Modal -->
+<div class="modal fade" id="modal-validation-failed" tabindex="-1"
+    aria-labelledby="modal-validation-failed-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-validation-failed-label"
+                    data-translate="modals.validationFailed.title">Submission not possible</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning mb-0">
+                    <p><strong data-translate="modals.validationFailed.greeting">Dear user,</strong></p>
+                    <p data-translate="modals.validationFailed.body">
+                        it appears that you want to submit data. Unfortunately, you have not filled in all the required fields.
+                    </p>
+                    <p id="modal-validation-failed-save-hint"
+                        data-translate="modals.validationFailed.saveHint">
+                    </p>
+                    <p data-translate="modals.validationFailed.fixHint">
+                        Otherwise, please complete the fields marked in red and try again.
+                    </p>
+                    <p class="mb-0" data-translate="modals.validationFailed.guideHint">
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                    data-translate="modals.validationFailed.close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Notification Modal -->
 <div class="modal fade" id="modal-notification" tabindex="-1" aria-labelledby="modal-notification-label"
     aria-hidden="true">
