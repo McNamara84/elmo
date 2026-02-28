@@ -226,8 +226,10 @@ class SubmitHandler {
         if (!this.$form[0].checkValidity() || !validateContactPerson()) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
-            $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            $firstInvalid.focus();
+            if ($firstInvalid.length > 0 && $firstInvalid[0]) {
+                $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                $firstInvalid.focus();
+            }
             this.showValidationFailedModal();
             return;
         }

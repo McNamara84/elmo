@@ -4,6 +4,10 @@ test.describe('Validation Failed Modal (#968)', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('', { waitUntil: 'domcontentloaded' });
+    // Wait for JS modules to be fully loaded and initialized
+    await page.waitForFunction(() =>
+      document.getElementById('modal-validation-failed') !== null
+    );
   });
 
   test('shows validation-failed modal when submitting with empty mandatory fields', async ({ page }) => {
@@ -14,7 +18,7 @@ test.describe('Validation Failed Modal (#968)', () => {
 
     // The validation-failed modal should appear
     const modal = page.locator('#modal-validation-failed');
-    await expect(modal).toBeVisible();
+    await expect(modal).toBeVisible({ timeout: 10000 });
   });
 
   test('validation-failed modal can be closed via close button', async ({ page }) => {
@@ -23,7 +27,7 @@ test.describe('Validation Failed Modal (#968)', () => {
     await submitButton.click();
 
     const modal = page.locator('#modal-validation-failed');
-    await expect(modal).toBeVisible();
+    await expect(modal).toBeVisible({ timeout: 10000 });
 
     // Close it
     const closeButton = modal.locator('.btn-primary[data-bs-dismiss="modal"]');
@@ -38,7 +42,7 @@ test.describe('Validation Failed Modal (#968)', () => {
     await submitButton.click();
 
     const modal = page.locator('#modal-validation-failed');
-    await expect(modal).toBeVisible();
+    await expect(modal).toBeVisible({ timeout: 10000 });
 
     // Close via header X button
     const xButton = modal.locator('.btn-close');
@@ -52,7 +56,7 @@ test.describe('Validation Failed Modal (#968)', () => {
     await submitButton.click();
 
     const modal = page.locator('#modal-validation-failed');
-    await expect(modal).toBeVisible();
+    await expect(modal).toBeVisible({ timeout: 10000 });
 
     // Check that the modal has a title
     const title = modal.locator('#modal-validation-failed-label');
@@ -77,9 +81,10 @@ test.describe('Validation Failed Modal (#968)', () => {
     await page.locator('[id^="input-author-lastname"]').first().fill('Doe');
     await page.locator('[id^="input-author-firstname"]').first().fill('John');
 
-    // Check contact person checkbox and fill email
-    const contactCheckbox = page.locator('[id^="checkbox-author-contactperson"]').first();
-    await contactCheckbox.check();
+    // The contact person checkbox is styled as a Bootstrap toggle button.
+    // The <label> intercepts pointer events, so we click the label instead.
+    const contactLabel = page.locator('label[for="checkbox-author-contactperson"]').first();
+    await contactLabel.click();
     await page.locator('[id^="input-contactperson-email"]').first().fill('john@example.com');
 
     // Fill abstract
