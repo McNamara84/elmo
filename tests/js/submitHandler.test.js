@@ -65,6 +65,11 @@ describe('submitHandler.js', () => {
         validationErrorheading: 'Validation',
         validationError: 'Invalid',
         successMessage: 'Dataset successfully transmitted.'
+      },
+      modals: {
+        validationFailed: {
+          saveHint: "Send to <a href='mailto:{email}'>{email}</a>."
+        }
       }
     };
         // Mock applyTranslations function
@@ -505,5 +510,72 @@ describe('submitHandler.js', () => {
         done();
       }, 100);
     });
+  });
+
+  // ── showValidationFailedModal tests ──────────────────────────────────
+
+  describe('showValidationFailedModal', () => {
+    test('shows the validation-failed modal', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'test@example.com' };
+      handler.showValidationFailedModal();
+      expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    });
+
+    test('replaces {email} placeholder with configured address', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'datapub@gfz.de' };
+      handler.showValidationFailedModal();
+      const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
+      expect(hint).toContain('datapub@gfz.de');
+      expect(hint).not.toContain('{email}');
+    });
+
+    test('creates mailto link with configured address', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'datapub@gfz.de' };
+      handler.showValidationFailedModal();
+      const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
+      expect(hint).toContain("href='mailto:datapub@gfz.de'");
+    });
+
+    test('escapes HTML in email address', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: '<script>alert(1)</script>' };
+      handler.showValidationFailedModal();
+      const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
+      expect(hint).not.toContain('<script>');
+    });
+
+    test('handles missing ELMO_FEATURES gracefully', () => {
+      delete window.ELMO_FEATURES;
+      handler.showValidationFailedModal();
+      expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    });
+
+    test('handles empty xmlSubmitAddress gracefully', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: '' };
+      handler.showValidationFailedModal();
+      expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    });
+
+    afterEach(() => {
+      delete window.ELMO_FEATURES;
+    });
+  });
+
+  // ── handleSubmit validation-failed modal integration test ──────────
+
+  test('handleSubmit shows validation-failed modal instead of notification on invalid form', () => {
+    handler.$form[0].checkValidity = jest.fn().mockReturnValue(false);
+    const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
+    const notifSpy = jest.spyOn(handler, 'showNotification');
+    handler.handleSubmit();
+    expect(modalSpy).toHaveBeenCalled();
+    expect(notifSpy).not.toHaveBeenCalled();
+  });
+
+  test('handleSubmit shows validation-failed modal when contact person is missing', () => {
+    handler.$form[0].checkValidity = jest.fn().mockReturnValue(true);
+    // No contact person checkbox checked
+    const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
+    handler.handleSubmit();
+    expect(modalSpy).toHaveBeenCalled();
   });
 });
