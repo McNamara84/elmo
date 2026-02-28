@@ -23,6 +23,10 @@ describe('submitHandler.js', () => {
         <div id="modal-notification-label"></div>
         <div id="modal-notification-body"></div>
       </div>
+      <div id="modal-validation-failed">
+        <h5 id="modal-validation-failed-label"></h5>
+        <p id="modal-validation-failed-save-hint"></p>
+      </div>
       <input id="input-date-created" />
       <input id="input-date-embargo" />
       <div class="embargo-invalid"></div>
