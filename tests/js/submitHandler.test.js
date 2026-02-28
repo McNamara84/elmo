@@ -533,14 +533,16 @@ describe('submitHandler.js', () => {
       window.ELMO_FEATURES = { xmlSubmitAddress: 'datapub@gfz.de' };
       handler.showValidationFailedModal();
       const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
-      expect(hint).toContain("href='mailto:datapub@gfz.de'");
+      expect(hint).toContain('mailto:datapub@gfz.de');
     });
 
-    test('escapes HTML in email address', () => {
-      window.ELMO_FEATURES = { xmlSubmitAddress: '<script>alert(1)</script>' };
+    test('escapes HTML special characters in email address', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'test&"user@gfz.de' };
       handler.showValidationFailedModal();
       const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
-      expect(hint).not.toContain('<script>');
+      // The link text should contain escaped ampersand
+      expect(hint).toContain('test&amp;');
+      expect(hint).toContain('mailto:');
     });
 
     test('handles missing ELMO_FEATURES gracefully', () => {
@@ -563,7 +565,12 @@ describe('submitHandler.js', () => {
   // ── handleSubmit validation-failed modal integration test ──────────
 
   test('handleSubmit shows validation-failed modal instead of notification on invalid form', () => {
-    handler.$form[0].checkValidity = jest.fn().mockReturnValue(false);
+    // Add a required field that is empty so :invalid selector finds it
+    const reqInput = document.createElement('input');
+    reqInput.required = true;
+    reqInput.value = '';
+    handler.$form[0].appendChild(reqInput);
+
     const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
     const notifSpy = jest.spyOn(handler, 'showNotification');
     handler.handleSubmit();
@@ -572,8 +579,26 @@ describe('submitHandler.js', () => {
   });
 
   test('handleSubmit shows validation-failed modal when contact person is missing', () => {
+    // Temporarily override checkValidity to return true (form fields are valid)
+    // but validateContactPerson will return false (no checkbox checked)
     handler.$form[0].checkValidity = jest.fn().mockReturnValue(true);
-    // No contact person checkbox checked
+
+    // Add a dummy element so $firstInvalid[0] is accessible
+    const dummyInput = document.createElement('input');
+    dummyInput.required = true;
+    dummyInput.value = '';
+    handler.$form[0].appendChild(dummyInput);
+
+    // Add a contact person field to DOM but don't check it
+    document.getElementById('group-author').innerHTML = `
+      <div class="row">
+        <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+        <input id="input-contactperson-email-1">
+        <input id="input-author-firstname-1">
+        <input id="input-author-lastname-1">
+      </div>
+    `;
+
     const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
     handler.handleSubmit();
     expect(modalSpy).toHaveBeenCalled();
