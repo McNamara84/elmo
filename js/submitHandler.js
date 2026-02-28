@@ -130,7 +130,10 @@ class SubmitHandler {
         this.$form = $(`#${formId}`);
         this.modals = {
             submit: new bootstrap.Modal($(`#${submitModalId}`)[0]),
-            notification: new bootstrap.Modal($(`#${notificationModalId}`)[0])
+            notification: new bootstrap.Modal($(`#${notificationModalId}`)[0]),
+            validationFailed: document.getElementById('modal-validation-failed')
+                ? new bootstrap.Modal($('#modal-validation-failed')[0])
+                : null
         };
 
         // File Input References
@@ -225,13 +228,28 @@ class SubmitHandler {
             const $firstInvalid = this.$form.find(':invalid').first();
             $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
             $firstInvalid.focus();
-            this.showNotification('danger',
-                translations.alerts.validationErrorheading,
-                translations.alerts.validationError);
+            this.showValidationFailedModal();
             return;
         }
 
         this.modals.submit.show();
+    }
+
+    /**
+     * Show the validation-failed modal with dynamic email address.
+     * Replaces the {email} placeholder in the save-hint paragraph with
+     * the configured xmlSubmitAddress from ELMO_FEATURES.
+     */
+    showValidationFailedModal() {
+        const email = window.ELMO_FEATURES?.xmlSubmitAddress || '';
+        const saveHintEl = document.getElementById('modal-validation-failed-save-hint');
+        if (saveHintEl && email) {
+            const template = translations.modals?.validationFailed?.saveHint || '';
+            saveHintEl.innerHTML = template.replace(/\{email\}/g, this.escapeHtml(email));
+        }
+        if (this.modals.validationFailed) {
+            this.modals.validationFailed.show();
+        }
     }
 
     /**
