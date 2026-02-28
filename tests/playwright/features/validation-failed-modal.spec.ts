@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { completeMinimalDatasetForm, navigateToHome } from '../utils';
 
 test.describe('Validation Failed Modal (#968)', () => {
 
@@ -73,22 +74,8 @@ test.describe('Validation Failed Modal (#968)', () => {
   });
 
   test('validation-failed modal does NOT appear when all mandatory fields are filled', async ({ page }) => {
-    // Fill in the essential mandatory fields
-    await page.locator('#input-resourceinformation-title').fill('Test Dataset Title');
-    await page.locator('#input-resourceinformation-publicationyear').fill('2026');
-
-    // Fill author fields
-    await page.locator('[id^="input-author-lastname"]').first().fill('Doe');
-    await page.locator('[id^="input-author-firstname"]').first().fill('John');
-
-    // The contact person checkbox is styled as a Bootstrap toggle button.
-    // The <label> intercepts pointer events, so we click the label instead.
-    const contactLabel = page.locator('label[for="checkbox-author-contactperson"]').first();
-    await contactLabel.click();
-    await page.locator('[id^="input-contactperson-email"]').first().fill('john@example.com');
-
-    // Fill abstract
-    await page.locator('#input-abstract').fill('This is a test abstract for validation.');
+    // Use the shared helper that fills ALL mandatory fields reliably
+    await completeMinimalDatasetForm(page);
 
     // Click Submit
     const submitButton = page.locator('#button-form-submit');
