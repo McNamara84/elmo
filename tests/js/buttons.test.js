@@ -176,21 +176,20 @@ describe('buttons.js', () => {
     expect(window.validateContributorPersonRequirements).not.toHaveBeenCalled();
   });
 
-  test('Submit button enforces required on js-required-on-submit fields and triggers HTML5 validation', () => {
+  test('Submit button enforces required on js-required-on-submit fields and calls validators', () => {
     loadScript();
-    const form = document.getElementById('form-mde');
     const field1 = document.getElementById('field1');
     const field2 = document.getElementById('field2');
-
-    const checkSpy = jest.spyOn(form, 'checkValidity').mockReturnValue(false);
 
     const clickEvent = $.Event('click');
     $('#button-form-submit').trigger(clickEvent);
 
     expect(field1.hasAttribute('required')).toBe(true);
     expect(field2.hasAttribute('required')).toBe(true);
-    expect(clickEvent.isDefaultPrevented()).toBe(true);
-    expect(form.classList.contains('was-validated')).toBe(true);
+
+    // Validation is now handled by submitHandler.handleSubmit() in validation.js,
+    // so buttons.js must NOT call preventDefault or add was-validated.
+    expect(clickEvent.isDefaultPrevented()).toBe(false);
 
     // Validators must run on Submit
     expect(window.validateFundingReferenceRequirements).toHaveBeenCalledTimes(1);
@@ -198,8 +197,6 @@ describe('buttons.js', () => {
     expect(window.validateSpatialTemporalCoverageRequirements).toHaveBeenCalledTimes(1);
     expect(window.validateContributorOrganisationRequirements).toHaveBeenCalledTimes(1);
     expect(window.validateContributorPersonRequirements).toHaveBeenCalledTimes(1);
-
-    checkSpy.mockRestore();
   });
 
 });
