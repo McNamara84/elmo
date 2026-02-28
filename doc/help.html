@@ -174,7 +174,7 @@ include_once "../settings.php";
                     <?php if (!($showLicense ?? true)): ?>
                     <p>By default, this publication will be published under a Creative Commons Attribution 4.0 (CC-BY) license. 
                         This follows the GFZ German Research Centre for Geosciences' Guidelines for open science.
-                        If your dataset requires another license, please contact us at datapub@gfz.de for further advice.
+                        If your dataset requires another license, please contact us at <?php echo htmlspecialchars($xmlSubmitAddress ?? 'datapub@gfz.de'); ?> for further advice.
                     </p>
                     <?php endif; ?>
                 </div>
