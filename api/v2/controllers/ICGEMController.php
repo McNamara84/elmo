@@ -294,7 +294,7 @@ class ICGEMController extends DatasetController
     {
         if (!empty($ggmData['errors'])) {
             $errorsElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errors', null, self::ICGEM_NAMESPACE_URI);
-            $errorsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorType', $this->prepare($ggmData['errors'], 'errorsType'), self::ICGEM_NAMESPACE_URI);
+            $errorsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorType', $this->prepare($ggmData['errors'], 'errorType'), self::ICGEM_NAMESPACE_URI);
             
             // Add errorHandling inside errors element if it exists
             if (!empty($ggmData['error_handling_approach'])) {
