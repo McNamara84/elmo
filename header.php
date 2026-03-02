@@ -66,10 +66,13 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
       <img src="logos/GFZ_Data_Services_logo.png" alt="GFZ Data Services Logo" class="logo">
     </a>
     <div class="ms-auto d-flex align-items-center me-3 p-1">
-
+ 
       <!-- Dropdown menu for help -->
       <div class="dropdown ms-auto me-3 p-1">
-        <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
+
+      <a href="doc/help.php" target="_blank" class="settings-menu-link" id="buttonHelp" data-translate="buttons.elmoGuide">Elmo Guide</a>
+       
+      <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
           aria-expanded="false" data-translate="header.help">
           <i class="bi bi-question-square-fill"></i>
           Help
