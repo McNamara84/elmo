@@ -70,7 +70,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
       <!-- Dropdown menu for help -->
       <div class="dropdown ms-auto me-3 p-1">
 
-      <a href="doc/help.php" target="_blank" class="settings-menu-link" id="buttonHelp" data-translate="buttons.elmoGuide">Elmo Guide</a>
+      <a href="doc/help.php" target="_blank" class="text-white text-decoration-none me-3" id="buttonHelp" data-translate="buttons.elmoGuide">Elmo Guide</a>
        
       <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
           aria-expanded="false" data-translate="header.help">
