@@ -253,7 +253,7 @@
         "clearTooltip": "Delete all entries or content.",
         "load": "Load",
         "loadTooltip": "Load saved data or content.",
-        "saveAs": "Save",
+        "saveAs": "Save as",
         "saveAsTooltip": "Save the current data or content under a new file name.",
         "submit": "Submit",
         "submitTooltip": "Transmit the entered data or content.",
