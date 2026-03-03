@@ -94,7 +94,7 @@
         "publicationYearInvalid": "Veuillez saisir une année valide entre 1901-2155 (4 chiffres au format AAAA).",
         "resourceType": "Type de ressource",
         "version": "Version",
-        "versionInvalid": "Laissez vide en cas de doute",
+        "versionInvalid": "Veuillez utiliser le format chiffre.chiffre. Laissez vide en cas de doute",
         "datasetLanguage": "Langue du jeu de données",
         "resourceTitle": "Titre",
         "resourceTitleInvalid": "Veuillez fournir un titre descriptif (qui ne répète pas le titre de l'article, mais qui décrit les données).",
