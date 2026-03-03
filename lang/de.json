@@ -254,7 +254,7 @@
         "clearTooltip": "Alle Einträge oder Inhalte löschen.",
         "load": "Laden",
         "loadTooltip": "Gespeicherte Daten oder Inhalte laden.",
-        "saveAs": "Speichern",
+        "saveAs": "Speichern unter",
         "saveAsTooltip": "Aktuelle Daten oder Inhalte unter neuem Dateinamen speichern.",
         "submit": "Absenden",
         "submitTooltip": "Eingegebene Daten oder Inhalte übermitteln.",

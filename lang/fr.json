@@ -254,7 +254,7 @@
         "clearTooltip": "Supprimer toutes les entrées ou le contenu.",
         "load": "Charger",
         "loadTooltip": "Charger les données ou le contenu sauvegardés.",
-        "saveAs": "Enregistrer",
+        "saveAs": "Enregistrer sous",
         "saveAsTooltip": "Enregistrer les données ou le contenu actuels sous un nouveau nom de fichier.",
         "submit": "Soumettre",
         "submitTooltip": "Transmettre les données ou le contenu saisis.",
