@@ -30,7 +30,7 @@ require_once __DIR__ . '/settings.php';
 error_log("send_xml_file.php: settings.php included");
 
 // Make global variables from settings.php available
-global $connection, $showGGMsProperties;
+global $connection, $showGGMsProperties, $showUsedInstruments;
 global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
 global $xmlSubmitAddress;
 
@@ -46,6 +46,7 @@ require_once __DIR__ . '/save/formgroups/save_descriptions.php';
 require_once __DIR__ . '/save/formgroups/save_thesauruskeywords.php';
 require_once __DIR__ . '/save/formgroups/save_spatialtemporalcoverage.php';
 require_once __DIR__ . '/save/formgroups/save_relatedwork.php';
+require_once __DIR__ . '/save/formgroups/save_usedinstruments.php';
 require_once __DIR__ . '/save/formgroups/save_fundingreferences.php';
 
 if ($showGGMsProperties) {
@@ -168,6 +169,9 @@ try {
     saveFreeKeywords($connection, $_POST, $resource_id);
     saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
     saveRelatedWork($connection, $_POST, $resource_id);
+    if ($showUsedInstruments ?? false) {
+        saveUsedInstruments($connection, $_POST, $resource_id);
+    }
     saveFundingReferences($connection, $_POST, $resource_id);
 
     error_log("send_xml_file.php: All data saved successfully");
