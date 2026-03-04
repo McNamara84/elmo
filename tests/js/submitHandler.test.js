@@ -23,6 +23,10 @@ describe('submitHandler.js', () => {
         <div id="modal-notification-label"></div>
         <div id="modal-notification-body"></div>
       </div>
+      <div id="modal-validation-failed">
+        <h5 id="modal-validation-failed-label"></h5>
+        <p id="modal-validation-failed-save-hint"></p>
+      </div>
       <input id="input-date-created" />
       <input id="input-date-embargo" />
       <div class="embargo-invalid"></div>
@@ -61,6 +65,11 @@ describe('submitHandler.js', () => {
         validationErrorheading: 'Validation',
         validationError: 'Invalid',
         successMessage: 'Dataset successfully transmitted.'
+      },
+      modals: {
+        validationFailed: {
+          saveHint: "Send to <a href='mailto:{email}'>{email}</a>."
+        }
       }
     };
         // Mock applyTranslations function
@@ -501,5 +510,97 @@ describe('submitHandler.js', () => {
         done();
       }, 100);
     });
+  });
+
+  // ── showValidationFailedModal tests ──────────────────────────────────
+
+  describe('showValidationFailedModal', () => {
+    test('shows the validation-failed modal', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'test@example.com' };
+      handler.showValidationFailedModal();
+      expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    });
+
+    test('replaces {email} placeholder with configured address', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'datapub@gfz.de' };
+      handler.showValidationFailedModal();
+      const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
+      expect(hint).toContain('datapub@gfz.de');
+      expect(hint).not.toContain('{email}');
+    });
+
+    test('creates mailto link with configured address', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'datapub@gfz.de' };
+      handler.showValidationFailedModal();
+      const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
+      expect(hint).toContain('mailto:datapub@gfz.de');
+    });
+
+    test('escapes HTML special characters in email address', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'test&"user@gfz.de' };
+      handler.showValidationFailedModal();
+      const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
+      // The link text should contain escaped ampersand
+      expect(hint).toContain('test&amp;');
+      expect(hint).toContain('mailto:');
+    });
+
+    test('handles missing ELMO_FEATURES gracefully', () => {
+      delete window.ELMO_FEATURES;
+      handler.showValidationFailedModal();
+      expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    });
+
+    test('handles empty xmlSubmitAddress gracefully', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: '' };
+      handler.showValidationFailedModal();
+      expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    });
+
+    afterEach(() => {
+      delete window.ELMO_FEATURES;
+    });
+  });
+
+  // ── handleSubmit validation-failed modal integration test ──────────
+
+  test('handleSubmit shows validation-failed modal instead of notification on invalid form', () => {
+    // Add a required field that is empty so :invalid selector finds it
+    const reqInput = document.createElement('input');
+    reqInput.required = true;
+    reqInput.value = '';
+    handler.$form[0].appendChild(reqInput);
+
+    const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
+    const notifSpy = jest.spyOn(handler, 'showNotification');
+    handler.handleSubmit();
+    expect(modalSpy).toHaveBeenCalled();
+    expect(notifSpy).not.toHaveBeenCalled();
+  });
+
+  test('handleSubmit shows validation-failed modal when contact person is missing', () => {
+    // Temporarily override checkValidity to return true (form fields are valid)
+    // but validateContactPerson will return false (no checkbox checked)
+    handler.$form[0].checkValidity = jest.fn().mockReturnValue(true);
+
+    // Add a dummy element so $firstInvalid[0] is accessible
+    const dummyInput = document.createElement('input');
+    dummyInput.required = true;
+    dummyInput.value = '';
+    handler.$form[0].appendChild(dummyInput);
+
+    // Add a contact person field to DOM but don't check it
+    document.getElementById('group-author').innerHTML = `
+      <div class="row">
+        <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+        <input id="input-contactperson-email-1">
+        <input id="input-author-firstname-1">
+        <input id="input-author-lastname-1">
+      </div>
+    `;
+
+    const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
+    handler.handleSubmit();
+    expect(modalSpy).toHaveBeenCalled();
   });
 });

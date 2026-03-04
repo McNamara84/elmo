@@ -94,7 +94,7 @@
         "publicationYearInvalid": "Veuillez saisir une année valide entre 1901-2155 (4 chiffres au format AAAA).",
         "resourceType": "Type de ressource",
         "version": "Version",
-        "versionInvalid": "Laissez vide en cas de doute",
+        "versionInvalid": "Veuillez utiliser le format chiffres.chiffres. Laissez vide en cas de doute",
         "datasetLanguage": "Langue du jeu de données",
         "resourceTitle": "Titre",
         "resourceTitleInvalid": "Veuillez fournir un titre descriptif (qui ne répète pas le titre de l'article, mais qui décrit les données).",
@@ -309,6 +309,15 @@
             "high": "élevée",
             "normal": "normale",
             "low": "basse"
+        },
+        "validationFailed": {
+            "title": "Soumission impossible",
+            "greeting": "Cher utilisateur, chère utilisatrice,",
+            "body": "il semble que vous souhaitiez soumettre des données. Malheureusement, vous n'avez pas rempli tous les champs obligatoires.",
+            "saveHint": "Si vous avez déjà convenu avec l'équipe de curation des données que votre soumission n'est pas encore complète, vous pouvez cliquer sur <strong>Enregistrer sous</strong> et envoyer le fichier XML généré par e-mail à <a href='mailto:{email}'>{email}</a>.",
+            "fixHint": "Sinon, veuillez compléter les champs marqués en rouge et réessayer.",
+            "guideHint": "Si vous avez besoin d'aide pour remplir le formulaire, vous pouvez consulter le <a href='doc/help.php' target='_blank'>Guide ELMO</a> ici.",
+            "close": "Fermer"
         }
     },
     "welcome": {

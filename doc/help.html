@@ -174,7 +174,7 @@ include_once "../settings.php";
                     <?php if (!($showLicense ?? true)): ?>
                     <p>By default, this publication will be published under a Creative Commons Attribution 4.0 (CC-BY) license. 
                         This follows the GFZ German Research Centre for Geosciences' Guidelines for open science.
-                        If your dataset requires another license, please contact us at datapub@gfz.de for further advice.
+                        If your dataset requires another license, please contact us at <?php echo htmlspecialchars($xmlSubmitAddress ?? 'datapub@gfz.de'); ?> for further advice.
                     </p>
                     <?php endif; ?>
                 </div>
@@ -241,7 +241,7 @@ include_once "../settings.php";
                         first time, this field can be left empty. If it has been updated, specify the version number
                         here.
                         The suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
-                        changes in the dataset. Major changes typically require registration of a new DOI.
+                        changes in the dataset. Use the format digits.digits, for example 1.4. Major changes typically require registration of a new DOI.
                     </p>
                     <p><strong>Optional field. If unsure, leave blank.</strong></p>
                 </div>
