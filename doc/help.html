@@ -128,6 +128,11 @@ include_once "../settings.php";
                             <a class="nav-link" href="#help-relatedwork" data-bs-dismiss="offcanvas">Related Work</a>
                         </li>
                         <?php endif; ?>
+                        <?php if ($showUsedInstruments ?? false): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-usedinstruments" data-bs-dismiss="offcanvas">Used Instruments</a>
+                        </li>
+                        <?php endif; ?>
                         <?php if ($showFundingReference ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-fundingreference" data-bs-dismiss="offcanvas">Funding
@@ -914,6 +919,39 @@ include_once "../settings.php";
                     <strong>Only required if times are provided.</strong><br>
                     This field allows selection from all worldwide time zones to accurately represent the
                     temporal details of your data.
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <?php endif; ?>
+            <!-- formgroup used instruments -->
+            <?php if ($showUsedInstruments ?? false): ?>
+            <div id="help-usedinstruments" class="section-content">
+                <div id="help-usedinstruments-fg">
+                    <h3>Used Instruments</h3>
+                    <p>
+                        Select the instruments that were used to collect or generate your research data.
+                        Start typing to search the PID4INST instrument catalogue and select instruments from the
+                        autocomplete suggestions.
+                    </p>
+                    <p>
+                        Each instrument is identified by a persistent identifier (PID) from the PID4INST registry.
+                        The selected instruments will be stored as related identifiers with the relation type
+                        "IsCollectedBy" in the DataCite metadata.
+                    </p>
+                    <p><strong>Mandatory field. Please select at least one instrument.</strong></p>
+                </div>
+                <div id="help-usedinstruments-input">
+                    <h4>Instrument Search</h4>
+                    <p>
+                        Type at least one character to see matching instruments from the PID4INST catalogue.
+                        Instruments are displayed as "Name (Instrument Types)" to help you identify the correct one.
+                        You can select multiple instruments by clicking on them in the dropdown list.
+                    </p>
+                    <p>
+                        Only instruments from the catalogue can be selected. If your instrument is not listed,
+                        please contact the data management team.
+                    </p>
                 </div>
             </div>
             <div class="section-divider"></div>
