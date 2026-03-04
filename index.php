@@ -22,6 +22,8 @@ include_once __DIR__ . '/settings.php';
 // accessible by default.
 include_once __DIR__ . '/includes/feature_toggles.php';
 
+$isNewRecord = empty($_GET);
+
 /** @var bool $showLicense */
 $showLicense = resolveFeatureToggle($showLicense ?? null, false);   
 /** @var bool $showAuthorInstitution */
