@@ -12,7 +12,13 @@
  * @requires translations - A global object with loaded translation data
  */
 
-document.addEventListener('DOMContentLoaded', function () {
+/**
+ * Main initialization function for the Used Instruments module.
+ * Extracted from DOMContentLoaded listener to support both regular page load
+ * and scenarios where the script loads after DOMContentLoaded has already fired
+ * (e.g. Playwright route interception, dynamic script injection).
+ */
+function initUsedInstrumentsModule() {
     // Only initialize if the feature is enabled
     if (!window.ELMO_FEATURES || !window.ELMO_FEATURES.showUsedInstruments) {
         return;
@@ -330,4 +336,12 @@ document.addEventListener('DOMContentLoaded', function () {
         getSelectedInstruments: getSelectedInstruments,
         loadInstrumentsFromAPI: loadInstrumentsFromAPI
     };
-});
+}
+
+// Initialize: handle both "script loaded before DOMContentLoaded" and
+// "script loaded after DOMContentLoaded" (e.g. Playwright route interception)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUsedInstrumentsModule);
+} else {
+    initUsedInstrumentsModule();
+}

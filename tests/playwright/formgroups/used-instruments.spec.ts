@@ -89,7 +89,7 @@ test.describe('Used Instruments form group', () => {
             });
         });
 
-        await page.goto(`${APP_BASE_URL}test-used-instruments`);
+        await page.goto(`${APP_BASE_URL}test-used-instruments`, { waitUntil: 'domcontentloaded' });
     });
 
     test('renders the form group with correct title and elements', async ({ page }) => {
@@ -111,23 +111,25 @@ test.describe('Used Instruments form group', () => {
     });
 
     test('initializes Tagify on the input element', async ({ page }) => {
-        // Tagify creates a wrapper element
-        await page.waitForFunction(() => {
-            const input = document.getElementById('input-usedinstruments');
-            return input && input._tagify !== undefined;
-        }, null, { timeout: 5000 });
+        // Wait for the module to be fully initialized (set at end of init function)
+        await page.waitForFunction(
+            () => !!(window as any).usedInstrumentsModule,
+            null,
+            { timeout: 10000 }
+        );
 
-        // The Tagify wrapper should be present
+        // Tagify creates a visible wrapper element around the input
         const tagifyWrapper = page.locator('.tagify');
         await expect(tagifyWrapper).toBeVisible();
     });
 
     test('loads instruments from API and shows in dropdown', async ({ page }) => {
-        // Wait for Tagify to initialize
-        await page.waitForFunction(() => {
-            const input = document.getElementById('input-usedinstruments');
-            return input && input._tagify;
-        }, null, { timeout: 5000 });
+        // Wait for the module to be fully initialized
+        await page.waitForFunction(
+            () => !!(window as any).usedInstrumentsModule,
+            null,
+            { timeout: 10000 }
+        );
 
         // Focus on the Tagify input to trigger lazy loading
         await page.locator('.tagify__input').click();
@@ -145,15 +147,16 @@ test.describe('Used Instruments form group', () => {
     });
 
     test('creates hidden inputs when instrument is selected', async ({ page }) => {
-        // Wait for Tagify to initialize
-        await page.waitForFunction(() => {
-            const input = document.getElementById('input-usedinstruments');
-            return input && input._tagify;
-        }, null, { timeout: 5000 });
+        // Wait for the module to be fully initialized
+        await page.waitForFunction(
+            () => !!(window as any).usedInstrumentsModule,
+            null,
+            { timeout: 10000 }
+        );
 
         // Programmatically add an instrument
         await page.evaluate(() => {
-            window.usedInstrumentsModule.addInstrumentsByData([{
+            (window as any).usedInstrumentsModule.addInstrumentsByData([{
                 pid: '21.11157/0001',
                 pidType: 'Handle',
                 name: 'Broadband Seismometer STS-2',
