@@ -457,12 +457,17 @@ header.navbar {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  padding: 0.5rem;
 }
 
 /* Click area only fits the logo */
 .logo-center-wrapper img {
   display: block;
   pointer-events: auto;
+  max-width: 85%;
+  height: auto;
+  object-fit: contain;
 }
 
 /* Right alignment for legal notice / dropdowns */
@@ -471,6 +476,12 @@ header .ms-auto.d-flex {
   display: flex;
   align-items: center;
   gap: 0.5rem; 
+}
+
+/* Center logo stays visible on all screen sizes - scales more gradually */
+.logo-center-wrapper img {
+  /* Large screens (1400px+): ~100px */
+  max-height: 100px;
 }
 
 /* Make logo smaller at screen widths of 1100px or less so that nothing overlaps */
@@ -486,11 +497,28 @@ header .ms-auto.d-flex {
     margin-left: auto;
     margin-right: 0;
   }
+  
+  /* Center logo scales to 70px on tablets/smaller screens */
+  .logo-center-wrapper img {
+    max-height: 70px;
+  }
 }
 
 @media (max-width: 900px) {
   .logo {
     height: 30px;
+  }
+  
+  /* Center logo stays at comfortable 60px on medium screens */
+  .logo-center-wrapper img {
+    max-height: 60px;
+  }
+}
+
+@media (max-width: 576px) {
+  /* On very small screens, just keep it readable */
+  .logo-center-wrapper img {
+    max-height: 50px;
   }
 }
 

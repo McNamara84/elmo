@@ -68,7 +68,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
         </a>
       </div>
 
-      <a href="https://dataservices.gfz.de/web/" target="_blank" rel="noopener noreferrer" class="logo-center-wrapper d-none d-sm-block">
+      <a href="https://dataservices.gfz.de/web/" target="_blank" rel="noopener noreferrer" class="logo-center-wrapper">
         <img src="logos/GFZ_Data_Services_logo.png" alt="GFZ Data Services Logo" class="logo">
       </a>
 
