@@ -490,7 +490,7 @@ header .ms-auto.d-flex {
     height: 35px;
   }
 
-  /* On mobile/tablet the center logo becomes right-aligned */
+  /* On tablet/smaller screens the center logo becomes right-aligned */
   .logo-center-wrapper {
     position: static;
     transform: none;
@@ -501,6 +501,17 @@ header .ms-auto.d-flex {
   /* Center logo scales to 70px on tablets/smaller screens */
   .logo-center-wrapper img {
     max-height: 70px;
+  }
+}
+
+/* On very small screens (xs, sm: < 768px), as well as some medium screens (up to 1000px), center the logo */
+@media (max-width: 1000px) {
+  .logo-center-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 
