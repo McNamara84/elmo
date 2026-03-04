@@ -455,7 +455,7 @@ header.navbar {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   flex: 0 0 auto;
   padding: 0.5rem;
