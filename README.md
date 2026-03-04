@@ -272,19 +272,21 @@ To install them: npm install
   ```
   ELMO → ERNIE (fetch vocabularies)
   ├─ ELMO GETs: GET https://ernie.../api/v1/resource-types/elmo
+  ├─ ELMO GETs: GET https://ernie.../api/v1/title-types/elmo
   ├─ Header: X-API-KEY: [ERNIE_API_KEY from ELMO's .env]
   └─ ERNIE verifies the key on its side
 
   ELMO ← ERNIE (on-demand cache refresh)
   ├─ ERNIE POSTs: POST /api/v2/admin/cache/resourcetypes/refresh
+  ├─ ERNIE POSTs: POST /api/v2/admin/cache/titletypes/refresh
   ├─ Header: X-API-KEY: [ELMO_API_KEY from ERNIE's config]
   └─ ELMO verifies against $apiKeyElmo in ELMO's .env
   ```
 
   - `$apiKeyElmo`: API key that external services (including ERNIE) use to authenticate with ELMO's admin endpoints. **Direction: ERNIE → ELMO**
-  - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types are fetched from ERNIE instead of the local database.
+  - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types and title types are fetched from ERNIE instead of the local database.
   - `$ernieApiKey`: API key for ELMO to authenticate with the ERNIE service. **Direction: ELMO → ERNIE**
-  - `$ernieResourceTypesCacheTtl`: Cache time-to-live in seconds for ERNIE resource types (default: 21600 = 6 hours). Also determines the automatic refresh interval.
+  - `$ernieCacheTtl`: Cache time-to-live in seconds for all ERNIE data (resource types, title types; default: 21600 = 6 hours). Also determines the automatic refresh interval.
 
 </details>
 

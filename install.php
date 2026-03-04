@@ -187,9 +187,11 @@ function createDatabaseStructure($connection): array
 
         "Title_Type" => "CREATE TABLE IF NOT EXISTS `Title_Type` (
     `title_type_id` INT NOT NULL AUTO_INCREMENT,
+    `ernie_id` INT NULL,
     `name` VARCHAR(25) NOT NULL,
     PRIMARY KEY (`title_type_id`),
-    UNIQUE KEY `unique_name` (`name`)
+    UNIQUE KEY `unique_name` (`name`),
+    UNIQUE KEY `unique_ernie_id` (`ernie_id`)
     );",
 
         "Model_Type" => "CREATE TABLE IF NOT EXISTS `Model_Type` (
@@ -779,8 +781,10 @@ function insertLookupData($connection)
             ["name" => "Other", "description" => "Other: Any person or institution making a significant contribution to the development and/or maintenance of the resource, but whose contribution does not", "forInstitutions" => "2"]
         ],
         "Title_Type" => [
-            ["name" => "Main Title"],
             ["name" => "Alternative Title"],
+            ["name" => "Main Title"],
+            ["name" => "Other"],
+            ["name" => "Subtitle"],
             ["name" => "Translated Title"]
         ],
         "Relation" => [
