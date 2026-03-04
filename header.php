@@ -52,34 +52,34 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
       
       <div class="d-flex align-items-center ms-3 my-2">
         <h1 class="visually-hidden">ELMO – GFZ Data Services' Metadata Editor 2.0</h1>
-        <a href="https://www.gfz.de/" target="_blank" rel="noopener noreferrer" class="pe-3 border-end border-white">
+        <a href="https://www.gfz.de/" target="_blank" rel="noopener noreferrer">
           <img src="logos/GFZ-logo.png" alt="GFZ Logo" class="logo logo-left">
-        </a>
-
-        <a href="https://dataservices.gfz.de/web/" target="_blank" rel="noopener noreferrer" class="ps-3">
-          <img src="logos/GFZ_Data_Services_logo.png" alt="GFZ Data Services Logo" class="logo">
         </a>
       </div>
 
+      <a href="https://dataservices.gfz.de/web/" target="_blank" rel="noopener noreferrer" class="logo-center-wrapper d-none d-sm-block">
+        <img src="logos/GFZ_Data_Services_logo.png" alt="GFZ Data Services Logo" class="logo">
+      </a>
+
       <!-- Toggle button for mobile -->
-      <button class="navbar-toggler me-3" type="button" data-bs-toggle="collapse" data-bs-target="#headerMenuContent" aria-controls="headerMenuContent" aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler me-3 p-1" style="font-size: 0.85rem;" type="button" data-bs-toggle="collapse" data-bs-target="#headerMenuContent" aria-controls="headerMenuContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <!-- Collapsible content -->
       <div class="collapse navbar-collapse" id="headerMenuContent">
-        <div class="ms-auto d-flex flex-row align-items-center justify-content-start flex-wrap me-lg-3 px-3 pb-3 pt-2 pt-lg-0 px-lg-0 pb-lg-0 p-lg-1 gap-2 bg-primary">
+        <div class="ms-lg-auto d-flex flex-row align-items-center justify-content-between w-100 w-lg-auto me-lg-3 px-3 pb-3 pt-2 pt-lg-0 px-lg-0 pb-lg-0 p-lg-1 gap-2 bg-primary">
      
           <!-- Guide Link -->
-          <div class="dropdown">
-            <a href="doc/help.php" target="_blank" class="btn btn-primary" id="buttonHelpheader" data-translate="buttons.elmoGuide">
+          <div class="dropdown flex-fill">
+            <a href="doc/help.php" target="_blank" class="btn btn-primary w-100" id="buttonHelpheader" data-translate="buttons.elmoGuide">
               <i class="bi bi-book"></i> Guide
             </a>
           </div>
            
           <!-- Dropdown menu for help -->
-          <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
+          <div class="dropdown flex-fill">
+            <button class="btn btn-primary dropdown-toggle w-100" id="bd-help" type="button" data-bs-toggle="dropdown"
               aria-expanded="false" data-translate="header.help">
               <i class="bi bi-question-square-fill"></i>
               Help
@@ -95,9 +95,9 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
             </ul>
           </div>
 
-          <div class="dropdown">
+          <div class="dropdown flex-fill">
             <!-- Dropdown menu for dark mode settings -->
-            <button class="btn btn-primary dropdown-toggle" id="bd-theme" type="button" data-bs-toggle="dropdown"
+            <button class="btn btn-primary dropdown-toggle w-100" id="bd-theme" type="button" data-bs-toggle="dropdown"
               aria-expanded="false" data-translate="header.mode">
               <i class="bi bi-circle-half"></i>
               Mode
@@ -112,9 +112,9 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
             </ul>
           </div>
           
-          <div class="dropdown">
+          <div class="dropdown flex-fill">
             <!-- Dropdown menu for language settings -->
-            <button class="btn btn-primary dropdown-toggle" id="bd-lang" type="button" data-bs-toggle="dropdown"
+            <button class="btn btn-primary dropdown-toggle w-100" id="bd-lang" type="button" data-bs-toggle="dropdown"
               aria-expanded="false" data-translate="header.language">
               <i class="bi bi-translate"></i>
               Language
