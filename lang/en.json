@@ -93,7 +93,7 @@
         "publicationYearInvalid": "Please provide a valid year ranging from 1901-2155 (4 digits in the format YYYY).",
         "resourceType": "Resource Type",
         "version": "Version",
-        "versionInvalid": "Please use digit.digit as the format. If unsure leave blank",
+        "versionInvalid": "Please use digits.digits as the format. If unsure leave blank",
         "datasetLanguage": "Language of dataset",
         "resourceTitle": "Title",
         "resourceTitleInvalid": "Please provide a descriptive title (that does not repeat the paper title, but describes the data).",
