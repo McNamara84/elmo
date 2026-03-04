@@ -189,6 +189,14 @@
         "mapInfo": "(Please choose coordinates with rectangle or marker)",
         "mapSearch": "Search for place names"
     },
+    "usedInstruments": {
+        "title": "Used Instruments",
+        "placeholder": "Search and select instruments...",
+        "required": "Please select at least one instrument.",
+        "loading": "Loading instrument list...",
+        "unavailable": "Instrument list currently unavailable. Please try again later.",
+        "selected": "selected instruments"
+    },
     "relatedWork": {
         "title": "Related work",
         "relation": "Relation",
