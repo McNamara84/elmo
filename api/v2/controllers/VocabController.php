@@ -1528,10 +1528,22 @@ class VocabController
 
                 if (!empty($ernieTypes)) {
                     // Sync to local DB for storage purposes
-                    $this->syncResourceTypesToDb($ernieTypes);
+                    $syncItems = array_map(fn($t) => [
+                        'ernie_id' => $t['id'],
+                        'name' => $t['name'],
+                        'description' => $t['description'] ?? null
+                    ], $ernieTypes);
+                    $this->syncErnieToDb('Resource_Type', $syncItems, [
+                        'ernie_id_col' => 'ernie_id',
+                        'name_col' => 'resource_type_general',
+                        'description_col' => 'description'
+                    ]);
 
                     // Return ERNIE data with local IDs
-                    $types = $this->mapErnieToLocalIds($ernieTypes);
+                    $types = $this->mapErnieToLocalIds(
+                        'Resource_Type', $ernieTypes, 'resource_name_id', 'ernie_id',
+                        ['name' => 'resource_type_general', 'description' => 'description']
+                    );
                     error_log("Resource Types: Serving " . count($types) . " types from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($types);
@@ -1586,115 +1598,102 @@ class VocabController
     }
 
     /**
-     * Syncs ERNIE resource types to local database
-     * 
-     * This method ensures that all resource types from ERNIE exist in the local
-     * database with their ernie_id mapping. Existing records are updated,
-     * new records are inserted. Uses a transaction to ensure data consistency.
+     * Updates the given database table with items retrieved from ERNIE
      *
-     * @param array<array{id: int, name: string, description: string|null}> $ernieTypes Resource types from ERNIE
-     * @return bool True if sync was successful, false otherwise
+     * Uses INSERT ... ON DUPLICATE KEY UPDATE (upsert) for efficient syncing.
+     * Both the ernie_id and name columns have UNIQUE constraints, so this
+     * handles three cases atomically:
+     * - New item: INSERT
+     * - Existing by ernie_id: UPDATE name (and description if applicable)
+     * - Existing by name without ernie_id: UPDATE to link ernie_id (migration)
+     *
+     * @param string $dbTable The target database table name
+     * @param array<int, array{ernie_id: int, name: string, description?: string|null}> $items Normalised items to sync
+     * @param array{ernie_id_col: string, name_col: string, description_col?: string|null} $tableStructure Mapping of DB columns
+     * @return bool True if all records were successfully upserted
      */
-    private function syncResourceTypesToDb(array $ernieTypes): bool
+    private function syncErnieToDb(string $dbTable, array $items, array $tableStructure): bool
     {
         global $connection;
 
-        // Start transaction for atomic sync
+        $ernieIdCol = $tableStructure['ernie_id_col'];
+        $nameCol = $tableStructure['name_col'];
+        $descCol = $tableStructure['description_col'] ?? null;
+
         $connection->begin_transaction();
 
         try {
-            foreach ($ernieTypes as $type) {
-                $ernieId = $type['id'];
-                $name = $type['name'];
-                $description = $type['description'];
+            foreach ($items as $item) {
+                $ernieId = $item['ernie_id'];
+                $name = $item['name'];
 
                 if (!$ernieId || !$name) {
                     continue;
                 }
 
-                // First, try to find existing record by ernie_id
-                $stmt = $connection->prepare(
-                    'SELECT resource_name_id FROM Resource_Type WHERE ernie_id = ?'
-                );
-                $stmt->bind_param('i', $ernieId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-
-                if ($result->num_rows > 0) {
-                    // Update existing record by ernie_id
-                    $updateStmt = $connection->prepare(
-                        'UPDATE Resource_Type 
-                         SET resource_type_general = ?, description = ? 
-                         WHERE ernie_id = ?'
-                    );
-                    $updateStmt->bind_param('ssi', $name, $description, $ernieId);
-                    $updateStmt->execute();
-                    continue;
-                }
-
-                // Check if record exists by name (for migrating existing data)
-                $stmt = $connection->prepare(
-                    'SELECT resource_name_id FROM Resource_Type WHERE resource_type_general = ?'
-                );
-                $stmt->bind_param('s', $name);
-                $stmt->execute();
-                $result = $stmt->get_result();
-
-                if ($result->num_rows > 0) {
-                    // Update existing record to add ernie_id
-                    $row = $result->fetch_assoc();
-                    $updateStmt = $connection->prepare(
-                        'UPDATE Resource_Type 
-                         SET ernie_id = ?, description = ? 
-                         WHERE resource_name_id = ?'
-                    );
-                    $updateStmt->bind_param('isi', $ernieId, $description, $row['resource_name_id']);
-                    $updateStmt->execute();
+                if ($descCol !== null) {
+                    $desc = $item['description'] ?? null;
+                    $sql = "INSERT INTO `$dbTable` (`$ernieIdCol`, `$nameCol`, `$descCol`) VALUES (?, ?, ?)
+                            ON DUPLICATE KEY UPDATE
+                            `$nameCol` = VALUES(`$nameCol`),
+                            `$descCol` = VALUES(`$descCol`),
+                            `$ernieIdCol` = VALUES(`$ernieIdCol`)";
+                    $stmt = $connection->prepare($sql);
+                    $stmt->bind_param('iss', $ernieId, $name, $desc);
                 } else {
-                    // Insert new record
-                    $insertStmt = $connection->prepare(
-                        'INSERT INTO Resource_Type (ernie_id, resource_type_general, description) 
-                         VALUES (?, ?, ?)'
-                    );
-                    $insertStmt->bind_param('iss', $ernieId, $name, $description);
-                    $insertStmt->execute();
+                    $sql = "INSERT INTO `$dbTable` (`$ernieIdCol`, `$nameCol`) VALUES (?, ?)
+                            ON DUPLICATE KEY UPDATE
+                            `$nameCol` = VALUES(`$nameCol`),
+                            `$ernieIdCol` = VALUES(`$ernieIdCol`)";
+                    $stmt = $connection->prepare($sql);
+                    $stmt->bind_param('is', $ernieId, $name);
                 }
+
+                $stmt->execute();
             }
 
-            // Commit transaction
             $connection->commit();
             return true;
 
         } catch (\Exception $e) {
-            // Rollback on error
             $connection->rollback();
-            error_log("ERNIE sync failed, rolled back transaction: " . $e->getMessage());
+            error_log("ERNIE sync to $dbTable failed: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Maps ERNIE data to local database IDs
-     * 
+     * Maps ERNIE item data to local database IDs
+     *
      * Transforms ERNIE response format to the format expected by the frontend,
      * using local database IDs for storage compatibility.
      *
-     * @param array<array{id: int, name: string, description: string|null}> $ernieTypes Resource types from ERNIE
-     * @return array<array{id: int|null, resource_type_general: string, description: string}> Mapped resource types
+     * Important: Must be called after syncErnieToDb() to ensure all ERNIE items
+     * have corresponding local database records with mapped ernie_id values.
+     *
+     * @param string $dbTable The database table name
+     * @param array<int, array<string, mixed>> $ernieItems Raw items from ERNIE (each with 'id' key)
+     * @param string $localIdCol Primary key column name in the DB table
+     * @param string $ernieIdCol ERNIE ID column name in the DB table
+     * @param array<string, string> $outputFieldMap Maps ERNIE response keys to output keys (e.g., ['name' => 'resource_type_general'])
+     * @return array<int, array<string, mixed>> Items with local database IDs and mapped field names
      */
-    private function mapErnieToLocalIds(array $ernieTypes): array
-    {
+    private function mapErnieToLocalIds(
+        string $dbTable,
+        array $ernieItems,
+        string $localIdCol,
+        string $ernieIdCol,
+        array $outputFieldMap
+    ): array {
         global $connection;
 
         $result = [];
 
-        foreach ($ernieTypes as $type) {
-            $ernieId = $type['id'];
-            $name = $type['name'];
+        foreach ($ernieItems as $item) {
+            $ernieId = $item['id'];
 
-            // Get local ID
             $stmt = $connection->prepare(
-                'SELECT resource_name_id FROM Resource_Type WHERE ernie_id = ?'
+                "SELECT `$localIdCol` FROM `$dbTable` WHERE `$ernieIdCol` = ?"
             );
             $stmt->bind_param('i', $ernieId);
             $stmt->execute();
@@ -1702,14 +1701,14 @@ class VocabController
 
             $localId = null;
             if ($row = $dbResult->fetch_assoc()) {
-                $localId = (int) $row['resource_name_id'];
+                $localId = (int) $row[$localIdCol];
             }
 
-            $result[] = [
-                'id' => $localId,
-                'resource_type_general' => $name,
-                'description' => $type['description'] ?? ''
-            ];
+            $mapped = ['id' => $localId];
+            foreach ($outputFieldMap as $ernieKey => $outputKey) {
+                $mapped[$outputKey] = $item[$ernieKey] ?? '';
+            }
+            $result[] = $mapped;
         }
 
         return $result;
@@ -1751,7 +1750,16 @@ class VocabController
                 // Also sync to database
                 $ernieTypes = $ernieService->getResourceTypesWithCache();
                 if (!empty($ernieTypes)) {
-                    $this->syncResourceTypesToDb($ernieTypes);
+                    $syncItems = array_map(fn($t) => [
+                        'ernie_id' => $t['id'],
+                        'name' => $t['name'],
+                        'description' => $t['description'] ?? null
+                    ], $ernieTypes);
+                    $this->syncErnieToDb('Resource_Type', $syncItems, [
+                        'ernie_id_col' => 'ernie_id',
+                        'name_col' => 'resource_type_general',
+                        'description_col' => 'description'
+                    ]);
                 }
 
                 $status = $ernieService->getCacheStatus();
@@ -1858,10 +1866,20 @@ class VocabController
 
                 if (!empty($ernieTypes)) {
                     // Sync to local DB for storage purposes
-                    $this->syncTitleTypesToDb($ernieTypes);
+                    $syncItems = array_map(fn($t) => [
+                        'ernie_id' => $t['id'],
+                        'name' => $t['name']
+                    ], $ernieTypes);
+                    $this->syncErnieToDb('Title_Type', $syncItems, [
+                        'ernie_id_col' => 'ernie_id',
+                        'name_col' => 'name'
+                    ]);
 
                     // Return ERNIE data with local IDs
-                    $types = $this->mapTitleTypeErnieToLocalIds($ernieTypes);
+                    $types = $this->mapErnieToLocalIds(
+                        'Title_Type', $ernieTypes, 'title_type_id', 'ernie_id',
+                        ['name' => 'name']
+                    );
                     error_log("Title Types: Serving " . count($types) . " types from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($types);
@@ -1914,129 +1932,6 @@ class VocabController
     }
 
     /**
-     * Syncs ERNIE title types to local database
-     * 
-     * This method ensures that all title types from ERNIE exist in the local
-     * database with their ernie_id mapping. Existing records are updated,
-     * new records are inserted. Uses a transaction to ensure data consistency.
-     *
-     * @param array<array{id: int, name: string, slug: string}> $ernieTypes Title types from ERNIE
-     * @return bool True if sync was successful, false otherwise
-     */
-    private function syncTitleTypesToDb(array $ernieTypes): bool
-    {
-        global $connection;
-
-        // Start transaction for atomic sync
-        $connection->begin_transaction();
-
-        try {
-            foreach ($ernieTypes as $type) {
-                $ernieId = $type['id'];
-                $name = $type['name'];
-
-                if (!$ernieId || !$name) {
-                    continue;
-                }
-
-                // First, try to find existing record by ernie_id
-                $stmt = $connection->prepare(
-                    'SELECT title_type_id FROM Title_Type WHERE ernie_id = ?'
-                );
-                $stmt->bind_param('i', $ernieId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-
-                if ($result->num_rows > 0) {
-                    // Update existing record by ernie_id
-                    $updateStmt = $connection->prepare(
-                        'UPDATE Title_Type SET name = ? WHERE ernie_id = ?'
-                    );
-                    $updateStmt->bind_param('si', $name, $ernieId);
-                    $updateStmt->execute();
-                    continue;
-                }
-
-                // Check if record exists by name (for migrating existing data)
-                $stmt = $connection->prepare(
-                    'SELECT title_type_id FROM Title_Type WHERE name = ?'
-                );
-                $stmt->bind_param('s', $name);
-                $stmt->execute();
-                $result = $stmt->get_result();
-
-                if ($result->num_rows > 0) {
-                    // Update existing record to add ernie_id
-                    $row = $result->fetch_assoc();
-                    $updateStmt = $connection->prepare(
-                        'UPDATE Title_Type SET ernie_id = ? WHERE title_type_id = ?'
-                    );
-                    $updateStmt->bind_param('ii', $ernieId, $row['title_type_id']);
-                    $updateStmt->execute();
-                } else {
-                    // Insert new record
-                    $insertStmt = $connection->prepare(
-                        'INSERT INTO Title_Type (ernie_id, name) VALUES (?, ?)'
-                    );
-                    $insertStmt->bind_param('is', $ernieId, $name);
-                    $insertStmt->execute();
-                }
-            }
-
-            // Commit transaction
-            $connection->commit();
-            return true;
-
-        } catch (\Exception $e) {
-            // Rollback on error
-            $connection->rollback();
-            error_log("ERNIE title types sync failed, rolled back transaction: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Maps ERNIE title type data to local database IDs
-     * 
-     * Transforms ERNIE response format to the format expected by the frontend,
-     * using local database IDs for storage compatibility.
-     *
-     * @param array<array{id: int, name: string, slug: string}> $ernieTypes Title types from ERNIE
-     * @return array<array{id: int|null, name: string}> Mapped title types with local IDs
-     */
-    private function mapTitleTypeErnieToLocalIds(array $ernieTypes): array
-    {
-        global $connection;
-
-        $result = [];
-
-        foreach ($ernieTypes as $type) {
-            $ernieId = $type['id'];
-            $name = $type['name'];
-
-            // Get local ID
-            $stmt = $connection->prepare(
-                'SELECT title_type_id FROM Title_Type WHERE ernie_id = ?'
-            );
-            $stmt->bind_param('i', $ernieId);
-            $stmt->execute();
-            $dbResult = $stmt->get_result();
-
-            $localId = null;
-            if ($row = $dbResult->fetch_assoc()) {
-                $localId = (int) $row['title_type_id'];
-            }
-
-            $result[] = [
-                'id' => $localId,
-                'name' => $name
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
      * Manually refreshes the ERNIE title types cache
      * 
      * Requires API key authentication.
@@ -2072,7 +1967,14 @@ class VocabController
                 // Also sync to database
                 $ernieTypes = $ernieService->getTitleTypesWithCache();
                 if (!empty($ernieTypes)) {
-                    $this->syncTitleTypesToDb($ernieTypes);
+                    $syncItems = array_map(fn($t) => [
+                        'ernie_id' => $t['id'],
+                        'name' => $t['name']
+                    ], $ernieTypes);
+                    $this->syncErnieToDb('Title_Type', $syncItems, [
+                        'ernie_id_col' => 'ernie_id',
+                        'name_col' => 'name'
+                    ]);
                 }
 
                 $status = $ernieService->getTitleTypesCacheStatus();

@@ -316,6 +316,71 @@ class ErnieService
     }
 
     // ──────────────────────────────────────────────────────────────
+    //  Generic cache workflow helpers
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Gets data from ERNIE with full cache fallback chain
+     *
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback as last resort
+     *
+     * @param string $endpoint The API endpoint path
+     * @param string $label Human-readable label for logging
+     * @param string $cacheFile Path to the cache file
+     * @param callable(): array<int, mixed> $fallbackFn Function returning fallback data
+     * @return array<mixed> Data from cache, ERNIE, or fallback
+     */
+    private function getDataWithCache(
+        string $endpoint,
+        string $label,
+        string $cacheFile,
+        callable $fallbackFn
+    ): array {
+        if ($this->isCacheFileValid($cacheFile)) {
+            $cachedData = $this->readCacheFile($cacheFile);
+            if (!empty($cachedData)) {
+                return $cachedData;
+            }
+        }
+
+        $ernieData = $this->fetchFromErnie($endpoint, $label);
+        if ($ernieData !== null && !empty($ernieData)) {
+            $this->writeCacheFile($cacheFile, $ernieData);
+            return $ernieData;
+        }
+
+        $staleCache = $this->readCacheFile($cacheFile, ignoreExpiry: true);
+        if (!empty($staleCache)) {
+            error_log("ERNIE: Using stale cache as fallback for $label");
+            return $staleCache;
+        }
+
+        error_log("ERNIE: Using hardcoded fallback for $label - all other sources unavailable");
+        return $fallbackFn();
+    }
+
+    /**
+     * Fetches data from ERNIE and caches it
+     *
+     * @param string $endpoint The relative API path
+     * @param string $label Human-readable label for logging
+     * @param string $cacheFile The destination cache file path
+     * @return bool True if refresh was successful
+     */
+    private function refreshCacheFromApi(string $endpoint, string $label, string $cacheFile): bool
+    {
+        $data = $this->fetchFromErnie($endpoint, $label);
+        if ($data !== null && !empty($data)) {
+            return $this->writeCacheFile($cacheFile, $data);
+        }
+        return false;
+    }
+
+    // ──────────────────────────────────────────────────────────────
     //  Resource Types
     // ──────────────────────────────────────────────────────────────
 
@@ -342,34 +407,12 @@ class ErnieService
      */
     public function getResourceTypesWithCache(): array
     {
-        $cacheFile = $this->getCacheFile();
-
-        // Check if cache is valid
-        if ($this->isCacheFileValid($cacheFile)) {
-            $cachedData = $this->readCacheFile($cacheFile);
-            if (!empty($cachedData)) {
-                return $cachedData;
-            }
-        }
-
-        // Try to fetch from ERNIE
-        $ernieData = $this->fetchResourceTypes();
-
-        if ($ernieData !== null && !empty($ernieData)) {
-            $this->writeCacheFile($cacheFile, $ernieData);
-            return $ernieData;
-        }
-
-        // Fallback to stale cache if ERNIE unavailable
-        $staleCache = $this->readCacheFile($cacheFile, ignoreExpiry: true);
-        if (!empty($staleCache)) {
-            error_log("ERNIE: Using stale cache as fallback for resource types");
-            return $staleCache;
-        }
-
-        // Last resort: hardcoded fallback to ensure ELMO can always submit
-        error_log("ERNIE: Using hardcoded fallback (Dataset, Other) - all other sources unavailable");
-        return $this->getHardcodedResourceTypeFallback();
+        return $this->getDataWithCache(
+            '/api/v1/resource-types/elmo',
+            'resource types',
+            $this->getCacheFile(),
+            [$this, 'getHardcodedResourceTypeFallback']
+        );
     }
 
     /**
@@ -404,13 +447,11 @@ class ErnieService
      */
     public function refreshCache(): bool
     {
-        $data = $this->fetchResourceTypes();
-
-        if ($data !== null && !empty($data)) {
-            return $this->writeCacheFile($this->getCacheFile(), $data);
-        }
-
-        return false;
+        return $this->refreshCacheFromApi(
+            '/api/v1/resource-types/elmo',
+            'resource types',
+            $this->getCacheFile()
+        );
     }
 
     /**
@@ -450,34 +491,12 @@ class ErnieService
      */
     public function getTitleTypesWithCache(): array
     {
-        $cacheFile = $this->getTitleTypesCacheFile();
-
-        // Check if cache is valid
-        if ($this->isCacheFileValid($cacheFile)) {
-            $cachedData = $this->readCacheFile($cacheFile);
-            if (!empty($cachedData)) {
-                return $cachedData;
-            }
-        }
-
-        // Try to fetch from ERNIE
-        $ernieData = $this->fetchTitleTypes();
-
-        if ($ernieData !== null && !empty($ernieData)) {
-            $this->writeCacheFile($cacheFile, $ernieData);
-            return $ernieData;
-        }
-
-        // Fallback to stale cache if ERNIE unavailable
-        $staleCache = $this->readCacheFile($cacheFile, ignoreExpiry: true);
-        if (!empty($staleCache)) {
-            error_log("ERNIE: Using stale cache as fallback for title types");
-            return $staleCache;
-        }
-
-        // Last resort: hardcoded fallback
-        error_log("ERNIE: Using hardcoded fallback for title types - all other sources unavailable");
-        return $this->getHardcodedTitleTypeFallback();
+        return $this->getDataWithCache(
+            '/api/v1/title-types/elmo',
+            'title types',
+            $this->getTitleTypesCacheFile(),
+            [$this, 'getHardcodedTitleTypeFallback']
+        );
     }
 
     /**
@@ -516,13 +535,11 @@ class ErnieService
      */
     public function refreshTitleTypesCache(): bool
     {
-        $data = $this->fetchTitleTypes();
-
-        if ($data !== null && !empty($data)) {
-            return $this->writeCacheFile($this->getTitleTypesCacheFile(), $data);
-        }
-
-        return false;
+        return $this->refreshCacheFromApi(
+            '/api/v1/title-types/elmo',
+            'title types',
+            $this->getTitleTypesCacheFile()
+        );
     }
 
     /**

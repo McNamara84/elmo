@@ -103,8 +103,9 @@ final class TitleTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('syncTitleTypesToDb');
-        $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('syncErnieToDb');
+        $syncItems = array_map(fn($t) => ['ernie_id' => $t['id'], 'name' => $t['name']], $ernieData);
+        $method->invoke($controller, 'Title_Type', $syncItems, ['ernie_id_col' => 'ernie_id', 'name_col' => 'name']);
 
         // Verify data was inserted
         $result = $this->connection->query(
@@ -143,8 +144,9 @@ final class TitleTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('syncTitleTypesToDb');
-        $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('syncErnieToDb');
+        $syncItems = array_map(fn($t) => ['ernie_id' => $t['id'], 'name' => $t['name']], $ernieData);
+        $method->invoke($controller, 'Title_Type', $syncItems, ['ernie_id_col' => 'ernie_id', 'name_col' => 'name']);
 
         // Verify data was updated
         $result = $this->connection->query(
@@ -179,8 +181,9 @@ final class TitleTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('syncTitleTypesToDb');
-        $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('syncErnieToDb');
+        $syncItems = array_map(fn($t) => ['ernie_id' => $t['id'], 'name' => $t['name']], $ernieData);
+        $method->invoke($controller, 'Title_Type', $syncItems, ['ernie_id_col' => 'ernie_id', 'name_col' => 'name']);
 
         // Verify ernie_id was linked to existing record
         $result = $this->connection->query(
@@ -193,9 +196,9 @@ final class TitleTypesIntegrationTest extends DatabaseTestCase
     }
 
     /**
-     * Test mapTitleTypeErnieToLocalIds returns correct structure
+     * Test mapErnieToLocalIds returns correct structure for title types
      */
-    public function testMapTitleTypeErnieToLocalIdsReturnsCorrectStructure(): void
+    public function testMapErnieToLocalIdsReturnsCorrectStructure(): void
     {
         // Set up test data
         $this->connection->query('DELETE FROM Title');
@@ -213,8 +216,8 @@ final class TitleTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('mapTitleTypeErnieToLocalIds');
-        $result = $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('mapErnieToLocalIds');
+        $result = $method->invoke($controller, 'Title_Type', $ernieData, 'title_type_id', 'ernie_id', ['name' => 'name']);
 
         $this->assertCount(1, $result);
         $this->assertEquals($localId, $result[0]['id']);
@@ -225,9 +228,9 @@ final class TitleTypesIntegrationTest extends DatabaseTestCase
     }
 
     /**
-     * Test that syncTitleTypesToDb returns boolean and uses transaction
+     * Test that syncErnieToDb for title types returns boolean and uses transaction
      */
-    public function testSyncTitleTypesToDbReturnsBoolean(): void
+    public function testSyncErnieToDbReturnsBoolean(): void
     {
         $ernieData = [
             ['id' => 999, 'name' => 'TestType', 'slug' => 'test-type'],
@@ -237,8 +240,9 @@ final class TitleTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('syncTitleTypesToDb');
-        $result = $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('syncErnieToDb');
+        $syncItems = array_map(fn($t) => ['ernie_id' => $t['id'], 'name' => $t['name']], $ernieData);
+        $result = $method->invoke($controller, 'Title_Type', $syncItems, ['ernie_id_col' => 'ernie_id', 'name_col' => 'name']);
 
         $this->assertIsBool($result);
         $this->assertTrue($result);
@@ -271,8 +275,9 @@ final class TitleTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('syncTitleTypesToDb');
-        $result = $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('syncErnieToDb');
+        $syncItems = array_map(fn($t) => ['ernie_id' => $t['id'], 'name' => $t['name']], $ernieData);
+        $result = $method->invoke($controller, 'Title_Type', $syncItems, ['ernie_id_col' => 'ernie_id', 'name_col' => 'name']);
 
         $this->assertTrue($result);
 
@@ -333,8 +338,9 @@ final class TitleTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('syncTitleTypesToDb');
-        $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('syncErnieToDb');
+        $syncItems = array_map(fn($t) => ['ernie_id' => $t['id'], 'name' => $t['name']], $ernieData);
+        $method->invoke($controller, 'Title_Type', $syncItems, ['ernie_id_col' => 'ernie_id', 'name_col' => 'name']);
 
         // Verify local IDs are preserved for existing types
         $result = $this->connection->query(
