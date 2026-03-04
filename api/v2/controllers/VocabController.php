@@ -1869,4 +1869,140 @@ class VocabController
             echo json_encode(['error' => $e->getMessage()]);
         }
     }
+
+    // ==================== PID4INST Instruments ====================
+
+    /**
+     * Retrieves PID4INST instruments from ERNIE with caching
+     * 
+     * Returns a slim representation for frontend autocomplete:
+     * [{pid, pidType, name, instrumentTypes}]
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getPid4instInstruments(): void
+    {
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+
+            $ernieService = new ErnieService();
+
+            if ($ernieService->isConfigured(logResult: true)) {
+                $result = $ernieService->getPid4instInstrumentsWithCache();
+
+                if ($result !== null && !empty($result['data'])) {
+                    // Transform to slim format for frontend
+                    $instruments = array_map(function ($item) {
+                        return [
+                            'pid' => $item['pid'] ?? '',
+                            'pidType' => $item['pidType'] ?? 'Handle',
+                            'name' => $item['name'] ?? '',
+                            'instrumentTypes' => $item['instrumentTypes'] ?? []
+                        ];
+                    }, $result['data']);
+
+                    error_log("PID4INST: Serving " . count($instruments) . " instruments from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($instruments);
+                    return;
+                }
+            }
+
+            // No data available
+            error_log("PID4INST: No instruments available");
+            http_response_code(503);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'error' => 'PID4INST instruments currently unavailable',
+                'instruments' => []
+            ]);
+
+        } catch (Exception $e) {
+            error_log("API Error in getPid4instInstruments: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Manually refreshes the PID4INST instruments cache
+     * 
+     * Requires API key authentication.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshPid4instCache(): void
+    {
+        if (!$this->validateApiKey()) {
+            return;
+        }
+
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+
+            $ernieService = new ErnieService();
+
+            if (!$ernieService->isConfigured()) {
+                http_response_code(400);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'ERNIE service is not configured'
+                ]);
+                return;
+            }
+
+            $success = $ernieService->refreshPid4instCache();
+
+            header('Content-Type: application/json');
+
+            if ($success) {
+                $status = $ernieService->getPid4instCacheStatus();
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'PID4INST instruments cache refreshed successfully',
+                    'itemCount' => $status['itemCount'],
+                    'lastUpdated' => $status['lastUpdated']
+                ]);
+            } else {
+                http_response_code(502);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to fetch PID4INST data from ERNIE'
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("Error refreshing PID4INST cache: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Gets the status of the PID4INST instruments cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getPid4instCacheStatus(): void
+    {
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+
+            $ernieService = new ErnieService();
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'configured' => $ernieService->isConfigured(),
+                'cache' => $ernieService->getPid4instCacheStatus()
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error getting PID4INST cache status: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
 }

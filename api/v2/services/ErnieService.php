@@ -35,6 +35,11 @@ class ErnieService
     private string $cacheFile;
 
     /**
+     * @var string Path to the PID4INST instruments cache file
+     */
+    private string $pid4instCacheFile;
+
+    /**
      * ErnieService constructor.
      * 
      * Initializes the service with configuration from global settings.
@@ -47,6 +52,7 @@ class ErnieService
         $this->apiKey = $ernieApiKey ?? '';
         $this->cacheTtl = $ernieResourceTypesCacheTtl ?? 21600; // Default: 6 hours
         $this->cacheFile = __DIR__ . '/../../../storage/cache/ernie_resource_types.json';
+        $this->pid4instCacheFile = __DIR__ . '/../../../storage/cache/ernie_pid4inst.json';
     }
 
     /**
@@ -392,5 +398,306 @@ class ErnieService
             $minutes = floor(($seconds % 3600) / 60);
             return "$hours hour" . ($hours > 1 ? 's' : '') . " $minutes minute" . ($minutes > 1 ? 's' : '');
         }
+    }
+
+    // ==================== PID4INST Instruments ====================
+
+    /**
+     * Gets the PID4INST instruments cache file path
+     * 
+     * @return string Path to the PID4INST cache file
+     */
+    protected function getPid4instCacheFile(): string
+    {
+        return $this->pid4instCacheFile;
+    }
+
+    /**
+     * Fetches PID4INST instruments from the ERNIE API
+     * 
+     * @return array{lastUpdated: string, total: int, data: array<array{id: string, pid: string, pidType: string, name: string, instrumentTypes: string[]}>}|null Instruments data or null on failure
+     */
+    public function fetchPid4instInstruments(): ?array
+    {
+        if (!$this->isConfigured()) {
+            error_log("ERNIE: Missing URL or API key configuration for PID4INST");
+            return null;
+        }
+
+        $url = $this->baseUrl . '/api/v1/vocabularies/pid4inst-instruments';
+
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => [
+                    'X-API-KEY: ' . $this->apiKey,
+                    'Accept: application/json'
+                ],
+                'timeout' => 30,
+                'ignore_errors' => true
+            ],
+            'ssl' => [
+                'verify_peer' => true,
+                'verify_peer_name' => true
+            ]
+        ]);
+
+        $response = @file_get_contents($url, false, $context);
+
+        if ($response === false) {
+            error_log("ERNIE: Failed to fetch PID4INST instruments from $url");
+            return null;
+        }
+
+        // Check HTTP status code
+        // @phpstan-ignore-next-line - $http_response_header is a magic PHP variable
+        $responseHeaders = $http_response_header ?? [];
+        if (!empty($responseHeaders)) {
+            $statusLine = $responseHeaders[0];
+            if (preg_match('/HTTP\/\d\.\d\s+(\d+)/', $statusLine, $matches)) {
+                $statusCode = (int) $matches[1];
+                if ($statusCode !== 200) {
+                    error_log("ERNIE: HTTP error $statusCode when fetching PID4INST instruments");
+                    return null;
+                }
+            }
+        }
+
+        $data = json_decode($response, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log("ERNIE: Invalid JSON response for PID4INST - " . json_last_error_msg());
+            return null;
+        }
+
+        // Validate response structure: must have 'data' array
+        if (!is_array($data) || !isset($data['data']) || !is_array($data['data'])) {
+            error_log("ERNIE: PID4INST response missing 'data' array");
+            return null;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Gets PID4INST instruments with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. null (no hardcoded fallback – instrument data is too specific)
+     * 
+     * @return array{lastUpdated: string, total: int, data: array<mixed>}|null Instruments data or null if unavailable
+     */
+    public function getPid4instInstrumentsWithCache(): ?array
+    {
+        $cacheFile = $this->getPid4instCacheFile();
+
+        // Check if cache is valid
+        if ($this->isCacheValidForFile($cacheFile)) {
+            $cachedData = $this->readCacheFile($cacheFile);
+            if (!empty($cachedData)) {
+                return $cachedData;
+            }
+        }
+
+        // Try to fetch from ERNIE
+        $ernieData = $this->fetchPid4instInstruments();
+
+        if ($ernieData !== null && !empty($ernieData['data'])) {
+            $this->writeCacheFile($cacheFile, $ernieData);
+            return $ernieData;
+        }
+
+        // Fallback to stale cache if ERNIE unavailable
+        $staleCache = $this->readCacheFile($cacheFile, ignoreExpiry: true);
+        if (!empty($staleCache)) {
+            error_log("ERNIE: Using stale PID4INST cache as fallback");
+            return $staleCache;
+        }
+
+        // No fallback possible for instrument-specific data
+        error_log("ERNIE: PID4INST instruments unavailable - no cache or API data");
+        return null;
+    }
+
+    /**
+     * Forces PID4INST cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshPid4instCache(): bool
+    {
+        $data = $this->fetchPid4instInstruments();
+
+        if ($data !== null && !empty($data['data'])) {
+            return $this->writeCacheFile($this->getPid4instCacheFile(), $data);
+        }
+
+        return false;
+    }
+
+    /**
+     * Gets PID4INST cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getPid4instCacheStatus(): array
+    {
+        $cacheFile = $this->getPid4instCacheFile();
+        if (!file_exists($cacheFile)) {
+            return [
+                'exists' => false,
+                'valid' => false,
+                'lastUpdated' => null,
+                'age' => null,
+                'itemCount' => 0
+            ];
+        }
+
+        $content = @file_get_contents($cacheFile);
+        if ($content === false) {
+            return [
+                'exists' => true,
+                'valid' => false,
+                'lastUpdated' => null,
+                'age' => null,
+                'itemCount' => 0,
+                'error' => 'Unable to read cache file'
+            ];
+        }
+
+        $cache = json_decode($content, true);
+
+        $lastUpdated = isset($cache['lastUpdated']) ? strtotime($cache['lastUpdated']) : null;
+        $age = $lastUpdated ? time() - $lastUpdated : null;
+
+        return [
+            'exists' => true,
+            'valid' => $this->isCacheValidForFile($cacheFile),
+            'lastUpdated' => $cache['lastUpdated'] ?? null,
+            'age' => $age,
+            'ageFormatted' => $age ? $this->formatAge($age) : null,
+            'ttl' => $this->cacheTtl,
+            'itemCount' => isset($cache['data']) ? (is_array($cache['data']) ? count($cache['data']) : 0) : 0
+        ];
+    }
+
+    // ==================== Generic Cache Helpers ====================
+
+    /**
+     * Checks if a specific cache file exists and is not expired
+     * 
+     * @param string $cacheFile Path to the cache file
+     * @return bool True if cache is valid
+     */
+    private function isCacheValidForFile(string $cacheFile): bool
+    {
+        if (!file_exists($cacheFile)) {
+            return false;
+        }
+
+        $content = @file_get_contents($cacheFile);
+        if ($content === false) {
+            return false;
+        }
+
+        $cache = json_decode($content, true);
+
+        if (!isset($cache['lastUpdated'])) {
+            return false;
+        }
+
+        $lastUpdated = strtotime($cache['lastUpdated']);
+        if ($lastUpdated === false) {
+            return false;
+        }
+
+        $age = time() - $lastUpdated;
+        return $age < $this->cacheTtl;
+    }
+
+    /**
+     * Reads a cache file and returns its contents
+     * 
+     * @param string $cacheFile Path to the cache file
+     * @param bool $ignoreExpiry Whether to read cache even if expired
+     * @return array<string, mixed> Cached data or empty array
+     */
+    private function readCacheFile(string $cacheFile, bool $ignoreExpiry = false): array
+    {
+        if (!file_exists($cacheFile)) {
+            return [];
+        }
+
+        $content = @file_get_contents($cacheFile);
+        if ($content === false) {
+            return [];
+        }
+
+        $cache = json_decode($content, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return [];
+        }
+
+        // For PID4INST-style cache (full object with data array), return the whole object
+        if (isset($cache['data']) && is_array($cache['data'])) {
+            return $cache;
+        }
+
+        return $cache['data'] ?? [];
+    }
+
+    /**
+     * Writes data to a specific cache file
+     * 
+     * @param string $cacheFile Path to the cache file
+     * @param array<string, mixed> $data Data to cache
+     * @return bool True if cache was written successfully
+     */
+    private function writeCacheFile(string $cacheFile, array $data): bool
+    {
+        $cacheDir = dirname($cacheFile);
+
+        if (!is_dir($cacheDir)) {
+            if (!mkdir($cacheDir, 0755, true)) {
+                error_log("ERNIE: Failed to create cache directory: $cacheDir");
+                return false;
+            }
+        }
+
+        // If data already has the cache structure (lastUpdated, data), wrap it;
+        // otherwise use the existing resource-types format
+        if (isset($data['lastUpdated']) && isset($data['data'])) {
+            $cache = [
+                'lastUpdated' => date('c'),
+                'ttl' => $this->cacheTtl,
+                'source' => 'ernie',
+                'originalLastUpdated' => $data['lastUpdated'],
+                'total' => $data['total'] ?? count($data['data']),
+                'data' => $data['data']
+            ];
+        } else {
+            $cache = [
+                'lastUpdated' => date('c'),
+                'ttl' => $this->cacheTtl,
+                'source' => 'ernie',
+                'data' => $data
+            ];
+        }
+
+        $result = file_put_contents(
+            $cacheFile,
+            json_encode($cache, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+        );
+
+        if ($result === false) {
+            error_log("ERNIE: Failed to write cache file: $cacheFile");
+            return false;
+        }
+
+        return true;
     }
 }

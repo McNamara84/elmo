@@ -74,5 +74,10 @@ return [
 
     // ERNIE cache management endpoints
     ['POST', '/admin/cache/resourcetypes/refresh', [new VocabController(), 'refreshResourceTypesCache']],
-    ['GET', '/admin/cache/resourcetypes/status', [new VocabController(), 'getResourceTypesCacheStatus']]
+    ['GET', '/admin/cache/resourcetypes/status', [new VocabController(), 'getResourceTypesCacheStatus']],
+
+    // PID4INST instruments endpoints
+    ['GET', '/vocabs/pid4inst/instruments', [new VocabController(), 'getPid4instInstruments']],
+    ['POST', '/admin/cache/pid4inst/refresh', [new VocabController(), 'refreshPid4instCache']],
+    ['GET', '/admin/cache/pid4inst/status', [new VocabController(), 'getPid4instCacheStatus']]
 ];
