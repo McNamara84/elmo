@@ -68,40 +68,41 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
 
       <!-- Collapsible content -->
       <div class="collapse navbar-collapse" id="headerMenuContent">
-        <div class="ms-auto d-flex flex-column flex-lg-row align-items-lg-center me-lg-3 px-3 pb-3 pt-2 pt-lg-0 px-lg-0 pb-lg-0 p-lg-1 gap-2 bg-primary">
+        <div class="ms-auto d-flex flex-row align-items-center justify-content-start flex-wrap me-lg-3 px-3 pb-3 pt-2 pt-lg-0 px-lg-0 pb-lg-0 p-lg-1 gap-2 bg-primary">
      
-          <!-- Dropdown menu for help -->
-          <div class="d-flex flex-row gap-2">
+          <!-- Guide Link -->
+          <div class="dropdown">
             <a href="doc/help.php" target="_blank" class="btn btn-primary" id="buttonHelpheader" data-translate="buttons.elmoGuide">
               <i class="bi bi-book"></i> Guide
             </a>
+          </div>
            
-            <div class="dropdown">
-              <button class="btn btn-primary dropdown-toggle text-start" id="bd-help" type="button" data-bs-toggle="dropdown"
-                aria-expanded="false" data-translate="header.help">
-                <i class="bi bi-question-square-fill"></i>
-                Help
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bd-help">
-                <li><a class="dropdown-item" data-bs-theme-value="help-on" id="buttonHelpOn" data-translate="buttons.helpOn">
-                    <i class="bi bi-question-circle-fill"></i> <span data-translate="header.on">On</span></a></li>
-                <li><a class="dropdown-item" data-bs-theme-value="help-off" id="buttonHelpOff"
-                    data-translate="buttons.helpOff">
-                    <i class="bi bi-question-circle"></i> <span data-translate="header.off">Off</span></a></li>
-                <li><a class="dropdown-item" id="button-changelog-show">
-                    <i class="bi bi-card-checklist"></i> <span data-translate="buttons.about">About</span></a></li>
-              </ul>
-            </div>
+          <!-- Dropdown menu for help -->
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
+              aria-expanded="false" data-translate="header.help">
+              <i class="bi bi-question-square-fill"></i>
+              Help
+            </button>
+            <ul class="dropdown-menu shadow" aria-labelledby="bd-help">
+              <li><a class="dropdown-item" data-bs-theme-value="help-on" id="buttonHelpOn" data-translate="buttons.helpOn">
+                  <i class="bi bi-question-circle-fill"></i> <span data-translate="header.on">On</span></a></li>
+              <li><a class="dropdown-item" data-bs-theme-value="help-off" id="buttonHelpOff"
+                  data-translate="buttons.helpOff">
+                  <i class="bi bi-question-circle"></i> <span data-translate="header.off">Off</span></a></li>
+              <li><a class="dropdown-item" id="button-changelog-show">
+                  <i class="bi bi-card-checklist"></i> <span data-translate="buttons.about">About</span></a></li>
+            </ul>
           </div>
 
           <div class="dropdown">
             <!-- Dropdown menu for dark mode settings -->
-            <button class="btn btn-primary dropdown-toggle w-100 text-start" id="bd-theme" type="button" data-bs-toggle="dropdown"
+            <button class="btn btn-primary dropdown-toggle" id="bd-theme" type="button" data-bs-toggle="dropdown"
               aria-expanded="false" data-translate="header.mode">
               <i class="bi bi-circle-half"></i>
               Mode
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bd-theme">
+            <ul class="dropdown-menu shadow" aria-labelledby="bd-theme">
               <li><a class="dropdown-item active" data-bs-theme-value="auto" data-translate="buttons.auto">
                   <i class="bi bi-circle-half"></i> Auto</a></li>
               <li><a class="dropdown-item" data-bs-theme-value="light" data-translate="buttons.light">
@@ -113,7 +114,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
           
           <div class="dropdown">
             <!-- Dropdown menu for language settings -->
-            <button class="btn btn-primary dropdown-toggle w-100 text-start" id="bd-lang" type="button" data-bs-toggle="dropdown"
+            <button class="btn btn-primary dropdown-toggle" id="bd-lang" type="button" data-bs-toggle="dropdown"
               aria-expanded="false" data-translate="header.language">
               <i class="bi bi-translate"></i>
               Language
