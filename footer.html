@@ -68,6 +68,11 @@ window.ELMO_FEATURES = {
 };
 </script>
 
+<script>
+  window.elmo = window.elmo || {};
+  window.elmo.isNewRecord = <?php echo !empty($isNewRecord) && $isNewRecord ? 'true' : 'false'; ?>;
+</script>
+
 <!-- jQuery -->
 <script src="node_modules/jquery/dist/jquery.min.js"></script>
 <!-- jQuery UI -->
