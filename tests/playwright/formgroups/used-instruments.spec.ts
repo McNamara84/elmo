@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
-import { APP_BASE_URL, registerStaticAssetRoutes, REPO_ROOT } from '../utils';
+import { APP_BASE_URL, REPO_ROOT } from '../utils';
+import { injectScript, injectStylesheet } from '../utils/assets';
 
 const instrumentsFixture = [
     {
@@ -29,15 +30,13 @@ const usedInstrumentsTemplate = readFileSync(
     'utf8'
 );
 
+// Minimal HTML harness – scripts are injected programmatically via injectScript()
+// after page.goto() to avoid route-interception timing issues with <script src>.
 const testHarnessMarkup = String.raw`<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>Used Instruments Test Harness</title>
-    <base href="${APP_BASE_URL}">
-    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="node_modules/bootstrap-icons/font/bootstrap-icons.css" />
-    <link rel="stylesheet" href="node_modules/@yaireo/tagify/dist/tagify.css" />
   </head>
   <body>
     <main class="container py-4">
@@ -47,30 +46,20 @@ const testHarnessMarkup = String.raw`<!DOCTYPE html>
       <div id="help-usedinstruments-fg" role="note">Used instruments help text</div>
       <div id="help-usedinstruments-input" role="note">Instrument search help text</div>
     </main>
-    <script>
-      window.ELMO_FEATURES = { showUsedInstruments: true };
-      window.translations = {
-        usedInstruments: {
-          title: 'Used Instruments',
-          placeholder: 'Search and select instruments...',
-          required: 'Please select at least one instrument.',
-          loading: 'Loading instrument list...',
-          unavailable: 'Instrument list currently unavailable.',
-          selected: 'selected instruments'
-        }
-      };
-    </script>
-    <script src="node_modules/jquery/dist/jquery.min.js"></script>
-    <script src="node_modules/@yaireo/tagify/dist/tagify.min.js"></script>
-    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/usedInstruments.js"></script>
   </body>
 </html>`;
 
+/** Wait until the usedInstrumentsModule has been fully set on window. */
+async function waitForUsedInstrumentsInit(page: import('@playwright/test').Page) {
+    await page.waitForFunction(
+        () => !!(window as any).usedInstrumentsModule,
+        null,
+        { timeout: 10000 }
+    );
+}
+
 test.describe('Used Instruments form group', () => {
     test.beforeEach(async ({ page }) => {
-        await registerStaticAssetRoutes(page);
-
         // Mock PID4INST API
         await page.route('**/api/v2/vocabs/pid4inst/instruments', async route => {
             await route.fulfill({
@@ -89,7 +78,43 @@ test.describe('Used Instruments form group', () => {
             });
         });
 
-        await page.goto(`${APP_BASE_URL}test-used-instruments`, { waitUntil: 'domcontentloaded' });
+        await page.goto(`${APP_BASE_URL}test-used-instruments`);
+
+        // Inject stylesheets
+        await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
+        await injectStylesheet(page, 'node_modules/bootstrap-icons/font/bootstrap-icons.css');
+        await injectStylesheet(page, 'node_modules/@yaireo/tagify/dist/tagify.css');
+
+        // Inject dependencies in correct order
+        await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
+        await injectScript(page, 'node_modules/@yaireo/tagify/dist/tagify.min.js');
+        await injectScript(page, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js');
+
+        // Set up globals before loading the module
+        await page.addScriptTag({
+            content: `
+                window.ELMO_FEATURES = { showUsedInstruments: true };
+                window.translations = {
+                    usedInstruments: {
+                        title: 'Used Instruments',
+                        placeholder: 'Search and select instruments...',
+                        required: 'Please select at least one instrument.',
+                        loading: 'Loading instrument list...',
+                        unavailable: 'Instrument list currently unavailable.',
+                        selected: 'selected instruments'
+                    }
+                };
+            `
+        });
+
+        // Inject the module under test
+        await injectScript(page, 'js/usedInstruments.js');
+
+        // In case the module registered a DOMContentLoaded listener, fire it
+        await page.evaluate(() => document.dispatchEvent(new Event('DOMContentLoaded')));
+
+        // Wait until fully initialized
+        await waitForUsedInstrumentsInit(page);
     });
 
     test('renders the form group with correct title and elements', async ({ page }) => {
@@ -111,26 +136,12 @@ test.describe('Used Instruments form group', () => {
     });
 
     test('initializes Tagify on the input element', async ({ page }) => {
-        // Wait for the module to be fully initialized (set at end of init function)
-        await page.waitForFunction(
-            () => !!(window as any).usedInstrumentsModule,
-            null,
-            { timeout: 10000 }
-        );
-
         // Tagify creates a visible wrapper element around the input
         const tagifyWrapper = page.locator('.tagify');
         await expect(tagifyWrapper).toBeVisible();
     });
 
     test('loads instruments from API and shows in dropdown', async ({ page }) => {
-        // Wait for the module to be fully initialized
-        await page.waitForFunction(
-            () => !!(window as any).usedInstrumentsModule,
-            null,
-            { timeout: 10000 }
-        );
-
         // Focus on the Tagify input to trigger lazy loading
         await page.locator('.tagify__input').click();
 
@@ -147,13 +158,6 @@ test.describe('Used Instruments form group', () => {
     });
 
     test('creates hidden inputs when instrument is selected', async ({ page }) => {
-        // Wait for the module to be fully initialized
-        await page.waitForFunction(
-            () => !!(window as any).usedInstrumentsModule,
-            null,
-            { timeout: 10000 }
-        );
-
         // Programmatically add an instrument
         await page.evaluate(() => {
             (window as any).usedInstrumentsModule.addInstrumentsByData([{
