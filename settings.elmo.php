@@ -73,14 +73,21 @@ $showMslVocabs = false;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
+$showMslDefaultFreeKeywords = false;
+
 $envShowMslLabs   = getenv('SHOW_MSL_LABS');
 $envShowMslVocabs = getenv('SHOW_MSL_VOCABS');
+$envShowMslDefaultFreeKeywords = getenv('SHOW_MSL_DEFAULT_FREE_KEYWORDS');
+
 
 if ($envShowMslLabs !== false) {
     $showMslLabs = filter_var($envShowMslLabs, FILTER_VALIDATE_BOOLEAN);
 }
 if ($envShowMslVocabs !== false) {
     $showMslVocabs = filter_var($envShowMslVocabs, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowMslDefaultFreeKeywords !== false) {
+    $showMslDefaultFreeKeywords = filter_var($envShowMslDefaultFreeKeywords, FILTER_VALIDATE_BOOLEAN);
 }
 
 // SETTINGS FOR ICGEM
