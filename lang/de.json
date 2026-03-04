@@ -94,7 +94,7 @@
         "publicationYearInvalid": "Bitte geben Sie ein gültiges Jahr zwischen 1901-2155 ein (4 Ziffern im Format JJJJ).",
         "resourceType": "Ressourcentyp",
         "version": "Version",
-        "versionInvalid": "Bei Unsicherheit leer lassen.",
+        "versionInvalid": "Bitte verwenden Sie Ziffern.Ziffern als Format. Bei Unsicherheit leer lassen.",
         "datasetLanguage": "Sprache des Datensatzes",
         "resourceTitle": "Titel",
         "resourceTitleInvalid": "Bitte geben Sie einen beschreibenden Titel an (der nicht den Titel der Arbeit wiederholt, sondern die Daten beschreibt).",
