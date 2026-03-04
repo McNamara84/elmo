@@ -307,7 +307,21 @@ function initUsedInstrumentsModule() {
             };
         });
 
+        // Ensure tags are in the whitelist so enforceWhitelist doesn't reject them
+        var currentWhitelist = instrumentsTagify.settings.whitelist || [];
+        tags.forEach(function (tag) {
+            var exists = currentWhitelist.some(function (w) { return w.pid === tag.pid; });
+            if (!exists) {
+                currentWhitelist.push(tag);
+            }
+        });
+        instrumentsTagify.settings.whitelist = currentWhitelist;
+        instrumentsTagify.whitelist = currentWhitelist;
+
         instrumentsTagify.addTags(tags);
+
+        // Explicitly update hidden inputs in case Tagify add event is async
+        updateHiddenInputs();
     }
 
     /**
