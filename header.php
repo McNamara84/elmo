@@ -56,21 +56,23 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
       ELMO
     </a> -->
 
-    <h1 class="visually-hidden">ELMO – GFZ Data Services' Metadata Editor 2.0</h1>
-    <a href="https://www.gfz.de/" target="_blank" rel="noopener noreferrer">
-      <img src="logos/GFZ-logo.png" alt="GFZ Logo" class="logo logo-left">
-    </a>
+    <div class="d-flex align-items-center ms-3">
+      <h1 class="visually-hidden">ELMO – GFZ Data Services' Metadata Editor 2.0</h1>
+      <a href="https://www.gfz.de/" target="_blank" rel="noopener noreferrer" class="pe-3 border-end border-white">
+        <img src="logos/GFZ-logo.png" alt="GFZ Logo" class="logo logo-left">
+      </a>
 
-    <a href="https://dataservices.gfz.de/web/" target="_blank" rel="noopener noreferrer"
-      class="logo-center-wrapper">
-      <img src="logos/GFZ_Data_Services_logo.png" alt="GFZ Data Services Logo" class="logo">
-    </a>
+      <a href="https://dataservices.gfz.de/web/" target="_blank" rel="noopener noreferrer" class="ps-3">
+        <img src="logos/GFZ_Data_Services_logo.png" alt="GFZ Data Services Logo" class="logo">
+      </a>
+    </div>
     <div class="ms-auto d-flex align-items-center me-3 p-1">
  
       <!-- Dropdown menu for help -->
       <div class="dropdown ms-auto me-3 p-1">
-
-      <a href="doc/help.php" target="_blank" class="text-white text-decoration-none me-3" id="buttonHelpheader" data-translate="buttons.elmoGuide">Elmo Guide</a>
+        <a href="doc/help.php" target="_blank" class="btn btn-primary me-3" id="buttonHelpheader" data-translate="buttons.elmoGuide">
+          <i class="bi bi-book"></i> Guide
+        </a>
        
       <button class="btn btn-primary dropdown-toggle" id="bd-help" type="button" data-bs-toggle="dropdown"
           aria-expanded="false" data-translate="header.help">
