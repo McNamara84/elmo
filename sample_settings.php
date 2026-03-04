@@ -76,6 +76,10 @@ $showMslVocabs = false;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
+// SETTINGS FOR PID4INST INSTRUMENTS
+// Show Used Instruments form group (PID4INST via ERNIE API)
+$showUsedInstruments = false;
+
 // SETTINGS FOR ICGEM
 // Show ICGEM form groups (GGMs Properties and Characteristics of the model)
 $showGGMsProperties = false;
