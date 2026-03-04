@@ -87,7 +87,7 @@ test.describe('Used Instruments form group', () => {
 
         // Inject dependencies in correct order
         await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
-        await injectScript(page, 'node_modules/@yaireo/tagify/dist/tagify.min.js');
+        await injectScript(page, 'node_modules/@yaireo/tagify/dist/tagify.js');
         await injectScript(page, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js');
 
         // Set up globals before loading the module
