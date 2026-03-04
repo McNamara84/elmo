@@ -263,6 +263,7 @@ To install them: npm install
   - `$showSpatialTemporalCoverage`: Specifies whether the form group Spatial and Temporal Coverages should be displayed (true/false).
   - `$showRelatedWork`: Specifies whether the form group Related Work should be displayed (true/false).
   - `$showFundingReference`: Specifies whether the form group Funding Reference should be displayed (true/false).
+  - `$showUsedInstruments`: Specifies whether the form group Used Instruments (PID4INST via ERNIE API) should be displayed (true/false).
   - `$showGGMsProperties`: specific for implementation for the ICGEM platform. Specifies whether ICGEM form groups (GGMs Properties and Characteristics of the model) should be displayed (true/false).
 
   ### ERNIE Integration (Bidirectional Communication)

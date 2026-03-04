@@ -227,6 +227,8 @@ function validateRelatedWorkRequirements() {
  * Validates the Used Instruments section of the form.
  * When the feature is active, at least one instrument must be selected (via Tagify).
  * The Tagify input has class js-required-on-submit set in HTML.
+ *
+ * @returns {void}
  */
 function validateUsedInstrumentsRequirements() {
     if (!window.ELMO_FEATURES || !window.ELMO_FEATURES.showUsedInstruments) {
