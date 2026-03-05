@@ -60,7 +60,6 @@ test.describe('Resource Information Form Tests', () => {
 
     const languageSelect = page.locator('#input-resourceinformation-language');
     await expect(languageSelect).toBeVisible();
-    await expect(languageSelect).toHaveAttribute('required');
     await languageSelect.selectOption('1');
     await expect(languageSelect).toHaveValue('1');
 

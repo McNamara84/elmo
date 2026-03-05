@@ -222,7 +222,7 @@ describe('select.js', () => {
     Intl.DateTimeFormat = originalIntl;
   });
 
-  test('setupLanguageDropdown populates options from API', async () => {
+  test('setupLanguageDropdown populates options from API and pre-selects English', async () => {
     const select = $('<select id="input-resourceinformation-language"></select>').appendTo(document.body);
     $.ajax.mockImplementation(opts => {
       opts.success([
@@ -237,6 +237,7 @@ describe('select.js', () => {
     window.setupLanguageDropdown();
     const options = select.find('option').map((i,el)=>$(el).text()).get();
     expect(options).toEqual(['Choose...','English','German']);
+    expect(select.val()).toBe('1');
     expect(select.prop('disabled')).toBe(false);
   });
 
