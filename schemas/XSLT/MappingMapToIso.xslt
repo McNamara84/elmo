@@ -10,6 +10,7 @@ http://www.altova.com/mapforce
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" exclude-result-prefixes="xs">
 	<xsl:output method="xml" encoding="UTF-8" indent="yes"/>
+	<xsl:param name="contactEmail" select="'datapub@gfz.de'"/>
 	<xsl:template match="/">
 		<xsl:variable name="var1_initial" select="."/>
 		<MD_Metadata xmlns="http://www.isotc211.org/2005/gmd" xmlns:gco="http://www.isotc211.org/2005/gco" xmlns:gsr="http://www.isotc211.org/2005/gsr" xmlns:gss="http://www.isotc211.org/2005/gss" xmlns:gts="http://www.isotc211.org/2005/gts" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -66,7 +67,7 @@ http://www.altova.com/mapforce
 									<CI_Address>
 										<electronicMailAddress>
 											<gco:CharacterString>
-												<xsl:value-of select="'datapub@gfz.de'"/>
+												<xsl:value-of select="$contactEmail"/>
 											</gco:CharacterString>
 										</electronicMailAddress>
 									</CI_Address>

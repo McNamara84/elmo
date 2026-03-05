@@ -1138,6 +1138,9 @@ class DatasetController
         // Create XSLT processor, configure it, and perform the transformation
         $proc = new XSLTProcessor;
         $proc->importStyleSheet($xsl);
+        // Pass the contact email as an XSLT parameter
+        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
+        $proc->setParameter('', 'contactEmail', $contactEmail);
         $newXml = $proc->transformToXML($xml);
 
         if ($newXml === false) {

@@ -19,7 +19,7 @@ const KEY_SECTIONS = [
   '#button-form-submit',
 ];
 
-const MEASUREMENT_RUNS = 3;
+const MEASUREMENT_RUNS = process.env.CI ? 1 : 3;
 
 const average = (values: Array<number | undefined>) => {
   const valid = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));

@@ -20,7 +20,7 @@
         "lastNameInvalid": "Bitte geben Sie einen Nachnamen ein. Nur Buchstaben sind erlaubt.",
         "firstNameInvalid": "Bitte geben Sie einen Vornamen ein. Nur Buchstaben sind erlaubt.",
         "firstName": "Vorname",
-        "affiliation": "Zugehörigkeit(en)",
+        "affiliation": "Affiliation",
         "roleLabel": "Rolle(n)",
         "add": "+",
         "cancel": "Abbrechen",
@@ -52,7 +52,11 @@
         "submitError": "Datensatz konnte nicht übermittelt werden.",
         "errorHeading": "Fehler",
         "successHeading": "Erfolg! Ihre Metadaten wurden übermittelt.",
-        "successMessage": "Vielen Dank für Ihre Kooperation. Sie werden in Kürze per E-Mail vom Datenkuratierungsteam der GFZ Data Services kontaktiert."
+        "successMessage": "Vielen Dank für Ihre Kooperation. Sie werden in Kürze per E-Mail vom Datenkuratierungsteam der GFZ Data Services kontaktiert.",
+        "dataUploadTitle": "Primärdaten hochladen",
+        "dataUploadMessage": "Es wurden nur die <strong>Metadaten</strong> an GFZ Data Services übermittelt. Bitte laden Sie Ihre Primärdaten (Forschungsdaten) über den folgenden Link in der Nextcloud hoch:",
+        "dataUploadLinkText": "Primärdaten hier hochladen",
+        "dataUploadFileNameHint": "Bitte benennen Sie Ihre Datei(en) passend zum Titel Ihres Datensatzes:"
 
     },
     "autosave": {
@@ -90,7 +94,7 @@
         "publicationYearInvalid": "Bitte geben Sie ein gültiges Jahr zwischen 1901-2155 ein (4 Ziffern im Format JJJJ).",
         "resourceType": "Ressourcentyp",
         "version": "Version",
-        "versionInvalid": "Bei Unsicherheit leer lassen.",
+        "versionInvalid": "Bitte verwenden Sie Ziffern.Ziffern als Format. Bei Unsicherheit leer lassen.",
         "datasetLanguage": "Sprache des Datensatzes",
         "resourceTitle": "Titel",
         "resourceTitleInvalid": "Bitte geben Sie einen beschreibenden Titel an (der nicht den Titel der Arbeit wiederholt, sondern die Daten beschreibt).",
@@ -101,12 +105,12 @@
         "licenseTitle": "Lizenz"
     },
     "authors": {
-        "title": "Autor(en)",
+        "title": "Autor: Personen",
         "affiliationInvalid": "Bitte geben Sie eine Zugehörigkeit an.",
         "InstitutionsNameInvalid": "Bitte geben Sie den Namen der Institution an."
     },
     "authorsInstitutions": {
-        "title": "Autor Institution",
+        "title": "Autor: Institutionen",
         "name": "Name der Autor Institution"
     },
     "contactPersons": {
@@ -118,11 +122,11 @@
         "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
     },
     "contributorPersons": {
-        "title": "Beitragende (Personen)"
+        "title": "Beitragende: Personen"
     },
     "contributorInstitutions": {
-        "title": "Beitragende (Organisationen)",
-        "organization": "Name der Organisation",
+        "title": "Beitragende: Institutionen",
+        "organization": "Name der Institution",
         "organizationInvalid": "Bitte geben Sie einen gültigen Organisationsnamen ein."
     },
     "laboratory": {
@@ -250,7 +254,7 @@
         "clearTooltip": "Alle Einträge oder Inhalte löschen.",
         "load": "Laden",
         "loadTooltip": "Gespeicherte Daten oder Inhalte laden.",
-        "saveAs": "Speichern",
+        "saveAs": "Speichern unter",
         "saveAsTooltip": "Aktuelle Daten oder Inhalte unter neuem Dateinamen speichern.",
         "submit": "Absenden",
         "submitTooltip": "Eingegebene Daten oder Inhalte übermitteln.",
@@ -308,6 +312,15 @@
             "high": "hoch",
             "normal": "normal",
             "low": "niedrig"
+        },
+        "validationFailed": {
+            "title": "Übermittlung nicht möglich",
+            "greeting": "Liebe Nutzerin, lieber Nutzer,",
+            "body": "es scheint, als möchten Sie Daten übermitteln. Leider haben Sie nicht alle Pflichtfelder ausgefüllt.",
+            "saveHint": "Falls Sie bereits mit dem Datenkuratierungsteam vereinbart haben, dass Ihre Einreichung noch nicht vollständig ist, können Sie auf <strong>Speichern unter</strong> klicken und die erzeugte XML-Datei per E-Mail an <a href='mailto:{email}'>{email}</a> senden.",
+            "fixHint": "Andernfalls füllen Sie bitte die rot markierten Felder aus und versuchen Sie es erneut.",
+            "guideHint": "Wenn Sie weitere Hilfe beim Ausfüllen des Formulars benötigen, finden Sie den <a href='doc/help.php' target='_blank'>ELMO Guide</a> hier.",
+            "close": "Schließen"
         }
     },
     "welcome": {

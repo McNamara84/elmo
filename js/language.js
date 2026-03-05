@@ -206,6 +206,10 @@ $(document).ready(function () {
             changeLanguage(lang);
         }
     });
+        // Force English for GEM instances
+    if (window.ELMO_FEATURES?.showGGMsProperties) {
+        changeLanguage('en');
+    }
 });
 
 // Export for testing

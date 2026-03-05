@@ -2,8 +2,11 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Footer Tests', () => {
 
+  test.beforeEach(async ({ page }) => {
+    await page.goto('', { waitUntil: 'domcontentloaded' });
+  });
+
   test('footer contains all expected elements', async ({ page }) => {
-    await page.goto('');
 
     const footer = page.locator('.footer-info-nav');
     await expect(footer).toBeVisible();
@@ -26,7 +29,6 @@ test.describe('Footer Tests', () => {
   });
 
   test('Footer links are clickable', async ({ page }) => {
-    await page.goto('');
 
     const legalNotice = page.locator('#buttonLegalNotice');
     const privacyPolicy = page.locator('#buttonPrivacy');
@@ -44,7 +46,7 @@ test.describe('Footer Tests', () => {
   });
 
   test('Verify legal notice button opens correct link', async ({ page, context }) => {
-    await page.goto('');
+
     
     const legalNoticeButton = page.locator('#buttonLegalNotice');
     
@@ -54,7 +56,6 @@ test.describe('Footer Tests', () => {
   });
 
   test('Verify privacy policy button opens correct link', async ({ page }) => {
-    await page.goto('');
     
     const privacyPolicyButton = page.locator('#buttonPrivacy');
     
@@ -68,7 +69,6 @@ test.describe('Footer Tests', () => {
   });
 
   test('Verify ELMO guide button opens correct link', async ({ page }) => {
-    await page.goto('');
     
     const elmoGuideButton = page.locator('#buttonHelp');
     

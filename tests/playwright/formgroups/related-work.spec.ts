@@ -118,7 +118,6 @@ test.describe('Related work form group', () => {
     });
 
     await page.goto(`${APP_BASE_URL}related-work-harness`, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
 
     await page.waitForFunction(() => {
       const relationSelect = document.querySelector('#input-relatedwork-relation');
@@ -189,7 +188,6 @@ test.describe('Related work form group', () => {
 
     await identifierInput.fill('10.1234/example.doi');
     await identifierInput.blur();
-    await page.waitForTimeout(400);
 
     await simulateSubmitValidation(page);
     await expect(relationSelect).toHaveAttribute('required', 'required');
@@ -233,7 +231,6 @@ test.describe('Related work form group', () => {
 
     await identifierInput.fill('10.5555/zenodo.1234567');
     await identifierInput.blur();
-    await page.waitForTimeout(500);
 
     await expect(identifierTypeSelect).toHaveValue('DOI');
 
@@ -281,7 +278,6 @@ test.describe('Related work form group', () => {
 
     await identifierInput.fill('https://example.org/resource');
     await identifierInput.blur();
-    await page.waitForTimeout(500);
 
     await expect(identifierTypeSelect).toHaveValue('URL');
     await applyPatternUpdate();
@@ -290,7 +286,6 @@ test.describe('Related work form group', () => {
 
     await identifierInput.fill('');
     await identifierInput.blur();
-    await page.waitForTimeout(200);
     await expect(identifierTypeSelect).toHaveValue('');
     await applyPatternUpdate();
     patternValue = await identifierInput.getAttribute('pattern');

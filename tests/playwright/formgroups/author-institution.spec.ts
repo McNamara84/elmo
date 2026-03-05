@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { navigateToHome, SELECTORS } from '../utils';
+import { getTranslations } from '../utils';
 
 test.describe('Author Institution form group', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,6 +8,13 @@ test.describe('Author Institution form group', () => {
     
     // Wait for Tagify to be initialized on the affiliation field
     await page.waitForSelector('[data-authorinstitution-row] .tagify', { timeout: 10000 });
+  });
+
+  let translations: ReturnType<typeof getTranslations>;
+
+  test.beforeAll(() => {
+    // Load translations for assertions
+    translations = getTranslations();
   });
 
   test('renders base fields with accessible structure and help affordances', async ({ page }) => {
@@ -17,7 +25,8 @@ test.describe('Author Institution form group', () => {
     await expect(rows).toHaveCount(1);
 
     const heading = page.locator('[data-translate="authorsInstitutions.title"]');
-    await expect(heading).toContainText('Author Institution');
+    const propperName = translations.authorsInstitutions.title;
+    await expect(heading).toContainText(propperName);
 
     const nameInput = formGroup.locator('input[name="authorinstitutionName[]"]');
     await expect(nameInput).toBeVisible();

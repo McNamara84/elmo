@@ -33,8 +33,11 @@ $apiKeyTimezone = 'your_timezone_api_key';
 // ERNIE Integration (External Vocabulary Service)
 $ernieUrl = getenv('ERNIE_URL') ?: '';
 $ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
-// Cache TTL for ERNIE Resource Types in seconds (default: 6 hours)
-$ernieResourceTypesCacheTtl = 21600;
+// Cache TTL for all ERNIE data in seconds (default: 6 hours)
+$ernieCacheTtl = 21600;
+
+// URL for primary data upload (shown after successful submit)
+$dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
 
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
 // maximale Anzahl der eingebbaren Titel

@@ -20,7 +20,7 @@
         "lastNameInvalid": "Veuillez saisir un nom. Seules les lettres sont autorisées.",
         "firstNameInvalid": "Veuillez saisir un prénom. Seules les lettres sont autorisées.",
         "firstName": "Prénom",
-        "affiliation": "Affiliation(s)",
+        "affiliation": "Affiliation",
         "roleLabel": "Rôle(s)",
         "add": "+",
         "cancel": "Annuler",
@@ -52,7 +52,11 @@
         "submitError": "Échec de la soumission de l'ensemble de données.",
         "errorHeading": "Erreur",
         "successHeading": "Succès ! Vos métadonnées ont été soumises.",
-        "successMessage": "Merci de votre coopération. Vous serez contacté par email par l'équipe de curation des données des GFZ Data Services sous peu."
+        "successMessage": "Merci de votre coopération. Vous serez contacté par email par l'équipe de curation des données des GFZ Data Services sous peu.",
+        "dataUploadTitle": "Télécharger les données primaires",
+        "dataUploadMessage": "Seules les <strong>métadonnées</strong> ont été soumises aux GFZ Data Services. Veuillez télécharger vos données primaires (données de recherche) via le lien suivant vers le Nextcloud :",
+        "dataUploadLinkText": "Télécharger les données primaires ici",
+        "dataUploadFileNameHint": "Veuillez nommer vos fichiers selon le titre de votre jeu de données :"
 
     },
     "autosave": {
@@ -90,7 +94,7 @@
         "publicationYearInvalid": "Veuillez saisir une année valide entre 1901-2155 (4 chiffres au format AAAA).",
         "resourceType": "Type de ressource",
         "version": "Version",
-        "versionInvalid": "Laissez vide en cas de doute",
+        "versionInvalid": "Veuillez utiliser le format chiffres.chiffres. Laissez vide en cas de doute",
         "datasetLanguage": "Langue du jeu de données",
         "resourceTitle": "Titre",
         "resourceTitleInvalid": "Veuillez fournir un titre descriptif (qui ne répète pas le titre de l'article, mais qui décrit les données).",
@@ -101,12 +105,12 @@
         "licenseTitle": "Licence"
     },
     "authors": {
-        "title": "Auteur(s)",
+        "title": "Auteur: Personnes",
         "affiliationInvalid": "Veuillez indiquer une affiliation.",
         "InstitutionsNameInvalid": "Veuillez fournir le nom de l'institution."
     },
     "authorsInstitutions": {
-        "title": "Institution de l'auteur",
+        "title": "Auteur: Institutions",
         "name": "Nom de l'institution de l'auteur"
     },
     "contactPersons": {
@@ -118,11 +122,11 @@
         "websiteInvalid": "Veuillez saisir une URL valide."
     },
     "contributorPersons": {
-        "title": "Contributeurs (Personnes)"
+        "title": "Contributeurs: Personnes"
     },
     "contributorInstitutions": {
-        "title": "Contributeurs (Organisations)",
-        "organization": "Nom de l'organisation",
+        "title": "Contributeurs: Institutions",
+        "organization": "Nom de l'institution",
         "organizationInvalid": "Veuillez saisir un nom d'organisation valide."
     },
     "laboratory": {
@@ -250,7 +254,7 @@
         "clearTooltip": "Supprimer toutes les entrées ou le contenu.",
         "load": "Charger",
         "loadTooltip": "Charger les données ou le contenu sauvegardés.",
-        "saveAs": "Enregistrer",
+        "saveAs": "Enregistrer sous",
         "saveAsTooltip": "Enregistrer les données ou le contenu actuels sous un nouveau nom de fichier.",
         "submit": "Soumettre",
         "submitTooltip": "Transmettre les données ou le contenu saisis.",
@@ -305,6 +309,15 @@
             "high": "élevée",
             "normal": "normale",
             "low": "basse"
+        },
+        "validationFailed": {
+            "title": "Soumission impossible",
+            "greeting": "Cher utilisateur, chère utilisatrice,",
+            "body": "il semble que vous souhaitiez soumettre des données. Malheureusement, vous n'avez pas rempli tous les champs obligatoires.",
+            "saveHint": "Si vous avez déjà convenu avec l'équipe de curation des données que votre soumission n'est pas encore complète, vous pouvez cliquer sur <strong>Enregistrer sous</strong> et envoyer le fichier XML généré par e-mail à <a href='mailto:{email}'>{email}</a>.",
+            "fixHint": "Sinon, veuillez compléter les champs marqués en rouge et réessayer.",
+            "guideHint": "Si vous avez besoin d'aide pour remplir le formulaire, vous pouvez consulter le <a href='doc/help.php' target='_blank'>Guide ELMO</a> ici.",
+            "close": "Fermer"
         }
     },
     "welcome": {

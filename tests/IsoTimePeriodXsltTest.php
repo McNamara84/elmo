@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Test to verify that the XSLT transformation adds valid gml:id attribute to gml:TimePeriod.
  * 
@@ -13,7 +15,7 @@
 
 use PHPUnit\Framework\TestCase;
 
-class IsoTimePeriodXsltTest extends TestCase
+final class IsoTimePeriodXsltTest extends TestCase
 {
     /**
      * Test that XSLT generates valid gml:id attribute for gml:TimePeriod
@@ -113,7 +115,7 @@ XML;
             );
             
             // Verify it uses position-based numbering (starts at 1)
-            $this->assertEquals('timePeriod-1', $gmlId, 'gml:id should be timePeriod-1 for the first (and only) STC element');
+            $this->assertSame('timePeriod-1', $gmlId, 'gml:id should be timePeriod-1 for the first (and only) STC element');
         }
     }
 

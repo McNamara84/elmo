@@ -64,30 +64,37 @@ include_once "../settings.php";
                             <a class="nav-link" href="#help-resourceinformation" data-bs-dismiss="offcanvas">Resource
                                 Information</a>
                         </li>
+                        <?php if ($showLicense ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-rights" data-bs-dismiss="offcanvas">Licenses and rights</a>
                         </li>
-
+                        <?php endif; ?> 
                         <li class="nav-item">
                             <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors</a>
                         </li>
+                        <?php if ($showAuthorInstitution ?? true): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors Institution</a>
+                            <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors Institution</a> 
                         </li>
+                        <?php endif; ?> 
                         <?php if ($showMslLabs ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-originatinglaboratory"
                                 data-bs-dismiss="offcanvas">Originating Laboratory</a>
                         </li>
                         <?php endif; ?>
+                        <?php if ($showContributorPersons ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-contributorpersons" data-bs-dismiss="offcanvas">Contributor
                                 Persons</a>
                         </li>
+                        <?php endif; ?>
+                        <?php if ($showContributorInstitutions ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-contributorinstitutions"
                                 data-bs-dismiss="offcanvas">Contributor Institutions</a>
                         </li>
+                        <?php endif; ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-descriptions" data-bs-dismiss="offcanvas">Description(s)</a>
                         </li>
@@ -97,30 +104,42 @@ include_once "../settings.php";
                                 Keywords</a>
                         </li>
                         <?php endif; ?>
+                        <?php if ($showGcmdThesauri ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-scienceKeywords" data-bs-dismiss="offcanvas">Keywords</a>
                         </li>
+                        <?php endif; ?>
+                        <?php if ($showFreeKeywords ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-freeKeywords" data-bs-dismiss="offcanvas">Free Keywords</a>
                         </li>
+                        <?php endif; ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-dates" data-bs-dismiss="offcanvas">Dates</a>
                         </li>
+                        <?php if ($showSpatialTemporalCoverage ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-tsc" data-bs-dismiss="offcanvas">Spatial and Temporal
                                 coverage</a>
                         </li>
+                        <?php endif; ?>
+                        <?php if ($showRelatedWork ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-relatedwork" data-bs-dismiss="offcanvas">Related Work</a>
                         </li>
+                        <?php endif; ?>
+                        <?php if ($showFundingReference ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-fundingreference" data-bs-dismiss="offcanvas">Funding
                                 Reference</a>
                         </li>
+                        <?php endif; ?>
+                        <?php if ($showGGMsProperties ?? true): ?>
                         <!-- ICGEM-related content -->
                         <li class="nav-item">
                             <a class="nav-link" href="#help-model-characteristics" data-bs-dismiss="offcanvas">Gravitational Models Properties</a>
                         </li>
+                        <?php endif; ?>
                     </ul>
                 </div>
             </div>
@@ -155,7 +174,7 @@ include_once "../settings.php";
                     <?php if (!($showLicense ?? true)): ?>
                     <p>By default, this publication will be published under a Creative Commons Attribution 4.0 (CC-BY) license. 
                         This follows the GFZ German Research Centre for Geosciences' Guidelines for open science.
-                        If your dataset requires another license, please contact us at datapub@gfz.de for further advice.
+                        If your dataset requires another license, please contact us at <?php echo htmlspecialchars($xmlSubmitAddress ?? 'datapub@gfz.de'); ?> for further advice.
                     </p>
                     <?php endif; ?>
                 </div>
@@ -211,7 +230,7 @@ include_once "../settings.php";
                         } else {
                             echo '<p><em>No resource types available.</em></p>';
                         }
-                    } catch (Exception $e) {
+                    } catch (Throwable $e) {
                         echo '<p><em>Resource types list could not be loaded. Please refer to the dropdown in the form.</em></p>';
                     }
                     ?>
@@ -222,7 +241,7 @@ include_once "../settings.php";
                         first time, this field can be left empty. If it has been updated, specify the version number
                         here.
                         The suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
-                        changes in the dataset. Major changes typically require registration of a new DOI.
+                        changes in the dataset. Use the format digits.digits, for example 1.4. Major changes typically require registration of a new DOI.
                     </p>
                     <p><strong>Optional field. If unsure, leave blank.</strong></p>
                 </div>
@@ -353,6 +372,7 @@ include_once "../settings.php";
                 </div>
             </div>
             <!-- formgroup authors Institution -->
+            <?php if ($showAuthorInstitution ?? true): ?>
             <div id="help-authors-institution" class="section-content">
                 <div id="help-author-institution-fg">
                     <h3>Author Institution(s)</h3>
@@ -363,8 +383,9 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
-            <?php if ($showMslLabs ?? false): ?>
+            <?php endif; ?>
             <!-- formgroup originating laboratory -->
+            <?php if ($showMslLabs ?? false): ?>
             <div id="help-originatinglaboratory" class="section-content">
                 <div id="help-originatinglaboratory-fg">
                     <h3>Originating Laboratory</h3>
@@ -387,6 +408,7 @@ include_once "../settings.php";
             <hr>            
             <?php endif; ?>
             <!-- formgroup contributor persons -->
+            <?php if ($showContributorPersons ?? true): ?> 
             <div id="help-contributorpersons" class="section-content">
                 <div id="help-contributorpersons-fg">
                     <h3>Contributor Persons</h3>
@@ -516,7 +538,9 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
             <!-- formgroup contributor institutions -->
+            <?php if ($showContributorInstitutions ?? true): ?>  
             <div id="help-contributorinstitutions" class="section-content">
                 <div id="help-contributorinstitutions-fg">
                     <h3>Contributor Institutions</h3>
@@ -622,6 +646,7 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
             <!-- formgroup descriptions -->
             <div id="help-descriptions" class="section-content">
                 <div id="help-descriptions-fg">
@@ -684,9 +709,9 @@ include_once "../settings.php";
                 </div>
             </div>
             <div class="section-divider"></div>
-            <?php if ($showMslVocabs ?? false): ?>
             <hr>
             <!-- formgroup MSL Keywords -->
+            <?php if ($showMslVocabs ?? false): ?>
             <div id="help-mslkeywords" class="section-content">
                 <div id="help-mslKeywords-keyword">
                     <h3>EPOS Multi-Scale Laboratories Keywords</h3>
@@ -717,9 +742,10 @@ include_once "../settings.php";
                 </div>
             </div>
             <div class="section-divider"></div>
-            <?php endif; ?>
             <hr>
+            <?php endif; ?>
             <!-- formgroup GCMD Platforms Keywords -->
+            <?php if ($showGcmdThesauri ?? true): ?>  
             <div id="help-platformsKeywords" class="section-content">
                 <div id="help-gcmd-platforms-keyword">
                     <h3>GCMD Platforms Keywords</h3>
@@ -775,7 +801,9 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
-            <!-- formgroup descriptions -->
+            <?php endif; ?>
+            <!-- formgroup free keywords -->
+            <?php if ($showFreeKeywords ?? true): ?>
             <div id="help-freeKeywords" class="section-content">
                 <h3>Free Keywords</h3>
                 <p>Free keywords are user-defined tags that complement predefined thesaurus terms.
@@ -786,6 +814,7 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
             <!-- formgroup descriptions -->
             <div id="help-dates" class="section-content">
                 <div id="help-dates-fg">
@@ -820,6 +849,7 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>
             <!-- formgroup temporal and spacial coverage -->
+            <?php if ($showSpatialTemporalCoverage ?? true): ?>
             <div id="help-tsc" class="section-content">
                 <div id="help-stc-fg">
                     <h3>Spatial and Temporal coverage</h3>
@@ -888,7 +918,9 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
             <!-- formgroup related work-->
+            <?php if ($showRelatedWork ?? true): ?>
             <div id="help-relatedwork" class="section-content">
                 <div id="help-relatedwork-fg">
                     <h3>Related Work</h3>
@@ -990,7 +1022,9 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
             <!-- formgroup funding reference -->
+            <?php if ($showFundingReference ?? true): ?>
             <div id="help-fundingreference" class="section-content">
                 <div id="help-fundingreference-fg">
                     <h3>Funding Reference</h3>
@@ -1020,6 +1054,7 @@ include_once "../settings.php";
                     <p>Optional link or identifier to detailed information about the award. This can be a URL pointing to the grant on the funder's website or a DOI.</p>
                 </div>
             </div>
+            <?php endif; ?>
             <!-- formgroup GGMs Properties -->
             <?php if ($showGGMsProperties ?? false): ?>
             <div id="help-model-characteristics" class="section-content">

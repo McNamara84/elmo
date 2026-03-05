@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import path from 'node:path';
-import { completeMinimalDatasetForm, REPO_ROOT, SELECTORS } from '../utils';
+import { REPO_ROOT, SELECTORS } from '../utils';
 import { injectScript } from '../utils/assets';
 
 type TagifyInputElement = HTMLInputElement & {
@@ -319,7 +319,25 @@ test.describe('Metadata form reset', () => {
   });
 
   test('clears populated form groups and restores a pristine state', async ({ page }) => {
-    await completeMinimalDatasetForm(page);
+    // Populate initial form with minimal required fields (old working version)
+    await page.locator('#input-resourceinformation-publicationyear').fill('2025');
+    await page.locator('#input-resourceinformation-resourcetype').selectOption('5');
+    await page.locator('#input-resourceinformation-language').selectOption('1');
+    await page.locator('#input-resourceinformation-title').fill('A dataset');
+
+    await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
+    await page.locator('input[name="familynames[]"]').fill('Alice');
+    await page.locator('input[name="givennames[]"]').fill('Bob');
+    await page.locator('#input-author-affiliation').fill('GFZ Helmholtz Centre for Geosciences');
+
+    await page.locator("input[id^='checkbox-author-contactperson']").first().check();
+
+    const emailField = page.locator('input[name="cpEmail[]"]').first();
+    await expect(emailField).toBeVisible();
+    await emailField.fill('example@gmail.com');
+
+    await page.locator('#input-abstract').fill('Necessary abstract');
+    await page.locator('#input-datecreated').fill('2025-01-01');
 
     const authorRows = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`);
     const firstAuthorRow = authorRows.first();

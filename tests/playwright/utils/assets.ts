@@ -4,6 +4,9 @@ import path from 'node:path';
 import https from 'node:https';
 import http from 'node:http';
 import { APP_BASE_URL, CONTENT_TYPES, REPO_ROOT, STATIC_ASSET_ROUTE_PATTERNS } from './constants';
+// Not to make too much noise in logs
+let assetServeCount = 0;
+let assetLoadCount = 0;
 
 function getRepositoryRelativePath(pathname: string) {
   const trimmedPath = pathname.replace(/^\/+/, '');
@@ -53,7 +56,7 @@ export async function fulfillWithLocalAsset(route: Route) {
       const extension = path.extname(filePath).toLowerCase();
       const contentType = CONTENT_TYPES[extension] ?? 'application/octet-stream';
 
-      console.log(`✅ Serving from local: ${pathname}`);
+      assetServeCount++;
       await route.fulfill({
         status: 200,
         body,
@@ -109,7 +112,7 @@ export async function loadFileContent(filePath: string): Promise<string> {
   try {
     // Try local filesystem first
     const content = await fs.readFile(fullPath, 'utf-8');
-    console.log(`📖 Loaded from local: ${filePath}`);
+    assetLoadCount++;
     return content;
   } catch (error) {
     // If local file doesn't exist and we're testing against remote, try fetching
@@ -153,10 +156,12 @@ export async function injectStylesheet(page: Page, filePath: string): Promise<vo
 }
 
 export async function registerStaticAssetRoutes(page: Page) {
-  console.log(`🔗 Registering asset routes with baseURL: ${APP_BASE_URL}`);
+  assetServeCount = 0;
+  assetLoadCount = 0;
   for (const pattern of STATIC_ASSET_ROUTE_PATTERNS) {
     await page.route(pattern, fulfillWithLocalAsset);
   }
+  console.log(`📦 Asset routes registered (${STATIC_ASSET_ROUTE_PATTERNS.length} patterns)`);
 }
 
 export async function expectHelpSectionVisible(page: Page, helpSectionId: string) {

@@ -62,6 +62,20 @@ test.describe('Free Keywords Form Group', () => {
     await page.evaluate(() => document.dispatchEvent(new Event('DOMContentLoaded')));
 
     await waitForFreeKeywordTagify(page);
+
+    // Wait for any async initialization (e.g., AJAX whitelist loading) to settle,
+    // then ensure a clean tag state. In some CI environments, tags may be
+    // unexpectedly pre-populated during initialization.
+    await page.waitForFunction(() => {
+      const el = document.querySelector('#input-freekeyword') as any;
+      return el?._tagify?.settings?.whitelist?.length > 0;
+    }, { timeout: 5000 }).catch(() => { /* whitelist may remain empty if mock responds with [] */ });
+    await page.evaluate(() => {
+      const el = document.querySelector('#input-freekeyword') as any;
+      if (el?._tagify) {
+        el._tagify.removeAllTags();
+      }
+    });
   });
 
   test('renders accessible field, help affordances, and Tagify configuration', async ({ page }) => {

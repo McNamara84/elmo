@@ -89,8 +89,8 @@ test.describe('Author(s) form group', () => {
 
     await contactToggleLabel.click();
 
-    await expect(emailInput).toBeVisible({ timeout: 1000000 });
-    await expect(websiteInput).toBeVisible({ timeout: 1000000 });
+    await expect(emailInput).toBeVisible({ timeout: 10000 });
+    await expect(websiteInput).toBeVisible({ timeout: 10000 });
 
     await emailInput.fill('contact@example.com');
     await websiteInput.fill('https://example.com/profile');
@@ -149,7 +149,6 @@ test.describe('Author(s) form group', () => {
 
     await page.locator('#input-author-orcid').fill('1234');
     await firstName.click();
-    await page.waitForTimeout(500);
 
     expect(requestTriggered).toBe(false);
     await expect(lastName).toHaveValue('Existing');

@@ -122,7 +122,7 @@ function createDatabaseStructure($connection): array
         "Resource_Type" => "CREATE TABLE IF NOT EXISTS `Resource_Type` (
     `resource_name_id` INT NOT NULL AUTO_INCREMENT,
     `ernie_id` INT NULL,
-    `resource_type_general` VARCHAR(30) NULL,
+    `resource_type_general` VARCHAR(50) NULL,
     `description` TEXT(5000) NULL,
     PRIMARY KEY (`resource_name_id`),
     UNIQUE KEY `unique_name` (`resource_type_general`),
@@ -131,7 +131,7 @@ function createDatabaseStructure($connection): array
 
         "Rights" => "CREATE TABLE IF NOT EXISTS `Rights` (
     `rights_id` INT NOT NULL AUTO_INCREMENT,
-    `text` VARCHAR(100) NOT NULL,
+    `text` VARCHAR(200) NOT NULL,
     `rightsIdentifier` VARCHAR(20) NULL,
     `rightsURI` VARCHAR(256) NULL,
     `forSoftware` SMALLINT,
@@ -172,7 +172,7 @@ function createDatabaseStructure($connection): array
 
         "Role" => "CREATE TABLE IF NOT EXISTS `Role` (
     `role_id` INT NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(45) NOT NULL,
+    `name` VARCHAR(85) NOT NULL,
     `description` TEXT(1000) NULL,
     `forInstitutions` SMALLINT,
     PRIMARY KEY (`role_id`),
@@ -181,15 +181,17 @@ function createDatabaseStructure($connection): array
 
         "Affiliation" => "CREATE TABLE IF NOT EXISTS `Affiliation` (
     `affiliation_id` INT NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(265) NOT NULL,
+    `name` VARCHAR(700) NOT NULL,
     `rorId` VARCHAR(25) NULL,
     PRIMARY KEY (`affiliation_id`));",
 
         "Title_Type" => "CREATE TABLE IF NOT EXISTS `Title_Type` (
     `title_type_id` INT NOT NULL AUTO_INCREMENT,
+    `ernie_id` INT NULL,
     `name` VARCHAR(25) NOT NULL,
     PRIMARY KEY (`title_type_id`),
-    UNIQUE KEY `unique_name` (`name`)
+    UNIQUE KEY `unique_name` (`name`),
+    UNIQUE KEY `unique_ernie_id` (`ernie_id`)
     );",
 
         "Model_Type" => "CREATE TABLE IF NOT EXISTS `Model_Type` (
@@ -218,7 +220,7 @@ function createDatabaseStructure($connection): array
 
         "Resource" => "CREATE TABLE IF NOT EXISTS `Resource` (
     `resource_id` INT NOT NULL AUTO_INCREMENT,
-    `doi` VARCHAR(100) NULL,
+    `doi` VARCHAR(200) NULL,
     `version` FLOAT NULL,
     `year` YEAR(4) NULL,
     `dateCreated` DATE NULL,
@@ -237,7 +239,7 @@ function createDatabaseStructure($connection): array
 
         "Title" => "CREATE TABLE IF NOT EXISTS `Title` (
     `title_id` INT NOT NULL AUTO_INCREMENT,
-    `text` VARCHAR(256) NOT NULL,
+    `text` VARCHAR(700) NOT NULL,
     `Title_Type_fk` INT NULL,
     `Resource_resource_id` INT NOT NULL,
     PRIMARY KEY (`title_id`),
@@ -252,7 +254,7 @@ function createDatabaseStructure($connection): array
    `givenname` TEXT(746) NOT NULL,
    `orcid` VARCHAR(19)  NULL,
    `email` VARCHAR(255)  NOT NULL,
-   `website` VARCHAR(255) NULL,
+   `website` VARCHAR(455) NULL,
    PRIMARY KEY (`contact_person_id`));",
 
         "Originating_Laboratory" => "CREATE TABLE IF NOT EXISTS `Originating_Laboratory` (
@@ -290,7 +292,7 @@ function createDatabaseStructure($connection): array
 
         "Contributor_Institution" => "CREATE TABLE IF NOT EXISTS `Contributor_Institution` (
    `contributor_institution_id` INT NOT NULL AUTO_INCREMENT,
-   `name` VARCHAR(255) NULL,
+   `name` VARCHAR(700) NULL,
     PRIMARY KEY (`contributor_institution_id`));",
 
         "Description" => "CREATE TABLE IF NOT EXISTS `Description` (
@@ -307,7 +309,7 @@ function createDatabaseStructure($connection): array
     `keyword` TEXT(256) NOT NULL,
     `scheme` TEXT(256) NULL,
     `schemeURI` VARCHAR(256) NULL,
-    `valueURI` VARCHAR(1000) NULL,
+    `valueURI` VARCHAR(256) NULL,
     `language` VARCHAR(20) NOT NULL,
     PRIMARY KEY (`thesaurus_keywords_id`));",
 
@@ -323,7 +325,7 @@ function createDatabaseStructure($connection): array
 
         "Free_Keywords" => "CREATE TABLE IF NOT EXISTS Free_Keywords (
     free_keywords_id INT NOT NULL AUTO_INCREMENT,
-    free_keyword VARCHAR(100) NOT NULL,
+    free_keyword VARCHAR(150) NOT NULL,
     isCurated SMALLINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (free_keywords_id));",
 
@@ -350,7 +352,7 @@ function createDatabaseStructure($connection): array
 
         "Relation" => "CREATE TABLE IF NOT EXISTS `Relation` (
     `relation_id` INT NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(45) NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
     `description` TEXT(1000) NULL,
     PRIMARY KEY (`relation_id`),
     UNIQUE KEY `unique_name` (`name`)
@@ -368,7 +370,7 @@ function createDatabaseStructure($connection): array
 
         "Related_Work" => "CREATE TABLE IF NOT EXISTS `Related_Work` (
     `related_work_id` INT NOT NULL AUTO_INCREMENT,
-    `Identifier` VARCHAR(245) NOT NULL,
+    `Identifier` VARCHAR(700) NOT NULL,
     `relation_fk` INT NULL,
     `identifier_type_fk`INT NULL,
     PRIMARY KEY (`related_work_id`),
@@ -389,11 +391,11 @@ function createDatabaseStructure($connection): array
 
         "Funding_Reference" => "CREATE TABLE IF NOT EXISTS `Funding_Reference` (
    `funding_reference_id` INT NOT NULL AUTO_INCREMENT,
-   `funder` VARCHAR(265) NOT NULL,
+   `funder` VARCHAR(700) NOT NULL,
    `funderid` VARCHAR(11) NULL,
-   `funderidtyp` VARCHAR(25) NULL,
-   `grantnumber` VARCHAR(45) NULL,
-   `grantname` VARCHAR(500) NULL,
+   `funderidtyp` VARCHAR(55) NULL,
+   `grantnumber` VARCHAR(700) NULL,
+   `grantname` VARCHAR(700) NULL,
    `awarduri` VARCHAR(255) NULL,
     PRIMARY KEY (`funding_reference_id`));",
 
@@ -526,7 +528,7 @@ function createDatabaseStructure($connection): array
     // ICGEM-specific tables to describe beautiful GGMs
             "GGM_Definition" => "CREATE TABLE IF NOT EXISTS `GGM_Definition` (
     `GGM_Definition_id` INT NOT NULL AUTO_INCREMENT,
-    `Model_Name` VARCHAR(100) NOT NULL,
+    `Model_Name` VARCHAR(300) NOT NULL,
     `Celestial_Body` VARCHAR(100) NULL,
     `Product_Type` VARCHAR(100) NULL,
     `Model_type_id` INT NULL,
@@ -577,11 +579,11 @@ function createDatabaseStructure($connection): array
     `topographic_model_property_id` INT NOT NULL AUTO_INCREMENT,
     `layer_approach` VARCHAR(100),
     `forward_modelling_domain` VARCHAR(100),
-    `density_information` VARCHAR(100),
-    `density_information_details` VARCHAR(1000),
-    `mantle_density_information` VARCHAR(100),
+    `density_information` VARCHAR(100) NULL,
+    `density_information_details` TEXT NULL,
+    `mantle_density_information` VARCHAR(100) NULL,
     `mantle_density_information_details` TEXT NULL,
-    `crust_density_information` VARCHAR(100),
+    `crust_density_information` VARCHAR(100) NULL,
     `crust_density_information_details` TEXT NULL,
     `approximation` VARCHAR(100),
     PRIMARY KEY (`topographic_model_property_id`)
@@ -598,11 +600,11 @@ function createDatabaseStructure($connection): array
 
         "Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Temporal_Model_Properties` (
     `temporal_model_property_id` INT NOT NULL AUTO_INCREMENT,
-    `generating_institution` VARCHAR(100) NULL,
+    `generating_institution` VARCHAR(300) NULL,
     `temporal_resolution_days` INT NULL,
     `start_date` DATE NULL,
     `end_date` DATE NULL,
-    `release` VARCHAR(100) NULL,
+    `release` VARCHAR(200) NULL,
     PRIMARY KEY (`temporal_model_property_id`)
         );",
 
@@ -656,7 +658,7 @@ function createDatabaseStructure($connection): array
     `data_source_id` INT NOT NULL AUTO_INCREMENT,
     `type` VARCHAR(100) NOT NULL,
     `description` TEXT NULL,
-    `details` VARCHAR(100) NULL,
+    `details` TEXT NULL,
     `S_value_name` VARCHAR(500) NULL,
     `S_value_uri` VARCHAR(100) NULL,
     `S_scheme_name` VARCHAR(100) NULL,
@@ -779,8 +781,10 @@ function insertLookupData($connection)
             ["name" => "Other", "description" => "Other: Any person or institution making a significant contribution to the development and/or maintenance of the resource, but whose contribution does not", "forInstitutions" => "2"]
         ],
         "Title_Type" => [
-            ["name" => "Main Title"],
             ["name" => "Alternative Title"],
+            ["name" => "Main Title"],
+            ["name" => "Other"],
+            ["name" => "Subtitle"],
             ["name" => "Translated Title"]
         ],
         "Relation" => [

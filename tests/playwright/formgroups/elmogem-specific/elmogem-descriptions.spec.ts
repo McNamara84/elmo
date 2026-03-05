@@ -76,12 +76,10 @@ test.describe('GGM Descriptions (ICGEM Edition)', () => {
 
     // Click to expand
     await generalModelButton.click();
-    await page.waitForTimeout(300); // Wait for animation
     await expect(generalModelCollapse).toHaveClass(/show/);
 
     // Click to collapse
     await generalModelButton.click();
-    await page.waitForTimeout(300);
   });
 
   test('Can enter text in description fields', async ({ page }) => {
