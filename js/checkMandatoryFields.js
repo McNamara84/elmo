@@ -223,32 +223,6 @@ function validateRelatedWorkRequirements() {
 
 };
 
-/**
- * Validates the Used Instruments section of the form.
- * When the feature is active, at least one instrument must be selected (via Tagify).
- * The Tagify input has class js-required-on-submit set in HTML.
- *
- * @returns {void}
- */
-function validateUsedInstrumentsRequirements() {
-    if (!window.ELMO_FEATURES || !window.ELMO_FEATURES.showUsedInstruments) {
-        return;
-    }
-
-    var input = document.getElementById('input-usedinstruments');
-    if (!input) return;
-
-    var tagifyInstance = input._tagify;
-    var hasInstruments = tagifyInstance && Array.isArray(tagifyInstance.value) && tagifyInstance.value.length > 0;
-
-    if (hasInstruments) {
-        // At least one instrument selected - mark as valid
-        $(input).removeClass('is-invalid').addClass('is-valid');
-    } else {
-        // No instruments selected - keep js-required-on-submit class (already set in HTML)
-        $(input).removeClass('is-valid');
-    }
-}
 
 /**
  * Validates the Funding Reference section of the form(only when clicking submit).
@@ -598,9 +572,6 @@ function validateAllMandatoryFields() {
 
     //Formgroup Related Work
     validateRelatedWorkRequirements();
-
-    // Formgroup Used Instruments
-    validateUsedInstrumentsRequirements();
 
     // Formgroup Funding Reference
     validateFundingReferenceRequirements();
