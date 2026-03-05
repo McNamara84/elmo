@@ -2045,7 +2045,7 @@ class VocabController
             if ($ernieService->isConfigured(logResult: true)) {
                 $result = $ernieService->getPid4instInstrumentsWithCache();
 
-                if ($result !== null && !empty($result['data'])) {
+                if (!empty($result['data'])) {
                     // Transform to slim format for frontend
                     $instruments = array_map(function ($item) {
                         return [
