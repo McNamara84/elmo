@@ -615,6 +615,12 @@ class ICGEMController extends DatasetController
         if ($fieldName === 'tideSystem') {
             $trimmed = str_replace(' ', '-', $trimmed);
         }
+
+        // replace underscores and dashes with spaces in density information type, then collapse multiple spaces to single
+        if ($fieldName === 'densityInformationType') {
+            $trimmed = str_replace(['_', '-'], ' ', $trimmed);
+            $trimmed = preg_replace('/\s+/', ' ', $trimmed) ?? $trimmed;
+        }
         
         // Capitalize if this is an enumeration field
         if (in_array($fieldName, self::ENUMERATION_FIELDS, true)) {
