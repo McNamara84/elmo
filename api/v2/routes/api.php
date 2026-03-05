@@ -76,5 +76,7 @@ return [
     ['POST', '/admin/cache/resourcetypes/refresh', [new VocabController(), 'refreshResourceTypesCache']],
     ['GET', '/admin/cache/resourcetypes/status', [new VocabController(), 'getResourceTypesCacheStatus']],
     ['POST', '/admin/cache/titletypes/refresh', [new VocabController(), 'refreshTitleTypesCache']],
-    ['GET', '/admin/cache/titletypes/status', [new VocabController(), 'getTitleTypesCacheStatus']]
+    ['GET', '/admin/cache/titletypes/status', [new VocabController(), 'getTitleTypesCacheStatus']],
+    ['POST', '/admin/cache/languages/refresh', [new VocabController(), 'refreshLanguagesCache']],
+    ['GET', '/admin/cache/languages/status', [new VocabController(), 'getLanguagesCacheStatus']]
 ];

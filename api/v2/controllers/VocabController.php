@@ -1811,37 +1811,149 @@ class VocabController
     }
 
     /**
-     * Retrieves all languages from the database
+     * Retrieves all languages, preferring ERNIE data with local DB fallback
+     *
+     * When ERNIE is configured, fetches languages from ERNIE (with caching),
+     * syncs to local DB, and returns data with local IDs.
+     * Falls back to local database if ERNIE is unavailable.
      *
      * @return void Outputs JSON response directly
      */
     public function getLanguages(): void
     {
         try {
-            global $connection;
-            $stmt = $connection->prepare('SELECT language_id as id, code, name FROM Language ORDER BY name');
+            require_once __DIR__ . '/../services/ErnieService.php';
+            $ernieService = new ErnieService();
 
-            if (!$stmt) {
-                throw new Exception("Failed to prepare statement: " . $connection->error);
+            if ($ernieService->isConfigured(logResult: true)) {
+                $ernieLanguages = $ernieService->getLanguagesWithCache();
+
+                if (!empty($ernieLanguages)) {
+                    // Sync to local DB via code matching
+                    $this->syncLanguagesToDb($ernieLanguages);
+
+                    // Return with local IDs (mapped via code)
+                    $languages = $this->mapLanguagesByCode($ernieLanguages);
+                    error_log("Languages: Serving " . count($languages) . " languages from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($languages);
+                    return;
+                }
             }
 
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            $languages = [];
-            while ($row = $result->fetch_assoc()) {
-                $languages[] = $row;
-            }
-
-            header('Content-Type: application/json');
-            echo json_encode($languages);
+            // Fallback to local database
+            error_log("Languages: Falling back to local database");
+            $this->getLanguagesFromDb();
 
         } catch (Exception $e) {
             error_log("API Error in getLanguages: " . $e->getMessage());
+            $this->getLanguagesFromDb();
+        }
+    }
+
+    /**
+     * Fetches languages directly from local database
+     *
+     * @return void Outputs JSON response directly
+     */
+    private function getLanguagesFromDb(): void
+    {
+        global $connection;
+
+        $stmt = $connection->prepare('SELECT language_id as id, code, name FROM Language ORDER BY name');
+
+        if (!$stmt) {
             http_response_code(500);
             header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
+            echo json_encode(['error' => 'Failed to prepare statement: ' . $connection->error]);
+            return;
         }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $languages = [];
+        while ($row = $result->fetch_assoc()) {
+            $languages[] = $row;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($languages);
+    }
+
+    /**
+     * Syncs ERNIE language data to the local Language table via code column
+     *
+     * Uses INSERT ... ON DUPLICATE KEY UPDATE on the unique `code` column
+     * to insert new languages or update existing ones.
+     *
+     * @param array<array{id: int, name: string, code: string}> $ernieLanguages Languages from ERNIE
+     * @return void
+     */
+    private function syncLanguagesToDb(array $ernieLanguages): void
+    {
+        global $connection;
+        $connection->begin_transaction();
+
+        try {
+            foreach ($ernieLanguages as $lang) {
+                $code = $lang['code'];
+                $name = $lang['name'];
+
+                if (!$code || !$name) {
+                    continue;
+                }
+
+                $sql = "INSERT INTO `Language` (`code`, `name`) VALUES (?, ?)
+                        ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)";
+                $stmt = $connection->prepare($sql);
+                $stmt->bind_param('ss', $code, $name);
+                $stmt->execute();
+            }
+
+            $connection->commit();
+        } catch (\Exception $e) {
+            $connection->rollback();
+            error_log("ERNIE language sync failed: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Maps ERNIE language data to local database IDs via the code column
+     *
+     * Looks up the local language_id for each ERNIE language by its unique code,
+     * returning data in the format expected by the frontend.
+     *
+     * @param array<array{id: int, name: string, code: string}> $ernieLanguages Languages from ERNIE
+     * @return array<array{id: int|null, name: string, code: string}> Languages with local IDs
+     */
+    private function mapLanguagesByCode(array $ernieLanguages): array
+    {
+        global $connection;
+
+        $result = [];
+
+        foreach ($ernieLanguages as $lang) {
+            $code = $lang['code'];
+
+            $stmt = $connection->prepare("SELECT language_id FROM Language WHERE code = ?");
+            $stmt->bind_param('s', $code);
+            $stmt->execute();
+            $dbResult = $stmt->get_result();
+
+            $localId = null;
+            if ($row = $dbResult->fetch_assoc()) {
+                $localId = (int) $row['language_id'];
+            }
+
+            $result[] = [
+                'id' => $localId,
+                'name' => $lang['name'],
+                'code' => $code
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -2019,6 +2131,93 @@ class VocabController
 
         } catch (Exception $e) {
             error_log("Error getting title types cache status: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Manually refreshes the ERNIE languages cache
+     * 
+     * Requires API key authentication.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshLanguagesCache(): void
+    {
+        if (!$this->validateApiKey()) {
+            return;
+        }
+
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+
+            $ernieService = new ErnieService();
+
+            if (!$ernieService->isConfigured()) {
+                http_response_code(400);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'ERNIE service is not configured'
+                ]);
+                return;
+            }
+
+            $success = $ernieService->refreshLanguagesCache();
+
+            header('Content-Type: application/json');
+
+            if ($success) {
+                // Also sync to database
+                $ernieLanguages = $ernieService->getLanguagesWithCache();
+                if (!empty($ernieLanguages)) {
+                    $this->syncLanguagesToDb($ernieLanguages);
+                }
+
+                $status = $ernieService->getLanguagesCacheStatus();
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Languages cache refreshed successfully',
+                    'itemCount' => $status['itemCount'],
+                    'lastUpdated' => $status['lastUpdated']
+                ]);
+            } else {
+                http_response_code(502);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to fetch languages data from ERNIE'
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("Error refreshing languages cache: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Gets the status of the ERNIE languages cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getLanguagesCacheStatus(): void
+    {
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+
+            $ernieService = new ErnieService();
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'configured' => $ernieService->isConfigured(),
+                'cache' => $ernieService->getLanguagesCacheStatus()
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error getting languages cache status: " . $e->getMessage());
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
