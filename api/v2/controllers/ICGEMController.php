@@ -314,7 +314,7 @@ class ICGEMController extends DatasetController
             'S' => 'Satellite',
             'G' => 'Ground data',
             'A' => 'Altimetry',
-            'T' => 'Topographic',
+            'T' => 'Elevation/Terrain',
             'M' => 'Model'
         ];
 
@@ -618,7 +618,9 @@ class ICGEMController extends DatasetController
 
         // replace underscores and dashes with spaces in density information type, then collapse multiple spaces to single
         if ($fieldName === 'densityInformationType') {
-            $trimmed = str_replace(['_', '-'], ' ', $trimmed);
+            // a spetial case for Density model 
+            $trimmed = str_replace(['ensity-model'], 'ensity model', $trimmed);
+            $trimmed = str_replace(['_'], ' ', $trimmed);
             $trimmed = preg_replace('/\s+/', ' ', $trimmed) ?? $trimmed;
         }
         
