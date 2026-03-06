@@ -41,6 +41,11 @@ class ErnieService
     private string $titleTypesCacheFile;
 
     /**
+     * @var string Path to the PID4INST instruments cache file
+     */
+    private string $pid4instCacheFile;
+
+    /**
      * ErnieService constructor.
      * 
      * Initializes the service with configuration from global settings.
@@ -55,6 +60,7 @@ class ErnieService
         $this->cacheTtl = $ernieCacheTtl ?? $ernieResourceTypesCacheTtl ?? 21600; // Default: 6 hours
         $this->cacheFile = __DIR__ . '/../../../storage/cache/ernie_resource_types.json';
         $this->titleTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_title_types.json';
+        $this->pid4instCacheFile = __DIR__ . '/../../../storage/cache/ernie_pid4inst.json';
     }
 
     /**
@@ -574,5 +580,64 @@ class ErnieService
             $minutes = floor(($seconds % 3600) / 60);
             return "$hours hour" . ($hours > 1 ? 's' : '') . " $minutes minute" . ($minutes > 1 ? 's' : '');
         }
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  PID4INST Instruments
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Gets the PID4INST instruments cache file path
+     * 
+     * @return string Path to the PID4INST cache file
+     */
+    protected function getPid4instCacheFile(): string
+    {
+        return $this->pid4instCacheFile;
+    }
+
+    /**
+     * Gets PID4INST instruments with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Empty array (no hardcoded fallback – instrument data is too specific)
+     * 
+     * @return array<mixed> Instruments data or empty array if unavailable
+     */
+    public function getPid4instInstrumentsWithCache(): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/vocabularies/pid4inst-instruments',
+            'PID4INST instruments',
+            $this->getPid4instCacheFile(),
+            fn() => []
+        );
+    }
+
+    /**
+     * Forces PID4INST cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshPid4instCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/vocabularies/pid4inst-instruments',
+            'PID4INST instruments',
+            $this->getPid4instCacheFile()
+        );
+    }
+
+    /**
+     * Gets PID4INST cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getPid4instCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getPid4instCacheFile());
     }
 }

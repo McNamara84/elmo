@@ -62,6 +62,7 @@ window.ELMO_FEATURES = {
     showContributorInstitutions: <?php echo json_encode($showContributorInstitutions ?? true); ?>,
     showGGMsProperties: <?php echo json_encode($showGGMsProperties ?? false); ?>,
     showSpatialTemporalCoverage: <?php echo json_encode($showSpatialTemporalCoverage ?? true); ?>,
+    showUsedInstruments: <?php echo json_encode($showUsedInstruments ?? false); ?>,
     showRelatedWork: <?php echo json_encode($showRelatedWork ?? true); ?>,
     showFundingReference: <?php echo json_encode($showFundingReference ?? true); ?>,
     dataUploadUrl: <?php echo json_encode($dataUploadUrl ?? ''); ?>,
@@ -92,6 +93,8 @@ window.ELMO_FEATURES = {
 <script src="js/originatingLaboratories.js"></script>
 <!-- JS-Datei für die Tags einbinden -->
 <script src="js/freekeywordTags.js"></script>
+<!-- JS-Datei für Used Instruments Tagify einbinden -->
+<script src="js/usedInstruments.js"></script>
 <!-- affiliations laden -->
 <script src="js/affiliations.js"></script>
 <!-- Darkmode-Funktionen eingebunden -->

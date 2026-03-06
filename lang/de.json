@@ -190,6 +190,14 @@
         "mapInfo": "(Bitte wählen Sie Koordinaten per Rechteck oder Markierung)",
         "mapSearch": "Bitte geben Sie einen Ort ein..."
     },
+    "usedInstruments": {
+        "title": "Verwendete Instrumente",
+        "placeholder": "Instrumente suchen und auswählen...",
+        "required": "Bitte wählen Sie mindestens ein Instrument aus.",
+        "loading": "Instrumentenliste wird geladen...",
+        "unavailable": "Instrumentenliste derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
+        "selected": "ausgewählte Instrumente"
+    },
     "relatedWork": {
         "title": "Verwandte Werke",
         "relation": "Beziehung",
