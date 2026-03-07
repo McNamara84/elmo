@@ -31,6 +31,11 @@ class VocabController
     private $mslVocabsUrl;
 
     /**
+     * @var \ErnieService|null Lazy-loaded ErnieService instance
+     */
+    private ?\ErnieService $ernieService = null;
+
+    /**
      * VocabController constructor.
      *
      * Initializes URLs using global variables.
@@ -41,6 +46,20 @@ class VocabController
         global $mslVocabsUrl;
         $this->url = $mslLabsUrl;
         $this->mslVocabsUrl = $mslVocabsUrl;
+    }
+
+    /**
+     * Returns the shared ErnieService instance, creating it on first use
+     *
+     * @return \ErnieService
+     */
+    private function getErnieService(): \ErnieService
+    {
+        if ($this->ernieService === null) {
+            require_once __DIR__ . '/../services/ErnieService.php';
+            $this->ernieService = new \ErnieService();
+        }
+        return $this->ernieService;
     }
 
     /**
@@ -1518,9 +1537,7 @@ class VocabController
     public function getResourceTypes(): void
     {
         try {
-            require_once __DIR__ . '/../services/ErnieService.php';
-
-            $ernieService = new ErnieService();
+            $ernieService = $this->getErnieService();
 
             // Only try ERNIE if it's configured (log configuration status)
             if ($ernieService->isConfigured(logResult: true)) {
@@ -1723,31 +1740,11 @@ class VocabController
      */
     public function refreshResourceTypesCache(): void
     {
-        if (!$this->validateApiKey()) {
-            return;
-        }
-
-        try {
-            require_once __DIR__ . '/../services/ErnieService.php';
-
-            $ernieService = new ErnieService();
-
-            if (!$ernieService->isConfigured()) {
-                http_response_code(400);
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'ERNIE service is not configured'
-                ]);
-                return;
-            }
-
-            $success = $ernieService->refreshCache();
-
-            header('Content-Type: application/json');
-
-            if ($success) {
-                // Also sync to database
+        $this->handleCacheRefresh(
+            'refreshCache',
+            'getCacheStatus',
+            'Resource types',
+            function ($ernieService) {
                 $ernieTypes = $ernieService->getResourceTypesWithCache();
                 if (!empty($ernieTypes)) {
                     $syncItems = array_map(fn($t) => [
@@ -1761,27 +1758,8 @@ class VocabController
                         'description_col' => 'description'
                     ]);
                 }
-
-                $status = $ernieService->getCacheStatus();
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Resource types cache refreshed successfully',
-                    'itemCount' => $status['itemCount'],
-                    'lastUpdated' => $status['lastUpdated']
-                ]);
-            } else {
-                http_response_code(502);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Failed to fetch data from ERNIE'
-                ]);
             }
-        } catch (Exception $e) {
-            error_log("Error refreshing resource types cache: " . $e->getMessage());
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
-        }
+        );
     }
 
     /**
@@ -1791,23 +1769,7 @@ class VocabController
      */
     public function getResourceTypesCacheStatus(): void
     {
-        try {
-            require_once __DIR__ . '/../services/ErnieService.php';
-
-            $ernieService = new ErnieService();
-
-            header('Content-Type: application/json');
-            echo json_encode([
-                'configured' => $ernieService->isConfigured(),
-                'cache' => $ernieService->getCacheStatus()
-            ]);
-
-        } catch (Exception $e) {
-            error_log("Error getting cache status: " . $e->getMessage());
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
-        }
+        $this->handleCacheStatus('getCacheStatus', 'resource types');
     }
 
     /**
@@ -1822,8 +1784,7 @@ class VocabController
     public function getLanguages(): void
     {
         try {
-            require_once __DIR__ . '/../services/ErnieService.php';
-            $ernieService = new ErnieService();
+            $ernieService = $this->getErnieService();
 
             if ($ernieService->isConfigured(logResult: true)) {
                 $ernieLanguages = $ernieService->getLanguagesWithCache();
@@ -1968,9 +1929,7 @@ class VocabController
     public function getTitleTypes(): void
     {
         try {
-            require_once __DIR__ . '/../services/ErnieService.php';
-
-            $ernieService = new ErnieService();
+            $ernieService = $this->getErnieService();
 
             // Only try ERNIE if it's configured (log configuration status)
             if ($ernieService->isConfigured(logResult: true)) {
@@ -2052,31 +2011,11 @@ class VocabController
      */
     public function refreshTitleTypesCache(): void
     {
-        if (!$this->validateApiKey()) {
-            return;
-        }
-
-        try {
-            require_once __DIR__ . '/../services/ErnieService.php';
-
-            $ernieService = new ErnieService();
-
-            if (!$ernieService->isConfigured()) {
-                http_response_code(400);
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'ERNIE service is not configured'
-                ]);
-                return;
-            }
-
-            $success = $ernieService->refreshTitleTypesCache();
-
-            header('Content-Type: application/json');
-
-            if ($success) {
-                // Also sync to database
+        $this->handleCacheRefresh(
+            'refreshTitleTypesCache',
+            'getTitleTypesCacheStatus',
+            'Title types',
+            function ($ernieService) {
                 $ernieTypes = $ernieService->getTitleTypesWithCache();
                 if (!empty($ernieTypes)) {
                     $syncItems = array_map(fn($t) => [
@@ -2088,27 +2027,8 @@ class VocabController
                         'name_col' => 'name'
                     ]);
                 }
-
-                $status = $ernieService->getTitleTypesCacheStatus();
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Title types cache refreshed successfully',
-                    'itemCount' => $status['itemCount'],
-                    'lastUpdated' => $status['lastUpdated']
-                ]);
-            } else {
-                http_response_code(502);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Failed to fetch title types data from ERNIE'
-                ]);
             }
-        } catch (Exception $e) {
-            error_log("Error refreshing title types cache: " . $e->getMessage());
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
-        }
+        );
     }
 
     /**
@@ -2118,19 +2038,30 @@ class VocabController
      */
     public function getTitleTypesCacheStatus(): void
     {
-        try {
-            require_once __DIR__ . '/../services/ErnieService.php';
+        $this->handleCacheStatus('getTitleTypesCacheStatus', 'title types');
+    }
 
-            $ernieService = new ErnieService();
+    // ==================== Generic ERNIE cache handlers ====================
+
+    /**
+     * Generic handler for ERNIE cache status endpoints
+     *
+     * @param string $cacheStatusMethod The ErnieService method to call
+     * @param string $label Human-readable label for error logging
+     * @return void Outputs JSON response directly
+     */
+    private function handleCacheStatus(string $cacheStatusMethod, string $label): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
 
             header('Content-Type: application/json');
             echo json_encode([
                 'configured' => $ernieService->isConfigured(),
-                'cache' => $ernieService->getTitleTypesCacheStatus()
+                'cache' => $ernieService->$cacheStatusMethod()
             ]);
-
         } catch (Exception $e) {
-            error_log("Error getting title types cache status: " . $e->getMessage());
+            error_log("Error getting $label cache status: " . $e->getMessage());
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
@@ -2138,22 +2069,26 @@ class VocabController
     }
 
     /**
-     * Manually refreshes the ERNIE languages cache
-     * 
-     * Requires API key authentication.
+     * Generic handler for ERNIE cache refresh endpoints
      *
+     * @param string $refreshMethod ErnieService method to refresh the cache
+     * @param string $statusMethod ErnieService method to get cache status after refresh
+     * @param string $label Human-readable label for messages
+     * @param callable|null $afterRefresh Optional callback executed after successful refresh (e.g. DB sync)
      * @return void Outputs JSON response directly
      */
-    public function refreshLanguagesCache(): void
-    {
+    private function handleCacheRefresh(
+        string $refreshMethod,
+        string $statusMethod,
+        string $label,
+        ?callable $afterRefresh = null
+    ): void {
         if (!$this->validateApiKey()) {
             return;
         }
 
         try {
-            require_once __DIR__ . '/../services/ErnieService.php';
-
-            $ernieService = new ErnieService();
+            $ernieService = $this->getErnieService();
 
             if (!$ernieService->isConfigured()) {
                 http_response_code(400);
@@ -2165,21 +2100,19 @@ class VocabController
                 return;
             }
 
-            $success = $ernieService->refreshLanguagesCache();
+            $success = $ernieService->$refreshMethod();
 
             header('Content-Type: application/json');
 
             if ($success) {
-                // Also sync to database
-                $ernieLanguages = $ernieService->getLanguagesWithCache();
-                if (!empty($ernieLanguages)) {
-                    $this->syncLanguagesToDb($ernieLanguages);
+                if ($afterRefresh !== null) {
+                    $afterRefresh($ernieService);
                 }
 
-                $status = $ernieService->getLanguagesCacheStatus();
+                $status = $ernieService->$statusMethod();
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Languages cache refreshed successfully',
+                    'message' => "$label cache refreshed successfully",
                     'itemCount' => $status['itemCount'],
                     'lastUpdated' => $status['lastUpdated']
                 ]);
@@ -2187,15 +2120,37 @@ class VocabController
                 http_response_code(502);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Failed to fetch languages data from ERNIE'
+                    'message' => "Failed to fetch $label data from ERNIE"
                 ]);
             }
         } catch (Exception $e) {
-            error_log("Error refreshing languages cache: " . $e->getMessage());
+            error_log("Error refreshing $label cache: " . $e->getMessage());
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
         }
+    }
+
+    // ==================== Languages cache endpoints ====================
+
+    /**
+     * Manually refreshes the ERNIE languages cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshLanguagesCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshLanguagesCache',
+            'getLanguagesCacheStatus',
+            'Languages',
+            function ($ernieService) {
+                $ernieLanguages = $ernieService->getLanguagesWithCache();
+                if (!empty($ernieLanguages)) {
+                    $this->syncLanguagesToDb($ernieLanguages);
+                }
+            }
+        );
     }
 
     /**
@@ -2205,22 +2160,83 @@ class VocabController
      */
     public function getLanguagesCacheStatus(): void
     {
+        $this->handleCacheStatus('getLanguagesCacheStatus', 'languages');
+    }
+
+    // ==================== PID4INST Instruments ====================
+
+    /**
+     * Retrieves PID4INST instruments from ERNIE with caching
+     *
+     * Returns a slim representation for frontend autocomplete:
+     * [{pid, pidType, name, instrumentTypes}]
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getPid4instInstruments(): void
+    {
         try {
-            require_once __DIR__ . '/../services/ErnieService.php';
+            $ernieService = $this->getErnieService();
 
-            $ernieService = new ErnieService();
+            if ($ernieService->isConfigured(logResult: true)) {
+                $result = $ernieService->getPid4instInstrumentsWithCache();
 
+                if (!empty($result['data'])) {
+                    // Transform to slim format for frontend
+                    $instruments = array_map(function ($item) {
+                        return [
+                            'pid' => $item['pid'] ?? '',
+                            'pidType' => $item['pidType'] ?? 'Handle',
+                            'name' => $item['name'] ?? '',
+                            'instrumentTypes' => $item['instrumentTypes'] ?? []
+                        ];
+                    }, $result['data']);
+
+                    error_log("PID4INST: Serving " . count($instruments) . " instruments from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($instruments);
+                    return;
+                }
+            }
+
+            // No data available
+            error_log("PID4INST: No instruments available");
+            http_response_code(503);
             header('Content-Type: application/json');
             echo json_encode([
-                'configured' => $ernieService->isConfigured(),
-                'cache' => $ernieService->getLanguagesCacheStatus()
+                'error' => 'PID4INST instruments currently unavailable',
+                'instruments' => []
             ]);
 
         } catch (Exception $e) {
-            error_log("Error getting languages cache status: " . $e->getMessage());
+            error_log("API Error in getPid4instInstruments: " . $e->getMessage());
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Manually refreshes the PID4INST instruments cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshPid4instCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshPid4instCache',
+            'getPid4instCacheStatus',
+            'PID4INST instruments'
+        );
+    }
+
+    /**
+     * Gets the status of the PID4INST instruments cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getPid4instCacheStatus(): void
+    {
+        $this->handleCacheStatus('getPid4instCacheStatus', 'PID4INST');
     }
 }

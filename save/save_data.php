@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
     require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
     require_once __DIR__ . '/formgroups/save_relatedwork.php';
+    require_once __DIR__ . '/formgroups/save_usedinstruments.php';
     require_once __DIR__ . '/formgroups/save_fundingreferences.php';
     // ICGEM related formgroups
     require_once __DIR__ . '/formgroups/save_ggms_definition.php';
@@ -194,6 +195,9 @@ try {
     }
     if ($showRelatedWork) {
         executeSaveFunction('saveRelatedWork', $connection, $_POST, $resource_id);
+    }
+    if ($showUsedInstruments) {
+        executeSaveFunction('saveUsedInstruments', $connection, $_POST, $resource_id);
     }
     if ($showFundingReference) {
         executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);

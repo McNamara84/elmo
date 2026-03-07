@@ -564,6 +564,98 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /vocabs/pid4inst/instruments:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get PID4INST instruments
+      description: Retrieve instruments from the PID4INST catalogue (via ERNIE API with caching). Returns a simplified list with only the fields needed by the frontend.
+      operationId: getPid4instInstruments
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pid4instInstrument"
+        "503":
+          description: Instrument data temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/pid4inst/refresh:
+    post:
+      tags:
+        - update
+      summary: Refresh PID4INST instruments cache
+      description: Forces a refresh of the cached PID4INST instrument data from the ERNIE API. Requires API key authentication.
+      operationId: refreshPid4instCache
+      parameters:
+        - name: X-API-KEY
+          in: header
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        "200":
+          description: Cache refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "PID4INST instruments cache refreshed successfully."
+        "401":
+          description: Unauthorized - Invalid or missing API key
+        "500":
+          description: Failed to refresh cache
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/pid4inst/status:
+    get:
+      tags:
+        - update
+      summary: Get PID4INST cache status
+      description: Returns the current status of the PID4INST instruments cache including validity, age, and entry count. Requires API key authentication.
+      operationId: getPid4instCacheStatus
+      parameters:
+        - name: X-API-KEY
+          in: header
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        "200":
+          description: Cache status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exists:
+                    type: boolean
+                  valid:
+                    type: boolean
+                  age_seconds:
+                    type: integer
+                    nullable: true
+                  ttl_seconds:
+                    type: integer
+                  entry_count:
+                    type: integer
+                    nullable: true
+        "401":
+          description: Unauthorized - Invalid or missing API key
   /vocabs/resourcetypes:
     get:
       tags:
@@ -1755,3 +1847,30 @@ components:
       required:
         - id
         - name
+    Pid4instInstrument:
+      type: object
+      description: A scientific instrument from the PID4INST catalogue
+      properties:
+        pid:
+          type: string
+          description: Persistent identifier (Handle) of the instrument
+          example: "21.11157/a9250866-bbec-4542-86b3-a5f78c0c6922"
+        pidType:
+          type: string
+          description: Type of the persistent identifier
+          example: "Handle"
+        name:
+          type: string
+          description: Name of the instrument
+          example: "MFC_001000_02"
+        instrumentTypes:
+          type: array
+          description: List of instrument type classifications
+          items:
+            type: string
+          example: ["Mass flow controller"]
+      required:
+        - pid
+        - pidType
+        - name
+        - instrumentTypes
