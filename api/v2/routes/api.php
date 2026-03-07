@@ -77,6 +77,8 @@ return [
     ['GET', '/admin/cache/resourcetypes/status', [new VocabController(), 'getResourceTypesCacheStatus']],
     ['POST', '/admin/cache/titletypes/refresh', [new VocabController(), 'refreshTitleTypesCache']],
     ['GET', '/admin/cache/titletypes/status', [new VocabController(), 'getTitleTypesCacheStatus']],
+    ['POST', '/admin/cache/languages/refresh', [new VocabController(), 'refreshLanguagesCache']],
+    ['GET', '/admin/cache/languages/status', [new VocabController(), 'getLanguagesCacheStatus']],
 
     // PID4INST instruments endpoints
     ['GET', '/vocabs/pid4inst/instruments', [new VocabController(), 'getPid4instInstruments']],

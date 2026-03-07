@@ -33,7 +33,7 @@ function saveResourceInformationAndRights($connection, $postData)
         global $showLicense;
         $action = $postData['action'] ?? 'save_and_download';
         if ($action === 'submit') {
-            $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
+            $requiredFields = ['year', 'dateCreated', 'resourcetype'];
             $requiredArrayFields = ['title', 'titleType'];
 
             if ($showLicense) {

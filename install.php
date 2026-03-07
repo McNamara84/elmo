@@ -141,10 +141,11 @@ function createDatabaseStructure($connection): array
 
         "Language" => "CREATE TABLE IF NOT EXISTS `Language` (
     `language_id` INT NOT NULL AUTO_INCREMENT,
-    `code` VARCHAR(10) NULL,
+    `code` VARCHAR(10) NOT NULL,
     `name` VARCHAR(20) NOT NULL,
     PRIMARY KEY (`language_id`),
-    UNIQUE KEY `unique_name` (`name`)
+    UNIQUE KEY `unique_name` (`name`),
+    UNIQUE KEY `unique_code` (`code`)
     );",
 
 

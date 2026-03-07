@@ -41,7 +41,7 @@ const TEST_FORM_HTML = `<!DOCTYPE html>
             </select>
           </div>
           <div>
-            <label for="input-resourceinformation-language">Language of dataset*</label>
+            <label for="input-resourceinformation-language">Language of dataset</label>
             <select id="input-resourceinformation-language" name="language">
               <option value=""></option>
               <option value="1">English</option>

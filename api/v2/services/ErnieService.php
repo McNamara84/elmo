@@ -41,6 +41,11 @@ class ErnieService
     private string $titleTypesCacheFile;
 
     /**
+     * @var string Path to the languages cache file
+     */
+    private string $languagesCacheFile;
+
+    /**
      * @var string Path to the PID4INST instruments cache file
      */
     private string $pid4instCacheFile;
@@ -60,6 +65,7 @@ class ErnieService
         $this->cacheTtl = $ernieCacheTtl ?? $ernieResourceTypesCacheTtl ?? 21600; // Default: 6 hours
         $this->cacheFile = __DIR__ . '/../../../storage/cache/ernie_resource_types.json';
         $this->titleTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_title_types.json';
+        $this->languagesCacheFile = __DIR__ . '/../../../storage/cache/ernie_languages.json';
         $this->pid4instCacheFile = __DIR__ . '/../../../storage/cache/ernie_pid4inst.json';
     }
 
@@ -81,6 +87,16 @@ class ErnieService
     protected function getTitleTypesCacheFile(): string
     {
         return $this->titleTypesCacheFile;
+    }
+
+    /**
+     * Gets the languages cache file path
+     * 
+     * @return string Path to the languages cache file
+     */
+    protected function getLanguagesCacheFile(): string
+    {
+        return $this->languagesCacheFile;
     }
 
     /**
@@ -556,6 +572,89 @@ class ErnieService
     public function getTitleTypesCacheStatus(): array
     {
         return $this->getCacheFileStatus($this->getTitleTypesCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Languages
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches languages from ERNIE API
+     * 
+     * @return array<array{id: int, name: string, code: string}>|null Array of languages or null on failure
+     */
+    public function fetchLanguages(): ?array
+    {
+        return $this->fetchFromErnie('/api/v1/languages/elmo', 'languages');
+    }
+
+    /**
+     * Gets languages with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback (English, German) as last resort
+     * 
+     * @return array<array{id: int, name: string, code: string}> Languages from cache or ERNIE
+     */
+    public function getLanguagesWithCache(): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/languages/elmo',
+            'languages',
+            $this->getLanguagesCacheFile(),
+            [$this, 'getHardcodedLanguageFallback']
+        );
+    }
+
+    /**
+     * Returns hardcoded fallback languages
+     * 
+     * This is the absolute last resort when ERNIE, cache, and stale cache are all unavailable.
+     * English and German are the two most common languages at GFZ.
+     * 
+     * @return array<array{id: int, name: string, code: string}> Minimal fallback languages
+     */
+    private function getHardcodedLanguageFallback(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'name' => 'English',
+                'code' => 'en'
+            ],
+            [
+                'id' => 2,
+                'name' => 'German',
+                'code' => 'de'
+            ]
+        ];
+    }
+
+    /**
+     * Forces languages cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshLanguagesCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/languages/elmo',
+            'languages',
+            $this->getLanguagesCacheFile()
+        );
+    }
+
+    /**
+     * Gets languages cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getLanguagesCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getLanguagesCacheFile());
     }
 
     // ──────────────────────────────────────────────────────────────

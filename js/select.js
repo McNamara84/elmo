@@ -222,6 +222,12 @@ function setupLanguageDropdown() {
             })
           );
         });
+
+        // Pre-select English (code "en") as default
+        const englishOption = filteredData.find(lang => lang.code === 'en');
+        if (englishOption) {
+          select.val(englishOption.id);
+        }
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
@@ -640,6 +646,12 @@ function populateLanguageDropdownWithData(languages) {
         })
       );
     });
+
+    // Pre-select English (code "en") as default
+    const englishOption = filteredData.find(lang => lang.code === 'en');
+    if (englishOption) {
+      $select.val(englishOption.id);
+    }
   }
   $select.prop('disabled', false);
 }
