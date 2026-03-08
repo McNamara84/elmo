@@ -448,7 +448,10 @@ paths:
         - vocabularies
       security: []
       summary: Retrieve roles based on type
-      description: Get a list of roles filtered by type
+      description: |
+        Get a list of roles filtered by type. When ERNIE is configured, roles are fetched
+        from the ERNIE API (with caching) and synced to the local database. Falls back to
+        the local database if ERNIE is unavailable.
       operationId: getRoles
       parameters:
         - name: type
@@ -1393,6 +1396,214 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /admin/cache/roles/contributor-persons/refresh:
+    post:
+      tags:
+        - admin
+      summary: Refresh contributor person roles cache
+      description: Forces a refresh of the ERNIE contributor person roles cache and syncs the data to the local database. Requires API key authentication.
+      operationId: refreshContributorPersonRolesCache
+      responses:
+        "200":
+          description: Cache refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Contributor person roles cache refreshed successfully"
+                  itemCount:
+                    type: integer
+                    example: 16
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                    example: "2026-03-08T10:30:00+00:00"
+        "400":
+          description: ERNIE service is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Failed to fetch data from ERNIE
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/roles/contributor-persons/status:
+    get:
+      tags:
+        - admin
+      summary: Get contributor person roles cache status
+      description: Returns the current status of the ERNIE contributor person roles cache including validity, age, and item count.
+      operationId: getContributorPersonRolesCacheStatus
+      responses:
+        "200":
+          description: Cache status returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured:
+                    type: boolean
+                    description: Whether ERNIE service is configured
+                    example: true
+                  cache:
+                    type: object
+                    properties:
+                      exists:
+                        type: boolean
+                        example: true
+                      valid:
+                        type: boolean
+                        example: true
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        example: "2026-03-08T10:30:00+00:00"
+                      age:
+                        type: integer
+                        description: Cache age in seconds
+                        example: 3600
+                      ageFormatted:
+                        type: string
+                        example: "1 hour 0 minutes"
+                      ttl:
+                        type: integer
+                        description: Cache TTL in seconds
+                        example: 21600
+                      itemCount:
+                        type: integer
+                        example: 16
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/roles/contributor-institutions/refresh:
+    post:
+      tags:
+        - admin
+      summary: Refresh contributor institution roles cache
+      description: Forces a refresh of the ERNIE contributor institution roles cache and syncs the data to the local database. Requires API key authentication.
+      operationId: refreshContributorInstitutionRolesCache
+      responses:
+        "200":
+          description: Cache refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Contributor institution roles cache refreshed successfully"
+                  itemCount:
+                    type: integer
+                    example: 13
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                    example: "2026-03-08T10:30:00+00:00"
+        "400":
+          description: ERNIE service is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Failed to fetch data from ERNIE
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/roles/contributor-institutions/status:
+    get:
+      tags:
+        - admin
+      summary: Get contributor institution roles cache status
+      description: Returns the current status of the ERNIE contributor institution roles cache including validity, age, and item count.
+      operationId: getContributorInstitutionRolesCacheStatus
+      responses:
+        "200":
+          description: Cache status returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured:
+                    type: boolean
+                    description: Whether ERNIE service is configured
+                    example: true
+                  cache:
+                    type: object
+                    properties:
+                      exists:
+                        type: boolean
+                        example: true
+                      valid:
+                        type: boolean
+                        example: true
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        example: "2026-03-08T10:30:00+00:00"
+                      age:
+                        type: integer
+                        description: Cache age in seconds
+                        example: 3600
+                      ageFormatted:
+                        type: string
+                        example: "1 hour 0 minutes"
+                      ttl:
+                        type: integer
+                        description: Cache TTL in seconds
+                        example: 21600
+                      itemCount:
+                        type: integer
+                        example: 13
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -1725,14 +1936,24 @@ components:
     Role:
       type: object
       properties:
-        id:
+        role_id:
           type: integer
-          description: Unique identifier of the role
+          description: Local database identifier of the role
           example: 1
+        ernie_id:
+          type: integer
+          nullable: true
+          description: ERNIE API identifier of the role (null for locally-only roles)
+          example: 5
         name:
           type: string
           description: Name of the role
           example: "Data Curator"
+        description:
+          type: string
+          nullable: true
+          description: Optional description of the role
+          example: null
         forInstitutions:
           type: integer
           description: |
@@ -1743,7 +1964,7 @@ components:
           enum: [0, 1, 2]
           example: 0
       required:
-        - id
+        - role_id
         - name
         - forInstitutions
     FreeKeywordsResponse:
