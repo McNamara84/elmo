@@ -552,35 +552,120 @@ class VocabController
     }
 
     /**
-     * Retrieves roles from the database based on the specified type and returns them as JSON.
+     * Retrieves roles, preferring ERNIE data with local DB fallback
+     *
+     * When ERNIE is configured, fetches contributor person and/or institution roles
+     * from ERNIE (with caching), syncs to local DB, and returns data with local IDs.
+     * Falls back to local database if ERNIE is unavailable.
      *
      * @param array<mixed> $vars An associative array of parameters.
      * @return void
      */
     public function getRoles(array $vars)
     {
-        global $connection;
         $type = $vars['type'] ?? $_GET['type'] ?? 'all';
 
-        // SQL query based on the type
-        if ($type == 'all') {
-            $sql = 'SELECT * FROM Role';
-        } elseif ($type == 'person') {
-            $sql = 'SELECT * FROM Role WHERE forInstitutions = 0';
-        } elseif ($type == 'institution') {
-            $sql = 'SELECT * FROM Role WHERE forInstitutions = 1';
-        } elseif ($type == 'both') {
-            $sql = 'SELECT * FROM Role WHERE forInstitutions = 2';
-        } else {
+        if (!in_array($type, ['all', 'person', 'institution', 'both'], true)) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid roles type specified']);
             return;
+        }
+
+        try {
+            $ernieService = $this->getErnieService();
+
+            if ($ernieService->isConfigured(logResult: true)) {
+                $allRoles = [];
+
+                // Fetch person roles from ERNIE if requested
+                if (in_array($type, ['all', 'person'], true)) {
+                    $personRoles = $ernieService->getContributorPersonRolesWithCache();
+                    if (!empty($personRoles)) {
+                        $this->syncRolesToDb($personRoles, 0);
+                        $allRoles = array_merge($allRoles, $this->mapRolesToLocalFormat($personRoles, 0));
+                    }
+                }
+
+                // Fetch institution roles from ERNIE if requested
+                if (in_array($type, ['all', 'institution'], true)) {
+                    $institutionRoles = $ernieService->getContributorInstitutionRolesWithCache();
+                    if (!empty($institutionRoles)) {
+                        $this->syncRolesToDb($institutionRoles, 1);
+                        $allRoles = array_merge($allRoles, $this->mapRolesToLocalFormat($institutionRoles, 1));
+                    }
+                }
+
+                // Fetch roles that apply to both from ERNIE (intersection of person + institution)
+                if ($type === 'both') {
+                    $personRoles = $ernieService->getContributorPersonRolesWithCache();
+                    $institutionRoles = $ernieService->getContributorInstitutionRolesWithCache();
+
+                    if (!empty($personRoles) && !empty($institutionRoles)) {
+                        // Find roles present in both endpoints
+                        $personNames = array_column($personRoles, 'name');
+                        $institutionNames = array_column($institutionRoles, 'name');
+                        $bothNames = array_intersect($personNames, $institutionNames);
+
+                        $bothRoles = array_filter($personRoles, fn($r) => in_array($r['name'], $bothNames, true));
+                        if (!empty($bothRoles)) {
+                            $this->syncRolesToDb(array_values($bothRoles), 2);
+                            $allRoles = $this->mapRolesToLocalFormat(array_values($bothRoles), 2);
+                        }
+                    }
+                }
+
+                if (!empty($allRoles)) {
+                    // Deduplicate by role_id
+                    $uniqueRoles = [];
+                    foreach ($allRoles as $role) {
+                        $key = $role['role_id'] ?? $role['name'];
+                        $uniqueRoles[$key] = $role;
+                    }
+                    $allRoles = array_values($uniqueRoles);
+
+                    error_log("Roles ($type): Serving " . count($allRoles) . " roles from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($allRoles);
+                    return;
+                }
+            }
+
+            // Fallback to local database
+            error_log("Roles: Falling back to local database");
+            $this->getRolesFromDb($type);
+
+        } catch (Exception $e) {
+            error_log("API Error in getRoles: " . $e->getMessage());
+            error_log("Roles: Falling back to local database due to error");
+            $this->getRolesFromDb($type);
+        }
+    }
+
+    /**
+     * Fetches roles directly from local database
+     *
+     * @param string $type The role type filter ('all', 'person', 'institution', 'both')
+     * @return void Outputs JSON response directly
+     */
+    private function getRolesFromDb(string $type): void
+    {
+        global $connection;
+
+        if ($type === 'all') {
+            $sql = 'SELECT * FROM Role';
+        } elseif ($type === 'person') {
+            $sql = 'SELECT * FROM Role WHERE forInstitutions = 0';
+        } elseif ($type === 'institution') {
+            $sql = 'SELECT * FROM Role WHERE forInstitutions = 1';
+        } else {
+            $sql = 'SELECT * FROM Role WHERE forInstitutions = 2';
         }
 
         if ($stmt = $connection->prepare($sql)) {
             $stmt->execute();
             $result = $stmt->get_result();
             $rolesList = $result->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
 
             if ($rolesList) {
                 header('Content-Type: application/json');
@@ -589,12 +674,94 @@ class VocabController
                 http_response_code(404);
                 echo json_encode(['error' => 'No roles found']);
             }
-
-            $stmt->close();
         } else {
             http_response_code(500);
             echo json_encode(['error' => 'Database error: ' . $connection->error]);
         }
+    }
+
+    /**
+     * Syncs ERNIE role data to the local Role table
+     *
+     * Uses INSERT ... ON DUPLICATE KEY UPDATE to upsert roles.
+     * Sets the forInstitutions value based on the source endpoint.
+     *
+     * @param array<array{id: int, name: string, description?: string|null}> $ernieRoles Roles from ERNIE
+     * @param int $forInstitutions The forInstitutions value (0=person, 1=institution, 2=both)
+     * @return void
+     */
+    private function syncRolesToDb(array $ernieRoles, int $forInstitutions): void
+    {
+        global $connection;
+        $connection->begin_transaction();
+
+        try {
+            foreach ($ernieRoles as $role) {
+                $ernieId = $role['id'];
+                $name = $role['name'];
+                $description = $role['description'] ?? null;
+
+                if (!$ernieId || !$name) {
+                    continue;
+                }
+
+                $sql = "INSERT INTO `Role` (`ernie_id`, `name`, `description`, `forInstitutions`) VALUES (?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE
+                        `name` = VALUES(`name`),
+                        `description` = VALUES(`description`),
+                        `forInstitutions` = VALUES(`forInstitutions`),
+                        `ernie_id` = VALUES(`ernie_id`)";
+                $stmt = $connection->prepare($sql);
+                $stmt->bind_param('issi', $ernieId, $name, $description, $forInstitutions);
+                $stmt->execute();
+            }
+
+            $connection->commit();
+        } catch (\Exception $e) {
+            $connection->rollback();
+            error_log("ERNIE role sync failed: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Maps ERNIE role data to the format matching the local Role table structure
+     *
+     * Looks up local role_id for each ERNIE role by ernie_id, returning data
+     * in the same format as a direct database query would return.
+     *
+     * @param array<array{id: int, name: string, description?: string|null}> $ernieRoles Roles from ERNIE
+     * @param int $forInstitutions The forInstitutions value
+     * @return array<array{role_id: int|null, ernie_id: int, name: string, description: string|null, forInstitutions: int}> Roles with local IDs
+     */
+    private function mapRolesToLocalFormat(array $ernieRoles, int $forInstitutions): array
+    {
+        global $connection;
+
+        $result = [];
+
+        foreach ($ernieRoles as $role) {
+            $ernieId = $role['id'];
+
+            $stmt = $connection->prepare("SELECT role_id FROM Role WHERE ernie_id = ?");
+            $stmt->bind_param('i', $ernieId);
+            $stmt->execute();
+            $dbResult = $stmt->get_result();
+
+            $localId = null;
+            if ($row = $dbResult->fetch_assoc()) {
+                $localId = (int) $row['role_id'];
+            }
+
+            $result[] = [
+                'role_id' => $localId,
+                'ernie_id' => $ernieId,
+                'name' => $role['name'],
+                'description' => $role['description'] ?? null,
+                'forInstitutions' => $forInstitutions,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -2238,5 +2405,67 @@ class VocabController
     public function getPid4instCacheStatus(): void
     {
         $this->handleCacheStatus('getPid4instCacheStatus', 'PID4INST');
+    }
+
+    // ==================== Contributor Roles cache endpoints ====================
+
+    /**
+     * Manually refreshes the ERNIE contributor person roles cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshContributorPersonRolesCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshContributorPersonRolesCache',
+            'getContributorPersonRolesCacheStatus',
+            'Contributor person roles',
+            function ($ernieService) {
+                $ernieRoles = $ernieService->getContributorPersonRolesWithCache();
+                if (!empty($ernieRoles)) {
+                    $this->syncRolesToDb($ernieRoles, 0);
+                }
+            }
+        );
+    }
+
+    /**
+     * Gets the status of the ERNIE contributor person roles cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getContributorPersonRolesCacheStatus(): void
+    {
+        $this->handleCacheStatus('getContributorPersonRolesCacheStatus', 'contributor person roles');
+    }
+
+    /**
+     * Manually refreshes the ERNIE contributor institution roles cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshContributorInstitutionRolesCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshContributorInstitutionRolesCache',
+            'getContributorInstitutionRolesCacheStatus',
+            'Contributor institution roles',
+            function ($ernieService) {
+                $ernieRoles = $ernieService->getContributorInstitutionRolesWithCache();
+                if (!empty($ernieRoles)) {
+                    $this->syncRolesToDb($ernieRoles, 1);
+                }
+            }
+        );
+    }
+
+    /**
+     * Gets the status of the ERNIE contributor institution roles cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getContributorInstitutionRolesCacheStatus(): void
+    {
+        $this->handleCacheStatus('getContributorInstitutionRolesCacheStatus', 'contributor institution roles');
     }
 }
