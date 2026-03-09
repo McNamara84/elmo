@@ -10,6 +10,38 @@ class ICGEMController extends DatasetController
     {
         parent::__construct();
     }
+
+    /**
+     * Override of getResourceAsXml to ensure ICGEM XML always has a DOI (placeholder if not provided).
+     * 
+     * @param mysqli $connection The database connection.
+     * @param int $id The resource ID.
+     * @return void
+     */
+    function getResourceAsXml($connection, $id)
+    {
+        // Call parent implementation
+        parent::getResourceAsXml($connection, $id);
+        
+        // Ensure DOI has a value (use placeholder if empty)
+        if ($this->resourceXml) {
+            $doiElement = $this->resourceXml->doi;
+            if (!$doiElement || empty((string)$doiElement)) {
+                if ($doiElement) {
+                    unset($this->resourceXml->doi);
+                }
+                $this->resourceXml->addChild('doi', htmlspecialchars('10.5072/placeholder'));
+                
+                // Save modified XML
+                $xmlPath = $this->generate_xml_path($id);
+                $domXml = dom_import_simplexml($this->resourceXml);
+                $dom = $domXml->ownerDocument;
+                $dom->formatOutput = true;
+                file_put_contents($xmlPath, $dom->saveXML());
+            }
+        }
+    }
+
 //----------------------------------DATA RETRIEVAL FUNCTIONS FOR ICGEM XML CREATION---------------------------------    
     /**
      * Retrieves GGM essential variables for a given resource id
