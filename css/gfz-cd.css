@@ -504,7 +504,7 @@ header .ms-auto.d-flex {
   }
 }
 
-/* On very small screens (xs, sm: < 768px), as well as some medium screens (up to 1000px), center the logo */
+/* On very small and medium screens (up to 1000px), center the logo */
 @media (max-width: 1000px) {
   .logo-center-wrapper {
     position: absolute;

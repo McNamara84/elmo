@@ -83,14 +83,14 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
      
           <!-- Guide Link -->
           <div class="dropdown">
-            <a href="doc/help.php" target="_blank" class="btn btn-primary w-100 w-lg-auto" id="buttonHelpheader" data-translate="buttons.elmoGuide">
+            <a href="doc/help.php" target="_blank" class="btn btn-primary w-100  " id="buttonHelpheader" data-translate="buttons.elmoGuide">
               <i class="bi bi-book"></i> Guide
             </a>
           </div>
            
           <!-- Dropdown menu for help -->
           <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle w-100 w-lg-auto" id="bd-help" type="button" data-bs-toggle="dropdown"
+            <button class="btn btn-primary dropdown-toggle w-100  " id="bd-help" type="button" data-bs-toggle="dropdown"
               aria-expanded="false" data-translate="header.help">
               <i class="bi bi-question-square-fill"></i>
               Help
@@ -108,7 +108,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
 
           <div class="dropdown">
             <!-- Dropdown menu for dark mode settings -->
-            <button class="btn btn-primary dropdown-toggle w-100 w-lg-auto" id="bd-theme" type="button" data-bs-toggle="dropdown"
+            <button class="btn btn-primary dropdown-toggle w-100  " id="bd-theme" type="button" data-bs-toggle="dropdown"
               aria-expanded="false" data-translate="header.mode">
               <i class="bi bi-circle-half"></i>
               Mode
@@ -125,7 +125,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
           
           <div class="dropdown">
             <!-- Dropdown menu for language settings -->
-            <button class="btn btn-primary dropdown-toggle w-100 w-lg-auto" id="bd-lang" type="button" data-bs-toggle="dropdown"
+            <button class="btn btn-primary dropdown-toggle w-100  " id="bd-lang" type="button" data-bs-toggle="dropdown"
               aria-expanded="false" data-translate="header.language">
               <i class="bi bi-translate"></i>
               Language
