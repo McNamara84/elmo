@@ -877,7 +877,10 @@ class ICGEMController extends DatasetController
         // 11. Format and return the combined envelope XML
         $dom = dom_import_simplexml($envelope)->ownerDocument;
         $dom->formatOutput = true;
-        return $dom->saveXML();
+        $xml = $dom->saveXML();
+        
+        // Ensure no leading whitespace that would break XML declaration
+        return ltrim($xml);
     }
 
     /**
@@ -900,11 +903,20 @@ class ICGEMController extends DatasetController
         $id = intval($vars['id']);
 
         try {
+            // Clear any output buffering to ensure clean XML output
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
             $xmlString = $this->createICGEMxml($id);
+            
+            // Extra safeguard: ensure no leading whitespace
+            $xmlString = ltrim($xmlString);
+            
             header('Content-Type: application/xml; charset=utf-8');
             echo $xmlString;
         } catch (Exception $e) {
-            http_response_code(404); // Or 500 depending on the error
+            http_response_code(404);
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['error' => $e->getMessage()]);
         }
