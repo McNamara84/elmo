@@ -22,6 +22,7 @@ include_once __DIR__ . '/settings.php';
 // accessible by default.
 include_once __DIR__ . '/includes/feature_toggles.php';
 
+// Treat requests without query parameters as "new records"
 $isNewRecord = empty($_GET);
 
 /** @var bool $showLicense */
