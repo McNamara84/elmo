@@ -919,13 +919,17 @@ class DatasetController extends ICGEMController
             }
         }
 
-        // Descriptions
+        // Descriptions (only valid DataCite types)
         $descriptions = $this->getDescriptions($connection, $id);
+        $validDescriptionTypes = ['Abstract', 'Methods', 'SeriesInformation', 'TableOfContents', 'TechnicalInfo', 'Other'];
         $descriptionsXml = $xml->addChild('Descriptions');
         foreach ($descriptions as $description) {
-            $descriptionXml = $descriptionsXml->addChild('Description');
-            $descriptionXml->addChild('type', htmlspecialchars($description['type']));
-            $descriptionXml->addChild('description', htmlspecialchars($description['description']));
+            // Only include descriptions with valid DataCite types
+            if (in_array($description['type'], $validDescriptionTypes)) {
+                $descriptionXml = $descriptionsXml->addChild('Description');
+                $descriptionXml->addChild('type', htmlspecialchars($description['type']));
+                $descriptionXml->addChild('description', htmlspecialchars($description['description']));
+            }
         }
 
         // Thesaurus Keywords
@@ -1134,6 +1138,9 @@ class DatasetController extends ICGEMController
         // Create XSLT processor, configure it, and perform the transformation
         $proc = new XSLTProcessor;
         $proc->importStyleSheet($xsl);
+        // Pass the contact email as an XSLT parameter
+        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
+        $proc->setParameter('', 'contactEmail', $contactEmail);
         $newXml = $proc->transformToXML($xml);
 
         if ($newXml === false) {

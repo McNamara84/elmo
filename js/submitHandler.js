@@ -130,7 +130,10 @@ class SubmitHandler {
         this.$form = $(`#${formId}`);
         this.modals = {
             submit: new bootstrap.Modal($(`#${submitModalId}`)[0]),
-            notification: new bootstrap.Modal($(`#${notificationModalId}`)[0])
+            notification: new bootstrap.Modal($(`#${notificationModalId}`)[0]),
+            validationFailed: document.getElementById('modal-validation-failed')
+                ? new bootstrap.Modal($('#modal-validation-failed')[0])
+                : null
         };
 
         // File Input References
@@ -223,15 +226,32 @@ class SubmitHandler {
         if (!this.$form[0].checkValidity() || !validateContactPerson()) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
-            $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            $firstInvalid.focus();
-            this.showNotification('danger',
-                translations.alerts.validationErrorheading,
-                translations.alerts.validationError);
+            if ($firstInvalid.length > 0 && $firstInvalid[0]) {
+                $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                $firstInvalid.focus();
+            }
+            this.showValidationFailedModal();
             return;
         }
 
         this.modals.submit.show();
+    }
+
+    /**
+     * Show the validation-failed modal with dynamic email address.
+     * Replaces the {email} placeholder in the save-hint paragraph with
+     * the configured xmlSubmitAddress from ELMO_FEATURES.
+     */
+    showValidationFailedModal() {
+        const email = window.ELMO_FEATURES?.xmlSubmitAddress || '';
+        const saveHintEl = document.getElementById('modal-validation-failed-save-hint');
+        if (saveHintEl && email) {
+            const template = translations.modals?.validationFailed?.saveHint || '';
+            saveHintEl.innerHTML = template.replace(/\{email\}/g, this.escapeHtml(email));
+        }
+        if (this.modals.validationFailed) {
+            this.modals.validationFailed.show();
+        }
     }
 
     /**
@@ -283,6 +303,16 @@ class SubmitHandler {
                     this.showNotification('success',
                         translations.alerts.successHeading,
                         translations.alerts.successMessage);
+
+                    // Append primary data upload hint if URL is configured
+                    const uploadUrl = window.ELMO_FEATURES?.dataUploadUrl;
+                    if (uploadUrl) {
+                        const mainTitle = $('#input-resourceinformation-title').val() || '';
+                        const hint = this.buildDataUploadHint(uploadUrl, mainTitle);
+                        $('#modal-notification-body').append(hint);
+                        $('#modal-notification .modal-dialog').addClass('modal-lg');
+                    }
+
                     if (this.autosaveService) {
                         this.autosaveService.clearDraft();
                     }
@@ -405,6 +435,35 @@ class SubmitHandler {
                 default: return ch;
             }
         });
+    }
+    /**
+     * Build HTML for the primary data upload hint shown after successful submit.
+     * @param {string} uploadUrl - The Nextcloud upload URL
+     * @param {string} mainTitle - The main title from the form
+     * @returns {string} HTML string for the hint block
+     */
+    buildDataUploadHint(uploadUrl, mainTitle) {
+        const escapedTitle = this.escapeHtml(mainTitle);
+        const titleHint = escapedTitle
+            ? `<p class="mb-1"><strong>${translations.alerts.dataUploadFileNameHint}</strong></p>
+               <p class="mb-0 font-monospace bg-light rounded px-2 py-1">${escapedTitle}</p>`
+            : '';
+
+        return `
+            <div class="alert alert-warning mt-3 mb-0">
+                <h6 class="alert-heading fw-bold">
+                    <i class="bi bi-cloud-arrow-up-fill me-2"></i>${translations.alerts.dataUploadTitle}
+                </h6>
+                <p>${translations.alerts.dataUploadMessage}</p>
+                <p class="mb-2">
+                    <a href="${this.escapeHtml(uploadUrl)}" target="_blank" rel="noopener noreferrer"
+                       class="btn btn-warning btn-sm fw-bold">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>${translations.alerts.dataUploadLinkText}
+                    </a>
+                </p>
+                ${titleHint}
+            </div>
+        `;
     }
     /**
      * Format message for display (scrubs risky tags, escapes, and converts newlines)

@@ -1,13 +1,20 @@
 <?php
+declare(strict_types=1);
+
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use EasyRdf\Graph;
 use EasyRdf\RdfNamespace;
 
+if (!defined('UNIT_TESTING')) {
+    define('UNIT_TESTING', true);
+}
 require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
 
-class VocabControllerTest extends TestCase
+#[CoversClass(\VocabController::class)]
+final class VocabControllerTest extends TestCase
 {
     private function getController(): \VocabController
     {
@@ -17,11 +24,10 @@ class VocabControllerTest extends TestCase
         return new \VocabController();
     }
 
-    private function invoke($object, string $method, array $args = [])
+    private function invoke(object $object, string $method, array $args = []): mixed
     {
         $ref = new \ReflectionClass($object);
         $m = $ref->getMethod($method);
-        $m->setAccessible(true);
         return $m->invokeArgs($object, $args);
     }
 
@@ -33,7 +39,7 @@ class VocabControllerTest extends TestCase
         $this->assertIsArray($result);
         $this->assertArrayHasKey('lastUpdated', $result);
         $this->assertArrayHasKey('data', $result);
-        $this->assertEquals([1, 2, 3], $result['data']);
+        $this->assertSame([1, 2, 3], $result['data']);
         $this->assertMatchesRegularExpression('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $result['lastUpdated']);
     }
 
@@ -72,6 +78,6 @@ class VocabControllerTest extends TestCase
             ]]
         ];
 
-        $this->assertEquals($expected, $processed);
+        $this->assertSame($expected, $processed);
     }
 }

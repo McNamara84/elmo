@@ -120,7 +120,11 @@ test.describe('Theme toggle', () => {
     });
   });
 
-  test('allows switching themes and respects auto mode preference', async ({ page }) => {
+  test('allows switching themes and respects auto mode preference', async ({ page }, testInfo) => {
+    // This test performs 1 initial load + 3 page.reload() cycles.
+    // Each Chromium page load takes 8-13s in CI, so 45s is not enough.
+    testInfo.setTimeout(90_000);
+
     await navigateToHome(page);
 
     const html = page.locator('html');
@@ -130,13 +134,15 @@ test.describe('Theme toggle', () => {
       page.locator(`#bd-theme + ul.dropdown-menu [data-bs-theme-value="${value}"]`);
 
     const expectThemeState = async (value: 'dark' | 'light') => {
-      await expect(html).toHaveAttribute('data-bs-theme', value);
-      await expect.poll(async () => page.evaluate(() => localStorage.getItem('theme'))).toBe(
+      // Use a generous timeout because theme application after reload can be
+      // slow in CI environments (matchMedia mock + localStorage restore).
+      await expect(html).toHaveAttribute('data-bs-theme', value, { timeout: 15_000 });
+      await expect.poll(async () => page.evaluate(() => localStorage.getItem('theme')), { timeout: 10_000 }).toBe(
         value,
       );
 
       const activeItems = page.locator('#bd-theme + ul.dropdown-menu .dropdown-item.active');
-      await expect(activeItems).toHaveCount(1);
+      await expect(activeItems).toHaveCount(1, { timeout: 10_000 });
       await expect(activeItems.first()).toHaveAttribute('data-bs-theme-value', value);
     };
 
@@ -150,13 +156,13 @@ test.describe('Theme toggle', () => {
     await chooseTheme('dark');
     await expectThemeState('dark');
 
-    await page.reload();
+    await page.reload({ waitUntil: 'domcontentloaded' });
     await expectThemeState('dark');
 
     await chooseTheme('light');
     await expectThemeState('light');
 
-    await page.reload();
+    await page.reload({ waitUntil: 'domcontentloaded' });
     await expectThemeState('light');
 
     await chooseTheme('auto');
@@ -168,7 +174,7 @@ test.describe('Theme toggle', () => {
 
     await expectThemeState('dark');
 
-    await page.reload();
+    await page.reload({ waitUntil: 'domcontentloaded' });
     await expectThemeState('dark');
   });
 });

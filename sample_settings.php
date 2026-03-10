@@ -33,8 +33,11 @@ $apiKeyTimezone = 'your_timezone_api_key';
 // ERNIE Integration (External Vocabulary Service)
 $ernieUrl = getenv('ERNIE_URL') ?: '';
 $ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
-// Cache TTL for ERNIE Resource Types in seconds (default: 6 hours)
-$ernieResourceTypesCacheTtl = 21600;
+// Cache TTL for all ERNIE data in seconds (default: 6 hours)
+$ernieCacheTtl = 21600;
+
+// URL for primary data upload (shown after successful submit)
+$dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
 
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
 // maximale Anzahl der eingebbaren Titel
@@ -72,6 +75,10 @@ $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabular
 $showMslVocabs = false;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+
+// SETTINGS FOR PID4INST INSTRUMENTS
+// Show Used Instruments form group (PID4INST via ERNIE API)
+$showUsedInstruments = false;
 
 // SETTINGS FOR ICGEM
 // Show ICGEM form groups (GGMs Properties and Characteristics of the model)

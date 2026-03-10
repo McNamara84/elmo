@@ -40,6 +40,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       LOCAL_DEVELOPMENT: "true"
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       # Database install routine
       INSTALL_ACTION: basic
       DB_INIT_MODE: drop_data
@@ -93,6 +94,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       LOCAL_DEVELOPMENT: "true"
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
@@ -144,6 +146,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       LOCAL_DEVELOPMENT: "true"
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       # Flags for ICGEM (GGMs properties enabled)
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
@@ -194,6 +197,7 @@ services:
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       # Flags for IGSN (minimal form - most form groups disabled)
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"

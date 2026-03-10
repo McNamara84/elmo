@@ -1,6 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../save/formgroups/save_affiliations.php';
@@ -10,7 +14,9 @@ require_once __DIR__ . '/../save/formgroups/save_affiliations.php';
  * @package Tests
  */
 
-class ParseAffiliationAndRorIdsTest extends TestCase
+#[CoversFunction('parseAffiliationData')]
+#[CoversFunction('parseRorIds')]
+final class ParseAffiliationAndRorIdsTest extends TestCase
 {
     /**
      * Parses a valid JSON string into an array of affiliation names.
@@ -21,7 +27,7 @@ class ParseAffiliationAndRorIdsTest extends TestCase
     {
         $input = '[{"value":"University of Applied Sciences Potsdam"},{"value":"GFZ Helmholtz Centre for Geosciences"}]';
         $expected = ['University of Applied Sciences Potsdam', 'GFZ Helmholtz Centre for Geosciences'];
-        $this->assertEquals($expected, parseAffiliationData($input));
+        $this->assertSame($expected, parseAffiliationData($input));
     }
 
     /**
@@ -31,7 +37,7 @@ class ParseAffiliationAndRorIdsTest extends TestCase
      */
     public function testParseAffiliationDataWithInvalidJson(): void
     {
-        $this->assertEquals([], parseAffiliationData('invalid-json'));
+        $this->assertSame([], parseAffiliationData('invalid-json'));
     }
 
     /**
@@ -41,7 +47,7 @@ class ParseAffiliationAndRorIdsTest extends TestCase
      */
     public function testParseAffiliationDataWithEmptyString(): void
     {
-        $this->assertEquals([], parseAffiliationData(''));
+        $this->assertSame([], parseAffiliationData(''));
     }
 
     /**
@@ -51,7 +57,7 @@ class ParseAffiliationAndRorIdsTest extends TestCase
      */
     public function testParseAffiliationDataWithNull(): void
     {
-        $this->assertEquals([], parseAffiliationData(null));
+        $this->assertSame([], parseAffiliationData(null));
     }
 
     /**
@@ -63,7 +69,7 @@ class ParseAffiliationAndRorIdsTest extends TestCase
     {
         $input = 'https://ror.org/03yrm5c26,02nr0ka47, https://ror.org/0168r3w48';
         $expected = ['03yrm5c26', '02nr0ka47', '0168r3w48'];
-        $this->assertEquals($expected, parseRorIds($input));
+        $this->assertSame($expected, parseRorIds($input));
     }
 
     /**
@@ -75,7 +81,7 @@ class ParseAffiliationAndRorIdsTest extends TestCase
     {
         $input = '03yrm5c26, ';
         $expected = ['03yrm5c26', null];
-        $this->assertEquals($expected, parseRorIds($input));
+        $this->assertSame($expected, parseRorIds($input));
     }
 
     /**
@@ -85,7 +91,7 @@ class ParseAffiliationAndRorIdsTest extends TestCase
      */
     public function testParseRorIdsWithEmptyString(): void
     {
-        $this->assertEquals([], parseRorIds(''));
+        $this->assertSame([], parseRorIds(''));
     }
 
     /**
@@ -95,6 +101,6 @@ class ParseAffiliationAndRorIdsTest extends TestCase
      */
     public function testParseRorIdsWithNull(): void
     {
-        $this->assertEquals([], parseRorIds(null));
+        $this->assertSame([], parseRorIds(null));
     }
 }

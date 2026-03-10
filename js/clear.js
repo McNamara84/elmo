@@ -100,6 +100,17 @@ function clearInputFields() {
     $('#group-relatedwork .row[related-work-row]').not(':first').remove();  // Remove all rows except the first one
     $('#group-relatedwork .row[related-work-row]:first').find('input, select').val('').trigger('change');  // Clear the first row
 
+    // Reset Used Instruments (Tagify)
+    var instrumentsInput = document.getElementById('input-usedinstruments');
+    if (instrumentsInput && instrumentsInput._tagify) {
+        instrumentsInput._tagify.removeAllTags();
+    }
+    // Also clear hidden inputs for instruments
+    var hiddenContainer = document.getElementById('usedinstruments-hidden-inputs');
+    if (hiddenContainer) {
+        hiddenContainer.innerHTML = '';
+    }
+
     // Clear Funding References
     $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
     $('#group-fundingreference .row[funding-reference-row]:first input').val('');

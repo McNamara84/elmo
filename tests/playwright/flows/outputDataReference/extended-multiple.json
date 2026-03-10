@@ -1,0 +1,595 @@
+{
+  "?xml": {
+    "version": "1.0",
+    "encoding": "UTF-8"
+  },
+  "envelope": {
+    "resource": {
+      "identifier": {
+        "identifierType": "DOI"
+      },
+      "creators": {
+        "creator": [
+          {
+            "creatorName": {
+              "#text": "Carberry, Josiah",
+              "nameType": "Personal"
+            },
+            "givenName": "Josiah",
+            "familyName": "Carberry",
+            "nameIdentifier": {
+              "#text": "0000-0002-1825-0097",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            }
+          },
+          {
+            "creatorName": {
+              "#text": "Isaak, Johann",
+              "nameType": "Personal"
+            },
+            "givenName": "Johann",
+            "familyName": "Isaak",
+            "nameIdentifier": {
+              "#text": "0000-0001-2345-6789",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            },
+            "affiliation": {
+              "#text": "University of Cambridge",
+              "affiliationIdentifierScheme": "ROR",
+              "schemeURI": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/013meh722"
+            }
+          },
+          {
+            "creatorName": {
+              "#text": "Mueller, Hans",
+              "nameType": "Personal"
+            },
+            "givenName": "Hans",
+            "familyName": "Mueller",
+            "nameIdentifier": {
+              "#text": "0000-0001-6352-9161",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            },
+            "affiliation": {
+              "#text": "ETH Zürich Foundation",
+              "affiliationIdentifierScheme": "ROR",
+              "schemeURI": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/03nqkz164"
+            }
+          },
+          {
+            "creatorName": {
+              "#text": "GFZ Helmholtz Centre for Geosciences",
+              "nameType": "Organizational"
+            },
+            "affiliation": {
+              "#text": "GFZ Helmholtz Centre for Geosciences",
+              "affiliationIdentifierScheme": "ROR",
+              "schemeURI": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/04z8jg394"
+            }
+          },
+          {
+            "creatorName": {
+              "#text": "Research Institute for Sustainability",
+              "nameType": "Organizational"
+            },
+            "affiliation": {
+              "#text": "Research Institute for Sustainability at GFZ",
+              "affiliationIdentifierScheme": "ROR",
+              "schemeURI": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/01vvnmw35"
+            }
+          }
+        ]
+      },
+      "titles": {
+        "title": {
+          "#text": "A dataset",
+          "xml:lang": "en"
+        }
+      },
+      "publisher": {
+        "#text": "GFZ Data Services",
+        "xml:lang": "en"
+      },
+      "publicationYear": 2025,
+      "resourceType": {
+        "#text": "Dataset",
+        "resourceTypeGeneral": "Dataset"
+      },
+      "subjects": {
+        "subject": [
+          "seismic data",
+          "nowcasting",
+          "monitoring",
+          "plate tectonics"
+        ]
+      },
+      "contributors": {
+        "contributor": [
+          {
+            "contributorName": "Carberry, Josiah",
+            "givenName": "Josiah",
+            "familyName": "Carberry",
+            "nameIdentifier": {
+              "#text": "0000-0002-1825-0097",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            },
+            "contributorType": "ContactPerson"
+          },
+          {
+            "contributorName": {
+              "#text": "Haak, Laurel",
+              "nameType": "Personal"
+            },
+            "givenName": "Laurel",
+            "familyName": "Haak",
+            "nameIdentifier": {
+              "#text": "0000-0001-5109-3700",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            },
+            "contributorType": "DataCollector"
+          },
+          {
+            "contributorName": {
+              "#text": "Eze, Ifeoma",
+              "nameType": "Personal"
+            },
+            "givenName": "Ifeoma",
+            "familyName": "Eze",
+            "nameIdentifier": {
+              "#text": "0000-0002-3915-1872",
+              "nameIdentifierScheme": "ORCID",
+              "schemeURI": "https://orcid.org/"
+            },
+            "affiliation": "The Shepherd MediCentre",
+            "contributorType": "Researcher"
+          },
+          {
+            "contributorName": {
+              "#text": "FFFF",
+              "nameType": "Organizational"
+            },
+            "affiliation": "Florida Forest Friends Fund",
+            "contributorType": "Translator"
+          },
+          {
+            "contributorName": {
+              "#text": "THE Japan Thailand Association",
+              "nameType": "Organizational"
+            },
+            "affiliation": "Japan Thailand Association",
+            "contributorType": "Sponsor"
+          }
+        ]
+      },
+      "dates": {
+        "date": {
+          "#text": "2025-01-01",
+          "dateType": "Created"
+        }
+      },
+      "language": "en",
+      "relatedIdentifiers": {
+        "relatedIdentifier": [
+          {
+            "#text": "10.5880/GFZ.DMJQ.2025.007",
+            "relatedIdentifierType": "DOI",
+            "relationType": "References"
+          },
+          {
+            "#text": "10.5880/GFZ.DMJQ.2025.008",
+            "relatedIdentifierType": "DOI",
+            "relationType": "References"
+          },
+          {
+            "#text": "10.5880/GFZ.DMJQ.2025.009",
+            "relatedIdentifierType": "DOI",
+            "relationType": "References"
+          }
+        ]
+      },
+      "rightsList": {
+        "rights": {
+          "#text": "Creative Commons Attribution 4.0 International",
+          "rightsURI": "https://creativecommons.org/licenses/by/4.0/legalcode",
+          "rightsIdentifier": "CC-BY-4.0",
+          "rightsIdentifierScheme": "SPDX",
+          "schemeURI": "https://spdx.org/licenses/",
+          "xml:lang": "en"
+        }
+      },
+      "descriptions": {
+        "description": [
+          {
+            "#text": "Necessary abstract",
+            "descriptionType": "Abstract",
+            "xml:lang": "en"
+          },
+          {
+            "#text": "Data was collected using seismic stations deployed across the region.",
+            "descriptionType": "Methods",
+            "xml:lang": "en"
+          },
+          {
+            "#text": "Sampling rate: 100 Hz. Data format: miniSEED.",
+            "descriptionType": "TechnicalInformation",
+            "xml:lang": "en"
+          },
+          {
+            "#text": "Additional processing applied: bandpass filtering between 0.5-25 Hz.",
+            "descriptionType": "Other",
+            "xml:lang": "en"
+          }
+        ]
+      },
+      "geoLocations": "",
+      "fundingReferences": {
+        "fundingReference": [
+          {
+            "funderName": "DFG",
+            "awardNumber": {
+              "#text": "DFG-12345",
+              "awardURI": "https://gepris.dfg.de/gepris/project/12345"
+            },
+            "awardTitle": "Seismic Monitoring Network"
+          },
+          {
+            "funderName": "NSF",
+            "awardNumber": {
+              "#text": "NSF-67890",
+              "awardURI": "https://www.nsf.gov/awardsearch/showAward?AWD_ID=2067890"
+            },
+            "awardTitle": "Climate Data Analytics Initiative"
+          },
+          {
+            "funderName": "EU Horizon",
+            "awardNumber": {
+              "#text": "EU-2025-001",
+              "awardURI": "https://cordis.europa.eu/project/id/2025001"
+            },
+            "awardTitle": "European Research Initiative"
+          }
+        ]
+      },
+      "xmlns": "http://datacite.org/schema/kernel-4",
+      "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "xsi:schemaLocation": "http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/elmo/schemas/DataCite/DataCiteSchema45.xsd"
+    },
+    "MD_Metadata": {
+      "fileIdentifier": {
+        "gco:CharacterString": "doi:N/A"
+      },
+      "language": {
+        "LanguageCode": {
+          "#text": "en",
+          "codeList": "http://www.loc.gov/standards/iso639-1/",
+          "codeListValue": "en"
+        }
+      },
+      "characterSet": {
+        "MD_CharacterSetCode": {
+          "codeList": "http://www.isotc211.org/2005/resources/codeList.xml#MD_CharacterSetCode",
+          "codeListValue": "utf8"
+        }
+      },
+      "hierarchyLevel": {
+        "MD_ScopeCode": {
+          "#text": "dataset",
+          "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode",
+          "codeListValue": "dataset"
+        }
+      },
+      "contact": {
+        "CI_ResponsibleParty": {
+          "organisationName": {
+            "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
+          },
+          "contactInfo": {
+            "CI_Contact": {
+              "address": {
+                "CI_Address": {
+                  "electronicMailAddress": {
+                    "gco:CharacterString": "datapub@gfz.de"
+                  }
+                }
+              },
+              "onlineResource": {
+                "CI_OnlineResource": {
+                  "linkage": {
+                    "URL": "https://www.gfz.de/"
+                  },
+                  "name": {
+                    "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
+                  },
+                  "description": {
+                    "gco:CharacterString": "GFZ Helmholtz Centre for Geosciences"
+                  },
+                  "function": {
+                    "CI_OnLineFunctionCode": {
+                      "#text": "information",
+                      "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode",
+                      "codeListValue": "information"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "role": {
+            "CI_RoleCode": {
+              "#text": "pointOfContact",
+              "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode",
+              "codeListValue": "pointOfContact"
+            }
+          }
+        }
+      },
+      "dateStamp": {
+        "gco:Date": "2026-01-30"
+      },
+      "referenceSystemInfo": {
+        "MD_ReferenceSystem": {
+          "referenceSystemIdentifier": {
+            "RS_Identifier": {
+              "code": {
+                "gco:CharacterString": "urn:ogc:def:crs:EPSG:4326"
+              }
+            }
+          }
+        }
+      },
+      "identificationInfo": {
+        "MD_DataIdentification": {
+          "citation": {
+            "CI_Citation": {
+              "title": {
+                "gco:CharacterString": "A dataset"
+              },
+              "date": {
+                "CI_Date": {
+                  "date": {
+                    "gco:Date": "2025-01-01"
+                  },
+                  "dateType": {
+                    "CI_DateTypeCode": {
+                      "#text": "creation",
+                      "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode",
+                      "codeListValue": "creation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "abstract": {
+            "gco:CharacterString": "Necessary abstract"
+          },
+          "pointOfContact": {
+            "CI_ResponsibleParty": {
+              "individualName": {
+                "gco:CharacterString": "Carberry, Josiah"
+              },
+              "contactInfo": {
+                "CI_Contact": {
+                  "address": {
+                    "CI_Address": {
+                      "electronicMailAddress": {
+                        "gco:CharacterString": "example@gmail.com"
+                      }
+                    }
+                  },
+                  "onlineResource": {
+                    "CI_OnlineResource": {
+                      "linkage": ""
+                    }
+                  }
+                }
+              },
+              "role": {
+                "CI_RoleCode": {
+                  "#text": "pointOfContact",
+                  "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode",
+                  "codeListValue": "pointOfContact"
+                }
+              }
+            }
+          },
+          "descriptiveKeywords": [
+            "",
+            "",
+            {
+              "MD_Keywords": {
+                "keyword": [
+                  {
+                    "gco:CharacterString": "seismic data"
+                  },
+                  {
+                    "gco:CharacterString": "nowcasting"
+                  },
+                  {
+                    "gco:CharacterString": "monitoring"
+                  },
+                  {
+                    "gco:CharacterString": "data"
+                  }
+                ]
+              }
+            }
+          ],
+          "resourceConstraints": [
+            {
+              "MD_Constraints": {
+                "useLimitation": {
+                  "gco:CharacterString": "Creative Commons Attribution 4.0 International"
+                }
+              },
+              "xlink:href": "https://creativecommons.org/licenses/by/4.0/legalcode"
+            },
+            {
+              "MD_LegalConstraints": {
+                "accessConstraints": {
+                  "MD_RestrictionCode": {
+                    "codeList": "http://www.isotc211.org/2005/resources/codeList.xml#MD_RestrictionCode",
+                    "codeListValue": "otherRestrictions"
+                  }
+                },
+                "otherConstraints": {
+                  "gco:CharacterString": "Creative Commons Attribution 4.0 International"
+                }
+              }
+            },
+            {
+              "MD_SecurityConstraints": {
+                "classification": {
+                  "MD_ClassificationCode": {
+                    "codeList": "http://www.isotc211.org/2005/resources/codeList.xml#MD_ClassificationCode",
+                    "codeListValue": "unclassified"
+                  }
+                }
+              }
+            }
+          ],
+          "aggregationInfo": [
+            {
+              "MD_AggregateInformation": {
+                "aggregateDataSetIdentifier": {
+                  "RS_Identifier": {
+                    "code": {
+                      "gco:CharacterString": "10.5880/GFZ.DMJQ.2025.007"
+                    },
+                    "codeSpace": {
+                      "gco:CharacterString": "DOI"
+                    }
+                  }
+                },
+                "associationType": {
+                  "DS_AssociationTypeCode": {
+                    "#text": "References",
+                    "codeList": "http://datacite.org/schema/kernel-4",
+                    "codeListValue": "References"
+                  }
+                }
+              }
+            },
+            {
+              "MD_AggregateInformation": {
+                "aggregateDataSetIdentifier": {
+                  "RS_Identifier": {
+                    "code": {
+                      "gco:CharacterString": "10.5880/GFZ.DMJQ.2025.008"
+                    },
+                    "codeSpace": {
+                      "gco:CharacterString": "DOI"
+                    }
+                  }
+                },
+                "associationType": {
+                  "DS_AssociationTypeCode": {
+                    "#text": "References",
+                    "codeList": "http://datacite.org/schema/kernel-4",
+                    "codeListValue": "References"
+                  }
+                }
+              }
+            },
+            {
+              "MD_AggregateInformation": {
+                "aggregateDataSetIdentifier": {
+                  "RS_Identifier": {
+                    "code": {
+                      "gco:CharacterString": "10.5880/GFZ.DMJQ.2025.009"
+                    },
+                    "codeSpace": {
+                      "gco:CharacterString": "DOI"
+                    }
+                  }
+                },
+                "associationType": {
+                  "DS_AssociationTypeCode": {
+                    "#text": "References",
+                    "codeList": "http://datacite.org/schema/kernel-4",
+                    "codeListValue": "References"
+                  }
+                }
+              }
+            }
+          ],
+          "language": {
+            "gco:CharacterString": "en"
+          },
+          "characterSet": {
+            "MD_CharacterSetCode": {
+              "codeList": "http://www.isotc211.org/2005/resources/codeList.xml#MD_CharacterSetCode",
+              "codeListValue": "utf8"
+            }
+          },
+          "topicCategory": {
+            "MD_TopicCategoryCode": "geoscientificInformation"
+          }
+        }
+      },
+      "distributionInfo": {
+        "MD_Distribution": {
+          "transferOptions": {
+            "MD_DigitalTransferOptions": {
+              "onLine": {
+                "CI_OnlineResource": {
+                  "linkage": {
+                    "URL": "http://doi.org/N/A"
+                  },
+                  "protocol": {
+                    "gco:CharacterString": "WWW:LINK-1.0-http--link"
+                  },
+                  "name": {
+                    "gco:CharacterString": "Download"
+                  },
+                  "description": {
+                    "gco:CharacterString": "Download"
+                  },
+                  "function": {
+                    "CI_OnLineFunctionCode": {
+                      "#text": "information",
+                      "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode",
+                      "codeListValue": "information"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "dataQualityInfo": {
+        "DQ_DataQuality": {
+          "scope": {
+            "DQ_Scope": {
+              "level": {
+                "MD_ScopeCode": {
+                  "codeList": "http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode",
+                  "codeListValue": "dataset"
+                }
+              }
+            }
+          }
+        }
+      },
+      "xmlns": "http://www.isotc211.org/2005/gmd",
+      "xmlns:gco": "http://www.isotc211.org/2005/gco",
+      "xmlns:gsr": "http://www.isotc211.org/2005/gsr",
+      "xmlns:gss": "http://www.isotc211.org/2005/gss",
+      "xmlns:gts": "http://www.isotc211.org/2005/gts",
+      "xmlns:gml": "http://www.opengis.net/gml",
+      "xmlns:xlink": "http://www.w3.org/1999/xlink",
+      "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "xsi:schemaLocation": "http://www.isotc211.org/2005/gmd file:///C:/xampp/htdocs/msl-mde/schemas/ISO/gmd.xsd"
+    }
+  }
+}

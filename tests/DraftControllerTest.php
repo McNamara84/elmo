@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../api/v2/controllers/DraftController.php';
 
-class DraftControllerTest extends TestCase
+#[CoversClass(\DraftController::class)]
+final class DraftControllerTest extends TestCase
 {
     private string $storagePath;
 

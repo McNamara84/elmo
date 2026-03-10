@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { REPO_ROOT, SELECTORS } from '../utils';
+import { injectScript, injectStylesheet } from '../utils/assets';
 
 const CURATED_KEYWORDS = [
   { free_keyword: 'Arctic Ocean Circulation' },
@@ -49,18 +50,32 @@ test.describe('Free Keywords Form Group', () => {
 
     await page.goto(TEST_ROUTE_PATH);
 
-    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.css') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery/dist/jquery.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.js') });
+    await injectStylesheet(page, 'node_modules/@yaireo/tagify/dist/tagify.css');
+    await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
+    await injectScript(page, 'node_modules/@yaireo/tagify/dist/tagify.js');
     await page.addScriptTag({
       content: `window.translations = ${JSON.stringify({
         keywords: { free: { placeholder: 'Please enter keywords and separate them by a comma.' } },
       })};`,
     });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'js/freekeywordTags.js') });
+    await injectScript(page, 'js/freekeywordTags.js');
     await page.evaluate(() => document.dispatchEvent(new Event('DOMContentLoaded')));
 
     await waitForFreeKeywordTagify(page);
+
+    // Wait for any async initialization (e.g., AJAX whitelist loading) to settle,
+    // then ensure a clean tag state. In some CI environments, tags may be
+    // unexpectedly pre-populated during initialization.
+    await page.waitForFunction(() => {
+      const el = document.querySelector('#input-freekeyword') as any;
+      return el?._tagify?.settings?.whitelist?.length > 0;
+    }, { timeout: 5000 }).catch(() => { /* whitelist may remain empty if mock responds with [] */ });
+    await page.evaluate(() => {
+      const el = document.querySelector('#input-freekeyword') as any;
+      if (el?._tagify) {
+        el._tagify.removeAllTags();
+      }
+    });
   });
 
   test('renders accessible field, help affordances, and Tagify configuration', async ({ page }) => {

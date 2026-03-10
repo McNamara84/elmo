@@ -1,5 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
+
 
 require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
 
@@ -9,7 +13,7 @@ require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
  * Tests the controller methods for retrieving dataset information
  * including authors, contributors, titles, descriptions, etc.
  */
-class DatasetControllerTest extends DatabaseTestCase
+final class DatasetControllerTest extends DatabaseTestCase
 {
     private \DatasetController $controller;
     private int $resourceId;

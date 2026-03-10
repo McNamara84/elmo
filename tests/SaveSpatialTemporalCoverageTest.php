@@ -1,8 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
-use Tests\DatabaseTestCase;
+
 
 require_once __DIR__ . '/../save/formgroups/save_spatialtemporalcoverage.php';
 require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
@@ -14,7 +15,7 @@ require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.
  * and temporal coverage data in the database, including coordinate information,
  * dates, times, and timezone data.
  */
-class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
+final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 {
     /**
      * Tests saving a complete STC record with all fields filled.

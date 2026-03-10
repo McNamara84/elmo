@@ -41,6 +41,7 @@ services:
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       # Flags for Standard ELMO (all form groups enabled)
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
@@ -89,6 +90,7 @@ services:
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"

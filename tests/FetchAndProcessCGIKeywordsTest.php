@@ -1,6 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 use EasyRdf\Http;
 use EasyRdf\Http\Response;
@@ -13,7 +17,8 @@ require_once __DIR__ . '/../api_functions.php';
  * These tests verify that CGI keywords are fetched and processed into the
  * expected hierarchical structure.
  */
-class FetchAndProcessCGIKeywordsTest extends TestCase
+#[CoversFunction('fetchAndProcessCGIKeywords')]
+final class FetchAndProcessCGIKeywordsTest extends TestCase
 {
     private $originalClient;
 
@@ -33,13 +38,11 @@ class FetchAndProcessCGIKeywordsTest extends TestCase
         $rdfData = file_get_contents(__DIR__ . '/datasets/simplelithology.rdf');
         $response = new Response(200, ['Content-Type' => 'application/rdf+xml'], $rdfData);
 
-        // Create mock client that returns the predefined response
-        $mock = $this->getMockBuilder('EasyRdf\\Http\\Client')
-            ->onlyMethods(['request'])
-            ->getMock();
-        $mock->method('request')->willReturn($response);
+        // Create stub client that returns the predefined response
+        $stub = $this->createStub(\EasyRdf\Http\Client::class);
+        $stub->method('request')->willReturn($response);
 
-        Http::setDefaultHttpClient($mock);
+        Http::setDefaultHttpClient($stub);
     }
 
     /**
@@ -69,13 +72,13 @@ class FetchAndProcessCGIKeywordsTest extends TestCase
         $this->assertCount(1, $keywords);
 
         $root = $keywords[0];
-        $this->assertEquals('http://resource.geosciml.org/classifier/cgi/lithology/compound_material', $root['id']);
-        $this->assertEquals('Compound Material', $root['text']);
+        $this->assertSame('http://resource.geosciml.org/classifier/cgi/lithology/compound_material', $root['id']);
+        $this->assertSame('Compound Material', $root['text']);
         $this->assertArrayHasKey('children', $root);
         $this->assertCount(1, $root['children']);
 
         $child = $root['children'][0];
-        $this->assertEquals('http://resource.geosciml.org/classifier/cgi/lithology/granite', $child['id']);
-        $this->assertEquals('Granite', $child['text']);
+        $this->assertSame('http://resource.geosciml.org/classifier/cgi/lithology/granite', $child['id']);
+        $this->assertSame('Granite', $child['text']);
     }
 }

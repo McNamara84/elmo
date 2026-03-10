@@ -1,7 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
+
 
 require_once __DIR__ . '/../save/formgroups/save_descriptions.php';
 require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
@@ -9,7 +11,7 @@ require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.
 /**
  * Test suite for saving description text sections.
  */
-class SaveDescriptionsTest extends DatabaseTestCase
+final class SaveDescriptionsTest extends DatabaseTestCase
 {
     /**
      * Saves all four description types and verifies persistence.

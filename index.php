@@ -43,6 +43,8 @@ $showSpatialTemporalCoverage = resolveFeatureToggle($showSpatialTemporalCoverage
 $showRelatedWork = resolveFeatureToggle($showRelatedWork ?? null, true);
 /** @var bool $showFundingReference */
 $showFundingReference = resolveFeatureToggle($showFundingReference ?? null, true);
+/** @var bool $showUsedInstruments */
+$showUsedInstruments = resolveFeatureToggle($showUsedInstruments ?? null, false);
 /** @var bool $showGGMsProperties */
 $showGGMsProperties = resolveFeatureToggle($showGGMsProperties ?? null, false);
 /** @var bool $showMslLabs */
@@ -79,7 +81,11 @@ if ($showContributorInstitutions) {
 if ($showMslLabs) {
     include $baseDir . 'formgroups/originatingLaboratory.html';
 }
-include $baseDir . 'formgroups/descriptions.html';
+if ($showGGMsProperties) {
+    include $baseDir . 'formgroups/GGMsDescriptions.html';
+} else {
+    include $baseDir . 'formgroups/descriptions.html';
+}
 if ($showMslVocabs) {
     include $baseDir . 'formgroups/mslKeywords.html';
 }
@@ -92,6 +98,9 @@ if ($showFreeKeywords) {
 include $baseDir . 'formgroups/dates.html';
 if ($showSpatialTemporalCoverage) {
     include $baseDir . 'formgroups/coverage.html';
+}
+if ($showUsedInstruments) {
+    include $baseDir . 'formgroups/usedInstruments.html';
 }
 if ($showRelatedWork) {
     include $baseDir . 'formgroups/relatedwork.html';
