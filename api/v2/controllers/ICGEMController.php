@@ -662,7 +662,7 @@ class ICGEMController extends DatasetController
 
         // replace underscores and dashes with spaces in density information type, then collapse multiple spaces to single
         if ($fieldName === 'densityInformationType') {
-            // a spetial case for Density model 
+            // a special case for Density model 
             $trimmed = str_replace(['ensity-model'], 'ensity model', $trimmed);
             $trimmed = str_replace(['_'], ' ', $trimmed);
             $trimmed = preg_replace('/\s+/', ' ', $trimmed) ?? $trimmed;
