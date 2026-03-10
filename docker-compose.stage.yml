@@ -47,6 +47,7 @@ services:
       # Flags for Standard ELMO
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
+      SHOW_MSL_LOGO: "false"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_GCMD_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
@@ -97,6 +98,7 @@ services:
       # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
+      SHOW_MSL_LOGO: "true"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_GCMD_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
@@ -148,6 +150,7 @@ services:
       # Flags for ICGEM (GGMs properties enabled)
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
+      SHOW_MSL_LOGO: "false"
       SHOW_GGMS_PROPERTIES: "true"
       SHOW_GCMD_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
@@ -198,6 +201,7 @@ services:
       # Flags for IGSN (minimal form - most form groups disabled)
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
+      SHOW_MSL_LOGO: "false"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_GCMD_THESAURI: "false"
       SHOW_FREE_KEYWORDS: "false"
