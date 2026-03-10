@@ -1152,4 +1152,352 @@ final class ICGEMControllerTest extends TestCase
         $descElements = $xml->descriptions->description;
         $this->assertCount(0, $descElements);
     }
+
+    // ============================================
+    // PART 3: HELPER FUNCTIONS TESTS
+    // ============================================
+
+    /**
+     * Test prepare function escapes HTML special characters
+     */
+    public function testPrepareEscapesHtmlSpecialCharacters(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('prepare');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->controller, '<script>alert("xss")</script>', 'description');
+        $this->assertStringContainsString('&lt;script&gt;', $result);
+        $this->assertStringContainsString('&quot;', $result);
+        $this->assertStringNotContainsString('<script>', $result);
+    }
+
+    /**
+     * Test prepare function converts tideSystem spaces to dashes
+     */
+    public function testPrepareConvertsTideSystemSpacesToDashes(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('prepare');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->controller, 'tide free', 'tideSystem');
+        $this->assertEquals('Tide-free', $result);
+
+        $result = $method->invoke($this->controller, 'mean tide', 'tideSystem');
+        $this->assertEquals('Mean-tide', $result);
+    }
+
+    /**
+     * Test prepare function handles densityInformationType transformation
+     */
+    public function testPrepareHandlesDensityInformationTypeTransformation(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('prepare');
+        $method->setAccessible(true);
+
+        // Replace underscores with spaces
+        $result = $method->invoke($this->controller, 'Density_model', 'densityInformationType');
+        $this->assertEquals('Density model', $result);
+
+        // Handle special case for ensity-model
+        $result = $method->invoke($this->controller, 'ensity-model', 'densityInformationType');
+        $this->assertEquals('Ensity model', $result);
+
+        // Collapse multiple spaces
+        $result = $method->invoke($this->controller, 'Density   model', 'densityInformationType');
+        $this->assertEquals('Density model', $result);
+    }
+
+    /**
+     * Test prepare function capitalizes enumeration fields
+     */
+    public function testPrepareCapitalizesEnumerationFields(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('prepare');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->controller, 'static', 'modelType');
+        $this->assertEquals('Static', $result);
+
+        $result = $method->invoke($this->controller, 'satellite', 'inputDataSourceType');
+        $this->assertEquals('Satellite', $result);
+
+        $result = $method->invoke($this->controller, 'point-mass', 'approximation');
+        $this->assertEquals('Point-mass', $result);
+    }
+
+    /**
+     * Test prepare function trims whitespace
+     */
+    public function testPrepareTrimmsWhitespace(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('prepare');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->controller, '  some value  ', 'description');
+        $this->assertEquals('some value', $result);
+
+        $result = $method->invoke($this->controller, "\t\n  model name  \n", 'modelName');
+        $this->assertEquals('Model name', $result);
+    }
+
+    /**
+     * Test normalizeDescriptionType converts to sentence case
+     */
+    public function testNormalizeDescriptionTypeConvertToSentenceCase(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('normalizeDescriptionType');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->controller, 'GENERAL MODEL DESCRIPTION');
+        $this->assertEquals('General model description', $result);
+
+        $result = $method->invoke($this->controller, 'abstract');
+        $this->assertEquals('Abstract', $result);
+
+        $result = $method->invoke($this->controller, 'INPUT DATA');
+        $this->assertEquals('Input data', $result);
+
+        $result = $method->invoke($this->controller, 'Processing Procedures');
+        $this->assertEquals('Processing procedures', $result);
+
+        $result = $method->invoke($this->controller, 'Other');
+        $this->assertEquals('Other', $result);
+    }
+
+    /**
+     * Test removeElmogEmTextFromAbstract removes ELMOGEM-specific texts
+     */
+    public function testRemoveElmogEmTextFromAbstractRemovesElmogTexts(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('removeElmogEmTextFromAbstract');
+        $method->setAccessible(true);
+
+        $abstract = <<<EOT
+This is the main abstract.
+
+General model description
+Some details about the model.
+
+Input data
+Details about input data sources.
+EOT;
+
+        $elmogem_texts = [
+            'General model description',
+            'Input data'
+        ];
+
+        $result = $method->invoke($this->controller, $abstract, $elmogem_texts);
+
+        $this->assertStringNotContainsString('General model description', $result);
+        $this->assertStringNotContainsString('Input data', $result);
+        $this->assertStringContainsString('This is the main abstract', $result);
+        $this->assertStringContainsString('Some details about the model', $result);
+    }
+
+    /**
+     * Test removeElmogEmTextFromAbstractCleans up extra whitespace
+     */
+    public function testRemoveElmogEmTextFromAbstractCleansUpWhitespace(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('removeElmogEmTextFromAbstract');
+        $method->setAccessible(true);
+
+        $abstract = <<<EOT
+Main abstract line.
+
+
+Extra section to remove
+
+
+More content here.
+EOT;
+
+        $elmogem_texts = ['Extra section to remove'];
+
+        $result = $method->invoke($this->controller, $abstract, $elmogem_texts);
+
+        // Should clean up extra blank lines (three newlines with spaces)
+        $this->assertStringNotContainsString('Extra section to remove', $result);
+        $this->assertStringContainsString('Main abstract line', $result);
+        $this->assertStringContainsString('More content here', $result);
+
+        // Should trim leading/trailing whitespace
+        $this->assertEquals($result, trim($result));
+    }
+
+    /**
+     * Test removeElmogEmTextFromAbstractWithEmptyTexts
+     */
+    public function testRemoveElmogEmTextFromAbstractWithEmptyTexts(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('removeElmogEmTextFromAbstract');
+        $method->setAccessible(true);
+
+        $abstract = 'This is the main content';
+        $elmogem_texts = [];
+
+        $result = $method->invoke($this->controller, $abstract, $elmogem_texts);
+
+        // No changes should occur
+        $this->assertEquals('This is the main content', $result);
+    }
+
+    /**
+     * Test cleanDataCiteSchemaLocation replaces Windows file paths
+     */
+    public function testCleanDataCiteSchemaLocationReplacesWindowsPaths(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('cleanDataCiteSchemaLocation');
+        $method->setAccessible(true);
+
+        $xml = <<<EOT
+<?xml version="1.0"?>
+<root xsi:schemaLocation="file:C:\\Users\\user\\Documents\\DataCiteSchema45.xsd">
+  <element>data</element>
+</root>
+EOT;
+
+        $result = $method->invoke($this->controller, $xml);
+
+        $this->assertStringNotContainsString('file:C:\\', $result);
+        $this->assertStringNotContainsString('DataCiteSchema45.xsd', $result);
+        $this->assertStringContainsString('http://schema.datacite.org/meta/kernel-4/metadata.xsd', $result);
+    }
+
+    /**
+     * Test cleanDataCiteSchemaLocation with multiple file paths
+     */
+    public function testCleanDataCiteSchemaLocationHandlesMultiplePaths(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('cleanDataCiteSchemaLocation');
+        $method->setAccessible(true);
+
+        $xml = <<<EOT
+<?xml version="1.0"?>
+<root xsi:schemaLocation="file:D:\\path\\to\\DataCiteSchema45.xsd http://example.com file:/path/unix/DataCiteSchema45.xsd">
+</root>
+EOT;
+
+        $result = $method->invoke($this->controller, $xml);
+
+        // All file: paths should be replaced
+        $this->assertStringNotContainsString('file:', $result);
+        $this->assertStringContainsString('http://schema.datacite.org/meta/kernel-4/metadata.xsd', $result);
+    }
+
+    /**
+     * Test cleanDataCiteSchemaLocation with no file paths
+     */
+    public function testCleanDataCiteSchemaLocationWithNoFilePaths(): void
+    {
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('cleanDataCiteSchemaLocation');
+        $method->setAccessible(true);
+
+        $xml = '<?xml version="1.0"?><root xsi:schemaLocation="http://schema.datacite.org/meta/kernel-4/metadata.xsd"></root>';
+
+        $result = $method->invoke($this->controller, $xml);
+
+        // XML should remain unchanged
+        $this->assertEquals($xml, $result);
+        $this->assertStringContainsString('http://schema.datacite.org', $result);
+    }
+
+    /**
+     * Test simplexmlAppend appends XML elements from source to target
+     */
+    public function testSimplexmlAppendAppendsChildElements(): void
+    {
+        $to = new \SimpleXMLElement('<?xml version="1.0"?><root><child1>value1</child1></root>');
+        $from = new \SimpleXMLElement('<?xml version="1.0"?><source><child2>value2</child2><child3>value3</child3></source>');
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('simplexmlAppend');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $to, $from);
+
+        // Check that children from $from were added to $to
+        $this->assertNotNull($to->child1);
+        $this->assertEquals('value1', (string)$to->child1);
+        $this->assertNotNull($to->child2);
+        $this->assertEquals('value2', (string)$to->child2);
+        $this->assertNotNull($to->child3);
+        $this->assertEquals('value3', (string)$to->child3);
+    }
+
+    /**
+     * Test simplexmlAppend preserves existing elements in target
+     */
+    public function testSimplexmlAppendPreservesExistingElements(): void
+    {
+        $to = new \SimpleXMLElement('<?xml version="1.0"?><root><existing>original</existing></root>');
+        $from = new \SimpleXMLElement('<?xml version="1.0"?><source><new>added</new></source>');
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('simplexmlAppend');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $to, $from);
+
+        // Original element should still exist
+        $this->assertNotNull($to->existing);
+        $this->assertEquals('original', (string)$to->existing);
+
+        // New element should be added
+        $this->assertNotNull($to->new);
+        $this->assertEquals('added', (string)$to->new);
+    }
+
+    /**
+     * Test simplexmlAppend with empty source element
+     */
+    public function testSimplexmlAppendWithEmptySource(): void
+    {
+        $to = new \SimpleXMLElement('<?xml version="1.0"?><root><child>value</child></root>');
+        $from = new \SimpleXMLElement('<?xml version="1.0"?><source></source>');
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('simplexmlAppend');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $to, $from);
+
+        // Target should remain unchanged
+        $this->assertNotNull($to->child);
+        $this->assertEquals('value', (string)$to->child);
+        $this->assertCount(1, $to->children());
+    }
+
+    /**
+     * Test simplexmlAppend with namespaced elements
+     */
+    public function testSimplexmlAppendWithNamespacedElements(): void
+    {
+        $to = new \SimpleXMLElement(
+            '<?xml version="1.0"?><root xmlns:dc="http://datacite.org/schema/kernel-4"><dc:existing>original</dc:existing></root>'
+        );
+        $from = new \SimpleXMLElement(
+            '<?xml version="1.0"?><source xmlns:dc="http://datacite.org/schema/kernel-4"><dc:new>added</dc:new></source>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('simplexmlAppend');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $to, $from);
+
+        // Check both elements exist
+        $dcNamespace = $to->children('http://datacite.org/schema/kernel-4');
+        $this->assertNotNull($dcNamespace->existing);
+        $this->assertNotNull($dcNamespace->new);
+    }
 }
