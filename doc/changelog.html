@@ -1,15 +1,57 @@
 <!-- Changelog Content -->
 <div class="accordion" id="accordion-changelog">
+    <!-- Version 2.0.7 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-changelog-version12">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse-changelog-version12" aria-expanded="true"
+                aria-controls="collapse-changelog-version12">
+                Version 2.0.7 - 2026/03/xx
+            </button>
+        </h2>
+        <div id="collapse-changelog-version12" class="accordion-collapse collapse show"
+            aria-labelledby="heading-changelog-version12" data-bs-parent="#accordion-changelog">
+            <div class="accordion-body">
+                <ul>
+                    <li><strong>Features:</strong>
+                        <ul>
+                            <li>ICGEM version: simplified the Resource Information form group and set English as a default.</li>
+                            <li>Dynamic title type management via ERNIE API</li>
+                            <li>Dynamic Language of Dataset options from ERNIE API</li>
+                            <li>User guidance for missing mandatory fields</li>
+                            <li>Added ELMO User Guide to the header.</li>
+                            <li>Adjusted the header layout and packed the buttons in so-called toggler for smaller screen formats</li>
+                            <li>Renaming the save button to save as</li>
+                            <li>New form group Used Instruments for managing instrument information with PID4INST over ERNIE API</li>
+                            <li>Adjusted rules for versioning and more clear documentation.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Fixes:</strong>
+                        <ul>
+                            <li>Pre-selected English as the default language in the Resource Information form group</li>
+                            <li>Language of Dataset is no longer a mandatory field</li>
+                            <li>Hid map search label visually while keeping it accessible for screen readers in the spatial coverage modal</li>
+                        </ul>
+                    </li>
+                    <li><strong>Documentation:</strong>
+                        <ul>
+                            <li>Dynamic user guide</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>  
     <!-- Version 2.0.6 -->
     <div class="accordion-item">
         <h2 class="accordion-header" id="heading-changelog-version11">
             <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse-changelog-version11" aria-expanded="true"
+                data-bs-target="#collapse-changelog-version11" aria-expanded="false"
                 aria-controls="collapse-changelog-version11">
-                Version 2.0.6 - 2026/00/00
+                Version 2.0.6 - 2026/02/17
             </button>
         </h2>
-        <div id="collapse-changelog-version11" class="accordion-collapse collapse show"
+        <div id="collapse-changelog-version11" class="accordion-collapse collapse"
             aria-labelledby="heading-changelog-version11" data-bs-parent="#accordion-changelog">
             <div class="accordion-body">
                 <ul>
@@ -17,21 +59,22 @@
                         <ul>
                             <li>Resource Types dropdown now fetches values from ERNIE API for centralized vocabulary management</li>
                             <li>Caching Resource Types with configurable TTL (default: 6 hours)</li>
+                            <li>Simplified the license choice: the selection and help section changes dynamically based on the resource type.</li>
                         </ul>
                     </li>
                     <li><strong>Fixes:</strong>
                         <ul>
+                            <li>ICGEM description types now properly captured: Methods, TechnicalInfo, and custom GGM types (Input Data, Processing Procedures, Specific Features of Resulting Gravity Field)</li>
                             <li>Debugged Titles and Title Types in the Resource Information from group</li>
-                            <li>Hid map search label visually while keeping it accessible for screen readers in the spatial coverage modal</li>
+                            <li>Debugged Spatio-temporal coverage form group: backend and database scripts. Validation is entirely skipped on save.</li>                            
+                            <li>Debugged Titles and Title Types in the Resource Information from group. Validation is entirely skipped on save.</li>
+                            <li>Improved the logic for back-end validation</li>
+
                         </ul>
                     </li>
                     <li><strong>Documentation:</strong>
                         <ul>
                             <li>Dynamic help for Resource Types in ELMO Guide</li>
-                        </ul>
-                    </li>
-                    <li><strong>Chore:</strong>
-                        <ul>
                         </ul>
                     </li>
                 </ul>
@@ -57,6 +100,7 @@
                             <li>Provide CC-BY-4.0 as default license</li>
                             <li>Better user feedback when submission of metadata to curation is successful</li>
                             <li>Save button now stores drafts without triggering form validation, while Submit still enforces all required fields</li>
+                            <li>Simplified the choice of license</li>
                             <li>Added save and file export functionality for the ELMO-GEM version</li>
                         </ul>
                     </li>
