@@ -692,6 +692,7 @@ final class ICGEMControllerTest extends TestCase
             'model_type_name' => 'Static',
             'mathematical_representation_name' => 'Spherical Harmonics',
             'product_type' => 'gravity_field',
+            'celestial_body' => 'Earth',
             'file_format_name' => 'binary',
             'tide_system' => 'tide-free',
             'degree' => '2190',
@@ -720,6 +721,9 @@ final class ICGEMControllerTest extends TestCase
         
         $this->assertNotNull($xml->children('http://icgem.gfz.de/schema')->modelType);
         $this->assertEquals('Static', (string)$xml->children('http://icgem.gfz.de/schema')->modelType);
+
+        $this->assertNotNull($xml->children('http://icgem.gfz.de/schema')->celestialBody);
+        $this->assertEquals('Earth', (string)$xml->children('http://icgem.gfz.de/schema')->celestialBody);
         
         $this->assertNotNull($xml->children('http://icgem.gfz.de/schema')->degreeOrderMax);
         $this->assertEquals('2190', (string)$xml->children('http://icgem.gfz.de/schema')->degreeOrderMax);
@@ -848,7 +852,7 @@ final class ICGEMControllerTest extends TestCase
                 'S_value_name' => 'GRACE',
                 'S_value_uri' => 'https://grace.nasa.gov',
                 'S_scheme_name' => 'NASA',
-                'S_scheme_uri' => null,
+                'S_scheme_uri' => 'https://nasa.gov',
                 'T_Isostasy_compensation_depth' => null,
                 'M_identifier' => null,
                 'M_identifier_type' => null,
@@ -891,6 +895,7 @@ final class ICGEMControllerTest extends TestCase
         $this->assertEquals('Satellite', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('GRACE satellite data', (string)$sourceChildren->description);
         $this->assertEquals('GRACE', (string)$sourceChildren->satelliteValueName);
+        $this->assertEquals('https://nasa.gov', (string)$sourceChildren->satelliteSchemeUri);
         
         // Second source (Ground data)
         $sourceChildren = $sources[1]->children('http://icgem.gfz.de/schema');
@@ -1069,6 +1074,7 @@ final class ICGEMControllerTest extends TestCase
         $this->assertEquals('6356752.314245', (string)$epChildren->semiminorAxisB);
         $this->assertEquals('0.00335281066474748', (string)$epChildren->flattening);
         $this->assertEquals('298.257223563', (string)$epChildren->reciprocalFlattening);
+        $this->assertEquals('0.0818191908426', (string)$epChildren->eccentricity);
     }
 
     /**
