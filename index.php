@@ -48,6 +48,8 @@ $showGGMsProperties = resolveFeatureToggle($showGGMsProperties ?? null, false);
 $showMslLabs = resolveFeatureToggle($showMslLabs ?? null, false);
 /** @var bool $showMslVocabs */
 $showMslVocabs = resolveFeatureToggle($showMslVocabs ?? null, false);
+/** @var bool $showMslLogo */
+$showMslLogo = resolveFeatureToggle($showMslLogo ?? null, false);
 
 // Include HTML components using absolute paths to ensure reliable file access
 $mslLogoHtml = '<a href="https://epos-msl.uu.nl/" target="_blank" rel="noopener noreferrer"> <img src="logos/EPOS_logo.png" alt="MSL Logo" class="logo logo-right"> </a>';
