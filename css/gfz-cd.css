@@ -589,6 +589,7 @@ header .ms-auto.d-flex {
 
 /* Base size for the MSL logo */
 /* small screens */
+/* Small screens (between 576px and 768px) */
 /* Laptop-Screens */
 /* Large screens */
 .logo-msl {
@@ -598,6 +599,11 @@ header .ms-auto.d-flex {
 @media (max-width: 575.98px) {
   .logo-msl {
     height: 24px;
+  }
+}
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .logo-msl {
+    height: 26px;
   }
 }
 @media (min-width: 768px) and (max-width: 1199.98px) {
