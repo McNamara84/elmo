@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 // Define test mode to prevent settings.php from being loaded
 define('ERNIE_SERVICE_TEST_MODE', true);
 
 // Set global config variables BEFORE loading ErnieService
-global $ernieUrl, $ernieApiKey, $ernieResourceTypesCacheTtl;
+global $ernieUrl, $ernieApiKey, $ernieCacheTtl, $ernieResourceTypesCacheTtl;
 $ernieUrl = '';
 $ernieApiKey = '';
+$ernieCacheTtl = 21600;
 $ernieResourceTypesCacheTtl = 21600;
 
 require_once __DIR__ . '/../api/v2/services/ErnieService.php';
@@ -23,11 +25,15 @@ require_once __DIR__ . '/../api/v2/services/ErnieService.php';
 class TestableErnieService extends \ErnieService
 {
     private string $customCacheFile;
+    private string $customTitleTypesCacheFile;
+    private string $customLanguagesCacheFile;
 
-    public function __construct(string $cacheFile)
+    public function __construct(string $cacheFile, string $titleTypesCacheFile = '', string $languagesCacheFile = '')
     {
         parent::__construct();
         $this->customCacheFile = $cacheFile;
+        $this->customTitleTypesCacheFile = $titleTypesCacheFile;
+        $this->customLanguagesCacheFile = $languagesCacheFile;
     }
 
     /**
@@ -36,6 +42,22 @@ class TestableErnieService extends \ErnieService
     protected function getCacheFile(): string
     {
         return $this->customCacheFile;
+    }
+
+    /**
+     * Override getTitleTypesCacheFile to use custom path
+     */
+    protected function getTitleTypesCacheFile(): string
+    {
+        return $this->customTitleTypesCacheFile ?: $this->customCacheFile;
+    }
+
+    /**
+     * Override getLanguagesCacheFile to use custom path
+     */
+    protected function getLanguagesCacheFile(): string
+    {
+        return $this->customLanguagesCacheFile ?: $this->customCacheFile;
     }
 }
 
@@ -46,7 +68,8 @@ class TestableErnieService extends \ErnieService
  * Note: These tests mock the global configuration variables to avoid
  * database connections during unit testing.
  */
-class ErnieServiceTest extends TestCase
+#[CoversClass(\ErnieService::class)]
+final class ErnieServiceTest extends TestCase
 {
     /**
      * @var string Path to test cache directory
@@ -59,6 +82,16 @@ class ErnieServiceTest extends TestCase
     private string $testCacheFile;
 
     /**
+     * @var string Path to test title types cache file
+     */
+    private string $testTitleTypesCacheFile;
+
+    /**
+     * @var string Path to test languages cache file
+     */
+    private string $testLanguagesCacheFile;
+
+    /**
      * Set up test environment
      */
     protected function setUp(): void
@@ -68,6 +101,8 @@ class ErnieServiceTest extends TestCase
         // Create a temporary cache directory for tests
         $this->testCacheDir = sys_get_temp_dir() . '/elmo_test_cache_' . uniqid();
         $this->testCacheFile = $this->testCacheDir . '/ernie_resource_types.json';
+        $this->testTitleTypesCacheFile = $this->testCacheDir . '/ernie_title_types.json';
+        $this->testLanguagesCacheFile = $this->testCacheDir . '/ernie_languages.json';
 
         if (!is_dir($this->testCacheDir)) {
             mkdir($this->testCacheDir, 0755, true);
@@ -77,6 +112,12 @@ class ErnieServiceTest extends TestCase
         if (file_exists($this->testCacheFile)) {
             unlink($this->testCacheFile);
         }
+        if (file_exists($this->testTitleTypesCacheFile)) {
+            unlink($this->testTitleTypesCacheFile);
+        }
+        if (file_exists($this->testLanguagesCacheFile)) {
+            unlink($this->testLanguagesCacheFile);
+        }
     }
 
     /**
@@ -84,9 +125,15 @@ class ErnieServiceTest extends TestCase
      */
     protected function tearDown(): void
     {
-        // Remove test cache file
+        // Remove test cache files
         if (file_exists($this->testCacheFile)) {
             unlink($this->testCacheFile);
+        }
+        if (file_exists($this->testTitleTypesCacheFile)) {
+            unlink($this->testTitleTypesCacheFile);
+        }
+        if (file_exists($this->testLanguagesCacheFile)) {
+            unlink($this->testLanguagesCacheFile);
         }
 
         // Remove test cache directory
@@ -102,19 +149,20 @@ class ErnieServiceTest extends TestCase
      */
     private function setGlobalConfig(string $url, string $apiKey, int $ttl = 21600): void
     {
-        global $ernieUrl, $ernieApiKey, $ernieResourceTypesCacheTtl;
+        global $ernieUrl, $ernieApiKey, $ernieCacheTtl, $ernieResourceTypesCacheTtl;
         $ernieUrl = $url;
         $ernieApiKey = $apiKey;
+        $ernieCacheTtl = $ttl;
         $ernieResourceTypesCacheTtl = $ttl;
     }
 
     /**
-     * Creates a testable ErnieService with custom cache file path
+     * Creates a testable ErnieService with custom cache file paths
      */
     private function createTestableService(string $url = '', string $apiKey = '', int $ttl = 21600): TestableErnieService
     {
         $this->setGlobalConfig($url, $apiKey, $ttl);
-        return new TestableErnieService($this->testCacheFile);
+        return new TestableErnieService($this->testCacheFile, $this->testTitleTypesCacheFile, $this->testLanguagesCacheFile);
     }
 
     /**
@@ -131,6 +179,38 @@ class ErnieServiceTest extends TestCase
             'data' => $data
         ];
         file_put_contents($this->testCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Helper to write a test title types cache file
+     * 
+     * @param array<array{id: int, name: string, slug: string}> $data
+     */
+    private function writeTitleTypesTestCache(array $data, ?string $lastUpdated = null): void
+    {
+        $cache = [
+            'lastUpdated' => $lastUpdated ?? date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => $data
+        ];
+        file_put_contents($this->testTitleTypesCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Helper to write a test languages cache file
+     * 
+     * @param array<array{id: int, name: string, code: string}> $data
+     */
+    private function writeLanguagesTestCache(array $data, ?string $lastUpdated = null): void
+    {
+        $cache = [
+            'lastUpdated' => $lastUpdated ?? date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => $data
+        ];
+        file_put_contents($this->testLanguagesCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
     }
 
     // ==================== isConfigured() Tests ====================
@@ -185,7 +265,7 @@ class ErnieServiceTest extends TestCase
         $this->assertFalse($status['valid']);
         $this->assertNull($status['lastUpdated']);
         $this->assertNull($status['age']);
-        $this->assertEquals(0, $status['itemCount']);
+        $this->assertSame(0, $status['itemCount']);
     }
 
     /**
@@ -206,7 +286,7 @@ class ErnieServiceTest extends TestCase
         $this->assertTrue($status['valid']);
         $this->assertNotNull($status['lastUpdated']);
         $this->assertIsInt($status['age']);
-        $this->assertEquals(2, $status['itemCount']);
+        $this->assertSame(2, $status['itemCount']);
         $this->assertArrayHasKey('ageFormatted', $status);
         $this->assertArrayHasKey('ttl', $status);
     }
@@ -228,7 +308,7 @@ class ErnieServiceTest extends TestCase
 
         $this->assertTrue($status['exists']);
         $this->assertFalse($status['valid']);
-        $this->assertEquals(1, $status['itemCount']);
+        $this->assertSame(1, $status['itemCount']);
     }
 
     // ==================== getResourceTypesWithCache() Tests ====================
@@ -244,8 +324,8 @@ class ErnieServiceTest extends TestCase
         $this->assertIsArray($result);
         // Should return hardcoded fallback (Dataset and Other)
         $this->assertCount(2, $result);
-        $this->assertEquals('Dataset', $result[0]['name']);
-        $this->assertEquals('Other', $result[1]['name']);
+        $this->assertSame('Dataset', $result[0]['name']);
+        $this->assertSame('Other', $result[1]['name']);
     }
 
     /**
@@ -263,8 +343,8 @@ class ErnieServiceTest extends TestCase
         $result = $service->getResourceTypesWithCache();
 
         $this->assertCount(2, $result);
-        $this->assertEquals('Dataset', $result[0]['name']);
-        $this->assertEquals('Software', $result[1]['name']);
+        $this->assertSame('Dataset', $result[0]['name']);
+        $this->assertSame('Software', $result[1]['name']);
     }
 
     /**
@@ -285,7 +365,7 @@ class ErnieServiceTest extends TestCase
 
         // Should return stale cache data
         $this->assertCount(1, $result);
-        $this->assertEquals('Collection', $result[0]['name']);
+        $this->assertSame('Collection', $result[0]['name']);
     }
 
     // ==================== fetchResourceTypes() Tests ====================
@@ -493,13 +573,13 @@ class ErnieServiceTest extends TestCase
         $this->assertCount(2, $result);
         
         // Verify Dataset
-        $this->assertEquals(10, $result[0]['id']);
-        $this->assertEquals('Dataset', $result[0]['name']);
+        $this->assertSame(10, $result[0]['id']);
+        $this->assertSame('Dataset', $result[0]['name']);
         $this->assertNotEmpty($result[0]['description']);
         
         // Verify Other
-        $this->assertEquals(21, $result[1]['id']);
-        $this->assertEquals('Other', $result[1]['name']);
+        $this->assertSame(21, $result[1]['id']);
+        $this->assertSame('Other', $result[1]['name']);
         $this->assertNotEmpty($result[1]['description']);
     }
 
@@ -514,8 +594,859 @@ class ErnieServiceTest extends TestCase
 
         // Should use hardcoded fallback
         $this->assertCount(2, $result);
-        $this->assertEquals('Dataset', $result[0]['name']);
-        $this->assertEquals('Other', $result[1]['name']);
+        $this->assertSame('Dataset', $result[0]['name']);
+        $this->assertSame('Other', $result[1]['name']);
+    }
+
+    // ==================== Title Types: getTitleTypesCacheStatus() Tests ====================
+
+    /**
+     * Test getTitleTypesCacheStatus when cache doesn't exist
+     */
+    public function testGetTitleTypesCacheStatusWhenCacheDoesNotExist(): void
+    {
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getTitleTypesCacheStatus();
+
+        $this->assertFalse($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertNull($status['lastUpdated']);
+        $this->assertNull($status['age']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    /**
+     * Test getTitleTypesCacheStatus when cache exists and is valid
+     */
+    public function testGetTitleTypesCacheStatusWhenCacheExistsAndValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title'],
+            ['id' => 2, 'name' => 'Alternative Title', 'slug' => 'alternative-title']
+        ];
+        $this->writeTitleTypesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getTitleTypesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertNotNull($status['lastUpdated']);
+        $this->assertIsInt($status['age']);
+        $this->assertSame(2, $status['itemCount']);
+        $this->assertArrayHasKey('ageFormatted', $status);
+        $this->assertArrayHasKey('ttl', $status);
+    }
+
+    /**
+     * Test getTitleTypesCacheStatus when cache exists but is expired
+     */
+    public function testGetTitleTypesCacheStatusWhenCacheExpired(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeTitleTypesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getTitleTypesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertSame(1, $status['itemCount']);
+    }
+
+    // ==================== Title Types: getTitleTypesWithCache() Tests ====================
+
+    /**
+     * Test that getTitleTypesWithCache returns hardcoded fallback when not configured and no cache
+     */
+    public function testGetTitleTypesWithCacheReturnsHardcodedFallbackWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getTitleTypesWithCache();
+
+        $this->assertIsArray($result);
+        // Should return hardcoded fallback (Main Title, Alternative Title, Translated Title)
+        $this->assertCount(3, $result);
+        $this->assertSame('Main Title', $result[0]['name']);
+        $this->assertSame('Alternative Title', $result[1]['name']);
+        $this->assertSame('Translated Title', $result[2]['name']);
+    }
+
+    /**
+     * Test that getTitleTypesWithCache returns cached data when cache is valid
+     */
+    public function testGetTitleTypesWithCacheReturnsCachedDataWhenValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title'],
+            ['id' => 2, 'name' => 'Alternative Title', 'slug' => 'alternative-title'],
+            ['id' => 5, 'name' => 'Other', 'slug' => 'other']
+        ];
+        $this->writeTitleTypesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getTitleTypesWithCache();
+
+        $this->assertCount(3, $result);
+        $this->assertSame('Main Title', $result[0]['name']);
+        $this->assertSame('Alternative Title', $result[1]['name']);
+        $this->assertSame('Other', $result[2]['name']);
+    }
+
+    /**
+     * Test that getTitleTypesWithCache returns stale cache when ERNIE unavailable
+     */
+    public function testGetTitleTypesWithCacheReturnsStaleWhenErnieUnavailable(): void
+    {
+        $testData = [
+            ['id' => 3, 'name' => 'Subtitle', 'slug' => 'subtitle']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeTitleTypesTestCache($testData, $expiredTime);
+
+        // Use invalid URL so ERNIE fetch fails
+        $service = $this->createTestableService('https://invalid-url-that-does-not-exist.local/', 'test-key');
+        $result = $service->getTitleTypesWithCache();
+
+        // Should return stale cache data
+        $this->assertCount(1, $result);
+        $this->assertSame('Subtitle', $result[0]['name']);
+    }
+
+    // ==================== Title Types: fetchTitleTypes() Tests ====================
+
+    /**
+     * Test fetchTitleTypes returns null when not configured
+     */
+    public function testFetchTitleTypesReturnsNullWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->fetchTitleTypes();
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * Test fetchTitleTypes returns null on invalid URL
+     */
+    public function testFetchTitleTypesReturnsNullOnInvalidUrl(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->fetchTitleTypes();
+
+        $this->assertNull($result);
+    }
+
+    // ==================== Title Types: refreshTitleTypesCache() Tests ====================
+
+    /**
+     * Test refreshTitleTypesCache returns false when not configured
+     */
+    public function testRefreshTitleTypesCacheReturnsFalseWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->refreshTitleTypesCache();
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test refreshTitleTypesCache returns false when ERNIE unavailable
+     */
+    public function testRefreshTitleTypesCacheReturnsFalseWhenErnieUnavailable(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->refreshTitleTypesCache();
+
+        $this->assertFalse($result);
+    }
+
+    // ==================== Title Types: Hardcoded Fallback Tests ====================
+
+    /**
+     * Test that hardcoded title type fallback contains Main Title, Alternative Title, Translated Title
+     */
+    public function testHardcodedTitleTypeFallbackContainsExpectedTypes(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getTitleTypesWithCache();
+
+        $this->assertCount(3, $result);
+
+        // Verify Main Title
+        $this->assertSame(1, $result[0]['id']);
+        $this->assertSame('Main Title', $result[0]['name']);
+        $this->assertSame('main-title', $result[0]['slug']);
+
+        // Verify Alternative Title
+        $this->assertSame(2, $result[1]['id']);
+        $this->assertSame('Alternative Title', $result[1]['name']);
+        $this->assertSame('alternative-title', $result[1]['slug']);
+
+        // Verify Translated Title
+        $this->assertSame(4, $result[2]['id']);
+        $this->assertSame('Translated Title', $result[2]['name']);
+        $this->assertSame('translated-title', $result[2]['slug']);
+    }
+
+    /**
+     * Test that hardcoded title type fallback is used when ERNIE fails and no cache exists
+     */
+    public function testHardcodedTitleTypeFallbackUsedWhenErnieFailsAndNoCache(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->getTitleTypesWithCache();
+
+        $this->assertCount(3, $result);
+        $this->assertSame('Main Title', $result[0]['name']);
+        $this->assertSame('Alternative Title', $result[1]['name']);
+        $this->assertSame('Translated Title', $result[2]['name']);
+    }
+
+    // ==================== Title Types: Cache independence Tests ====================
+
+    /**
+     * Test that title types and resource types use independent caches
+     */
+    public function testTitleTypesAndResourceTypesUseIndependentCaches(): void
+    {
+        // Write resource types cache
+        $resourceData = [
+            ['id' => 10, 'name' => 'Dataset', 'description' => null]
+        ];
+        $this->writeTestCache($resourceData);
+
+        // Write title types cache with different data
+        $titleData = [
+            ['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title'],
+            ['id' => 2, 'name' => 'Alternative Title', 'slug' => 'alternative-title']
+        ];
+        $this->writeTitleTypesTestCache($titleData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+
+        // Verify resource types cache is independent
+        $resourceResult = $service->getResourceTypesWithCache();
+        $this->assertCount(1, $resourceResult);
+        $this->assertSame('Dataset', $resourceResult[0]['name']);
+
+        // Verify title types cache is independent
+        $titleResult = $service->getTitleTypesWithCache();
+        $this->assertCount(2, $titleResult);
+        $this->assertSame('Main Title', $titleResult[0]['name']);
+    }
+
+    /**
+     * Test that title types cache status is independent from resource types cache
+     */
+    public function testTitleTypesCacheStatusIsIndependentFromResourceTypes(): void
+    {
+        // Only write resource types cache, not title types
+        $resourceData = [
+            ['id' => 10, 'name' => 'Dataset', 'description' => null]
+        ];
+        $this->writeTestCache($resourceData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+
+        // Resource types cache should exist
+        $resourceStatus = $service->getCacheStatus();
+        $this->assertTrue($resourceStatus['exists']);
+
+        // Title types cache should NOT exist
+        $titleStatus = $service->getTitleTypesCacheStatus();
+        $this->assertFalse($titleStatus['exists']);
+    }
+
+    // ==================== isConfigured() with logging Tests ====================
+
+    /**
+     * Test that isConfigured with logResult logs when configured
+     */
+    public function testIsConfiguredWithLogResultWhenConfigured(): void
+    {
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->isConfigured(logResult: true);
+
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test that isConfigured with logResult logs when not configured
+     */
+    public function testIsConfiguredWithLogResultWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->isConfigured(logResult: true);
+
+        $this->assertFalse($result);
+    }
+
+    // ==================== isCacheFileValid() edge cases ====================
+
+    /**
+     * Test that cache with invalid lastUpdated timestamp is treated as invalid
+     */
+    public function testCacheWithInvalidTimestampIsInvalid(): void
+    {
+        $cache = [
+            'lastUpdated' => 'not-a-valid-date',
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => [['id' => 1, 'name' => 'Test', 'description' => null]]
+        ];
+        file_put_contents($this->testCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getCacheStatus();
+
+        // Cache exists but should be invalid due to unparseable timestamp
+        $this->assertTrue($status['exists']);
+        $this->assertFalse($status['valid']);
+    }
+
+    // ==================== writeCacheFile() edge cases ====================
+
+    /**
+     * Test that writeCacheFile creates directory if needed
+     */
+    public function testWriteCacheCreatesDirectoryIfNeeded(): void
+    {
+        // Create a service with cache file in a non-existent subdirectory
+        $nestedDir = $this->testCacheDir . '/nested/deep';
+        $nestedCacheFile = $nestedDir . '/test_cache.json';
+
+        $this->setGlobalConfig('https://ernie.example.com/', 'test-key');
+        $service = new TestableErnieService($nestedCacheFile, $this->testTitleTypesCacheFile);
+
+        // Write valid data to the nested cache path via the resource types cache
+        $testData = [['id' => 1, 'name' => 'Test', 'description' => null]];
+        // Write to the nested cache file directly (simulating what writeCacheFile does)
+        if (!is_dir($nestedDir)) {
+            mkdir($nestedDir, 0755, true);
+        }
+        $cache = [
+            'lastUpdated' => date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => $testData
+        ];
+        file_put_contents($nestedCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
+
+        // Verify we can read data back via the service
+        $result = $service->getResourceTypesWithCache();
+        $this->assertCount(1, $result);
+        $this->assertSame('Test', $result[0]['name']);
+
+        // Clean up nested directory
+        if (file_exists($nestedCacheFile)) {
+            unlink($nestedCacheFile);
+        }
+        if (is_dir($nestedDir)) {
+            rmdir($nestedDir);
+        }
+        $parentDir = dirname($nestedDir);
+        if (is_dir($parentDir)) {
+            rmdir($parentDir);
+        }
+    }
+
+    // ==================== getCacheFileStatus() edge cases ====================
+
+    /**
+     * Test getCacheStatus with empty data array
+     */
+    public function testGetCacheStatusWithEmptyData(): void
+    {
+        $cache = [
+            'lastUpdated' => date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => []
+        ];
+        file_put_contents($this->testCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    /**
+     * Test getCacheStatus for title types with empty data 
+     */
+    public function testGetTitleTypesCacheStatusWithEmptyData(): void
+    {
+        $cache = [
+            'lastUpdated' => date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => []
+        ];
+        file_put_contents($this->testTitleTypesCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getTitleTypesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    // ==================== TTL with title types cache ====================
+
+    /**
+     * Test that custom TTL is respected for title types cache
+     */
+    public function testCustomTtlIsRespectedForTitleTypesCache(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title']];
+        // 30 minutes ago
+        $thirtyMinutesAgo = date('c', strtotime('-30 minutes'));
+        $this->writeTitleTypesTestCache($testData, $thirtyMinutesAgo);
+
+        // Use 1 hour TTL - cache should be valid
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key', 3600);
+        $status = $service->getTitleTypesCacheStatus();
+        $this->assertTrue($status['valid']);
+
+        // Use 10 minute TTL - cache should be invalid
+        $service2 = $this->createTestableService('https://ernie.example.com/', 'test-key', 600);
+        $status2 = $service2->getTitleTypesCacheStatus();
+        $this->assertFalse($status2['valid']);
+    }
+
+    // ==================== readCacheFile() edge cases ====================
+
+    /**
+     * Test that title types cache with invalid JSON returns fallback
+     */
+    public function testTitleTypesCacheHandlesInvalidJsonGracefully(): void
+    {
+        // Write invalid JSON to title types cache file
+        file_put_contents($this->testTitleTypesCacheFile, 'not valid json {{{');
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getTitleTypesWithCache();
+
+        // Should return array (either empty or fallback)
+        $this->assertIsArray($result);
+    }
+
+    /**
+     * Test that title types cache handles missing data key
+     */
+    public function testTitleTypesCacheHandlesMissingDataKey(): void
+    {
+        $cache = ['lastUpdated' => date('c'), 'ttl' => 21600];
+        file_put_contents($this->testTitleTypesCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getTitleTypesWithCache();
+
+        // Should return array (cache data is empty, so fallback)
+        $this->assertIsArray($result);
+    }
+
+    // ==================== formatAge() for title types ====================
+
+    /**
+     * Test formatAge for title types cache with hours
+     */
+    public function testFormatAgeForTitleTypesCacheHours(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title']];
+        $twoHoursAgo = date('c', strtotime('-2 hours'));
+        $this->writeTitleTypesTestCache($testData, $twoHoursAgo);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getTitleTypesCacheStatus();
+
+        $this->assertStringContainsString('hour', $status['ageFormatted']);
+    }
+
+    /**
+     * Test formatAge for title types cache with seconds
+     */
+    public function testFormatAgeForTitleTypesCacheSeconds(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title']];
+        $recent = date('c', strtotime('-15 seconds'));
+        $this->writeTitleTypesTestCache($testData, $recent);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getTitleTypesCacheStatus();
+
+        $this->assertStringContainsString('seconds', $status['ageFormatted']);
+    }
+
+    // ==================== Constructor TTL fallback ====================
+
+    /**
+     * Test that constructor falls back to ernieResourceTypesCacheTtl when ernieCacheTtl is null
+     */
+    public function testConstructorFallsBackToLegacyTtlVariable(): void
+    {
+        global $ernieUrl, $ernieApiKey, $ernieCacheTtl, $ernieResourceTypesCacheTtl;
+        $ernieUrl = 'https://ernie.example.com/';
+        $ernieApiKey = 'test-key';
+        $ernieCacheTtl = null;
+        $ernieResourceTypesCacheTtl = 7200; // 2 hours
+
+        $service = new TestableErnieService($this->testCacheFile, $this->testTitleTypesCacheFile, $this->testLanguagesCacheFile);
+
+        // Write cache that is 3 hours old
+        $testData = [['id' => 1, 'name' => 'Test', 'description' => null]];
+        $threeHoursAgo = date('c', strtotime('-3 hours'));
+        $this->writeTestCache($testData, $threeHoursAgo);
+
+        $status = $service->getCacheStatus();
+        // With 2 hour TTL, 3 hour old cache should be invalid
+        $this->assertFalse($status['valid']);
+
+        // Restore
+        $ernieCacheTtl = 21600;
+        $ernieResourceTypesCacheTtl = 21600;
+    }
+
+    // ==================== Languages: getLanguagesCacheStatus() Tests ====================
+
+    /**
+     * Test getLanguagesCacheStatus when cache doesn't exist
+     */
+    public function testGetLanguagesCacheStatusWhenCacheDoesNotExist(): void
+    {
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getLanguagesCacheStatus();
+
+        $this->assertFalse($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertNull($status['lastUpdated']);
+        $this->assertNull($status['age']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    /**
+     * Test getLanguagesCacheStatus when cache exists and is valid
+     */
+    public function testGetLanguagesCacheStatusWhenCacheExistsAndValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'English', 'code' => 'en'],
+            ['id' => 2, 'name' => 'German', 'code' => 'de']
+        ];
+        $this->writeLanguagesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getLanguagesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertNotNull($status['lastUpdated']);
+        $this->assertIsInt($status['age']);
+        $this->assertSame(2, $status['itemCount']);
+        $this->assertArrayHasKey('ageFormatted', $status);
+        $this->assertArrayHasKey('ttl', $status);
+    }
+
+    /**
+     * Test getLanguagesCacheStatus when cache exists but is expired
+     */
+    public function testGetLanguagesCacheStatusWhenCacheExpired(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'English', 'code' => 'en']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeLanguagesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getLanguagesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertSame(1, $status['itemCount']);
+    }
+
+    // ==================== Languages: getLanguagesWithCache() Tests ====================
+
+    /**
+     * Test that getLanguagesWithCache returns hardcoded fallback when not configured and no cache
+     */
+    public function testGetLanguagesWithCacheReturnsHardcodedFallbackWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getLanguagesWithCache();
+
+        $this->assertIsArray($result);
+        $this->assertCount(2, $result);
+        $this->assertSame('English', $result[0]['name']);
+        $this->assertSame('German', $result[1]['name']);
+    }
+
+    /**
+     * Test that getLanguagesWithCache returns cached data when cache is valid
+     */
+    public function testGetLanguagesWithCacheReturnsCachedDataWhenValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'English', 'code' => 'en'],
+            ['id' => 2, 'name' => 'German', 'code' => 'de'],
+            ['id' => 3, 'name' => 'French', 'code' => 'fr']
+        ];
+        $this->writeLanguagesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getLanguagesWithCache();
+
+        $this->assertCount(3, $result);
+        $this->assertSame('English', $result[0]['name']);
+        $this->assertSame('German', $result[1]['name']);
+        $this->assertSame('French', $result[2]['name']);
+    }
+
+    /**
+     * Test that getLanguagesWithCache returns stale cache when ERNIE unavailable
+     */
+    public function testGetLanguagesWithCacheReturnsStaleWhenErnieUnavailable(): void
+    {
+        $testData = [
+            ['id' => 5, 'name' => 'Spanish', 'code' => 'es']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeLanguagesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://invalid-url-that-does-not-exist.local/', 'test-key');
+        $result = $service->getLanguagesWithCache();
+
+        $this->assertCount(1, $result);
+        $this->assertSame('Spanish', $result[0]['name']);
+    }
+
+    // ==================== Languages: fetchLanguages() Tests ====================
+
+    /**
+     * Test fetchLanguages returns null when not configured
+     */
+    public function testFetchLanguagesReturnsNullWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->fetchLanguages();
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * Test fetchLanguages returns null on invalid URL
+     */
+    public function testFetchLanguagesReturnsNullOnInvalidUrl(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->fetchLanguages();
+
+        $this->assertNull($result);
+    }
+
+    // ==================== Languages: refreshLanguagesCache() Tests ====================
+
+    /**
+     * Test refreshLanguagesCache returns false when not configured
+     */
+    public function testRefreshLanguagesCacheReturnsFalseWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->refreshLanguagesCache();
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test refreshLanguagesCache returns false when ERNIE unavailable
+     */
+    public function testRefreshLanguagesCacheReturnsFalseWhenErnieUnavailable(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->refreshLanguagesCache();
+
+        $this->assertFalse($result);
+    }
+
+    // ==================== Languages: Hardcoded Fallback Tests ====================
+
+    /**
+     * Test that hardcoded language fallback contains English and German
+     */
+    public function testHardcodedLanguageFallbackContainsExpectedLanguages(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getLanguagesWithCache();
+
+        $this->assertCount(2, $result);
+
+        // Verify English
+        $this->assertSame(1, $result[0]['id']);
+        $this->assertSame('English', $result[0]['name']);
+        $this->assertSame('en', $result[0]['code']);
+
+        // Verify German
+        $this->assertSame(2, $result[1]['id']);
+        $this->assertSame('German', $result[1]['name']);
+        $this->assertSame('de', $result[1]['code']);
+    }
+
+    /**
+     * Test that hardcoded language fallback is used when ERNIE fails and no cache exists
+     */
+    public function testHardcodedLanguageFallbackUsedWhenErnieFailsAndNoCache(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->getLanguagesWithCache();
+
+        $this->assertCount(2, $result);
+        $this->assertSame('English', $result[0]['name']);
+        $this->assertSame('German', $result[1]['name']);
+    }
+
+    // ==================== Languages: Cache independence Tests ====================
+
+    /**
+     * Test that languages, title types and resource types use independent caches
+     */
+    public function testLanguagesCacheIsIndependentFromOtherCaches(): void
+    {
+        // Write resource types cache
+        $resourceData = [
+            ['id' => 10, 'name' => 'Dataset', 'description' => null]
+        ];
+        $this->writeTestCache($resourceData);
+
+        // Write title types cache
+        $titleData = [
+            ['id' => 1, 'name' => 'Main Title', 'slug' => 'main-title']
+        ];
+        $this->writeTitleTypesTestCache($titleData);
+
+        // Write languages cache with different data
+        $languageData = [
+            ['id' => 1, 'name' => 'English', 'code' => 'en'],
+            ['id' => 2, 'name' => 'German', 'code' => 'de'],
+            ['id' => 3, 'name' => 'French', 'code' => 'fr']
+        ];
+        $this->writeLanguagesTestCache($languageData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+
+        // Verify all caches are independent
+        $resourceResult = $service->getResourceTypesWithCache();
+        $this->assertCount(1, $resourceResult);
+        $this->assertSame('Dataset', $resourceResult[0]['name']);
+
+        $titleResult = $service->getTitleTypesWithCache();
+        $this->assertCount(1, $titleResult);
+        $this->assertSame('Main Title', $titleResult[0]['name']);
+
+        $languageResult = $service->getLanguagesWithCache();
+        $this->assertCount(3, $languageResult);
+        $this->assertSame('English', $languageResult[0]['name']);
+    }
+
+    /**
+     * Test that languages cache status is independent from other caches
+     */
+    public function testLanguagesCacheStatusIsIndependentFromOtherCaches(): void
+    {
+        // Only write resource types cache, not languages
+        $resourceData = [
+            ['id' => 10, 'name' => 'Dataset', 'description' => null]
+        ];
+        $this->writeTestCache($resourceData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+
+        // Resource types cache should exist
+        $resourceStatus = $service->getCacheStatus();
+        $this->assertTrue($resourceStatus['exists']);
+
+        // Languages cache should NOT exist
+        $languagesStatus = $service->getLanguagesCacheStatus();
+        $this->assertFalse($languagesStatus['exists']);
+    }
+
+    // ==================== Languages: TTL Tests ====================
+
+    /**
+     * Test that custom TTL is respected for languages cache
+     */
+    public function testCustomTtlIsRespectedForLanguagesCache(): void
+    {
+        $testData = [['id' => 1, 'name' => 'English', 'code' => 'en']];
+        $thirtyMinutesAgo = date('c', strtotime('-30 minutes'));
+        $this->writeLanguagesTestCache($testData, $thirtyMinutesAgo);
+
+        // Use 1 hour TTL - cache should be valid
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key', 3600);
+        $status = $service->getLanguagesCacheStatus();
+        $this->assertTrue($status['valid']);
+
+        // Use 10 minute TTL - cache should be invalid
+        $service2 = $this->createTestableService('https://ernie.example.com/', 'test-key', 600);
+        $status2 = $service2->getLanguagesCacheStatus();
+        $this->assertFalse($status2['valid']);
+    }
+
+    // ==================== Languages: Cache edge cases ====================
+
+    /**
+     * Test that languages cache with invalid JSON returns fallback
+     */
+    public function testLanguagesCacheHandlesInvalidJsonGracefully(): void
+    {
+        file_put_contents($this->testLanguagesCacheFile, 'not valid json {{{');
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getLanguagesWithCache();
+
+        $this->assertIsArray($result);
+    }
+
+    /**
+     * Test that languages cache handles missing data key
+     */
+    public function testLanguagesCacheHandlesMissingDataKey(): void
+    {
+        $cache = ['lastUpdated' => date('c'), 'ttl' => 21600];
+        file_put_contents($this->testLanguagesCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getLanguagesWithCache();
+
+        $this->assertIsArray($result);
+    }
+
+    /**
+     * Test getLanguagesCacheStatus with empty data
+     */
+    public function testGetLanguagesCacheStatusWithEmptyData(): void
+    {
+        $cache = [
+            'lastUpdated' => date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => []
+        ];
+        file_put_contents($this->testLanguagesCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getLanguagesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertSame(0, $status['itemCount']);
     }
 }
 

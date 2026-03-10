@@ -157,16 +157,14 @@ function setupResourceTypeDropdown() {
     method: "GET",
     dataType: "json",
     success: function (data) {
-      select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Choose...",
-          "data-translate": "general.choose",
-        })
-      );
+      select.empty();
+      addPlaceholder(select, true);
 
       if (Array.isArray(data)) {
-        data.forEach(function (type) {
+        const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
+        const filteredData = filterDataByGEM(data, 'resourceType', isGEM);
+
+        filteredData.forEach(function (type) {
           select.append(
             $("<option>", {
               value: type.id,
@@ -208,16 +206,14 @@ function setupLanguageDropdown() {
     method: "GET",
     dataType: "json",
     success: function (data) {
-      select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Choose...",
-          "data-translate": "general.choose",
-        })
-      );
+      select.empty();
+      addPlaceholder(select, true);
 
       if (Array.isArray(data)) {
-        data.forEach(function (lang) {
+        const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
+        const filteredData = filterDataByGEM(data, 'language', isGEM);
+
+        filteredData.forEach(function (lang) {
           select.append(
             $("<option>", {
               value: lang.id,
@@ -226,6 +222,12 @@ function setupLanguageDropdown() {
             })
           );
         });
+
+        // Pre-select English (code "en") as default
+        const englishOption = filteredData.find(lang => lang.code === 'en');
+        if (englishOption) {
+          select.val(englishOption.id);
+        }
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
@@ -306,7 +308,134 @@ function setupTitleTypeDropdown() {
   });
 }
 
+/**
+* Populates the select field with ID input-rights-license with options created via an API call.
+* @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
+*/
+function setupLicenseDropdown(isSoftware) {
+  const $select = $("#input-rights-license"); // Defined as $select for consistency
+  const top_licenseId = "CC-BY-4.0"; //Should be the first
+  const copyleftLicenses = ['GPL-3.0-or-later', 'EUPL-1.2']; // Should be the last
+
+  // 1. Determine the endpoint FIRST
+  const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
+
+  // Loading state
+  $select.prop("disabled", true).empty().append(
+    $("<option>", {
+      value: "",
+      text: "Loading...",
+      "data-translate": "general.loading",
+    })
+  );
+
+  // 2. Start the API call
+  $.getJSON(`./api/v2/${endpoint}`, function (data) {
+    let processedLicenses = [];
+
+    // Prepare the options for the dropdown menu
+    if (!isSoftware) {
+      // Non-software
+      processedLicenses = data
+        .filter(item => item.forSoftware === "0") // Only non-software
+        .sort((a, b) => {
+          // Custom Priority: If it's our target ID, move it to the top (-1)
+          if (a.rightsIdentifier === top_licenseId) return -1;
+          if (b.rightsIdentifier === top_licenseId) return 1;
+
+          // Otherwise: Standard alphabetical sort
+          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
+        });
+    } else {
+      // Software
+      processedLicenses = data
+        .filter(item => item.forSoftware === "1") // Only software licenses
+        .sort((a, b) => {
+          const aIsCopyleft = copyleftLicenses.includes(a.rightsIdentifier);
+          const bIsCopyleft = copyleftLicenses.includes(b.rightsIdentifier);
+          
+          if (aIsCopyleft !== bIsCopyleft) {
+            return aIsCopyleft ? 1 : -1; // Non-copyleft first
+          }
+          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
+        });
+    }
+    // Clear existing options
+    $select.empty()
+
+    // Include them into the dropdown
+    processedLicenses.forEach(license => {
+      const option = $("<option>", {
+        value: license.rights_id,
+        text: `${license.text} (${license.rightsIdentifier})`,
+        title: license.description || license.text
+      });
+
+      if (license.rightsIdentifier === "CC-BY-4.0") {
+        option.prop("selected", true);
+      }
+
+      $select.append(option);
+    });
+
+    $select.prop("disabled", false).trigger("change");
+
+  }).fail(function (jqXHR, textStatus, errorThrown) {
+    // Fallback: use CC-BY-4.0 (rights_id=1) if API call fails
+    console.error("Error loading licenses:", textStatus, errorThrown);
+    $select.empty().append(
+      $("<option>", {
+        value: "1",
+        text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
+        selected: true
+      })
+    );
+
+    $select.prop("disabled", false).trigger("change");
+  });
+}
+
+/**
+ * Adds a "Choose..." placeholder option to a dropdown
+ * For ICGEM-specific dropdowns, skips placeholder when ICGEM mode is enabled
+ * @param {jQuery} $select - The jQuery select element
+ * @param {boolean} isGEMDropdown - Whether this is a ICGEM-specific dropdown (skips placeholder if ICGEM enabled)
+ */
+function addPlaceholder($select, isGEMDropdown = false) {
+  const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
+  
+  // For GEM dropdowns, don't add placeholder when GEM is enabled. For others, always add.
+  if (isGEMDropdown && isGEM) return;
+  
+  $select.append(
+    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
+  );
+}
+
+/**
+ * Filters data based on GEM feature flag
+ * @param {Array} data - Array of data objects to filter
+ * @param {string} type - Type of filter: "resourceType" or "language"
+ * @param {boolean} isGEM - Whether ICGEM mode is enabled (see showGGMsProperties flag)
+ * @returns {Array} Filtered data array
+ */
+function filterDataByGEM(data, type, isGEM) {
+  if (!isGEM || !Array.isArray(data)) {
+    return data;
+  }
+
+  switch (type) {
+    case 'resourceType':
+      return data.filter(item => item.resource_type_general === "Dataset");
+    case 'language':
+      return data.filter(item => item.name === "English");
+    default:
+      return data;
+  }
+}
+
 // Make functions available globally (important for tests)
+window.setupLicenseDropdown = setupLicenseDropdown;
 window.setupLanguageDropdown = setupLanguageDropdown;
 window.setupResourceTypeDropdown = setupResourceTypeDropdown;
 window.setupTitleTypeDropdown = setupTitleTypeDropdown;
@@ -464,13 +593,19 @@ function populateTimezoneDropdownWithData(timezones) {
 function populateResourceTypeDropdownWithData(types) {
   const $select = $("#input-resourceinformation-resourcetype");
   if (!$select.length) return;
-
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
-
+    
+  // Always empty to remove "Loading..." option
+  $select.empty();
+  
+  // Handle placeholder logic
+  addPlaceholder($select, true);
+  
   if (Array.isArray(types)) {
-    types.forEach(type => {
+    // Filter data based on GEM flag
+    const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
+    const filteredData = filterDataByGEM(types, 'resourceType', isGEM);
+    
+    filteredData.forEach(type => {
       $select.append(
         $("<option>", {
           value: type.id,
@@ -490,13 +625,19 @@ function populateResourceTypeDropdownWithData(types) {
 function populateLanguageDropdownWithData(languages) {
   const $select = $("#input-resourceinformation-language");
   if (!$select.length) return;
-
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
-
+  
+  // Always empty to remove "Loading..." option
+  $select.empty();
+  
+  // Handle placeholder logic
+  addPlaceholder($select, true);
+  
   if (Array.isArray(languages)) {
-    languages.forEach(lang => {
+    // Filter data based on GEM flag
+    const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
+    const filteredData = filterDataByGEM(languages, 'language', isGEM);
+    
+    filteredData.forEach(lang => {
       $select.append(
         $("<option>", {
           value: lang.id,
@@ -505,6 +646,12 @@ function populateLanguageDropdownWithData(languages) {
         })
       );
     });
+
+    // Pre-select English (code "en") as default
+    const englishOption = filteredData.find(lang => lang.code === 'en');
+    if (englishOption) {
+      $select.val(englishOption.id);
+    }
   }
   $select.prop('disabled', false);
 }
@@ -517,9 +664,8 @@ function populateTitleTypeDropdownWithData(types) {
   const $select = $("#input-resourceinformation-titletype");
   if (!$select.length) return;
 
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
+  $select.empty();
+  addPlaceholder($select);
 
   let mainTitleId = "";
 
@@ -567,9 +713,9 @@ function populateLicenseDropdownWithData(licenses) {
       $select.append($option);
     });
   } else {
-    // Fallback
+    // Fallback: use CC-BY-4.0 (rights_id=1)
     $select.append($("<option>", {
-      value: "CC-BY-4.0",
+      value: "1",
       text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
       selected: true
     }));
@@ -585,9 +731,8 @@ function populateRelationsDropdownWithData(response) {
   const $select = $("#input-relatedwork-relation");
   if (!$select.length) return;
 
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
+  $select.empty();
+  addPlaceholder($select);
 
   if (response && response.relations && response.relations.length > 0) {
     response.relations
@@ -613,9 +758,8 @@ function populateIdentifierTypesDropdownWithData(response) {
   const $select = $("#input-relatedwork-identifiertype");
   if (!$select.length) return;
 
-  $select.empty().append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
-  );
+  $select.empty();
+  addPlaceholder($select);
 
   if (response && response.identifierTypes) {
     response.identifierTypes.forEach(type => {
@@ -639,45 +783,6 @@ $(document).ready(function () {
   // Use parallel initialization for faster page load
   initializeAllDropdownsParallel();
   
-  /**
-  * Populates the select field with ID input-rights-license with options created via an API call.
-  * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
-  */
-  function setupLicenseDropdown(isSoftware) {
-    $("#input-rights-license").empty();
-
-    const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
-    $.getJSON(`./api/v2/${endpoint}`, function (data) {
-      var defaultOptionSet = false;
-
-      $.each(data, function (key, val) {
-        var option = $("<option>", {
-          value: val.rights_id,
-          text: val.text + " (" + val.rightsIdentifier + ")",
-        });
-
-        if (val.rightsIdentifier === "CC-BY-4.0") {
-          option.prop("selected", true);
-          defaultOptionSet = true;
-        }
-
-        $("#input-rights-license").append(option);
-      });
-
-      // Trigger change event to ensure any listeners are notified
-      $("#input-rights-license").trigger("change");
-    }).fail(function (jqXHR, textStatus, errorThrown) {
-      console.error("Fehler beim Laden der Lizenzen:", textStatus, errorThrown);
-      // Fallback: Default-Option hinzufügen
-      $("#input-rights-license").append($("<option>", {
-        value: "CC-BY-4.0",
-        text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
-        selected: true,
-      }));
-      $("#input-rights-license").trigger("change");
-    });
-  }
-
   // Event handler to monitor if the resource type is changed
   // Only reload licenses when user actually selects a resource type (not on initial load)
   $("#input-resourceinformation-resourcetype").change(function () {
@@ -691,9 +796,9 @@ $(document).ready(function () {
 
     // Check if "Software" is selected
     if (selectedResourceType === "Software") {
-      setupLicenseDropdown(true);
+      window.setupLicenseDropdown(true);
     } else {
-      setupLicenseDropdown(false);
+      window.setupLicenseDropdown(false);
     }
   });
 
@@ -1027,6 +1132,8 @@ if (typeof module !== 'undefined' && module.exports) {
     populateLicenseDropdownWithData,
     populateRelationsDropdownWithData,
     populateIdentifierTypesDropdownWithData,
+    addPlaceholder,
+    filterDataByGEM,
     getIdentifierPriority,
     updateIdentifierType,
     debounce,

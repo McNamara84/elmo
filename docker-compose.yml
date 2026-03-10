@@ -27,6 +27,7 @@ services:
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
     depends_on:
       - db
     restart: unless-stopped

@@ -263,6 +263,7 @@ To install them: npm install
   - `$showSpatialTemporalCoverage`: Specifies whether the form group Spatial and Temporal Coverages should be displayed (true/false).
   - `$showRelatedWork`: Specifies whether the form group Related Work should be displayed (true/false).
   - `$showFundingReference`: Specifies whether the form group Funding Reference should be displayed (true/false).
+  - `$showUsedInstruments`: Specifies whether the form group Used Instruments (PID4INST via ERNIE API) should be displayed (true/false).
   - `$showGGMsProperties`: specific for implementation for the ICGEM platform. Specifies whether ICGEM form groups (GGMs Properties and Characteristics of the model) should be displayed (true/false).
 
   ### ERNIE Integration (Bidirectional Communication)
@@ -272,19 +273,21 @@ To install them: npm install
   ```
   ELMO → ERNIE (fetch vocabularies)
   ├─ ELMO GETs: GET https://ernie.../api/v1/resource-types/elmo
+  ├─ ELMO GETs: GET https://ernie.../api/v1/title-types/elmo
   ├─ Header: X-API-KEY: [ERNIE_API_KEY from ELMO's .env]
   └─ ERNIE verifies the key on its side
 
   ELMO ← ERNIE (on-demand cache refresh)
   ├─ ERNIE POSTs: POST /api/v2/admin/cache/resourcetypes/refresh
+  ├─ ERNIE POSTs: POST /api/v2/admin/cache/titletypes/refresh
   ├─ Header: X-API-KEY: [ELMO_API_KEY from ERNIE's config]
   └─ ELMO verifies against $apiKeyElmo in ELMO's .env
   ```
 
   - `$apiKeyElmo`: API key that external services (including ERNIE) use to authenticate with ELMO's admin endpoints. **Direction: ERNIE → ELMO**
-  - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types are fetched from ERNIE instead of the local database.
+  - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types and title types are fetched from ERNIE instead of the local database.
   - `$ernieApiKey`: API key for ELMO to authenticate with the ERNIE service. **Direction: ELMO → ERNIE**
-  - `$ernieResourceTypesCacheTtl`: Cache time-to-live in seconds for ERNIE resource types (default: 21600 = 6 hours). Also determines the automatic refresh interval.
+  - `$ernieCacheTtl`: Cache time-to-live in seconds for all ERNIE data (resource types, title types; default: 21600 = 6 hours). Also determines the automatic refresh interval.
 
 </details>
 
@@ -1140,6 +1143,21 @@ The following relates to ELMO-GEM — the ELMO implementation for the ICGEM plat
   - Occurrence: 0-1
   - The corresponding field in the database is `earth_gravity_constant` in the `GGM_Properties` table.
   - Mapping: mapped to `<earthGravityConstant>` in the XML export
+
+#### Description Types
+
+ICGEM datasets support dual-layer description handling:
+
+- **DataCite Export**: Uses standard types (Abstract, Methods, TechnicalInfo, Other)
+- **ICGEM Metadata**: Preserves all custom types:
+  - Abstract (standard)
+  - General model description (custom ICGEM)
+  - Input data (custom ICGEM)
+  - Processing procedures (custom ICGEM)
+  - Specific features of resulting gravity field (custom ICGEM)
+  - Other (standard)
+
+Custom description types (Input Data, Processing Procedures, Specific Features) are mapped to `Abstract` in DataCite exports to ensure schema compliance, while the full original types are retained in the ICGEM metadata section.
 
 #### Topographic Model Properties
 Concepts specific to models, where model type is topographic masses.

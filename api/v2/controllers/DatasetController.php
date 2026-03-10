@@ -919,13 +919,17 @@ class DatasetController extends ICGEMController
             }
         }
 
-        // Descriptions
+        // Descriptions (only valid DataCite types)
         $descriptions = $this->getDescriptions($connection, $id);
+        $validDescriptionTypes = ['Abstract', 'Methods', 'SeriesInformation', 'TableOfContents', 'TechnicalInfo', 'Other'];
         $descriptionsXml = $xml->addChild('Descriptions');
         foreach ($descriptions as $description) {
-            $descriptionXml = $descriptionsXml->addChild('Description');
-            $descriptionXml->addChild('type', htmlspecialchars($description['type']));
-            $descriptionXml->addChild('description', htmlspecialchars($description['description']));
+            // Only include descriptions with valid DataCite types
+            if (in_array($description['type'], $validDescriptionTypes)) {
+                $descriptionXml = $descriptionsXml->addChild('Description');
+                $descriptionXml->addChild('type', htmlspecialchars($description['type']));
+                $descriptionXml->addChild('description', htmlspecialchars($description['description']));
+            }
         }
 
         // Thesaurus Keywords
@@ -1004,11 +1008,38 @@ class DatasetController extends ICGEMController
             $relatedWorksXml = $xml->addChild('RelatedWorks');
             foreach ($relatedWorks as $work) {
                 $workXml = $relatedWorksXml->addChild('RelatedWork');
-                $workXml->addChild('Identifier', htmlspecialchars($work['Identifier']));
+                $identifier = $work['Identifier'] ?? '';
+                $workXml->addChild(
+                    'Identifier',
+                    htmlspecialchars((string) $identifier, ENT_XML1, 'UTF-8')
+                );
+                $relationName = '';
+                if (isset($work['Relation'])) {
+                    if (is_array($work['Relation'])) {
+                        $relationName = $work['Relation']['name'] ?? '';
+                    } else {
+                        $relationName = $work['Relation'];
+                    }
+                }
                 $relationXml = $workXml->addChild('Relation');
-                $relationXml->addChild('name', htmlspecialchars($work['Relation']['name']));
+                $relationXml->addChild(
+                    'name',
+                    htmlspecialchars((string) $relationName, ENT_XML1, 'UTF-8')
+                );
+                $identifierTypeName = '';
+                if (isset($work['IdentifierType'])) {
+                    if (is_array($work['IdentifierType'])) {
+                        $identifierTypeName = $work['IdentifierType']['name'] ?? '';
+                    } else {
+                        $identifierTypeName = $work['IdentifierType'];
+                    }
+                }
+
                 $identifierTypeXml = $workXml->addChild('IdentifierType');
-                $identifierTypeXml->addChild('name', htmlspecialchars($work['IdentifierType']['name']));
+                $identifierTypeXml->addChild(
+                    'name',
+                    htmlspecialchars((string) $identifierTypeName, ENT_XML1, 'UTF-8')
+                );
             }
         }
 
@@ -1107,6 +1138,9 @@ class DatasetController extends ICGEMController
         // Create XSLT processor, configure it, and perform the transformation
         $proc = new XSLTProcessor;
         $proc->importStyleSheet($xsl);
+        // Pass the contact email as an XSLT parameter
+        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
+        $proc->setParameter('', 'contactEmail', $contactEmail);
         $newXml = $proc->transformToXML($xml);
 
         if ($newXml === false) {

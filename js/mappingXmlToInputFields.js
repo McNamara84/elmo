@@ -1118,11 +1118,17 @@ function processKeywords(xmlDoc, resolver) {
 
 /**
  * Process related identifiers from XML and populate the formgroup Related Works
+ * When showUsedInstruments is active, entries with relationType="IsCollectedBy" are
+ * filtered out and handled by processUsedInstruments() instead.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
 function processRelatedWorks(xmlDoc, resolver) {
   const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  // Collect entries, optionally filtering out instruments
+  const showUsedInstruments = window.ELMO_FEATURES && window.ELMO_FEATURES.showUsedInstruments;
+  let entries = [];
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -1130,25 +1136,83 @@ function processRelatedWorks(xmlDoc, resolver) {
     const identifierType = identifierNode.getAttribute("relatedIdentifierType");
     const identifierValue = identifierNode.textContent;
 
+    // Skip IsCollectedBy entries when Used Instruments feature is active
+    if (showUsedInstruments && relationType === "IsCollectedBy") {
+      continue;
+    }
+
+    entries.push({ relationType, identifierType, identifierValue });
+  }
+
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+
     // Find last row
     const $lastRow = $('input[name="rIdentifier[]"]').last().closest(".row");
 
     // Set values
-    $lastRow.find('input[name="rIdentifier[]"]').val(identifierValue);
-    $lastRow.find('select[name="rIdentifierType[]"]').val(identifierType);
+    $lastRow.find('input[name="rIdentifier[]"]').val(entry.identifierValue);
+    $lastRow.find('select[name="rIdentifierType[]"]').val(entry.identifierType);
     // Match relation by visible text instead of value
     $lastRow
       .find('select[name="relation[]"]:first option')
       .filter(function () {
-        return $(this).text() === relationType; // Match by visible text
+        return $(this).text() === entry.relationType; // Match by visible text
       })
       .prop("selected", true);
 
     // clone row for the next entry, if there is one
-    if (i < identifierNodes.snapshotLength - 1) {
+    if (i < entries.length - 1) {
       // Add Related Work
       $("#button-relatedwork-add").click();
     }
+  }
+}
+
+/**
+ * Process related identifiers with relationType="IsCollectedBy" from XML
+ * and populate the Used Instruments Tagify field.
+ * Only active when the showUsedInstruments feature toggle is enabled.
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processUsedInstruments(xmlDoc, resolver) {
+  if (!window.ELMO_FEATURES || !window.ELMO_FEATURES.showUsedInstruments) {
+    return;
+  }
+
+  const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  const instruments = [];
+
+  for (let i = 0; i < identifierNodes.snapshotLength; i++) {
+    const identifierNode = identifierNodes.snapshotItem(i);
+    const relationType = identifierNode.getAttribute("relationType");
+
+    if (relationType !== "IsCollectedBy") {
+      continue;
+    }
+
+    const pidType = identifierNode.getAttribute("relatedIdentifierType") || "Handle";
+    const pid = identifierNode.textContent.trim();
+
+    instruments.push({
+      pid: pid,
+      pidType: pidType,
+      name: pid, // Use PID as name fallback; Tagify will show the PID
+      instrumentTypes: []
+    });
+  }
+
+  if (instruments.length > 0 && window.usedInstrumentsModule) {
+    // Ensure API data is loaded so Tagify can match instruments
+    window.usedInstrumentsModule.loadInstrumentsFromAPI();
+
+    // Use a short delay to allow API data to potentially load
+    // then add instruments by their PID data
+    setTimeout(function () {
+      window.usedInstrumentsModule.addInstrumentsByData(instruments);
+    }, 500);
   }
 }
 
@@ -1308,6 +1372,8 @@ async function loadXmlToForm(xmlDoc) {
   processKeywords(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
+  // Process Used Instruments (IsCollectedBy entries)
+  processUsedInstruments(xmlDoc, resolver);
   // Process Funders
   processFunders(xmlDoc, resolver);
   // Process Dates
@@ -1337,6 +1403,7 @@ if (typeof module !== 'undefined' && module.exports) {
         populateFormWithContributors,
         parseTemporalData,
         getGeoLocationData,
-        fillSpatialFields
+        fillSpatialFields,
+        processUsedInstruments
     };
 }

@@ -40,7 +40,6 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
 
   test('Help button shows MSL help modal', async ({ page }) => {
     await enableHelp(page);
-    await page.waitForTimeout(500);
 
     // Click help button inside the input group
     await page.locator('[data-help-section-id="help-mslKeywords-keyword"]').click();

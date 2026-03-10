@@ -1,30 +1,3 @@
-$(document).ready(function () {
-  // Alle Optionen klonen und als Variable zwischenspeichern
-  var allOptions = $("#input-rights-license option").clone();
-
-  // Event Handler für Änderungen am Resource Type Select Element
-  $("#input-resourceinformation-resourcetype").change(function () {
-    var selectedResourceType = $("#input-resourceinformation-resourcetype option:selected").text().trim();
-
-    // Prüfung ob "Software" ausgewählt wurde
-    if (selectedResourceType === "Software") {
-      $("#input-rights-license").empty();
-
-      // Filtern der Optionen nach "MIT License" und "Apache License 2.0"
-      allOptions.each(function () {
-        var optionText = $(this).text().trim();
-
-        if (optionText === "MIT License" || optionText === "Apache License 2.0") {
-          $("#input-rights-license").append($(this).clone());
-        }
-      });
-    } else {
-      // Optionen zurücksetzen auf Klon der ursprünglichen Optionen
-      $("#input-rights-license").empty().append(allOptions.clone());
-    }
-  });
-});
-
 /**
  * Normalizes a ROR identifier to include the canonical https scheme.
  * @param {string} rorId - The raw ROR identifier from the ORCID payload.

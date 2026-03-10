@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
     require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
     require_once __DIR__ . '/formgroups/save_relatedwork.php';
+    require_once __DIR__ . '/formgroups/save_usedinstruments.php';
     require_once __DIR__ . '/formgroups/save_fundingreferences.php';
     // ICGEM related formgroups
     require_once __DIR__ . '/formgroups/save_ggms_definition.php';
@@ -106,7 +107,7 @@ function generateAndOutputXml($resource_id)
                     'message' => "Sorry, we encountered an error while generating an XML file with your data:\n\n" .
                     $e->getMessage() . "\n\n" .
                     "Your data has been saved in our system.\n\n" .
-                    "Please contact the data curation team at datapub@gfz.de.\n" .
+                    "Please contact the data curation team at {$GLOBALS['xmlSubmitAddress']}.\n" .
                     "In your Email, make sure to reference this Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
                     "We will be glad to fix the issue and see your data resubmitted.\n\n" .
                     "ELMO team"
@@ -195,6 +196,9 @@ try {
     if ($showRelatedWork) {
         executeSaveFunction('saveRelatedWork', $connection, $_POST, $resource_id);
     }
+    if ($showUsedInstruments) {
+        executeSaveFunction('saveUsedInstruments', $connection, $_POST, $resource_id);
+    }
     if ($showFundingReference) {
         executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);
     }
@@ -233,7 +237,7 @@ try {
         'message' => "Sorry, we encountered an error while saving your data in the database system:\n\n" .
                      $e->getMessage() . "\n\n" .
                      "Your data has NOT been saved in our system. Sorry for the inconvenience.\n\n" .
-                     "Please contact the data curation team at datapub@gfz.de.\n" .
+                     "Please contact the data curation team at {$GLOBALS['xmlSubmitAddress']}.\n" .
                      "In your Email, make sure to reference this Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
                      "We will be glad to fix the issue and see your data resubmitted.\n\n" .
                      "ELMO team"

@@ -79,16 +79,6 @@ describe('autocomplete.js', () => {
     jest.resetAllMocks();
   });
 
-  test('license options filtered based on resource type', () => {
-    $('#input-resourceinformation-resourcetype').val('Software').trigger('change');
-    let options = $('#input-rights-license option').map((i, el) => $(el).text()).get();
-    expect(options).toEqual(['MIT License', 'Apache License 2.0']);
-
-    $('#input-resourceinformation-resourcetype').val('Article').trigger('change');
-    options = $('#input-rights-license option').map((i, el) => $(el).text()).get();
-    expect(options).toEqual(['MIT License', 'Apache License 2.0', 'GPL']);
-  });
-
   test('normalizeRorId utility', () => {
     expect(window.normalizeRorId('https://ror.org/05rrcem69')).toBe('https://ror.org/05rrcem69');
     expect(window.normalizeRorId('05rrcem69')).toBe('https://ror.org/05rrcem69');

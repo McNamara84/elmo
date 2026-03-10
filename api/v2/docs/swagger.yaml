@@ -48,6 +48,8 @@ tags:
     description: Operations for dataset management and export
   - name: drafts
     description: Operations for managing autosave drafts within a user session
+  - name: admin
+    description: Administrative operations for cache management (requires API key)
 paths:
   /update/timezones:
     get:
@@ -562,6 +564,98 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /vocabs/pid4inst/instruments:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get PID4INST instruments
+      description: Retrieve instruments from the PID4INST catalogue (via ERNIE API with caching). Returns a simplified list with only the fields needed by the frontend.
+      operationId: getPid4instInstruments
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pid4instInstrument"
+        "503":
+          description: Instrument data temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/pid4inst/refresh:
+    post:
+      tags:
+        - update
+      summary: Refresh PID4INST instruments cache
+      description: Forces a refresh of the cached PID4INST instrument data from the ERNIE API. Requires API key authentication.
+      operationId: refreshPid4instCache
+      parameters:
+        - name: X-API-KEY
+          in: header
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        "200":
+          description: Cache refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "PID4INST instruments cache refreshed successfully."
+        "401":
+          description: Unauthorized - Invalid or missing API key
+        "500":
+          description: Failed to refresh cache
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/pid4inst/status:
+    get:
+      tags:
+        - update
+      summary: Get PID4INST cache status
+      description: Returns the current status of the PID4INST instruments cache including validity, age, and entry count. Requires API key authentication.
+      operationId: getPid4instCacheStatus
+      parameters:
+        - name: X-API-KEY
+          in: header
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        "200":
+          description: Cache status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exists:
+                    type: boolean
+                  valid:
+                    type: boolean
+                  age_seconds:
+                    type: integer
+                    nullable: true
+                  ttl_seconds:
+                    type: integer
+                  entry_count:
+                    type: integer
+                    nullable: true
+        "401":
+          description: Unauthorized - Invalid or missing API key
   /vocabs/resourcetypes:
     get:
       tags:
@@ -626,7 +720,7 @@ paths:
         - vocabularies
       security: []
       summary: Get title types
-      description: Retrieve all available title types
+      description: Retrieve all available title types. When ERNIE is configured, types are fetched from ERNIE with caching and synced to the local database. Falls back to the local database if ERNIE is unavailable.
       operationId: getTitleTypes
       responses:
         "200":
@@ -1195,6 +1289,110 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /admin/cache/titletypes/refresh:
+    post:
+      tags:
+        - admin
+      summary: Refresh title types cache
+      description: Forces a refresh of the ERNIE title types cache and syncs the data to the local database. Requires API key authentication. This endpoint is typically triggered by ERNIE after title type configuration changes.
+      operationId: refreshTitleTypesCache
+      responses:
+        "200":
+          description: Cache refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Title types cache refreshed successfully"
+                  itemCount:
+                    type: integer
+                    example: 5
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                    example: "2026-02-27T10:30:00+00:00"
+        "400":
+          description: ERNIE service is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Failed to fetch data from ERNIE
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/titletypes/status:
+    get:
+      tags:
+        - admin
+      summary: Get title types cache status
+      description: Returns the current status of the ERNIE title types cache including validity, age, and item count.
+      operationId: getTitleTypesCacheStatus
+      responses:
+        "200":
+          description: Cache status returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured:
+                    type: boolean
+                    description: Whether ERNIE service is configured
+                    example: true
+                  cache:
+                    type: object
+                    properties:
+                      exists:
+                        type: boolean
+                        example: true
+                      valid:
+                        type: boolean
+                        example: true
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        example: "2026-02-27T10:30:00+00:00"
+                      age:
+                        type: integer
+                        description: Cache age in seconds
+                        example: 3600
+                      ageFormatted:
+                        type: string
+                        example: "1 hour 0 minutes"
+                      ttl:
+                        type: integer
+                        description: Cache TTL in seconds
+                        example: 21600
+                      itemCount:
+                        type: integer
+                        example: 5
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -1640,12 +1838,39 @@ components:
       properties:
         id:
           type: integer
-          description: Unique identifier of the title type
+          description: Unique identifier of the title type (local database ID)
           example: 1
         name:
           type: string
           description: Name of the title type
-          example: "TranslatedTitle"
+          example: "Main Title"
       required:
         - id
         - name
+    Pid4instInstrument:
+      type: object
+      description: A scientific instrument from the PID4INST catalogue
+      properties:
+        pid:
+          type: string
+          description: Persistent identifier (Handle) of the instrument
+          example: "21.11157/a9250866-bbec-4542-86b3-a5f78c0c6922"
+        pidType:
+          type: string
+          description: Type of the persistent identifier
+          example: "Handle"
+        name:
+          type: string
+          description: Name of the instrument
+          example: "MFC_001000_02"
+        instrumentTypes:
+          type: array
+          description: List of instrument type classifications
+          items:
+            type: string
+          example: ["Mass flow controller"]
+      required:
+        - pid
+        - pidType
+        - name
+        - instrumentTypes

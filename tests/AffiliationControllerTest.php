@@ -1,6 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
+
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../api/v2/controllers/AffiliationController.php';
 
@@ -9,7 +14,8 @@ require_once __DIR__ . '/../api/v2/controllers/AffiliationController.php';
  * 
  * Tests the server-side affiliation search functionality
  */
-class AffiliationControllerTest extends \PHPUnit\Framework\TestCase
+#[CoversClass(\AffiliationController::class)]
+final class AffiliationControllerTest extends TestCase
 {
     private \AffiliationController $controller;
     private string $testJsonPath;
@@ -57,7 +63,6 @@ class AffiliationControllerTest extends \PHPUnit\Framework\TestCase
         // Use reflection to set the private cacheFile property
         $reflection = new \ReflectionClass($this->controller);
         $property = $reflection->getProperty('cacheFile');
-        $property->setAccessible(true);
         $property->setValue($this->controller, $this->testJsonPath);
     }
 
@@ -104,8 +109,8 @@ class AffiliationControllerTest extends \PHPUnit\Framework\TestCase
         $results = $this->captureSearchOutput('Test University');
         
         $this->assertNotEmpty($results);
-        $this->assertEquals('Test University', $results[0]['name']);
-        $this->assertEquals('https://ror.org/012345678', $results[0]['id']);
+        $this->assertSame('Test University', $results[0]['name']);
+        $this->assertSame('https://ror.org/012345678', $results[0]['id']);
     }
 
     public function testSearchFindsByAlternativeName(): void
@@ -113,7 +118,7 @@ class AffiliationControllerTest extends \PHPUnit\Framework\TestCase
         $results = $this->captureSearchOutput('GFZ Potsdam');
         
         $this->assertNotEmpty($results);
-        $this->assertEquals('GFZ German Research Centre for Geosciences', $results[0]['name']);
+        $this->assertSame('GFZ German Research Centre for Geosciences', $results[0]['name']);
     }
 
     public function testSearchFindsByAbbreviation(): void
@@ -137,7 +142,7 @@ class AffiliationControllerTest extends \PHPUnit\Framework\TestCase
         $results = $this->captureSearchOutput('test university');
         
         $this->assertNotEmpty($results);
-        $this->assertEquals('Test University', $results[0]['name']);
+        $this->assertSame('Test University', $results[0]['name']);
     }
 
     public function testSearchReturnsMultipleMatches(): void
@@ -152,7 +157,7 @@ class AffiliationControllerTest extends \PHPUnit\Framework\TestCase
         $results = $this->captureSearchOutput('Test University');
         
         // Exact match should be first
-        $this->assertEquals('Test University', $results[0]['name']);
+        $this->assertSame('Test University', $results[0]['name']);
     }
 
     public function testSearchRespectsLimit(): void
@@ -205,7 +210,6 @@ class AffiliationControllerTest extends \PHPUnit\Framework\TestCase
         $controller = new \AffiliationController();
         $reflection = new \ReflectionClass($controller);
         $property = $reflection->getProperty('cacheFile');
-        $property->setAccessible(true);
         $property->setValue($controller, $this->testJsonPath);
         
         $_GET['q'] = 'Test';

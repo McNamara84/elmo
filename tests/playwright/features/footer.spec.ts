@@ -2,8 +2,11 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Footer Tests', () => {
 
+  test.beforeEach(async ({ page }) => {
+    await page.goto('', { waitUntil: 'domcontentloaded' });
+  });
+
   test('footer contains all expected elements', async ({ page }) => {
-    await page.goto('');
 
     const footer = page.locator('.footer-info-nav');
     await expect(footer).toBeVisible();
@@ -26,7 +29,6 @@ test.describe('Footer Tests', () => {
   });
 
   test('Footer links are clickable', async ({ page }) => {
-    await page.goto('');
 
     const legalNotice = page.locator('#buttonLegalNotice');
     const privacyPolicy = page.locator('#buttonPrivacy');
@@ -43,22 +45,17 @@ test.describe('Footer Tests', () => {
     await elmoGuide.click();
   });
 
-  test('Verify legal notice button opens correct link', async ({ page }) => {
-    await page.goto('');
+  test('Verify legal notice button opens correct link', async ({ page, context }) => {
+
     
     const legalNoticeButton = page.locator('#buttonLegalNotice');
     
-    const pagePromise = page.context().waitForEvent('page');
-    await legalNoticeButton.click();
-    const legalNoticePage = await pagePromise;
-    
-    await legalNoticePage.waitForLoadState('domcontentloaded');
-    await expect(legalNoticePage).toHaveURL(/legal-notice/);
-    await legalNoticePage.close();
+    // For external links, we verify the href attribute instead of navigating
+    await expect(legalNoticeButton).toHaveAttribute('href', /https:\/\/dataservices\.gfz\.de.*legal-notice/);
+    await expect(legalNoticeButton).toHaveAttribute('target', '_blank');
   });
 
   test('Verify privacy policy button opens correct link', async ({ page }) => {
-    await page.goto('');
     
     const privacyPolicyButton = page.locator('#buttonPrivacy');
     
@@ -72,7 +69,6 @@ test.describe('Footer Tests', () => {
   });
 
   test('Verify ELMO guide button opens correct link', async ({ page }) => {
-    await page.goto('');
     
     const elmoGuideButton = page.locator('#buttonHelp');
     

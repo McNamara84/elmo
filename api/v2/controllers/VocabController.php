@@ -9,7 +9,9 @@ use EasyRdf\Graph;
 // Set Max Execution Time to 300 seconds
 ini_set('max_execution_time', 300);
 // Include settings.php so that variables are available
-require_once __DIR__ . '/../../../settings.php';
+if (!defined('UNIT_TESTING')) {
+    require_once __DIR__ . '/../../../settings.php';
+}
 
 /**
  * Class VocabController
@@ -29,6 +31,11 @@ class VocabController
     private $mslVocabsUrl;
 
     /**
+     * @var \ErnieService|null Lazy-loaded ErnieService instance
+     */
+    private ?\ErnieService $ernieService = null;
+
+    /**
      * VocabController constructor.
      *
      * Initializes URLs using global variables.
@@ -39,6 +46,20 @@ class VocabController
         global $mslVocabsUrl;
         $this->url = $mslLabsUrl;
         $this->mslVocabsUrl = $mslVocabsUrl;
+    }
+
+    /**
+     * Returns the shared ErnieService instance, creating it on first use
+     *
+     * @return \ErnieService
+     */
+    private function getErnieService(): \ErnieService
+    {
+        if ($this->ernieService === null) {
+            require_once __DIR__ . '/../services/ErnieService.php';
+            $this->ernieService = new \ErnieService();
+        }
+        return $this->ernieService;
     }
 
     /**
@@ -1516,9 +1537,7 @@ class VocabController
     public function getResourceTypes(): void
     {
         try {
-            require_once __DIR__ . '/../services/ErnieService.php';
-
-            $ernieService = new ErnieService();
+            $ernieService = $this->getErnieService();
 
             // Only try ERNIE if it's configured (log configuration status)
             if ($ernieService->isConfigured(logResult: true)) {
@@ -1526,10 +1545,22 @@ class VocabController
 
                 if (!empty($ernieTypes)) {
                     // Sync to local DB for storage purposes
-                    $this->syncResourceTypesToDb($ernieTypes);
+                    $syncItems = array_map(fn($t) => [
+                        'ernie_id' => $t['id'],
+                        'name' => $t['name'],
+                        'description' => $t['description'] ?? null
+                    ], $ernieTypes);
+                    $this->syncErnieToDb('Resource_Type', $syncItems, [
+                        'ernie_id_col' => 'ernie_id',
+                        'name_col' => 'resource_type_general',
+                        'description_col' => 'description'
+                    ]);
 
                     // Return ERNIE data with local IDs
-                    $types = $this->mapErnieToLocalIds($ernieTypes);
+                    $types = $this->mapErnieToLocalIds(
+                        'Resource_Type', $ernieTypes, 'resource_name_id', 'ernie_id',
+                        ['name' => 'resource_type_general', 'description' => 'description']
+                    );
                     error_log("Resource Types: Serving " . count($types) . " types from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($types);
@@ -1584,115 +1615,102 @@ class VocabController
     }
 
     /**
-     * Syncs ERNIE resource types to local database
-     * 
-     * This method ensures that all resource types from ERNIE exist in the local
-     * database with their ernie_id mapping. Existing records are updated,
-     * new records are inserted. Uses a transaction to ensure data consistency.
+     * Updates the given database table with items retrieved from ERNIE
      *
-     * @param array<array{id: int, name: string, description: string|null}> $ernieTypes Resource types from ERNIE
-     * @return bool True if sync was successful, false otherwise
+     * Uses INSERT ... ON DUPLICATE KEY UPDATE (upsert) for efficient syncing.
+     * Both the ernie_id and name columns have UNIQUE constraints, so this
+     * handles three cases atomically:
+     * - New item: INSERT
+     * - Existing by ernie_id: UPDATE name (and description if applicable)
+     * - Existing by name without ernie_id: UPDATE to link ernie_id (migration)
+     *
+     * @param string $dbTable The target database table name
+     * @param array<int, array{ernie_id: int, name: string, description?: string|null}> $items Normalised items to sync
+     * @param array{ernie_id_col: string, name_col: string, description_col?: string|null} $tableStructure Mapping of DB columns
+     * @return bool True if all records were successfully upserted
      */
-    private function syncResourceTypesToDb(array $ernieTypes): bool
+    private function syncErnieToDb(string $dbTable, array $items, array $tableStructure): bool
     {
         global $connection;
 
-        // Start transaction for atomic sync
+        $ernieIdCol = $tableStructure['ernie_id_col'];
+        $nameCol = $tableStructure['name_col'];
+        $descCol = $tableStructure['description_col'] ?? null;
+
         $connection->begin_transaction();
 
         try {
-            foreach ($ernieTypes as $type) {
-                $ernieId = $type['id'];
-                $name = $type['name'];
-                $description = $type['description'];
+            foreach ($items as $item) {
+                $ernieId = $item['ernie_id'];
+                $name = $item['name'];
 
                 if (!$ernieId || !$name) {
                     continue;
                 }
 
-                // First, try to find existing record by ernie_id
-                $stmt = $connection->prepare(
-                    'SELECT resource_name_id FROM Resource_Type WHERE ernie_id = ?'
-                );
-                $stmt->bind_param('i', $ernieId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-
-                if ($result->num_rows > 0) {
-                    // Update existing record by ernie_id
-                    $updateStmt = $connection->prepare(
-                        'UPDATE Resource_Type 
-                         SET resource_type_general = ?, description = ? 
-                         WHERE ernie_id = ?'
-                    );
-                    $updateStmt->bind_param('ssi', $name, $description, $ernieId);
-                    $updateStmt->execute();
-                    continue;
-                }
-
-                // Check if record exists by name (for migrating existing data)
-                $stmt = $connection->prepare(
-                    'SELECT resource_name_id FROM Resource_Type WHERE resource_type_general = ?'
-                );
-                $stmt->bind_param('s', $name);
-                $stmt->execute();
-                $result = $stmt->get_result();
-
-                if ($result->num_rows > 0) {
-                    // Update existing record to add ernie_id
-                    $row = $result->fetch_assoc();
-                    $updateStmt = $connection->prepare(
-                        'UPDATE Resource_Type 
-                         SET ernie_id = ?, description = ? 
-                         WHERE resource_name_id = ?'
-                    );
-                    $updateStmt->bind_param('isi', $ernieId, $description, $row['resource_name_id']);
-                    $updateStmt->execute();
+                if ($descCol !== null) {
+                    $desc = $item['description'] ?? null;
+                    $sql = "INSERT INTO `$dbTable` (`$ernieIdCol`, `$nameCol`, `$descCol`) VALUES (?, ?, ?)
+                            ON DUPLICATE KEY UPDATE
+                            `$nameCol` = VALUES(`$nameCol`),
+                            `$descCol` = VALUES(`$descCol`),
+                            `$ernieIdCol` = VALUES(`$ernieIdCol`)";
+                    $stmt = $connection->prepare($sql);
+                    $stmt->bind_param('iss', $ernieId, $name, $desc);
                 } else {
-                    // Insert new record
-                    $insertStmt = $connection->prepare(
-                        'INSERT INTO Resource_Type (ernie_id, resource_type_general, description) 
-                         VALUES (?, ?, ?)'
-                    );
-                    $insertStmt->bind_param('iss', $ernieId, $name, $description);
-                    $insertStmt->execute();
+                    $sql = "INSERT INTO `$dbTable` (`$ernieIdCol`, `$nameCol`) VALUES (?, ?)
+                            ON DUPLICATE KEY UPDATE
+                            `$nameCol` = VALUES(`$nameCol`),
+                            `$ernieIdCol` = VALUES(`$ernieIdCol`)";
+                    $stmt = $connection->prepare($sql);
+                    $stmt->bind_param('is', $ernieId, $name);
                 }
+
+                $stmt->execute();
             }
 
-            // Commit transaction
             $connection->commit();
             return true;
 
         } catch (\Exception $e) {
-            // Rollback on error
             $connection->rollback();
-            error_log("ERNIE sync failed, rolled back transaction: " . $e->getMessage());
+            error_log("ERNIE sync to $dbTable failed: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Maps ERNIE data to local database IDs
-     * 
+     * Maps ERNIE item data to local database IDs
+     *
      * Transforms ERNIE response format to the format expected by the frontend,
      * using local database IDs for storage compatibility.
      *
-     * @param array<array{id: int, name: string, description: string|null}> $ernieTypes Resource types from ERNIE
-     * @return array<array{id: int|null, resource_type_general: string, description: string}> Mapped resource types
+     * Important: Must be called after syncErnieToDb() to ensure all ERNIE items
+     * have corresponding local database records with mapped ernie_id values.
+     *
+     * @param string $dbTable The database table name
+     * @param array<int, array<string, mixed>> $ernieItems Raw items from ERNIE (each with 'id' key)
+     * @param string $localIdCol Primary key column name in the DB table
+     * @param string $ernieIdCol ERNIE ID column name in the DB table
+     * @param array<string, string> $outputFieldMap Maps ERNIE response keys to output keys (e.g., ['name' => 'resource_type_general'])
+     * @return array<int, array<string, mixed>> Items with local database IDs and mapped field names
      */
-    private function mapErnieToLocalIds(array $ernieTypes): array
-    {
+    private function mapErnieToLocalIds(
+        string $dbTable,
+        array $ernieItems,
+        string $localIdCol,
+        string $ernieIdCol,
+        array $outputFieldMap
+    ): array {
         global $connection;
 
         $result = [];
 
-        foreach ($ernieTypes as $type) {
-            $ernieId = $type['id'];
-            $name = $type['name'];
+        foreach ($ernieItems as $item) {
+            $ernieId = $item['id'];
 
-            // Get local ID
             $stmt = $connection->prepare(
-                'SELECT resource_name_id FROM Resource_Type WHERE ernie_id = ?'
+                "SELECT `$localIdCol` FROM `$dbTable` WHERE `$ernieIdCol` = ?"
             );
             $stmt->bind_param('i', $ernieId);
             $stmt->execute();
@@ -1700,14 +1718,14 @@ class VocabController
 
             $localId = null;
             if ($row = $dbResult->fetch_assoc()) {
-                $localId = (int) $row['resource_name_id'];
+                $localId = (int) $row[$localIdCol];
             }
 
-            $result[] = [
-                'id' => $localId,
-                'resource_type_general' => $name,
-                'description' => $type['description'] ?? ''
-            ];
+            $mapped = ['id' => $localId];
+            foreach ($outputFieldMap as $ernieKey => $outputKey) {
+                $mapped[$outputKey] = $item[$ernieKey] ?? '';
+            }
+            $result[] = $mapped;
         }
 
         return $result;
@@ -1722,14 +1740,355 @@ class VocabController
      */
     public function refreshResourceTypesCache(): void
     {
+        $this->handleCacheRefresh(
+            'refreshCache',
+            'getCacheStatus',
+            'Resource types',
+            function ($ernieService) {
+                $ernieTypes = $ernieService->getResourceTypesWithCache();
+                if (!empty($ernieTypes)) {
+                    $syncItems = array_map(fn($t) => [
+                        'ernie_id' => $t['id'],
+                        'name' => $t['name'],
+                        'description' => $t['description'] ?? null
+                    ], $ernieTypes);
+                    $this->syncErnieToDb('Resource_Type', $syncItems, [
+                        'ernie_id_col' => 'ernie_id',
+                        'name_col' => 'resource_type_general',
+                        'description_col' => 'description'
+                    ]);
+                }
+            }
+        );
+    }
+
+    /**
+     * Gets the status of the ERNIE resource types cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getResourceTypesCacheStatus(): void
+    {
+        $this->handleCacheStatus('getCacheStatus', 'resource types');
+    }
+
+    /**
+     * Retrieves all languages, preferring ERNIE data with local DB fallback
+     *
+     * When ERNIE is configured, fetches languages from ERNIE (with caching),
+     * syncs to local DB, and returns data with local IDs.
+     * Falls back to local database if ERNIE is unavailable.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getLanguages(): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
+
+            if ($ernieService->isConfigured(logResult: true)) {
+                $ernieLanguages = $ernieService->getLanguagesWithCache();
+
+                if (!empty($ernieLanguages)) {
+                    // Sync to local DB via code matching
+                    $this->syncLanguagesToDb($ernieLanguages);
+
+                    // Return with local IDs (mapped via code)
+                    $languages = $this->mapLanguagesByCode($ernieLanguages);
+                    error_log("Languages: Serving " . count($languages) . " languages from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($languages);
+                    return;
+                }
+            }
+
+            // Fallback to local database
+            error_log("Languages: Falling back to local database");
+            $this->getLanguagesFromDb();
+
+        } catch (Exception $e) {
+            error_log("API Error in getLanguages: " . $e->getMessage());
+            $this->getLanguagesFromDb();
+        }
+    }
+
+    /**
+     * Fetches languages directly from local database
+     *
+     * @return void Outputs JSON response directly
+     */
+    private function getLanguagesFromDb(): void
+    {
+        global $connection;
+
+        $stmt = $connection->prepare('SELECT language_id as id, code, name FROM Language ORDER BY name');
+
+        if (!$stmt) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Failed to prepare statement: ' . $connection->error]);
+            return;
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $languages = [];
+        while ($row = $result->fetch_assoc()) {
+            $languages[] = $row;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($languages);
+    }
+
+    /**
+     * Syncs ERNIE language data to the local Language table via code column
+     *
+     * Uses INSERT ... ON DUPLICATE KEY UPDATE on the unique `code` column
+     * to insert new languages or update existing ones.
+     *
+     * @param array<array{id: int, name: string, code: string}> $ernieLanguages Languages from ERNIE
+     * @return void
+     */
+    private function syncLanguagesToDb(array $ernieLanguages): void
+    {
+        global $connection;
+        $connection->begin_transaction();
+
+        try {
+            foreach ($ernieLanguages as $lang) {
+                $code = $lang['code'];
+                $name = $lang['name'];
+
+                if (!$code || !$name) {
+                    continue;
+                }
+
+                $sql = "INSERT INTO `Language` (`code`, `name`) VALUES (?, ?)
+                        ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)";
+                $stmt = $connection->prepare($sql);
+                $stmt->bind_param('ss', $code, $name);
+                $stmt->execute();
+            }
+
+            $connection->commit();
+        } catch (\Exception $e) {
+            $connection->rollback();
+            error_log("ERNIE language sync failed: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Maps ERNIE language data to local database IDs via the code column
+     *
+     * Looks up the local language_id for each ERNIE language by its unique code,
+     * returning data in the format expected by the frontend.
+     *
+     * @param array<array{id: int, name: string, code: string}> $ernieLanguages Languages from ERNIE
+     * @return array<array{id: int|null, name: string, code: string}> Languages with local IDs
+     */
+    private function mapLanguagesByCode(array $ernieLanguages): array
+    {
+        global $connection;
+
+        $result = [];
+
+        foreach ($ernieLanguages as $lang) {
+            $code = $lang['code'];
+
+            $stmt = $connection->prepare("SELECT language_id FROM Language WHERE code = ?");
+            $stmt->bind_param('s', $code);
+            $stmt->execute();
+            $dbResult = $stmt->get_result();
+
+            $localId = null;
+            if ($row = $dbResult->fetch_assoc()) {
+                $localId = (int) $row['language_id'];
+            }
+
+            $result[] = [
+                'id' => $localId,
+                'name' => $lang['name'],
+                'code' => $code
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Retrieves all title types, preferring ERNIE data with local DB fallback
+     *
+     * When ERNIE is configured, fetches title types from ERNIE (with caching),
+     * syncs to local DB, and returns data with local IDs.
+     * Falls back to local database if ERNIE is unavailable.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getTitleTypes(): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
+
+            // Only try ERNIE if it's configured (log configuration status)
+            if ($ernieService->isConfigured(logResult: true)) {
+                $ernieTypes = $ernieService->getTitleTypesWithCache();
+
+                if (!empty($ernieTypes)) {
+                    // Sync to local DB for storage purposes
+                    $syncItems = array_map(fn($t) => [
+                        'ernie_id' => $t['id'],
+                        'name' => $t['name']
+                    ], $ernieTypes);
+                    $this->syncErnieToDb('Title_Type', $syncItems, [
+                        'ernie_id_col' => 'ernie_id',
+                        'name_col' => 'name'
+                    ]);
+
+                    // Return ERNIE data with local IDs
+                    $types = $this->mapErnieToLocalIds(
+                        'Title_Type', $ernieTypes, 'title_type_id', 'ernie_id',
+                        ['name' => 'name']
+                    );
+                    error_log("Title Types: Serving " . count($types) . " types from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($types);
+                    return;
+                }
+            }
+
+            // Fallback: Load from local database
+            error_log("Title Types: Falling back to local database");
+            $this->getTitleTypesFromDb();
+
+        } catch (Exception $e) {
+            error_log("API Error in getTitleTypes: " . $e->getMessage());
+            // Fallback to local DB on any error
+            error_log("Title Types: Falling back to local database due to error");
+            $this->getTitleTypesFromDb();
+        }
+    }
+
+    /**
+     * Fetches title types directly from local database
+     *
+     * @return void Outputs JSON response directly
+     */
+    private function getTitleTypesFromDb(): void
+    {
+        global $connection;
+
+        $stmt = $connection->prepare(
+            'SELECT title_type_id as id, name FROM Title_Type ORDER BY name'
+        );
+
+        if (!$stmt) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Failed to prepare statement: ' . $connection->error]);
+            return;
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $types = [];
+        while ($row = $result->fetch_assoc()) {
+            $types[] = $row;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($types);
+    }
+
+    /**
+     * Manually refreshes the ERNIE title types cache
+     * 
+     * Requires API key authentication.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshTitleTypesCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshTitleTypesCache',
+            'getTitleTypesCacheStatus',
+            'Title types',
+            function ($ernieService) {
+                $ernieTypes = $ernieService->getTitleTypesWithCache();
+                if (!empty($ernieTypes)) {
+                    $syncItems = array_map(fn($t) => [
+                        'ernie_id' => $t['id'],
+                        'name' => $t['name']
+                    ], $ernieTypes);
+                    $this->syncErnieToDb('Title_Type', $syncItems, [
+                        'ernie_id_col' => 'ernie_id',
+                        'name_col' => 'name'
+                    ]);
+                }
+            }
+        );
+    }
+
+    /**
+     * Gets the status of the ERNIE title types cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getTitleTypesCacheStatus(): void
+    {
+        $this->handleCacheStatus('getTitleTypesCacheStatus', 'title types');
+    }
+
+    // ==================== Generic ERNIE cache handlers ====================
+
+    /**
+     * Generic handler for ERNIE cache status endpoints
+     *
+     * @param string $cacheStatusMethod The ErnieService method to call
+     * @param string $label Human-readable label for error logging
+     * @return void Outputs JSON response directly
+     */
+    private function handleCacheStatus(string $cacheStatusMethod, string $label): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'configured' => $ernieService->isConfigured(),
+                'cache' => $ernieService->$cacheStatusMethod()
+            ]);
+        } catch (Exception $e) {
+            error_log("Error getting $label cache status: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Generic handler for ERNIE cache refresh endpoints
+     *
+     * @param string $refreshMethod ErnieService method to refresh the cache
+     * @param string $statusMethod ErnieService method to get cache status after refresh
+     * @param string $label Human-readable label for messages
+     * @param callable|null $afterRefresh Optional callback executed after successful refresh (e.g. DB sync)
+     * @return void Outputs JSON response directly
+     */
+    private function handleCacheRefresh(
+        string $refreshMethod,
+        string $statusMethod,
+        string $label,
+        ?callable $afterRefresh = null
+    ): void {
         if (!$this->validateApiKey()) {
             return;
         }
 
         try {
-            require_once __DIR__ . '/../services/ErnieService.php';
-
-            $ernieService = new ErnieService();
+            $ernieService = $this->getErnieService();
 
             if (!$ernieService->isConfigured()) {
                 http_response_code(400);
@@ -1741,21 +2100,19 @@ class VocabController
                 return;
             }
 
-            $success = $ernieService->refreshCache();
+            $success = $ernieService->$refreshMethod();
 
             header('Content-Type: application/json');
 
             if ($success) {
-                // Also sync to database
-                $ernieTypes = $ernieService->getResourceTypesWithCache();
-                if (!empty($ernieTypes)) {
-                    $this->syncResourceTypesToDb($ernieTypes);
+                if ($afterRefresh !== null) {
+                    $afterRefresh($ernieService);
                 }
 
-                $status = $ernieService->getCacheStatus();
+                $status = $ernieService->$statusMethod();
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Resource types cache refreshed successfully',
+                    'message' => "$label cache refreshed successfully",
                     'itemCount' => $status['itemCount'],
                     'lastUpdated' => $status['lastUpdated']
                 ]);
@@ -1763,37 +2120,96 @@ class VocabController
                 http_response_code(502);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Failed to fetch data from ERNIE'
+                    'message' => "Failed to fetch $label data from ERNIE"
                 ]);
             }
         } catch (Exception $e) {
-            error_log("Error refreshing resource types cache: " . $e->getMessage());
+            error_log("Error refreshing $label cache: " . $e->getMessage());
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
         }
     }
 
+    // ==================== Languages cache endpoints ====================
+
     /**
-     * Gets the status of the ERNIE resource types cache
+     * Manually refreshes the ERNIE languages cache
      *
      * @return void Outputs JSON response directly
      */
-    public function getResourceTypesCacheStatus(): void
+    public function refreshLanguagesCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshLanguagesCache',
+            'getLanguagesCacheStatus',
+            'Languages',
+            function ($ernieService) {
+                $ernieLanguages = $ernieService->getLanguagesWithCache();
+                if (!empty($ernieLanguages)) {
+                    $this->syncLanguagesToDb($ernieLanguages);
+                }
+            }
+        );
+    }
+
+    /**
+     * Gets the status of the ERNIE languages cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getLanguagesCacheStatus(): void
+    {
+        $this->handleCacheStatus('getLanguagesCacheStatus', 'languages');
+    }
+
+    // ==================== PID4INST Instruments ====================
+
+    /**
+     * Retrieves PID4INST instruments from ERNIE with caching
+     *
+     * Returns a slim representation for frontend autocomplete:
+     * [{pid, pidType, name, instrumentTypes}]
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getPid4instInstruments(): void
     {
         try {
-            require_once __DIR__ . '/../services/ErnieService.php';
+            $ernieService = $this->getErnieService();
 
-            $ernieService = new ErnieService();
+            if ($ernieService->isConfigured(logResult: true)) {
+                $result = $ernieService->getPid4instInstrumentsWithCache();
 
+                if (!empty($result['data'])) {
+                    // Transform to slim format for frontend
+                    $instruments = array_map(function ($item) {
+                        return [
+                            'pid' => $item['pid'] ?? '',
+                            'pidType' => $item['pidType'] ?? 'Handle',
+                            'name' => $item['name'] ?? '',
+                            'instrumentTypes' => $item['instrumentTypes'] ?? []
+                        ];
+                    }, $result['data']);
+
+                    error_log("PID4INST: Serving " . count($instruments) . " instruments from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($instruments);
+                    return;
+                }
+            }
+
+            // No data available
+            error_log("PID4INST: No instruments available");
+            http_response_code(503);
             header('Content-Type: application/json');
             echo json_encode([
-                'configured' => $ernieService->isConfigured(),
-                'cache' => $ernieService->getCacheStatus()
+                'error' => 'PID4INST instruments currently unavailable',
+                'instruments' => []
             ]);
 
         } catch (Exception $e) {
-            error_log("Error getting cache status: " . $e->getMessage());
+            error_log("API Error in getPid4instInstruments: " . $e->getMessage());
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
@@ -1801,70 +2217,26 @@ class VocabController
     }
 
     /**
-     * Retrieves all languages from the database
+     * Manually refreshes the PID4INST instruments cache
      *
      * @return void Outputs JSON response directly
      */
-    public function getLanguages(): void
+    public function refreshPid4instCache(): void
     {
-        try {
-            global $connection;
-            $stmt = $connection->prepare('SELECT language_id as id, code, name FROM Language ORDER BY name');
-
-            if (!$stmt) {
-                throw new Exception("Failed to prepare statement: " . $connection->error);
-            }
-
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            $languages = [];
-            while ($row = $result->fetch_assoc()) {
-                $languages[] = $row;
-            }
-
-            header('Content-Type: application/json');
-            echo json_encode($languages);
-
-        } catch (Exception $e) {
-            error_log("API Error in getLanguages: " . $e->getMessage());
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
-        }
+        $this->handleCacheRefresh(
+            'refreshPid4instCache',
+            'getPid4instCacheStatus',
+            'PID4INST instruments'
+        );
     }
 
     /**
-     * Retrieves all title types from the database
+     * Gets the status of the PID4INST instruments cache
      *
      * @return void Outputs JSON response directly
      */
-    public function getTitleTypes(): void
+    public function getPid4instCacheStatus(): void
     {
-        try {
-            global $connection;
-            $stmt = $connection->prepare('SELECT title_type_id as id, name FROM Title_Type ORDER BY name');
-
-            if (!$stmt) {
-                throw new Exception("Failed to prepare statement: " . $connection->error);
-            }
-
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            $types = [];
-            while ($row = $result->fetch_assoc()) {
-                $types[] = $row;
-            }
-
-            header('Content-Type: application/json');
-            echo json_encode($types);
-
-        } catch (Exception $e) {
-            error_log("API Error in getTitleTypes: " . $e->getMessage());
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
-        }
+        $this->handleCacheStatus('getPid4instCacheStatus', 'PID4INST');
     }
 }

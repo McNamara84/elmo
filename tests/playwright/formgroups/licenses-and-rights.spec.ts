@@ -13,13 +13,10 @@ test.describe("Licenses and Rights", () => {
 
     // Wait for licenses to load
     await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length > 0);
-    const allOptions = licenseSelect.locator("option");
-    const allCount = await allOptions.count();
-    expect(allCount).toBeGreaterThan(4);
 
     // Switch resource type to Software
     const resourceType = page.locator('#input-resourceinformation-resourcetype');
-    await resourceType.selectOption('12');
+    await resourceType.selectOption({ label: 'Software' });
     // Wait for the dropdown to update
     await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length === 4);
 
@@ -33,10 +30,10 @@ test.describe("Licenses and Rights", () => {
 
     // Switch back to Dataset
     await resourceType.selectOption('5');
-    await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length > 4);
+    await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length === 4);
     const datasetOptions = licenseSelect.locator('option');
     const datasetCount = await datasetOptions.count();
-    expect(datasetCount).toBeGreaterThan(4);
+    expect(datasetCount).toBe(4);
     const datasetTexts = await datasetOptions.allTextContents();
     expect(datasetTexts.join(' ')).toContain('Creative Commons Attribution 4.0');
   });
@@ -44,12 +41,27 @@ test.describe("Licenses and Rights", () => {
   test("Help button displays rights help", async ({ page }) => {
     // Ensure help is on
     await enableHelp(page);
-    await page.waitForTimeout(500);
 
     // Open help for rights section
     await page.locator('[data-help-section-id="help-rights"]').click();
     const modal = page.locator(SELECTORS.modals.help);
     await expect(modal).toBeVisible();
     await expect(modal.locator('.modal-body')).toContainText('Licenses and Rights');
+  });
+  test("License dropdown does not contain duplicate entries (#875)", async ({ page }) => {
+    const licenseSelect = page.locator('#input-rights-license');
+    
+    // Wait for licenses to load
+    await page.waitForFunction(() => document.querySelectorAll('#input-rights-license option').length > 0);
+    
+    const options = licenseSelect.locator("option");
+    const allTextContents = await options.allTextContents();
+    
+    // Filter out empty options
+    const validLicenses = allTextContents.filter(text => text.trim() !== '');
+    
+    // Check for duplicates by comparing length with Set (which removes duplicates)
+    const uniqueLicenses = new Set(validLicenses);
+    expect(validLicenses.length).toBe(uniqueLicenses.size);
   });
 });

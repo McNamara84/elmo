@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { navigateToHome, SELECTORS } from '../utils';
+import { navigateToHome, SELECTORS, simulateSubmitValidation } from '../utils';
 
 const apiKey = process.env.GOOGLE_MAPS_API_KEY ?? 'playwright-test-google-maps-key';
 
@@ -419,6 +419,8 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
 
     // Trigger blur to run validation
     await page.locator('#input-stc-timeend').blur();
+
+    await simulateSubmitValidation(page);
 
     // Timezone should now be required when time is provided
     await expect(timezoneSelect).toHaveAttribute('required');

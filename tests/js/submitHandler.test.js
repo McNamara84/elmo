@@ -23,6 +23,10 @@ describe('submitHandler.js', () => {
         <div id="modal-notification-label"></div>
         <div id="modal-notification-body"></div>
       </div>
+      <div id="modal-validation-failed">
+        <h5 id="modal-validation-failed-label"></h5>
+        <p id="modal-validation-failed-save-hint"></p>
+      </div>
       <input id="input-date-created" />
       <input id="input-date-embargo" />
       <div class="embargo-invalid"></div>
@@ -61,6 +65,11 @@ describe('submitHandler.js', () => {
         validationErrorheading: 'Validation',
         validationError: 'Invalid',
         successMessage: 'Dataset successfully transmitted.'
+      },
+      modals: {
+        validationFailed: {
+          saveHint: "Send to <a href='mailto:{email}'>{email}</a>."
+        }
       }
     };
         // Mock applyTranslations function
@@ -291,5 +300,307 @@ describe('submitHandler.js', () => {
     handler.showNotification('danger', 'Error', 'Message');
     body = $('#modal-notification-body').html();
     expect(body).toContain('alert-danger');
+  });
+
+  // ── buildDataUploadHint tests ──────────────────────────────────────
+
+  describe('buildDataUploadHint', () => {
+    beforeEach(() => {
+      global.translations.alerts.dataUploadTitle = 'Upload primary data';
+      global.translations.alerts.dataUploadMessage = 'Only <strong>metadata</strong> submitted.';
+      global.translations.alerts.dataUploadLinkText = 'Upload here';
+      global.translations.alerts.dataUploadFileNameHint = 'Name your file:';
+    });
+
+    test('returns alert-warning block with correct URL and target=_blank', () => {
+      const html = handler.buildDataUploadHint('https://nextcloud.example.com/share', 'My Dataset');
+      expect(html).toContain('alert-warning');
+      expect(html).toContain('href="https://nextcloud.example.com/share"');
+      expect(html).toContain('target="_blank"');
+      expect(html).toContain('rel="noopener noreferrer"');
+    });
+
+    test('displays translated title and message', () => {
+      const html = handler.buildDataUploadHint('https://example.com', 'Test');
+      expect(html).toContain('Upload primary data');
+      expect(html).toContain('Only <strong>metadata</strong> submitted.');
+      expect(html).toContain('Upload here');
+    });
+
+    test('includes main title as filename suggestion when provided', () => {
+      const html = handler.buildDataUploadHint('https://example.com', 'My Important Research Dataset');
+      expect(html).toContain('My Important Research Dataset');
+      expect(html).toContain('Name your file:');
+      expect(html).toContain('font-monospace');
+    });
+
+    test('omits filename suggestion when main title is empty', () => {
+      const html = handler.buildDataUploadHint('https://example.com', '');
+      expect(html).not.toContain('Name your file:');
+      expect(html).not.toContain('font-monospace');
+    });
+
+    test('escapes HTML in main title to prevent XSS', () => {
+      const html = handler.buildDataUploadHint('https://example.com', '<script>alert("xss")</script>');
+      expect(html).not.toContain('<script>');
+      expect(html).toContain('&lt;script&gt;');
+    });
+
+    test('escapes HTML in upload URL to prevent XSS', () => {
+      const html = handler.buildDataUploadHint('https://example.com/"><script>alert(1)</script>', 'Title');
+      expect(html).not.toContain('"><script>');
+      expect(html).toContain('&quot;&gt;&lt;script&gt;');
+    });
+
+    test('handles special characters in title correctly', () => {
+      const html = handler.buildDataUploadHint('https://example.com', 'Müller & Schröder\'s Data "2025"');
+      expect(html).toContain('Müller &amp; Schröder&#39;s Data &quot;2025&quot;');
+    });
+
+    test('renders the upload link as a button with btn-warning class', () => {
+      const html = handler.buildDataUploadHint('https://example.com', 'Test');
+      expect(html).toContain('btn btn-warning btn-sm fw-bold');
+      expect(html).toContain('bi-box-arrow-up-right');
+    });
+
+    test('renders the cloud upload icon in the heading', () => {
+      const html = handler.buildDataUploadHint('https://example.com', 'Test');
+      expect(html).toContain('bi-cloud-arrow-up-fill');
+    });
+  });
+
+  // ── submitViaAjax data upload hint integration tests ───────────────
+
+  describe('submitViaAjax data upload hint', () => {
+    beforeEach(() => {
+      global.translations.alerts.dataUploadTitle = 'Upload primary data';
+      global.translations.alerts.dataUploadMessage = 'Only metadata submitted.';
+      global.translations.alerts.dataUploadLinkText = 'Upload here';
+      global.translations.alerts.dataUploadFileNameHint = 'Name your file:';
+
+      // Add title input and modal-dialog to DOM
+      document.body.innerHTML += `
+        <input id="input-resourceinformation-title" value="My Research Dataset" />
+        <div id="modal-notification">
+          <div class="modal-dialog">
+            <div id="modal-notification-label"></div>
+            <div id="modal-notification-body"></div>
+          </div>
+        </div>
+      `;
+    });
+
+    afterEach(() => {
+      delete window.ELMO_FEATURES;
+    });
+
+    test('appends upload hint when ELMO_FEATURES.dataUploadUrl is set', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: 'https://nextcloud.example.com/upload' };
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        const body = $('#modal-notification-body').html();
+        expect(body).toContain('alert-warning');
+        expect(body).toContain('https://nextcloud.example.com/upload');
+        expect(body).toContain('My Research Dataset');
+        expect(body).toContain('Upload primary data');
+        done();
+      }, 100);
+    });
+
+    test('does not append upload hint when ELMO_FEATURES.dataUploadUrl is empty', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: '' };
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        const body = $('#modal-notification-body').html();
+        expect(body).not.toContain('alert-warning');
+        done();
+      }, 100);
+    });
+
+    test('does not append upload hint when ELMO_FEATURES is undefined', (done) => {
+      delete window.ELMO_FEATURES;
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        const body = $('#modal-notification-body').html();
+        expect(body).not.toContain('alert-warning');
+        done();
+      }, 100);
+    });
+
+    test('adds modal-lg class when upload hint is appended', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: 'https://nextcloud.example.com' };
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        expect($('#modal-notification .modal-dialog').hasClass('modal-lg')).toBe(true);
+        done();
+      }, 100);
+    });
+
+    test('does not add modal-lg class when no upload URL configured', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: '' };
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        expect($('#modal-notification .modal-dialog').hasClass('modal-lg')).toBe(false);
+        done();
+      }, 100);
+    });
+
+    test('does not append upload hint on error response', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: 'https://nextcloud.example.com' };
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: false, message: 'Failed' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        const body = $('#modal-notification-body').html();
+        expect(body).not.toContain('alert-warning');
+        expect(body).toContain('alert-danger');
+        done();
+      }, 100);
+    });
+
+    test('uses empty string for title when title input is empty', (done) => {
+      window.ELMO_FEATURES = { dataUploadUrl: 'https://nextcloud.example.com' };
+      $('#input-resourceinformation-title').val('');
+
+      jest.spyOn($, 'ajax').mockImplementation((config) => {
+        config.success({ success: true, message: 'OK' });
+      });
+
+      handler.submitViaAjax(new FormData());
+
+      setTimeout(() => {
+        const body = $('#modal-notification-body').html();
+        expect(body).toContain('alert-warning');
+        // Should not contain filename hint when title is empty
+        expect(body).not.toContain('Name your file:');
+        done();
+      }, 100);
+    });
+  });
+
+  // ── showValidationFailedModal tests ──────────────────────────────────
+
+  describe('showValidationFailedModal', () => {
+    test('shows the validation-failed modal', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'test@example.com' };
+      handler.showValidationFailedModal();
+      expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    });
+
+    test('replaces {email} placeholder with configured address', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'datapub@gfz.de' };
+      handler.showValidationFailedModal();
+      const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
+      expect(hint).toContain('datapub@gfz.de');
+      expect(hint).not.toContain('{email}');
+    });
+
+    test('creates mailto link with configured address', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'datapub@gfz.de' };
+      handler.showValidationFailedModal();
+      const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
+      expect(hint).toContain('mailto:datapub@gfz.de');
+    });
+
+    test('escapes HTML special characters in email address', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: 'test&"user@gfz.de' };
+      handler.showValidationFailedModal();
+      const hint = document.getElementById('modal-validation-failed-save-hint').innerHTML;
+      // The link text should contain escaped ampersand
+      expect(hint).toContain('test&amp;');
+      expect(hint).toContain('mailto:');
+    });
+
+    test('handles missing ELMO_FEATURES gracefully', () => {
+      delete window.ELMO_FEATURES;
+      handler.showValidationFailedModal();
+      expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    });
+
+    test('handles empty xmlSubmitAddress gracefully', () => {
+      window.ELMO_FEATURES = { xmlSubmitAddress: '' };
+      handler.showValidationFailedModal();
+      expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    });
+
+    afterEach(() => {
+      delete window.ELMO_FEATURES;
+    });
+  });
+
+  // ── handleSubmit validation-failed modal integration test ──────────
+
+  test('handleSubmit shows validation-failed modal instead of notification on invalid form', () => {
+    // Add a required field that is empty so :invalid selector finds it
+    const reqInput = document.createElement('input');
+    reqInput.required = true;
+    reqInput.value = '';
+    handler.$form[0].appendChild(reqInput);
+
+    const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
+    const notifSpy = jest.spyOn(handler, 'showNotification');
+    handler.handleSubmit();
+    expect(modalSpy).toHaveBeenCalled();
+    expect(notifSpy).not.toHaveBeenCalled();
+  });
+
+  test('handleSubmit shows validation-failed modal when contact person is missing', () => {
+    // Temporarily override checkValidity to return true (form fields are valid)
+    // but validateContactPerson will return false (no checkbox checked)
+    handler.$form[0].checkValidity = jest.fn().mockReturnValue(true);
+
+    // Add a dummy element so $firstInvalid[0] is accessible
+    const dummyInput = document.createElement('input');
+    dummyInput.required = true;
+    dummyInput.value = '';
+    handler.$form[0].appendChild(dummyInput);
+
+    // Add a contact person field to DOM but don't check it
+    document.getElementById('group-author').innerHTML = `
+      <div class="row">
+        <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+        <input id="input-contactperson-email-1">
+        <input id="input-author-firstname-1">
+        <input id="input-author-lastname-1">
+      </div>
+    `;
+
+    const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
+    handler.handleSubmit();
+    expect(modalSpy).toHaveBeenCalled();
   });
 });
