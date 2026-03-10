@@ -1622,6 +1622,5 @@ in case it does not work try:
 
 for PHPStan:
 
-
 './vendor/bin/phpstan analyze file-to-analyze.php'
 
