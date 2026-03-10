@@ -867,10 +867,10 @@ class ICGEMController extends DatasetController
         // 6. Create ICGEM globalGravityProduct as child of envelope
         $icgempart = $envelope->addChild(self::ICGEM_NAMESPACE_PREFIX . ':globalGravityProduct', null, self::ICGEM_NAMESPACE_URI);
         
-        // 7. Create gravityFieldModel container (FIRST per XSD sequence)
-        $shm = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':gravityFieldModel', null, self::ICGEM_NAMESPACE_URI);
+        // 7. Create harmonicCoefficientsModel container (FIRST per XSD sequence)
+        $shm = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':harmonicCoefficientsModel', null, self::ICGEM_NAMESPACE_URI);
         
-        // 8. Insert core GGM properties into gravityFieldModel
+        // 8. Insert core GGM properties into harmonicCoefficientsModel
         $this->insertSphericalHarmonicModelProperties($shm, $ggmData);
         $this->insertErrors($shm, $ggmData);
         $this->insertTemporalModelPropertiesIcgem($shm, $temporalProperties);
