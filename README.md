@@ -1620,3 +1620,8 @@ composer test -- --filter SaveAuthorsTest
 in case it does not work try:
 './vendor/bin/phpunit testToRun.php --filter "DataSources"'
 
+for PHPStan:
+
+
+'./vendor/bin/phpstan analyze file-to-analyze.php'
+

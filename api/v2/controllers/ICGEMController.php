@@ -16,30 +16,33 @@ class ICGEMController extends DatasetController
      * 
      * @param mysqli $connection The database connection.
      * @param int $id The resource ID.
-     * @return void
+     * @return string The generated XML as a string.
      */
-    function getResourceAsXml($connection, $id)
+    function getResourceAsXml($connection, $id): string
     {
-        // Call parent implementation
-        parent::getResourceAsXml($connection, $id);
+        // Call parent implementation which returns XML string and saves it
+        $xmlString = parent::getResourceAsXml($connection, $id);
         
-        // Ensure DOI has a value (use placeholder if empty)
-        if ($this->resourceXml) {
-            $doiElement = $this->resourceXml->doi;
-            if (!$doiElement || empty((string)$doiElement)) {
-                if ($doiElement) {
-                    unset($this->resourceXml->doi);
-                }
-                $this->resourceXml->addChild('doi', htmlspecialchars('10.5072/placeholder'));
-                
-                // Save modified XML
-                $xmlPath = $this->generate_xml_path($id);
-                $domXml = dom_import_simplexml($this->resourceXml);
-                $dom = $domXml->ownerDocument;
-                $dom->formatOutput = true;
-                file_put_contents($xmlPath, $dom->saveXML());
-            }
+        // Parse the returned XML string
+        try {
+            $resourceXml = new SimpleXMLElement($xmlString);
+        } catch (Exception $e) {
+            // If parsing fails, return the original
+            return $xmlString;
         }
+        
+        // Check if DOI element exists and is empty
+        $doiElement = $resourceXml->doi;
+        if ($doiElement === null || trim((string)$doiElement) === '') {
+            // Add placeholder DOI
+            if ($doiElement !== null) {
+                unset($resourceXml->doi);
+            }
+            $resourceXml->addChild('doi', htmlspecialchars('10.5072/placeholder'));
+        }
+        
+        // Return the modified XML as string
+        return $resourceXml->asXML();
     }
 
 //----------------------------------DATA RETRIEVAL FUNCTIONS FOR ICGEM XML CREATION---------------------------------    
