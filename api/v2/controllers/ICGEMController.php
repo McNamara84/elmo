@@ -622,11 +622,9 @@ class ICGEMController extends DatasetController
         'forwardModellingDomain',
         'approximation',
         'layerApproach',
-        'descriptionSection',
         'modelDetails',
         'altimetryDetails',
         'elevationTerrainDetails',
-        'inputDataSourceType',
         'densityInformationType',
         'densityInformationDomain'
     ];
