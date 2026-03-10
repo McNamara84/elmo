@@ -2125,5 +2125,105 @@ final class ErnieServiceTest extends TestCase
         $this->assertTrue($status['valid']);
         $this->assertSame(0, $status['itemCount']);
     }
-}
 
+    // ==================== onFreshData callback Tests ====================
+
+    /**
+     * Test that onFreshData callback is NOT called when cache is valid (cache hit)
+     */
+    public function testOnFreshDataCallbackNotCalledOnCacheHit(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Researcher'],
+            ['id' => 2, 'name' => 'Supervisor']
+        ];
+        $this->writeContributorPersonRolesTestCache($testData);
+
+        $callbackInvoked = false;
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getContributorPersonRolesWithCache(
+            function (array $freshData) use (&$callbackInvoked) {
+                $callbackInvoked = true;
+            }
+        );
+
+        $this->assertFalse($callbackInvoked, 'onFreshData callback should NOT be called on cache hit');
+        $this->assertCount(2, $result);
+    }
+
+    /**
+     * Test that onFreshData callback is NOT called when falling back to hardcoded data
+     */
+    public function testOnFreshDataCallbackNotCalledOnHardcodedFallback(): void
+    {
+        $callbackInvoked = false;
+        $service = $this->createTestableService('', '');
+        $result = $service->getContributorPersonRolesWithCache(
+            function (array $freshData) use (&$callbackInvoked) {
+                $callbackInvoked = true;
+            }
+        );
+
+        $this->assertFalse($callbackInvoked, 'onFreshData callback should NOT be called on hardcoded fallback');
+        $this->assertNotEmpty($result);
+    }
+
+    /**
+     * Test that onFreshData callback is NOT called when falling back to stale cache
+     */
+    public function testOnFreshDataCallbackNotCalledOnStaleCache(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Editor']];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeContributorPersonRolesTestCache($testData, $expiredTime);
+
+        $callbackInvoked = false;
+        $service = $this->createTestableService('https://invalid-url-that-does-not-exist.local/', 'test-key');
+        $result = $service->getContributorPersonRolesWithCache(
+            function (array $freshData) use (&$callbackInvoked) {
+                $callbackInvoked = true;
+            }
+        );
+
+        $this->assertFalse($callbackInvoked, 'onFreshData callback should NOT be called on stale cache fallback');
+        $this->assertCount(1, $result);
+    }
+
+    /**
+     * Test that null callback works (backwards compatibility)
+     */
+    public function testNullCallbackWorksForBackwardsCompatibility(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Researcher']];
+        $this->writeContributorPersonRolesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getContributorPersonRolesWithCache(null);
+
+        $this->assertCount(1, $result);
+        $this->assertSame('Researcher', $result[0]['name']);
+    }
+
+    /**
+     * Test that institution roles callback works independently
+     */
+    public function testOnFreshDataCallbackNotCalledOnInstitutionCacheHit(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Distributor'],
+            ['id' => 2, 'name' => 'Hosting Institution']
+        ];
+        $this->writeContributorInstitutionRolesTestCache($testData);
+
+        $callbackInvoked = false;
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getContributorInstitutionRolesWithCache(
+            function (array $freshData) use (&$callbackInvoked) {
+                $callbackInvoked = true;
+            }
+        );
+
+        $this->assertFalse($callbackInvoked, 'onFreshData callback should NOT be called on cache hit');
+        $this->assertCount(2, $result);
+    }
+}

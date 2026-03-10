@@ -386,13 +386,15 @@ class ErnieService
      * @param string $label Human-readable label for logging
      * @param string $cacheFile Path to the cache file
      * @param callable(): array<int, mixed> $fallbackFn Function returning fallback data
+     * @param (callable(array<mixed>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE (not on cache hit)
      * @return array<mixed> Data from cache, ERNIE, or fallback
      */
     private function getDataWithCache(
         string $endpoint,
         string $label,
         string $cacheFile,
-        callable $fallbackFn
+        callable $fallbackFn,
+        ?callable $onFreshData = null
     ): array {
         if ($this->isCacheFileValid($cacheFile)) {
             $cachedData = $this->readCacheFile($cacheFile);
@@ -404,6 +406,9 @@ class ErnieService
         $ernieData = $this->fetchFromErnie($endpoint, $label);
         if ($ernieData !== null && !empty($ernieData)) {
             $this->writeCacheFile($cacheFile, $ernieData);
+            if ($onFreshData !== null) {
+                $onFreshData($ernieData);
+            }
             return $ernieData;
         }
 
@@ -791,19 +796,21 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (triggers onFreshData callback for DB sync)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback as last resort
      * 
+     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE
      * @return array<array{id: int, name: string}> Contributor person roles from cache or ERNIE
      */
-    public function getContributorPersonRolesWithCache(): array
+    public function getContributorPersonRolesWithCache(?callable $onFreshData = null): array
     {
         return $this->getDataWithCache(
             '/api/v1/roles/contributor-persons/elmo',
             'contributor person roles',
             $this->getContributorPersonRolesCacheFile(),
-            [$this, 'getHardcodedContributorPersonRoleFallback']
+            [$this, 'getHardcodedContributorPersonRoleFallback'],
+            $onFreshData
         );
     }
 
@@ -880,19 +887,21 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (triggers onFreshData callback for DB sync)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback as last resort
      * 
+     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE
      * @return array<array{id: int, name: string}> Contributor institution roles from cache or ERNIE
      */
-    public function getContributorInstitutionRolesWithCache(): array
+    public function getContributorInstitutionRolesWithCache(?callable $onFreshData = null): array
     {
         return $this->getDataWithCache(
             '/api/v1/roles/contributor-institutions/elmo',
             'contributor institution roles',
             $this->getContributorInstitutionRolesCacheFile(),
-            [$this, 'getHardcodedContributorInstitutionRoleFallback']
+            [$this, 'getHardcodedContributorInstitutionRoleFallback'],
+            $onFreshData
         );
     }
 

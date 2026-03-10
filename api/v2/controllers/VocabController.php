@@ -554,9 +554,10 @@ class VocabController
     /**
      * Retrieves roles, preferring ERNIE data with local DB fallback
      *
-     * When ERNIE is configured, fetches contributor person and/or institution roles
-     * from ERNIE (with caching), syncs to local DB, and returns data with local IDs.
-     * Falls back to local database if ERNIE is unavailable.
+     * When ERNIE is configured, returns roles from cache (or fresh ERNIE data).
+     * DB sync only occurs when fresh data is fetched from ERNIE (cache miss),
+     * not on every read request. Falls back to local database if ERNIE is
+     * unavailable or not configured.
      *
      * @param array<mixed> $vars An associative array of parameters.
      * @return void
@@ -579,47 +580,50 @@ class VocabController
 
                 // Fetch person roles from ERNIE if requested
                 if (in_array($type, ['all', 'person'], true)) {
-                    $personRoles = $ernieService->getContributorPersonRolesWithCache();
+                    $personRoles = $ernieService->getContributorPersonRolesWithCache(
+                        fn(array $freshData) => $this->syncRolesToDb($freshData, 0)
+                    );
                     if (!empty($personRoles)) {
-                        $this->syncRolesToDb($personRoles, 0);
-                        $allRoles = array_merge($allRoles, $this->mapRolesToLocalFormat($personRoles, 0));
+                        $allRoles = array_merge($allRoles, $this->formatErnieRoles($personRoles, 0));
                     }
                 }
 
                 // Fetch institution roles from ERNIE if requested
                 if (in_array($type, ['all', 'institution'], true)) {
-                    $institutionRoles = $ernieService->getContributorInstitutionRolesWithCache();
+                    $institutionRoles = $ernieService->getContributorInstitutionRolesWithCache(
+                        fn(array $freshData) => $this->syncRolesToDb($freshData, 1)
+                    );
                     if (!empty($institutionRoles)) {
-                        $this->syncRolesToDb($institutionRoles, 1);
-                        $allRoles = array_merge($allRoles, $this->mapRolesToLocalFormat($institutionRoles, 1));
+                        $allRoles = array_merge($allRoles, $this->formatErnieRoles($institutionRoles, 1));
                     }
                 }
 
                 // Fetch roles that apply to both from ERNIE (intersection of person + institution)
                 if ($type === 'both') {
-                    $personRoles = $ernieService->getContributorPersonRolesWithCache();
-                    $institutionRoles = $ernieService->getContributorInstitutionRolesWithCache();
+                    $personRoles = $ernieService->getContributorPersonRolesWithCache(
+                        fn(array $freshData) => $this->syncRolesToDb($freshData, 0)
+                    );
+                    $institutionRoles = $ernieService->getContributorInstitutionRolesWithCache(
+                        fn(array $freshData) => $this->syncRolesToDb($freshData, 1)
+                    );
 
                     if (!empty($personRoles) && !empty($institutionRoles)) {
-                        // Find roles present in both endpoints
                         $personNames = array_column($personRoles, 'name');
                         $institutionNames = array_column($institutionRoles, 'name');
                         $bothNames = array_intersect($personNames, $institutionNames);
 
                         $bothRoles = array_filter($personRoles, fn($r) => in_array($r['name'], $bothNames, true));
                         if (!empty($bothRoles)) {
-                            $this->syncRolesToDb(array_values($bothRoles), 2);
-                            $allRoles = $this->mapRolesToLocalFormat(array_values($bothRoles), 2);
+                            $allRoles = $this->formatErnieRoles(array_values($bothRoles), 2);
                         }
                     }
                 }
 
                 if (!empty($allRoles)) {
-                    // Deduplicate by role_id
+                    // Deduplicate by name
                     $uniqueRoles = [];
                     foreach ($allRoles as $role) {
-                        $key = $role['role_id'] ?? $role['name'];
-                        $uniqueRoles[$key] = $role;
+                        $uniqueRoles[$role['name']] = $role;
                     }
                     $allRoles = array_values($uniqueRoles);
 
@@ -724,44 +728,22 @@ class VocabController
     }
 
     /**
-     * Maps ERNIE role data to the format matching the local Role table structure
+     * Formats ERNIE role data for the API response
      *
-     * Looks up local role_id for each ERNIE role by ernie_id, returning data
-     * in the same format as a direct database query would return.
+     * Transforms ERNIE role format into a consistent response format
+     * without requiring database lookups. The frontend only uses the
+     * 'name' field for Tagify whitelists.
      *
      * @param array<array{id: int, name: string, description?: string|null}> $ernieRoles Roles from ERNIE
-     * @param int $forInstitutions The forInstitutions value
-     * @return array<array{role_id: int|null, ernie_id: int, name: string, description: string|null, forInstitutions: int}> Roles with local IDs
+     * @param int $forInstitutions The forInstitutions value (0=person, 1=institution, 2=both)
+     * @return array<array{name: string, forInstitutions: int}> Formatted roles
      */
-    private function mapRolesToLocalFormat(array $ernieRoles, int $forInstitutions): array
+    private function formatErnieRoles(array $ernieRoles, int $forInstitutions): array
     {
-        global $connection;
-
-        $result = [];
-
-        foreach ($ernieRoles as $role) {
-            $ernieId = $role['id'];
-
-            $stmt = $connection->prepare("SELECT role_id FROM Role WHERE ernie_id = ?");
-            $stmt->bind_param('i', $ernieId);
-            $stmt->execute();
-            $dbResult = $stmt->get_result();
-
-            $localId = null;
-            if ($row = $dbResult->fetch_assoc()) {
-                $localId = (int) $row['role_id'];
-            }
-
-            $result[] = [
-                'role_id' => $localId,
-                'ernie_id' => $ernieId,
-                'name' => $role['name'],
-                'description' => $role['description'] ?? null,
-                'forInstitutions' => $forInstitutions,
-            ];
-        }
-
-        return $result;
+        return array_map(fn($role) => [
+            'name' => $role['name'],
+            'forInstitutions' => $forInstitutions,
+        ], $ernieRoles);
     }
 
     /**

@@ -1935,25 +1935,14 @@ components:
         - children
     Role:
       type: object
+      description: |
+        When served from ERNIE (default), only `name` and `forInstitutions` are returned.
+        When falling back to the local database, additional fields like `role_id` and `ernie_id` may be present.
       properties:
-        role_id:
-          type: integer
-          description: Local database identifier of the role
-          example: 1
-        ernie_id:
-          type: integer
-          nullable: true
-          description: ERNIE API identifier of the role (null for locally-only roles)
-          example: 5
         name:
           type: string
           description: Name of the role
           example: "Data Curator"
-        description:
-          type: string
-          nullable: true
-          description: Optional description of the role
-          example: null
         forInstitutions:
           type: integer
           description: |
@@ -1963,8 +1952,16 @@ components:
             * `2` - for both persons and institutions
           enum: [0, 1, 2]
           example: 0
+        role_id:
+          type: integer
+          description: Local database identifier (only present in DB fallback responses)
+          example: 1
+        ernie_id:
+          type: integer
+          nullable: true
+          description: ERNIE API identifier (only present in DB fallback responses)
+          example: 5
       required:
-        - role_id
         - name
         - forInstitutions
     FreeKeywordsResponse:
