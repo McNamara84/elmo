@@ -300,6 +300,9 @@ class ICGEMController extends DatasetController
             if (!empty($ggmData['product_type'])) {
                 $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':productType', $this->prepare($ggmData['product_type'], 'productType'), self::ICGEM_NAMESPACE_URI);
             }
+            if (!empty($ggmData['celestial_body'])) {
+                $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':celestialBody', $this->prepare($ggmData['celestial_body'], 'celestialBody'), self::ICGEM_NAMESPACE_URI);
+            }
             if (!empty($ggmData['file_format_name'])) {
                 $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':fileFormat', $this->prepare($ggmData['file_format_name'], 'fileFormat'), self::ICGEM_NAMESPACE_URI);
             }
@@ -376,6 +379,9 @@ class ICGEMController extends DatasetController
                         }
                         if (!empty($dataSource['S_scheme_name'])) {
                             $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteSchemeName', $this->prepare($dataSource['S_scheme_name'], 'satelliteSchemeName'), self::ICGEM_NAMESPACE_URI);
+                        }
+                        if (!empty($dataSource['S_scheme_uri'])) {
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':satelliteSchemeUri', $this->prepare($dataSource['S_scheme_uri'], 'satelliteSchemeUri'), self::ICGEM_NAMESPACE_URI);
                         }
                         break;
                     
@@ -584,6 +590,9 @@ class ICGEMController extends DatasetController
                 }
                 if (!empty($parameter['reciprocal_flattening'])) {
                     $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':reciprocalFlattening', $this->prepare($parameter['reciprocal_flattening'], 'reciprocalFlattening'), self::ICGEM_NAMESPACE_URI);
+                }
+                if (!empty($parameter['excentricity'])) {
+                    $epElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':eccentricity', $this->prepare($parameter['excentricity'], 'eccentricity'), self::ICGEM_NAMESPACE_URI);
                 }
             }
         }
