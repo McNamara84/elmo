@@ -107,4 +107,25 @@ describe('freekeywordTags.js', () => {
     });
     warnSpy.mockRestore();
   });
+  
+  test('adds default MSL free keywords for new records when feature is enabled', async () => {
+    // Set feature flags before loading the script so the DOMContentLoaded handler sees them
+    global.window = global.window || {};
+    window.ELMO_FEATURES = { showMslDefaultFreeKeywords: true };
+    window.elmo = { isNewRecord: true };
+
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    // Wait one tick to let async callbacks (including Tagify init) complete
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    const input = document.getElementById('input-freekeyword');
+    expect(input._tagify.value).toEqual([
+      { value: 'EPOS' },
+      { value: 'multi-scale laboratories' }
+    ]);
+  });
 });
