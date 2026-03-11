@@ -81,7 +81,7 @@ $showMslDefaultFreeKeywords = false;
 $envShowMslLabs   = getenv('SHOW_MSL_LABS');
 $envShowMslVocabs = getenv('SHOW_MSL_VOCABS');
 $envShowMslDefaultFreeKeywords = getenv('SHOW_MSL_DEFAULT_FREE_KEYWORDS');
-
+$envShowMslLogo = getenv('SHOW_MSL_LOGO');
 
 if ($envShowMslLabs !== false) {
     $showMslLabs = filter_var($envShowMslLabs, FILTER_VALIDATE_BOOLEAN);
@@ -91,6 +91,9 @@ if ($envShowMslVocabs !== false) {
 }
 if ($envShowMslDefaultFreeKeywords !== false) {
     $showMslDefaultFreeKeywords = filter_var($envShowMslDefaultFreeKeywords, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowMslLogo !== false) {
+    $showMslLogo = filter_var($envShowMslLogo, FILTER_VALIDATE_BOOLEAN);
 }
 
 // SETTINGS FOR ICGEM

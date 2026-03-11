@@ -43,19 +43,6 @@ function extractDataSourceRows(array $postData): array
         'dName'
     ];
 
-    // Validate that all field arrays have consistent length with the type array
-    // This catches front-end/back-end mismatches early
-    $allFields = array_merge(['datasource_description'], $post_variables);
-    foreach ($allFields as $field) {
-        $fieldArray = $postData[$field] ?? [];
-        if (!empty($fieldArray) && count($fieldArray) !== $total_length) {
-            throw new \InvalidArgumentException(
-                "Array length mismatch: 'datasource_type' has {$total_length} elements, " .
-                "but '{$field}' has " . count($fieldArray) . " elements."
-            );
-        }
-    }
-
     $rows = [];
     for ($i = 0; $i < $total_length; $i++) {
         $this_type = $types[$i];
@@ -66,7 +53,8 @@ function extractDataSourceRows(array $postData): array
             'description' => $postData['datasource_description'][$i] ?? null
         ];
 
-        // Copy all fields from POST at the same index - each HTML row has all fields
+        // Copy all fields from POST at the same index
+        // Arrays may be different lengths - some fields (like datasource_details) may not exist for all row types
         foreach ($post_variables as $variable) {
             $row[$variable] = $postData[$variable][$i] ?? null;
         }

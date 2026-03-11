@@ -1617,3 +1617,11 @@ composer test -- --filter SaveAuthorsTest
 
 - `composer run test` runs the tests in `tests/`
 - `npm test` runs the JavaScript tests in `tests/js/`
+
+in case it does not work try:
+'./vendor/bin/phpunit testToRun.php --filter "DataSources"'
+
+for PHPStan:
+
+'./vendor/bin/phpstan analyze file-to-analyze.php'
+

@@ -1,16 +1,16 @@
 <?php
 require_once __DIR__ . '/../../../settings.php';
-require_once __DIR__ . '/ICGEMController.php'; // Require parent class with ICGEM-specific methods.
 
-
-class DatasetController extends ICGEMController
+class DatasetController
 {
-    // private mysqli $connection;
-    // private mixed $logger;
+    protected mysqli $connection;
+    protected mixed $logger;
 
     public function __construct() 
     {
-        parent::__construct(); // Constructor for this class is in ICGEMController!
+        global $connection;
+        $this->connection = $connection;
+        $this->logger = null; // Optional logger
     }
 
     /**

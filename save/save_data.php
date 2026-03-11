@@ -52,9 +52,10 @@ function generateAndOutputXml($resource_id)
     global $connection, $showGGMsProperties;
     
     try {
+        require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
     } catch (Exception $e) {
-        error_log("Error accessing DatasetController: " . $e->getMessage());
+        error_log("Error accessing Controller: " . $e->getMessage());
         http_response_code(500);
         echo "Error: Could not initialize XML generator";
         exit();
@@ -87,10 +88,11 @@ function generateAndOutputXml($resource_id)
             error_log("[💿SAVE]: Will use " . ($showGGMsProperties ? "createICGEMxml()" : "envelopeXmlAsString()"));
 
             try {
-                $datasetController = new DatasetController();
+                $controller = new DatasetController();
+                $ICGEMcontroller = new ICGEMController();
                 $xmlString = $showGGMsProperties
-                    ? $datasetController->createICGEMxml($resource_id)
-                    : $datasetController->envelopeXmlAsString($connection, $resource_id);
+                    ? $ICGEMcontroller->createICGEMxml($resource_id)
+                    : $controller->envelopeXmlAsString($connection, $resource_id);
                     
                 if ($xmlString) {
                     echo $xmlString;
