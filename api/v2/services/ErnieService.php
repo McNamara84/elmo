@@ -51,6 +51,16 @@ class ErnieService
     private string $pid4instCacheFile;
 
     /**
+     * @var string Path to the contributor person roles cache file
+     */
+    private string $contributorPersonRolesCacheFile;
+
+    /**
+     * @var string Path to the contributor institution roles cache file
+     */
+    private string $contributorInstitutionRolesCacheFile;
+
+    /**
      * ErnieService constructor.
      * 
      * Initializes the service with configuration from global settings.
@@ -67,6 +77,8 @@ class ErnieService
         $this->titleTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_title_types.json';
         $this->languagesCacheFile = __DIR__ . '/../../../storage/cache/ernie_languages.json';
         $this->pid4instCacheFile = __DIR__ . '/../../../storage/cache/ernie_pid4inst.json';
+        $this->contributorPersonRolesCacheFile = __DIR__ . '/../../../storage/cache/ernie_contributor_person_roles.json';
+        $this->contributorInstitutionRolesCacheFile = __DIR__ . '/../../../storage/cache/ernie_contributor_institution_roles.json';
     }
 
     /**
@@ -97,6 +109,26 @@ class ErnieService
     protected function getLanguagesCacheFile(): string
     {
         return $this->languagesCacheFile;
+    }
+
+    /**
+     * Gets the contributor person roles cache file path
+     * 
+     * @return string Path to the contributor person roles cache file
+     */
+    protected function getContributorPersonRolesCacheFile(): string
+    {
+        return $this->contributorPersonRolesCacheFile;
+    }
+
+    /**
+     * Gets the contributor institution roles cache file path
+     * 
+     * @return string Path to the contributor institution roles cache file
+     */
+    protected function getContributorInstitutionRolesCacheFile(): string
+    {
+        return $this->contributorInstitutionRolesCacheFile;
     }
 
     /**
@@ -354,13 +386,15 @@ class ErnieService
      * @param string $label Human-readable label for logging
      * @param string $cacheFile Path to the cache file
      * @param callable(): array<int, mixed> $fallbackFn Function returning fallback data
+     * @param (callable(array<mixed>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE (not on cache hit)
      * @return array<mixed> Data from cache, ERNIE, or fallback
      */
     private function getDataWithCache(
         string $endpoint,
         string $label,
         string $cacheFile,
-        callable $fallbackFn
+        callable $fallbackFn,
+        ?callable $onFreshData = null
     ): array {
         if ($this->isCacheFileValid($cacheFile)) {
             $cachedData = $this->readCacheFile($cacheFile);
@@ -372,6 +406,9 @@ class ErnieService
         $ernieData = $this->fetchFromErnie($endpoint, $label);
         if ($ernieData !== null && !empty($ernieData)) {
             $this->writeCacheFile($cacheFile, $ernieData);
+            if ($onFreshData !== null) {
+                $onFreshData($ernieData);
+            }
             return $ernieData;
         }
 
@@ -738,5 +775,184 @@ class ErnieService
     public function getPid4instCacheStatus(): array
     {
         return $this->getCacheFileStatus($this->getPid4instCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Contributor Person Roles
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches contributor person roles from ERNIE API
+     * 
+     * @return array<array{id: int, name: string}>|null Array of roles or null on failure
+     */
+    public function fetchContributorPersonRoles(): ?array
+    {
+        return $this->fetchFromErnie('/api/v1/roles/contributor-persons/elmo', 'contributor person roles');
+    }
+
+    /**
+     * Gets contributor person roles with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE (triggers onFreshData callback for DB sync)
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback as last resort
+     * 
+     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE
+     * @return array<array{id: int, name: string}> Contributor person roles from cache or ERNIE
+     */
+    public function getContributorPersonRolesWithCache(?callable $onFreshData = null): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/roles/contributor-persons/elmo',
+            'contributor person roles',
+            $this->getContributorPersonRolesCacheFile(),
+            [$this, 'getHardcodedContributorPersonRoleFallback'],
+            $onFreshData
+        );
+    }
+
+    /**
+     * Returns hardcoded fallback contributor person roles
+     * 
+     * This is the absolute last resort when ERNIE, cache, and stale cache are all unavailable.
+     * These are DataCite contributor person roles commonly used at GFZ.
+     * 
+     * @return array<array{id: int, name: string}> Minimal fallback contributor person roles
+     */
+    private function getHardcodedContributorPersonRoleFallback(): array
+    {
+        return [
+            ['id' => 1, 'name' => 'Data Collector'],
+            ['id' => 2, 'name' => 'Data Curator'],
+            ['id' => 3, 'name' => 'Data Manager'],
+            ['id' => 4, 'name' => 'Editor'],
+            ['id' => 5, 'name' => 'Producer'],
+            ['id' => 6, 'name' => 'Project Leader'],
+            ['id' => 7, 'name' => 'Project Manager'],
+            ['id' => 8, 'name' => 'Project Member'],
+            ['id' => 9, 'name' => 'Related Person'],
+            ['id' => 10, 'name' => 'Researcher'],
+            ['id' => 11, 'name' => 'Rights Holder'],
+            ['id' => 12, 'name' => 'Sponsor'],
+            ['id' => 13, 'name' => 'Supervisor'],
+            ['id' => 14, 'name' => 'Translator'],
+            ['id' => 15, 'name' => 'Work Package Leader'],
+            ['id' => 16, 'name' => 'Other'],
+        ];
+    }
+
+    /**
+     * Forces contributor person roles cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshContributorPersonRolesCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/roles/contributor-persons/elmo',
+            'contributor person roles',
+            $this->getContributorPersonRolesCacheFile()
+        );
+    }
+
+    /**
+     * Gets contributor person roles cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getContributorPersonRolesCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getContributorPersonRolesCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Contributor Institution Roles
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches contributor institution roles from ERNIE API
+     * 
+     * @return array<array{id: int, name: string}>|null Array of roles or null on failure
+     */
+    public function fetchContributorInstitutionRoles(): ?array
+    {
+        return $this->fetchFromErnie('/api/v1/roles/contributor-institutions/elmo', 'contributor institution roles');
+    }
+
+    /**
+     * Gets contributor institution roles with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE (triggers onFreshData callback for DB sync)
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback as last resort
+     * 
+     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE
+     * @return array<array{id: int, name: string}> Contributor institution roles from cache or ERNIE
+     */
+    public function getContributorInstitutionRolesWithCache(?callable $onFreshData = null): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/roles/contributor-institutions/elmo',
+            'contributor institution roles',
+            $this->getContributorInstitutionRolesCacheFile(),
+            [$this, 'getHardcodedContributorInstitutionRoleFallback'],
+            $onFreshData
+        );
+    }
+
+    /**
+     * Returns hardcoded fallback contributor institution roles
+     * 
+     * This is the absolute last resort when ERNIE, cache, and stale cache are all unavailable.
+     * These are DataCite contributor institution roles commonly used at GFZ.
+     * 
+     * @return array<array{id: int, name: string}> Minimal fallback contributor institution roles
+     */
+    private function getHardcodedContributorInstitutionRoleFallback(): array
+    {
+        return [
+            ['id' => 1, 'name' => 'Data Collector'],
+            ['id' => 2, 'name' => 'Data Manager'],
+            ['id' => 3, 'name' => 'Distributor'],
+            ['id' => 4, 'name' => 'Hosting Institution'],
+            ['id' => 5, 'name' => 'Producer'],
+            ['id' => 6, 'name' => 'Registration Agency'],
+            ['id' => 7, 'name' => 'Registration Authority'],
+            ['id' => 8, 'name' => 'Research Group'],
+            ['id' => 9, 'name' => 'Rights Holder'],
+            ['id' => 10, 'name' => 'Sponsor'],
+            ['id' => 11, 'name' => 'Translator'],
+            ['id' => 12, 'name' => 'Work Package Leader'],
+            ['id' => 13, 'name' => 'Other'],
+        ];
+    }
+
+    /**
+     * Forces contributor institution roles cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshContributorInstitutionRolesCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/roles/contributor-institutions/elmo',
+            'contributor institution roles',
+            $this->getContributorInstitutionRolesCacheFile()
+        );
+    }
+
+    /**
+     * Gets contributor institution roles cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getContributorInstitutionRolesCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getContributorInstitutionRolesCacheFile());
     }
 }

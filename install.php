@@ -173,11 +173,13 @@ function createDatabaseStructure($connection): array
 
         "Role" => "CREATE TABLE IF NOT EXISTS `Role` (
     `role_id` INT NOT NULL AUTO_INCREMENT,
+    `ernie_id` INT NULL,
     `name` VARCHAR(85) NOT NULL,
     `description` TEXT(1000) NULL,
     `forInstitutions` SMALLINT,
     PRIMARY KEY (`role_id`),
-    UNIQUE KEY `unique_name` (`name`)
+    UNIQUE KEY `unique_name` (`name`),
+    UNIQUE KEY `unique_ernie_id` (`ernie_id`)
     );",
 
         "Affiliation" => "CREATE TABLE IF NOT EXISTS `Affiliation` (

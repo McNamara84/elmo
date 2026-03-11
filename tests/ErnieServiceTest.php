@@ -27,13 +27,22 @@ class TestableErnieService extends \ErnieService
     private string $customCacheFile;
     private string $customTitleTypesCacheFile;
     private string $customLanguagesCacheFile;
+    private string $customContributorPersonRolesCacheFile;
+    private string $customContributorInstitutionRolesCacheFile;
 
-    public function __construct(string $cacheFile, string $titleTypesCacheFile = '', string $languagesCacheFile = '')
-    {
+    public function __construct(
+        string $cacheFile,
+        string $titleTypesCacheFile = '',
+        string $languagesCacheFile = '',
+        string $contributorPersonRolesCacheFile = '',
+        string $contributorInstitutionRolesCacheFile = ''
+    ) {
         parent::__construct();
         $this->customCacheFile = $cacheFile;
         $this->customTitleTypesCacheFile = $titleTypesCacheFile;
         $this->customLanguagesCacheFile = $languagesCacheFile;
+        $this->customContributorPersonRolesCacheFile = $contributorPersonRolesCacheFile;
+        $this->customContributorInstitutionRolesCacheFile = $contributorInstitutionRolesCacheFile;
     }
 
     /**
@@ -58,6 +67,22 @@ class TestableErnieService extends \ErnieService
     protected function getLanguagesCacheFile(): string
     {
         return $this->customLanguagesCacheFile ?: $this->customCacheFile;
+    }
+
+    /**
+     * Override getContributorPersonRolesCacheFile to use custom path
+     */
+    protected function getContributorPersonRolesCacheFile(): string
+    {
+        return $this->customContributorPersonRolesCacheFile ?: $this->customCacheFile;
+    }
+
+    /**
+     * Override getContributorInstitutionRolesCacheFile to use custom path
+     */
+    protected function getContributorInstitutionRolesCacheFile(): string
+    {
+        return $this->customContributorInstitutionRolesCacheFile ?: $this->customCacheFile;
     }
 }
 
@@ -92,6 +117,16 @@ final class ErnieServiceTest extends TestCase
     private string $testLanguagesCacheFile;
 
     /**
+     * @var string Path to test contributor person roles cache file
+     */
+    private string $testContributorPersonRolesCacheFile;
+
+    /**
+     * @var string Path to test contributor institution roles cache file
+     */
+    private string $testContributorInstitutionRolesCacheFile;
+
+    /**
      * Set up test environment
      */
     protected function setUp(): void
@@ -103,20 +138,24 @@ final class ErnieServiceTest extends TestCase
         $this->testCacheFile = $this->testCacheDir . '/ernie_resource_types.json';
         $this->testTitleTypesCacheFile = $this->testCacheDir . '/ernie_title_types.json';
         $this->testLanguagesCacheFile = $this->testCacheDir . '/ernie_languages.json';
+        $this->testContributorPersonRolesCacheFile = $this->testCacheDir . '/ernie_contributor_person_roles.json';
+        $this->testContributorInstitutionRolesCacheFile = $this->testCacheDir . '/ernie_contributor_institution_roles.json';
 
         if (!is_dir($this->testCacheDir)) {
             mkdir($this->testCacheDir, 0755, true);
         }
 
         // Clean up any existing test cache
-        if (file_exists($this->testCacheFile)) {
-            unlink($this->testCacheFile);
-        }
-        if (file_exists($this->testTitleTypesCacheFile)) {
-            unlink($this->testTitleTypesCacheFile);
-        }
-        if (file_exists($this->testLanguagesCacheFile)) {
-            unlink($this->testLanguagesCacheFile);
+        foreach ([
+            $this->testCacheFile,
+            $this->testTitleTypesCacheFile,
+            $this->testLanguagesCacheFile,
+            $this->testContributorPersonRolesCacheFile,
+            $this->testContributorInstitutionRolesCacheFile,
+        ] as $cacheFile) {
+            if (file_exists($cacheFile)) {
+                unlink($cacheFile);
+            }
         }
     }
 
@@ -126,14 +165,16 @@ final class ErnieServiceTest extends TestCase
     protected function tearDown(): void
     {
         // Remove test cache files
-        if (file_exists($this->testCacheFile)) {
-            unlink($this->testCacheFile);
-        }
-        if (file_exists($this->testTitleTypesCacheFile)) {
-            unlink($this->testTitleTypesCacheFile);
-        }
-        if (file_exists($this->testLanguagesCacheFile)) {
-            unlink($this->testLanguagesCacheFile);
+        foreach ([
+            $this->testCacheFile,
+            $this->testTitleTypesCacheFile,
+            $this->testLanguagesCacheFile,
+            $this->testContributorPersonRolesCacheFile,
+            $this->testContributorInstitutionRolesCacheFile,
+        ] as $cacheFile) {
+            if (file_exists($cacheFile)) {
+                unlink($cacheFile);
+            }
         }
 
         // Remove test cache directory
@@ -162,7 +203,45 @@ final class ErnieServiceTest extends TestCase
     private function createTestableService(string $url = '', string $apiKey = '', int $ttl = 21600): TestableErnieService
     {
         $this->setGlobalConfig($url, $apiKey, $ttl);
-        return new TestableErnieService($this->testCacheFile, $this->testTitleTypesCacheFile, $this->testLanguagesCacheFile);
+        return new TestableErnieService(
+            $this->testCacheFile,
+            $this->testTitleTypesCacheFile,
+            $this->testLanguagesCacheFile,
+            $this->testContributorPersonRolesCacheFile,
+            $this->testContributorInstitutionRolesCacheFile
+        );
+    }
+
+    /**
+     * Helper to write a test contributor person roles cache file
+     * 
+     * @param array<array{id: int, name: string}> $data
+     */
+    private function writeContributorPersonRolesTestCache(array $data, ?string $lastUpdated = null): void
+    {
+        $cache = [
+            'lastUpdated' => $lastUpdated ?? date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => $data
+        ];
+        file_put_contents($this->testContributorPersonRolesCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Helper to write a test contributor institution roles cache file
+     * 
+     * @param array<array{id: int, name: string}> $data
+     */
+    private function writeContributorInstitutionRolesTestCache(array $data, ?string $lastUpdated = null): void
+    {
+        $cache = [
+            'lastUpdated' => $lastUpdated ?? date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => $data
+        ];
+        file_put_contents($this->testContributorInstitutionRolesCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
     }
 
     /**
@@ -1448,5 +1527,703 @@ final class ErnieServiceTest extends TestCase
         $this->assertTrue($status['valid']);
         $this->assertSame(0, $status['itemCount']);
     }
-}
 
+    // ==================== Contributor Person Roles: Cache Status Tests ====================
+
+    /**
+     * Test getContributorPersonRolesCacheStatus when cache doesn't exist
+     */
+    public function testGetContributorPersonRolesCacheStatusWhenCacheDoesNotExist(): void
+    {
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getContributorPersonRolesCacheStatus();
+
+        $this->assertFalse($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertNull($status['lastUpdated']);
+        $this->assertNull($status['age']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    /**
+     * Test getContributorPersonRolesCacheStatus when cache exists and is valid
+     */
+    public function testGetContributorPersonRolesCacheStatusWhenCacheExistsAndValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Data Collector'],
+            ['id' => 2, 'name' => 'Researcher']
+        ];
+        $this->writeContributorPersonRolesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getContributorPersonRolesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertNotNull($status['lastUpdated']);
+        $this->assertIsInt($status['age']);
+        $this->assertSame(2, $status['itemCount']);
+        $this->assertArrayHasKey('ageFormatted', $status);
+        $this->assertArrayHasKey('ttl', $status);
+    }
+
+    /**
+     * Test getContributorPersonRolesCacheStatus when cache exists but is expired
+     */
+    public function testGetContributorPersonRolesCacheStatusWhenCacheExpired(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Data Collector']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeContributorPersonRolesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getContributorPersonRolesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertSame(1, $status['itemCount']);
+    }
+
+    // ==================== Contributor Person Roles: getWithCache Tests ====================
+
+    /**
+     * Test getContributorPersonRolesWithCache returns hardcoded fallback when not configured
+     */
+    public function testGetContributorPersonRolesWithCacheReturnsHardcodedFallbackWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getContributorPersonRolesWithCache();
+
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+        // Should contain typical person roles
+        $names = array_column($result, 'name');
+        $this->assertContains('Data Collector', $names);
+        $this->assertContains('Researcher', $names);
+        $this->assertContains('Project Leader', $names);
+        $this->assertContains('Other', $names);
+    }
+
+    /**
+     * Test getContributorPersonRolesWithCache returns cached data when valid
+     */
+    public function testGetContributorPersonRolesWithCacheReturnsCachedDataWhenValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Data Collector'],
+            ['id' => 2, 'name' => 'Researcher'],
+            ['id' => 3, 'name' => 'Supervisor']
+        ];
+        $this->writeContributorPersonRolesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getContributorPersonRolesWithCache();
+
+        $this->assertCount(3, $result);
+        $this->assertSame('Data Collector', $result[0]['name']);
+        $this->assertSame('Researcher', $result[1]['name']);
+        $this->assertSame('Supervisor', $result[2]['name']);
+    }
+
+    /**
+     * Test getContributorPersonRolesWithCache returns stale cache when ERNIE unavailable
+     */
+    public function testGetContributorPersonRolesWithCacheReturnsStaleWhenErnieUnavailable(): void
+    {
+        $testData = [
+            ['id' => 5, 'name' => 'Editor']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeContributorPersonRolesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://invalid-url-that-does-not-exist.local/', 'test-key');
+        $result = $service->getContributorPersonRolesWithCache();
+
+        $this->assertCount(1, $result);
+        $this->assertSame('Editor', $result[0]['name']);
+    }
+
+    // ==================== Contributor Person Roles: fetch Tests ====================
+
+    /**
+     * Test fetchContributorPersonRoles returns null when not configured
+     */
+    public function testFetchContributorPersonRolesReturnsNullWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->fetchContributorPersonRoles();
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * Test fetchContributorPersonRoles returns null on invalid URL
+     */
+    public function testFetchContributorPersonRolesReturnsNullOnInvalidUrl(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->fetchContributorPersonRoles();
+
+        $this->assertNull($result);
+    }
+
+    // ==================== Contributor Person Roles: refresh Tests ====================
+
+    /**
+     * Test refreshContributorPersonRolesCache returns false when not configured
+     */
+    public function testRefreshContributorPersonRolesCacheReturnsFalseWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->refreshContributorPersonRolesCache();
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test refreshContributorPersonRolesCache returns false when ERNIE unavailable
+     */
+    public function testRefreshContributorPersonRolesCacheReturnsFalseWhenErnieUnavailable(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->refreshContributorPersonRolesCache();
+
+        $this->assertFalse($result);
+    }
+
+    // ==================== Contributor Person Roles: Hardcoded Fallback Tests ====================
+
+    /**
+     * Test that hardcoded contributor person roles fallback contains expected roles
+     */
+    public function testHardcodedContributorPersonRoleFallbackContainsExpectedRoles(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getContributorPersonRolesWithCache();
+
+        $this->assertGreaterThanOrEqual(10, count($result));
+
+        $names = array_column($result, 'name');
+        $this->assertContains('Data Collector', $names);
+        $this->assertContains('Data Curator', $names);
+        $this->assertContains('Data Manager', $names);
+        $this->assertContains('Editor', $names);
+        $this->assertContains('Researcher', $names);
+        $this->assertContains('Supervisor', $names);
+        $this->assertContains('Other', $names);
+
+        // Verify each entry has id and name
+        foreach ($result as $role) {
+            $this->assertArrayHasKey('id', $role);
+            $this->assertArrayHasKey('name', $role);
+            $this->assertIsInt($role['id']);
+            $this->assertIsString($role['name']);
+        }
+    }
+
+    /**
+     * Test hardcoded fallback is used when ERNIE fails and no cache exists
+     */
+    public function testHardcodedContributorPersonRoleFallbackUsedWhenErnieFailsAndNoCache(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->getContributorPersonRolesWithCache();
+
+        $this->assertNotEmpty($result);
+        $names = array_column($result, 'name');
+        $this->assertContains('Researcher', $names);
+    }
+
+    // ==================== Contributor Institution Roles: Cache Status Tests ====================
+
+    /**
+     * Test getContributorInstitutionRolesCacheStatus when cache doesn't exist
+     */
+    public function testGetContributorInstitutionRolesCacheStatusWhenCacheDoesNotExist(): void
+    {
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getContributorInstitutionRolesCacheStatus();
+
+        $this->assertFalse($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertNull($status['lastUpdated']);
+        $this->assertNull($status['age']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    /**
+     * Test getContributorInstitutionRolesCacheStatus when cache exists and is valid
+     */
+    public function testGetContributorInstitutionRolesCacheStatusWhenCacheExistsAndValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Distributor'],
+            ['id' => 2, 'name' => 'Hosting Institution']
+        ];
+        $this->writeContributorInstitutionRolesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getContributorInstitutionRolesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertNotNull($status['lastUpdated']);
+        $this->assertIsInt($status['age']);
+        $this->assertSame(2, $status['itemCount']);
+        $this->assertArrayHasKey('ageFormatted', $status);
+        $this->assertArrayHasKey('ttl', $status);
+    }
+
+    /**
+     * Test getContributorInstitutionRolesCacheStatus when cache exists but is expired
+     */
+    public function testGetContributorInstitutionRolesCacheStatusWhenCacheExpired(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Distributor']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeContributorInstitutionRolesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getContributorInstitutionRolesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertSame(1, $status['itemCount']);
+    }
+
+    // ==================== Contributor Institution Roles: getWithCache Tests ====================
+
+    /**
+     * Test getContributorInstitutionRolesWithCache returns hardcoded fallback when not configured
+     */
+    public function testGetContributorInstitutionRolesWithCacheReturnsHardcodedFallbackWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getContributorInstitutionRolesWithCache();
+
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+        $names = array_column($result, 'name');
+        $this->assertContains('Distributor', $names);
+        $this->assertContains('Hosting Institution', $names);
+        $this->assertContains('Research Group', $names);
+        $this->assertContains('Other', $names);
+    }
+
+    /**
+     * Test getContributorInstitutionRolesWithCache returns cached data when valid
+     */
+    public function testGetContributorInstitutionRolesWithCacheReturnsCachedDataWhenValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Distributor'],
+            ['id' => 2, 'name' => 'Hosting Institution'],
+            ['id' => 3, 'name' => 'Research Group']
+        ];
+        $this->writeContributorInstitutionRolesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getContributorInstitutionRolesWithCache();
+
+        $this->assertCount(3, $result);
+        $this->assertSame('Distributor', $result[0]['name']);
+        $this->assertSame('Hosting Institution', $result[1]['name']);
+        $this->assertSame('Research Group', $result[2]['name']);
+    }
+
+    /**
+     * Test getContributorInstitutionRolesWithCache returns stale cache when ERNIE unavailable
+     */
+    public function testGetContributorInstitutionRolesWithCacheReturnsStaleWhenErnieUnavailable(): void
+    {
+        $testData = [
+            ['id' => 4, 'name' => 'Registration Agency']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeContributorInstitutionRolesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://invalid-url-that-does-not-exist.local/', 'test-key');
+        $result = $service->getContributorInstitutionRolesWithCache();
+
+        $this->assertCount(1, $result);
+        $this->assertSame('Registration Agency', $result[0]['name']);
+    }
+
+    // ==================== Contributor Institution Roles: fetch Tests ====================
+
+    /**
+     * Test fetchContributorInstitutionRoles returns null when not configured
+     */
+    public function testFetchContributorInstitutionRolesReturnsNullWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->fetchContributorInstitutionRoles();
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * Test fetchContributorInstitutionRoles returns null on invalid URL
+     */
+    public function testFetchContributorInstitutionRolesReturnsNullOnInvalidUrl(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->fetchContributorInstitutionRoles();
+
+        $this->assertNull($result);
+    }
+
+    // ==================== Contributor Institution Roles: refresh Tests ====================
+
+    /**
+     * Test refreshContributorInstitutionRolesCache returns false when not configured
+     */
+    public function testRefreshContributorInstitutionRolesCacheReturnsFalseWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->refreshContributorInstitutionRolesCache();
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test refreshContributorInstitutionRolesCache returns false when ERNIE unavailable
+     */
+    public function testRefreshContributorInstitutionRolesCacheReturnsFalseWhenErnieUnavailable(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->refreshContributorInstitutionRolesCache();
+
+        $this->assertFalse($result);
+    }
+
+    // ==================== Contributor Institution Roles: Hardcoded Fallback Tests ====================
+
+    /**
+     * Test that hardcoded contributor institution roles fallback contains expected roles
+     */
+    public function testHardcodedContributorInstitutionRoleFallbackContainsExpectedRoles(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getContributorInstitutionRolesWithCache();
+
+        $this->assertGreaterThanOrEqual(10, count($result));
+
+        $names = array_column($result, 'name');
+        $this->assertContains('Distributor', $names);
+        $this->assertContains('Hosting Institution', $names);
+        $this->assertContains('Registration Agency', $names);
+        $this->assertContains('Registration Authority', $names);
+        $this->assertContains('Research Group', $names);
+        $this->assertContains('Rights Holder', $names);
+        $this->assertContains('Other', $names);
+
+        // Verify each entry has id and name
+        foreach ($result as $role) {
+            $this->assertArrayHasKey('id', $role);
+            $this->assertArrayHasKey('name', $role);
+            $this->assertIsInt($role['id']);
+            $this->assertIsString($role['name']);
+        }
+    }
+
+    /**
+     * Test hardcoded fallback is used when ERNIE fails and no cache exists
+     */
+    public function testHardcodedContributorInstitutionRoleFallbackUsedWhenErnieFailsAndNoCache(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->getContributorInstitutionRolesWithCache();
+
+        $this->assertNotEmpty($result);
+        $names = array_column($result, 'name');
+        $this->assertContains('Hosting Institution', $names);
+    }
+
+    // ==================== Contributor Roles: Cache independence Tests ====================
+
+    /**
+     * Test that contributor person and institution roles use independent caches
+     */
+    public function testContributorRolesCachesAreIndependent(): void
+    {
+        $personData = [
+            ['id' => 1, 'name' => 'Researcher'],
+            ['id' => 2, 'name' => 'Supervisor']
+        ];
+        $this->writeContributorPersonRolesTestCache($personData);
+
+        $institutionData = [
+            ['id' => 1, 'name' => 'Hosting Institution'],
+            ['id' => 2, 'name' => 'Distributor'],
+            ['id' => 3, 'name' => 'Research Group']
+        ];
+        $this->writeContributorInstitutionRolesTestCache($institutionData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+
+        $personResult = $service->getContributorPersonRolesWithCache();
+        $this->assertCount(2, $personResult);
+        $this->assertSame('Researcher', $personResult[0]['name']);
+
+        $institutionResult = $service->getContributorInstitutionRolesWithCache();
+        $this->assertCount(3, $institutionResult);
+        $this->assertSame('Hosting Institution', $institutionResult[0]['name']);
+    }
+
+    /**
+     * Test that contributor roles cache statuses are independent from each other
+     */
+    public function testContributorRolesCacheStatusesAreIndependent(): void
+    {
+        // Only write person roles cache
+        $personData = [
+            ['id' => 1, 'name' => 'Researcher']
+        ];
+        $this->writeContributorPersonRolesTestCache($personData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+
+        $personStatus = $service->getContributorPersonRolesCacheStatus();
+        $this->assertTrue($personStatus['exists']);
+
+        $institutionStatus = $service->getContributorInstitutionRolesCacheStatus();
+        $this->assertFalse($institutionStatus['exists']);
+    }
+
+    /**
+     * Test that contributor roles caches are independent from resource types cache
+     */
+    public function testContributorRolesCachesAreIndependentFromOtherCaches(): void
+    {
+        $resourceData = [
+            ['id' => 10, 'name' => 'Dataset', 'description' => null]
+        ];
+        $this->writeTestCache($resourceData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+
+        $resourceStatus = $service->getCacheStatus();
+        $this->assertTrue($resourceStatus['exists']);
+
+        $personStatus = $service->getContributorPersonRolesCacheStatus();
+        $this->assertFalse($personStatus['exists']);
+
+        $institutionStatus = $service->getContributorInstitutionRolesCacheStatus();
+        $this->assertFalse($institutionStatus['exists']);
+    }
+
+    // ==================== Contributor Roles: TTL Tests ====================
+
+    /**
+     * Test that custom TTL is respected for contributor person roles cache
+     */
+    public function testCustomTtlIsRespectedForContributorPersonRolesCache(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Researcher']];
+        $thirtyMinutesAgo = date('c', strtotime('-30 minutes'));
+        $this->writeContributorPersonRolesTestCache($testData, $thirtyMinutesAgo);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key', 3600);
+        $status = $service->getContributorPersonRolesCacheStatus();
+        $this->assertTrue($status['valid']);
+
+        $service2 = $this->createTestableService('https://ernie.example.com/', 'test-key', 600);
+        $status2 = $service2->getContributorPersonRolesCacheStatus();
+        $this->assertFalse($status2['valid']);
+    }
+
+    /**
+     * Test that custom TTL is respected for contributor institution roles cache
+     */
+    public function testCustomTtlIsRespectedForContributorInstitutionRolesCache(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Distributor']];
+        $thirtyMinutesAgo = date('c', strtotime('-30 minutes'));
+        $this->writeContributorInstitutionRolesTestCache($testData, $thirtyMinutesAgo);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key', 3600);
+        $status = $service->getContributorInstitutionRolesCacheStatus();
+        $this->assertTrue($status['valid']);
+
+        $service2 = $this->createTestableService('https://ernie.example.com/', 'test-key', 600);
+        $status2 = $service2->getContributorInstitutionRolesCacheStatus();
+        $this->assertFalse($status2['valid']);
+    }
+
+    // ==================== Contributor Roles: Cache edge cases ====================
+
+    /**
+     * Test that contributor person roles cache handles invalid JSON gracefully
+     */
+    public function testContributorPersonRolesCacheHandlesInvalidJsonGracefully(): void
+    {
+        file_put_contents($this->testContributorPersonRolesCacheFile, 'not valid json {{{');
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getContributorPersonRolesWithCache();
+
+        $this->assertIsArray($result);
+    }
+
+    /**
+     * Test that contributor institution roles cache handles invalid JSON gracefully
+     */
+    public function testContributorInstitutionRolesCacheHandlesInvalidJsonGracefully(): void
+    {
+        file_put_contents($this->testContributorInstitutionRolesCacheFile, 'not valid json {{{');
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getContributorInstitutionRolesWithCache();
+
+        $this->assertIsArray($result);
+    }
+
+    /**
+     * Test getContributorPersonRolesCacheStatus with empty data
+     */
+    public function testGetContributorPersonRolesCacheStatusWithEmptyData(): void
+    {
+        $cache = [
+            'lastUpdated' => date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => []
+        ];
+        file_put_contents($this->testContributorPersonRolesCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getContributorPersonRolesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    /**
+     * Test getContributorInstitutionRolesCacheStatus with empty data
+     */
+    public function testGetContributorInstitutionRolesCacheStatusWithEmptyData(): void
+    {
+        $cache = [
+            'lastUpdated' => date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => []
+        ];
+        file_put_contents($this->testContributorInstitutionRolesCacheFile, json_encode($cache));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getContributorInstitutionRolesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    // ==================== onFreshData callback Tests ====================
+
+    /**
+     * Test that onFreshData callback is NOT called when cache is valid (cache hit)
+     */
+    public function testOnFreshDataCallbackNotCalledOnCacheHit(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Researcher'],
+            ['id' => 2, 'name' => 'Supervisor']
+        ];
+        $this->writeContributorPersonRolesTestCache($testData);
+
+        $callbackInvoked = false;
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getContributorPersonRolesWithCache(
+            function (array $freshData) use (&$callbackInvoked) {
+                $callbackInvoked = true;
+            }
+        );
+
+        $this->assertFalse($callbackInvoked, 'onFreshData callback should NOT be called on cache hit');
+        $this->assertCount(2, $result);
+    }
+
+    /**
+     * Test that onFreshData callback is NOT called when falling back to hardcoded data
+     */
+    public function testOnFreshDataCallbackNotCalledOnHardcodedFallback(): void
+    {
+        $callbackInvoked = false;
+        $service = $this->createTestableService('', '');
+        $result = $service->getContributorPersonRolesWithCache(
+            function (array $freshData) use (&$callbackInvoked) {
+                $callbackInvoked = true;
+            }
+        );
+
+        $this->assertFalse($callbackInvoked, 'onFreshData callback should NOT be called on hardcoded fallback');
+        $this->assertNotEmpty($result);
+    }
+
+    /**
+     * Test that onFreshData callback is NOT called when falling back to stale cache
+     */
+    public function testOnFreshDataCallbackNotCalledOnStaleCache(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Editor']];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeContributorPersonRolesTestCache($testData, $expiredTime);
+
+        $callbackInvoked = false;
+        $service = $this->createTestableService('https://invalid-url-that-does-not-exist.local/', 'test-key');
+        $result = $service->getContributorPersonRolesWithCache(
+            function (array $freshData) use (&$callbackInvoked) {
+                $callbackInvoked = true;
+            }
+        );
+
+        $this->assertFalse($callbackInvoked, 'onFreshData callback should NOT be called on stale cache fallback');
+        $this->assertCount(1, $result);
+    }
+
+    /**
+     * Test that null callback works (backwards compatibility)
+     */
+    public function testNullCallbackWorksForBackwardsCompatibility(): void
+    {
+        $testData = [['id' => 1, 'name' => 'Researcher']];
+        $this->writeContributorPersonRolesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getContributorPersonRolesWithCache(null);
+
+        $this->assertCount(1, $result);
+        $this->assertSame('Researcher', $result[0]['name']);
+    }
+
+    /**
+     * Test that institution roles callback works independently
+     */
+    public function testOnFreshDataCallbackNotCalledOnInstitutionCacheHit(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Distributor'],
+            ['id' => 2, 'name' => 'Hosting Institution']
+        ];
+        $this->writeContributorInstitutionRolesTestCache($testData);
+
+        $callbackInvoked = false;
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getContributorInstitutionRolesWithCache(
+            function (array $freshData) use (&$callbackInvoked) {
+                $callbackInvoked = true;
+            }
+        );
+
+        $this->assertFalse($callbackInvoked, 'onFreshData callback should NOT be called on cache hit');
+        $this->assertCount(2, $result);
+    }
+}

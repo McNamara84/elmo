@@ -84,5 +84,11 @@ return [
     // PID4INST instruments endpoints
     ['GET', '/vocabs/pid4inst/instruments', [new VocabController(), 'getPid4instInstruments']],
     ['POST', '/admin/cache/pid4inst/refresh', [new VocabController(), 'refreshPid4instCache']],
-    ['GET', '/admin/cache/pid4inst/status', [new VocabController(), 'getPid4instCacheStatus']]
+    ['GET', '/admin/cache/pid4inst/status', [new VocabController(), 'getPid4instCacheStatus']],
+
+    // Contributor roles cache management endpoints
+    ['POST', '/admin/cache/roles/contributor-persons/refresh', [new VocabController(), 'refreshContributorPersonRolesCache']],
+    ['GET', '/admin/cache/roles/contributor-persons/status', [new VocabController(), 'getContributorPersonRolesCacheStatus']],
+    ['POST', '/admin/cache/roles/contributor-institutions/refresh', [new VocabController(), 'refreshContributorInstitutionRolesCache']],
+    ['GET', '/admin/cache/roles/contributor-institutions/status', [new VocabController(), 'getContributorInstitutionRolesCacheStatus']]
 ];
