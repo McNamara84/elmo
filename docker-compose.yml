@@ -28,6 +28,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      SHOW_USED_INSTRUMENTS: "true"
     depends_on:
       - db
     restart: unless-stopped
