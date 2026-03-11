@@ -173,8 +173,11 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
 
     // Parse temporal resolution from either custom value or predefined frequency
     $temporalResolutionDays = null;
-    $customFreq = $postData['temporalFrequency'];
-    $predefFreq = $postData['temporalFrequencyPredef'];
+    $customFreq = $postData['temporalFrequency'] ?? null;
+    $predefFreq = $postData['temporalFrequencyPredef'] ?? null;
+    if (!$customFreq && !$predefFreq) {
+        error_log('Temporal resolution is missing: neither custom nor user-defined. If you are saving it is fine.');
+    }
 
     if ($customFreq !== null) {
         $temporalResolutionDays = (int) $customFreq;
