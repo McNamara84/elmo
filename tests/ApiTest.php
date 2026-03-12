@@ -50,6 +50,7 @@ final class ApiTest extends DatabaseTestCase
         $this->client = new Client([
             'base_uri' => $this->baseUri ?: '',
             'http_errors' => false,
+            'cookies' => true,
             'headers' => [
                 'Accept' => 'application/json',
                 'X-API-KEY' => self::API_KEY,
@@ -324,5 +325,112 @@ final class ApiTest extends DatabaseTestCase
             }
             throw $e;
         }
+    }
+
+    /**
+     * Tests the full draft API lifecycle over HTTP with one session.
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testDraftLifecycleEndpoints(): void
+    {
+        $createUrl = $this->getApiUrl('drafts');
+        $createPayload = [
+            'payload' => [
+                'values' => [
+                    'title' => 'Draft via API test'
+                ],
+                'timestamp' => '2026-03-12T10:00:00Z'
+            ]
+        ];
+
+        $createResponse = $this->client->post($createUrl, [
+            'headers' => ['Content-Type' => 'application/json'],
+            'body' => json_encode($createPayload)
+        ]);
+
+        $this->assertEquals(
+            201,
+            $createResponse->getStatusCode(),
+            'Expected draft creation to return 201. Response: ' . $createResponse->getBody()
+        );
+
+        $created = json_decode((string) $createResponse->getBody(), true);
+        $this->assertIsArray($created);
+        $this->assertArrayHasKey('id', $created);
+        $this->assertNotEmpty($created['id']);
+        $this->assertArrayHasKey('updatedAt', $created);
+        $this->assertArrayHasKey('checksum', $created);
+
+        $draftId = $created['id'];
+
+        $latestUrl = $this->getApiUrl('drafts/session/latest');
+        $latestResponse = $this->client->get($latestUrl);
+        $this->assertEquals(
+            200,
+            $latestResponse->getStatusCode(),
+            'Expected latest draft endpoint to return 200. Response: ' . $latestResponse->getBody()
+        );
+
+        $latest = json_decode((string) $latestResponse->getBody(), true);
+        $this->assertIsArray($latest);
+        $this->assertSame($draftId, $latest['id']);
+        $this->assertSame('Draft via API test', $latest['payload']['values']['title']);
+
+        $getUrl = $this->getApiUrl('drafts/' . $draftId);
+        $getResponse = $this->client->get($getUrl);
+        $this->assertEquals(
+            200,
+            $getResponse->getStatusCode(),
+            'Expected draft get endpoint to return 200. Response: ' . $getResponse->getBody()
+        );
+
+        $fetched = json_decode((string) $getResponse->getBody(), true);
+        $this->assertIsArray($fetched);
+        $this->assertSame($draftId, $fetched['id']);
+        $this->assertSame('Draft via API test', $fetched['payload']['values']['title']);
+
+        $updateUrl = $this->getApiUrl('drafts/' . $draftId);
+        $updatePayload = [
+            'payload' => [
+                'values' => [
+                    'title' => 'Updated draft via API test'
+                ],
+                'timestamp' => '2026-03-12T10:05:00Z'
+            ]
+        ];
+
+        $updateResponse = $this->client->put($updateUrl, [
+            'headers' => ['Content-Type' => 'application/json'],
+            'body' => json_encode($updatePayload)
+        ]);
+
+        $this->assertEquals(
+            200,
+            $updateResponse->getStatusCode(),
+            'Expected draft update endpoint to return 200. Response: ' . $updateResponse->getBody()
+        );
+
+        $updated = json_decode((string) $updateResponse->getBody(), true);
+        $this->assertIsArray($updated);
+        $this->assertSame($draftId, $updated['id']);
+        $this->assertArrayHasKey('updatedAt', $updated);
+
+        $getUpdatedResponse = $this->client->get($getUrl);
+        $this->assertEquals(200, $getUpdatedResponse->getStatusCode());
+        $fetchedUpdated = json_decode((string) $getUpdatedResponse->getBody(), true);
+        $this->assertSame('Updated draft via API test', $fetchedUpdated['payload']['values']['title']);
+
+        $deleteUrl = $this->getApiUrl('drafts/' . $draftId);
+        $deleteResponse = $this->client->delete($deleteUrl);
+        $this->assertEquals(204, $deleteResponse->getStatusCode());
+
+        $getDeletedResponse = $this->client->get($getUrl);
+        $this->assertEquals(
+            404,
+            $getDeletedResponse->getStatusCode(),
+            'Expected deleted draft to return 404. Response: ' . $getDeletedResponse->getBody()
+        );
     }
 }

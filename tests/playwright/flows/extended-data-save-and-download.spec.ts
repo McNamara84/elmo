@@ -9,14 +9,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { XMLParser } from 'fast-xml-parser';
 
-const isCI = !!process.env.CI;
-
 const XML_REFERENCE_DIR = path.join(__dirname, './outputDataReference');
 const XML_ACTUAL_DIR = path.join(__dirname, './outputDataActual');
 
 test.describe('Dataset Save with XML Verification', () => {
-  test.skip(isCI, 'Download events unreliable in CI environment');
-
   test.beforeAll(() => {
   });
 
@@ -308,10 +304,10 @@ function loadReferenceXml(testName: string): any {
 }
 
 /**
- * Downloads XML from the form save dialog and saves it for verification.
+ * Captures XML from the save response and saves it for verification.
  * 
- * Triggers the form save flow (Save button → Save modal confirmation), waits for the
- * browser download, parses the XML using fast-xml-parser with attribute support,
+ * Triggers the form save flow (Save button -> Save modal confirmation), waits for the
+ * save response, parses the XML using fast-xml-parser with attribute support,
  * and saves both raw XML and parsed JSON representations to the actual output directory.
  * 
  * The parser configuration preserves XML attributes without prefixes, enabling direct
@@ -321,13 +317,16 @@ function loadReferenceXml(testName: string): any {
  * @param {string} testName - Test type identifier for file naming ('minimal', 'extended', or 'extended-multiple')
  * @returns {Promise<{xmlContent: string, parsedXml: any}>} 
  *          Object containing raw XML content and parsed JSON structure
- * @throws {Error} If download fails, file cannot be read, or XML parsing fails
+ * @throws {Error} If response fails or XML parsing fails
  */
 async function downloadAndSaveXml(
   page: Page,
   testName: string
 ): Promise<{ xmlContent: string; parsedXml: any }> {
-  const downloadPromise = page.waitForEvent('download', { timeout: 30000 });
+  const responsePromise = page.waitForResponse(
+    response => response.url().includes('/save/save_data.php') && response.request().method() === 'POST',
+    { timeout: 30_000 }
+  );
 
   // Wait for Save button and click
   const saveButton = page.getByRole('button', { name: 'Save' });
@@ -346,14 +345,11 @@ async function downloadAndSaveXml(
   const saveConfirmButton = page.locator('#button-saveas-save');
   await saveConfirmButton.click();
 
-  // Wait for download to complete
-  const download = await downloadPromise;
+  // Read and parse XML response body (more reliable than browser download events in CI)
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+  const xmlContent = await response.text();
 
-  // Get the downloaded file path
-  const filePath = await download.path();
-
-  // Read and parse XML
-  const xmlContent = fs.readFileSync(filePath, 'utf-8');
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: ''

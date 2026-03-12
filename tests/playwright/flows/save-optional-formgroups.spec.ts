@@ -126,14 +126,9 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
   test('saves dataset with Contributor Person data in request body', async ({ page }) => {
     await fillMandatoryFields(page);
 
-    // Check if Contributor Person section exists
+    // Contributor section must be available in CI test fixture
     const contributorSection = page.locator('#input-contributor-lastname');
-    const isContributorVisible = await contributorSection.isVisible().catch(() => false);
-    
-    if (!isContributorVisible) {
-      test.skip(true, 'Contributor Person section not visible - feature may be disabled');
-      return;
-    }
+    await expect(contributorSection).toBeVisible({ timeout: 10_000 });
 
     // Add Contributor Person
     await page.fill('#input-contributor-lastname', 'ContributorLastName');
@@ -144,29 +139,23 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
     const roleInputExists = await roleInput.count() > 0;
     
     if (roleInputExists) {
-      // Wait for Tagify initialization with longer timeout for CI
-      try {
-        await page.waitForFunction(() => {
-          const input: any = document.querySelector('#input-contributor-personrole');
-          return !!input?._tagify && Array.isArray(input._tagify.whitelist) && input._tagify.whitelist.length >= 1;
-        }, { timeout: 20_000 });
+      // Wait for Tagify initialization with longer timeout for CI and fail if unavailable
+      await page.waitForFunction(() => {
+        const input: any = document.querySelector('#input-contributor-personrole');
+        return !!input?._tagify && Array.isArray(input._tagify.whitelist) && input._tagify.whitelist.length >= 1;
+      }, { timeout: 20_000 });
 
-        // Add the first available role from whitelist
-        await page.evaluate(() => {
-          const input: any = document.querySelector('#input-contributor-personrole');
-          if (input?._tagify?.whitelist?.length > 0) {
-            const firstRole = input._tagify.whitelist[0];
-            input._tagify.addTags([firstRole]);
-          }
-        });
-        
-        // Wait for tag to be registered
-        await page.waitForTimeout(500);
-      } catch (e) {
-        // If Tagify doesn't initialize in time, skip this test
-        test.skip(true, 'Role Tagify did not initialize in time');
-        return;
-      }
+      // Add the first available role from whitelist
+      await page.evaluate(() => {
+        const input: any = document.querySelector('#input-contributor-personrole');
+        if (input?._tagify?.whitelist?.length > 0) {
+          const firstRole = input._tagify.whitelist[0];
+          input._tagify.addTags([firstRole]);
+        }
+      });
+      
+      // Wait for tag to be registered
+      await page.waitForTimeout(500);
     }
 
     // Trigger save with mocked endpoint
@@ -181,14 +170,9 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
   test('saves dataset with Spatial/Temporal Coverage data in request body', async ({ page }) => {
     await fillMandatoryFields(page);
 
-    // Check if Coverage section exists
+    // Coverage section must be available in CI test fixture
     const coverageSection = page.locator('#input-stc-latmin_1');
-    const isCoverageVisible = await coverageSection.isVisible().catch(() => false);
-    
-    if (!isCoverageVisible) {
-      test.skip(true, 'Coverage section not visible - feature may be disabled');
-      return;
-    }
+    await expect(coverageSection).toBeVisible({ timeout: 10_000 });
 
     // Add Spatial/Temporal Coverage
     await page.fill('#input-stc-latmin_1', '52.5');
@@ -212,40 +196,29 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
   test('saves dataset with both Contributor Person AND Coverage in request body', async ({ page }) => {
     await fillMandatoryFields(page);
 
-    // Check if both sections exist
+    // Both sections must be available in CI test fixture
     const contributorSection = page.locator('#input-contributor-lastname');
     const coverageSection = page.locator('#input-stc-latmin_1');
-    
-    const isContributorVisible = await contributorSection.isVisible().catch(() => false);
-    const isCoverageVisible = await coverageSection.isVisible().catch(() => false);
-    
-    if (!isContributorVisible || !isCoverageVisible) {
-      test.skip(true, 'Contributor or Coverage section not visible');
-      return;
-    }
+    await expect(contributorSection).toBeVisible({ timeout: 10_000 });
+    await expect(coverageSection).toBeVisible({ timeout: 10_000 });
 
     // Add Contributor Person
     await page.fill('#input-contributor-lastname', 'ContributorLastName');
     await page.fill('#input-contributor-firstname', 'ContributorFirstName');
 
     // Add role if Tagify is available
-    try {
-      await page.waitForFunction(() => {
-        const input: any = document.querySelector('#input-contributor-personrole');
-        return !!input?._tagify && Array.isArray(input._tagify.whitelist) && input._tagify.whitelist.length >= 1;
-      }, { timeout: 20_000 });
+    await page.waitForFunction(() => {
+      const input: any = document.querySelector('#input-contributor-personrole');
+      return !!input?._tagify && Array.isArray(input._tagify.whitelist) && input._tagify.whitelist.length >= 1;
+    }, { timeout: 20_000 });
 
-      await page.evaluate(() => {
-        const input: any = document.querySelector('#input-contributor-personrole');
-        if (input?._tagify?.whitelist?.length > 0) {
-          input._tagify.addTags([input._tagify.whitelist[0]]);
-        }
-      });
-      await page.waitForTimeout(500);
-    } catch (e) {
-      test.skip(true, 'Role Tagify did not initialize in time');
-      return;
-    }
+    await page.evaluate(() => {
+      const input: any = document.querySelector('#input-contributor-personrole');
+      if (input?._tagify?.whitelist?.length > 0) {
+        input._tagify.addTags([input._tagify.whitelist[0]]);
+      }
+    });
+    await page.waitForTimeout(500);
 
     // Add Spatial/Temporal Coverage
     await page.fill('#input-stc-latmin_1', '52.5');
