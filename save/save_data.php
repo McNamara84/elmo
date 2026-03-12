@@ -81,7 +81,7 @@ function generateAndOutputXml($resource_id)
         // Try API call first
         $bytesRead = @readfile($url);
 
-        if ($bytesRead === false) {
+        if ($bytesRead === false || $bytesRead === 0) {
             error_log("[💿SAVE]: readfile from URL failed. Attempting in-memory generation. Resource ID: $resource_id");
             error_log("[💿SAVE]: showGGMsProperties = " . var_export($showGGMsProperties, true));
             error_log("[💿SAVE]: showGGMsProperties = " . var_export($showGGMsProperties, true));

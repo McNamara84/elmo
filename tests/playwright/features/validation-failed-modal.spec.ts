@@ -34,8 +34,8 @@ test.describe('Validation Failed Modal (#968)', () => {
     const closeButton = modal.locator('.btn-primary[data-bs-dismiss="modal"]');
     await closeButton.click();
 
-    // Modal should be hidden
-    await expect(modal).not.toBeVisible();
+    // Modal should be hidden (allow time for Bootstrap fade-out animation)
+    await expect(modal).not.toBeVisible({ timeout: 10000 });
   });
 
   test('validation-failed modal can be closed via X button', async ({ page }) => {
@@ -49,7 +49,7 @@ test.describe('Validation Failed Modal (#968)', () => {
     const xButton = modal.locator('.btn-close');
     await xButton.click();
 
-    await expect(modal).not.toBeVisible();
+    await expect(modal).not.toBeVisible({ timeout: 10000 });
   });
 
   test('validation-failed modal contains expected text elements', async ({ page }) => {
