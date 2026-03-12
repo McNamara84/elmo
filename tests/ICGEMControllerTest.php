@@ -803,15 +803,14 @@ final class ICGEMControllerTest extends TestCase
         $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $ggmData);
 
-        // Verify errors element and children
+        // Verify errors and errorHandling are flat siblings directly on $shm
         $children = $xml->children('http://icgem.gfz.de/schema');
         $this->assertNotNull($children->errors);
-        
-        $errorsElement = $children->errors;
-        $errorChildren = $errorsElement->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Formal errors', (string)$errorChildren->errorType);
+        $this->assertEquals('Formal errors', (string)$children->errors);
+
+        $this->assertNotNull($children->errorHandling);
         // error_handling_approach is not in ENUMERATION_FIELDS, so it's not capitalized
-        $this->assertEquals('covariance matrices', (string)$errorChildren->errorHandling);
+        $this->assertEquals('covariance matrices', (string)$children->errorHandling);
     }
 
     /**
