@@ -80,6 +80,12 @@ $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabul
 // Show Used Instruments form group (PID4INST via ERNIE API)
 $showUsedInstruments = false;
 
+$envShowUsedInstruments = getenv('SHOW_USED_INSTRUMENTS');
+
+if ($envShowUsedInstruments !== false) {
+    $showUsedInstruments = filter_var($envShowUsedInstruments, FILTER_VALIDATE_BOOLEAN);
+}
+
 // SETTINGS FOR ICGEM
 // Show ICGEM form groups (GGMs Properties and Characteristics of the model)
 $showGGMsProperties = false;
