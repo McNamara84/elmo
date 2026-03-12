@@ -1,0 +1,120 @@
+<div class="card mb-2">
+	<div class="card-header">
+		<b>Altimetry-derived model properties</b>
+		<i class="bi bi-question-circle-fill" data-help-section-id="help-altimetry-properties" aria-hidden="true"></i>
+	</div>
+	<div class="card-body">
+		<div id="group-ggmsaltimetrymodels">
+			<div class="row">
+				<!-- Product Type -->
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<select class="form-select input-with-help input-right-no-round-corners" id="input-product-type" name="product_type" required>
+								<option value="" data-translate="general.choose">Choose...</option>
+								<option value="Mean sea surface">Mean sea surface</option>
+								<option value="Mean dynamic ocean topography">Mean dynamic ocean topography</option>
+								<option value="Errors">Errors</option>
+								<option value="Bathymerty">Bathymerty</option>
+							</select>
+							<label for="input-product-type">Product type <span class="text-danger">*</span></label>
+							<div class="invalid-feedback">Please provide product type.</div>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-product-type" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Reference Ellipsoid -->
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-reference-ellipsoid" name="reference_ellipsoid" required>
+							<label for="input-reference-ellipsoid">Reference ellipsoid <span class="text-danger">*</span></label>
+							<div class="invalid-feedback">Please provide reference ellipsoid.</div>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-reference-ellipsoid" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+				<!-- Tide System -->
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<select class="form-select input-with-help input-right-no-round-corners" id="input-altimetry-tide-system" name="tide_system" required>
+								<option value="" data-translate="general.choose">Choose...</option>
+								<option value="zero tide">zero tide</option>
+								<option value="mean tide" selected>mean tide</option>
+								<option value="tide free">tide free</option>
+							</select>
+							<label for="input-altimetry-tide-system">Tide system <span class="text-danger">*</span></label>
+							<div class="invalid-feedback">Please choose tide system.</div>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-tide-system" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row mt-2">
+
+				<!-- Spatial Resolution -->
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-spatial-resolution" name="spatial_resolution" required>
+							<label for="input-spatial-resolution">Spatial resolution <span class="text-danger">*</span></label>
+							<div class="invalid-feedback">Please provide spatial resolution.</div>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-resolution" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Gravity Field Method -->
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gravity-field-method" name="gravity_field_method" required>
+							<label for="input-gravity-field-method">Gravity field method <span class="text-danger">*</span></label>
+							<div class="invalid-feedback">Please provide gravity field method.</div>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-gravity-field-method" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Calculation Method -->
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-calculation-method" name="calculation_method" required>
+							<label for="input-calculation-method">Calculation method <span class="text-danger">*</span></label>
+							<div class="invalid-feedback">Please provide calculation method.</div>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-calculation-method" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
