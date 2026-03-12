@@ -270,15 +270,56 @@ test.describe('Dataset Save with XML Verification', () => {
 async function prepareReferencaeAndActualXml(page: Page, type: string) {
     // Save XML
     const { xmlContent, parsedXml } = await downloadAndSaveXml(page, type);
+
+    const actualEnvelope = extractEnvelopeNode(parsedXml);
+    if (!actualEnvelope) {
+      const preview = xmlContent.slice(0, 500);
+      throw new Error(`Expected XML envelope in save response, but none was found. Response preview: ${preview}`);
+    }
+    const actualRoot = extractResourceNode(actualEnvelope);
+    if (!actualRoot) {
+      throw new Error('Expected resource node inside XML envelope, but none was found.');
+    }
     
     // Verify XML
     const refRoot = loadReferenceXml(type).envelope.resource;
-    const actualRoot = parsedXml.envelope.resource;
-
     const refEnvelope = loadReferenceXml(type).envelope;
-    const actualEnvelope = parsedXml.envelope;
 
     return { refRoot, actualRoot, refEnvelope, actualEnvelope };
+}
+
+function extractEnvelopeNode(parsedXml: any): any | null {
+  if (!parsedXml || typeof parsedXml !== 'object') {
+    return null;
+  }
+
+  if (parsedXml.envelope && typeof parsedXml.envelope === 'object') {
+    return parsedXml.envelope;
+  }
+
+  const envelopeKey = Object.keys(parsedXml).find((key) => key.endsWith(':envelope'));
+  if (envelopeKey && typeof parsedXml[envelopeKey] === 'object') {
+    return parsedXml[envelopeKey];
+  }
+
+  return null;
+}
+
+function extractResourceNode(envelope: any): any | null {
+  if (!envelope || typeof envelope !== 'object') {
+    return null;
+  }
+
+  if (envelope.resource && typeof envelope.resource === 'object') {
+    return envelope.resource;
+  }
+
+  const resourceKey = Object.keys(envelope).find((key) => key.endsWith(':resource'));
+  if (resourceKey && typeof envelope[resourceKey] === 'object') {
+    return envelope[resourceKey];
+  }
+
+  return null;
 }
 
 /**
@@ -323,10 +364,15 @@ async function downloadAndSaveXml(
   page: Page,
   testName: string
 ): Promise<{ xmlContent: string; parsedXml: any }> {
-  const responsePromise = page.waitForResponse(
-    response => response.url().includes('/save/save_data.php') && response.request().method() === 'POST',
-    { timeout: 30_000 }
-  );
+  const responsePromise = page.waitForResponse(async (response) => {
+    if (!response.url().includes('/save/save_data.php') || response.request().method() !== 'POST') {
+      return false;
+    }
+
+    const contentType = (await response.headerValue('content-type')) || '';
+    const disposition = (await response.headerValue('content-disposition')) || '';
+    return contentType.includes('xml') || disposition.includes('.xml');
+  }, { timeout: 30_000 });
 
   // Wait for Save button and click
   const saveButton = page.getByRole('button', { name: 'Save' });
