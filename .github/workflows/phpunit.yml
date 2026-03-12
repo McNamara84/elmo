@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "**" ]
 
 permissions:
   contents: read
@@ -159,7 +159,18 @@ jobs:
         env:
           API_BASE_URL: http://localhost:8000
         run: |
-          vendor/bin/phpunit --configuration phpunit.xml --debug
+          set -euo pipefail
+
+          output_file="$(mktemp)"
+          if ! vendor/bin/phpunit --configuration phpunit.xml 2>&1 | tee "$output_file"; then
+            echo "PHPUnit test run failed."
+            exit 1
+          fi
+
+          if grep -q "No tests executed" "$output_file"; then
+            echo "PHPUnit completed without executing tests."
+            exit 1
+          fi
 
           echo "\nFinal Server Log:"
           cat server.log
@@ -173,7 +184,7 @@ jobs:
           echo "Checking Xdebug status:"
           php -m | grep -i xdebug || echo "Xdebug not found!"
           php -v
-          vendor/bin/phpunit --configuration phpunit.xml --coverage-clover clover.xml
+          vendor/bin/phpunit --configuration phpunit.coverage.xml
           echo "\nChecking clover.xml:"
           if [ -f clover.xml ]; then
             echo "clover.xml created successfully!"
