@@ -1,27 +1,11 @@
 import { test, expect } from '@playwright/test';
-import type { Page } from '@playwright/test';
-
-const navigateToHome = async ({ page }: { page: Page }) => {
-  await page.goto('/');
-  await page.waitForLoadState('domcontentloaded');
-};
-
-/**
- * Check if GGM Properties are enabled in this instance
- * @param page - Playwright page object
- * @returns boolean - true if GGM is enabled, false otherwise
- */
-const isGGMEnabled = async (page: Page): Promise<boolean> => {
-  const hasGGMCard = await page.locator('#group-ggmspropertiesessential').isVisible().catch(() => false);
-  return hasGGMCard;
-};
+import { navigateToHome } from '../../utils';
 
 test.describe('GGM Descriptions (ICGEM Edition)', () => {
   test.beforeEach(async ({ page }) => {
-    await navigateToHome({ page });
-    const ggmEnabled = await isGGMEnabled(page);
-    test.skip(!ggmEnabled,'GGM Properties not enabled in this environment');
-    });
+    await navigateToHome(page);
+    await expect(page.locator('#group-ggmspropertiesessential')).toBeVisible();
+  });
 
   test('Descriptions form group is visible', async ({ page }) => {
     const descriptionGroup = page.locator('#group-description');

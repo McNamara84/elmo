@@ -18,7 +18,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        include:
+          - browser: chromium
+            projects: chromium
+          - browser: firefox
+            projects: firefox-gem --project=firefox-igsn
+          - browser: webkit
+            projects: webkit
     
     services:
       mysql:
@@ -82,42 +88,70 @@ jobs:
 
     - name: Create settings.php
       run: |
-        cat << EOF > settings.php
+        cat << 'EOF' > settings.php
         <?php
         function connectDb() {
-            \$host = '127.0.0.1';
-            \$username = 'test_user';
-            \$password = 'test_password';
-            \$database = 'mde2-msl-test';
-            \$conn = new mysqli(\$host, \$username, \$password, \$database);
-            return \$conn;
+            $host = '127.0.0.1';
+            $username = 'test_user';
+            $password = 'test_password';
+            $database = 'mde2-msl-test';
+            $conn = new mysqli($host, $username, $password, $database);
+            return $conn;
         }
         function getApiKey() {
-            \$apiKeyGoogleMaps = '';
-            echo json_encode(['apiKey' => \$apiKeyGoogleMaps]);
+            $apiKeyGoogleMaps = '';
+            echo json_encode(['apiKey' => $apiKeyGoogleMaps]);
         }
-        if (basename(__FILE__) == basename(\$_SERVER['PHP_SELF'])) {
-            if (\$_SERVER['REQUEST_METHOD'] === 'GET') {
+        if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 getApiKey();
             }
         }
-        \$connection = connectDb();
-        \$apiKeyElmo = '1234-1234-1234-1234';
-        \$apiKeyTimezone = 'test_timezone_api_key';
-        \$maxTitles = 2;
-        \$showMslLabs = true;
-        \$showMslVocabs = true;
-        \$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
-        \$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';        
-        \$showFeedbackLink = true;
-        \$smtpHost = 'smtp.test.de';
-        \$smtpPort = 465;
-        \$smtpUser = 'test_user';
-        \$smtpPassword = 'test_password';
-        \$smtpSender = 'test_sender@test.com';
-        \$feedbackAddress = 'feedback@test.com';
-        \$showLicense = true;
-        \$showGGMsProperties = false;
+        $connection = connectDb();
+        $apiKeyElmo = '1234-1234-1234-1234';
+        $apiKeyTimezone = 'test_timezone_api_key';
+        $maxTitles = 2;
+        $showFeedbackLink = true;
+        $showLicense = true;
+        $smtpHost = 'smtp.test.de';
+        $smtpPort = 465;
+        $smtpUser = 'test_user';
+        $smtpPassword = 'test_password';
+        $smtpSender = 'test_sender@test.com';
+        $feedbackAddress = 'feedback@test.com';
+        $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
+        $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+
+        // Feature toggles from environment variables (set per PHP server instance)
+        $SIMULATE_EMAIL = filter_var(getenv('SIMULATE_EMAIL') ?: 'true', FILTER_VALIDATE_BOOLEAN);
+
+        $showMslLabs = false;
+        $showMslVocabs = false;
+        $showMslLogo = false;
+        $showGGMsProperties = false;
+        $showUsedInstruments = false;
+        $showGcmdThesauri = true;
+        $showFreeKeywords = true;
+        $showSpatialTemporalCoverage = true;
+        $showRelatedWork = true;
+
+        $envOverrides = [
+            'SHOW_MSL_LABS' => 'showMslLabs',
+            'SHOW_MSL_VOCABS' => 'showMslVocabs',
+            'SHOW_MSL_LOGO' => 'showMslLogo',
+            'SHOW_GGMS_PROPERTIES' => 'showGGMsProperties',
+            'SHOW_USED_INSTRUMENTS' => 'showUsedInstruments',
+            'SHOW_GCMD_THESAURI' => 'showGcmdThesauri',
+            'SHOW_FREE_KEYWORDS' => 'showFreeKeywords',
+            'SHOW_SPATIAL_TEMPORAL_COVERAGE' => 'showSpatialTemporalCoverage',
+            'SHOW_RELATED_WORK' => 'showRelatedWork',
+        ];
+        foreach ($envOverrides as $envKey => $varName) {
+            $envVal = getenv($envKey);
+            if ($envVal !== false) {
+                $$varName = filter_var($envVal, FILTER_VALIDATE_BOOLEAN);
+            }
+        }
         EOF
 
     - name: Initialize database structure and lookup data
@@ -126,11 +160,53 @@ jobs:
     - name: Shrink large JSON fixtures for faster page loads
       run: echo '[{"crossRefId":"100000001","name":"National Science Foundation"}]' > json/funders.json
 
-    - name: Start PHP built-in web server
+    - name: Start PHP servers for all ELMO instances
       run: |
-        PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.jit_buffer_size=64M -d opcache.jit=1255 -S localhost:8000 ci-router.php 2>&1 > server.log &
-        echo $! > server.pid
-        sleep 2
+        # ELMO Standard (Port 8000)
+        SHOW_MSL_LABS=false SHOW_MSL_VOCABS=false SHOW_MSL_LOGO=false \
+        SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
+        SHOW_GCMD_THESAURI=true SHOW_FREE_KEYWORDS=true \
+        SHOW_SPATIAL_TEMPORAL_COVERAGE=true SHOW_RELATED_WORK=true \
+        SIMULATE_EMAIL=true \
+        PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=1 -d opcache.enable_cli=1 \
+        -d opcache.jit_buffer_size=64M -d opcache.jit=1255 \
+        -S localhost:8000 ci-router.php > server-elmo.log 2>&1 &
+        echo $! > server-elmo.pid
+
+        # ELMO-GEM (Port 8001)
+        SHOW_MSL_LABS=false SHOW_MSL_VOCABS=false SHOW_MSL_LOGO=false \
+        SHOW_GGMS_PROPERTIES=true SHOW_USED_INSTRUMENTS=false \
+        SHOW_GCMD_THESAURI=true SHOW_FREE_KEYWORDS=true \
+        SHOW_SPATIAL_TEMPORAL_COVERAGE=false SHOW_RELATED_WORK=true \
+        SIMULATE_EMAIL=true \
+        PHP_CLI_SERVER_WORKERS=2 php -d opcache.enable=1 -d opcache.enable_cli=1 \
+        -d opcache.jit_buffer_size=64M -d opcache.jit=1255 \
+        -S localhost:8001 ci-router.php > server-gem.log 2>&1 &
+        echo $! > server-gem.pid
+
+        # ELMO-IGSN (Port 8002)
+        SHOW_MSL_LABS=false SHOW_MSL_VOCABS=false SHOW_MSL_LOGO=false \
+        SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
+        SHOW_GCMD_THESAURI=false SHOW_FREE_KEYWORDS=false \
+        SHOW_SPATIAL_TEMPORAL_COVERAGE=false SHOW_RELATED_WORK=false \
+        SIMULATE_EMAIL=true \
+        PHP_CLI_SERVER_WORKERS=2 php -d opcache.enable=1 -d opcache.enable_cli=1 \
+        -d opcache.jit_buffer_size=64M -d opcache.jit=1255 \
+        -S localhost:8002 ci-router.php > server-igsn.log 2>&1 &
+        echo $! > server-igsn.pid
+
+        # ELMO-MSL (Port 8003)
+        SHOW_MSL_LABS=true SHOW_MSL_VOCABS=true SHOW_MSL_LOGO=true \
+        SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=false \
+        SHOW_GCMD_THESAURI=true SHOW_FREE_KEYWORDS=true \
+        SHOW_SPATIAL_TEMPORAL_COVERAGE=true SHOW_RELATED_WORK=true \
+        SIMULATE_EMAIL=true \
+        PHP_CLI_SERVER_WORKERS=2 php -d opcache.enable=1 -d opcache.enable_cli=1 \
+        -d opcache.jit_buffer_size=64M -d opcache.jit=1255 \
+        -S localhost:8003 ci-router.php > server-msl.log 2>&1 &
+        echo $! > server-msl.pid
+
+        sleep 3
 
     - name: Cache Playwright browsers
       id: playwright-cache
@@ -146,21 +222,23 @@ jobs:
         PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
       run: npx playwright install --with-deps ${{ matrix.browser }}
 
-    - name: Verify server is running
+    - name: Verify servers are running
       run: |
-        for i in {1..10}; do
-          if curl -sf http://localhost:8000/index.php > /dev/null; then
-            echo "Server is responding on attempt $i"
-            break
-          fi
-          echo "Waiting for server... ($i)"
-          sleep 2
+        for port in 8000 8001 8002 8003; do
+          for i in {1..10}; do
+            if curl -sf "http://localhost:${port}/index.php" > /dev/null; then
+              echo "Server on port ${port} is responding on attempt $i"
+              break
+            fi
+            echo "Waiting for server on port ${port}... ($i)"
+            sleep 2
+          done
+          curl -sf "http://localhost:${port}/index.php" > /dev/null || { echo "Server on port ${port} not reachable"; exit 1; }
         done
-        curl -sf http://localhost:8000/index.php > /dev/null || { echo "Server not reachable"; exit 1; }
 
     - name: Run Playwright tests
       id: run_playwright_tests
-      run: npx playwright test --config=playwright.config.ci.ts --workers=2 --project=${{ matrix.browser }}
+      run: npx playwright test --config=playwright.config.ci.ts --workers=2 --project=${{ matrix.projects }}
       env:
         CI: true
 
@@ -175,115 +253,88 @@ jobs:
         const path = require('path');
 
         const project = process.env.PLAYWRIGHT_PROJECT || 'unknown';
-        const sanitized = project.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const metricsDir = path.join(process.cwd(), 'test-results', 'performance');
-        const candidatePaths = [
-          path.join(metricsDir, `${sanitized}.json`),
-          path.join(metricsDir, `${project}.json`),
-        ];
 
-        const metricsPath = candidatePaths.find((candidate) => fs.existsSync(candidate));
+        // Collect metrics from all project outputs for this browser
+        let allMetrics = [];
+        if (fs.existsSync(metricsDir)) {
+          for (const file of fs.readdirSync(metricsDir)) {
+            if (file.endsWith('.json')) {
+              try {
+                allMetrics.push(JSON.parse(fs.readFileSync(path.join(metricsDir, file), 'utf8')));
+              } catch (e) { /* skip invalid files */ }
+            }
+          }
+        }
 
-        if (!metricsPath) {
+        if (allMetrics.length === 0) {
           console.log(`::warning::Performance metrics not found for ${project}.`);
-          console.log(`Checked: ${candidatePaths.join(', ')}`);
-
           const outputsFile = process.env.GITHUB_OUTPUT;
           if (outputsFile) {
             fs.appendFileSync(outputsFile, 'load_time=n/a\n');
             fs.appendFileSync(outputsFile, 'navigation_duration=n/a\n');
             fs.appendFileSync(outputsFile, 'dom_content_loaded=n/a\n');
           }
-
           process.exit(0);
         }
-
-        const metrics = JSON.parse(fs.readFileSync(metricsPath, 'utf8'));
 
         const toNumber = (value) => (typeof value === 'number' && Number.isFinite(value) ? value : undefined);
         const average = (values) => {
           const valid = values.filter((value) => typeof value === 'number' && Number.isFinite(value));
-          if (valid.length === 0) {
-            return undefined;
-          }
+          if (valid.length === 0) return undefined;
           return valid.reduce((sum, value) => sum + value, 0) / valid.length;
         };
 
-        const runs = Array.isArray(metrics.runs) ? metrics.runs : [];
-        const runLoadTimes = runs
-          .map((run) => (run && typeof run === 'object' ? toNumber(run.totalLoadTimeMs) : undefined))
-          .filter((value) => value !== undefined);
-        const runNavigationDurations = runs
-          .map((run) => {
-            const navigation = run && typeof run === 'object' ? run.navigation : undefined;
-            return navigation && typeof navigation === 'object' ? toNumber(navigation.duration) : undefined;
-          })
-          .filter((value) => value !== undefined);
-        const runDomContentLoaded = runs
-          .map((run) => {
-            const navigation = run && typeof run === 'object' ? run.navigation : undefined;
-            return navigation && typeof navigation === 'object' ? toNumber(navigation.domContentLoadedEventEnd) : undefined;
-          })
-          .filter((value) => value !== undefined);
-
-        const navigation = metrics.navigation && typeof metrics.navigation === 'object' ? metrics.navigation : undefined;
-
-        const loadTime =
-          toNumber(metrics.totalLoadTimeMs ?? metrics.averageLoadTimeMs) ?? average(runLoadTimes);
-        const navigationDuration =
-          (navigation && toNumber(navigation.duration)) ?? average(runNavigationDurations);
-        const domContentLoaded =
-          (navigation && toNumber(navigation.domContentLoadedEventEnd)) ?? average(runDomContentLoaded);
-
-        const formattedLoad = loadTime !== undefined ? loadTime.toFixed(0) : 'n/a';
-        const formattedDuration = navigationDuration !== undefined ? navigationDuration.toFixed(0) : 'n/a';
-        const formattedDom = domContentLoaded !== undefined ? domContentLoaded.toFixed(0) : 'n/a';
-
-        const messageParts = [`${project} ELMO fully loaded in ${formattedLoad} ms`];
-        if (formattedDuration !== 'n/a') {
-          messageParts.push(`navigation duration ${formattedDuration} ms`);
-        }
-        if (formattedDom !== 'n/a') {
-          messageParts.push(`DOMContentLoaded ${formattedDom} ms`);
-        }
-        if (runLoadTimes.length > 0) {
-          const formattedRuns = runLoadTimes
-            .map((value, index) => `run ${index + 1}: ${value.toFixed(0)} ms`)
-            .join(', ');
-          messageParts.push(`runs ${formattedRuns}`);
-        }
-
-        console.log(`::notice title=ELMO load time::${messageParts.join(' | ')}`);
-
-        const outputsFile = process.env.GITHUB_OUTPUT;
-        const runsSummary = runLoadTimes.length > 0
-          ? runLoadTimes.map((value, index) => `#${index + 1}: ${value.toFixed(0)} ms`).join(', ')
-          : '';
-
-        if (outputsFile) {
-          fs.appendFileSync(outputsFile, `load_time=${formattedLoad}\n`);
-          fs.appendFileSync(outputsFile, `navigation_duration=${formattedDuration}\n`);
-          fs.appendFileSync(outputsFile, `dom_content_loaded=${formattedDom}\n`);
-          if (runsSummary) {
-            fs.appendFileSync(outputsFile, `runs_summary=${runsSummary}\n`);
-          }
-        }
-
         const summaryPath = process.env.GITHUB_STEP_SUMMARY;
-        if (summaryPath) {
-          let summary = '';
-          if (!fs.existsSync(summaryPath) || fs.statSync(summaryPath).size === 0) {
-            summary += '| Browser | Fully loaded (ms) | Navigation duration (ms) | DOMContentLoaded (ms) |\n';
-            summary += '| --- | ---: | ---: | ---: |\n';
+        const outputsFile = process.env.GITHUB_OUTPUT;
+        let firstMetric = true;
+
+        for (const metrics of allMetrics) {
+          const browser = metrics.browser || project;
+          const runs = Array.isArray(metrics.runs) ? metrics.runs : [];
+          const runLoadTimes = runs
+            .map((run) => (run && typeof run === 'object' ? toNumber(run.totalLoadTimeMs) : undefined))
+            .filter((value) => value !== undefined);
+          const runNavigationDurations = runs
+            .map((run) => {
+              const navigation = run && typeof run === 'object' ? run.navigation : undefined;
+              return navigation && typeof navigation === 'object' ? toNumber(navigation.duration) : undefined;
+            })
+            .filter((value) => value !== undefined);
+          const runDomContentLoaded = runs
+            .map((run) => {
+              const navigation = run && typeof run === 'object' ? run.navigation : undefined;
+              return navigation && typeof navigation === 'object' ? toNumber(navigation.domContentLoadedEventEnd) : undefined;
+            })
+            .filter((value) => value !== undefined);
+
+          const navigation = metrics.navigation && typeof metrics.navigation === 'object' ? metrics.navigation : undefined;
+          const loadTime = toNumber(metrics.totalLoadTimeMs ?? metrics.averageLoadTimeMs) ?? average(runLoadTimes);
+          const navigationDuration = (navigation && toNumber(navigation.duration)) ?? average(runNavigationDurations);
+          const domContentLoaded = (navigation && toNumber(navigation.domContentLoadedEventEnd)) ?? average(runDomContentLoaded);
+
+          const formattedLoad = loadTime !== undefined ? loadTime.toFixed(0) : 'n/a';
+          const formattedDuration = navigationDuration !== undefined ? navigationDuration.toFixed(0) : 'n/a';
+          const formattedDom = domContentLoaded !== undefined ? domContentLoaded.toFixed(0) : 'n/a';
+
+          console.log(`::notice title=ELMO load time (${browser})::${browser} fully loaded in ${formattedLoad} ms`);
+
+          if (firstMetric && outputsFile) {
+            fs.appendFileSync(outputsFile, `load_time=${formattedLoad}\n`);
+            fs.appendFileSync(outputsFile, `navigation_duration=${formattedDuration}\n`);
+            fs.appendFileSync(outputsFile, `dom_content_loaded=${formattedDom}\n`);
+            firstMetric = false;
           }
-          summary += `| ${metrics.browser || project} | ${formattedLoad} | ${formattedDuration} | ${formattedDom} |\n`;
-          if (runLoadTimes.length > 0) {
-            const runDetails = runLoadTimes
-              .map((value, index) => `#${index + 1}: ${value.toFixed(0)} ms`)
-              .join(', ');
-            summary += `> Individual runs (${runLoadTimes.length}): ${runDetails}\n`;
+
+          if (summaryPath) {
+            let summary = '';
+            if (!fs.existsSync(summaryPath) || fs.statSync(summaryPath).size === 0) {
+              summary += '| Instance | Fully loaded (ms) | Navigation duration (ms) | DOMContentLoaded (ms) |\n';
+              summary += '| --- | ---: | ---: | ---: |\n';
+            }
+            summary += `| ${browser} | ${formattedLoad} | ${formattedDuration} | ${formattedDom} |\n`;
+            fs.appendFileSync(summaryPath, summary);
           }
-          fs.appendFileSync(summaryPath, summary);
         }
         NODE
 
@@ -295,7 +346,6 @@ jobs:
         LOAD_TIME_MS: ${{ steps.publish_performance_metrics.outputs.load_time }}
         NAVIGATION_DURATION_MS: ${{ steps.publish_performance_metrics.outputs.navigation_duration }}
         DOM_CONTENT_LOADED_MS: ${{ steps.publish_performance_metrics.outputs.dom_content_loaded }}
-        RUNS_SUMMARY: ${{ steps.publish_performance_metrics.outputs.runs_summary }}
         PLAYWRIGHT_CONCLUSION: ${{ steps.run_playwright_tests.conclusion }}
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -304,7 +354,6 @@ jobs:
           const loadTime = process.env.LOAD_TIME_MS;
           const navigationDuration = process.env.NAVIGATION_DURATION_MS;
           const domContentLoaded = process.env.DOM_CONTENT_LOADED_MS;
-          const runsSummary = process.env.RUNS_SUMMARY || '';
           const testConclusion = (process.env.PLAYWRIGHT_CONCLUSION || '').toLowerCase();
 
           if (!loadTime) {
@@ -337,9 +386,6 @@ jobs:
           if (domContentLoaded && domContentLoaded !== 'n/a') {
             metricsLines.push(`• DOMContentLoaded: ${domContentLoaded} ms`);
           }
-          if (runsSummary) {
-            metricsLines.push(`• Runs: ${runsSummary}`);
-          }
 
           await github.rest.checks.create({
             owner,
@@ -360,8 +406,11 @@ jobs:
     - name: Debug what the browser actually sees
       if: failure()
       run: |
-        echo "=== Debugging what the browser gets ==="
-        curl -s http://localhost:8000/ | head -50
+        echo "=== Debugging what each server returns ==="
+        for port in 8000 8001 8002 8003; do
+          echo "--- Port ${port} ---"
+          curl -s "http://localhost:${port}/" | head -50
+        done
 
     - name: Upload Playwright Report
       uses: actions/upload-artifact@v4
@@ -382,16 +431,16 @@ jobs:
     - name: Display server logs on failure
       if: failure()
       run: |
-        echo "=== Server Log ==="
-        cat server.log
-        echo "=== PHP Error Log ==="
-        if [ -f /var/log/php_errors.log ]; then
-          cat /var/log/php_errors.log
-        fi
+        for instance in elmo gem igsn msl; do
+          echo "=== Server Log (${instance}) ==="
+          cat "server-${instance}.log" 2>/dev/null || echo "(no log)"
+        done
 
-    - name: Stop PHP server
+    - name: Stop PHP servers
       if: always()
       run: |
-        if [ -f server.pid ]; then
-          kill $(cat server.pid) || true
-        fi
+        for instance in elmo gem igsn msl; do
+          if [ -f "server-${instance}.pid" ]; then
+            kill "$(cat "server-${instance}.pid")" 2>/dev/null || true
+          fi
+        done
