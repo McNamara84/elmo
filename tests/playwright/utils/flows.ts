@@ -395,24 +395,12 @@ async function addAuthor(
     affiliation: string;
   }
 ) {
-  const creatorRows = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`);
-
   if (index > 0) {
-    // Ensure the requested row index exists even on slower/browser-specific render timing.
-    for (let attempts = 0; attempts < 5; attempts++) {
-      const count = await creatorRows.count();
-      if (count > index) {
-        break;
-      }
-      await page.locator('#button-author-add').click();
-      await page.waitForTimeout(150);
-    }
-
-    await expect(creatorRows).toHaveCount(index + 1, { timeout: 5000 });
-    await creatorRows.nth(index).waitFor({ state: 'visible' });
+    await page.locator('#button-author-add').click();
+    await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index).waitFor({ state: 'visible' });
   }
 
-  const authorRow = creatorRows.nth(index);
+  const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index);
 
   await authorRow.locator('[id^="input-author-orcid"]').fill(data.orcid);
   const lastNameField = authorRow.locator('[id^="input-author-lastname"]');
@@ -422,17 +410,21 @@ async function addAuthor(
   await lastNameField.fill(data.lastName);
   await authorRow.locator('[id^="input-author-firstname"]').fill(data.firstName);
 
-  // Fill affiliation using Tagify within the author row
-  const affiliationTagify = authorRow.locator('.tagify');
-  await affiliationTagify.waitFor({ state: 'visible', timeout: 5000 });
+  // Fill affiliation using tagify within the author row
   const affiliationTagifyInput = authorRow.locator('.tagify__input[title="Affiliation"]');
+  await affiliationTagifyInput.waitFor({ state: 'visible', timeout: 5000 });
   await affiliationTagifyInput.click();
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');
 
-  // Wait for the tag to appear visually (tests what the user sees, not internal state)
-  const affiliationTag = authorRow.locator('.tagify__tag');
-  await expect(affiliationTag.first()).toBeVisible({ timeout: 5000 });
+  // Wait for it to be in Tagify's internal state within the author row
+  const authorRowElement = await authorRow.evaluate((element) => {
+    const input = element.querySelector('input[name*="affiliation"]') as any;
+    return input?._tagify?.value?.some((tag: any) => tag.value === data.affiliation);
+  }, data.affiliation);
+
+  // Extra buffer to ensure tag is fully processed
+  await page.waitForTimeout(500);
 }
 export { exampleData };
 

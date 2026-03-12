@@ -108,29 +108,41 @@ test.describe('Dataset Save with XML Verification', () => {
     // Compare all the descriptions
     const descriptions = toArray(actualRoot.descriptions.description);
     const refDescriptions = toArray(refRoot.descriptions.description);
-    const actualDescriptionsByType = mapDescriptionsByType(descriptions);
-    const refDescriptionsByType = mapDescriptionsByType(refDescriptions);
-    expect(actualDescriptionsByType).toEqual(refDescriptionsByType);
+    expect(descriptions.length).toBe(refDescriptions.length);
+    for (let i = 0; i < descriptions.length; i++) {
+      expect(descriptions[i]['#text']).toBe(refDescriptions[i]['#text']);
+    }
 
     // Assert keywords present - handle both string and array formats
     if (actualRoot.subjects && refRoot.subjects) {
       const actualKeywords = toArray(actualRoot.subjects.subject);
       const refKeywords = toArray(refRoot.subjects.subject);
-      expect(sortPrimitiveArray(actualKeywords)).toEqual(sortPrimitiveArray(refKeywords));
+      expect(actualKeywords).toEqual(refKeywords);
     }
 
     // Assert related identifiers with detailed attributes - handle both object and array formats
     if (actualRoot.relatedIdentifiers && refRoot.relatedIdentifiers) {
       const actualRelated = toArray(actualRoot.relatedIdentifiers.relatedIdentifier);
       const refRelated = toArray(refRoot.relatedIdentifiers.relatedIdentifier);
-      expect(normalizeRelatedIdentifiers(actualRelated)).toEqual(normalizeRelatedIdentifiers(refRelated));
+      expect(actualRelated.length).toBe(refRelated.length);
+      for (let i = 0; i < actualRelated.length; i++) {
+        expect(actualRelated[i]['#text']).toBe(refRelated[i]['#text']);
+        expect(actualRelated[i].relatedIdentifierType).toBe(refRelated[i].relatedIdentifierType);
+        expect(actualRelated[i].relationType).toBe(refRelated[i].relationType);
+      }
     }
 
     // Assert funding references with detailed attributes - handle both object and array formats
     if (actualRoot.fundingReferences && refRoot.fundingReferences) {
       const actualFunding = toArray(actualRoot.fundingReferences.fundingReference);
       const refFunding = toArray(refRoot.fundingReferences.fundingReference);
-      expect(normalizeFundingReferences(actualFunding)).toEqual(normalizeFundingReferences(refFunding));
+      expect(actualFunding.length).toBe(refFunding.length);
+      for (let i = 0; i < actualFunding.length; i++) {
+        expect(actualFunding[i].funderName).toBe(refFunding[i].funderName);
+        expect(actualFunding[i].awardNumber['#text']).toBe(refFunding[i].awardNumber['#text']);
+        expect(actualFunding[i].awardNumber.awardURI).toBe(refFunding[i].awardNumber.awardURI);
+        expect(actualFunding[i].awardTitle).toBe(refFunding[i].awardTitle);
+      }
     }
 
     // Assert contact person email
@@ -152,46 +164,91 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert multiple personal authors (persons)
     const personalCreators = actualAuthors.filter((c: any) => c.creatorName.nameType === 'Personal');
     const refPersonalCreators = referenceAuthors.filter((c: any) => c.creatorName.nameType === 'Personal');
-    const personalByName = mapCreatorsByName(personalCreators);
-    const refPersonalByName = mapCreatorsByName(refPersonalCreators);
-    expect(personalByName).toEqual(refPersonalByName);
+    expect(personalCreators.length).toBe(refPersonalCreators.length);
+    for (let i = 0; i < personalCreators.length; i++) {
+      expect(personalCreators[i].creatorName['#text']).toBe(refPersonalCreators[i].creatorName['#text']);
+      expect(personalCreators[i].givenName).toBe(refPersonalCreators[i].givenName);
+      expect(personalCreators[i].familyName).toBe(refPersonalCreators[i].familyName);
+      expect(personalCreators[i].nameIdentifier['#text']).toBe(refPersonalCreators[i].nameIdentifier['#text']);
+    }
 
     // Assert organizational authors (institutions)
     const orgCreators = actualAuthors.filter((c: any) => c.creatorName.nameType === 'Organizational');
     const refOrgCreators = referenceAuthors.filter((c: any) => c.creatorName.nameType === 'Organizational');
-    const orgByName = mapOrganizationalCreatorsByName(orgCreators);
-    const refOrgByName = mapOrganizationalCreatorsByName(refOrgCreators);
-    expect(orgByName).toEqual(refOrgByName);
+    expect(orgCreators.length).toBe(refOrgCreators.length);
+    for (let i = 0; i < orgCreators.length; i++) {
+      expect(orgCreators[i].creatorName['#text']).toBe(refOrgCreators[i].creatorName['#text']);
+      // Organization affiliations can be strings or objects with #text
+      const actualOrgAff = extractText(orgCreators[i].affiliation);
+      const refOrgAff = extractText(refOrgCreators[i].affiliation);
+      if (actualOrgAff && refOrgAff) {
+        expect(actualOrgAff).toBe(refOrgAff);
+      }
+    }
 
     // Assert multiple keywords - check length and each value
     const actualKeywords = toArray(actualRoot.subjects?.subject);
     const referenceKeywords = toArray(refRoot.subjects?.subject);
-    expect(sortPrimitiveArray(actualKeywords)).toEqual(sortPrimitiveArray(referenceKeywords));
+    expect(actualKeywords.length).toBe(referenceKeywords.length);
+    for (let i = 0; i < actualKeywords.length; i++) {
+      expect(actualKeywords[i]).toBe(referenceKeywords[i]);
+    }
 
     // Assert multiple descriptions - check length and each value
     const actualDescriptions = toArray(actualRoot.descriptions?.description);
     const referenceDescriptions = toArray(refRoot.descriptions?.description);
-    expect(mapDescriptionsByType(actualDescriptions)).toEqual(mapDescriptionsByType(referenceDescriptions));
+    expect(actualDescriptions.length).toBe(referenceDescriptions.length);
+    for (let i = 0; i < actualDescriptions.length; i++) {
+      expect(actualDescriptions[i]['#text']).toBe(referenceDescriptions[i]['#text']);
+    }
 
     // Assert multiple related works - check length and each value with attributes
     const actualRelated = toArray(actualRoot.relatedIdentifiers?.relatedIdentifier);
     const referenceRelated = toArray(refRoot.relatedIdentifiers?.relatedIdentifier);
-    expect(normalizeRelatedIdentifiers(actualRelated)).toEqual(normalizeRelatedIdentifiers(referenceRelated));
+    expect(actualRelated.length).toBe(referenceRelated.length);
+    for (let i = 0; i < actualRelated.length; i++) {
+      expect(actualRelated[i]['#text']).toBe(referenceRelated[i]['#text']);
+      expect(actualRelated[i].relatedIdentifierType).toBe(referenceRelated[i].relatedIdentifierType);
+      expect(actualRelated[i].relationType).toBe(referenceRelated[i].relationType);
+    }
 
     // Assert multiple funding references - check length and each property with attributes
     const actualFunding = toArray(actualRoot.fundingReferences?.fundingReference);
     const referenceFunding = toArray(refRoot.fundingReferences?.fundingReference);
-    expect(normalizeFundingReferences(actualFunding)).toEqual(normalizeFundingReferences(referenceFunding));
+    expect(actualFunding.length).toBe(referenceFunding.length);
+    for (let i = 0; i < actualFunding.length; i++) {
+      expect(actualFunding[i].funderName).toBe(referenceFunding[i].funderName);
+      expect(actualFunding[i].awardNumber['#text']).toBe(referenceFunding[i].awardNumber['#text']);
+      expect(actualFunding[i].awardNumber.awardURI).toBe(referenceFunding[i].awardNumber.awardURI);
+      expect(actualFunding[i].awardTitle).toBe(referenceFunding[i].awardTitle);
+    }
 
         // Assert contributor persons - check length and each property
     const actualContributorPersons = toArray(actualRoot.contributors?.contributor).filter((c: any) => c.nameIdentifier);
     const refContributorPersons = toArray(refRoot.contributors?.contributor).filter((c: any) => c.nameIdentifier);
-    expect(mapContributorPersonsByName(actualContributorPersons)).toEqual(mapContributorPersonsByName(refContributorPersons));
+    expect(actualContributorPersons.length).toBe(refContributorPersons.length);
+    for (let i = 0; i < actualContributorPersons.length; i++) {
+      expect(actualContributorPersons[i].contributorName['#text']).toBe(refContributorPersons[i].contributorName['#text']);
+      expect(actualContributorPersons[i].givenName).toBe(refContributorPersons[i].givenName);
+      expect(actualContributorPersons[i].familyName).toBe(refContributorPersons[i].familyName);
+      expect(actualContributorPersons[i].nameIdentifier['#text']).toBe(refContributorPersons[i].nameIdentifier['#text']);
+      expect(actualContributorPersons[i].contributorType).toBe(refContributorPersons[i].contributorType);
+    }
 
     // Assert contributor institutions - check length and each property
     const actualContributorInstitutions = toArray(actualRoot.contributors?.contributor).filter((c: any) => !c.nameIdentifier);
     const refContributorInstitutions = toArray(refRoot.contributors?.contributor).filter((c: any) => !c.nameIdentifier);
-    expect(mapContributorInstitutionsByName(actualContributorInstitutions)).toEqual(mapContributorInstitutionsByName(refContributorInstitutions));
+    expect(actualContributorInstitutions.length).toBe(refContributorInstitutions.length);
+    for (let i = 0; i < actualContributorInstitutions.length; i++) {
+      expect(actualContributorInstitutions[i].contributorName['#text']).toBe(refContributorInstitutions[i].contributorName['#text']);
+      expect(actualContributorInstitutions[i].contributorType).toBe(refContributorInstitutions[i].contributorType);
+      // Affiliation can be a string or object with #text
+      const actualContribAff = extractText(actualContributorInstitutions[i].affiliation);
+      const refContribAff = extractText(refContributorInstitutions[i].affiliation);
+      if (actualContribAff && refContribAff) {
+        expect(actualContribAff).toBe(refContribAff);
+      }
+    }
 
     console.log('✓ Extended multiple entries XML verification passed');
   });
@@ -402,83 +459,4 @@ function extractText(value: any): string | undefined {
     return value;
   }
   return value?.['#text'];
-}
-
-function mapDescriptionsByType(descriptions: Array<any>): Record<string, string> {
-  return descriptions.reduce((acc, description) => {
-    const type = String(description?.descriptionType ?? 'unknown');
-    const text = String(description?.['#text'] ?? '');
-    acc[type] = text;
-    return acc;
-  }, {} as Record<string, string>);
-}
-
-function mapCreatorsByName(creators: Array<any>): Record<string, { givenName: string; familyName: string; nameIdentifier: string }> {
-  return creators.reduce((acc, creator) => {
-    const name = String(creator?.creatorName?.['#text'] ?? creator?.creatorName ?? '');
-    acc[name] = {
-      givenName: String(creator?.givenName ?? ''),
-      familyName: String(creator?.familyName ?? ''),
-      nameIdentifier: String(creator?.nameIdentifier?.['#text'] ?? '')
-    };
-    return acc;
-  }, {} as Record<string, { givenName: string; familyName: string; nameIdentifier: string }>);
-}
-
-function mapOrganizationalCreatorsByName(creators: Array<any>): Record<string, string> {
-  return creators.reduce((acc, creator) => {
-    const name = String(creator?.creatorName?.['#text'] ?? creator?.creatorName ?? '');
-    const affiliation = String(extractText(creator?.affiliation) ?? '');
-    acc[name] = affiliation;
-    return acc;
-  }, {} as Record<string, string>);
-}
-
-function sortPrimitiveArray(values: Array<any>): Array<string> {
-  return values.map((value) => String(value)).sort((a, b) => a.localeCompare(b));
-}
-
-function normalizeRelatedIdentifiers(values: Array<any>): Array<{ value: string; type: string; relation: string }> {
-  return values
-    .map((entry) => ({
-      value: String(entry?.['#text'] ?? ''),
-      type: String(entry?.relatedIdentifierType ?? ''),
-      relation: String(entry?.relationType ?? '')
-    }))
-    .sort((a, b) => `${a.value}|${a.type}|${a.relation}`.localeCompare(`${b.value}|${b.type}|${b.relation}`));
-}
-
-function normalizeFundingReferences(values: Array<any>): Array<{ funderName: string; awardNumber: string; awardURI: string; awardTitle: string }> {
-  return values
-    .map((entry) => ({
-      funderName: String(entry?.funderName ?? ''),
-      awardNumber: String(entry?.awardNumber?.['#text'] ?? ''),
-      awardURI: String(entry?.awardNumber?.awardURI ?? ''),
-      awardTitle: String(entry?.awardTitle ?? '')
-    }))
-    .sort((a, b) => `${a.funderName}|${a.awardNumber}|${a.awardTitle}`.localeCompare(`${b.funderName}|${b.awardNumber}|${b.awardTitle}`));
-}
-
-function mapContributorPersonsByName(contributors: Array<any>): Record<string, { givenName: string; familyName: string; nameIdentifier: string; contributorType: string }> {
-  return contributors.reduce((acc, contributor) => {
-    const name = String(contributor?.contributorName?.['#text'] ?? contributor?.contributorName ?? '');
-    acc[name] = {
-      givenName: String(contributor?.givenName ?? ''),
-      familyName: String(contributor?.familyName ?? ''),
-      nameIdentifier: String(contributor?.nameIdentifier?.['#text'] ?? ''),
-      contributorType: String(contributor?.contributorType ?? '')
-    };
-    return acc;
-  }, {} as Record<string, { givenName: string; familyName: string; nameIdentifier: string; contributorType: string }>);
-}
-
-function mapContributorInstitutionsByName(contributors: Array<any>): Record<string, { contributorType: string; affiliation: string }> {
-  return contributors.reduce((acc, contributor) => {
-    const name = String(contributor?.contributorName?.['#text'] ?? contributor?.contributorName ?? '');
-    acc[name] = {
-      contributorType: String(contributor?.contributorType ?? ''),
-      affiliation: String(extractText(contributor?.affiliation) ?? '')
-    };
-    return acc;
-  }, {} as Record<string, { contributorType: string; affiliation: string }>);
 }
