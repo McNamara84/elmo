@@ -33,11 +33,16 @@ describe('submitHandler.js', () => {
       <div class="embargo-invalid"></div>
       <div id="group-stc">
         <div id="row" tsc-row>
-          <input id="input-stc-datestart-row1" />
-          <input id="input-stc-timestart-row1" />
-          <input id="input-stc-dateend-row1" />
-          <input id="input-stc-timeend-row1" />
-          <div class="invalid-feedback" data-translate="coverage.dateTimeInvalid"></div>
+          <div class="input-group has-validation" id="start-group">
+            <input id="input-stc-datestart-row1" />
+            <input id="input-stc-timestart-row1" />
+            <div id="feedback-start" class="invalid-feedback" data-translate="coverage.dateTimeInvalid"></div>
+          </div>
+          <div class="input-group has-validation" id="end-group">
+            <input id="input-stc-dateend-row1" />
+            <input id="input-stc-timeend-row1" />
+            <div id="feedback-end" class="invalid-feedback" data-translate="coverage.dateTimeInvalid"></div>
+          </div>
         </div>
       </div>
       <input type="checkbox" id="input-submit-privacycheck">
@@ -109,7 +114,8 @@ describe('submitHandler.js', () => {
     const result = validateTemporalCoverage(row);
     expect(result).toBe(false);
     expect($('#input-stc-dateend-row1').hasClass('is-invalid')).toBe(true);
-    expect(row.querySelector('.invalid-feedback').textContent).toBe('End Date Error');
+    expect(document.getElementById('feedback-end').textContent).toBe('End Date Error');
+    expect(document.getElementById('feedback-start').textContent).toBe('');
   });
 
   test('validateTemporalCoverage marks invalid when same date has end time before start time', () => {
@@ -123,7 +129,8 @@ describe('submitHandler.js', () => {
 
     expect(result).toBe(false);
     expect($('#input-stc-dateend-row1').hasClass('is-invalid')).toBe(true);
-    expect(row.querySelector('.invalid-feedback').textContent).toBe('End Time Error');
+    expect(document.getElementById('feedback-end').textContent).toBe('End Time Error');
+    expect(document.getElementById('feedback-start').textContent).toBe('');
   });
 
   test('validateTemporalCoverage is valid when same date has correct time order', () => {
@@ -137,7 +144,7 @@ describe('submitHandler.js', () => {
 
     expect(result).toBe(true);
     expect($('#input-stc-dateend-row1').hasClass('is-invalid')).toBe(false);
-    expect(row.querySelector('.invalid-feedback').textContent).toBe('');
+    expect(document.getElementById('feedback-end').textContent).toBe('');
   });
 
   test('validateAllTemporalCoverageRows returns false when one row is invalid', () => {

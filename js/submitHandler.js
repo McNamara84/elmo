@@ -65,7 +65,9 @@ function validateTemporalCoverage(row) {
     const dateEndInput = row.querySelector('[id*="input-stc-dateend"]');
     const timeStartInput = row.querySelector('[id*="input-stc-timestart"]');
     const timeEndInput = row.querySelector('[id*="input-stc-timeend"]');
-    const dateTimeInvalidFeedback = row.querySelector('.invalid-feedback[data-translate="coverage.dateTimeInvalid"]');
+    const dateTimeInvalidFeedback =
+        dateEndInput?.closest('.input-group')?.querySelector('.invalid-feedback') ||
+        row.querySelector('.invalid-feedback[data-translate="coverage.dateTimeInvalid"]');
 
     if (!dateStartInput || !dateEndInput || !dateTimeInvalidFeedback) {
         return true;
