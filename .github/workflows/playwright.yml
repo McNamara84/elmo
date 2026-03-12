@@ -2,24 +2,30 @@ name: Playwright Tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "**" ]
+    branches: ["**"]
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
-  checks: write
 
 jobs:
-  playwright-tests:
+  core-smoke:
+    name: "Smoke Tests (${{ matrix.browser }})"
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     env:
       PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
+      PROFILE: elmo
+      TEST_SCOPE: core-smoke
     strategy:
       fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
-    
+
     services:
       mysql:
         image: mysql:8.0
@@ -37,361 +43,714 @@ jobs:
           --health-retries 3
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.5'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
-        tools: phpdbg
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
+          tools: phpdbg
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '24'
-        cache: 'npm'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: |
-        composer install --prefer-dist --no-progress --no-suggest
-        composer dump-autoload -o
-        npm ci
+      - name: Install dependencies
+        run: |
+          composer install --prefer-dist --no-progress --no-suggest
+          composer dump-autoload -o
+          npm ci
 
-    - name: Wait for MySQL to be ready
-      run: |
-        for i in {30..0}; do
-          if mysqladmin ping -h127.0.0.1 --silent; then
-            break
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {30..0}; do
+            if mysqladmin ping -h127.0.0.1 --silent; then
+              break
+            fi
+            echo 'Waiting for MySQL...'
+            sleep 5
+          done
+          if [ "$i" = 0 ]; then
+            echo >&2 'MySQL did not start in time.'
+            exit 1
           fi
-          echo 'Waiting for MySQL...'
-          sleep 5
-        done
-        if [ "$i" = 0 ]; then
-          echo >&2 'MySQL did not start in time.'
-          exit 1
-        fi
 
-    - name: Grant privileges to test_user
-      run: |
-        mysql -h127.0.0.1 -uroot -proot_password -e "
-          CREATE USER IF NOT EXISTS 'test_user'@'%' IDENTIFIED BY 'test_password';
-          GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
-          FLUSH PRIVILEGES;
-        "
+      - name: Grant privileges to test_user
+        run: |
+          mysql -h127.0.0.1 -uroot -proot_password -e "
+            CREATE USER IF NOT EXISTS 'test_user'@'%' IDENTIFIED BY 'test_password';
+            GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
+            FLUSH PRIVILEGES;
+          "
 
-    - name: Create settings.php
-      run: |
-        cat << EOF > settings.php
-        <?php
-        function connectDb() {
-            \$host = '127.0.0.1';
-            \$username = 'test_user';
-            \$password = 'test_password';
-            \$database = 'mde2-msl-test';
-            \$conn = new mysqli(\$host, \$username, \$password, \$database);
-            return \$conn;
-        }
-        function getApiKey() {
-            \$apiKeyGoogleMaps = '';
-            echo json_encode(['apiKey' => \$apiKeyGoogleMaps]);
-        }
-        if (basename(__FILE__) == basename(\$_SERVER['PHP_SELF'])) {
-            if (\$_SERVER['REQUEST_METHOD'] === 'GET') {
-                getApiKey();
-            }
-        }
-        \$connection = connectDb();
-        \$apiKeyElmo = '1234-1234-1234-1234';
-        \$apiKeyTimezone = 'test_timezone_api_key';
-        \$maxTitles = 2;
-        \$showMslLabs = true;
-        \$showMslVocabs = true;
-        \$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
-        \$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';        
-        \$showFeedbackLink = true;
-        \$smtpHost = 'smtp.test.de';
-        \$smtpPort = 465;
-        \$smtpUser = 'test_user';
-        \$smtpPassword = 'test_password';
-        \$smtpSender = 'test_sender@test.com';
-        \$feedbackAddress = 'feedback@test.com';
-        \$showLicense = true;
-        \$showGGMsProperties = false;
-        EOF
+      - name: Create profile settings.php
+        run: |
+          set -euo pipefail
 
-    - name: Initialize database structure and lookup data
-      run: php -r "require 'install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
+          case "${PROFILE}" in
+            elmo)
+              SHOW_MSL_LABS=false
+              SHOW_MSL_VOCABS=false
+              SHOW_MSL_LOGO=false
+              SHOW_GGMS_PROPERTIES=false
+              SHOW_USED_INSTRUMENTS=true
+              SHOW_GCMD_THESAURI=true
+              SHOW_FREE_KEYWORDS=true
+              SHOW_SPATIAL_TEMPORAL_COVERAGE=true
+              SHOW_RELATED_WORK=true
+              ;;
+            *)
+              echo "Unsupported profile: ${PROFILE}" >&2
+              exit 1
+              ;;
+          esac
 
-    - name: Shrink large JSON fixtures for faster page loads
-      run: echo '[{"crossRefId":"100000001","name":"National Science Foundation"}]' > json/funders.json
+          cat > settings.php <<PHP
+          <?php
+          function connectDb() {
+              \$host = '127.0.0.1';
+              \$username = 'test_user';
+              \$password = 'test_password';
+              \$database = 'mde2-msl-test';
+              \$conn = new mysqli(\$host, \$username, \$password, \$database);
+              return \$conn;
+          }
+          function getApiKey() {
+              \$apiKeyGoogleMaps = '';
+              echo json_encode(['apiKey' => \$apiKeyGoogleMaps]);
+          }
+          if (basename(__FILE__) == basename(\$_SERVER['PHP_SELF'])) {
+              if (\$_SERVER['REQUEST_METHOD'] === 'GET') {
+                  getApiKey();
+              }
+          }
+          \$connection = connectDb();
+          \$apiKeyElmo = '1234-1234-1234-1234';
+          \$apiKeyTimezone = 'test_timezone_api_key';
+          \$maxTitles = 2;
 
-    - name: Start PHP built-in web server
-      run: |
-        PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.jit_buffer_size=64M -d opcache.jit=1255 -S localhost:8000 ci-router.php 2>&1 > server.log &
-        echo $! > server.pid
-        sleep 2
+          \$showContributorPersons = true;
+          \$showContributorInstitutions = true;
+          \$showFundingReference = true;
+          \$showAuthorInstitution = true;
+          \$showLicense = true;
 
-    - name: Cache Playwright browsers
-      id: playwright-cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/ms-playwright
-        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-        restore-keys: |
-          playwright-${{ runner.os }}-
+          \$showMslLabs = ${SHOW_MSL_LABS};
+          \$showMslVocabs = ${SHOW_MSL_VOCABS};
+          \$showMslLogo = ${SHOW_MSL_LOGO};
+          \$showGGMsProperties = ${SHOW_GGMS_PROPERTIES};
+          \$showUsedInstruments = ${SHOW_USED_INSTRUMENTS};
+          \$showGcmdThesauri = ${SHOW_GCMD_THESAURI};
+          \$showFreeKeywords = ${SHOW_FREE_KEYWORDS};
+          \$showSpatialTemporalCoverage = ${SHOW_SPATIAL_TEMPORAL_COVERAGE};
+          \$showRelatedWork = ${SHOW_RELATED_WORK};
 
-    - name: Install Playwright Browsers
-      env:
-        PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
-      run: npx playwright install --with-deps ${{ matrix.browser }}
+          \$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
+          \$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
-    - name: Verify server is running
-      run: |
-        for i in {1..10}; do
-          if curl -sf http://localhost:8000/index.php > /dev/null; then
-            echo "Server is responding on attempt $i"
-            break
-          fi
-          echo "Waiting for server... ($i)"
+          \$showFeedbackLink = true;
+          \$smtpHost = 'smtp.test.de';
+          \$smtpPort = 465;
+          \$smtpUser = 'test_user';
+          \$smtpPassword = 'test_password';
+          \$smtpSender = 'test_sender@test.com';
+          \$feedbackAddress = 'feedback@test.com';
+          \$xmlSubmitAddress = 'xmlsubmit@test.com';
+          PHP
+
+      - name: Initialize database structure and lookup data
+        run: php -r "require 'install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
+
+      - name: Shrink large JSON fixtures for faster page loads
+        run: echo '[{"crossRefId":"100000001","name":"National Science Foundation"}]' > json/funders.json
+
+      - name: Start PHP built-in web server
+        run: |
+          PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.jit_buffer_size=64M -d opcache.jit=1255 -S localhost:8000 ci-router.php > server.log 2>&1 &
+          echo $! > server.pid
           sleep 2
-        done
-        curl -sf http://localhost:8000/index.php > /dev/null || { echo "Server not reachable"; exit 1; }
 
-    - name: Run Playwright tests
-      id: run_playwright_tests
-      run: npx playwright test --config=playwright.config.ci.ts --workers=2 --project=${{ matrix.browser }}
-      env:
-        CI: true
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
 
-    - name: Publish ELMO performance metrics
-      id: publish_performance_metrics
-      if: always()
-      env:
-        PLAYWRIGHT_PROJECT: ${{ matrix.browser }}
-      run: |
-        node <<'NODE'
-        const fs = require('fs');
-        const path = require('path');
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps ${{ matrix.browser }}
 
-        const project = process.env.PLAYWRIGHT_PROJECT || 'unknown';
-        const sanitized = project.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const metricsDir = path.join(process.cwd(), 'test-results', 'performance');
-        const candidatePaths = [
-          path.join(metricsDir, `${sanitized}.json`),
-          path.join(metricsDir, `${project}.json`),
-        ];
+      - name: Verify server is running
+        run: |
+          for i in {1..10}; do
+            if curl -sf http://localhost:8000/index.php > /dev/null; then
+              echo "Server is responding on attempt $i"
+              break
+            fi
+            echo "Waiting for server... ($i)"
+            sleep 2
+          done
+          curl -sf http://localhost:8000/index.php > /dev/null || { echo "Server not reachable"; exit 1; }
 
-        const metricsPath = candidatePaths.find((candidate) => fs.existsSync(candidate));
+      - name: Run core smoke tests
+        run: >-
+          npx playwright test
+          --config=playwright.config.ci.ts
+          --workers=2
+          --project=${{ matrix.browser }}
+          tests/playwright/features/header.spec.ts
+          tests/playwright/features/help-toggle.spec.ts
+          tests/playwright/features/language-preferences.spec.ts
+          tests/playwright/flows/minimal-data-save.spec.ts
+          tests/playwright/flows/minimal-data-submission.spec.ts
+        env:
+          CI: true
 
-        if (!metricsPath) {
-          console.log(`::warning::Performance metrics not found for ${project}.`);
-          console.log(`Checked: ${candidatePaths.join(', ')}`);
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-core-${{ matrix.browser }}
+          path: playwright-report/
+          retention-days: 30
 
-          const outputsFile = process.env.GITHUB_OUTPUT;
-          if (outputsFile) {
-            fs.appendFileSync(outputsFile, 'load_time=n/a\n');
-            fs.appendFileSync(outputsFile, 'navigation_duration=n/a\n');
-            fs.appendFileSync(outputsFile, 'dom_content_loaded=n/a\n');
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-core-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 30
+
+      - name: Display server logs on failure
+        if: failure()
+        run: |
+          echo "=== Server Log ==="
+          cat server.log
+
+      - name: Stop PHP server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill "$(cat server.pid)" || true
+          fi
+
+  profile-smoke:
+    name: "Profile: ${{ matrix.profile }} (${{ matrix.browser }})"
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
+      TEST_SCOPE: profile-smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: elmo-gem
+            browser: firefox
+            tests: "tests/playwright/formgroups/elmogem-specific/elmogem-descriptions.spec.ts tests/playwright/features/header.spec.ts"
+          - profile: elmo-igsn
+            browser: firefox
+            tests: "tests/playwright/features/header.spec.ts tests/playwright/formgroups/resource-information.spec.ts"
+          - profile: elmo-msl
+            browser: firefox
+            tests: "tests/playwright/features/header.spec.ts tests/playwright/formgroups/mslKeywords.spec.ts tests/playwright/formgroups/originatingLaboratory.spec.ts"
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: mde2-msl-test
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping --silent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
+          tools: phpdbg
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          composer install --prefer-dist --no-progress --no-suggest
+          composer dump-autoload -o
+          npm ci
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {30..0}; do
+            if mysqladmin ping -h127.0.0.1 --silent; then
+              break
+            fi
+            echo 'Waiting for MySQL...'
+            sleep 5
+          done
+          if [ "$i" = 0 ]; then
+            echo >&2 'MySQL did not start in time.'
+            exit 1
+          fi
+
+      - name: Grant privileges to test_user
+        run: |
+          mysql -h127.0.0.1 -uroot -proot_password -e "
+            CREATE USER IF NOT EXISTS 'test_user'@'%' IDENTIFIED BY 'test_password';
+            GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+
+      - name: Create profile settings.php
+        run: |
+          set -euo pipefail
+
+          case "${{ matrix.profile }}" in
+            elmo-gem)
+              SHOW_MSL_LABS=false
+              SHOW_MSL_VOCABS=false
+              SHOW_MSL_LOGO=false
+              SHOW_GGMS_PROPERTIES=true
+              SHOW_USED_INSTRUMENTS=false
+              SHOW_GCMD_THESAURI=true
+              SHOW_FREE_KEYWORDS=true
+              SHOW_SPATIAL_TEMPORAL_COVERAGE=false
+              SHOW_RELATED_WORK=true
+              INSTANCE_TITLE='ELMO ICGEM Edition – Alpha Version'
+              ;;
+            elmo-igsn)
+              SHOW_MSL_LABS=false
+              SHOW_MSL_VOCABS=false
+              SHOW_MSL_LOGO=false
+              SHOW_GGMS_PROPERTIES=false
+              SHOW_USED_INSTRUMENTS=true
+              SHOW_GCMD_THESAURI=false
+              SHOW_FREE_KEYWORDS=false
+              SHOW_SPATIAL_TEMPORAL_COVERAGE=false
+              SHOW_RELATED_WORK=false
+              INSTANCE_TITLE='ELMO IGSN Edition – Alpha Version'
+              ;;
+            elmo-msl)
+              SHOW_MSL_LABS=true
+              SHOW_MSL_VOCABS=true
+              SHOW_MSL_LOGO=true
+              SHOW_GGMS_PROPERTIES=false
+              SHOW_USED_INSTRUMENTS=false
+              SHOW_GCMD_THESAURI=true
+              SHOW_FREE_KEYWORDS=true
+              SHOW_SPATIAL_TEMPORAL_COVERAGE=true
+              SHOW_RELATED_WORK=true
+              INSTANCE_TITLE='ELMO MSL Edition – GFZ Metadata Editor 2.0'
+              ;;
+            *)
+              echo "Unsupported profile: ${{ matrix.profile }}" >&2
+              exit 1
+              ;;
+          esac
+
+          cat > settings.php <<PHP
+          <?php
+          function connectDb() {
+              \$host = '127.0.0.1';
+              \$username = 'test_user';
+              \$password = 'test_password';
+              \$database = 'mde2-msl-test';
+              \$conn = new mysqli(\$host, \$username, \$password, \$database);
+              return \$conn;
           }
-
-          process.exit(0);
-        }
-
-        const metrics = JSON.parse(fs.readFileSync(metricsPath, 'utf8'));
-
-        const toNumber = (value) => (typeof value === 'number' && Number.isFinite(value) ? value : undefined);
-        const average = (values) => {
-          const valid = values.filter((value) => typeof value === 'number' && Number.isFinite(value));
-          if (valid.length === 0) {
-            return undefined;
+          function getApiKey() {
+              \$apiKeyGoogleMaps = '';
+              echo json_encode(['apiKey' => \$apiKeyGoogleMaps]);
           }
-          return valid.reduce((sum, value) => sum + value, 0) / valid.length;
-        };
-
-        const runs = Array.isArray(metrics.runs) ? metrics.runs : [];
-        const runLoadTimes = runs
-          .map((run) => (run && typeof run === 'object' ? toNumber(run.totalLoadTimeMs) : undefined))
-          .filter((value) => value !== undefined);
-        const runNavigationDurations = runs
-          .map((run) => {
-            const navigation = run && typeof run === 'object' ? run.navigation : undefined;
-            return navigation && typeof navigation === 'object' ? toNumber(navigation.duration) : undefined;
-          })
-          .filter((value) => value !== undefined);
-        const runDomContentLoaded = runs
-          .map((run) => {
-            const navigation = run && typeof run === 'object' ? run.navigation : undefined;
-            return navigation && typeof navigation === 'object' ? toNumber(navigation.domContentLoadedEventEnd) : undefined;
-          })
-          .filter((value) => value !== undefined);
-
-        const navigation = metrics.navigation && typeof metrics.navigation === 'object' ? metrics.navigation : undefined;
-
-        const loadTime =
-          toNumber(metrics.totalLoadTimeMs ?? metrics.averageLoadTimeMs) ?? average(runLoadTimes);
-        const navigationDuration =
-          (navigation && toNumber(navigation.duration)) ?? average(runNavigationDurations);
-        const domContentLoaded =
-          (navigation && toNumber(navigation.domContentLoadedEventEnd)) ?? average(runDomContentLoaded);
-
-        const formattedLoad = loadTime !== undefined ? loadTime.toFixed(0) : 'n/a';
-        const formattedDuration = navigationDuration !== undefined ? navigationDuration.toFixed(0) : 'n/a';
-        const formattedDom = domContentLoaded !== undefined ? domContentLoaded.toFixed(0) : 'n/a';
-
-        const messageParts = [`${project} ELMO fully loaded in ${formattedLoad} ms`];
-        if (formattedDuration !== 'n/a') {
-          messageParts.push(`navigation duration ${formattedDuration} ms`);
-        }
-        if (formattedDom !== 'n/a') {
-          messageParts.push(`DOMContentLoaded ${formattedDom} ms`);
-        }
-        if (runLoadTimes.length > 0) {
-          const formattedRuns = runLoadTimes
-            .map((value, index) => `run ${index + 1}: ${value.toFixed(0)} ms`)
-            .join(', ');
-          messageParts.push(`runs ${formattedRuns}`);
-        }
-
-        console.log(`::notice title=ELMO load time::${messageParts.join(' | ')}`);
-
-        const outputsFile = process.env.GITHUB_OUTPUT;
-        const runsSummary = runLoadTimes.length > 0
-          ? runLoadTimes.map((value, index) => `#${index + 1}: ${value.toFixed(0)} ms`).join(', ')
-          : '';
-
-        if (outputsFile) {
-          fs.appendFileSync(outputsFile, `load_time=${formattedLoad}\n`);
-          fs.appendFileSync(outputsFile, `navigation_duration=${formattedDuration}\n`);
-          fs.appendFileSync(outputsFile, `dom_content_loaded=${formattedDom}\n`);
-          if (runsSummary) {
-            fs.appendFileSync(outputsFile, `runs_summary=${runsSummary}\n`);
+          if (basename(__FILE__) == basename(\$_SERVER['PHP_SELF'])) {
+              if (\$_SERVER['REQUEST_METHOD'] === 'GET') {
+                  getApiKey();
+              }
           }
-        }
+          \$connection = connectDb();
+          \$apiKeyElmo = '1234-1234-1234-1234';
+          \$apiKeyTimezone = 'test_timezone_api_key';
+          \$maxTitles = 2;
 
-        const summaryPath = process.env.GITHUB_STEP_SUMMARY;
-        if (summaryPath) {
-          let summary = '';
-          if (!fs.existsSync(summaryPath) || fs.statSync(summaryPath).size === 0) {
-            summary += '| Browser | Fully loaded (ms) | Navigation duration (ms) | DOMContentLoaded (ms) |\n';
-            summary += '| --- | ---: | ---: | ---: |\n';
+          \$showContributorPersons = true;
+          \$showContributorInstitutions = true;
+          \$showFundingReference = true;
+          \$showAuthorInstitution = true;
+          \$showLicense = true;
+
+          \$showMslLabs = ${SHOW_MSL_LABS};
+          \$showMslVocabs = ${SHOW_MSL_VOCABS};
+          \$showMslLogo = ${SHOW_MSL_LOGO};
+          \$showGGMsProperties = ${SHOW_GGMS_PROPERTIES};
+          \$showUsedInstruments = ${SHOW_USED_INSTRUMENTS};
+          \$showGcmdThesauri = ${SHOW_GCMD_THESAURI};
+          \$showFreeKeywords = ${SHOW_FREE_KEYWORDS};
+          \$showSpatialTemporalCoverage = ${SHOW_SPATIAL_TEMPORAL_COVERAGE};
+          \$showRelatedWork = ${SHOW_RELATED_WORK};
+
+          \$instanceTitle = '${INSTANCE_TITLE}';
+
+          \$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
+          \$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+
+          \$showFeedbackLink = true;
+          \$smtpHost = 'smtp.test.de';
+          \$smtpPort = 465;
+          \$smtpUser = 'test_user';
+          \$smtpPassword = 'test_password';
+          \$smtpSender = 'test_sender@test.com';
+          \$feedbackAddress = 'feedback@test.com';
+          \$xmlSubmitAddress = 'xmlsubmit@test.com';
+          PHP
+
+      - name: Initialize database structure and lookup data
+        run: php -r "require 'install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
+
+      - name: Start PHP built-in web server
+        run: |
+          PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.jit_buffer_size=64M -d opcache.jit=1255 -S localhost:8000 ci-router.php > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 2
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Verify server is running
+        run: |
+          for i in {1..10}; do
+            if curl -sf http://localhost:8000/index.php > /dev/null; then
+              echo "Server is responding on attempt $i"
+              break
+            fi
+            echo "Waiting for server... ($i)"
+            sleep 2
+          done
+          curl -sf http://localhost:8000/index.php > /dev/null || { echo "Server not reachable"; exit 1; }
+
+      - name: Run profile smoke tests
+        run: >-
+          npx playwright test
+          --config=playwright.config.ci.ts
+          --workers=2
+          --project=${{ matrix.browser }}
+          ${{ matrix.tests }}
+        env:
+          CI: true
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.profile }}-${{ matrix.browser }}
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.profile }}-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 30
+
+      - name: Display server logs on failure
+        if: failure()
+        run: |
+          echo "=== Server Log ==="
+          cat server.log
+
+      - name: Stop PHP server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill "$(cat server.pid)" || true
+          fi
+
+  nightly-profile-browser-matrix:
+    name: "Nightly: ${{ matrix.profile }} / ${{ matrix.browser }}"
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
+      TEST_SCOPE: nightly-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [elmo, elmo-gem, elmo-igsn, elmo-msl]
+        browser: [chromium, firefox, webkit]
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: mde2-msl-test
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping --silent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
+          tools: phpdbg
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          composer install --prefer-dist --no-progress --no-suggest
+          composer dump-autoload -o
+          npm ci
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {30..0}; do
+            if mysqladmin ping -h127.0.0.1 --silent; then
+              break
+            fi
+            echo 'Waiting for MySQL...'
+            sleep 5
+          done
+          if [ "$i" = 0 ]; then
+            echo >&2 'MySQL did not start in time.'
+            exit 1
+          fi
+
+      - name: Grant privileges to test_user
+        run: |
+          mysql -h127.0.0.1 -uroot -proot_password -e "
+            CREATE USER IF NOT EXISTS 'test_user'@'%' IDENTIFIED BY 'test_password';
+            GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
+            FLUSH PRIVILEGES;
+          "
+
+      - name: Create profile settings.php
+        run: |
+          set -euo pipefail
+
+          case "${{ matrix.profile }}" in
+            elmo)
+              SHOW_MSL_LABS=false
+              SHOW_MSL_VOCABS=false
+              SHOW_MSL_LOGO=false
+              SHOW_GGMS_PROPERTIES=false
+              SHOW_USED_INSTRUMENTS=true
+              SHOW_GCMD_THESAURI=true
+              SHOW_FREE_KEYWORDS=true
+              SHOW_SPATIAL_TEMPORAL_COVERAGE=true
+              SHOW_RELATED_WORK=true
+              INSTANCE_TITLE='ELMO – GFZ Metadata Editor 2.0'
+              ;;
+            elmo-gem)
+              SHOW_MSL_LABS=false
+              SHOW_MSL_VOCABS=false
+              SHOW_MSL_LOGO=false
+              SHOW_GGMS_PROPERTIES=true
+              SHOW_USED_INSTRUMENTS=false
+              SHOW_GCMD_THESAURI=true
+              SHOW_FREE_KEYWORDS=true
+              SHOW_SPATIAL_TEMPORAL_COVERAGE=false
+              SHOW_RELATED_WORK=true
+              INSTANCE_TITLE='ELMO ICGEM Edition – Alpha Version'
+              ;;
+            elmo-igsn)
+              SHOW_MSL_LABS=false
+              SHOW_MSL_VOCABS=false
+              SHOW_MSL_LOGO=false
+              SHOW_GGMS_PROPERTIES=false
+              SHOW_USED_INSTRUMENTS=true
+              SHOW_GCMD_THESAURI=false
+              SHOW_FREE_KEYWORDS=false
+              SHOW_SPATIAL_TEMPORAL_COVERAGE=false
+              SHOW_RELATED_WORK=false
+              INSTANCE_TITLE='ELMO IGSN Edition – Alpha Version'
+              ;;
+            elmo-msl)
+              SHOW_MSL_LABS=true
+              SHOW_MSL_VOCABS=true
+              SHOW_MSL_LOGO=true
+              SHOW_GGMS_PROPERTIES=false
+              SHOW_USED_INSTRUMENTS=false
+              SHOW_GCMD_THESAURI=true
+              SHOW_FREE_KEYWORDS=true
+              SHOW_SPATIAL_TEMPORAL_COVERAGE=true
+              SHOW_RELATED_WORK=true
+              INSTANCE_TITLE='ELMO MSL Edition – GFZ Metadata Editor 2.0'
+              ;;
+            *)
+              echo "Unsupported profile: ${{ matrix.profile }}" >&2
+              exit 1
+              ;;
+          esac
+
+          cat > settings.php <<PHP
+          <?php
+          function connectDb() {
+              \$host = '127.0.0.1';
+              \$username = 'test_user';
+              \$password = 'test_password';
+              \$database = 'mde2-msl-test';
+              \$conn = new mysqli(\$host, \$username, \$password, \$database);
+              return \$conn;
           }
-          summary += `| ${metrics.browser || project} | ${formattedLoad} | ${formattedDuration} | ${formattedDom} |\n`;
-          if (runLoadTimes.length > 0) {
-            const runDetails = runLoadTimes
-              .map((value, index) => `#${index + 1}: ${value.toFixed(0)} ms`)
-              .join(', ');
-            summary += `> Individual runs (${runLoadTimes.length}): ${runDetails}\n`;
+          function getApiKey() {
+              \$apiKeyGoogleMaps = '';
+              echo json_encode(['apiKey' => \$apiKeyGoogleMaps]);
           }
-          fs.appendFileSync(summaryPath, summary);
-        }
-        NODE
-
-    - name: Report ELMO load time check run
-      if: always()
-      uses: actions/github-script@v7
-      env:
-        PLAYWRIGHT_PROJECT: ${{ matrix.browser }}
-        LOAD_TIME_MS: ${{ steps.publish_performance_metrics.outputs.load_time }}
-        NAVIGATION_DURATION_MS: ${{ steps.publish_performance_metrics.outputs.navigation_duration }}
-        DOM_CONTENT_LOADED_MS: ${{ steps.publish_performance_metrics.outputs.dom_content_loaded }}
-        RUNS_SUMMARY: ${{ steps.publish_performance_metrics.outputs.runs_summary }}
-        PLAYWRIGHT_CONCLUSION: ${{ steps.run_playwright_tests.conclusion }}
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const project = process.env.PLAYWRIGHT_PROJECT || 'unknown';
-          const loadTime = process.env.LOAD_TIME_MS;
-          const navigationDuration = process.env.NAVIGATION_DURATION_MS;
-          const domContentLoaded = process.env.DOM_CONTENT_LOADED_MS;
-          const runsSummary = process.env.RUNS_SUMMARY || '';
-          const testConclusion = (process.env.PLAYWRIGHT_CONCLUSION || '').toLowerCase();
-
-          if (!loadTime) {
-            core.info(`No load time available for ${project}. Skipping check run.`);
-            return;
+          if (basename(__FILE__) == basename(\$_SERVER['PHP_SELF'])) {
+              if (\$_SERVER['REQUEST_METHOD'] === 'GET') {
+                  getApiKey();
+              }
           }
+          \$connection = connectDb();
+          \$apiKeyElmo = '1234-1234-1234-1234';
+          \$apiKeyTimezone = 'test_timezone_api_key';
+          \$maxTitles = 2;
 
-          const conclusionMap = {
-            success: 'success',
-            failure: 'failure',
-            cancelled: 'cancelled',
-            skipped: 'skipped',
-            timed_out: 'timed_out',
-            action_required: 'action_required',
-          };
+          \$showContributorPersons = true;
+          \$showContributorInstitutions = true;
+          \$showFundingReference = true;
+          \$showAuthorInstitution = true;
+          \$showLicense = true;
 
-          const conclusion = conclusionMap[testConclusion] || (loadTime === 'n/a' ? 'neutral' : 'success');
+          \$showMslLabs = ${SHOW_MSL_LABS};
+          \$showMslVocabs = ${SHOW_MSL_VOCABS};
+          \$showMslLogo = ${SHOW_MSL_LOGO};
+          \$showGGMsProperties = ${SHOW_GGMS_PROPERTIES};
+          \$showUsedInstruments = ${SHOW_USED_INSTRUMENTS};
+          \$showGcmdThesauri = ${SHOW_GCMD_THESAURI};
+          \$showFreeKeywords = ${SHOW_FREE_KEYWORDS};
+          \$showSpatialTemporalCoverage = ${SHOW_SPATIAL_TEMPORAL_COVERAGE};
+          \$showRelatedWork = ${SHOW_RELATED_WORK};
 
-          const owner = context.repo.owner;
-          const repo = context.repo.repo;
-          const headSha = context.sha;
-          const now = new Date().toISOString();
+          \$instanceTitle = '${INSTANCE_TITLE}';
 
-          const metricsLines = [
-            `• Fully loaded: ${loadTime} ms`,
-          ];
-          if (navigationDuration && navigationDuration !== 'n/a') {
-            metricsLines.push(`• Navigation duration: ${navigationDuration} ms`);
-          }
-          if (domContentLoaded && domContentLoaded !== 'n/a') {
-            metricsLines.push(`• DOMContentLoaded: ${domContentLoaded} ms`);
-          }
-          if (runsSummary) {
-            metricsLines.push(`• Runs: ${runsSummary}`);
-          }
+          \$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
+          \$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
-          await github.rest.checks.create({
-            owner,
-            repo,
-            name: `playwright-tests (${project}) load time`,
-            head_sha: headSha,
-            status: 'completed',
-            started_at: now,
-            completed_at: now,
-            conclusion,
-            output: {
-              title: `ELMO fully loaded in ${loadTime} ms`,
-              summary: metricsLines.join('\n'),
-            },
-            details_url: `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`,
-          });
+          \$showFeedbackLink = true;
+          \$smtpHost = 'smtp.test.de';
+          \$smtpPort = 465;
+          \$smtpUser = 'test_user';
+          \$smtpPassword = 'test_password';
+          \$smtpSender = 'test_sender@test.com';
+          \$feedbackAddress = 'feedback@test.com';
+          \$xmlSubmitAddress = 'xmlsubmit@test.com';
+          PHP
 
-    - name: Debug what the browser actually sees
-      if: failure()
-      run: |
-        echo "=== Debugging what the browser gets ==="
-        curl -s http://localhost:8000/ | head -50
+      - name: Initialize database structure and lookup data
+        run: php -r "require 'install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
 
-    - name: Upload Playwright Report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report-${{ matrix.browser }}
-        path: playwright-report/
-        retention-days: 30
+      - name: Start PHP built-in web server
+        run: |
+          PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.jit_buffer_size=64M -d opcache.jit=1255 -S localhost:8000 ci-router.php > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 2
 
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results-${{ matrix.browser }}
-        path: test-results/
-        retention-days: 30
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
 
-    - name: Display server logs on failure
-      if: failure()
-      run: |
-        echo "=== Server Log ==="
-        cat server.log
-        echo "=== PHP Error Log ==="
-        if [ -f /var/log/php_errors.log ]; then
-          cat /var/log/php_errors.log
-        fi
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps ${{ matrix.browser }}
 
-    - name: Stop PHP server
-      if: always()
-      run: |
-        if [ -f server.pid ]; then
-          kill $(cat server.pid) || true
-        fi
+      - name: Verify server is running
+        run: |
+          for i in {1..10}; do
+            if curl -sf http://localhost:8000/index.php > /dev/null; then
+              echo "Server is responding on attempt $i"
+              break
+            fi
+            echo "Waiting for server... ($i)"
+            sleep 2
+          done
+          curl -sf http://localhost:8000/index.php > /dev/null || { echo "Server not reachable"; exit 1; }
+
+      - name: Run nightly profile-browser core smoke
+        run: >-
+          npx playwright test
+          --config=playwright.config.ci.ts
+          --workers=2
+          --project=${{ matrix.browser }}
+          tests/playwright/features/header.spec.ts
+          tests/playwright/features/help-toggle.spec.ts
+          tests/playwright/features/language-preferences.spec.ts
+          tests/playwright/flows/minimal-data-save.spec.ts
+          tests/playwright/flows/minimal-data-submission.spec.ts
+        env:
+          CI: true
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-nightly-${{ matrix.profile }}-${{ matrix.browser }}
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-nightly-${{ matrix.profile }}-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 14
+
+      - name: Display server logs on failure
+        if: failure()
+        run: |
+          echo "=== Server Log ==="
+          cat server.log
+
+      - name: Stop PHP server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill "$(cat server.pid)" || true
+          fi
