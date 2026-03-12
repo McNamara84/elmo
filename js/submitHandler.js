@@ -25,16 +25,56 @@ function validateEmbargoDate() {
 }
 
 /**
- * Validates that the start date is not after the end date in the temporal coverage section.
+ * Converts a time string (HH:MM or HH:MM:SS) to seconds for robust ordering checks.
+ * @param {string} timeValue - Time value from an input[type="time"] field.
+ * @returns {number|null} Seconds since midnight, or null if value is empty/invalid.
+ */
+function parseTimeToSeconds(timeValue) {
+    if (!timeValue) {
+        return null;
+    }
+
+    const parts = timeValue.split(':');
+    if (parts.length < 2 || parts.length > 3) {
+        return null;
+    }
+
+    const [hours, minutes, seconds = '0'] = parts;
+    const h = Number(hours);
+    const m = Number(minutes);
+    const s = Number(seconds);
+
+    if ([h, m, s].some(Number.isNaN)) {
+        return null;
+    }
+
+    return (h * 3600) + (m * 60) + s;
+}
+
+/**
+ * Validates date and time order in the temporal coverage section.
  * @param {HTMLElement} row - The row containing the start and end dates.
- * @returns {boolean} True if the dates are valid, false otherwise.
+ * @returns {boolean} True if date/time values are valid, false otherwise.
  */
 function validateTemporalCoverage(row) {
+    if (!row) {
+        return true;
+    }
+
     const dateStartInput = row.querySelector('[id*="input-stc-datestart"]');
     const dateEndInput = row.querySelector('[id*="input-stc-dateend"]');
-    const dateTimeInvalidFeedback = row.querySelector('.invalid-feedback[data-translate="coverage.dateTimeInvalid"]');
+    const timeStartInput = row.querySelector('[id*="input-stc-timestart"]');
+    const timeEndInput = row.querySelector('[id*="input-stc-timeend"]');
+    const dateTimeInvalidFeedback =
+        dateEndInput?.closest('.input-group')?.querySelector('.invalid-feedback') ||
+        row.querySelector('.invalid-feedback[data-translate="coverage.dateTimeInvalid"]');
 
-    if (!dateStartInput || !dateEndInput) {
+    if (!dateStartInput || !dateEndInput || !dateTimeInvalidFeedback) {
+        return true;
+    }
+
+    if (!dateStartInput.value || !dateEndInput.value) {
+        setValidState(dateEndInput, dateTimeInvalidFeedback);
         return true;
     }
 
@@ -44,10 +84,37 @@ function validateTemporalCoverage(row) {
     if (dateStart > dateEnd) {
         setInvalidState(dateEndInput, dateTimeInvalidFeedback, translations.coverage.endDateError);
         return false;
-    } else {
-        setValidState(dateEndInput, dateTimeInvalidFeedback);
-        return true;
     }
+
+    if (dateStartInput.value === dateEndInput.value && timeStartInput && timeEndInput) {
+        const startSeconds = parseTimeToSeconds(timeStartInput.value);
+        const endSeconds = parseTimeToSeconds(timeEndInput.value);
+
+        if (startSeconds !== null && endSeconds !== null && endSeconds < startSeconds) {
+            setInvalidState(dateEndInput, dateTimeInvalidFeedback, translations.coverage.endTimeError);
+            return false;
+        }
+    }
+
+    setValidState(dateEndInput, dateTimeInvalidFeedback);
+    return true;
+}
+
+/**
+ * Validates all STC rows to ensure submit is blocked even without prior change events.
+ * @returns {boolean} True if all rows are valid.
+ */
+function validateAllTemporalCoverageRows() {
+    const rows = document.querySelectorAll('#group-stc [tsc-row]');
+    let isValid = true;
+
+    rows.forEach((row) => {
+        if (!validateTemporalCoverage(row)) {
+            isValid = false;
+        }
+    });
+
+    return isValid;
 }
 
 function setInvalidState(input, feedback, message) {
@@ -87,7 +154,15 @@ if (dateEmbargoInput) {
 // Event listener for temporal coverage validation
 if (groupStc) {
     groupStc.addEventListener('change', function(event) {
-        if (event.target && (event.target.id.includes('input-stc-datestart') || event.target.id.includes('input-stc-dateend'))) {
+        if (
+            event.target &&
+            (
+                event.target.id.includes('input-stc-datestart') ||
+                event.target.id.includes('input-stc-dateend') ||
+                event.target.id.includes('input-stc-timestart') ||
+                event.target.id.includes('input-stc-timeend')
+            )
+        ) {
             const row = event.target.closest('[tsc-row]');
             validateTemporalCoverage(row);
         }
@@ -223,7 +298,8 @@ class SubmitHandler {
             this.autosaveService.flushPending();
         }
         validateEmbargoDate();
-        if (!this.$form[0].checkValidity() || !validateContactPerson()) {
+        const temporalCoverageValid = validateAllTemporalCoverageRows();
+        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {
@@ -500,10 +576,11 @@ if (typeof module !== 'undefined' && module.exports) {
     SubmitHandler,
     validateEmbargoDate,
     validateTemporalCoverage,
+        validateAllTemporalCoverageRows,
     validateContactPerson,
     default: SubmitHandler
   };
 }
 
-export { SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson };
+export { SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateAllTemporalCoverageRows, validateContactPerson };
 export default SubmitHandler;

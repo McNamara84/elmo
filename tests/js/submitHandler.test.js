@@ -4,12 +4,13 @@ describe('submitHandler.js', () => {
   let SubmitHandler;
   let validateEmbargoDate;
   let validateTemporalCoverage;
+  let validateAllTemporalCoverageRows;
   let validateContactPerson;
   let handler;
   let $;
 
   function loadScript() {
-    ({ SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson } =
+    ({ SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateAllTemporalCoverageRows, validateContactPerson } =
       requireFresh('../../js/submitHandler.js'));
     handler = new SubmitHandler('test-form', 'modal-submit', 'modal-notification');
   }
@@ -30,17 +31,25 @@ describe('submitHandler.js', () => {
       <input id="input-date-created" />
       <input id="input-date-embargo" />
       <div class="embargo-invalid"></div>
-      <div id="row" tsc-row>
-        <input id="input-stc-datestart-row1" />
-        <input id="input-stc-dateend-row1" />
-        <div class="invalid-feedback" data-translate="coverage.dateTimeInvalid"></div>
+      <div id="group-stc">
+        <div id="row" tsc-row>
+          <div class="input-group has-validation" id="start-group">
+            <input id="input-stc-datestart-row1" />
+            <input id="input-stc-timestart-row1" />
+            <div id="feedback-start" class="invalid-feedback" data-translate="coverage.dateTimeInvalid"></div>
+          </div>
+          <div class="input-group has-validation" id="end-group">
+            <input id="input-stc-dateend-row1" />
+            <input id="input-stc-timeend-row1" />
+            <div id="feedback-end" class="invalid-feedback" data-translate="coverage.dateTimeInvalid"></div>
+          </div>
+        </div>
       </div>
       <input type="checkbox" id="input-submit-privacycheck">
       <button id="button-submit-submit" disabled></button>
       <input type="file" id="input-submit-datadescription" />
       <button id="remove-file-btn"></button>
       <span id="selected-file-name"></span>
-      <div id="group-stc"></div>
       <div id="group-author"></div>
     `;
 
@@ -57,7 +66,10 @@ describe('submitHandler.js', () => {
 
     global.translations = {
       dates: { embargoDateError: 'Embargo Error' },
-      coverage: { endDateError: 'End Date Error' },
+      coverage: {
+        endDateError: 'End Date Error',
+        endTimeError: 'End Time Error'
+      },
       alerts: {
         successHeading: 'Success',
         errorHeading: 'Error',
@@ -102,7 +114,54 @@ describe('submitHandler.js', () => {
     const result = validateTemporalCoverage(row);
     expect(result).toBe(false);
     expect($('#input-stc-dateend-row1').hasClass('is-invalid')).toBe(true);
-    expect(row.querySelector('.invalid-feedback').textContent).toBe('End Date Error');
+    expect(document.getElementById('feedback-end').textContent).toBe('End Date Error');
+    expect(document.getElementById('feedback-start').textContent).toBe('');
+  });
+
+  test('validateTemporalCoverage marks invalid when same date has end time before start time', () => {
+    $('#input-stc-datestart-row1').val('2024-05-10');
+    $('#input-stc-dateend-row1').val('2024-05-10');
+    $('#input-stc-timestart-row1').val('12:00');
+    $('#input-stc-timeend-row1').val('11:00');
+
+    const row = document.getElementById('row');
+    const result = validateTemporalCoverage(row);
+
+    expect(result).toBe(false);
+    expect($('#input-stc-dateend-row1').hasClass('is-invalid')).toBe(true);
+    expect(document.getElementById('feedback-end').textContent).toBe('End Time Error');
+    expect(document.getElementById('feedback-start').textContent).toBe('');
+  });
+
+  test('validateTemporalCoverage is valid when same date has correct time order', () => {
+    $('#input-stc-datestart-row1').val('2024-05-10');
+    $('#input-stc-dateend-row1').val('2024-05-10');
+    $('#input-stc-timestart-row1').val('11:00');
+    $('#input-stc-timeend-row1').val('12:00');
+
+    const row = document.getElementById('row');
+    const result = validateTemporalCoverage(row);
+
+    expect(result).toBe(true);
+    expect($('#input-stc-dateend-row1').hasClass('is-invalid')).toBe(false);
+    expect(document.getElementById('feedback-end').textContent).toBe('');
+  });
+
+  test('validateAllTemporalCoverageRows returns false when one row is invalid', () => {
+    const group = document.getElementById('group-stc');
+    const row2 = document.createElement('div');
+    row2.setAttribute('tsc-row', '');
+    row2.innerHTML = `
+      <input id="input-stc-datestart-row2" value="2024-05-10" />
+      <input id="input-stc-timestart-row2" value="13:00" />
+      <input id="input-stc-dateend-row2" value="2024-05-10" />
+      <input id="input-stc-timeend-row2" value="12:00" />
+      <div class="invalid-feedback" data-translate="coverage.dateTimeInvalid"></div>
+    `;
+    group.appendChild(row2);
+
+    const result = validateAllTemporalCoverageRows();
+    expect(result).toBe(false);
   });
 
   test('toggleSubmitButton enables button when checked', () => {
@@ -170,6 +229,7 @@ describe('submitHandler.js', () => {
     expect(mod.SubmitHandler).toBeDefined();
     expect(mod.validateEmbargoDate).toBeDefined();
     expect(mod.validateTemporalCoverage).toBeDefined();
+    expect(mod.validateAllTemporalCoverageRows).toBeDefined();
     expect(mod.validateContactPerson).toBeDefined();
   });
 

@@ -346,6 +346,48 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     }
 
     /**
+     * Tests that submit validation rejects same-day entries with reversed time order.
+     *
+     * @return void
+     */
+    public function testSubmitRejectsSameDateWithEndTimeBeforeStartTime(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.INVALID.TIME.ORDER",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Invalid Time Order STC"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            "action" => "submit",
+            "tscLatitudeMin" => ["40.7128"],
+            "tscLatitudeMax" => ["40.7828"],
+            "tscLongitudeMin" => ["-74.0060"],
+            "tscLongitudeMax" => ["-73.9360"],
+            "tscDescription" => ["New York City"],
+            "tscDateStart" => ["2023-01-01"],
+            "tscTimeStart" => ["12:00"],
+            "tscDateEnd" => ["2023-01-01"],
+            "tscTimeEnd" => ["11:00"],
+            "tscTimezone" => ["-05:00"]
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertFalse($result, 'Function should return false for invalid same-day time order.');
+
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Spatial_Temporal_Coverage");
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(0, $count, 'No STC entries should be saved for invalid same-day time order.');
+    }
+    /**
      * Tests saving with mixed time values.
      * 
      * Verifies that records can be saved with some time fields populated

@@ -185,6 +185,7 @@
         "end": "Fin",
         "dateTimeInvalid": "Veuillez saisir une date valide.",
         "endDateError": "La date de fin ne doit pas être antérieure à la date de début.",
+        "endTimeError": "Lorsque les dates de début et de fin sont identiques, l'heure de fin ne doit pas être antérieure à l'heure de début.",
         "timezone": "Fuseau horaire",
         "timezoneInvalid": "Veuillez sélectionner le fuseau horaire",
         "mapInfo": "(Veuillez choisir les coordonnées par rectangle ou marqueur)",

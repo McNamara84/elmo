@@ -184,6 +184,7 @@
         "end": "End",
         "dateTimeInvalid": "Please enter a valid date.",
         "endDateError": "End date must not be before start date.",
+        "endTimeError": "When start and end date are the same, end time must not be before start time.",
         "timezone": "Timezone",
         "timezoneInvalid": "Please choose a timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)",
