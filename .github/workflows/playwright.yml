@@ -134,6 +134,11 @@ jobs:
         $showFreeKeywords = true;
         $showSpatialTemporalCoverage = true;
         $showRelatedWork = true;
+        $showContributorPersons = true;
+        $showContributorInstitutions = true;
+        $showFundingReference = true;
+        $showAuthorInstitution = true;
+        $xmlSubmitAddress = 'test@test.com';
 
         $envOverrides = [
             'SHOW_MSL_LABS' => 'showMslLabs',

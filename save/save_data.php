@@ -68,53 +68,33 @@ function generateAndOutputXml($resource_id)
         header('Content-Type: application/xml');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
 
-        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
-        $base_url = $protocol . $_SERVER['HTTP_HOST'];
-        $project_path = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\');
-        
-        // $showGGMsProperties; is an indicator, whether this version is ICGEM or not.
+        try {
+            $controller = new DatasetController();
+            $ICGEMcontroller = new ICGEMController();
+            $xmlString = $showGGMsProperties
+                ? $ICGEMcontroller->createICGEMxml($resource_id)
+                : $controller->envelopeXmlAsString($connection, $resource_id);
 
-        $general_url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
-        $icgem_url   = $base_url . $project_path . "/api/v2/dataset/icgem_export/" . $resource_id;
-        $url         = $showGGMsProperties ? $icgem_url : $general_url;
-
-        // Try API call first
-        $bytesRead = @readfile($url);
-
-        if ($bytesRead === false || $bytesRead === 0) {
-            error_log("[💿SAVE]: readfile from URL failed. Attempting in-memory generation. Resource ID: $resource_id");
-            error_log("[💿SAVE]: showGGMsProperties = " . var_export($showGGMsProperties, true));
-            error_log("[💿SAVE]: showGGMsProperties = " . var_export($showGGMsProperties, true));
-            error_log("[💿SAVE]: Will use " . ($showGGMsProperties ? "createICGEMxml()" : "envelopeXmlAsString()"));
-
-            try {
-                $controller = new DatasetController();
-                $ICGEMcontroller = new ICGEMController();
-                $xmlString = $showGGMsProperties
-                    ? $ICGEMcontroller->createICGEMxml($resource_id)
-                    : $controller->envelopeXmlAsString($connection, $resource_id);
-                    
-                if ($xmlString) {
-                    echo $xmlString;
-                } else {
-                    http_response_code(500);
-                    echo "Error: Could not retrieve or generate XML file.";
-                }
-            } catch (Exception $e) {
-                error_log("[💿SAVE]: XML in-memory generation failed for resource ID: $resource_id. Error: " . $e->getMessage());
+            if ($xmlString) {
+                echo $xmlString;
+            } else {
+                error_log("[💿SAVE]: XML generation returned empty for resource ID: $resource_id");
                 http_response_code(500);
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'message' => "Sorry, we encountered an error while generating an XML file with your data:\n\n" .
-                    $e->getMessage() . "\n\n" .
-                    "Your data has been saved in our system.\n\n" .
-                    "Please contact the data curation team at {$GLOBALS['xmlSubmitAddress']}.\n" .
-                    "In your Email, make sure to reference this Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
-                    "We will be glad to fix the issue and see your data resubmitted.\n\n" .
-                    "ELMO team"
-    ]);
+                echo "Error: Could not retrieve or generate XML file.";
             }
+        } catch (\Throwable $e) {
+            error_log("[💿SAVE]: XML generation failed for resource ID: $resource_id. Error: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => "Sorry, we encountered an error while generating an XML file with your data:\n\n" .
+                $e->getMessage() . "\n\n" .
+                "Your data has been saved in our system.\n\n" .
+                "Please contact the data curation team at " . ($GLOBALS['xmlSubmitAddress'] ?? 'the support team') . ".\n" .
+                "In your Email, make sure to reference this Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
+                "We will be glad to fix the issue and see your data resubmitted.\n\n" .
+                "ELMO team"
+            ]);
         }
         exit();
     }
