@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
  * @return void Outputs XML or error response, may exit
  * @throws Exception If critical errors occur during XML generation
  */
+if (!function_exists('generateAndOutputXml')) {
 function generateAndOutputXml($resource_id)
 {
     global $connection, $showGGMsProperties;
@@ -101,6 +102,7 @@ function generateAndOutputXml($resource_id)
     echo $xmlString;
     flush();
 }
+} // end function_exists('generateAndOutputXml')
 
 /**
  * Existing functions dont alwys throw an exception, but sometimes just return false. This won't interrupt the save process
@@ -111,6 +113,7 @@ function generateAndOutputXml($resource_id)
  * @return mixed The return value from the callback
  * @throws Exception If the callback returns false
  */
+if (!function_exists('executeSaveFunction')) {
 function executeSaveFunction($callback, ...$args)
 {
     $functionName = is_array($callback) ? $callback[1] : $callback;
@@ -129,6 +132,7 @@ function executeSaveFunction($callback, ...$args)
         throw $e; // Re-throw so outer catch can handle it
     }
 }
+} // end function_exists('executeSaveFunction')
 
 // only process requests (use return instead of exit to avoid killing
 // the PHPUnit process when this file is loaded via require_once)

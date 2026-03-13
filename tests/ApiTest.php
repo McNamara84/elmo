@@ -97,7 +97,7 @@ final class ApiTest extends DatabaseTestCase
                 'Expected status code 200. Response: ' . $response->getBody()
             );
 
-            $data = json_decode($response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 $this->fail('Failed to parse JSON response: ' . json_last_error_msg());
             }
@@ -143,7 +143,7 @@ final class ApiTest extends DatabaseTestCase
                 "\nEndpoint: " . $endpointUrl
             );
 
-            $data = json_decode($response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             $this->assertIsArray($data, 'Response should be an array');
             $this->assertNotEmpty($data, 'Response should not be empty');
 
@@ -179,7 +179,7 @@ final class ApiTest extends DatabaseTestCase
                 'Expected status code 200. Response: ' . $response->getBody()
             );
 
-            $data = json_decode($response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             $this->assertIsArray($data, 'Response should be an array');
             $this->assertNotEmpty($data, 'Response should not be empty');
 
@@ -212,7 +212,7 @@ final class ApiTest extends DatabaseTestCase
             echo "\nResponse Status: " . $response->getStatusCode();
             echo "\nResponse Body: " . $response->getBody();
 
-            $data = json_decode($response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 $this->fail('Failed to parse JSON response: ' . json_last_error_msg());
             }
@@ -288,7 +288,7 @@ final class ApiTest extends DatabaseTestCase
             echo "\nResponse Status: " . $response->getStatusCode();
             echo "\nResponse Body: " . $response->getBody();
 
-            $data = json_decode($response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 $this->fail('Failed to parse JSON response: ' . json_last_error_msg());
             }
