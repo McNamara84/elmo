@@ -364,15 +364,27 @@ async function downloadAndSaveXml(
   page: Page,
   testName: string
 ): Promise<{ xmlContent: string; parsedXml: any }> {
-  const responsePromise = page.waitForResponse(async (response) => {
-    if (!response.url().includes('/save/save_data.php') || response.request().method() !== 'POST') {
-      return false;
-    }
+  // Intercept the save request via page.route() to capture the response body.
+  // Content-Disposition: attachment causes the browser to treat the response as
+  // a file download, which means response.text() returns an empty string.
+  // By using route.fetch() we read the body before the browser consumes it.
+  let capturedBody = '';
+  let capturedStatus = 0;
+  let capturedHeaders: Record<string, string> = {};
 
-    const contentType = (await response.headerValue('content-type')) || '';
-    const disposition = (await response.headerValue('content-disposition')) || '';
-    return contentType.includes('xml') || disposition.includes('.xml');
-  }, { timeout: 30_000 });
+  await page.route('**/save/save_data.php', async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.fallback();
+      return;
+    }
+    const response = await route.fetch();
+    capturedStatus = response.status();
+    capturedHeaders = response.headers();
+    const body = await response.body();
+    capturedBody = body.toString('utf-8');
+    // Forward the original response (including download headers) to the browser
+    await route.fulfill({ response, body });
+  });
 
   // Wait for Save button and click
   const saveButton = page.getByRole('button', { name: 'Save' });
@@ -383,7 +395,7 @@ async function downloadAndSaveXml(
   const saveModal = page.locator('#modal-saveas');
   await saveModal.waitFor({ state: 'visible', timeout: 5000 });
 
-  // Fill filename if needed
+  // Fill filename
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
 
@@ -391,22 +403,27 @@ async function downloadAndSaveXml(
   const saveConfirmButton = page.locator('#button-saveas-save');
   await saveConfirmButton.click();
 
-  // Read and parse XML response body (more reliable than browser download events in CI)
-  const response = await responsePromise;
-  const status = response.status();
-  const xmlContent = await response.text();
-  const headers = await response.allHeaders();
+  // Wait for the POST response to complete
+  await page.waitForResponse(
+    resp => resp.url().includes('/save/save_data.php') && resp.request().method() === 'POST',
+    { timeout: 30_000 }
+  );
+
+  // Clean up route handler
+  await page.unroute('**/save/save_data.php');
+
+  // Use the captured body from route interception
+  const xmlContent = capturedBody;
 
   // Fail fast with detailed diagnostics when save response is broken
-  if (status !== 200 || xmlContent.trim().length === 0) {
-    const headerStr = Object.entries(headers).map(([k, v]) => `${k}: ${v}`).join(', ');
+  if (capturedStatus !== 200 || xmlContent.trim().length === 0) {
+    const headerStr = Object.entries(capturedHeaders).map(([k, v]) => `${k}: ${v}`).join(', ');
     throw new Error(
       `Save endpoint returned unexpected response.\n` +
-      `  Status: ${status}\n` +
+      `  Status: ${capturedStatus}\n` +
       `  Body length: ${xmlContent.length} (trimmed: ${xmlContent.trim().length})\n` +
       `  Headers: ${headerStr}\n` +
-      `  Body (first 500 chars): ${JSON.stringify(xmlContent.slice(0, 500))}\n` +
-      `  Content-Length header: ${headers['content-length'] ?? '(not set)'}`
+      `  Body (first 500 chars): ${JSON.stringify(xmlContent.slice(0, 500))}`
     );
   }
 
