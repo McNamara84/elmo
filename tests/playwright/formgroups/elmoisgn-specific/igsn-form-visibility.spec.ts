@@ -7,7 +7,7 @@ test.describe('IGSN Edition – Form Group Visibility', () => {
   });
 
   test('shows used instruments form group', async ({ page }) => {
-    await expect(page.locator('#group-usedinstrument')).toBeVisible();
+    await expect(page.locator('#group-usedinstruments')).toBeVisible();
   });
 
   test('shows authors form group', async ({ page }) => {
@@ -15,7 +15,7 @@ test.describe('IGSN Edition – Form Group Visibility', () => {
   });
 
   test('shows resource information form group', async ({ page }) => {
-    await expect(page.locator('#group-resourceinformation')).toBeVisible();
+    await expect(page.locator('#input-resourceinformation-doi')).toBeVisible();
   });
 
   test('hides GCMD thesauri keywords', async ({ page }) => {
