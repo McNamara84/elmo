@@ -54,14 +54,17 @@ export async function completeExtendedDatasetForm(page: Page) {
   // Add Descriptions - Abstract already filled by completeMinimalDatasetForm
   // Fill Methods section
   await page.locator('button[data-bs-target="#collapse-methods"]').click();
+  await page.locator('#input-methods').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('#input-methods').fill(exampleData.extended.descriptions.methods);
 
   // Fill Technical Information section
   await page.locator('button[data-bs-target="#collapse-technicalinfo"]').click();
+  await page.locator('#input-technicalinfo').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('#input-technicalinfo').fill(exampleData.extended.descriptions.technicalInfo);
 
   // Fill Other section
   await page.locator('button[data-bs-target="#collapse-other"]').click();
+  await page.locator('#input-other').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('#input-other').fill(exampleData.extended.descriptions.other);
 
   // Add Funding Reference entries
@@ -397,18 +400,26 @@ async function addAuthor(
 ) {
   if (index > 0) {
     await page.locator('#button-author-add').click();
-    await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index).waitFor({ state: 'visible' });
+    await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index).waitFor({ state: 'visible', timeout: 5000 });
   }
 
   const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index);
 
-  await authorRow.locator('[id^="input-author-orcid"]').fill(data.orcid);
+  // Wait for the ORCID field to be ready before filling
+  const orcidField = authorRow.locator('[id^="input-author-orcid"]');
+  await orcidField.waitFor({ state: 'visible', timeout: 5000 });
+  await orcidField.fill(data.orcid);
+
   const lastNameField = authorRow.locator('[id^="input-author-lastname"]');
+  await lastNameField.waitFor({ state: 'visible', timeout: 5000 });
   await lastNameField.click();
   await expect(lastNameField).toBeFocused();
   await lastNameField.clear();
   await lastNameField.fill(data.lastName);
-  await authorRow.locator('[id^="input-author-firstname"]').fill(data.firstName);
+
+  const firstNameField = authorRow.locator('[id^="input-author-firstname"]');
+  await firstNameField.waitFor({ state: 'visible', timeout: 5000 });
+  await firstNameField.fill(data.firstName);
 
   // Fill affiliation using tagify within the author row
   const affiliationTagifyInput = authorRow.locator('.tagify__input[title="Affiliation"]');
@@ -417,14 +428,18 @@ async function addAuthor(
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');
 
-  // Wait for it to be in Tagify's internal state within the author row
-  const authorRowElement = await authorRow.evaluate((element) => {
-    const input = element.querySelector('input[name*="affiliation"]') as any;
-    return input?._tagify?.value?.some((tag: any) => tag.value === data.affiliation);
-  }, data.affiliation);
-
-  // Extra buffer to ensure tag is fully processed
-  await page.waitForTimeout(500);
+  // Wait for tagify to register the affiliation
+  await page.waitForFunction(
+    ({ rowIndex, selector, affiliation }) => {
+      const rows = document.querySelectorAll(`${selector} [data-creator-row]`);
+      const row = rows[rowIndex];
+      if (!row) return false;
+      const input = row.querySelector('input[name*="affiliation"]') as any;
+      return input?._tagify?.value?.some((tag: any) => tag.value === affiliation);
+    },
+    { rowIndex: index, selector: SELECTORS.formGroups.authors, affiliation: data.affiliation },
+    { timeout: 5000 }
+  );
 }
 export { exampleData };
 
