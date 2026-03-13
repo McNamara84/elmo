@@ -54,17 +54,17 @@ export async function completeExtendedDatasetForm(page: Page) {
   // Add Descriptions - Abstract already filled by completeMinimalDatasetForm
   // Fill Methods section
   await page.locator('button[data-bs-target="#collapse-methods"]').click();
-  await page.locator('#input-methods').waitFor({ state: 'visible', timeout: 5000 });
+  await waitForAccordionTransition(page, '#collapse-methods');
   await page.locator('#input-methods').fill(exampleData.extended.descriptions.methods);
 
   // Fill Technical Information section
   await page.locator('button[data-bs-target="#collapse-technicalinfo"]').click();
-  await page.locator('#input-technicalinfo').waitFor({ state: 'visible', timeout: 5000 });
+  await waitForAccordionTransition(page, '#collapse-technicalinfo');
   await page.locator('#input-technicalinfo').fill(exampleData.extended.descriptions.technicalInfo);
 
   // Fill Other section
   await page.locator('button[data-bs-target="#collapse-other"]').click();
-  await page.locator('#input-other').waitFor({ state: 'visible', timeout: 5000 });
+  await waitForAccordionTransition(page, '#collapse-other');
   await page.locator('#input-other').fill(exampleData.extended.descriptions.other);
 
   // Add Funding Reference entries
@@ -116,6 +116,21 @@ export async function completeExtendedMultipleEntries(page: Page) {
 }
 
 // ============ Helper Functions ============
+
+/**
+ * Waits for a Bootstrap accordion collapse transition to complete.
+ * Ensures the section has fully opened (has 'show' class, no 'collapsing' class).
+ */
+async function waitForAccordionTransition(page: Page, collapseSelector: string) {
+  await page.waitForFunction(
+    (selector: string) => {
+      const el = document.querySelector(selector);
+      return el && el.classList.contains('show') && !el.classList.contains('collapsing');
+    },
+    collapseSelector,
+    { timeout: 5000 }
+  );
+}
 
 /**
  * Adds an author institution entry with institution name and affiliation.
@@ -421,12 +436,17 @@ async function addAuthor(
   await firstNameField.waitFor({ state: 'visible', timeout: 5000 });
   await firstNameField.fill(data.firstName);
 
-  // Fill affiliation using tagify within the author row
-  const affiliationTagifyInput = authorRow.locator('.tagify__input[title="Affiliation"]');
-  await affiliationTagifyInput.waitFor({ state: 'visible', timeout: 5000 });
-  await affiliationTagifyInput.click();
-  await affiliationTagifyInput.type(data.affiliation);
-  await page.keyboard.press('Enter');
+  // Add affiliation tag via Tagify API directly (more reliable than type+Enter
+  // because Tagify's async API search can block Enter key processing during loading state)
+  const affiliationInput = authorRow.locator('[id^="input-author-affiliation"]');
+  await expect(async () => {
+    const hasTagify = await affiliationInput.evaluate((el: any) => !!el._tagify);
+    expect(hasTagify).toBe(true);
+  }).toPass({ timeout: 10000 });
+
+  await affiliationInput.evaluate((el: any, affiliation: string) => {
+    el._tagify.addTags([{ value: affiliation }]);
+  }, data.affiliation);
 
   // Wait for the tagify tag element to appear in the DOM
   await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5000 });
