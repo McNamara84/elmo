@@ -54,10 +54,11 @@ function generateAndOutputXml($resource_id)
     try {
         require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
-    } catch (Exception $e) {
-        error_log("Error accessing Controller: " . $e->getMessage());
+    } catch (\Throwable $e) {
+        error_log("[\xF0\x9F\x92\xBFSAVE]: Error loading controllers: " . $e->getMessage());
         http_response_code(500);
-        echo "Error: Could not initialize XML generator";
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Could not initialize XML generator: ' . $e->getMessage()]);
         exit();
     }
 
@@ -65,20 +66,30 @@ function generateAndOutputXml($resource_id)
     if (isset($_POST['filename'])) {
         $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
 
+        // Clear any accidental output from require'd files before setting headers
+        if (ob_get_level() > 0 && ob_get_length() > 0) {
+            error_log("[\xF0\x9F\x92\xBFSAVE]: Clearing " . ob_get_length() . " bytes of buffered output before XML response");
+            ob_clean();
+        }
+
         header('Content-Type: application/xml');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
+        error_log("[\xF0\x9F\x92\xBFSAVE]: Headers set for XML download, resource_id=$resource_id, filename=$filename");
 
         try {
+            error_log("[\xF0\x9F\x92\xBFSAVE]: Creating controllers for XML generation...");
             $controller = new DatasetController();
             $ICGEMcontroller = new ICGEMController();
+            error_log("[\xF0\x9F\x92\xBFSAVE]: Calling envelopeXmlAsString for resource_id=$resource_id, showGGMsProperties=" . var_export($showGGMsProperties, true));
             $xmlString = $showGGMsProperties
                 ? $ICGEMcontroller->createICGEMxml($resource_id)
                 : $controller->envelopeXmlAsString($connection, $resource_id);
 
             if ($xmlString) {
+                error_log("[\xF0\x9F\x92\xBFSAVE]: XML generated successfully, length=" . strlen($xmlString) . " bytes");
                 echo $xmlString;
             } else {
-                error_log("[💿SAVE]: XML generation returned empty for resource ID: $resource_id");
+                error_log("[\xF0\x9F\x92\xBFSAVE]: XML generation returned empty for resource ID: $resource_id");
                 http_response_code(500);
                 echo "Error: Could not retrieve or generate XML file.";
             }
@@ -201,13 +212,14 @@ try {
     // ===== ONLY AFTER SUCCESSFUL COMMIT: Generate XML =====
     try {
         generateAndOutputXml($resource_id);
-    } catch (Exception $e) {
-        error_log("[💿SAVE]: XML generation failed after successful database commit for resource ID: " . $resource_id . ". Error: " . $e->getMessage());
+    } catch (\Throwable $e) {
+        error_log("[\xF0\x9F\x92\xBFSAVE]: XML generation failed after successful database commit for resource ID: " . $resource_id . ". Error: " . $e->getMessage());
         http_response_code(500);
+        header('Content-Type: application/json');
         echo json_encode(['error' => 'Data saved but XML generation failed: ' . $e->getMessage()]);
     }
     
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     // Transaction or save operation failed
     $connection->rollback();
     error_log("[💿SAVE]: Transaction rolled back. Save process failed for resource ID: " . (isset($resource_id) ? $resource_id : 'N/A') . ". Error: " . $e->getMessage());

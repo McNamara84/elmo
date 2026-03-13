@@ -393,8 +393,20 @@ async function downloadAndSaveXml(
 
   // Read and parse XML response body (more reliable than browser download events in CI)
   const response = await responsePromise;
-  expect(response.status()).toBe(200);
+  const status = response.status();
   const xmlContent = await response.text();
+
+  // Enhanced diagnostics for CI debugging
+  if (status !== 200 || xmlContent.trim().length === 0) {
+    const headers = await response.allHeaders();
+    const headerStr = Object.entries(headers).map(([k, v]) => `  ${k}: ${v}`).join('\n');
+    console.error(`[SAVE DIAGNOSTIC] Status: ${status}`);
+    console.error(`[SAVE DIAGNOSTIC] Body length: ${xmlContent.length} (trimmed: ${xmlContent.trim().length})`);
+    console.error(`[SAVE DIAGNOSTIC] Headers:\n${headerStr}`);
+    console.error(`[SAVE DIAGNOSTIC] Body (first 500 chars): ${JSON.stringify(xmlContent.slice(0, 500))}`);
+  }
+
+  expect(response.status()).toBe(200);
 
   const parser = new XMLParser({
     ignoreAttributes: false,

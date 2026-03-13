@@ -49,7 +49,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.5'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
+        extensions: mbstring, xml, xsl, dom, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
         tools: phpdbg
 
     - name: Set up Node.js
@@ -439,6 +439,15 @@ jobs:
         for instance in elmo gem igsn msl; do
           echo "=== Server Log (${instance}) ==="
           cat "server-${instance}.log" 2>/dev/null || echo "(no log)"
+        done
+
+    - name: Display SAVE-related log entries
+      if: always()
+      run: |
+        echo "=== SAVE-related log entries from all servers ==="
+        for instance in elmo gem igsn msl; do
+          echo "--- ${instance} ---"
+          grep -i "SAVE\|error\|fatal\|XSLTProcessor\|xsl" "server-${instance}.log" 2>/dev/null | tail -50 || echo "(no matches)"
         done
 
     - name: Stop PHP servers

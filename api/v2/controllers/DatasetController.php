@@ -1312,7 +1312,7 @@ XML;
                 header('Content-Type: application/xml; charset=utf-8');
                 echo $combinedXml;
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             if ($returnAsString) {
                 throw $e;
             }
