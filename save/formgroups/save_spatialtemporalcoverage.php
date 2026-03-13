@@ -55,6 +55,28 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
                 $allSuccessful = false;
                 continue;
             }
+
+            // Skip entry if dateStart is empty (no temporal data)
+            if (trim($entry['dateStart'] ?? '') === '') {
+                continue;
+            }
+        } else {
+            // Even without submit, skip entries with incomplete coordinates
+            $hasAnySpatial = (trim($entry['latitudeMin'] ?? '') !== '') || (trim($entry['latitudeMax'] ?? '') !== '')
+                          || (trim($entry['longitudeMin'] ?? '') !== '') || (trim($entry['longitudeMax'] ?? '') !== '');
+            $hasBothRequired = (trim($entry['latitudeMin'] ?? '') !== '') && (trim($entry['longitudeMin'] ?? '') !== '');
+            if ($hasAnySpatial && !$hasBothRequired) {
+                $allSuccessful = false;
+                continue;
+            }
+            // Skip entries where all fields are effectively empty
+            $hasAnyData = $hasAnySpatial
+                       || (trim($entry['dateStart'] ?? '') !== '')
+                       || (trim($entry['dateEnd'] ?? '') !== '')
+                       || (trim($entry['description'] ?? '') !== '');
+            if (!$hasAnyData) {
+                continue;
+            }
         }
 
         // Prepare optional fields - convert empty strings to NULL for database
