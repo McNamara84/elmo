@@ -428,21 +428,19 @@ async function addAuthor(
 
   const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index);
 
-  // Wait for the ORCID field to be ready before filling
   const orcidField = authorRow.locator('[id^="input-author-orcid"]');
   await orcidField.waitFor({ state: 'visible', timeout: 5000 });
   await orcidField.fill(data.orcid);
 
   const lastNameField = authorRow.locator('[id^="input-author-lastname"]');
   await lastNameField.waitFor({ state: 'visible', timeout: 5000 });
-  await lastNameField.click();
-  await expect(lastNameField).toBeFocused();
-  await lastNameField.clear();
   await lastNameField.fill(data.lastName);
+  await expect(lastNameField).toHaveValue(data.lastName);
 
   const firstNameField = authorRow.locator('[id^="input-author-firstname"]');
   await firstNameField.waitFor({ state: 'visible', timeout: 5000 });
   await firstNameField.fill(data.firstName);
+  await expect(firstNameField).toHaveValue(data.firstName);
 
   // Add affiliation tag via Tagify API directly (more reliable than type+Enter
   // because Tagify's async API search can block Enter key processing during loading state)
