@@ -438,7 +438,7 @@ async function addAuthor(
 
   // Add affiliation tag via Tagify API directly (more reliable than type+Enter
   // because Tagify's async API search can block Enter key processing during loading state)
-  const affiliationInput = authorRow.locator('[id^="input-author-affiliation"]');
+  const affiliationInput = authorRow.locator('input[id^="input-author-affiliation"]');
   await expect(async () => {
     const hasTagify = await affiliationInput.evaluate((el: any) => !!el._tagify);
     expect(hasTagify).toBe(true);
