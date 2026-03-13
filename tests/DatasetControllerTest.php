@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-
-require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
-
 /**
  * Test class for DatasetController
  * 
@@ -21,6 +18,7 @@ final class DatasetControllerTest extends DatabaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
         $this->controller = new \DatasetController();
         
         // Create a test resource with all related data

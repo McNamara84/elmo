@@ -1,17 +1,18 @@
 <?php
 require_once __DIR__ . '/../validation.php';
 
+if (!function_exists('isEmptyArray')) {
+    function isEmptyArray($arr) {
+        return !isset($arr) || !is_array($arr) || count($arr) === 0;
+    }
+}
+
 function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
 {
     $action = $postData['action'] ?? 'save_and_download';
 
     // If NO STC data provided at all, return early (it's optional)
     // Only skip if BOTH spatial and temporal fields are empty
-    // false if array exists and has elements, 
-    // true if not set, not an array, or empty array
-    function isEmptyArray($arr) {
-        return !isset($arr) || !is_array($arr) || count($arr) === 0; 
-    }
     if (
         isEmptyArray($postData['tscLatitudeMin']) &&  //AND
         isEmptyArray($postData['tscLatitudeMax']) &&

@@ -47,6 +47,11 @@ function saveRelatedWork($connection, $postData, $resource_id)
             continue;
         }
 
+        // Skip if required fields are missing
+        if ($entry['identifier'] === '' || $entry['relation'] === '') {
+            continue;
+        }
+
         if ($action === 'submit') {
             if (!validateRelatedWorkDependencies($entry)) {
                 error_log('Related Work entry validation failed: ' . json_encode($entry));
