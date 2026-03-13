@@ -428,18 +428,8 @@ async function addAuthor(
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');
 
-  // Wait for tagify to register the affiliation
-  await page.waitForFunction(
-    ({ rowIndex, selector, affiliation }) => {
-      const rows = document.querySelectorAll(`${selector} [data-creator-row]`);
-      const row = rows[rowIndex];
-      if (!row) return false;
-      const input = row.querySelector('input[name*="affiliation"]') as any;
-      return input?._tagify?.value?.some((tag: any) => tag.value === affiliation);
-    },
-    { rowIndex: index, selector: SELECTORS.formGroups.authors, affiliation: data.affiliation },
-    { timeout: 5000 }
-  );
+  // Wait for the tagify tag element to appear in the DOM
+  await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5000 });
 }
 export { exampleData };
 
