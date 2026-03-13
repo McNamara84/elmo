@@ -55,7 +55,7 @@ final class SaveDescriptionsTest extends DatabaseTestCase
             ['type' => 'Abstract', 'description' => $postData['descriptionAbstract']],
             ['type' => 'Methods', 'description' => $postData['descriptionMethods']],
             ['type' => 'Other', 'description' => $postData['descriptionOther']],
-            ['type' => 'Technical Information', 'description' => $postData['descriptionTechnical']]
+            ['type' => 'TechnicalInfo', 'description' => $postData['descriptionTechnical']]
         ];
 
         $index = 0;

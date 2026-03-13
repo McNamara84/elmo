@@ -33,7 +33,7 @@ final class DatasetControllerTest extends DatabaseTestCase
         $conn = $this->connection;
 
         // Insert Resource
-        $stmt = $conn->prepare("INSERT INTO Resource (version, language, publicationYear, currentSchemaVersion) VALUES (1, 'en', 2024, '1.0')");
+        $stmt = $conn->prepare("INSERT INTO Resource (version, Language_language_id, year) VALUES (1, 1, 2024)");
         $stmt->execute();
         $this->resourceId = (int) $conn->insert_id;
         $stmt->close();
@@ -48,7 +48,7 @@ final class DatasetControllerTest extends DatabaseTestCase
         $stmt->close();
 
         // Insert Description
-        $stmt = $conn->prepare("INSERT INTO Description (description_abstract, resource_id) VALUES ('Test abstract description', ?)");
+        $stmt = $conn->prepare("INSERT INTO Description (type, description, resource_id) VALUES ('Abstract', 'Test abstract description', ?)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
         $stmt->close();
@@ -89,7 +89,7 @@ final class DatasetControllerTest extends DatabaseTestCase
         $stmt->close();
 
         // Insert Spatial Temporal Coverage
-        $conn->query("INSERT INTO Spatial_Temporal_Coverage (spatial_temporal_coverage_id, latMin, latMax, lonMin, lonMax, dateStart, dateEnd) VALUES (1, 52.0, 53.0, 13.0, 14.0, '2024-01-01', '2024-12-31')");
+        $conn->query("INSERT INTO Spatial_Temporal_Coverage (spatial_temporal_coverage_id, latitudeMin, latitudeMax, longitudeMin, longitudeMax, dateStart, dateEnd) VALUES (1, 52.0, 53.0, 13.0, 14.0, '2024-01-01', '2024-12-31')");
         $stmt = $conn->prepare("INSERT INTO Resource_has_Spatial_Temporal_Coverage (Resource_resource_id, Spatial_Temporal_Coverage_spatial_temporal_coverage_id) VALUES (?, 1)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
@@ -107,7 +107,7 @@ final class DatasetControllerTest extends DatabaseTestCase
         $stmt->close();
 
         // Insert Funding Reference
-        $conn->query("INSERT INTO Funding_Reference (funding_reference_id, funder, funderIdentifier, funderIdentifierType, awardNumber, awardTitle, awardURI) VALUES (1, 'Test Funder', 'fund-123', 'Crossref', 'AWARD-001', 'Test Award', 'https://award.test')");
+        $conn->query("INSERT INTO Funding_Reference (funding_reference_id, funder, funderid, funderidtyp, grantnumber, grantname, awarduri) VALUES (1, 'Test Funder', 'fund-123', 'Crossref', 'AWARD-001', 'Test Award', 'https://award.test')");
         $stmt = $conn->prepare("INSERT INTO Resource_has_Funding_Reference (Resource_resource_id, Funding_Reference_funding_reference_id) VALUES (?, 1)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
@@ -144,7 +144,7 @@ final class DatasetControllerTest extends DatabaseTestCase
 
         $this->assertIsArray($descriptions);
         $this->assertNotEmpty($descriptions);
-        $this->assertEquals('Test abstract description', $descriptions[0]['description_abstract']);
+        $this->assertEquals('Test abstract description', $descriptions[0]['description']);
     }
 
     public function testGetAuthorsReturnsPersonAuthors(): void
@@ -219,10 +219,10 @@ final class DatasetControllerTest extends DatabaseTestCase
 
         $this->assertIsArray($coverage);
         $this->assertNotEmpty($coverage);
-        $this->assertEquals(52.0, $coverage[0]['latMin']);
-        $this->assertEquals(53.0, $coverage[0]['latMax']);
-        $this->assertEquals(13.0, $coverage[0]['lonMin']);
-        $this->assertEquals(14.0, $coverage[0]['lonMax']);
+        $this->assertEquals(52.0, $coverage[0]['latitudeMin']);
+        $this->assertEquals(53.0, $coverage[0]['latitudeMax']);
+        $this->assertEquals(13.0, $coverage[0]['longitudeMin']);
+        $this->assertEquals(14.0, $coverage[0]['longitudeMax']);
     }
 
     public function testGetRelatedWorksReturnsCorrectStructure(): void
@@ -243,7 +243,7 @@ final class DatasetControllerTest extends DatabaseTestCase
         $this->assertIsArray($funding);
         $this->assertNotEmpty($funding);
         $this->assertEquals('Test Funder', $funding[0]['funder']);
-        $this->assertEquals('AWARD-001', $funding[0]['awardNumber']);
+        $this->assertEquals('AWARD-001', $funding[0]['grantnumber']);
     }
 
     public function testGetThesaurusKeywordsReturnsCorrectData(): void
@@ -285,7 +285,7 @@ final class DatasetControllerTest extends DatabaseTestCase
     public function testGetAuthorsWithNoAuthorsReturnsEmptyArray(): void
     {
         // Create a resource without authors
-        $stmt = $this->connection->prepare("INSERT INTO Resource (version, language, publicationYear) VALUES (1, 'en', 2024)");
+        $stmt = $this->connection->prepare("INSERT INTO Resource (version, Language_language_id, year) VALUES (1, 1, 2024)");
         $stmt->execute();
         $emptyResourceId = (int) $this->connection->insert_id;
         $stmt->close();
@@ -299,7 +299,7 @@ final class DatasetControllerTest extends DatabaseTestCase
     public function testGetContributorsWithNoContributorsReturnsEmptyStructure(): void
     {
         // Create a resource without contributors
-        $stmt = $this->connection->prepare("INSERT INTO Resource (version, language, publicationYear) VALUES (1, 'en', 2024)");
+        $stmt = $this->connection->prepare("INSERT INTO Resource (version, Language_language_id, year) VALUES (1, 1, 2024)");
         $stmt->execute();
         $emptyResourceId = (int) $this->connection->insert_id;
         $stmt->close();

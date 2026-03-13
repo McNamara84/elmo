@@ -28,7 +28,7 @@ function saveDescriptions($connection, $postData, $resource_id)
     // Generic description types (always available)
     $genericDescriptionTypes = [
         'Methods' => 'descriptionMethods',
-        'Technical Information' => 'descriptionTechnical'
+        'TechnicalInfo' => 'descriptionTechnical'
     ];
 
     // Save generic descriptions (excluding Abstract and Other, which are handled separately)
