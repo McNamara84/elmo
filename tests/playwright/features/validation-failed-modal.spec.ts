@@ -45,10 +45,13 @@ test.describe('Validation Failed Modal (#968)', () => {
     const modal = page.locator('#modal-validation-failed');
     await expect(modal).toBeVisible({ timeout: 10000 });
 
-    // Close via header X button – wait for it to be actionable
+    // Close via header X button – wait for Bootstrap transition to fully complete
     const xButton = modal.locator('.btn-close');
-    await xButton.waitFor({ state: 'visible', timeout: 5000 });
-    await xButton.click({ force: true });
+    await page.waitForFunction(() => {
+      const m = document.getElementById('modal-validation-failed');
+      return m?.classList.contains('show') && getComputedStyle(m).opacity === '1';
+    }, { timeout: 5000 });
+    await xButton.click();
 
     await expect(modal).not.toBeVisible({ timeout: 10000 });
   });

@@ -138,7 +138,7 @@ jobs:
         $showContributorInstitutions = true;
         $showFundingReference = true;
         $showAuthorInstitution = true;
-        $xmlSubmitAddress = 'test@test.com';
+        $xmlSubmitAddress = 'datapub@gfz.de';
 
         $envOverrides = [
             'SHOW_MSL_LABS' => 'showMslLabs',

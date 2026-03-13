@@ -105,12 +105,14 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert dataset language
     expect(actualRoot.language).toBe(refRoot.language);
     
-    // Compare all the descriptions
+    // Compare all descriptions (matched by descriptionType, order may differ)
     const descriptions = toArray(actualRoot.descriptions.description);
     const refDescriptions = toArray(refRoot.descriptions.description);
     expect(descriptions.length).toBe(refDescriptions.length);
-    for (let i = 0; i < descriptions.length; i++) {
-      expect(descriptions[i]['#text']).toBe(refDescriptions[i]['#text']);
+    for (const refDesc of refDescriptions) {
+      const match = descriptions.find((d: any) => d.descriptionType === refDesc.descriptionType);
+      expect(match, `Missing description of type ${refDesc.descriptionType}`).toBeTruthy();
+      expect(match['#text']).toBe(refDesc['#text']);
     }
 
     // Assert keywords present - handle both string and array formats
@@ -161,15 +163,16 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert multiple authors - check length and each property
     const actualAuthors = toArray(actualRoot.creators?.creator);
     const referenceAuthors = toArray(refRoot.creators?.creator);
-    // Assert multiple personal authors (persons)
+    // Assert multiple personal authors (matched by familyName, order may differ)
     const personalCreators = actualAuthors.filter((c: any) => c.creatorName.nameType === 'Personal');
     const refPersonalCreators = referenceAuthors.filter((c: any) => c.creatorName.nameType === 'Personal');
     expect(personalCreators.length).toBe(refPersonalCreators.length);
-    for (let i = 0; i < personalCreators.length; i++) {
-      expect(personalCreators[i].creatorName['#text']).toBe(refPersonalCreators[i].creatorName['#text']);
-      expect(personalCreators[i].givenName).toBe(refPersonalCreators[i].givenName);
-      expect(personalCreators[i].familyName).toBe(refPersonalCreators[i].familyName);
-      expect(personalCreators[i].nameIdentifier['#text']).toBe(refPersonalCreators[i].nameIdentifier['#text']);
+    for (const refCreator of refPersonalCreators) {
+      const match = personalCreators.find((c: any) => c.familyName === refCreator.familyName);
+      expect(match, `Missing personal creator with familyName ${refCreator.familyName}`).toBeTruthy();
+      expect(match.creatorName['#text']).toBe(refCreator.creatorName['#text']);
+      expect(match.givenName).toBe(refCreator.givenName);
+      expect(match.nameIdentifier['#text']).toBe(refCreator.nameIdentifier['#text']);
     }
 
     // Assert organizational authors (institutions)
@@ -194,12 +197,14 @@ test.describe('Dataset Save with XML Verification', () => {
       expect(actualKeywords[i]).toBe(referenceKeywords[i]);
     }
 
-    // Assert multiple descriptions - check length and each value
+    // Assert multiple descriptions (matched by descriptionType, order may differ)
     const actualDescriptions = toArray(actualRoot.descriptions?.description);
     const referenceDescriptions = toArray(refRoot.descriptions?.description);
     expect(actualDescriptions.length).toBe(referenceDescriptions.length);
-    for (let i = 0; i < actualDescriptions.length; i++) {
-      expect(actualDescriptions[i]['#text']).toBe(referenceDescriptions[i]['#text']);
+    for (const refDesc of referenceDescriptions) {
+      const match = actualDescriptions.find((d: any) => d.descriptionType === refDesc.descriptionType);
+      expect(match, `Missing description of type ${refDesc.descriptionType}`).toBeTruthy();
+      expect(match['#text']).toBe(refDesc['#text']);
     }
 
     // Assert multiple related works - check length and each value with attributes
