@@ -130,9 +130,10 @@ function executeSaveFunction($callback, ...$args)
     }
 }
 
-// only process requests
+// only process requests (use return instead of exit to avoid killing
+// the PHPUnit process when this file is loaded via require_once)
 if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
-    exit();
+    return;
 }
 
 // Only load settings if connection not already injected (for testing)
