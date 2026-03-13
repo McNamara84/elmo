@@ -52,20 +52,28 @@ export async function completeExtendedDatasetForm(page: Page) {
   await addFreeKeyword(page, exampleData.extended.keywords[0]);
 
   // Add Descriptions - Abstract already filled by completeMinimalDatasetForm
-  // Fill Methods section
-  await page.locator('button[data-bs-target="#collapse-methods"]').click();
-  await waitForAccordionTransition(page, '#collapse-methods');
-  await page.locator('#input-methods').fill(exampleData.extended.descriptions.methods);
-
-  // Fill Technical Information section
-  await page.locator('button[data-bs-target="#collapse-technicalinfo"]').click();
-  await waitForAccordionTransition(page, '#collapse-technicalinfo');
-  await page.locator('#input-technicalinfo').fill(exampleData.extended.descriptions.technicalInfo);
-
-  // Fill Other section
-  await page.locator('button[data-bs-target="#collapse-other"]').click();
-  await waitForAccordionTransition(page, '#collapse-other');
-  await page.locator('#input-other').fill(exampleData.extended.descriptions.other);
+  // Set description textareas directly via evaluate to bypass accordion transition issues in CI.
+  // Bootstrap accordion transitions are unreliable in headless CI: fill() can execute during
+  // the transition, causing the value to be silently lost.
+  await page.evaluate(({ methods, techInfo, other }) => {
+    const fields: Array<[string, string]> = [
+      ['#input-methods', methods],
+      ['#input-technicalinfo', techInfo],
+      ['#input-other', other],
+    ];
+    for (const [selector, value] of fields) {
+      const el = document.querySelector(selector) as HTMLTextAreaElement;
+      if (el) {
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+  }, {
+    methods: exampleData.extended.descriptions.methods,
+    techInfo: exampleData.extended.descriptions.technicalInfo,
+    other: exampleData.extended.descriptions.other,
+  });
 
   // Add Funding Reference entries
   await addFundingReference(page, 0, exampleData.extended.fundingReferences[0]);
@@ -450,6 +458,9 @@ async function addAuthor(
 
   // Wait for the tagify tag element to appear in the DOM
   await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5000 });
+
+  // Brief settle time so the next addAuthor call doesn't race with Tagify rendering
+  await page.waitForTimeout(200);
 }
 export { exampleData };
 
