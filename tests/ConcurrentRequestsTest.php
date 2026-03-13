@@ -255,7 +255,7 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
         $this->assertEquals($this->postData1["descriptionMethods"], $descriptions1[1]["description"]);
         $this->assertEquals("Other", $descriptions1[2]["type"]);
         $this->assertEquals($this->postData1["descriptionOther"], $descriptions1[2]["description"]);
-        $this->assertEquals("Technical Information", $descriptions1[3]["type"]);
+        $this->assertEquals("TechnicalInfo", $descriptions1[3]["type"]);
         $this->assertEquals($this->postData1["descriptionTechnical"], $descriptions1[3]["description"]);
 
         // Verify descriptions for Resource 2

@@ -38,11 +38,8 @@ final class DatasetControllerTest extends DatabaseTestCase
         $this->resourceId = (int) $conn->insert_id;
         $stmt->close();
 
-        // Insert Title Type
-        $conn->query("INSERT INTO Title_Type (title_type_id, name) VALUES (1, 'Main Title') ON DUPLICATE KEY UPDATE name=name");
-
-        // Insert Title
-        $stmt = $conn->prepare("INSERT INTO Title (text, Title_Type_fk, Resource_resource_id) VALUES ('Test Dataset Title', 1, ?)");
+        // Insert Title (Title_Type id 2 = 'Main Title' from install.php seed data)
+        $stmt = $conn->prepare("INSERT INTO Title (text, Title_Type_fk, Resource_resource_id) VALUES ('Test Dataset Title', 2, ?)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
         $stmt->close();
@@ -72,9 +69,8 @@ final class DatasetControllerTest extends DatabaseTestCase
         $stmt->execute();
         $stmt->close();
 
-        // Insert Contributor Person with Role
+        // Insert Contributor Person with Role (Role id 1 = 'Data Collector' from install.php seed data)
         $conn->query("INSERT INTO Contributor_Person (contributor_person_id, familyname, givenname, orcid) VALUES (1, 'Smith', 'Jane', '0000-0002-3456-7890')");
-        $conn->query("INSERT INTO Role (role_id, name) VALUES (1, 'DataCollector') ON DUPLICATE KEY UPDATE name=name");
         $conn->query("INSERT INTO Contributor_Person_has_Role (Contributor_Person_contributor_person_id, Role_role_id) VALUES (1, 1)");
         $stmt = $conn->prepare("INSERT INTO Resource_has_Contributor_Person (Resource_resource_id, Contributor_Person_contributor_person_id) VALUES (?, 1)");
         $stmt->bind_param('i', $this->resourceId);
@@ -95,12 +91,8 @@ final class DatasetControllerTest extends DatabaseTestCase
         $stmt->execute();
         $stmt->close();
 
-        // Insert Relation and Identifier Type for Related Work
-        $conn->query("INSERT INTO Relation (relation_id, name) VALUES (1, 'IsCitedBy') ON DUPLICATE KEY UPDATE name=name");
-        $conn->query("INSERT INTO Identifier_Type (identifier_type_id, name) VALUES (1, 'DOI') ON DUPLICATE KEY UPDATE name=name");
-
-        // Insert Related Work
-        $conn->query("INSERT INTO Related_Work (related_work_id, Identifier, relation_fk, identifier_type_fk) VALUES (1, '10.1234/test', 1, 1)");
+        // Insert Related Work (Relation id 1 = 'IsCitedBy', Identifier_Type id 4 = 'DOI' from install.php seed data)
+        $conn->query("INSERT INTO Related_Work (related_work_id, Identifier, relation_fk, identifier_type_fk) VALUES (1, '10.1234/test', 1, 4)");
         $stmt = $conn->prepare("INSERT INTO Resource_has_Related_Work (Resource_resource_id, Related_Work_related_work_id) VALUES (?, 1)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
@@ -198,7 +190,7 @@ final class DatasetControllerTest extends DatabaseTestCase
 
         $this->assertIsArray($roles);
         $this->assertNotEmpty($roles);
-        $this->assertEquals('DataCollector', $roles[0]['name']);
+        $this->assertEquals('Data Collector', $roles[0]['name']);
     }
 
     public function testGetContactPersonsReturnsCorrectData(): void
