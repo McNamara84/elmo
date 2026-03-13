@@ -395,18 +395,20 @@ async function downloadAndSaveXml(
   const response = await responsePromise;
   const status = response.status();
   const xmlContent = await response.text();
+  const headers = await response.allHeaders();
 
-  // Enhanced diagnostics for CI debugging
+  // Fail fast with detailed diagnostics when save response is broken
   if (status !== 200 || xmlContent.trim().length === 0) {
-    const headers = await response.allHeaders();
-    const headerStr = Object.entries(headers).map(([k, v]) => `  ${k}: ${v}`).join('\n');
-    console.error(`[SAVE DIAGNOSTIC] Status: ${status}`);
-    console.error(`[SAVE DIAGNOSTIC] Body length: ${xmlContent.length} (trimmed: ${xmlContent.trim().length})`);
-    console.error(`[SAVE DIAGNOSTIC] Headers:\n${headerStr}`);
-    console.error(`[SAVE DIAGNOSTIC] Body (first 500 chars): ${JSON.stringify(xmlContent.slice(0, 500))}`);
+    const headerStr = Object.entries(headers).map(([k, v]) => `${k}: ${v}`).join(', ');
+    throw new Error(
+      `Save endpoint returned unexpected response.\n` +
+      `  Status: ${status}\n` +
+      `  Body length: ${xmlContent.length} (trimmed: ${xmlContent.trim().length})\n` +
+      `  Headers: ${headerStr}\n` +
+      `  Body (first 500 chars): ${JSON.stringify(xmlContent.slice(0, 500))}\n` +
+      `  Content-Length header: ${headers['content-length'] ?? '(not set)'}`
+    );
   }
-
-  expect(response.status()).toBe(200);
 
   const parser = new XMLParser({
     ignoreAttributes: false,

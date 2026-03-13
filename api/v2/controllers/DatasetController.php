@@ -638,10 +638,9 @@ class DatasetController
             chmod($outputDir, 0777);
         }
         // Especially for saving xml transformed in different schemas
-        $filename = "resource_$id.xml";
-        if ($prefix) {
-            $filename = $outputDir . "/" . $prefix . "_" . $filename;
-        }
+        $filename = $prefix
+            ? $prefix . "_resource_$id.xml"
+            : "resource_$id.xml";
 
         return $outputDir . "/" . $filename;
     }
