@@ -428,9 +428,16 @@ async function addAuthor(
 
   const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index);
 
+  // Set ORCID via evaluate() to avoid triggering the blur-based ORCID lookup.
+  // The lookup would asynchronously populate name/affiliation fields via the ORCID API,
+  // racing with our explicit fill() calls below and causing doubled values.
   const orcidField = authorRow.locator('[id^="input-author-orcid"]');
   await orcidField.waitFor({ state: 'visible', timeout: 5000 });
-  await orcidField.fill(data.orcid);
+  await orcidField.evaluate((el: HTMLInputElement, val: string) => {
+    el.value = val;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }, data.orcid);
 
   const lastNameField = authorRow.locator('[id^="input-author-lastname"]');
   await lastNameField.waitFor({ state: 'visible', timeout: 5000 });
