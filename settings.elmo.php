@@ -50,8 +50,8 @@ $showMslLogo = false;
 $showContributorPersons = true;
 // Show Contributor Institutios form group
 $showContributorInstitutions = true;
-// Show GCMD Thesauri form group
-$showGcmdThesauri = true;
+// Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
+$showThesauri = true;
 // Show Free Keywords form group
 $showFreeKeywords = true;
 // Show Spatial and Temporal Coverage form group
@@ -111,13 +111,13 @@ if ($envShowGGMsProperties !== false) {
 }
 
 // Environment variable overrides for additional form groups
-$envShowGcmdThesauri = getenv('SHOW_GCMD_THESAURI');
+$envShowThesauri = getenv('SHOW_THESAURI');
 $envShowFreeKeywords = getenv('SHOW_FREE_KEYWORDS');
 $envShowSpatialTemporalCoverage = getenv('SHOW_SPATIAL_TEMPORAL_COVERAGE');
 $envShowRelatedWork = getenv('SHOW_RELATED_WORK');
 
-if ($envShowGcmdThesauri !== false) {
-    $showGcmdThesauri = filter_var($envShowGcmdThesauri, FILTER_VALIDATE_BOOLEAN);
+if ($envShowThesauri !== false) {
+    $showThesauri = filter_var($envShowThesauri, FILTER_VALIDATE_BOOLEAN);
 }
 if ($envShowFreeKeywords !== false) {
     $showFreeKeywords = filter_var($envShowFreeKeywords, FILTER_VALIDATE_BOOLEAN);

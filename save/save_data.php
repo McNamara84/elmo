@@ -186,7 +186,7 @@ try {
         executeSaveFunction('saveContributorInstitutions', $connection, $_POST, $resource_id);
     }
     executeSaveFunction('saveDescriptions', $connection, $_POST, $resource_id);
-    if ($showGcmdThesauri) {
+    if ($showThesauri) {
         executeSaveFunction('saveKeywords', $connection, $_POST, $resource_id);
     }
     if ($showFreeKeywords) {
