@@ -5,8 +5,6 @@ namespace Tests;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use EasyRdf\Graph;
-use EasyRdf\RdfNamespace;
 
 if (!defined('UNIT_TESTING')) {
     define('UNIT_TESTING', true);
