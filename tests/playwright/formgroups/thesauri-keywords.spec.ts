@@ -10,6 +10,97 @@ const SCIENCE_PATH = 'Science Keywords > EARTH SCIENCE > AGRICULTURE > AGRICULTU
 const PLATFORMS_PATH = 'Platforms > Air-based Platforms > BALLOONS';
 
 const THESAURI_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/thesaurusKeywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
+
+/**
+ * Minimal mock vocabulary data used instead of large production JSON files.
+ * Contains exactly the hierarchical paths the tests exercise.
+ */
+const MOCK_SCIENCE_KEYWORDS = {
+  data: [
+    {
+      id: 'sk-1', text: 'Science Keywords', scheme: 'GCMD',
+      schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+      language: 'en',
+      children: [
+        {
+          id: 'sk-2', text: 'EARTH SCIENCE', scheme: 'GCMD',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+          language: 'en',
+          children: [
+            {
+              id: 'sk-3', text: 'AGRICULTURE', scheme: 'GCMD',
+              schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+              language: 'en',
+              children: [
+                {
+                  id: 'sk-4', text: 'AGRICULTURAL AQUATIC SCIENCES', scheme: 'GCMD',
+                  schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+                  language: 'en',
+                  children: [
+                    {
+                      id: 'sk-5', text: 'AQUACULTURE', scheme: 'GCMD',
+                      schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+                      language: 'en',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const MOCK_PLATFORMS = {
+  data: [
+    {
+      id: 'pl-1', text: 'Platforms', scheme: 'GCMD',
+      schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms',
+      language: 'en',
+      children: [
+        {
+          id: 'pl-2', text: 'Air-based Platforms', scheme: 'GCMD',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms',
+          language: 'en',
+          children: [
+            {
+              id: 'pl-3', text: 'BALLOONS', scheme: 'GCMD',
+              schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms',
+              language: 'en',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const MOCK_INSTRUMENTS = {
+  data: [
+    {
+      id: 'in-1', text: 'Instruments', scheme: 'GCMD',
+      schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+      language: 'en',
+      children: [
+        {
+          id: 'in-2', text: 'Spectrometers', scheme: 'GCMD',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+          language: 'en',
+          description: 'Instruments that measure spectra',
+          children: [
+            {
+              id: 'in-3', text: 'Infrared Spectrometer', scheme: 'GCMD',
+              schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+              language: 'en',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
 const TEST_ROUTE_PATH = '/thesauri-keywords-test';
 const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -76,18 +167,15 @@ test.describe('Thesauri Keywords Form Group', () => {
       });
     });
 
-    // Mock vocabulary API endpoints — serve real JSON data from local files
+    // Mock vocabulary API endpoints with inline test data
     await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords', async route => {
-      const body = readFileSync(path.join(REPO_ROOT, 'json/thesauri/gcmdScienceKeywords.json'), 'utf8');
-      await route.fulfill({ status: 200, contentType: 'application/json', body });
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_SCIENCE_KEYWORDS) });
     });
     await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms', async route => {
-      const body = readFileSync(path.join(REPO_ROOT, 'json/thesauri/gcmdPlatformsKeywords.json'), 'utf8');
-      await route.fulfill({ status: 200, contentType: 'application/json', body });
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_PLATFORMS) });
     });
     await page.route('**/api/v2/vocabs/thesauri/gcmd-instruments', async route => {
-      const body = readFileSync(path.join(REPO_ROOT, 'json/thesauri/gcmdInstrumentsKeywords.json'), 'utf8');
-      await route.fulfill({ status: 200, contentType: 'application/json', body });
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_INSTRUMENTS) });
     });
 
     await page.goto(TEST_ROUTE_PATH);
