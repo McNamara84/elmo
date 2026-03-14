@@ -104,7 +104,7 @@ include_once "../settings.php";
                                 Keywords</a>
                         </li>
                         <?php endif; ?>
-                        <?php if ($showGcmdThesauri ?? true): ?>
+                        <?php if ($showThesauri ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-scienceKeywords" data-bs-dismiss="offcanvas">Keywords</a>
                         </li>
@@ -750,7 +750,7 @@ include_once "../settings.php";
             <hr>
             <?php endif; ?>
             <!-- formgroup GCMD Platforms Keywords -->
-            <?php if ($showGcmdThesauri ?? true): ?>  
+            <?php if ($showThesauri ?? true): ?>  
             <div id="help-platformsKeywords" class="section-content">
                 <div id="help-gcmd-platforms-keyword">
                     <h3>GCMD Platforms Keywords</h3>
