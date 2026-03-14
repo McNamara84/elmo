@@ -151,12 +151,10 @@
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
-            "title": "GCMD Thesauri",
-            "name": "GCMD Thesauri Keywords",
-            "scienceKeywords": "GCMD Science Keywords",
-            "platforms": "GCMD Platforms",
-            "instruments": "GCMD Instruments",
-            "label": "Open thesaurus to choose keywords or start typing..."
+            "title": "Thesauri",
+            "name": "Thesauri Keywords",
+            "label": "Open thesaurus to choose keywords or start typing...",
+            "unavailable": "Thesaurus data currently unavailable."
         },
         "free": {
             "title": "Free Keywords",
