@@ -195,71 +195,6 @@ class VocabController
     }
 
     /**
-     * Fetches the CGI Simple Lithology vocabulary from the official RDF source
-     * and returns a hierarchical array formatted for jsTree.
-     *
-     * @return array<mixed> Parsed CGI keywords tree
-     * @throws Exception If fetching or parsing the RDF data fails
-     */
-    public function fetchAndProcessCGIKeywords(): array
-    {
-        // Source URL of the CGI Simple Lithology vocabulary
-        $url = 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology.rdf';
-
-        // Register RDF namespaces
-        \EasyRdf\RdfNamespace::set('skos', 'http://www.w3.org/2004/02/skos/core#');
-        \EasyRdf\RdfNamespace::set('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#');
-
-        // Load RDF data
-        $graph = new Graph($url);
-        $graph->load();
-
-        $keywordMap = [];
-
-        // Iterate through all SKOS concepts
-        foreach ($graph->allOfType('skos:Concept') as $concept) {
-            $id = $concept->getUri();
-            $prefLabel = (string) $concept->get('skos:prefLabel');
-            $definition = (string) $concept->get('skos:definition');
-
-            $keywordMap[$id] = [
-                'id' => $id,
-                'text' => $prefLabel,
-                'language' => 'en',
-                'scheme' => 'CGI Simple Lithology',
-                'schemeURI' => 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology',
-                'description' => $definition,
-                'children' => []
-            ];
-        }
-
-        // Build hierarchy with compound_material as the root node
-        $rootId = 'http://resource.geosciml.org/classifier/cgi/lithology/compound_material';
-        foreach ($graph->allOfType('skos:Concept') as $concept) {
-            $id = $concept->getUri();
-            if ($id === $rootId) {
-                continue; // Skip the root element
-            }
-            $broader = $concept->all('skos:broader');
-            if (empty($broader)) {
-                // Concepts without a broader term become children of the root
-                $keywordMap[$rootId]['children'][] = &$keywordMap[$id];
-            } else {
-                foreach ($broader as $parent) {
-                    $parentId = $parent->getUri();
-                    if (isset($keywordMap[$parentId])) {
-                        $keywordMap[$parentId]['children'][] = &$keywordMap[$id];
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Return only the root element
-        return [$keywordMap[$rootId]];
-    }
-
-    /**
      * Gets the latest version number for the combined vocabulary file.
      *
      * @param string $baseUrl The base URL for vocabularies.
@@ -2449,5 +2384,145 @@ class VocabController
     public function getContributorInstitutionRolesCacheStatus(): void
     {
         $this->handleCacheStatus('getContributorInstitutionRolesCacheStatus', 'contributor institution roles');
+    }
+
+    // ==================== Thesauri (ERNIE proxy) endpoints ====================
+
+    /**
+     * Returns thesauri availability from ERNIE (with caching)
+     * 
+     * Tells the frontend which thesauri are currently enabled.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getThesauriAvailability(): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
+
+            if ($ernieService->isConfigured()) {
+                $availability = $ernieService->getThesauriAvailabilityWithCache();
+                if (!empty($availability)) {
+                    header('Content-Type: application/json');
+                    echo json_encode($availability);
+                    return;
+                }
+            }
+
+            http_response_code(503);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Thesauri availability currently unavailable']);
+        } catch (Exception $e) {
+            error_log("API Error in getThesauriAvailability: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Returns vocabulary data for a specific thesaurus from ERNIE (with caching)
+     *
+     * @param string $slug The thesaurus slug (e.g. 'gcmd-science-keywords')
+     * @return void Outputs JSON response directly
+     */
+    private function getThesaurusVocabulary(string $slug): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
+
+            if ($ernieService->isConfigured()) {
+                $data = $ernieService->getThesaurusVocabularyWithCache($slug);
+                if (!empty($data)) {
+                    error_log("Thesaurus ($slug): Serving " . count($data) . " items from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($data);
+                    return;
+                }
+            }
+
+            http_response_code(503);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => "Thesaurus vocabulary '$slug' currently unavailable"]);
+        } catch (Exception $e) {
+            error_log("API Error in getThesaurusVocabulary($slug): " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Returns GCMD Science Keywords vocabulary data
+     *
+     * @return void
+     */
+    public function getGcmdScienceKeywordsFromErnie(): void
+    {
+        $this->getThesaurusVocabulary('gcmd-science-keywords');
+    }
+
+    /**
+     * Returns GCMD Platforms vocabulary data
+     *
+     * @return void
+     */
+    public function getGcmdPlatformsFromErnie(): void
+    {
+        $this->getThesaurusVocabulary('gcmd-platforms');
+    }
+
+    /**
+     * Returns GCMD Instruments vocabulary data
+     *
+     * @return void
+     */
+    public function getGcmdInstrumentsFromErnie(): void
+    {
+        $this->getThesaurusVocabulary('gcmd-instruments');
+    }
+
+    /**
+     * Returns ICS Chronostratigraphy vocabulary data
+     *
+     * @return void
+     */
+    public function getChronostratTimescale(): void
+    {
+        $this->getThesaurusVocabulary('chronostrat-timescale');
+    }
+
+    /**
+     * Returns GEMET Thesaurus vocabulary data
+     *
+     * @return void
+     */
+    public function getGemet(): void
+    {
+        $this->getThesaurusVocabulary('gemet');
+    }
+
+    /**
+     * Manually refreshes the thesauri availability cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshThesauriAvailabilityCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshThesauriAvailabilityCache',
+            'getThesauriAvailabilityCacheStatus',
+            'Thesauri availability'
+        );
+    }
+
+    /**
+     * Gets the status of the thesauri availability cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getThesauriAvailabilityCacheStatus(): void
+    {
+        $this->handleCacheStatus('getThesauriAvailabilityCacheStatus', 'thesauri availability');
     }
 }
