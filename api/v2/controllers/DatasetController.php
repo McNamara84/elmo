@@ -14,38 +14,44 @@ class DatasetController
     }
 
     /**
-     * Loads and parses the lastUpdated information from thesauri JSON files.
+     * Loads and parses the lastUpdated information from thesauri cache files.
      * 
-     * This method reads the lastUpdated timestamps from various JSON files containing
-     * keyword definitions. It handles GCMD Platform, Instrument, and Science keywords,
-     * as well as MSL vocabularies.
+     * This method reads the lastUpdated timestamps from ERNIE cache files
+     * in storage/cache/ and from the local MSL vocabularies JSON file.
      *
-     * @return array<mixed> An associative array where keys are the JSON filename bases (without extension)
+     * @return array<mixed> An associative array where keys are thesaurus identifiers
      *               and values are their corresponding lastUpdated timestamps.
-     *               Format: [
-     *                   'gcmdPlatformsKeywords' => 'YYYY-MM-DD',
-     *                   'gcmdInstrumentsKeywords' => 'YYYY-MM-DD',
-     *                   'gcmdScienceKeywords' => 'YYYY-MM-DD',
-     *                   'msl-vocabularies' => 'YYYY-MM-DD'
-     *               ]
      * @return array<mixed>
      */
     private function loadThesauriData(): array
     {
         $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
-        $jsonDir = $baseDir . '/json/thesauri'; // Path to the 'thesauri' folder
-
         $keywordData = [];
 
-        // Scan the directory for all .json files inside the thesauri folder
-        $files = glob($jsonDir . '/*.json');  // Match all .json files in thesauri
+        // ERNIE cache files for thesauri
+        $cacheFiles = [
+            'gcmdScienceKeywords' => $baseDir . '/storage/cache/ernie_gcmd_science_keywords.json',
+            'gcmdPlatformsKeywords' => $baseDir . '/storage/cache/ernie_gcmd_platforms.json',
+            'gcmdInstrumentsKeywords' => $baseDir . '/storage/cache/ernie_gcmd_instruments.json',
+            'chronostratTimescale' => $baseDir . '/storage/cache/ernie_chronostrat_timescale.json',
+            'gemet' => $baseDir . '/storage/cache/ernie_gemet.json',
+        ];
 
-        foreach ($files as $file) {
-            $fileNameBase = basename($file, '.json'); // Extract the file name without extension
-            $data = json_decode(file_get_contents($file), true);
+        foreach ($cacheFiles as $key => $file) {
+            if (file_exists($file)) {
+                $data = json_decode(file_get_contents($file), true);
+                if ($data && isset($data['lastUpdated'])) {
+                    $keywordData[$key] = $data['lastUpdated'];
+                }
+            }
+        }
 
+        // MSL vocabularies remain in local JSON
+        $mslFile = $baseDir . '/json/thesauri/msl-vocabularies.json';
+        if (file_exists($mslFile)) {
+            $data = json_decode(file_get_contents($mslFile), true);
             if ($data && isset($data['lastUpdated'])) {
-                $keywordData[$fileNameBase] = $data['lastUpdated']; // Store lastUpdated for each file
+                $keywordData['msl-vocabularies'] = $data['lastUpdated'];
             }
         }
 
@@ -950,11 +956,13 @@ class DatasetController
             // Load lastUpdated data from JSON files
             $keywordData = $this->loadThesauriData();
 
-            // Map JSON file keys to XSD element names
+            // Map cache file keys to XSD element names
             $lastUpdatedMapping = [
                 'gcmdPlatformsKeywords' => 'lastUpdatedGcmdPlatformsKeywords',
                 'gcmdInstrumentsKeywords' => 'lastUpdatedGcmdInstrumentsKeywords',
                 'gcmdScienceKeywords' => 'lastUpdatedGcmdScienceKeywords',
+                'chronostratTimescale' => 'lastUpdatedChronostratTimescale',
+                'gemet' => 'lastUpdatedGemet',
                 'msl-vocabularies' => 'lastUpdatedMslVocabularies'
             ];
 
