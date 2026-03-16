@@ -76,8 +76,11 @@ $showMslVocabs = false;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
+$showMslDefaultFreeKeywords = false;
+
 $envShowMslLabs   = getenv('SHOW_MSL_LABS');
 $envShowMslVocabs = getenv('SHOW_MSL_VOCABS');
+$envShowMslDefaultFreeKeywords = getenv('SHOW_MSL_DEFAULT_FREE_KEYWORDS');
 $envShowMslLogo = getenv('SHOW_MSL_LOGO');
 
 if ($envShowMslLabs !== false) {
@@ -85,6 +88,9 @@ if ($envShowMslLabs !== false) {
 }
 if ($envShowMslVocabs !== false) {
     $showMslVocabs = filter_var($envShowMslVocabs, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowMslDefaultFreeKeywords !== false) {
+    $showMslDefaultFreeKeywords = filter_var($envShowMslDefaultFreeKeywords, FILTER_VALIDATE_BOOLEAN);
 }
 if ($envShowMslLogo !== false) {
     $showMslLogo = filter_var($envShowMslLogo, FILTER_VALIDATE_BOOLEAN);

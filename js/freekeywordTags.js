@@ -180,6 +180,17 @@ document.addEventListener('DOMContentLoaded', function () {
     initTagify();
 
     // 2) Register event listener for translation changes
+    if (window.ELMO_FEATURES &&
+        window.ELMO_FEATURES.showMslDefaultFreeKeywords === true &&
+        window.elmo && window.elmo.isNewRecord === true &&
+        input._tagify) {
+
+        input._tagify.addTags([
+            { value: 'EPOS' },
+            { value: 'multi-scale laboratories' }
+        ]);
+    }
+
     document.addEventListener('translationsLoaded', refreshTagifyInstance);
 
     // 3) Load curated keywords from the API

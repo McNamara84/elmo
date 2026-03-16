@@ -22,6 +22,9 @@ include_once __DIR__ . '/settings.php';
 // accessible by default.
 include_once __DIR__ . '/includes/feature_toggles.php';
 
+// Treat requests without query parameters as "new records"
+$isNewRecord = empty($_GET);
+
 /** @var bool $showLicense */
 $showLicense = resolveFeatureToggle($showLicense ?? null, false);   
 /** @var bool $showAuthorInstitution */
@@ -48,6 +51,8 @@ $showGGMsProperties = resolveFeatureToggle($showGGMsProperties ?? null, false);
 $showMslLabs = resolveFeatureToggle($showMslLabs ?? null, false);
 /** @var bool $showMslVocabs */
 $showMslVocabs = resolveFeatureToggle($showMslVocabs ?? null, false);
+/** @var bool $showMslDefaultFreeKeywords */
+$showMslDefaultFreeKeywords = resolveFeatureToggle($showMslDefaultFreeKeywords ?? null, false);
 /** @var bool $showMslLogo */
 $showMslLogo = resolveFeatureToggle($showMslLogo ?? null, false);
 
