@@ -17,7 +17,7 @@
         "orcid": "ORCID",
         "orcidInvalid": "Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))",
         "lastName": "Last Name",
-        "lastNameInvalid": "Please provide a lastname. Only letters are allowed.",
+        "lastNameInvalid": "Please provide a lastname. Letters only. No digits or special characters (e.g. $, %, _).",
         "firstNameInvalid": "Please provide a firstname. Only letters are allowed.",
         "firstName": "First Name",
         "affiliation": "Affiliation",
