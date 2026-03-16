@@ -18,7 +18,7 @@
         "orcidInvalid": "Bitte geben Sie eine gültige ORCID ein (XXXX-XXXX-XXXX-XXX(X))",
         "lastName": "Nachname",
         "lastNameInvalid": "Bitte geben Sie einen Nachnamen ein. Nur Buchstaben. Keine Ziffern oder Sonderzeichen (z.B. $, %, _).",
-        "firstNameInvalid": "Bitte geben Sie einen Vornamen ein. Nur Buchstaben sind erlaubt.",
+        "firstNameInvalid": "Bitte geben Sie einen Vornamen ein.  Nur Buchstaben. Keine Ziffern oder Sonderzeichen (z.B. $, %, _).",
         "firstName": "Vorname",
         "affiliation": "Affiliation",
         "roleLabel": "Rolle(n)",
