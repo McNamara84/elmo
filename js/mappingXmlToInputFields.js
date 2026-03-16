@@ -989,31 +989,32 @@ function processDescriptions(xmlDoc, resolver) {
   // Get all description elements
   const descriptionNodes = xmlDoc.evaluate(".//ns:descriptions/ns:description", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-  // Create a mapping of description types to form input IDs
-  const descriptionMapping = {
+  // Mapping for Abstract (always static) and dynamic description types
+  const staticMapping = {
     Abstract: "input-abstract",
-    Methods: "input-methods",
-    TechnicalInformation: "input-technicalinfo",
-    Other: "input-other",
   };
+
+  // Dynamic description types use the pattern input-description-{Slug}
+  const dynamicSlugs = ["Methods", "TechnicalInfo", "TechnicalInformation", "SeriesInformation", "TableOfContents", "Other"];
 
   // Process each description node
   for (let i = 0; i < descriptionNodes.snapshotLength; i++) {
     const descriptionNode = descriptionNodes.snapshotItem(i);
     const descriptionType = descriptionNode.getAttribute("descriptionType");
-    const language = descriptionNode.getAttribute("xml:lang") || "en";
     const content = descriptionNode.textContent.trim();
 
-    // Find the corresponding input field
-    const inputId = descriptionMapping[descriptionType];
-    if (inputId) {
-      // Set the content in the appropriate textarea
-      $(`#${inputId}`).val(content);
-
-      // If this is not the Abstract, expand the corresponding accordion section
-      if (descriptionType !== "Abstract") {
-        const collapseId = `collapse-${descriptionType.toLowerCase().replace("information", "info")}`;
-        $(`#${collapseId}`).addClass("show");
+    if (staticMapping[descriptionType]) {
+      // Abstract: static field
+      $(`#${staticMapping[descriptionType]}`).val(content);
+    } else if (dynamicSlugs.indexOf(descriptionType) !== -1) {
+      // Dynamic types: normalize TechnicalInformation -> TechnicalInfo
+      const slug = descriptionType === "TechnicalInformation" ? "TechnicalInfo" : descriptionType;
+      const inputId = "input-description-" + slug;
+      const $input = $(`#${inputId}`);
+      if ($input.length) {
+        $input.val(content);
+        // Expand the accordion section
+        $(`#collapse-description-${slug}`).addClass("show");
       }
     }
   }
