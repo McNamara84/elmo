@@ -4,6 +4,7 @@
   </div>
   <div id="group-description">
     <div class="accordion p-2" id="accordion-description">
+      <!-- Abstract: statisch, Pflichtfeld, immer sichtbar -->
       <div class="accordion-item">
         <h2 class="accordion-header">
           <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-abstract"
@@ -11,7 +12,6 @@
             Abstract
           </button>
         </h2>
-        <!-- Input field Abstract -->
         <div id="collapse-abstract" class="accordion-collapse collapse show" data-bs-parent="#accordion-description">
           <div class="accordion-body">
             <label for="input-abstract" class="visually-hidden">
@@ -29,75 +29,10 @@
           </div>
         </div>
       </div>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-            data-bs-target="#collapse-methods" aria-expanded="false" aria-controls="collapse-methods"
-            data-translate="descriptions.methods">
-            Methods
-          </button>
-        </h2>
-        <!-- Input field Methods -->
-        <div id="collapse-methods" class="accordion-collapse collapse" data-bs-parent="#accordion-description">
-          <div class="accordion-body">
-            <div class="input-group has-validation">
-                <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
-                  id="input-methods" name="descriptionMethods"
-                  data-translate-placeholder="descriptions.methodsPlaceholder"></textarea>
-                <label for="input-methods" data-translate="descriptions.methods" class="visually-hidden">
-                  Methods
-                </label>
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-description-methods"></i></span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-            data-bs-target="#collapse-technicalinfo" aria-expanded="false" aria-controls="collapse-technicalinfo"
-            data-translate="descriptions.technicalInfo">
-            Technical Information
-          </button>
-        </h2>
-        <!-- Input field Technical Information -->
-        <div id="collapse-technicalinfo" class="accordion-collapse collapse" data-bs-parent="#accordion-description">
-          <div class="accordion-body">
-            <div class="input-group has-validation">
-                <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
-                data-translate-placeholder="descriptions.technicalinfoPlaceholder" id="input-technicalinfo"
-                  name="descriptionTechnical"></textarea>
-                <label for="input-technicalinfo" data-translate="descriptions.technicalInfo" class="visually-hidden">
-                  Technical Information
-                </label>
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-description-technicalinfo"></i></span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-            data-bs-target="#collapse-other" aria-expanded="false" aria-controls="collapse-other"
-            data-translate="descriptions.other">
-            Other
-          </button>
-        </h2>
-        <!-- Input field Other -->
-        <div id="collapse-other" class="accordion-collapse collapse" data-bs-parent="#accordion-description">
-          <div class="accordion-body">
-            <div class="input-group has-validation">
-                <textarea class="form-control input-with-help input-right-no-round-corners textarea-description"
-                data-translate-placeholder="descriptions.otherPlaceholder" id="input-other" name="descriptionOther"></textarea>
-                <label for="input-other" data-translate="descriptions.other" class="visually-hidden">
-                  Other
-                </label>
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-description-other"></i></span>
-            </div>
-          </div>
+      <!-- Dynamische Description Types werden hier per JS eingefügt -->
+    </div>
+  </div>
+</div>
         </div>
       </div>
     </div>
