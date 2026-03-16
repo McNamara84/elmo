@@ -151,10 +151,12 @@ function buildAccordionItem(type) {
   }
 
   var helpSpan = $('<span>', { class: 'input-group-text' });
-  var helpIcon = $('<i>', { class: 'bi bi-question-circle-fill' });
+  var helpIconId = slug.toLowerCase() + '-help';
+  var helpIcon = $('<i>', { class: 'bi bi-question-circle-fill', id: helpIconId });
   if (helpId) {
     helpIcon.attr('data-help-section-id', helpId);
   }
+  textarea.attr('aria-describedby', helpIconId);
   helpSpan.append(helpIcon);
 
   inputGroup.append(textarea, helpSpan);
