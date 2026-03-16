@@ -711,24 +711,24 @@ include_once "../settings.php";
                             (e.g. http://doi.org/10.5880/GFZ.4.1.2019.005)</li>
                     </ul>
                 </div>
-                <div id="help-description-methods" data-description-slug="Methods">
+                <div id="help-description-methods" data-description-slug="Methods" style="display:none">
                     <h4>Methods</h4>
                     <p>The methodology employed for the study or research.</p>
                 </div>
-                <div id="help-description-technicalinfo" data-description-slug="TechnicalInfo">
+                <div id="help-description-technicalinfo" data-description-slug="TechnicalInfo" style="display:none">
                     <h4>Technical Information</h4>
                     <p>Detailed information that may be associated with design, implementation, operation, use,
                         and/or maintenance of a process, system, or instrument.</p>
                 </div>
-                <div id="help-description-seriesinformation" data-description-slug="SeriesInformation">
+                <div id="help-description-seriesinformation" data-description-slug="SeriesInformation" style="display:none">
                     <h4>Series Information</h4>
                     <p>Information about a repeating series, such as volume, issue, number.</p>
                 </div>
-                <div id="help-description-tableofcontents" data-description-slug="TableOfContents">
+                <div id="help-description-tableofcontents" data-description-slug="TableOfContents" style="display:none">
                     <h4>Table of Contents</h4>
                     <p>A listing of the contents of the resource.</p>
                 </div>
-                <div id="help-description-other" data-description-slug="Other">
+                <div id="help-description-other" data-description-slug="Other" style="display:none">
                     <h4>Other</h4>
                     <p>Other description information that does not fit into an existing category.</p>
                 </div>
@@ -1541,6 +1541,24 @@ include_once "../settings.php";
             .catch(function () {
                 // On error show all thesaurus sections as fallback
                 document.querySelectorAll('[data-thesaurus]').forEach(function (el) {
+                    el.style.display = '';
+                });
+            });
+
+        // Show/hide description type help sections based on ERNIE API
+        fetch('../api/v2/vocabs/descriptiontypes')
+            .then(function (response) { return response.json(); })
+            .then(function (types) {
+                var activeSlugs = types.map(function (t) { return t.slug; });
+                document.querySelectorAll('[data-description-slug]').forEach(function (el) {
+                    if (activeSlugs.indexOf(el.getAttribute('data-description-slug')) !== -1) {
+                        el.style.display = '';
+                    }
+                });
+            })
+            .catch(function () {
+                // On error show all description type sections as fallback
+                document.querySelectorAll('[data-description-slug]').forEach(function (el) {
                     el.style.display = '';
                 });
             });
