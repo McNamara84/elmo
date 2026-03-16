@@ -1051,37 +1051,34 @@ function processDates(xmlDoc, resolver) {
  */
 function processKeywords(xmlDoc, resolver) {
   const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  // Thesaurus inputs — may not exist if the thesaurus is disabled via ERNIE availability
   const tagifyInputGCMD = document.querySelector("#input-sciencekeyword");
+  const tagifyInputPlatforms = document.querySelector("#input-platforms");
+  const tagifyInputInstruments = document.querySelector("#input-instruments");
+  const tagifyInputChronostrat = document.querySelector("#input-chronostratigraphy");
+  const tagifyInputGemet = document.querySelector("#input-gemet");
+
+  // Always-present inputs
   const tagifyInputMsl = document.querySelector("#input-mslkeyword");
   const tagifyInputFree = document.querySelector("#input-freekeyword");
-  const tagifyInputPlatforms = document.querySelector("#input-Platforms");
-  const tagifyInputInstruments = document.querySelector("#input-Instruments");
 
-  // Error handling
-  if (
-    !tagifyInputGCMD?._tagify ||
-    !tagifyInputMsl?._tagify ||
-    !tagifyInputFree?._tagify ||
-    !tagifyInputPlatforms?._tagify ||
-    !tagifyInputInstruments?._tagify
-  ) {
-    console.error("One or more Tagify instances are not properly initialized.");
+  if (!tagifyInputFree?._tagify) {
+    console.error("Free keyword Tagify instance is not properly initialized.");
     return;
   }
 
-  // Retrieve existing Tagify instances
-  const tagifyGCMD = tagifyInputGCMD._tagify;
-  const tagifyMsl = tagifyInputMsl._tagify;
   const tagifyFree = tagifyInputFree._tagify;
-  const tagifyPlatforms = tagifyInputPlatforms._tagify;
-  const tagifyInstruments = tagifyInputInstruments._tagify;
+  const tagifyMsl = tagifyInputMsl?._tagify;
 
-  // Clear existing tags
-  tagifyGCMD.removeAllTags();
-  tagifyMsl.removeAllTags();
+  // Clear existing tags on all available inputs
   tagifyFree.removeAllTags();
-  tagifyPlatforms.removeAllTags();
-  tagifyInstruments.removeAllTags();
+  tagifyMsl?.removeAllTags();
+  tagifyInputGCMD?._tagify?.removeAllTags();
+  tagifyInputPlatforms?._tagify?.removeAllTags();
+  tagifyInputInstruments?._tagify?.removeAllTags();
+  tagifyInputChronostrat?._tagify?.removeAllTags();
+  tagifyInputGemet?._tagify?.removeAllTags();
 
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
@@ -1090,7 +1087,6 @@ function processKeywords(xmlDoc, resolver) {
     const valueURI = subjectNode.getAttribute("valueURI") || "";
     const keyword = subjectNode.textContent.trim();
 
-    // Create the tag data
     const tagData = {
       value: keyword,
       scheme: subjectScheme,
@@ -1098,19 +1094,34 @@ function processKeywords(xmlDoc, resolver) {
       id: valueURI,
     };
 
-    // Check the schemeURI and add the tag to the appropriate Tagify instance
+    // Route tag to appropriate Tagify instance based on schemeURI
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
-      // Add the tag to the GCMD Science Keyword input field
-      tagifyGCMD.addTags([tagData]);
+      if (tagifyInputGCMD?._tagify) tagifyInputGCMD._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
-      tagifyPlatforms.addTags([tagData]);
+      if (tagifyInputPlatforms?._tagify) tagifyInputPlatforms._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
-      tagifyInstruments.addTags([tagData]);
+      if (tagifyInputInstruments?._tagify) tagifyInputInstruments._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
+    } else if (
+      schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020" ||
+      subjectScheme === "International Chronostratigraphic Chart" ||
+      subjectScheme === "Chronostratigraphic Chart"
+    ) {
+      if (tagifyInputChronostrat?._tagify) tagifyInputChronostrat._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
+    } else if (
+      schemeURI === "http://www.eionet.europa.eu/gemet/gemetThesaurus" ||
+      schemeURI === "http://www.eionet.europa.eu/gemet/concept/" ||
+      subjectScheme?.includes("GEMET")
+    ) {
+      if (tagifyInputGemet?._tagify) tagifyInputGemet._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
-      // Add the tag to the MSL Keyword input field
-      tagifyMsl.addTags([tagData]);
+      if (tagifyMsl) tagifyMsl.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else {
-      // Add all other tags to the Free Keyword input field
       tagifyFree.addTags([tagData]);
     }
   }

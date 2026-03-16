@@ -261,7 +261,7 @@ To install them: npm install
   - `$showContributorInstitutions`: Specifies whether the form group Contributor Institutions should be displayed (true/false).
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
   - `$showMslVocabs`: Specifies whether the form group EPOS Multi-Scale Laboratories Keywords should be displayed (true/false).
-  - `$showGcmdThesauri`: Specifies whether the form group GCMD Thesauri should be displayed (true/false).
+  - `$showThesauri`: Specifies whether the form group Thesauri Keywords should be displayed (true/false). Individual thesauri are controlled by ERNIE.
   - `$showFreeKeywords`: Specifies whether the form group Free Keywords should be displayed (true/false).
   - `$showSpatialTemporalCoverage`: Specifies whether the form group Spatial and Temporal Coverages should be displayed (true/false).
   - `$showRelatedWork`: Specifies whether the form group Related Work should be displayed (true/false).

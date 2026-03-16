@@ -240,6 +240,16 @@ const MOCK_API_DATA: Record<string, any> = {
     name: 'GFZ German Research Centre for Geosciences',
     other: ['GFZ'],
   }],
+  'api/v2/vocabs/thesauri/availability': {
+    science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
+    platforms: { available: true, displayName: 'GCMD Platforms' },
+    instruments: { available: true, displayName: 'GCMD Instruments' },
+    chronostratigraphy: { available: false, displayName: 'ICS Chronostratigraphy' },
+    gemet: { available: false, displayName: 'GEMET' },
+  },
+  'api/v2/vocabs/thesauri/gcmd-science-keywords': { data: [] },
+  'api/v2/vocabs/thesauri/gcmd-platforms': { data: [] },
+  'api/v2/vocabs/thesauri/gcmd-instruments': { data: [] },
 };
 
 async function waitForEditorReady(page: Page) {
@@ -305,7 +315,8 @@ test.describe('XML Upload Mapping Flow', () => {
       (window as any).ELMO_FEATURES = {
         showMslLabs: true,
         showMslVocabs: false,
-        showGGMsProperties: false
+        showGGMsProperties: false,
+        showThesauri: true
       };
     }, { translations: TEST_TRANSLATIONS });
 
@@ -479,7 +490,7 @@ test.describe('XML Upload Mapping Flow', () => {
     await page.evaluate(() => {
       // Initialize Tagify for keyword input fields that need it for the test
       // Note: #input-freekeyword is included because waitForEditorReady() checks for it
-      const selectors = ['#input-sciencekeyword', '#input-Platforms', '#input-Instruments', '#input-mslkeyword', '#input-freekeyword'];
+      const selectors = ['#input-sciencekeyword', '#input-platforms', '#input-instruments', '#input-mslkeyword', '#input-freekeyword'];
       selectors.forEach((selector) => {
         const element = document.querySelector(selector) as any;
         if (element && !element._tagify && (window as any).Tagify) {

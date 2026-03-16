@@ -104,9 +104,21 @@ include_once "../settings.php";
                                 Keywords</a>
                         </li>
                         <?php endif; ?>
-                        <?php if ($showGcmdThesauri ?? true): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#help-scienceKeywords" data-bs-dismiss="offcanvas">Keywords</a>
+                        <?php if ($showThesauri ?? true): ?>
+                        <li class="nav-item thesaurus-nav" data-thesaurus="science_keywords" style="display:none">
+                            <a class="nav-link" href="#help-scienceKeywords" data-bs-dismiss="offcanvas">GCMD Science Keywords</a>
+                        </li>
+                        <li class="nav-item thesaurus-nav" data-thesaurus="platforms" style="display:none">
+                            <a class="nav-link" href="#help-platformsKeywords" data-bs-dismiss="offcanvas">GCMD Platforms</a>
+                        </li>
+                        <li class="nav-item thesaurus-nav" data-thesaurus="instruments" style="display:none">
+                            <a class="nav-link" href="#help-instrumentsKeywords" data-bs-dismiss="offcanvas">GCMD Instruments</a>
+                        </li>
+                        <li class="nav-item thesaurus-nav" data-thesaurus="chronostratigraphy" style="display:none">
+                            <a class="nav-link" href="#help-chronostratigraphy" data-bs-dismiss="offcanvas">ICS Chronostratigraphy</a>
+                        </li>
+                        <li class="nav-item thesaurus-nav" data-thesaurus="gemet" style="display:none">
+                            <a class="nav-link" href="#help-gemet" data-bs-dismiss="offcanvas">GEMET</a>
                         </li>
                         <?php endif; ?>
                         <?php if ($showFreeKeywords ?? true): ?>
@@ -749,59 +761,77 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>
             <?php endif; ?>
-            <!-- formgroup GCMD Platforms Keywords -->
-            <?php if ($showGcmdThesauri ?? true): ?>  
-            <div id="help-platformsKeywords" class="section-content">
-                <div id="help-gcmd-platforms-keyword">
-                    <h3>GCMD Platforms Keywords</h3>
-                    <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                    <p>Please click on the Thesaurus button to the right to select keywords from the tree or
-                        start
-                        typing to use the autocomplete function. </p>
-                    <p>GCMD Platforms are important for identifying the sources of data collection. We recommend
-                        selecting relevant platform keywords to provide context about how your dataset was
-                        acquired.
-                    </p>
+            <!-- Thesaurus help sections — shown dynamically based on ERNIE availability -->
+            <?php if ($showThesauri ?? true): ?>
+            <div class="thesaurus-help" data-thesaurus="platforms" style="display:none">
+                <div id="help-platformsKeywords" class="section-content">
+                    <div id="help-gcmd-platforms-keyword">
+                        <h3>GCMD Platforms Keywords</h3>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                            start typing to use the autocomplete function.</p>
+                        <p>GCMD Platforms are important for identifying the sources of data collection. We recommend
+                            selecting relevant platform keywords to provide context about how your dataset was
+                            acquired.</p>
+                    </div>
                 </div>
             </div>
-            <!-- formgroup GCMD Instruments Keywords -->
-            <div id="help-instrumentsKeywords" class="section-content">
-                <div id="help-gcmd-instruments-keyword">
-                    <h3>GCMD Instruments Keywords</h3>
-                    <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                    <p>Please click on the Thesaurus button to the right to select keywords from the tree or
-                        start
-                        typing to use the autocomplete function. </p>
-                    <p>GCMD Instruments help specify the tools used for data collection. We encourage you to
-                        select
-                        appropriate instrument keywords to give users a clear understanding of how your data was
-                        measured or observed.</p>
+            <div class="thesaurus-help" data-thesaurus="instruments" style="display:none">
+                <div id="help-instrumentsKeywords" class="section-content">
+                    <div id="help-gcmd-instruments-keyword">
+                        <h3>GCMD Instruments Keywords</h3>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                            start typing to use the autocomplete function.</p>
+                        <p>GCMD Instruments help specify the tools used for data collection. We encourage you to
+                            select appropriate instrument keywords to give users a clear understanding of how your
+                            data was measured or observed.</p>
+                    </div>
                 </div>
             </div>
-            <!-- formgroup GCMD Science Keywords -->
-            <div id="help-scienceKeywords" class="section-content">
-                <div id="help-scienceKeywords-keyword">
-                    <h3>GCMD Science Keywords</h3>
-                    <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                    <p>Please click on the Thesaurus button to the right to select keywords from the tree
-                        or start typing to use the autocomplete function. </p>
-                    <p>GCMD Science Keywords are essential for filtering options within the GFZ Metadata Portal.
-                        Therefore, we highly recommend selecting at least one GCMD Science Keyword to describe
-                        your
-                        dataset (you are welcome to add more if relevant).</p>
+            <div class="thesaurus-help" data-thesaurus="science_keywords" style="display:none">
+                <div id="help-scienceKeywords" class="section-content">
+                    <div id="help-scienceKeywords-keyword">
+                        <h3>GCMD Science Keywords</h3>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree
+                            or start typing to use the autocomplete function.</p>
+                        <p>GCMD Science Keywords are essential for filtering options within the GFZ Metadata Portal.
+                            Therefore, we highly recommend selecting at least one GCMD Science Keyword to describe
+                            your dataset (you are welcome to add more if relevant).</p>
+                    </div>
+                    <div id="help-keywords-keywordviewer">
+                        <h4>Keyword Viewer</h4>
+                        <p>Please try to choose your keywords as specific as possible. Always check if there is a
+                            more fitting keyword further down the hierarchy. Definitions of keywords can be read via
+                            mouse over, if provided by the thesaurus maintainer.</p>
+                        <p>To open the hierarchy ("tree"), click on the small arrow or double-click the keyword.
+                            Choose a keyword by clicking on it and thereby checking the checkbox. The keyword is than
+                            automatically added. Selected keywords have a checkmark in their checkbox.</p>
+                        <p>You can also use the search bar on top. It searches the keywords and their definitions or
+                            descriptions.</p>
+                    </div>
                 </div>
-                <!-- Explains use of thesaurus modal and the Keyword "tree"-->
-                <div id="help-keywords-keywordviewer">
-                    <h4>Keyword Viewer</h4>
-                    <p>Please try to choose your keywords as specific as possible. Always check if there is a
-                        more fitting keyword further down the hierarchy. Definitions of keywords can be read via
-                        mouse
-                        over, if provided by the thesaurus maintainer.</p>
-                    <p>To open the hierarchy ("tree"), click on the small arrow or double-click the keyword.
-                        Choose a keyword by clicking on it and thereby checking the checkbox. The keyword is than
-                        automatically added. Selected keywords have a checkmark in their checkbox.</p>
-                    <p>You can also use the search bar on top. It searches the keywords and their definitions or
-                        descriptions.</p>
+            </div>
+            <div class="thesaurus-help" data-thesaurus="chronostratigraphy" style="display:none">
+                <div id="help-chronostratigraphy" class="section-content">
+                    <div id="help-chronostratigraphy-keyword">
+                        <h3>ICS Chronostratigraphy</h3>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                            start typing to use the autocomplete function.</p>
+                        <p>The International Chronostratigraphic Chart provides a standardised framework of
+                            geological time units. Select chronostratigraphic terms to indicate the geological age
+                            or time period relevant to your dataset.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="thesaurus-help" data-thesaurus="gemet" style="display:none">
+                <div id="help-gemet" class="section-content">
+                    <div id="help-gemet-keyword">
+                        <h3>GEMET Thesaurus</h3>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                            start typing to use the autocomplete function.</p>
+                        <p>GEMET (General European Multilingual Environmental Thesaurus) provides environmental
+                            terminology for categorising your dataset. Select GEMET terms to improve the
+                            discoverability of environment-related research data.</p>
+                    </div>
                 </div>
             </div>
             <div class="section-divider"></div>
@@ -1487,6 +1517,27 @@ include_once "../settings.php";
     <!-- Custom jQuery Script -->
     <script src="helpMenu.js"></script>
     <script src="search.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('../api/v2/vocabs/thesauri/availability')
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                Object.keys(data).forEach(function (key) {
+                    if (data[key].available) {
+                        document.querySelectorAll('[data-thesaurus="' + key + '"]').forEach(function (el) {
+                            el.style.display = '';
+                        });
+                    }
+                });
+            })
+            .catch(function () {
+                // On error show all thesaurus sections as fallback
+                document.querySelectorAll('[data-thesaurus]').forEach(function (el) {
+                    el.style.display = '';
+                });
+            });
+    });
+    </script>
 </body>
 
 </html>
