@@ -39,6 +39,7 @@ return [
     ['GET', '/vocabs/resourcetypes', [new VocabController(), 'getResourceTypes']],
     ['GET', '/vocabs/languages', [new VocabController(), 'getLanguages']],
     ['GET', '/vocabs/titletypes', [new VocabController(), 'getTitleTypes']],
+    ['GET', '/vocabs/descriptiontypes', [new VocabController(), 'getDescriptionTypes']],
 
     // Thesauri vocabulary endpoints (ERNIE proxy with caching)
     ['GET', '/vocabs/thesauri/availability', [new VocabController(), 'getThesauriAvailability']],
@@ -95,6 +96,10 @@ return [
     ['GET', '/admin/cache/roles/contributor-persons/status', [new VocabController(), 'getContributorPersonRolesCacheStatus']],
     ['POST', '/admin/cache/roles/contributor-institutions/refresh', [new VocabController(), 'refreshContributorInstitutionRolesCache']],
     ['GET', '/admin/cache/roles/contributor-institutions/status', [new VocabController(), 'getContributorInstitutionRolesCacheStatus']],
+
+    // Description types cache management endpoints
+    ['POST', '/admin/cache/descriptiontypes/refresh', [new VocabController(), 'refreshDescriptionTypesCache']],
+    ['GET', '/admin/cache/descriptiontypes/status', [new VocabController(), 'getDescriptionTypesCacheStatus']],
 
     // Thesauri availability cache management
     ['POST', '/admin/cache/thesauri/availability/refresh', [new VocabController(), 'refreshThesauriAvailabilityCache']],
