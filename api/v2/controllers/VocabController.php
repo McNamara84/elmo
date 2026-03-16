@@ -1674,6 +1674,78 @@ class VocabController
     }
 
     /**
+     * Retrieves description types enabled for ELMO from ERNIE
+     *
+     * When ERNIE is configured, fetches description types from ERNIE (with caching).
+     * The ERNIE response contains { "value": [...] } - the "value" array is extracted.
+     * Falls back to hardcoded types (Abstract, Methods, TechnicalInfo, Other) if unavailable.
+     * No DB sync needed since description types are not stored in a local table.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getDescriptionTypes(): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
+
+            if ($ernieService->isConfigured(logResult: true)) {
+                $ernieData = $ernieService->getDescriptionTypesWithCache();
+
+                if (!empty($ernieData)) {
+                    // ERNIE API returns { "value": [...] } - extract the array
+                    $types = isset($ernieData['value']) ? $ernieData['value'] : $ernieData;
+                    error_log("Description Types: Serving " . count($types) . " types from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($types);
+                    return;
+                }
+            }
+
+            // Fallback: hardcoded types
+            error_log("Description Types: Using hardcoded fallback");
+            header('Content-Type: application/json');
+            echo json_encode([
+                ['id' => 1, 'name' => 'Abstract', 'slug' => 'Abstract'],
+                ['id' => 2, 'name' => 'Methods', 'slug' => 'Methods'],
+                ['id' => 5, 'name' => 'Technical Info', 'slug' => 'TechnicalInfo'],
+                ['id' => 6, 'name' => 'Other', 'slug' => 'Other'],
+            ]);
+
+        } catch (Exception $e) {
+            error_log("API Error in getDescriptionTypes: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Internal server error']);
+        }
+    }
+
+    /**
+     * Manually refreshes the ERNIE description types cache
+     * 
+     * Requires API key authentication.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshDescriptionTypesCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshDescriptionTypesCache',
+            'getDescriptionTypesCacheStatus',
+            'Description types'
+        );
+    }
+
+    /**
+     * Gets the status of the ERNIE description types cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getDescriptionTypesCacheStatus(): void
+    {
+        $this->handleCacheStatus('getDescriptionTypesCacheStatus', 'description types');
+    }
+
+    /**
      * Retrieves all title types, preferring ERNIE data with local DB fallback
      *
      * When ERNIE is configured, fetches title types from ERNIE (with caching),
