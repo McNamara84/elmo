@@ -1021,7 +1021,7 @@ class ErnieService
     /**
      * Fetches thesauri availability from ERNIE API
      * 
-     * Tries the ELMO-specific endpoint first (with API key, uses is_elmo_active flag),
+     * Tries the ELMO-specific endpoint first (requires API key),
      * falls back to the public endpoint if the ELMO-specific one fails.
      * 
      * @return array<string, array{available: bool, displayName: string}>|null Availability data or null on failure
