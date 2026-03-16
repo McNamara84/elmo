@@ -1376,6 +1376,10 @@ async function loadXmlToForm(xmlDoc) {
   processOriginatingLaboratories(xmlDoc, resolver);
   // Process contributors
   processContributors(xmlDoc, resolver);
+  // Wait for dynamic description type fields to be ready
+  if (window.descriptionTypesReady) {
+    await window.descriptionTypesReady;
+  }
   // Process descriptions
   processDescriptions(xmlDoc, resolver);
   // Process Spatial and Temporal Coverages

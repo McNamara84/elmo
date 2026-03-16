@@ -165,6 +165,11 @@ function buildAccordionItem(type) {
   return item;
 }
 
+// Auto-initialize on DOM ready
+$(document).ready(function () {
+  window.descriptionTypesReady = initDescriptionTypes();
+});
+
 // Export for testing and external usage
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
