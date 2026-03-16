@@ -71,7 +71,7 @@ window.ELMO_FEATURES = {
 };
 </script>
 
-// Expose "isNewRecord" so JS can apply behavior only for new records
+<!-- Expose "isNewRecord" so JS can apply behavior only for new records -->
 <script>
   window.elmo = window.elmo || {};
   window.elmo.isNewRecord = <?php echo !empty($isNewRecord) && $isNewRecord ? 'true' : 'false'; ?>;
