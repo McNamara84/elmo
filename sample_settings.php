@@ -50,8 +50,8 @@ $showMslLogo = false;
 $showContributorPersons = true;
 // Show Contributor Institutios form group
 $showContributorInstitutions = true;
-// Show GCMD Thesauri form group
-$showGcmdThesauri = true;
+// Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
+$showThesauri = true;
 // Show Free Keywords form group
 $showFreeKeywords = true;
 // Show Spatial and Temporal Coverage form group

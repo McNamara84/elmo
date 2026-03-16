@@ -61,6 +61,41 @@ class ErnieService
     private string $contributorInstitutionRolesCacheFile;
 
     /**
+     * @var string Path to the thesauri availability cache file
+     */
+    private string $thesauriAvailabilityCacheFile;
+
+    /**
+     * @var string Path to the GCMD Science Keywords cache file
+     */
+    private string $scienceKeywordsCacheFile;
+
+    /**
+     * @var string Path to the GCMD Platforms cache file
+     */
+    private string $platformsCacheFile;
+
+    /**
+     * @var string Path to the GCMD Instruments cache file
+     */
+    private string $instrumentsCacheFile;
+
+    /**
+     * @var string Path to the Chronostratigraphy cache file
+     */
+    private string $chronostratCacheFile;
+
+    /**
+     * @var string Path to the GEMET cache file
+     */
+    private string $gemetCacheFile;
+
+    /**
+     * @var array<string, string> Mapping of thesaurus slugs to cache file paths
+     */
+    private array $thesaurusCacheFiles;
+
+    /**
      * ErnieService constructor.
      * 
      * Initializes the service with configuration from global settings.
@@ -79,6 +114,19 @@ class ErnieService
         $this->pid4instCacheFile = __DIR__ . '/../../../storage/cache/ernie_pid4inst.json';
         $this->contributorPersonRolesCacheFile = __DIR__ . '/../../../storage/cache/ernie_contributor_person_roles.json';
         $this->contributorInstitutionRolesCacheFile = __DIR__ . '/../../../storage/cache/ernie_contributor_institution_roles.json';
+        $this->thesauriAvailabilityCacheFile = __DIR__ . '/../../../storage/cache/ernie_thesauri_availability.json';
+        $this->scienceKeywordsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_science_keywords.json';
+        $this->platformsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_platforms.json';
+        $this->instrumentsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_instruments.json';
+        $this->chronostratCacheFile = __DIR__ . '/../../../storage/cache/ernie_chronostrat_timescale.json';
+        $this->gemetCacheFile = __DIR__ . '/../../../storage/cache/ernie_gemet.json';
+        $this->thesaurusCacheFiles = [
+            'gcmd-science-keywords' => $this->scienceKeywordsCacheFile,
+            'gcmd-platforms' => $this->platformsCacheFile,
+            'gcmd-instruments' => $this->instrumentsCacheFile,
+            'chronostrat-timescale' => $this->chronostratCacheFile,
+            'gemet' => $this->gemetCacheFile,
+        ];
     }
 
     /**
@@ -954,5 +1002,218 @@ class ErnieService
     public function getContributorInstitutionRolesCacheStatus(): array
     {
         return $this->getCacheFileStatus($this->getContributorInstitutionRolesCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Thesauri Availability
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Gets the thesauri availability cache file path
+     * 
+     * @return string Path to the thesauri availability cache file
+     */
+    protected function getThesauriAvailabilityCacheFile(): string
+    {
+        return $this->thesauriAvailabilityCacheFile;
+    }
+
+    /**
+     * Fetches thesauri availability from ERNIE API
+     * 
+     * Tries the ELMO-specific endpoint first (requires API key),
+     * falls back to the public endpoint if the ELMO-specific one fails.
+     * 
+     * @return array<string, array{available: bool, displayName: string}>|null Availability data or null on failure
+     */
+    public function fetchThesauriAvailability(): ?array
+    {
+        // Try ELMO-specific endpoint first (requires API key)
+        $data = $this->fetchFromErnie('/api/v1/elmo/vocabularies/thesauri-availability', 'thesauri availability (ELMO)');
+        if ($data !== null) {
+            return $data;
+        }
+
+        // Fall back to public endpoint (no API key needed, but fetchFromErnie sends it anyway — harmless)
+        return $this->fetchFromErnie('/api/v1/vocabularies/thesauri-availability', 'thesauri availability (public)');
+    }
+
+    /**
+     * Gets thesauri availability with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE (ELMO-specific, then public fallback)
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback (only 3 GCMD thesauri) as last resort
+     * 
+     * @return array<string, array{available: bool, displayName: string}> Availability data
+     */
+    public function getThesauriAvailabilityWithCache(): array
+    {
+        // Cannot use generic getDataWithCache() because fetchThesauriAvailability() has custom dual-endpoint logic
+        $cacheFile = $this->getThesauriAvailabilityCacheFile();
+
+        if ($this->isCacheFileValid($cacheFile)) {
+            $cachedData = $this->readCacheFile($cacheFile);
+            if (!empty($cachedData)) {
+                return $cachedData;
+            }
+        }
+
+        $ernieData = $this->fetchThesauriAvailability();
+        if ($ernieData !== null && !empty($ernieData)) {
+            $this->writeCacheFile($cacheFile, $ernieData);
+            return $ernieData;
+        }
+
+        $staleCache = $this->readCacheFile($cacheFile, ignoreExpiry: true);
+        if (!empty($staleCache)) {
+            error_log("ERNIE: Using stale cache as fallback for thesauri availability");
+            return $staleCache;
+        }
+
+        error_log("ERNIE: Using hardcoded fallback for thesauri availability - all other sources unavailable");
+        return $this->getHardcodedThesauriAvailabilityFallback();
+    }
+
+    /**
+     * Returns hardcoded fallback thesauri availability
+     * 
+     * Only the 3 GCMD thesauri are enabled as fallback, matching the original ELMO behavior
+     * before Chronostratigraphy and GEMET were added.
+     * 
+     * @return array<string, array{available: bool, displayName: string}> Minimal fallback availability
+     */
+    private function getHardcodedThesauriAvailabilityFallback(): array
+    {
+        return [
+            'science_keywords' => ['available' => true, 'displayName' => 'GCMD Science Keywords'],
+            'platforms' => ['available' => true, 'displayName' => 'GCMD Platforms'],
+            'instruments' => ['available' => true, 'displayName' => 'GCMD Instruments'],
+            'chronostratigraphy' => ['available' => false, 'displayName' => 'ICS Chronostratigraphy'],
+            'gemet' => ['available' => false, 'displayName' => 'GEMET Thesaurus'],
+        ];
+    }
+
+    /**
+     * Forces thesauri availability cache refresh
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshThesauriAvailabilityCache(): bool
+    {
+        $data = $this->fetchThesauriAvailability();
+        if ($data !== null && !empty($data)) {
+            return $this->writeCacheFile($this->getThesauriAvailabilityCacheFile(), $data);
+        }
+        return false;
+    }
+
+    /**
+     * Gets thesauri availability cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getThesauriAvailabilityCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getThesauriAvailabilityCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Thesaurus Vocabulary Data
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Returns the cache file path for a given thesaurus slug
+     * 
+     * @param string $slug The thesaurus slug (e.g. 'gcmd-science-keywords')
+     * @return string|null Cache file path or null if slug is unknown
+     */
+    protected function getThesaurusCacheFile(string $slug): ?string
+    {
+        return $this->thesaurusCacheFiles[$slug] ?? null;
+    }
+
+    /**
+     * Returns the list of valid thesaurus slugs
+     * 
+     * @return array<string> Valid slug names
+     */
+    public function getValidThesaurusSlugs(): array
+    {
+        return array_keys($this->thesaurusCacheFiles);
+    }
+
+    /**
+     * Gets thesaurus vocabulary data with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Empty array (no hardcoded fallback — thesaurus data is too large and specific)
+     * 
+     * @param string $slug The thesaurus slug (e.g. 'gcmd-science-keywords')
+     * @return array<mixed> Vocabulary data or empty array if unavailable
+     */
+    public function getThesaurusVocabularyWithCache(string $slug): array
+    {
+        $cacheFile = $this->getThesaurusCacheFile($slug);
+        if ($cacheFile === null) {
+            error_log("ERNIE: Unknown thesaurus slug: $slug");
+            return [];
+        }
+
+        return $this->getDataWithCache(
+            "/api/v1/vocabularies/$slug",
+            "thesaurus vocabulary ($slug)",
+            $cacheFile,
+            fn() => []
+        );
+    }
+
+    /**
+     * Forces thesaurus vocabulary cache refresh for a given slug
+     * 
+     * @param string $slug The thesaurus slug
+     * @return bool True if refresh was successful
+     */
+    public function refreshThesaurusVocabularyCache(string $slug): bool
+    {
+        $cacheFile = $this->getThesaurusCacheFile($slug);
+        if ($cacheFile === null) {
+            error_log("ERNIE: Cannot refresh cache for unknown thesaurus slug: $slug");
+            return false;
+        }
+
+        return $this->refreshCacheFromApi(
+            "/api/v1/vocabularies/$slug",
+            "thesaurus vocabulary ($slug)",
+            $cacheFile
+        );
+    }
+
+    /**
+     * Gets thesaurus vocabulary cache status for a given slug
+     * 
+     * @param string $slug The thesaurus slug
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getThesaurusVocabularyCacheStatus(string $slug): array
+    {
+        $cacheFile = $this->getThesaurusCacheFile($slug);
+        if ($cacheFile === null) {
+            return [
+                'exists' => false,
+                'valid' => false,
+                'lastUpdated' => null,
+                'age' => null,
+                'itemCount' => 0,
+                'error' => "Unknown thesaurus slug: $slug"
+            ];
+        }
+
+        return $this->getCacheFileStatus($cacheFile);
     }
 }

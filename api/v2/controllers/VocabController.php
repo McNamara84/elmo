@@ -1,5 +1,4 @@
 <?php
-use EasyRdf\Graph;
 /**
  *
  * This controller provides endpoints for fetching vocabularies via the API.
@@ -195,71 +194,6 @@ class VocabController
     }
 
     /**
-     * Fetches the CGI Simple Lithology vocabulary from the official RDF source
-     * and returns a hierarchical array formatted for jsTree.
-     *
-     * @return array<mixed> Parsed CGI keywords tree
-     * @throws Exception If fetching or parsing the RDF data fails
-     */
-    public function fetchAndProcessCGIKeywords(): array
-    {
-        // Source URL of the CGI Simple Lithology vocabulary
-        $url = 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology.rdf';
-
-        // Register RDF namespaces
-        \EasyRdf\RdfNamespace::set('skos', 'http://www.w3.org/2004/02/skos/core#');
-        \EasyRdf\RdfNamespace::set('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#');
-
-        // Load RDF data
-        $graph = new Graph($url);
-        $graph->load();
-
-        $keywordMap = [];
-
-        // Iterate through all SKOS concepts
-        foreach ($graph->allOfType('skos:Concept') as $concept) {
-            $id = $concept->getUri();
-            $prefLabel = (string) $concept->get('skos:prefLabel');
-            $definition = (string) $concept->get('skos:definition');
-
-            $keywordMap[$id] = [
-                'id' => $id,
-                'text' => $prefLabel,
-                'language' => 'en',
-                'scheme' => 'CGI Simple Lithology',
-                'schemeURI' => 'https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology',
-                'description' => $definition,
-                'children' => []
-            ];
-        }
-
-        // Build hierarchy with compound_material as the root node
-        $rootId = 'http://resource.geosciml.org/classifier/cgi/lithology/compound_material';
-        foreach ($graph->allOfType('skos:Concept') as $concept) {
-            $id = $concept->getUri();
-            if ($id === $rootId) {
-                continue; // Skip the root element
-            }
-            $broader = $concept->all('skos:broader');
-            if (empty($broader)) {
-                // Concepts without a broader term become children of the root
-                $keywordMap[$rootId]['children'][] = &$keywordMap[$id];
-            } else {
-                foreach ($broader as $parent) {
-                    $parentId = $parent->getUri();
-                    if (isset($keywordMap[$parentId])) {
-                        $keywordMap[$parentId]['children'][] = &$keywordMap[$id];
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Return only the root element
-        return [$keywordMap[$rootId]];
-    }
-
-    /**
      * Gets the latest version number for the combined vocabulary file.
      *
      * @param string $baseUrl The base URL for vocabularies.
@@ -435,72 +369,6 @@ class VocabController
             }
             header('Content-Type: application/json');
             echo $json;
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Retrieves CGI Simple Lithology keywords from a local JSON file and returns them as JSON.
-     *
-     * @return void
-     */
-    public function getCGIKeywords()
-    {
-        try {
-            $jsonPath = __DIR__ . '/../../../json/thesauri/cgi.json';
-            if (!file_exists($jsonPath)) {
-                throw new Exception('CGI keywords file not found');
-            }
-            $json = file_get_contents($jsonPath);
-            if ($json === false) {
-                throw new Exception('Error reading CGI keywords file');
-            }
-            header('Content-Type: application/json');
-            echo $json;
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Updates the CGI Simple Lithology keywords by fetching the latest RDF and
-     * storing it as JSON for use by the frontend.
-     *
-     * @return void
-     */
-    public function updateCGIKeywords()
-    {
-        // Validate API key before processing request
-        if (!$this->validateApiKey()) {
-            return;
-        }
-
-        try {
-            $keywords = $this->fetchAndProcessCGIKeywords();
-
-            $jsonDir = __DIR__ . '/../../../json/thesauri/';
-            if (!file_exists($jsonDir)) {
-                mkdir($jsonDir, 0755, true);
-            }
-
-            $result = file_put_contents(
-                $jsonDir . 'cgi.json',
-                json_encode($keywords, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-            );
-
-            if ($result === false) {
-                throw new Exception('Error saving JSON file: ' . error_get_last()['message']);
-            }
-
-            header('Content-Type: application/json');
-            echo json_encode([
-                'message' => 'CGI keywords successfully updated',
-                'timestamp' => date('c')
-            ]);
-
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);
@@ -879,267 +747,6 @@ class VocabController
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Fetches RDF data from NASA GCMD API with pagination support
-     *
-     * @param string $conceptScheme The concept scheme to fetch (instruments, sciencekeywords, platforms)
-     * @param int $pageNum The page number for pagination
-     * @param int $pageSize The number of items per page
-     * @return string The raw RDF data response
-     * @throws Exception If the HTTP request fails
-     */
-    private function fetchRdfData($conceptScheme, $pageNum, $pageSize)
-    {
-        $url = "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/{$conceptScheme}?format=rdf&page_num={$pageNum}&page_size={$pageSize}";
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode !== 200) {
-            throw new Exception("Error fetching thesaurus keywords. HTTP status code: {$httpCode}");
-        }
-
-        return $response;
-    }
-
-    /**
-     * Recursively sorts children nodes alphabetically by their text property
-     *
-     * @param array<mixed> &$nodes Reference to the array of nodes to sort
-     * @return void
-     */
-    private function sortChildrenRecursively(array &$nodes)
-    {
-        foreach ($nodes as &$node) {
-            if (!empty($node['children'])) {
-                usort($node['children'], function ($a, $b) {
-                    return strcasecmp($a['text'], $b['text']);
-                });
-                $this->sortChildrenRecursively($node['children']);
-            }
-        }
-    }
-
-    /**
-     * Builds a hierarchical structure from RDF graph data
-     * Filters out "NOT APPLICABLE" entries and includes alternative labels
-     *
-     * @param Graph $graph The RDF graph object containing concept data
-     * @param string $conceptScheme The concept scheme identifier
-     * @param string $schemeName The human-readable name of the scheme
-     * @return array<mixed> The hierarchical structure of concepts
-     */
-    private function buildHierarchy($graph, $conceptScheme, $schemeName): array
-    {
-        $hierarchy = [];
-        $concepts = $graph->allOfType('skos:Concept');
-        $conceptMap = [];
-
-        $schemeURI = "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/{$conceptScheme}";
-
-        // Create concept map without "NOT APPLICABLE" entries
-        foreach ($concepts as $concept) {
-            $uri = $concept->getUri();
-            $label = $concept->getLiteral('skos:prefLabel') ? $concept->getLiteral('skos:prefLabel')->getValue() : '';
-
-            // Skip concepts with "NOT APPLICABLE" label
-            if ($label === 'NOT APPLICABLE') {
-                continue;
-            }
-
-            $lang = $concept->getLiteral('skos:prefLabel') ? $concept->getLiteral('skos:prefLabel')->getLang() : '';
-            $description = $concept->getLiteral('skos:definition', 'en') ?
-                $concept->getLiteral('skos:definition', 'en')->getValue() : '';
-
-            // Add optional alternative labels
-            $altLabels = [];
-            foreach ($concept->allResources('skos:altLabel') as $altLabel) {
-                $altLabels[] = $altLabel->getValue();
-            }
-
-            // Append alternative labels to description if present
-            if (!empty($altLabels)) {
-                $description .= "\nAlternative labels: " . implode(', ', $altLabels);
-            }
-
-            $conceptMap[$uri] = [
-                'id' => $uri,
-                'text' => $label,
-                'language' => $lang,
-                'scheme' => $schemeName,
-                'schemeURI' => $schemeURI,
-                'description' => $description,
-                'children' => []
-            ];
-        }
-
-        // Build hierarchy
-        foreach ($concepts as $concept) {
-            $uri = $concept->getUri();
-
-            // Skip if concept is not in map (was "NOT APPLICABLE")
-            if (!isset($conceptMap[$uri])) {
-                continue;
-            }
-
-            $broader = $concept->getResource('skos:broader');
-            if ($broader) {
-                $broaderUri = $broader->getUri();
-                // Check if parent concept exists
-                if (isset($conceptMap[$broaderUri])) {
-                    $conceptMap[$broaderUri]['children'][] = &$conceptMap[$uri];
-                } else {
-                    // If parent concept was "NOT APPLICABLE",
-                    // add this concept to root level
-                    $hierarchy[] = &$conceptMap[$uri];
-                }
-            } else {
-                $hierarchy[] = &$conceptMap[$uri];
-            }
-        }
-
-        // Sort concepts alphabetically
-        usort($hierarchy, function ($a, $b) {
-            return strcasecmp($a['text'], $b['text']);
-        });
-
-        // Sort children recursively
-        $this->sortChildrenRecursively($hierarchy);
-
-        return $hierarchy;
-    }
-
-    /**
-     * Processes GCMD keywords for a specific concept scheme
-     * Fetches data paginated, builds hierarchy, and saves to JSON file
-     *
-     * @param string $conceptScheme The concept scheme to process
-     * @param string $schemeName The name of the scheme
-     * @param string $outputFile The path to the output JSON file
-     * @return bool True if successful, false otherwise
-     * @throws Exception If data fetching or processing fails
-     */
-    private function processGcmdKeywords($conceptScheme, $schemeName, $outputFile)
-    {
-        $pageNum = 1;
-        $pageSize = 2000;
-        $graph = new Graph();
-
-        while (true) {
-            try {
-                $data = $this->fetchRdfData($conceptScheme, $pageNum, $pageSize);
-                $tempGraph = new Graph();
-                $tempGraph->parse($data, 'rdf');
-
-                foreach ($tempGraph->resources() as $resource) {
-                    foreach ($tempGraph->properties($resource) as $property) {
-                        foreach ($tempGraph->all($resource, $property) as $value) {
-                            $graph->add($resource, $property, $value);
-                        }
-                    }
-                }
-
-                if (strpos($data, '<skos:Concept') === false) {
-                    break;
-                }
-                $pageNum++;
-            } catch (Exception $e) {
-                if ($pageNum == 1) {
-                    throw $e;
-                }
-                break;
-            }
-        }
-
-        $hierarchicalData = $this->buildHierarchy($graph, $conceptScheme, $schemeName);
-        $dataWithTimestamp = $this->addTimestampToData($hierarchicalData);
-        file_put_contents($outputFile, json_encode($dataWithTimestamp, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-        return true;
-    }
-
-    /**
-     * Updates all GCMD vocabularies (Science Keywords, Instruments, and Platforms)
-     * Downloads latest versions from NASA's GCMD repository and saves them as JSON files
-     *
-     * @return void
-     * @throws Exception If the update process fails
-     */
-    public function updateGcmdVocabs()
-    {
-        // Validate API key before processing request
-        if (!$this->validateApiKey()) {
-            return;
-        }
-        // Temporarily adjust error reporting
-        $originalErrorReporting = error_reporting();
-        error_reporting(E_ALL & ~E_DEPRECATED);
-
-        try {
-            $jsonDir = __DIR__ . '/../../../json/thesauri/';
-            if (!file_exists($jsonDir)) {
-                mkdir($jsonDir, 0755, true);
-            }
-
-            $conceptSchemes = [
-                [
-                    'scheme' => 'instruments',
-                    'name' => 'NASA/GCMD Instruments',
-                    'output' => $jsonDir . 'gcmdInstrumentsKeywords.json'
-                ],
-                [
-                    'scheme' => 'sciencekeywords',
-                    'name' => 'NASA/GCMD Earth Science Keywords',
-                    'output' => $jsonDir . 'gcmdScienceKeywords.json'
-                ],
-                [
-                    'scheme' => 'platforms',
-                    'name' => 'NASA/GCMD Earth Platforms Keywords',
-                    'output' => $jsonDir . 'gcmdPlatformsKeywords.json'
-                ]
-            ];
-
-            $results = [];
-            foreach ($conceptSchemes as $scheme) {
-                try {
-                    $success = $this->processGcmdKeywords(
-                        $scheme['scheme'],
-                        $scheme['name'],
-                        $scheme['output']
-                    );
-                    $results[$scheme['scheme']] = $success ? 'Updated successfully' : 'Update failed';
-                } catch (Exception $e) {
-                    $results[$scheme['scheme']] = 'Error: ' . $e->getMessage();
-                }
-            }
-
-            // Reset error reporting
-            error_reporting($originalErrorReporting);
-
-            header('Content-Type: application/json');
-            echo json_encode([
-                'message' => 'GCMD vocabularies update completed',
-                'results' => $results,
-                'timestamp' => date('Y-m-d H:i:s')
-            ]);
-
-        } catch (Exception $e) {
-            // Reset error reporting
-            error_reporting($originalErrorReporting);
-
-            http_response_code(500);
-            echo json_encode([
-                'error' => $e->getMessage()
-            ]);
         }
     }
 
@@ -2449,5 +2056,145 @@ class VocabController
     public function getContributorInstitutionRolesCacheStatus(): void
     {
         $this->handleCacheStatus('getContributorInstitutionRolesCacheStatus', 'contributor institution roles');
+    }
+
+    // ==================== Thesauri (ERNIE proxy) endpoints ====================
+
+    /**
+     * Returns thesauri availability from ERNIE (with caching)
+     * 
+     * Tells the frontend which thesauri are currently enabled.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getThesauriAvailability(): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
+
+            if ($ernieService->isConfigured()) {
+                $availability = $ernieService->getThesauriAvailabilityWithCache();
+                if (!empty($availability)) {
+                    header('Content-Type: application/json');
+                    echo json_encode($availability);
+                    return;
+                }
+            }
+
+            http_response_code(503);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Thesauri availability currently unavailable']);
+        } catch (Exception $e) {
+            error_log("API Error in getThesauriAvailability: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Returns vocabulary data for a specific thesaurus from ERNIE (with caching)
+     *
+     * @param string $slug The thesaurus slug (e.g. 'gcmd-science-keywords')
+     * @return void Outputs JSON response directly
+     */
+    private function getThesaurusVocabulary(string $slug): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
+
+            if ($ernieService->isConfigured()) {
+                $data = $ernieService->getThesaurusVocabularyWithCache($slug);
+                if (!empty($data)) {
+                    error_log("Thesaurus ($slug): Serving " . count($data) . " items from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode($data);
+                    return;
+                }
+            }
+
+            http_response_code(503);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => "Thesaurus vocabulary '$slug' currently unavailable"]);
+        } catch (Exception $e) {
+            error_log("API Error in getThesaurusVocabulary($slug): " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Returns GCMD Science Keywords vocabulary data
+     *
+     * @return void
+     */
+    public function getGcmdScienceKeywordsFromErnie(): void
+    {
+        $this->getThesaurusVocabulary('gcmd-science-keywords');
+    }
+
+    /**
+     * Returns GCMD Platforms vocabulary data
+     *
+     * @return void
+     */
+    public function getGcmdPlatformsFromErnie(): void
+    {
+        $this->getThesaurusVocabulary('gcmd-platforms');
+    }
+
+    /**
+     * Returns GCMD Instruments vocabulary data
+     *
+     * @return void
+     */
+    public function getGcmdInstrumentsFromErnie(): void
+    {
+        $this->getThesaurusVocabulary('gcmd-instruments');
+    }
+
+    /**
+     * Returns ICS Chronostratigraphy vocabulary data
+     *
+     * @return void
+     */
+    public function getChronostratTimescale(): void
+    {
+        $this->getThesaurusVocabulary('chronostrat-timescale');
+    }
+
+    /**
+     * Returns GEMET Thesaurus vocabulary data
+     *
+     * @return void
+     */
+    public function getGemet(): void
+    {
+        $this->getThesaurusVocabulary('gemet');
+    }
+
+    /**
+     * Manually refreshes the thesauri availability cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshThesauriAvailabilityCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshThesauriAvailabilityCache',
+            'getThesauriAvailabilityCacheStatus',
+            'Thesauri availability'
+        );
+    }
+
+    /**
+     * Gets the status of the thesauri availability cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getThesauriAvailabilityCacheStatus(): void
+    {
+        $this->handleCacheStatus('getThesauriAvailabilityCacheStatus', 'thesauri availability');
     }
 }

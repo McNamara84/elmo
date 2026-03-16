@@ -33,8 +33,8 @@ $showAuthorInstitution = resolveFeatureToggle($showAuthorInstitution ?? null, tr
 $showContributorPersons = resolveFeatureToggle($showContributorPersons ?? null, true);
 /** @var bool $showContributorInstitutions */
 $showContributorInstitutions = resolveFeatureToggle($showContributorInstitutions ?? null, true);
-/** @var bool $showGcmdThesauri */
-$showGcmdThesauri = resolveFeatureToggle($showGcmdThesauri ?? null, true);
+/** @var bool $showThesauri */
+$showThesauri = resolveFeatureToggle($showThesauri ?? null, true);
 /** @var bool $showFreeKeywords */
 $showFreeKeywords = resolveFeatureToggle($showFreeKeywords ?? null, true);
 /** @var bool $showSpatialTemporalCoverage */
@@ -91,7 +91,7 @@ if ($showGGMsProperties) {
 if ($showMslVocabs) {
     include $baseDir . 'formgroups/mslKeywords.html';
 }
-if ($showGcmdThesauri) {
+if ($showThesauri) {
     include $baseDir . 'formgroups/thesaurusKeywords.html';
 }
 if ($showFreeKeywords) {

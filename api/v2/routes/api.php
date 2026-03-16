@@ -25,14 +25,10 @@ return [
     ['GET', '/update/vocabs/msl/labs', [new VocabController(), 'updateMslLabs']],
     ['GET', '/update/vocabs/msl', [new VocabController(), 'getMslVocab']],
     ['GET', '/update/timezones', [new VocabController(), 'updateTimezones']],
-    ['GET', '/update/vocabs/gcmd', [new VocabController(), 'updateGcmdVocabs']],
-    ['GET', '/update/vocabs/cgi', [new VocabController(), 'updateCGIKeywords']],
     ['GET', '/update/ror', [new VocabController(), 'getRorAffiliations']],
     ['GET', '/update/crossref', [new VocabController(), 'getCrossref']],
 
     // Vocabulary retrieval endpoints
-    ['GET', '/vocabs/sciencekeywords', [new VocabController(), 'getGcmdScienceKeywords']],
-    ['GET', '/vocabs/cgi', [new VocabController(), 'getCGIKeywords']],
     ['GET', '/vocabs/roles[/{type}]', [new VocabController(), 'getRoles']],
     ['GET', '/vocabs/relations', [new VocabController(), 'getRelations']],
     ['GET', '/vocabs/licenses/all', [new VocabController(), 'getAllLicenses']],
@@ -43,6 +39,14 @@ return [
     ['GET', '/vocabs/resourcetypes', [new VocabController(), 'getResourceTypes']],
     ['GET', '/vocabs/languages', [new VocabController(), 'getLanguages']],
     ['GET', '/vocabs/titletypes', [new VocabController(), 'getTitleTypes']],
+
+    // Thesauri vocabulary endpoints (ERNIE proxy with caching)
+    ['GET', '/vocabs/thesauri/availability', [new VocabController(), 'getThesauriAvailability']],
+    ['GET', '/vocabs/thesauri/gcmd-science-keywords', [new VocabController(), 'getGcmdScienceKeywordsFromErnie']],
+    ['GET', '/vocabs/thesauri/gcmd-platforms', [new VocabController(), 'getGcmdPlatformsFromErnie']],
+    ['GET', '/vocabs/thesauri/gcmd-instruments', [new VocabController(), 'getGcmdInstrumentsFromErnie']],
+    ['GET', '/vocabs/thesauri/chronostrat-timescale', [new VocabController(), 'getChronostratTimescale']],
+    ['GET', '/vocabs/thesauri/gemet', [new VocabController(), 'getGemet']],
 
     // Vocabulary retrieval for ICGEM implementation
     ['GET', '/vocabs/icgemformats', [new VocabController(), 'getICGEMFileFormats']],
@@ -90,5 +94,9 @@ return [
     ['POST', '/admin/cache/roles/contributor-persons/refresh', [new VocabController(), 'refreshContributorPersonRolesCache']],
     ['GET', '/admin/cache/roles/contributor-persons/status', [new VocabController(), 'getContributorPersonRolesCacheStatus']],
     ['POST', '/admin/cache/roles/contributor-institutions/refresh', [new VocabController(), 'refreshContributorInstitutionRolesCache']],
-    ['GET', '/admin/cache/roles/contributor-institutions/status', [new VocabController(), 'getContributorInstitutionRolesCacheStatus']]
+    ['GET', '/admin/cache/roles/contributor-institutions/status', [new VocabController(), 'getContributorInstitutionRolesCacheStatus']],
+
+    // Thesauri availability cache management
+    ['POST', '/admin/cache/thesauri/availability/refresh', [new VocabController(), 'refreshThesauriAvailabilityCache']],
+    ['GET', '/admin/cache/thesauri/availability/status', [new VocabController(), 'getThesauriAvailabilityCacheStatus']]
 ];
