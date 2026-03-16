@@ -25,20 +25,6 @@ function saveDescriptions($connection, $postData, $resource_id)
         }
     }
 
-    // Generic description types (always available)
-    $genericDescriptionTypes = [
-        'Methods' => 'descriptionMethods',
-        'TechnicalInfo' => 'descriptionTechnical'
-    ];
-
-    // Save generic descriptions (excluding Abstract and Other, which are handled separately)
-    foreach ($genericDescriptionTypes as $type => $postKey) {
-        if (isset($postData[$postKey]) && !empty($postData[$postKey])) {
-            $text = trim($postData[$postKey]);
-            insertDescription($connection, $type, $text, $resource_id);
-        }
-    }
-
     // ELMOGEM-specific handling (if enabled)
     $abstract_text = isset($postData['descriptionAbstract']) ? trim($postData['descriptionAbstract']) : '';
     
@@ -70,16 +56,41 @@ function saveDescriptions($connection, $postData, $resource_id)
             insertDescription($connection, 'Abstract', $abstract_text, $resource_id);
         }
     } else {
-        // Non-ELMOGEM mode: just save the abstract as-is
+        // Non-ELMOGEM mode: save abstract and dynamic description types
+
+        // Save Abstract
         if (!empty($abstract_text)) {
             insertDescription($connection, 'Abstract', $abstract_text, $resource_id);
         }
-    }
 
-    // Save Other
-    if (isset($postData['descriptionOther']) && !empty($postData['descriptionOther'])) {
-        $text = trim($postData['descriptionOther']);
-        insertDescription($connection, 'Other', $text, $resource_id);
+        // Save dynamic description types from description[] array (new format)
+        if (isset($postData['description']) && is_array($postData['description'])) {
+            // Whitelist of valid DataCite description type slugs (excluding Abstract)
+            $validSlugs = ['Methods', 'TechnicalInfo', 'SeriesInformation', 'TableOfContents', 'Other'];
+            foreach ($postData['description'] as $slug => $text) {
+                $text = trim($text);
+                if (!empty($text) && in_array($slug, $validSlugs, true)) {
+                    insertDescription($connection, $slug, $text, $resource_id);
+                }
+            }
+        }
+
+        // Backwards compatibility: support old field names from existing drafts
+        $legacyFields = [
+            'Methods' => 'descriptionMethods',
+            'TechnicalInfo' => 'descriptionTechnical',
+            'Other' => 'descriptionOther'
+        ];
+        foreach ($legacyFields as $type => $postKey) {
+            if (isset($postData[$postKey]) && !empty($postData[$postKey])) {
+                // Only save if not already saved via new format
+                $alreadySaved = isset($postData['description'][$type]) && !empty(trim($postData['description'][$type]));
+                if (!$alreadySaved) {
+                    $text = trim($postData[$postKey]);
+                    insertDescription($connection, $type, $text, $resource_id);
+                }
+            }
+        }
     }
 
     return true;
