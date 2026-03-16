@@ -72,7 +72,8 @@ test.describe('Resource Information Form Tests', () => {
     const optionTexts = await languageSelect.locator('option:not([disabled])').allTextContents();
     expect(optionTexts).toContain('English');
     expect(optionTexts).toContain('German');
-    expect(optionTexts).toContain('French');
+    // Note: French may not be available when ERNIE is configured and returns
+    // a subset of languages, so we only assert English and German.
   });
 
   test('Test add title button functionality', async ({ page }) => {
