@@ -20,8 +20,6 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   - [Dependencies](#dependencies)
   - [Settings](#settings)
   - [API-Dokumentation](#api-dokumentation)
-    - [Allgemeine Informationen](#allgemeine-informationen)
-    - [API-Endpunkte](#api-endpunkte)
   - [Formularfelder](#formularfelder)
   - [Data validation](#data-validation)
   - [Data Mapping and Occurences](#data-mapping-and-occurences)
