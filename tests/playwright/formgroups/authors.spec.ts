@@ -155,16 +155,38 @@ test.describe('Author(s) form group', () => {
     await expect(firstName).toHaveValue('Author');
   });
 
-  test('accepts Arabic author last name', async ({ page }) => {
+  test('accepts valid international author last names', async ({ page }) => {
     const lastName = page.locator('#input-author-lastname');
 
     await lastName.fill('محمد علي');
+    let isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
 
-    const isValid = await lastName.evaluate(
-      el => (el as HTMLInputElement).checkValidity()
-    );
+    await lastName.fill('Rüdiger');
+    let isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    await lastName.fill('Александр ');
+    let isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    await lastName.fill('Παπαδόπουλος');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    await lastName.fill('Çalışkan-Şahin');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    await lastName.fill('王小明');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    await lastName.fill("O'Connor-Smith");
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
   });
+
 
   test('rejects author last name containing special characters', async ({ page }) => {
     const lastName = page.locator('#input-author-lastname');
