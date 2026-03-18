@@ -158,16 +158,18 @@ test.describe('Author(s) form group', () => {
   test('accepts valid international author last names', async ({ page }) => {
     const lastName = page.locator('#input-author-lastname');
 
+    let isValid: boolean;
+
     await lastName.fill('محمد علي');
-    let isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
 
     await lastName.fill('Rüdiger');
-    let isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
 
     await lastName.fill('Александр ');
-    let isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
 
     await lastName.fill('Παπαδόπουλος');
@@ -191,8 +193,10 @@ test.describe('Author(s) form group', () => {
   test('rejects author last names with digits or forbidden symbols', async ({ page }) => {
     const lastName = page.locator('#input-author-lastname');
 
+    let isValid: boolean;
+
     await lastName.fill('Ali123');
-    let isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(false);
 
     await lastName.fill('Ali$');
