@@ -86,10 +86,12 @@ describe('clear.js - clearInputFields', () => {
                 </div>
                 
                 <!-- Descriptions -->
-                <textarea id="input-abstract">Abstract text</textarea>
-                <textarea id="input-methods">Methods text</textarea>
-                <textarea id="input-technicalinfo">Tech info</textarea>
-                <textarea id="input-other">Other info</textarea>
+                <div id="accordion-description">
+                    <textarea id="input-abstract">Abstract text</textarea>
+                    <textarea id="input-description-Methods">Methods text</textarea>
+                    <textarea id="input-description-TechnicalInfo">Tech info</textarea>
+                    <textarea id="input-description-Other">Other info</textarea>
+                </div>
                 
                 <!-- Tagify fields -->
                 <input id="input-sciencekeyword">
@@ -233,9 +235,7 @@ describe('clear.js - clearInputFields', () => {
           
             // Clear descriptions
             $('#input-abstract').val('');
-            $('#input-methods').val('');
-            $('#input-technicalinfo').val('');
-            $('#input-other').val('');
+            $('#accordion-description textarea[id^="input-description-"]').val('');
           
             // Clear all Tagify fields
             const tagifySelectors = [
@@ -371,9 +371,9 @@ describe('clear.js - clearInputFields', () => {
         clearInputFields();
         
         expect($('#input-abstract').val()).toBe('');
-        expect($('#input-methods').val()).toBe('');
-        expect($('#input-technicalinfo').val()).toBe('');
-        expect($('#input-other').val()).toBe('');
+        expect($('#input-description-Methods').val()).toBe('');
+        expect($('#input-description-TechnicalInfo').val()).toBe('');
+        expect($('#input-description-Other').val()).toBe('');
     });
 
     test('clearInputFields clears date fields', () => {

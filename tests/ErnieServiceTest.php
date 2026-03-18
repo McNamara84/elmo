@@ -29,13 +29,15 @@ class TestableErnieService extends \ErnieService
     private string $customLanguagesCacheFile;
     private string $customContributorPersonRolesCacheFile;
     private string $customContributorInstitutionRolesCacheFile;
+    private string $customDescriptionTypesCacheFile;
 
     public function __construct(
         string $cacheFile,
         string $titleTypesCacheFile = '',
         string $languagesCacheFile = '',
         string $contributorPersonRolesCacheFile = '',
-        string $contributorInstitutionRolesCacheFile = ''
+        string $contributorInstitutionRolesCacheFile = '',
+        string $descriptionTypesCacheFile = ''
     ) {
         parent::__construct();
         $this->customCacheFile = $cacheFile;
@@ -43,6 +45,7 @@ class TestableErnieService extends \ErnieService
         $this->customLanguagesCacheFile = $languagesCacheFile;
         $this->customContributorPersonRolesCacheFile = $contributorPersonRolesCacheFile;
         $this->customContributorInstitutionRolesCacheFile = $contributorInstitutionRolesCacheFile;
+        $this->customDescriptionTypesCacheFile = $descriptionTypesCacheFile;
     }
 
     /**
@@ -83,6 +86,14 @@ class TestableErnieService extends \ErnieService
     protected function getContributorInstitutionRolesCacheFile(): string
     {
         return $this->customContributorInstitutionRolesCacheFile ?: $this->customCacheFile;
+    }
+
+    /**
+     * Override getDescriptionTypesCacheFile to use custom path
+     */
+    protected function getDescriptionTypesCacheFile(): string
+    {
+        return $this->customDescriptionTypesCacheFile ?: $this->customCacheFile;
     }
 }
 
@@ -127,6 +138,11 @@ final class ErnieServiceTest extends TestCase
     private string $testContributorInstitutionRolesCacheFile;
 
     /**
+     * @var string Path to test description types cache file
+     */
+    private string $testDescriptionTypesCacheFile;
+
+    /**
      * Set up test environment
      */
     protected function setUp(): void
@@ -140,6 +156,7 @@ final class ErnieServiceTest extends TestCase
         $this->testLanguagesCacheFile = $this->testCacheDir . '/ernie_languages.json';
         $this->testContributorPersonRolesCacheFile = $this->testCacheDir . '/ernie_contributor_person_roles.json';
         $this->testContributorInstitutionRolesCacheFile = $this->testCacheDir . '/ernie_contributor_institution_roles.json';
+        $this->testDescriptionTypesCacheFile = $this->testCacheDir . '/ernie_description_types.json';
 
         if (!is_dir($this->testCacheDir)) {
             mkdir($this->testCacheDir, 0755, true);
@@ -208,7 +225,8 @@ final class ErnieServiceTest extends TestCase
             $this->testTitleTypesCacheFile,
             $this->testLanguagesCacheFile,
             $this->testContributorPersonRolesCacheFile,
-            $this->testContributorInstitutionRolesCacheFile
+            $this->testContributorInstitutionRolesCacheFile,
+            $this->testDescriptionTypesCacheFile
         );
     }
 
@@ -274,6 +292,22 @@ final class ErnieServiceTest extends TestCase
             'data' => $data
         ];
         file_put_contents($this->testTitleTypesCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Helper to write a test description types cache file
+     * 
+     * @param array<array{id: int, name: string, slug: string}> $data
+     */
+    private function writeDescriptionTypesTestCache(array $data, ?string $lastUpdated = null): void
+    {
+        $cache = [
+            'lastUpdated' => $lastUpdated ?? date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => $data
+        ];
+        file_put_contents($this->testDescriptionTypesCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
     }
 
     /**
@@ -2225,5 +2259,208 @@ final class ErnieServiceTest extends TestCase
 
         $this->assertFalse($callbackInvoked, 'onFreshData callback should NOT be called on cache hit');
         $this->assertCount(2, $result);
+    }
+
+    // ==================== Description Types: getDescriptionTypesCacheStatus() Tests ====================
+
+    /**
+     * Test getDescriptionTypesCacheStatus when cache doesn't exist
+     */
+    public function testGetDescriptionTypesCacheStatusWhenCacheDoesNotExist(): void
+    {
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getDescriptionTypesCacheStatus();
+
+        $this->assertFalse($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertNull($status['lastUpdated']);
+        $this->assertNull($status['age']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    /**
+     * Test getDescriptionTypesCacheStatus when cache exists and is valid
+     */
+    public function testGetDescriptionTypesCacheStatusWhenCacheExistsAndValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Abstract', 'slug' => 'Abstract'],
+            ['id' => 2, 'name' => 'Methods', 'slug' => 'Methods']
+        ];
+        $this->writeDescriptionTypesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getDescriptionTypesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertNotNull($status['lastUpdated']);
+        $this->assertIsInt($status['age']);
+        $this->assertSame(2, $status['itemCount']);
+        $this->assertArrayHasKey('ageFormatted', $status);
+        $this->assertArrayHasKey('ttl', $status);
+    }
+
+    /**
+     * Test getDescriptionTypesCacheStatus when cache exists but is expired
+     */
+    public function testGetDescriptionTypesCacheStatusWhenCacheExpired(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Abstract', 'slug' => 'Abstract']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeDescriptionTypesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getDescriptionTypesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertSame(1, $status['itemCount']);
+    }
+
+    // ==================== Description Types: getDescriptionTypesWithCache() Tests ====================
+
+    /**
+     * Test that getDescriptionTypesWithCache returns hardcoded fallback when not configured and no cache
+     */
+    public function testGetDescriptionTypesWithCacheReturnsHardcodedFallbackWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getDescriptionTypesWithCache();
+
+        $this->assertIsArray($result);
+        $this->assertCount(4, $result);
+        $this->assertSame('Abstract', $result[0]['name']);
+        $this->assertSame('Abstract', $result[0]['slug']);
+        $this->assertSame('Methods', $result[1]['name']);
+        $this->assertSame('Methods', $result[1]['slug']);
+        $this->assertSame('Technical Info', $result[2]['name']);
+        $this->assertSame('TechnicalInfo', $result[2]['slug']);
+        $this->assertSame('Other', $result[3]['name']);
+        $this->assertSame('Other', $result[3]['slug']);
+    }
+
+    /**
+     * Test that getDescriptionTypesWithCache returns cached data when cache is valid
+     */
+    public function testGetDescriptionTypesWithCacheReturnsCachedDataWhenValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'Abstract', 'slug' => 'Abstract'],
+            ['id' => 2, 'name' => 'Methods', 'slug' => 'Methods'],
+            ['id' => 3, 'name' => 'Series Information', 'slug' => 'SeriesInformation']
+        ];
+        $this->writeDescriptionTypesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getDescriptionTypesWithCache();
+
+        $this->assertCount(3, $result);
+        $this->assertSame('Abstract', $result[0]['name']);
+        $this->assertSame('Methods', $result[1]['name']);
+        $this->assertSame('Series Information', $result[2]['name']);
+    }
+
+    /**
+     * Test that getDescriptionTypesWithCache returns stale cache when ERNIE unavailable
+     */
+    public function testGetDescriptionTypesWithCacheReturnsStaleWhenErnieUnavailable(): void
+    {
+        $testData = [
+            ['id' => 6, 'name' => 'Other', 'slug' => 'Other']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeDescriptionTypesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://invalid-url-that-does-not-exist.local/', 'test-key');
+        $result = $service->getDescriptionTypesWithCache();
+
+        $this->assertCount(1, $result);
+        $this->assertSame('Other', $result[0]['name']);
+    }
+
+    // ==================== Description Types: fetchDescriptionTypes() Tests ====================
+
+    /**
+     * Test fetchDescriptionTypes returns null when not configured
+     */
+    public function testFetchDescriptionTypesReturnsNullWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->fetchDescriptionTypes();
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * Test fetchDescriptionTypes returns null on invalid URL
+     */
+    public function testFetchDescriptionTypesReturnsNullOnInvalidUrl(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->fetchDescriptionTypes();
+
+        $this->assertNull($result);
+    }
+
+    // ==================== Description Types: refreshDescriptionTypesCache() Tests ====================
+
+    /**
+     * Test refreshDescriptionTypesCache returns false when not configured
+     */
+    public function testRefreshDescriptionTypesCacheReturnsFalseWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->refreshDescriptionTypesCache();
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test refreshDescriptionTypesCache returns false when ERNIE unavailable
+     */
+    public function testRefreshDescriptionTypesCacheReturnsFalseWhenErnieUnavailable(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->refreshDescriptionTypesCache();
+
+        $this->assertFalse($result);
+    }
+
+    // ==================== Description Types: Hardcoded Fallback Tests ====================
+
+    /**
+     * Test that hardcoded description type fallback contains Abstract, Methods, TechnicalInfo, Other
+     */
+    public function testHardcodedDescriptionTypeFallbackContainsExpectedTypes(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getDescriptionTypesWithCache();
+
+        $slugs = array_column($result, 'slug');
+        $this->assertContains('Abstract', $slugs);
+        $this->assertContains('Methods', $slugs);
+        $this->assertContains('TechnicalInfo', $slugs);
+        $this->assertContains('Other', $slugs);
+    }
+
+    /**
+     * Test that hardcoded description type fallback has correct structure
+     */
+    public function testHardcodedDescriptionTypeFallbackHasCorrectStructure(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getDescriptionTypesWithCache();
+
+        foreach ($result as $type) {
+            $this->assertArrayHasKey('id', $type);
+            $this->assertArrayHasKey('name', $type);
+            $this->assertArrayHasKey('slug', $type);
+            $this->assertIsInt($type['id']);
+            $this->assertIsString($type['name']);
+            $this->assertIsString($type['slug']);
+        }
     }
 }
