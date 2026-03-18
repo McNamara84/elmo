@@ -52,12 +52,17 @@ export async function completeExtendedDatasetForm(page: Page) {
   await addFreeKeyword(page, exampleData.extended.keywords[0]);
 
   // Add Descriptions - Abstract already filled by completeMinimalDatasetForm.
-  // Open each collapsed accordion section and wait for it to be visible before
-  // filling, so Playwright's native fill() can set the value reliably.
+  // Description types other than Abstract are loaded dynamically from the ERNIE
+  // API, so we must wait for them to appear in the DOM first.
+  await page.waitForFunction(
+    () => document.querySelectorAll('#accordion-description .accordion-item[data-description-slug]').length > 0,
+    { timeout: 15000 },
+  );
+
   const descriptionFields: Array<[string, string, string]> = [
-    ['#collapse-methods', '#input-methods', exampleData.extended.descriptions.methods],
-    ['#collapse-technicalinfo', '#input-technicalinfo', exampleData.extended.descriptions.technicalInfo],
-    ['#collapse-other', '#input-other', exampleData.extended.descriptions.other],
+    ['#collapse-description-Methods', '#input-description-Methods', exampleData.extended.descriptions.methods],
+    ['#collapse-description-TechnicalInfo', '#input-description-TechnicalInfo', exampleData.extended.descriptions.technicalInfo],
+    ['#collapse-description-Other', '#input-description-Other', exampleData.extended.descriptions.other],
   ];
   for (const [collapseId, inputId, value] of descriptionFields) {
     await page.locator(`[data-bs-target="${collapseId}"]`).click();
