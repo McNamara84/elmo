@@ -21,7 +21,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   - [API documentation](#api-documentation)
   - [Form fields](#Form-fields)
   - [Data Mapping and Occurences](#data-mapping-and-occurences)
-  - [Architecture & Data Flow](#architecture-data-flow)
+  - [Architecture and Data Flow](#architecture-and-data-flow)
   - [Data validation](#data-validation)
   - [Database structure](#database-structure)
   - [Contributing](#contributing)
@@ -1361,7 +1361,7 @@ The following table gives a quick overview on the occurences of the form fields 
 <details>
   <summary>
 
-  ## Architecture & Data Flow
+  ## Architecture and Data Flow
   </summary>
 
 The `saveGGMsDataSources` function orchestrates a multi-step pipeline that transforms frontend form data into structured database records, often triggering "side effects" to maintain data integrity across the system.
