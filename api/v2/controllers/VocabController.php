@@ -1713,9 +1713,14 @@ class VocabController
 
         } catch (Exception $e) {
             error_log("API Error in getDescriptionTypes: " . $e->getMessage());
-            http_response_code(500);
+            error_log("Description Types: Falling back to hardcoded types due to error");
             header('Content-Type: application/json');
-            echo json_encode(['error' => 'Internal server error']);
+            echo json_encode([
+                ['id' => 1, 'name' => 'Abstract', 'slug' => 'Abstract'],
+                ['id' => 2, 'name' => 'Methods', 'slug' => 'Methods'],
+                ['id' => 5, 'name' => 'Technical Info', 'slug' => 'TechnicalInfo'],
+                ['id' => 6, 'name' => 'Other', 'slug' => 'Other'],
+            ]);
         }
     }
 
