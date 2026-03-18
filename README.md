@@ -127,36 +127,6 @@ If you encounter problems with the installation, feel free to leave an entry in 
 <details>
   <summary>
 
-  ## Dependencies
-  </summary>
-Dependencies can be installed using the following terminal commands:
-	1. `composer install`
-	2. `npm install`
-Prequisite for that is composer. If you don't have it consider brew install composer or other options
-
-The following third-party dependencies are included in header.php and footer.html:
-
-- [Bootstrap 5](https://github.com/twbs/bootstrap/releases)<br>
-  For the design, responsiveness and dark mode.
-- [Bootstrap Icons 1](https://github.com/twbs/icons/releases)<br>
-  For the icons used.
-- [jQuery 3](https://github.com/jquery/jquery/releases)<br>
-  For the event handlers in JavaScript and to simplify the JavaScript code.
-- [jQuery UI 1](https://github.com/jquery/jquery-ui/releases)<br>
-  Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
-- [Tagify 4](https://github.com/yairEO/tagify/releases)<br>
-  Is used for the Thesaurus Keywords field, the entry of multiple affiliations and free keywords.
-- [jsTree 3](https://github.com/vakata/jstree/releases)<br>
-  Is used to display the thesauri as a hierarchical tree structure.
-- [Swagger UI 5](https://github.com/swagger-api/swagger-ui/releases)<br>
-  For displaying the dynamic and interactive API documentation in accordance with OpenAPI standard 3.1.
-
-To install them: npm install
-</details>
-
-<details>
-  <summary>
-
   ## Settings
   </summary>
 
@@ -213,6 +183,37 @@ To install them: npm install
   - `$ernieCacheTtl`: Cache time-to-live in seconds for all ERNIE data (resource types, title types; default: 21600 = 6 hours). Also determines the automatic refresh interval.
 
 </details>
+
+<details>
+  <summary>
+
+  ## Dependencies
+  </summary>
+Dependencies can be installed using the following terminal commands:
+	1. `composer install`
+	2. `npm install`
+Prequisite for that is composer. If you don't have it consider brew install composer or other options
+
+The following third-party dependencies are included in header.php and footer.html:
+
+- [Bootstrap 5](https://github.com/twbs/bootstrap/releases)<br>
+  For the design, responsiveness and dark mode.
+- [Bootstrap Icons 1](https://github.com/twbs/icons/releases)<br>
+  For the icons used.
+- [jQuery 3](https://github.com/jquery/jquery/releases)<br>
+  For the event handlers in JavaScript and to simplify the JavaScript code.
+- [jQuery UI 1](https://github.com/jquery/jquery-ui/releases)<br>
+  Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
+- [Tagify 4](https://github.com/yairEO/tagify/releases)<br>
+  Is used for the Thesaurus Keywords field, the entry of multiple affiliations and free keywords.
+- [jsTree 3](https://github.com/vakata/jstree/releases)<br>
+  Is used to display the thesauri as a hierarchical tree structure.
+- [Swagger UI 5](https://github.com/swagger-api/swagger-ui/releases)<br>
+  For displaying the dynamic and interactive API documentation in accordance with OpenAPI standard 3.1.
+
+To install them: npm install
+</details>
+
 
 ## [API documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/)
 
