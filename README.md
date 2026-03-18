@@ -16,7 +16,6 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   - [Installation](#installation)
     - [Requirements](#requirements)
     - [Quick installation guide](#quick-installation-guide)
-    - [Detailed example installation on Windows 10/11](#detailed-example-installation-on-windows-1011)
   - [Dependencies](#dependencies)
   - [Settings](#settings)
   - [API-Dokumentation](#api-dokumentation)
