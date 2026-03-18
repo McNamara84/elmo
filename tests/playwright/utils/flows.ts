@@ -51,29 +51,19 @@ export async function completeExtendedDatasetForm(page: Page) {
   // Add Free Keywords (using tagify - Enter key)
   await addFreeKeyword(page, exampleData.extended.keywords[0]);
 
-  // Add Descriptions - Abstract already filled by completeMinimalDatasetForm
-  // Set description textareas directly via evaluate to bypass accordion transition issues in CI.
-  // Bootstrap accordion transitions are unreliable in headless CI: fill() can execute during
-  // the transition, causing the value to be silently lost.
-  await page.evaluate(({ methods, techInfo, other }) => {
-    const fields: Array<[string, string]> = [
-      ['#input-methods', methods],
-      ['#input-technicalinfo', techInfo],
-      ['#input-other', other],
-    ];
-    for (const [selector, value] of fields) {
-      const el = document.querySelector(selector) as HTMLTextAreaElement;
-      if (el) {
-        el.value = value;
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    }
-  }, {
-    methods: exampleData.extended.descriptions.methods,
-    techInfo: exampleData.extended.descriptions.technicalInfo,
-    other: exampleData.extended.descriptions.other,
-  });
+  // Add Descriptions - Abstract already filled by completeMinimalDatasetForm.
+  // Open each collapsed accordion section and wait for it to be visible before
+  // filling, so Playwright's native fill() can set the value reliably.
+  const descriptionFields: Array<[string, string, string]> = [
+    ['#collapse-methods', '#input-methods', exampleData.extended.descriptions.methods],
+    ['#collapse-technicalinfo', '#input-technicalinfo', exampleData.extended.descriptions.technicalInfo],
+    ['#collapse-other', '#input-other', exampleData.extended.descriptions.other],
+  ];
+  for (const [collapseId, inputId, value] of descriptionFields) {
+    await page.locator(`[data-bs-target="${collapseId}"]`).click();
+    await page.locator(collapseId).waitFor({ state: 'visible' });
+    await page.fill(inputId, value);
+  }
 
   // Add Funding Reference entries
   await addFundingReference(page, 0, exampleData.extended.fundingReferences[0]);

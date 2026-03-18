@@ -95,15 +95,6 @@ test.describe('Minimal dataset save-as flow', () => {
 
     const saveAsModal = page.locator(SELECTORS.modals.saveAs);
     await expect(saveAsModal).toBeVisible();
-
-    // Close the notification modal so it doesn't interfere with subsequent
-    // assertions that check for .alert-danger inside the same modal.
-    await page.evaluate(() => {
-      const el = document.getElementById('modal-notification');
-      const instance = (window as any).bootstrap?.Modal.getInstance(el);
-      instance?.hide();
-    });
-    await expect(notificationModal).toBeHidden();
   });
 
   test('saves the dataset and triggers an XML download', async ({ page }) => {
@@ -164,11 +155,7 @@ test.describe('Minimal dataset save-as flow', () => {
       );
     }
 
-    await page.evaluate(() => {
-      const modalElement = document.getElementById('modal-notification');
-      const instance = (window as any).bootstrap?.Modal.getInstance(modalElement);
-      instance?.hide();
-    });
+    await notificationModal.locator('.btn-primary').click();
 
     await expect(notificationModal).toBeHidden();
     await page.unroute(SAVE_ENDPOINT);
@@ -213,11 +200,7 @@ test.describe('Minimal dataset save-as flow', () => {
       );
     }
 
-    await page.evaluate(() => {
-      const modalElement = document.getElementById('modal-notification');
-      const instance = (window as any).bootstrap?.Modal.getInstance(modalElement);
-      instance?.hide();
-    });
+    await notificationModal.locator('.btn-primary').click();
     await expect(notificationModal).toBeHidden();
 
     // The user should be able to attempt saving again after an error.
