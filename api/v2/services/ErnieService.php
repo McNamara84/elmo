@@ -91,6 +91,11 @@ class ErnieService
     private string $gemetCacheFile;
 
     /**
+     * @var string Path to the description types cache file
+     */
+    private string $descriptionTypesCacheFile;
+
+    /**
      * @var array<string, string> Mapping of thesaurus slugs to cache file paths
      */
     private array $thesaurusCacheFiles;
@@ -120,6 +125,7 @@ class ErnieService
         $this->instrumentsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_instruments.json';
         $this->chronostratCacheFile = __DIR__ . '/../../../storage/cache/ernie_chronostrat_timescale.json';
         $this->gemetCacheFile = __DIR__ . '/../../../storage/cache/ernie_gemet.json';
+        $this->descriptionTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_description_types.json';
         $this->thesaurusCacheFiles = [
             'gcmd-science-keywords' => $this->scienceKeywordsCacheFile,
             'gcmd-platforms' => $this->platformsCacheFile,
@@ -147,6 +153,16 @@ class ErnieService
     protected function getTitleTypesCacheFile(): string
     {
         return $this->titleTypesCacheFile;
+    }
+
+    /**
+     * Gets the description types cache file path
+     * 
+     * @return string Path to the description types cache file
+     */
+    protected function getDescriptionTypesCacheFile(): string
+    {
+        return $this->descriptionTypesCacheFile;
     }
 
     /**
@@ -569,6 +585,99 @@ class ErnieService
     public function getCacheStatus(): array
     {
         return $this->getCacheFileStatus($this->getCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Description Types
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches description types from ERNIE API
+     * 
+     * @return array<mixed>|null Raw API response or null on failure
+     */
+    public function fetchDescriptionTypes(): ?array
+    {
+        return $this->fetchFromErnie('/api/v1/description-types/elmo', 'description types');
+    }
+
+    /**
+     * Gets description types with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback (Abstract, Methods, TechnicalInfo, Other) as last resort
+     * 
+     * @return array<mixed> Description types from cache or ERNIE
+     */
+    public function getDescriptionTypesWithCache(): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/description-types/elmo',
+            'description types',
+            $this->getDescriptionTypesCacheFile(),
+            [$this, 'getHardcodedDescriptionTypeFallback']
+        );
+    }
+
+    /**
+     * Returns hardcoded fallback description types
+     * 
+     * This is the absolute last resort when ERNIE, cache, and stale cache are all unavailable.
+     * Abstract, Methods, TechnicalInfo, and Other are the original ELMO description types.
+     * 
+     * @return array<array{id: int, name: string, slug: string}> Minimal fallback description types
+     */
+    private function getHardcodedDescriptionTypeFallback(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'name' => 'Abstract',
+                'slug' => 'Abstract'
+            ],
+            [
+                'id' => 2,
+                'name' => 'Methods',
+                'slug' => 'Methods'
+            ],
+            [
+                'id' => 5,
+                'name' => 'Technical Info',
+                'slug' => 'TechnicalInfo'
+            ],
+            [
+                'id' => 6,
+                'name' => 'Other',
+                'slug' => 'Other'
+            ]
+        ];
+    }
+
+    /**
+     * Forces description types cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshDescriptionTypesCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/description-types/elmo',
+            'description types',
+            $this->getDescriptionTypesCacheFile()
+        );
+    }
+
+    /**
+     * Gets description types cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getDescriptionTypesCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getDescriptionTypesCacheFile());
     }
 
     // ──────────────────────────────────────────────────────────────

@@ -62,9 +62,7 @@ function clearInputFields() {
   
     // Clear descriptions
     $('#input-abstract').val('');
-    $('#input-methods').val('');
-    $('#input-technicalinfo').val('');
-    $('#input-other').val('');
+    $('#accordion-description textarea[id^="input-description-"]').val('');
   
     // Clear all Tagify fields
     const tagifySelectors = [
