@@ -166,4 +166,15 @@ test.describe('Author(s) form group', () => {
     expect(isValid).toBe(true);
   });
 
+  test('rejects author last name containing special characters', async ({ page }) => {
+    const lastName = page.locator('#input-author-lastname');
+
+    await lastName.fill('Ali?=§&');
+
+    const isValid = await lastName.evaluate(
+      el => (el as HTMLInputElement).checkValidity()
+    );
+    expect(isValid).toBe(false);
+  });
+
 });
