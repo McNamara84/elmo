@@ -20,7 +20,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   - [Dependencies](#dependencies)
   - [Settings](#settings)
   - [API-Dokumentation](#api-dokumentation)
-  - [Formularfelder](#formularfelder)
+  - [Form fields](#Form-fields)
   - [Data validation](#data-validation)
   - [Data Mapping and Occurences](#data-mapping-and-occurences)
   - [Database structure](#database-structure)
@@ -220,7 +220,7 @@ To install them: npm install
 <details>
   <summary>
 
-  ## Formularfelder
+  ## Form fields
   </summary>
 
 ### Resource Information
