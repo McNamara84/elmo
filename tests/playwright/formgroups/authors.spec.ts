@@ -188,14 +188,19 @@ test.describe('Author(s) form group', () => {
   });
 
 
-  test('rejects author last name containing special characters', async ({ page }) => {
+  test('rejects author last names with digits or forbidden symbols', async ({ page }) => {
     const lastName = page.locator('#input-author-lastname');
 
-    await lastName.fill('Ali?=§&');
+    await lastName.fill('Ali123');
+    let isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(false);
 
-    const isValid = await lastName.evaluate(
-      el => (el as HTMLInputElement).checkValidity()
-    );
+    await lastName.fill('Ali$');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(false);
+
+    await lastName.fill('Ali?=§&');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(false);
   });
 
