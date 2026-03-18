@@ -43,7 +43,7 @@ final class ApiTest extends DatabaseTestCase
         // Database setup from DatabaseTestCase first
         parent::setUp();
 
-        $this->baseUri = rtrim((string) getenv('API_BASE_URL'), '/');
+        $this->baseUri = rtrim((string) (getenv('API_BASE_URL') ?: 'http://localhost:8080'), '/');
 
         $this->projectPath = '';
 

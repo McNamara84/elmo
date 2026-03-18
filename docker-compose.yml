@@ -30,109 +30,13 @@ services:
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       SHOW_USED_INSTRUMENTS: "true"
       SIMULATE_EMAIL: "true"
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
     depends_on:
       - db
     restart: unless-stopped
     volumes:
       # Mount the entire project directory for live code changes.
       # This is only for development. No way to production.
-      - .:/var/www/html
-
-  web-msl:
-    build: .
-    ports:
-      - "8081:80"
-    environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      ROOT_PASSWORD: ${ROOT_PASSWORD}
-      TZ: Europe/Berlin
-      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      ERNIE_URL: ${ERNIE_URL}
-      ERNIE_API_KEY: ${ERNIE_API_KEY}
-      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
-      SIMULATE_EMAIL: "true"
-      SHOW_MSL_LABS: "true"
-      SHOW_MSL_VOCABS: "true"
-      SHOW_MSL_LOGO: "true"
-      SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: "false"
-      SHOW_GCMD_THESAURI: "true"
-      SHOW_FREE_KEYWORDS: "true"
-      SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
-      SHOW_RELATED_WORK: "true"
-      INSTANCE_TITLE: "ELMO MSL Edition – DEV"
-    depends_on:
-      - db
-    restart: unless-stopped
-    volumes:
-      - .:/var/www/html
-
-  web-gem:
-    build: .
-    ports:
-      - "8082:80"
-    environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      ROOT_PASSWORD: ${ROOT_PASSWORD}
-      TZ: Europe/Berlin
-      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      ERNIE_URL: ${ERNIE_URL}
-      ERNIE_API_KEY: ${ERNIE_API_KEY}
-      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
-      SIMULATE_EMAIL: "true"
-      SHOW_MSL_LABS: "false"
-      SHOW_MSL_VOCABS: "false"
-      SHOW_MSL_LOGO: "false"
-      SHOW_GGMS_PROPERTIES: "true"
-      SHOW_USED_INSTRUMENTS: "false"
-      SHOW_GCMD_THESAURI: "true"
-      SHOW_FREE_KEYWORDS: "true"
-      SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
-      SHOW_RELATED_WORK: "true"
-      INSTANCE_TITLE: "ELMO for ICGEM – DEV"
-    depends_on:
-      - db
-    restart: unless-stopped
-    volumes:
-      - .:/var/www/html
-
-  web-igsn:
-    build: .
-    ports:
-      - "8083:80"
-    environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      ROOT_PASSWORD: ${ROOT_PASSWORD}
-      TZ: Europe/Berlin
-      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      ERNIE_URL: ${ERNIE_URL}
-      ERNIE_API_KEY: ${ERNIE_API_KEY}
-      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
-      SIMULATE_EMAIL: "true"
-      DB_INIT_MODE: "keep_data"
-      SHOW_MSL_LABS: "false"
-      SHOW_MSL_VOCABS: "false"
-      SHOW_MSL_LOGO: "false"
-      SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: "true"
-      SHOW_GCMD_THESAURI: "false"
-      SHOW_FREE_KEYWORDS: "false"
-      SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
-      SHOW_RELATED_WORK: "false"
-      INSTANCE_TITLE: "ELMO IGSN Edition – DEV"
-    depends_on:
-      - db
-    restart: unless-stopped
-    volumes:
       - .:/var/www/html
 
 
