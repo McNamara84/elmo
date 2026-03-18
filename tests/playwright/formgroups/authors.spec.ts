@@ -160,30 +160,37 @@ test.describe('Author(s) form group', () => {
 
     let isValid: boolean;
 
+    // Arabic name with spaces
     await lastName.fill('محمد علي');
     isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
 
+    // German name with umlaut
     await lastName.fill('Rüdiger');
     isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
 
+    // Russian name (Cyrillic)
     await lastName.fill('Александр ');
     isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
 
+    // Greek name
     await lastName.fill('Παπαδόπουλος');
     isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
 
+    // Turkish name with hyphen
     await lastName.fill('Çalışkan-Şahin');
     isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
 
+    // Chinese name
     await lastName.fill('王小明');
     isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
 
+    // English name with apostrophe and hyphen
     await lastName.fill("O'Connor-Smith");
     isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(true);
