@@ -154,4 +154,16 @@ test.describe('Author(s) form group', () => {
     await expect(lastName).toHaveValue('Existing');
     await expect(firstName).toHaveValue('Author');
   });
+
+  test('accepts Arabic author last name', async ({ page }) => {
+    const lastName = page.locator('#input-author-lastname');
+
+    await lastName.fill('محمد علي');
+
+    const isValid = await lastName.evaluate(
+      el => (el as HTMLInputElement).checkValidity()
+    );
+    expect(isValid).toBe(true);
+  });
+
 });
