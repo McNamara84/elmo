@@ -1484,7 +1484,7 @@ Meanwhile these variables from required list are not required to publish a GGM:
 
 ## Contributing
 
-We appreciate every contribution to this project! You can use the feedback back form on the test server [link], create an issue on github or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template (only available in german right now!), so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.
+We appreciate every contribution to this project! You can use the feedback back form on the [[test server](https://env.rz-vm182.gfz.de/elmo)], create an issue on github or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template, so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.
 
 ## Testing
 
