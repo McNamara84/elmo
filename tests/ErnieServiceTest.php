@@ -30,6 +30,8 @@ class TestableErnieService extends \ErnieService
     private string $customContributorPersonRolesCacheFile;
     private string $customContributorInstitutionRolesCacheFile;
     private string $customDescriptionTypesCacheFile;
+    private string $customRelationTypesCacheFile;
+    private string $customIdentifierTypesCacheFile;
 
     public function __construct(
         string $cacheFile,
@@ -37,7 +39,9 @@ class TestableErnieService extends \ErnieService
         string $languagesCacheFile = '',
         string $contributorPersonRolesCacheFile = '',
         string $contributorInstitutionRolesCacheFile = '',
-        string $descriptionTypesCacheFile = ''
+        string $descriptionTypesCacheFile = '',
+        string $relationTypesCacheFile = '',
+        string $identifierTypesCacheFile = ''
     ) {
         parent::__construct();
         $this->customCacheFile = $cacheFile;
@@ -46,6 +50,8 @@ class TestableErnieService extends \ErnieService
         $this->customContributorPersonRolesCacheFile = $contributorPersonRolesCacheFile;
         $this->customContributorInstitutionRolesCacheFile = $contributorInstitutionRolesCacheFile;
         $this->customDescriptionTypesCacheFile = $descriptionTypesCacheFile;
+        $this->customRelationTypesCacheFile = $relationTypesCacheFile;
+        $this->customIdentifierTypesCacheFile = $identifierTypesCacheFile;
     }
 
     /**
@@ -95,6 +101,22 @@ class TestableErnieService extends \ErnieService
     {
         return $this->customDescriptionTypesCacheFile ?: $this->customCacheFile;
     }
+
+    /**
+     * Override getRelationTypesCacheFile to use custom path
+     */
+    protected function getRelationTypesCacheFile(): string
+    {
+        return $this->customRelationTypesCacheFile ?: $this->customCacheFile;
+    }
+
+    /**
+     * Override getIdentifierTypesCacheFile to use custom path
+     */
+    protected function getIdentifierTypesCacheFile(): string
+    {
+        return $this->customIdentifierTypesCacheFile ?: $this->customCacheFile;
+    }
 }
 
 /**
@@ -143,6 +165,16 @@ final class ErnieServiceTest extends TestCase
     private string $testDescriptionTypesCacheFile;
 
     /**
+     * @var string Path to test relation types cache file
+     */
+    private string $testRelationTypesCacheFile;
+
+    /**
+     * @var string Path to test identifier types cache file
+     */
+    private string $testIdentifierTypesCacheFile;
+
+    /**
      * Set up test environment
      */
     protected function setUp(): void
@@ -157,6 +189,8 @@ final class ErnieServiceTest extends TestCase
         $this->testContributorPersonRolesCacheFile = $this->testCacheDir . '/ernie_contributor_person_roles.json';
         $this->testContributorInstitutionRolesCacheFile = $this->testCacheDir . '/ernie_contributor_institution_roles.json';
         $this->testDescriptionTypesCacheFile = $this->testCacheDir . '/ernie_description_types.json';
+        $this->testRelationTypesCacheFile = $this->testCacheDir . '/ernie_relation_types.json';
+        $this->testIdentifierTypesCacheFile = $this->testCacheDir . '/ernie_identifier_types.json';
 
         if (!is_dir($this->testCacheDir)) {
             mkdir($this->testCacheDir, 0755, true);
@@ -169,6 +203,9 @@ final class ErnieServiceTest extends TestCase
             $this->testLanguagesCacheFile,
             $this->testContributorPersonRolesCacheFile,
             $this->testContributorInstitutionRolesCacheFile,
+            $this->testDescriptionTypesCacheFile,
+            $this->testRelationTypesCacheFile,
+            $this->testIdentifierTypesCacheFile,
         ] as $cacheFile) {
             if (file_exists($cacheFile)) {
                 unlink($cacheFile);
@@ -188,6 +225,9 @@ final class ErnieServiceTest extends TestCase
             $this->testLanguagesCacheFile,
             $this->testContributorPersonRolesCacheFile,
             $this->testContributorInstitutionRolesCacheFile,
+            $this->testDescriptionTypesCacheFile,
+            $this->testRelationTypesCacheFile,
+            $this->testIdentifierTypesCacheFile,
         ] as $cacheFile) {
             if (file_exists($cacheFile)) {
                 unlink($cacheFile);
@@ -226,7 +266,9 @@ final class ErnieServiceTest extends TestCase
             $this->testLanguagesCacheFile,
             $this->testContributorPersonRolesCacheFile,
             $this->testContributorInstitutionRolesCacheFile,
-            $this->testDescriptionTypesCacheFile
+            $this->testDescriptionTypesCacheFile,
+            $this->testRelationTypesCacheFile,
+            $this->testIdentifierTypesCacheFile
         );
     }
 
@@ -2462,5 +2504,536 @@ final class ErnieServiceTest extends TestCase
             $this->assertIsString($type['name']);
             $this->assertIsString($type['slug']);
         }
+    }
+
+    // ==================== Relation Types: Cache Helper ====================
+
+    /**
+     * Helper to write a test relation types cache file
+     * 
+     * @param array<array{id: int, name: string, description: string|null}> $data
+     */
+    private function writeRelationTypesTestCache(array $data, ?string $lastUpdated = null): void
+    {
+        $cache = [
+            'lastUpdated' => $lastUpdated ?? date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => $data
+        ];
+        file_put_contents($this->testRelationTypesCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Helper to write a test identifier types cache file
+     * 
+     * @param array<array{id: int, name: string, description: string|null, pattern: string|null}> $data
+     */
+    private function writeIdentifierTypesTestCache(array $data, ?string $lastUpdated = null): void
+    {
+        $cache = [
+            'lastUpdated' => $lastUpdated ?? date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => $data
+        ];
+        file_put_contents($this->testIdentifierTypesCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
+    }
+
+    // ==================== Relation Types: getCacheStatus Tests ====================
+
+    /**
+     * Test getRelationTypesCacheStatus when cache doesn't exist
+     */
+    public function testGetRelationTypesCacheStatusWhenCacheDoesNotExist(): void
+    {
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getRelationTypesCacheStatus();
+
+        $this->assertFalse($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertNull($status['lastUpdated']);
+        $this->assertNull($status['age']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    /**
+     * Test getRelationTypesCacheStatus when cache exists and is valid
+     */
+    public function testGetRelationTypesCacheStatusWhenCacheExistsAndValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'IsCitedBy', 'description' => 'indicates that B includes A in a citation'],
+            ['id' => 2, 'name' => 'Cites', 'description' => 'indicates that A includes B in a citation']
+        ];
+        $this->writeRelationTypesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getRelationTypesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertNotNull($status['lastUpdated']);
+        $this->assertIsInt($status['age']);
+        $this->assertSame(2, $status['itemCount']);
+        $this->assertArrayHasKey('ageFormatted', $status);
+        $this->assertArrayHasKey('ttl', $status);
+    }
+
+    /**
+     * Test getRelationTypesCacheStatus when cache exists but is expired
+     */
+    public function testGetRelationTypesCacheStatusWhenCacheExpired(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'IsCitedBy', 'description' => null]
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeRelationTypesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getRelationTypesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertSame(1, $status['itemCount']);
+    }
+
+    // ==================== Relation Types: getRelationTypesWithCache Tests ====================
+
+    /**
+     * Test that getRelationTypesWithCache returns hardcoded fallback when not configured and no cache
+     */
+    public function testGetRelationTypesWithCacheReturnsHardcodedFallbackWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getRelationTypesWithCache();
+
+        $this->assertIsArray($result);
+        $this->assertCount(4, $result);
+        $this->assertSame('IsCitedBy', $result[0]['name']);
+        $this->assertSame('Cites', $result[1]['name']);
+        $this->assertSame('IsSupplementTo', $result[2]['name']);
+        $this->assertSame('IsSupplementedBy', $result[3]['name']);
+    }
+
+    /**
+     * Test that getRelationTypesWithCache returns cached data when cache is valid
+     */
+    public function testGetRelationTypesWithCacheReturnsCachedDataWhenValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'IsCitedBy', 'description' => 'cited'],
+            ['id' => 2, 'name' => 'Cites', 'description' => 'cites'],
+            ['id' => 5, 'name' => 'IsNewVersionOf', 'description' => 'new version']
+        ];
+        $this->writeRelationTypesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getRelationTypesWithCache();
+
+        $this->assertCount(3, $result);
+        $this->assertSame('IsCitedBy', $result[0]['name']);
+        $this->assertSame('Cites', $result[1]['name']);
+        $this->assertSame('IsNewVersionOf', $result[2]['name']);
+    }
+
+    /**
+     * Test that getRelationTypesWithCache returns stale cache when ERNIE unavailable
+     */
+    public function testGetRelationTypesWithCacheReturnsStaleWhenErnieUnavailable(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'IsCitedBy', 'description' => null],
+            ['id' => 2, 'name' => 'Cites', 'description' => null]
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeRelationTypesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://invalid-url-that-does-not-exist.local/', 'test-key');
+        $result = $service->getRelationTypesWithCache();
+
+        $this->assertCount(2, $result);
+        $this->assertSame('IsCitedBy', $result[0]['name']);
+    }
+
+    /**
+     * Test that hardcoded fallback is used when ERNIE fails and no cache exists
+     */
+    public function testRelationTypesHardcodedFallbackUsedWhenErnieFailsAndNoCache(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->getRelationTypesWithCache();
+
+        $this->assertCount(4, $result);
+        $this->assertSame('IsCitedBy', $result[0]['name']);
+        $this->assertSame('IsSupplementedBy', $result[3]['name']);
+    }
+
+    /**
+     * Test that hardcoded relation type fallback has correct structure
+     */
+    public function testHardcodedRelationTypeFallbackHasCorrectStructure(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getRelationTypesWithCache();
+
+        foreach ($result as $type) {
+            $this->assertArrayHasKey('id', $type);
+            $this->assertArrayHasKey('name', $type);
+            $this->assertArrayHasKey('description', $type);
+            $this->assertIsInt($type['id']);
+            $this->assertIsString($type['name']);
+            $this->assertIsString($type['description']);
+        }
+    }
+
+    // ==================== Relation Types: fetchRelationTypes Tests ====================
+
+    /**
+     * Test fetchRelationTypes returns null when not configured
+     */
+    public function testFetchRelationTypesReturnsNullWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->fetchRelationTypes();
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * Test fetchRelationTypes returns null on invalid URL
+     */
+    public function testFetchRelationTypesReturnsNullOnInvalidUrl(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->fetchRelationTypes();
+
+        $this->assertNull($result);
+    }
+
+    // ==================== Relation Types: refreshRelationTypesCache Tests ====================
+
+    /**
+     * Test refreshRelationTypesCache returns false when not configured
+     */
+    public function testRefreshRelationTypesCacheReturnsFalseWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->refreshRelationTypesCache();
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test refreshRelationTypesCache returns false when ERNIE unavailable
+     */
+    public function testRefreshRelationTypesCacheReturnsFalseWhenErnieUnavailable(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->refreshRelationTypesCache();
+
+        $this->assertFalse($result);
+    }
+
+    // ==================== Relation Types: Cache Independence Tests ====================
+
+    /**
+     * Test that relation types cache is independent from other caches
+     */
+    public function testRelationTypesCacheIsIndependentFromOtherCaches(): void
+    {
+        $resourceData = [
+            ['id' => 10, 'name' => 'Dataset', 'description' => null]
+        ];
+        $this->writeTestCache($resourceData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+
+        $resourceStatus = $service->getCacheStatus();
+        $this->assertTrue($resourceStatus['exists']);
+
+        $relationStatus = $service->getRelationTypesCacheStatus();
+        $this->assertFalse($relationStatus['exists']);
+    }
+
+    // ==================== Identifier Types: getCacheStatus Tests ====================
+
+    /**
+     * Test getIdentifierTypesCacheStatus when cache doesn't exist
+     */
+    public function testGetIdentifierTypesCacheStatusWhenCacheDoesNotExist(): void
+    {
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getIdentifierTypesCacheStatus();
+
+        $this->assertFalse($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertNull($status['lastUpdated']);
+        $this->assertNull($status['age']);
+        $this->assertSame(0, $status['itemCount']);
+    }
+
+    /**
+     * Test getIdentifierTypesCacheStatus when cache exists and is valid
+     */
+    public function testGetIdentifierTypesCacheStatusWhenCacheExistsAndValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'DOI', 'description' => 'Digital Object Identifier', 'pattern' => '^10\.\d{4,9}\/'],
+            ['id' => 2, 'name' => 'URL', 'description' => 'Uniform Resource Locator', 'pattern' => '^https?://']
+        ];
+        $this->writeIdentifierTypesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getIdentifierTypesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertTrue($status['valid']);
+        $this->assertNotNull($status['lastUpdated']);
+        $this->assertIsInt($status['age']);
+        $this->assertSame(2, $status['itemCount']);
+        $this->assertArrayHasKey('ageFormatted', $status);
+        $this->assertArrayHasKey('ttl', $status);
+    }
+
+    /**
+     * Test getIdentifierTypesCacheStatus when cache exists but is expired
+     */
+    public function testGetIdentifierTypesCacheStatusWhenCacheExpired(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'DOI', 'description' => null, 'pattern' => null]
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeIdentifierTypesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $status = $service->getIdentifierTypesCacheStatus();
+
+        $this->assertTrue($status['exists']);
+        $this->assertFalse($status['valid']);
+        $this->assertSame(1, $status['itemCount']);
+    }
+
+    // ==================== Identifier Types: getIdentifierTypesWithCache Tests ====================
+
+    /**
+     * Test that getIdentifierTypesWithCache returns hardcoded fallback when not configured and no cache
+     */
+    public function testGetIdentifierTypesWithCacheReturnsHardcodedFallbackWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getIdentifierTypesWithCache();
+
+        $this->assertIsArray($result);
+        $this->assertCount(4, $result);
+        $this->assertSame('DOI', $result[0]['name']);
+        $this->assertSame('URL', $result[1]['name']);
+        $this->assertSame('Handle', $result[2]['name']);
+        $this->assertSame('URN', $result[3]['name']);
+    }
+
+    /**
+     * Test that getIdentifierTypesWithCache returns cached data when cache is valid
+     */
+    public function testGetIdentifierTypesWithCacheReturnsCachedDataWhenValid(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'DOI', 'description' => 'DOI desc', 'pattern' => '^10\.'],
+            ['id' => 2, 'name' => 'URL', 'description' => 'URL desc', 'pattern' => '^https?://'],
+            ['id' => 5, 'name' => 'ISSN', 'description' => 'ISSN desc', 'pattern' => '^\d{4}-\d{3}[\dX]$']
+        ];
+        $this->writeIdentifierTypesTestCache($testData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getIdentifierTypesWithCache();
+
+        $this->assertCount(3, $result);
+        $this->assertSame('DOI', $result[0]['name']);
+        $this->assertSame('URL', $result[1]['name']);
+        $this->assertSame('ISSN', $result[2]['name']);
+    }
+
+    /**
+     * Test that getIdentifierTypesWithCache returns stale cache when ERNIE unavailable
+     */
+    public function testGetIdentifierTypesWithCacheReturnsStaleWhenErnieUnavailable(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'DOI', 'description' => null, 'pattern' => '^10\.'],
+            ['id' => 2, 'name' => 'URL', 'description' => null, 'pattern' => '^https?://']
+        ];
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeIdentifierTypesTestCache($testData, $expiredTime);
+
+        $service = $this->createTestableService('https://invalid-url-that-does-not-exist.local/', 'test-key');
+        $result = $service->getIdentifierTypesWithCache();
+
+        $this->assertCount(2, $result);
+        $this->assertSame('DOI', $result[0]['name']);
+    }
+
+    /**
+     * Test that hardcoded fallback is used when ERNIE fails and no cache exists
+     */
+    public function testIdentifierTypesHardcodedFallbackUsedWhenErnieFailsAndNoCache(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->getIdentifierTypesWithCache();
+
+        $this->assertCount(4, $result);
+        $this->assertSame('DOI', $result[0]['name']);
+        $this->assertSame('URN', $result[3]['name']);
+    }
+
+    /**
+     * Test that hardcoded identifier type fallback has correct structure including pattern
+     */
+    public function testHardcodedIdentifierTypeFallbackHasCorrectStructure(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getIdentifierTypesWithCache();
+
+        foreach ($result as $type) {
+            $this->assertArrayHasKey('id', $type);
+            $this->assertArrayHasKey('name', $type);
+            $this->assertArrayHasKey('description', $type);
+            $this->assertArrayHasKey('pattern', $type);
+            $this->assertIsInt($type['id']);
+            $this->assertIsString($type['name']);
+            $this->assertIsString($type['description']);
+            $this->assertIsString($type['pattern']);
+        }
+    }
+
+    /**
+     * Test that hardcoded identifier type fallback patterns are valid regex
+     */
+    public function testHardcodedIdentifierTypeFallbackPatternsAreValidRegex(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getIdentifierTypesWithCache();
+
+        foreach ($result as $type) {
+            if (!empty($type['pattern'])) {
+                // Test that the pattern is valid by attempting to use it (use # delimiter to avoid conflicts with / in patterns)
+                $regexResult = @preg_match('#' . $type['pattern'] . '#i', '');
+                $this->assertNotFalse($regexResult, "Pattern for {$type['name']} is not a valid regex: {$type['pattern']}");
+            }
+        }
+    }
+
+    // ==================== Identifier Types: fetchIdentifierTypes Tests ====================
+
+    /**
+     * Test fetchIdentifierTypes returns null when not configured
+     */
+    public function testFetchIdentifierTypesReturnsNullWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->fetchIdentifierTypes();
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * Test fetchIdentifierTypes returns null on invalid URL
+     */
+    public function testFetchIdentifierTypesReturnsNullOnInvalidUrl(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->fetchIdentifierTypes();
+
+        $this->assertNull($result);
+    }
+
+    // ==================== Identifier Types: refreshIdentifierTypesCache Tests ====================
+
+    /**
+     * Test refreshIdentifierTypesCache returns false when not configured
+     */
+    public function testRefreshIdentifierTypesCacheReturnsFalseWhenNotConfigured(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->refreshIdentifierTypesCache();
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test refreshIdentifierTypesCache returns false when ERNIE unavailable
+     */
+    public function testRefreshIdentifierTypesCacheReturnsFalseWhenErnieUnavailable(): void
+    {
+        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
+        $result = $service->refreshIdentifierTypesCache();
+
+        $this->assertFalse($result);
+    }
+
+    // ==================== Identifier Types: Cache Independence Tests ====================
+
+    /**
+     * Test that identifier types cache is independent from other caches
+     */
+    public function testIdentifierTypesCacheIsIndependentFromOtherCaches(): void
+    {
+        $resourceData = [
+            ['id' => 10, 'name' => 'Dataset', 'description' => null]
+        ];
+        $this->writeTestCache($resourceData);
+
+        $relationData = [
+            ['id' => 1, 'name' => 'IsCitedBy', 'description' => null]
+        ];
+        $this->writeRelationTypesTestCache($relationData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+
+        $resourceStatus = $service->getCacheStatus();
+        $this->assertTrue($resourceStatus['exists']);
+
+        $relationStatus = $service->getRelationTypesCacheStatus();
+        $this->assertTrue($relationStatus['exists']);
+
+        $identifierStatus = $service->getIdentifierTypesCacheStatus();
+        $this->assertFalse($identifierStatus['exists']);
+    }
+
+    /**
+     * Test that relation types and identifier types caches work independently
+     */
+    public function testRelationAndIdentifierTypesCachesAreIndependent(): void
+    {
+        $relationData = [
+            ['id' => 1, 'name' => 'IsCitedBy', 'description' => null]
+        ];
+        $this->writeRelationTypesTestCache($relationData);
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+
+        $relationStatus = $service->getRelationTypesCacheStatus();
+        $this->assertTrue($relationStatus['exists']);
+        $this->assertSame(1, $relationStatus['itemCount']);
+
+        $identifierStatus = $service->getIdentifierTypesCacheStatus();
+        $this->assertFalse($identifierStatus['exists']);
+
+        // Now write identifier types cache
+        $identifierData = [
+            ['id' => 1, 'name' => 'DOI', 'description' => null, 'pattern' => '^10\.'],
+            ['id' => 2, 'name' => 'URL', 'description' => null, 'pattern' => '^https?://']
+        ];
+        $this->writeIdentifierTypesTestCache($identifierData);
+
+        $identifierStatus2 = $service->getIdentifierTypesCacheStatus();
+        $this->assertTrue($identifierStatus2['exists']);
+        $this->assertSame(2, $identifierStatus2['itemCount']);
+
+        // Relation types cache should still be intact
+        $relationStatus2 = $service->getRelationTypesCacheStatus();
+        $this->assertTrue($relationStatus2['exists']);
+        $this->assertSame(1, $relationStatus2['itemCount']);
     }
 }
