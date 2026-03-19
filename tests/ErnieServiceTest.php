@@ -435,10 +435,12 @@ final class ErnieServiceTest extends TestCase
         $result = $service->getResourceTypesWithCache();
 
         $this->assertIsArray($result);
-        // Should return hardcoded fallback (Dataset and Other)
-        $this->assertCount(2, $result);
-        $this->assertSame('Dataset', $result[0]['name']);
-        $this->assertSame('Other', $result[1]['name']);
+        // Should return hardcoded fallback (Award, Dataset, Other, Project)
+        $this->assertCount(4, $result);
+        $this->assertSame('Award', $result[0]['name']);
+        $this->assertSame('Dataset', $result[1]['name']);
+        $this->assertSame('Other', $result[2]['name']);
+        $this->assertSame('Project', $result[3]['name']);
     }
 
     /**
@@ -683,17 +685,27 @@ final class ErnieServiceTest extends TestCase
         $service = $this->createTestableService('', '');
         $result = $service->getResourceTypesWithCache();
 
-        $this->assertCount(2, $result);
+        $this->assertCount(4, $result);
         
-        // Verify Dataset
-        $this->assertSame(10, $result[0]['id']);
-        $this->assertSame('Dataset', $result[0]['name']);
+        // Verify Award
+        $this->assertSame(2, $result[0]['id']);
+        $this->assertSame('Award', $result[0]['name']);
         $this->assertNotEmpty($result[0]['description']);
         
-        // Verify Other
-        $this->assertSame(21, $result[1]['id']);
-        $this->assertSame('Other', $result[1]['name']);
+        // Verify Dataset
+        $this->assertSame(10, $result[1]['id']);
+        $this->assertSame('Dataset', $result[1]['name']);
         $this->assertNotEmpty($result[1]['description']);
+        
+        // Verify Other
+        $this->assertSame(21, $result[2]['id']);
+        $this->assertSame('Other', $result[2]['name']);
+        $this->assertNotEmpty($result[2]['description']);
+        
+        // Verify Project
+        $this->assertSame(23, $result[3]['id']);
+        $this->assertSame('Project', $result[3]['name']);
+        $this->assertNotEmpty($result[3]['description']);
     }
 
     /**
@@ -706,9 +718,11 @@ final class ErnieServiceTest extends TestCase
         $result = $service->getResourceTypesWithCache();
 
         // Should use hardcoded fallback
-        $this->assertCount(2, $result);
-        $this->assertSame('Dataset', $result[0]['name']);
-        $this->assertSame('Other', $result[1]['name']);
+        $this->assertCount(4, $result);
+        $this->assertSame('Award', $result[0]['name']);
+        $this->assertSame('Dataset', $result[1]['name']);
+        $this->assertSame('Other', $result[2]['name']);
+        $this->assertSame('Project', $result[3]['name']);
     }
 
     // ==================== Title Types: getTitleTypesCacheStatus() Tests ====================
