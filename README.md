@@ -28,6 +28,9 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
   - [Database structure](#database-structure)
   - [Contributing](#contributing)
   - [Testing](#testing)
+    - [PHPUnit (PHP Backend Tests)](#phpunit-php-backend-tests)
+    - [Jest (JavaScript Unit Tests)](#jest-javascript-unit-tests)
+    - [Playwright (End-to-End Tests)](#playwright-end-to-end-tests)
 
 ## Main Features
 - Simple mapping of entered data using XSLT.
@@ -1568,64 +1571,105 @@ We appreciate every contribution to this project! You can use the feedback back 
 ## Testing
 
 > [!NOTE]
-> In order to run the tests, the dependencies must first be loaded via `composer install` and `npm install`.
+> Dependencies must be installed first: `composer install` and `npm install`.
 
-### Test Database & User Management
+ELMO uses three test frameworks:
 
-ELMO's test suite uses a two-tier database user setup:
-- **Bootstrap (root):** Creates the test database and grants privileges
-- **Execution (elmo user):** All tests run with the unprivileged `elmo` user
+| Framework | Scope | Command | Config |
+|-----------|-------|---------|--------|
+| **PHPUnit** | PHP backend (save pipeline, API, DB) | `composer test` | `phpunit.xml` |
+| **Jest** | JavaScript unit tests | `npm test` | `jest.config.js` |
+| **Playwright** | End-to-end browser tests | `npx playwright test` | `playwright.config.ts` |
 
-### Overview
+---
 
-ELMO's test suite uses different database user credentials depending on the execution environment (local Docker or CI/CD):
-- **Local Development (Docker):** Uses `root` user to set up the test database, then switches to the `elmo` user for actual test execution.
-- **CI/CD Environment (GitHub Actions/GitLab):** Uses a pre-configured `test_user` account with restricted privileges.
+### PHPUnit (PHP Backend Tests)
 
-This two-tier approach ensures:
-1. **Test isolation:** Each test suite gets a fresh database schema
-2. **User privilege separation:** Tests always run with limited user permissions (not root)
-3. **CI/CD compatibility:** Different environments can have different user setup strategies
+Tests live in `tests/` and extend `tests/DatabaseTestCase.php`, which handles database setup automatically.
 
-### Local Development Setup
+**Database user management:** The test suite uses a two-tier approach:
+- **Local (Docker):** Root user bootstraps the test database and grants privileges to the `elmo` user. Tests then run as `elmo`.
+- **CI (GitHub Actions):** A pre-configured `test_user` / `test_password` account is used directly.
 
-When running tests locally in Docker, the `tests/DatabaseTestCase.php` base class handles the following:
-
-**1. Environment Variable Loading**
-- The `.env` file is automatically parsed and loaded at test startup
-- This ensures database credentials (`DB_USER`, `DB_PASSWORD`, `DB_HOST`, `ROOT_PASSWORD`) are available via `getenv()`
-
-**2. Root Connection (Bootstrapping Only)** Root user connects → Creates test database → Grants privileges to elmo user (or whichever credentials are included into you .env) → Closes root connection
-
-### CI/CD Environment Setup
-
-In GitHub Actions or GitLab CI, the `tests/DatabaseTestCase.php` detects the `CI` or `GITHUB_ACTIONS` environment variable and uses a different strategy:
-
-**1. Pre-configured Test User**
-- Username: `test_user` (hardcoded in test code)
-- Password: `test_password` (hardcoded in test code)
-- Host: `127.0.0.1` (local CI runner)
-- This user is configured in the CI environment and already has all necessary privileges
-
-**2. Database Creation**
-- The test user can directly create databases and select them
-- No root user interaction required
-
-### Running Tests Locally
-
-Enter the Docker container and run tests:
+**Running PHPUnit locally (inside Docker container):**
 
 ```bash
-docker exec -it web bash
-composer test -- --filter SaveAuthorsTest
+docker exec -it elmo-web-1 bash
+composer test                              # run all tests
+composer test -- --filter SaveAuthorsTest   # run a specific test class
+./vendor/bin/phpunit tests/SaveAuthorsTest.php --filter "DataSources"  # alternative
+```
 
-- `composer run test` runs the tests in `tests/`
-- `npm test` runs the JavaScript tests in `tests/js/`
+**PHPStan (static analysis):**
 
-in case it does not work try:
-'./vendor/bin/phpunit testToRun.php --filter "DataSources"'
+```bash
+./vendor/bin/phpstan analyze file-to-analyze.php
+```
 
-for PHPStan:
+---
 
-'./vendor/bin/phpstan analyze file-to-analyze.php'
+### Jest (JavaScript Unit Tests)
+
+Runs in a jsdom environment. Tests live in `tests/js/`.
+
+```bash
+npm test            # run all JS unit tests
+npm test -- --watch # run in watch mode
+```
+
+---
+
+### Playwright (End-to-End Tests)
+
+Playwright tests live in `tests/playwright/` and run against the four ELMO Docker instances:
+
+| Playwright Project | Browser | ELMO Instance | URL |
+|--------------------|---------|---------------|-----|
+| `chromium` | Chromium | Standard | `http://localhost:8080/` |
+| `webkit` | WebKit (Safari) | MSL Edition | `http://localhost:8081/` |
+| `firefox-gem` | Firefox | ICGEM Edition | `http://localhost:8082/` |
+| `firefox-igsn` | Firefox | IGSN Edition | `http://localhost:8083/` |
+
+#### Prerequisites
+
+1. **Docker containers running** with all four instances:
+   ```bash
+   docker compose up -d
+   ```
+   Verify all services are healthy and reachable (ports 8080–8083).
+
+2. **Playwright browsers installed:**
+   ```bash
+   npx playwright install
+   # If system dependencies are missing (Linux):
+   sudo npx playwright install-deps
+   ```
+
+#### Running Playwright Tests
+
+```bash
+# Run all tests (all browsers/projects)
+npx playwright test
+
+# Run only one project (e.g. only Chromium / Standard instance)
+npx playwright test --project=chromium
+
+# Run a specific test file
+npx playwright test tests/playwright/formgroups/authors.spec.ts
+
+# Run tests with visible browser (headed mode)
+npx playwright test --headed --project=chromium
+
+# Run a single test by title
+npx playwright test -g "populates author details"
+
+# Show the HTML report after a test run
+npx playwright show-report
+```
+
+#### Troubleshooting
+
+- **`browserType.launch: Executable doesn't exist`** → Run `npx playwright install` to download the required browser binaries.
+- **Tests fail with connection errors** → Ensure Docker containers are running (`docker compose ps`) and ports 8080–8083 are accessible.
+- **WebKit/Firefox tests fail locally on Linux** → Some Linux distributions require additional system libraries. Run `sudo npx playwright install-deps` or install the packages listed in the error output.
 

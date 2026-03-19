@@ -60,6 +60,11 @@ function saveContributorPersons($connection, $postData, $resource_id)
             continue;
         }
 
+        // Skip if lastname is empty (required field)
+        if (empty($entry['lastname'])) {
+            continue;
+        }
+
         // Get or create contributor person
         $contributor_person_id = saveOrUpdateContributorPerson($connection, $entry['lastname'], $entry['firstname'], $entry['orcid']);
 

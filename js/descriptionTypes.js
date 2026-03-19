@@ -47,6 +47,14 @@ const SLUG_TO_HELP_ID = {
  */
 function initDescriptionTypes() {
   return new Promise(function (resolve) {
+    // ELMOGEM/ICGEM mode uses its own static description panels
+    // (GGMsDescriptions.html) – skip dynamic loading to avoid duplicates.
+    if (window.ELMO_FEATURES && window.ELMO_FEATURES.showGGMsProperties) {
+      window.ELMO_ACTIVE_DESCRIPTION_TYPES = [];
+      resolve([]);
+      return;
+    }
+
     $.ajax({
       url: 'api/v2/vocabs/descriptiontypes',
       method: 'GET',

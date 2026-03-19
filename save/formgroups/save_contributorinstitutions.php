@@ -54,6 +54,11 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
             continue;
         }
 
+        // Skip if roles are empty (required field)
+        if (empty($entry['roles'])) {
+            continue;
+        }
+
         $contributor_institution_id = saveOrUpdateContributorInstitution($connection, $entry['name']);
 
         if (!$contributor_institution_id) {

@@ -11,9 +11,7 @@ async function navigateToFeedbackModal(page: Page) {
   await navigateToHome(page);
 
   const feedbackButton = page.locator('#button-feedback-openmodalfooter');
-  if (!(await feedbackButton.isVisible())) {
-    test.skip(true, 'Feedback feature is disabled via feature flag.');
-  }
+  await expect(feedbackButton).toBeVisible();
 
   await feedbackButton.click();
 
@@ -85,9 +83,7 @@ test.describe('Feedback Security Features', () => {
       );
 
       const feedbackButton = page.locator('#button-feedback-openmodalfooter');
-      if (!(await feedbackButton.isVisible())) {
-        test.skip(true, 'Feedback feature is disabled via feature flag.');
-      }
+      await expect(feedbackButton).toBeVisible();
 
       await feedbackButton.click();
       const feedbackModal = page.locator(SELECTORS.modals.feedback);

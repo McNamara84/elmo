@@ -51,18 +51,24 @@ export async function completeExtendedDatasetForm(page: Page) {
   // Add Free Keywords (using tagify - Enter key)
   await addFreeKeyword(page, exampleData.extended.keywords[0]);
 
-  // Add Descriptions - Abstract already filled by completeMinimalDatasetForm
-  // Fill Methods section
-  await page.locator('button[data-bs-target="#collapse-methods"]').click();
-  await page.locator('#input-methods').fill(exampleData.extended.descriptions.methods);
+  // Add Descriptions - Abstract already filled by completeMinimalDatasetForm.
+  // Description types other than Abstract are loaded dynamically from the ERNIE
+  // API, so we must wait for them to appear in the DOM first.
+  await page.waitForFunction(
+    () => document.querySelectorAll('#accordion-description .accordion-item[data-description-slug]').length > 0,
+    { timeout: 15000 },
+  );
 
-  // Fill Technical Information section
-  await page.locator('button[data-bs-target="#collapse-technicalinfo"]').click();
-  await page.locator('#input-technicalinfo').fill(exampleData.extended.descriptions.technicalInfo);
-
-  // Fill Other section
-  await page.locator('button[data-bs-target="#collapse-other"]').click();
-  await page.locator('#input-other').fill(exampleData.extended.descriptions.other);
+  const descriptionFields: Array<[string, string, string]> = [
+    ['#collapse-description-Methods', '#input-description-Methods', exampleData.extended.descriptions.methods],
+    ['#collapse-description-TechnicalInfo', '#input-description-TechnicalInfo', exampleData.extended.descriptions.technicalInfo],
+    ['#collapse-description-Other', '#input-description-Other', exampleData.extended.descriptions.other],
+  ];
+  for (const [collapseId, inputId, value] of descriptionFields) {
+    await page.locator(`[data-bs-target="${collapseId}"]`).click();
+    await page.locator(collapseId).waitFor({ state: 'visible' });
+    await page.fill(inputId, value);
+  }
 
   // Add Funding Reference entries
   await addFundingReference(page, 0, exampleData.extended.fundingReferences[0]);
@@ -113,6 +119,21 @@ export async function completeExtendedMultipleEntries(page: Page) {
 }
 
 // ============ Helper Functions ============
+
+/**
+ * Waits for a Bootstrap accordion collapse transition to complete.
+ * Ensures the section has fully opened (has 'show' class, no 'collapsing' class).
+ */
+async function waitForAccordionTransition(page: Page, collapseSelector: string) {
+  await page.waitForFunction(
+    (selector: string) => {
+      const el = document.querySelector(selector);
+      return el && el.classList.contains('show') && !el.classList.contains('collapsing');
+    },
+    collapseSelector,
+    { timeout: 5000 }
+  );
+}
 
 /**
  * Adds an author institution entry with institution name and affiliation.
@@ -397,34 +418,49 @@ async function addAuthor(
 ) {
   if (index > 0) {
     await page.locator('#button-author-add').click();
-    await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index).waitFor({ state: 'visible' });
+    await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index).waitFor({ state: 'visible', timeout: 5000 });
   }
 
   const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index);
 
-  await authorRow.locator('[id^="input-author-orcid"]').fill(data.orcid);
+  // Set ORCID via evaluate() to avoid triggering the blur-based ORCID lookup.
+  // The lookup would asynchronously populate name/affiliation fields via the ORCID API,
+  // racing with our explicit fill() calls below and causing doubled values.
+  const orcidField = authorRow.locator('[id^="input-author-orcid"]');
+  await orcidField.waitFor({ state: 'visible', timeout: 5000 });
+  await orcidField.evaluate((el: HTMLInputElement, val: string) => {
+    el.value = val;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }, data.orcid);
+
   const lastNameField = authorRow.locator('[id^="input-author-lastname"]');
-  await lastNameField.click();
-  await expect(lastNameField).toBeFocused();
-  await lastNameField.clear();
+  await lastNameField.waitFor({ state: 'visible', timeout: 5000 });
   await lastNameField.fill(data.lastName);
-  await authorRow.locator('[id^="input-author-firstname"]').fill(data.firstName);
+  await expect(lastNameField).toHaveValue(data.lastName);
 
-  // Fill affiliation using tagify within the author row
-  const affiliationTagifyInput = authorRow.locator('.tagify__input[title="Affiliation"]');
-  await affiliationTagifyInput.waitFor({ state: 'visible', timeout: 5000 });
-  await affiliationTagifyInput.click();
-  await affiliationTagifyInput.type(data.affiliation);
-  await page.keyboard.press('Enter');
+  const firstNameField = authorRow.locator('[id^="input-author-firstname"]');
+  await firstNameField.waitFor({ state: 'visible', timeout: 5000 });
+  await firstNameField.fill(data.firstName);
+  await expect(firstNameField).toHaveValue(data.firstName);
 
-  // Wait for it to be in Tagify's internal state within the author row
-  const authorRowElement = await authorRow.evaluate((element) => {
-    const input = element.querySelector('input[name*="affiliation"]') as any;
-    return input?._tagify?.value?.some((tag: any) => tag.value === data.affiliation);
+  // Add affiliation tag via Tagify API directly (more reliable than type+Enter
+  // because Tagify's async API search can block Enter key processing during loading state)
+  const affiliationInput = authorRow.locator('input[id^="input-author-affiliation"]');
+  await expect(async () => {
+    const hasTagify = await affiliationInput.evaluate((el: any) => !!el._tagify);
+    expect(hasTagify).toBe(true);
+  }).toPass({ timeout: 10000 });
+
+  await affiliationInput.evaluate((el: any, affiliation: string) => {
+    el._tagify.addTags([{ value: affiliation }]);
   }, data.affiliation);
 
-  // Extra buffer to ensure tag is fully processed
-  await page.waitForTimeout(500);
+  // Wait for the tagify tag element to appear in the DOM
+  await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5000 });
+
+  // Brief settle time so the next addAuthor call doesn't race with Tagify rendering
+  await page.waitForTimeout(200);
 }
 export { exampleData };
 

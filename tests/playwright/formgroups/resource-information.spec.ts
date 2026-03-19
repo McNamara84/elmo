@@ -60,16 +60,20 @@ test.describe('Resource Information Form Tests', () => {
 
     const languageSelect = page.locator('#input-resourceinformation-language');
     await expect(languageSelect).toBeVisible();
-    await languageSelect.selectOption('1');
-    await expect(languageSelect).toHaveValue('1');
+    // Select English by label text instead of hardcoded DB ID
+    await languageSelect.selectOption({ label: 'English' });
 
     const languageOptions = languageSelect.locator('option');
     const languageCount = await languageOptions.count();
     expect(languageCount).toBeGreaterThanOrEqual(3);
 
-    await expect(languageSelect.locator('option[value="1"]').first()).toHaveText('English');
-    await expect(languageSelect.locator('option[value="2"]').first()).toHaveText('German');
-    await expect(languageSelect.locator('option[value="3"]').first()).toHaveText('French');
+    // Match by visible text instead of DB auto-increment IDs, which can
+    // shift when ERNIE syncs additional languages into the Language table.
+    const optionTexts = await languageSelect.locator('option:not([disabled])').allTextContents();
+    expect(optionTexts).toContain('English');
+    expect(optionTexts).toContain('German');
+    // Note: French may not be available when ERNIE is configured and returns
+    // a subset of languages, so we only assert English and German.
   });
 
   test('Test add title button functionality', async ({ page }) => {
