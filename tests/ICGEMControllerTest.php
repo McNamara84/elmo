@@ -1436,15 +1436,15 @@ EOT;
 
         $xml = <<<EOT
 <?xml version="1.0"?>
-<root xsi:schemaLocation="file:C:\\Users\\user\\Documents\\DataCiteSchema45.xsd">
+<root xsi:schemaLocation="file:C:\\Users\\user\\Documents\\DataCiteSchema46.xsd">
   <element>data</element>
 </root>
 EOT;
 
         $result = $method->invoke($this->controller, $xml);
 
-        $this->assertStringNotContainsString('file:C:\\', $result);
-        $this->assertStringNotContainsString('DataCiteSchema45.xsd', $result);
+        $this->assertStringNotContainsString('file:C\\', $result);
+        $this->assertStringNotContainsString('DataCiteSchema46.xsd', $result);
         $this->assertStringContainsString('http://schema.datacite.org/meta/kernel-4/metadata.xsd', $result);
     }
 
@@ -1459,7 +1459,7 @@ EOT;
 
         $xml = <<<EOT
 <?xml version="1.0"?>
-<root xsi:schemaLocation="file:D:\\path\\to\\DataCiteSchema45.xsd http://example.com file:/path/unix/DataCiteSchema45.xsd">
+<root xsi:schemaLocation="file:D:\\path\\to\\DataCiteSchema46.xsd http://example.com file:/path/unix/DataCiteSchema46.xsd">
 </root>
 EOT;
 

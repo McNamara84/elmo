@@ -964,7 +964,7 @@ function fillTemporalFields($row, temporalData) {
  */
 function processSpatialTemporalCoverages(xmlDoc, resolver) {
   const geoLocationNodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Coverage"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
     const geoData = getGeoLocationData(geoLocationNodes.snapshotItem(i));
