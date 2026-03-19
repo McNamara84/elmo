@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include_once "../settings.php";
 ?>
 <!DOCTYPE html>
@@ -1014,57 +1014,35 @@ include_once "../settings.php";
                 <div id="help-relatedwork-relation">
                     <h4>Relation Type</h4>
                     <p>The following different relation types are available for selection:</p>
-                    <ul>
-                        <li><strong>IsCitedBy:</strong> indicates that B includes A in a citation</li>
-                        <li><strong>Cites:</strong> indicates that A includes B in a citation</li>
-                        <li><strong>IsSupplementTo:</strong> indicates that A is a supplement to B</li>
-                        <li><strong>IsSupplementedBy:</strong> indicates that B is a supplement to A</li>
-                        <li><strong>IsContinuedBy:</strong> indicates A is continued by the work B</li>
-                        <li><strong>Continues:</strong> indicates A is a continuation of the work B</li>
-                        <li><strong>Describes:</strong> indicates A describes B</li>
-                        <li><strong>IsDescribedBy:</strong> indicates A is described by B</li>
-                        <li><strong>HasMetadata:</strong> indicates resource A has additional metadata B</li>
-                        <li><strong>IsMetadataFor:</strong> indicates additional metadata A for a resource B
-                        </li>
-                        <li><strong>HasVersion:</strong> indicates A has a version B</li>
-                        <li><strong>IsVersionOf:</strong> indicates A is a version of B</li>
-                        <li><strong>IsNewVersionOf:</strong> indicates A is a new edition of B, where the new
-                            edition has been modified or updated</li>
-                        <li><strong>IsPreviousVersionOf:</strong> indicates A is a previous edition of B</li>
-                        <li><strong>IsPartOf:</strong> indicates A is a portion of B; may be used for elements
-                            of a series</li>
-                        <li><strong>HasPart:</strong> indicates A includes the part B</li>
-                        <li><strong>IsPublishedIn:</strong> indicates A is published inside B, but is
-                            independent of other things published inside of B</li>
-                        <li><strong>IsReferencedBy:</strong> indicates A is used as a source of information by B
-                        </li>
-                        <li><strong>References:</strong> indicates B is used as a source of information for A
-                        </li>
-                        <li><strong>IsDocumentedBy:</strong> indicates B is documentation about/explaining A (e.g.
-                            points to software documentation or a data report)
-                        </li>
-                        <li><strong>Documents:</strong> indicates A is documentation about/explaining B (e.g. points
-                            to
-                            software documentation or a data report)</li>
-                        <li><strong>IsCompiledBy:</strong> indicates B is used to compile or create A</li>
-                        <li><strong>Compiles:</strong> indicates B is the result of a compile or creation event
-                            using A</li>
-                        <li><strong>IsVariantFormOf:</strong> indicates A is a variant or different form of B
-                        </li>
-                        <li><strong>IsOriginalFormOf:</strong> indicates A is the original form of B</li>
-                        <li><strong>IsIdenticalTo:</strong> indicates that A is identical to B, for use when
-                            there is a need to register two separate instances of the same resource</li>
-                        <li><strong>IsReviewedBy:</strong> indicates that A is reviewed by B</li>
-                        <li><strong>Reviews:</strong> indicates that A is a review of B</li>
-                        <li><strong>IsDerivedFrom:</strong> indicates B is a source upon which A is based</li>
-                        <li><strong>IsSourceOf:</strong> indicates A is a source upon which B is based</li>
-                        <li><strong>IsRequiredBy:</strong> Indicates A is required by B</li>
-                        <li><strong>Requires:</strong> Indicates A requires B</li>
-                        <li><strong>Obsoletes:</strong> Indicates A replaces B</li>
-                        <li><strong>IsObsoletedBy:</strong> Indicates A is replaced by B</li>
-                        <li><strong>IsCollectedBy:</strong> Indicates A is collected by B</li>
-                        <li><strong>Collects:</strong> Indicates A collects B</li>
-                    </ul>
+                    <?php
+                    // Fetch relation types dynamically from ERNIE API (with cache/fallback)
+                    require_once __DIR__ . '/../api/v2/services/ErnieService.php';
+
+                    try {
+                        if (!isset($ernieService)) {
+                            $ernieService = new ErnieService();
+                        }
+                        $relationTypes = $ernieService->getRelationTypesWithCache();
+
+                        if (is_array($relationTypes) && count($relationTypes) > 0) {
+                            echo '<ul>';
+                            foreach ($relationTypes as $type) {
+                                $name = htmlspecialchars($type['name'] ?? '');
+                                $description = htmlspecialchars($type['description'] ?? '');
+                                echo '<li><strong>' . $name . ':</strong>';
+                                if (!empty($description)) {
+                                    echo ' ' . $description;
+                                }
+                                echo '</li>';
+                            }
+                            echo '</ul>';
+                        } else {
+                            echo '<p><em>No relation types available.</em></p>';
+                        }
+                    } catch (Throwable $e) {
+                        echo '<p><em>Relation types list could not be loaded. Please refer to the dropdown in the form.</em></p>';
+                    }
+                    ?>
                 </div>
                 <div id="help-relatedwork-identifier">
                     <h4>Identifier</h4>
@@ -1073,27 +1051,34 @@ include_once "../settings.php";
                 <div id="help-relatedwork-identifiertype">
                     <h4>Identifier Type</h4>
                     <p>The type of the Related Identifier.</p>
-                    <ul>
-                        <li><strong>ARK:</strong> A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements).</li>
-                        <!-- arXiv: Repository for scientific preprints in math, physics, astronomy, etc. -->
-                        <!-- bibcode: Standardized 19-character identifier for scientific literature. -->
-                        <li><strong>DOI:</strong> A character string used to uniquely identify an object. Format should be 10.ORGANISATION/ID.</li>
-                        <!-- EAN13: 13-digit barcode standard, superset of UPC. -->
-                        <!-- EISSN: Electronic ISSN for periodicals. -->
-                        <li><strong>Handle:</strong> This refers specifically to an ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).</li>
-                        <li><strong>IGSN:</strong> A code that uniquely identifies samples from our natural environment and related features-of-interest.</li>
-                        <!-- ISBN: Unique book identifier, 10 or 13 digits. -->
-                        <!-- ISSN: 8-digit identifier for periodicals. -->
-                        <!-- ISTC: Unique number for textual works, 16 characters. -->
-                        <!-- LISSN: Linking ISSN for collocation among media versions. -->
-                        <li><strong>LSID:</strong> A unique identifier for data in the Life Science domain. Format: urn:lsid:authority:namespace:identifier:revision.</li>
-                        <!-- PMID: Unique number for PubMed records. -->
-                        <!-- PURL: Persistent URL with protocol, resolver, and name. -->
-                        <!-- UPC: Barcode for trade items, 12 digits. -->
-                        <li><strong>URL:</strong> Also known as web address, a URL is a specific character string that constitutes a reference to a resource. The syntax is: scheme://domain:port/path?query_string#fragment_id.</li>
-                        <li><strong>URN:</strong> A Uniform Resource Name (URN) is a type of URI that uses the syntax: urn:&lt;NID&gt;:&lt;NSS&gt;. The leading urn: sequence is case-insensitive, &lt;NID&gt; is the namespace identifier, &lt;NSS&gt; is the namespace-specific string.</li>
-                        <!-- w3id: Used for vocabularies and ontologies, stands for “World Wide Web”. -->
-                    </ul>
+                    <?php
+                    // Fetch identifier types dynamically from ERNIE API (with cache/fallback)
+                    try {
+                        if (!isset($ernieService)) {
+                            require_once __DIR__ . '/../api/v2/services/ErnieService.php';
+                            $ernieService = new ErnieService();
+                        }
+                        $identifierTypes = $ernieService->getIdentifierTypesWithCache();
+
+                        if (is_array($identifierTypes) && count($identifierTypes) > 0) {
+                            echo '<ul>';
+                            foreach ($identifierTypes as $type) {
+                                $name = htmlspecialchars($type['name'] ?? '');
+                                $description = htmlspecialchars($type['description'] ?? '');
+                                echo '<li><strong>' . $name . ':</strong>';
+                                if (!empty($description)) {
+                                    echo ' ' . $description;
+                                }
+                                echo '</li>';
+                            }
+                            echo '</ul>';
+                        } else {
+                            echo '<p><em>No identifier types available.</em></p>';
+                        }
+                    } catch (Throwable $e) {
+                        echo '<p><em>Identifier types list could not be loaded. Please refer to the dropdown in the form.</em></p>';
+                    }
+                    ?>
                 </div>
             </div>
             <div class="section-divider"></div>
