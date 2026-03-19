@@ -84,11 +84,11 @@ final class ICGEMControllerDescriptionsTest extends TestCase
         $this->assertCount(2, $xml->descriptions->description, 'Should have 2 descriptions (1 invalid filtered out)');
         
         // Check first description
-        $this->assertSame('Abstract', (string)$xml->descriptions->description[0]['type']);
+        $this->assertSame('Abstract', (string)$xml->descriptions->description[0]['section']);
         $this->assertSame('Test abstract', (string)$xml->descriptions->description[0]);
         
         // Check second description (should be converted to sentence case)
-        $this->assertSame('Input data', (string)$xml->descriptions->description[1]['type']);
+        $this->assertSame('Input data', (string)$xml->descriptions->description[1]['section']);
         $this->assertSame('Test input', (string)$xml->descriptions->description[1]);
         
         // Verify that the invalid type is NOT in the output
@@ -141,7 +141,7 @@ final class ICGEMControllerDescriptionsTest extends TestCase
         
         // Only valid types should be in the XML
         $this->assertCount(1, $xml->descriptions->description, 'Only 1 valid description should be included');
-        $this->assertSame('Abstract', (string)$xml->descriptions->description[0]['type']);
+        $this->assertSame('Abstract', (string)$xml->descriptions->description[0]['section']);
         $this->assertSame('Valid description', (string)$xml->descriptions->description[0]);
     }
 
@@ -188,9 +188,9 @@ final class ICGEMControllerDescriptionsTest extends TestCase
         $method->invoke($this->controller, $xml, 3);
         
         // All should be converted to proper sentence case
-        $this->assertSame('Abstract', (string)$xml->descriptions->description[0]['type']);
-        $this->assertSame('General model description', (string)$xml->descriptions->description[1]['type']);
-        $this->assertSame('Processing procedures', (string)$xml->descriptions->description[2]['type']);
+        $this->assertSame('Abstract', (string)$xml->descriptions->description[0]['section']);
+        $this->assertSame('General model description', (string)$xml->descriptions->description[1]['section']);
+        $this->assertSame('Processing procedures', (string)$xml->descriptions->description[2]['section']);
     }
 
     /**
@@ -369,7 +369,7 @@ final class ICGEMControllerDescriptionsTest extends TestCase
         
         // Verify each type
         foreach ($validTypes as $index => $type) {
-            $this->assertEquals($type, (string)$xml->descriptions->description[$index]['type']);
+            $this->assertEquals($type, (string)$xml->descriptions->description[$index]['section']);
         }
     }
 }

@@ -130,7 +130,7 @@
           },
           {
             "#text": "Sampling rate: 100 Hz. Data format: miniSEED.",
-            "descriptionType": "TechnicalInformation",
+            "descriptionType": "TechnicalInfo",
             "xml:lang": "en"
           },
           {

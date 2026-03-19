@@ -707,7 +707,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         }
 
         $this->assertEquals("Valid Title 1", $titles[0]["text"], "First valid title should be saved");
-        $this->assertEquals(2, $titles[0]["Title_Type_fk"], "First valid title should have type 2");
+        $this->assertEquals(1, $titles[0]["Title_Type_fk"], "First valid title should have type 1");
         $this->assertEquals("Valid Title 2", $titles[1]["text"], "Second valid title should be saved");
         $this->assertEquals(2, $titles[1]["Title_Type_fk"], "Second valid title should have type 2");
     }

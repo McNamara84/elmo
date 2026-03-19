@@ -13,7 +13,6 @@ export default defineConfig({
     ['json', { outputFile: 'test-results.json' }]
   ],
   use: {
-    baseURL: 'http://localhost:8000/',
     trace: 'on-first-retry',
     video: 'off',
     screenshot: 'only-on-failure',
@@ -22,15 +21,36 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], video: 'off' },
+      use: { ...devices['Desktop Chrome'], video: 'off', baseURL: 'http://localhost:8000/' },
+      testMatch: [
+        'features/**/*.spec.ts',
+        'flows/**/*.spec.ts',
+        'formgroups/*.spec.ts',
+      ],
     },
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: 'firefox-gem',
+      use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8001/' },
+      testMatch: [
+        'formgroups/elmogem-specific/**/*.spec.ts',
+        'features/elmo-performance.spec.ts',
+      ],
+    },
+    {
+      name: 'firefox-igsn',
+      use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8002/' },
+      testMatch: [
+        'formgroups/elmoisgn-specific/**/*.spec.ts',
+        'features/elmo-performance.spec.ts',
+      ],
     },
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: { ...devices['Desktop Safari'], baseURL: 'http://localhost:8003/' },
+      testMatch: [
+        'formgroups/elmomsl-specific/**/*.spec.ts',
+        'features/elmo-performance.spec.ts',
+      ],
     },
   ],
 });
