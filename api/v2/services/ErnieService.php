@@ -96,6 +96,16 @@ class ErnieService
     private string $descriptionTypesCacheFile;
 
     /**
+     * @var string Path to the relation types cache file
+     */
+    private string $relationTypesCacheFile;
+
+    /**
+     * @var string Path to the identifier types cache file
+     */
+    private string $identifierTypesCacheFile;
+
+    /**
      * @var array<string, string> Mapping of thesaurus slugs to cache file paths
      */
     private array $thesaurusCacheFiles;
@@ -126,6 +136,8 @@ class ErnieService
         $this->chronostratCacheFile = __DIR__ . '/../../../storage/cache/ernie_chronostrat_timescale.json';
         $this->gemetCacheFile = __DIR__ . '/../../../storage/cache/ernie_gemet.json';
         $this->descriptionTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_description_types.json';
+        $this->relationTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_relation_types.json';
+        $this->identifierTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_identifier_types.json';
         $this->thesaurusCacheFiles = [
             'gcmd-science-keywords' => $this->scienceKeywordsCacheFile,
             'gcmd-platforms' => $this->platformsCacheFile,
@@ -193,6 +205,26 @@ class ErnieService
     protected function getContributorInstitutionRolesCacheFile(): string
     {
         return $this->contributorInstitutionRolesCacheFile;
+    }
+
+    /**
+     * Gets the relation types cache file path
+     * 
+     * @return string Path to the relation types cache file
+     */
+    protected function getRelationTypesCacheFile(): string
+    {
+        return $this->relationTypesCacheFile;
+    }
+
+    /**
+     * Gets the identifier types cache file path
+     * 
+     * @return string Path to the identifier types cache file
+     */
+    protected function getIdentifierTypesCacheFile(): string
+    {
+        return $this->identifierTypesCacheFile;
     }
 
     /**
@@ -1324,5 +1356,157 @@ class ErnieService
         }
 
         return $this->getCacheFileStatus($cacheFile);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Relation Types
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches relation types from ERNIE API
+     * 
+     * @return array<array{id: int, name: string, description: string|null}>|null Array of relation types or null on failure
+     */
+    public function fetchRelationTypes(): ?array
+    {
+        return $this->fetchFromErnie('/api/v1/relation-types/elmo', 'relation types');
+    }
+
+    /**
+     * Gets relation types with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback as last resort
+     * 
+     * @return array<array{id: int, name: string, description: string|null}> Relation types from cache or ERNIE
+     */
+    public function getRelationTypesWithCache(): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/relation-types/elmo',
+            'relation types',
+            $this->getRelationTypesCacheFile(),
+            [$this, 'getHardcodedRelationTypeFallback']
+        );
+    }
+
+    /**
+     * Returns hardcoded fallback relation types
+     * 
+     * This is the absolute last resort when ERNIE, cache, and stale cache are all unavailable.
+     * 
+     * @return array<array{id: int, name: string, description: string|null}> Minimal fallback relation types
+     */
+    private function getHardcodedRelationTypeFallback(): array
+    {
+        return [
+            ['id' => 1, 'name' => 'IsCitedBy', 'description' => 'indicates that B includes A in a citation'],
+            ['id' => 2, 'name' => 'Cites', 'description' => 'indicates that A includes B in a citation'],
+            ['id' => 3, 'name' => 'IsSupplementTo', 'description' => 'indicates that A is a supplement to B'],
+            ['id' => 4, 'name' => 'IsSupplementedBy', 'description' => 'indicates that B is a supplement to A'],
+        ];
+    }
+
+    /**
+     * Forces relation types cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshRelationTypesCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/relation-types/elmo',
+            'relation types',
+            $this->getRelationTypesCacheFile()
+        );
+    }
+
+    /**
+     * Gets relation types cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getRelationTypesCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getRelationTypesCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Identifier Types
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches identifier types from ERNIE API
+     * 
+     * @return array<array{id: int, name: string, description: string|null, pattern: string|null}>|null Array of identifier types or null on failure
+     */
+    public function fetchIdentifierTypes(): ?array
+    {
+        return $this->fetchFromErnie('/api/v1/identifier-types/elmo', 'identifier types');
+    }
+
+    /**
+     * Gets identifier types with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback as last resort
+     * 
+     * @return array<array{id: int, name: string, description: string|null, pattern: string|null}> Identifier types from cache or ERNIE
+     */
+    public function getIdentifierTypesWithCache(): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/identifier-types/elmo',
+            'identifier types',
+            $this->getIdentifierTypesCacheFile(),
+            [$this, 'getHardcodedIdentifierTypeFallback']
+        );
+    }
+
+    /**
+     * Returns hardcoded fallback identifier types
+     * 
+     * This is the absolute last resort when ERNIE, cache, and stale cache are all unavailable.
+     * 
+     * @return array<array{id: int, name: string, description: string|null, pattern: string|null}> Minimal fallback identifier types
+     */
+    private function getHardcodedIdentifierTypeFallback(): array
+    {
+        return [
+            ['id' => 1, 'name' => 'DOI', 'description' => 'A character string used to uniquely identify an object. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.', 'pattern' => '^(?:https?:\/\/(?:dx\\.)?doi\.org\/|doi:)?10\.\d{4,9}\/[\-._;()/:A-Z0-9]+$'],
+            ['id' => 2, 'name' => 'URL', 'description' => 'A specific character string that constitutes a reference to a resource.', 'pattern' => '(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?'],
+            ['id' => 3, 'name' => 'Handle', 'description' => 'An ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).', 'pattern' => '^(hdl:)?\d+(\.\d+)*(\/[^\s]+)?$'],
+            ['id' => 4, 'name' => 'URN', 'description' => 'A unique and persistent identifier of an electronic document.', 'pattern' => '^urn:nbn:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$'],
+        ];
+    }
+
+    /**
+     * Forces identifier types cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshIdentifierTypesCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/identifier-types/elmo',
+            'identifier types',
+            $this->getIdentifierTypesCacheFile()
+        );
+    }
+
+    /**
+     * Gets identifier types cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getIdentifierTypesCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getIdentifierTypesCacheFile());
     }
 }

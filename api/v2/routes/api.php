@@ -101,6 +101,14 @@ return [
     ['POST', '/admin/cache/descriptiontypes/refresh', [new VocabController(), 'refreshDescriptionTypesCache']],
     ['GET', '/admin/cache/descriptiontypes/status', [new VocabController(), 'getDescriptionTypesCacheStatus']],
 
+    // Relation types cache management endpoints
+    ['POST', '/admin/cache/relationtypes/refresh', [new VocabController(), 'refreshRelationTypesCache']],
+    ['GET', '/admin/cache/relationtypes/status', [new VocabController(), 'getRelationTypesCacheStatus']],
+
+    // Identifier types cache management endpoints
+    ['POST', '/admin/cache/identifiertypes/refresh', [new VocabController(), 'refreshIdentifierTypesCache']],
+    ['GET', '/admin/cache/identifiertypes/status', [new VocabController(), 'getIdentifierTypesCacheStatus']],
+
     // Thesauri availability cache management
     ['POST', '/admin/cache/thesauri/availability/refresh', [new VocabController(), 'refreshThesauriAvailabilityCache']],
     ['GET', '/admin/cache/thesauri/availability/status', [new VocabController(), 'getThesauriAvailabilityCacheStatus']]

@@ -116,8 +116,11 @@ class ValidationController
     }
 
     /**
-     * Retrieves all active identifier types (isShown = 1) 
-     * from the Identifier_Type table and returns them as JSON.
+     * Retrieves all active identifier types, preferring ERNIE data with local DB fallback.
+     *
+     * When ERNIE is configured, fetches identifier types from ERNIE (with caching),
+     * syncs to local DB (including patterns), and returns data.
+     * Falls back to local database if ERNIE is unavailable.
      *
      * Each result contains:
      * - name        → the name of the identifier type
@@ -127,6 +130,51 @@ class ValidationController
      * @return void
      */
     public function getActiveIdentifierTypes(): void
+    {
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+            $ernieService = new \ErnieService();
+
+            if ($ernieService->isConfigured(logResult: true)) {
+                $ernieTypes = $ernieService->getIdentifierTypesWithCache();
+
+                if (!empty($ernieTypes)) {
+                    // Sync to local DB (including patterns and isShown flag)
+                    $this->syncIdentifierTypesToDb($ernieTypes);
+
+                    // Return in the same format as before
+                    $identifierTypes = array_map(fn($t) => [
+                        'name' => $t['name'],
+                        'pattern' => $t['pattern'] ?? '',
+                        'description' => $t['description'] ?? '',
+                    ], $ernieTypes);
+
+                    error_log("Identifier Types: Serving " . count($identifierTypes) . " types from ERNIE (cache or fresh)");
+                    http_response_code(200);
+                    header('Content-Type: application/json');
+                    echo json_encode(['identifierTypes' => $identifierTypes]);
+                    return;
+                }
+            }
+
+            // Fallback: Load from local database
+            error_log("Identifier Types: Falling back to local database");
+            $this->getActiveIdentifierTypesFromDb();
+
+        } catch (Exception $e) {
+            error_log("API Error in getActiveIdentifierTypes: " . $e->getMessage());
+            // Fallback to local DB on any error
+            error_log("Identifier Types: Falling back to local database due to error");
+            $this->getActiveIdentifierTypesFromDb();
+        }
+    }
+
+    /**
+     * Fetches active identifier types directly from local database
+     *
+     * @return void Outputs JSON response directly
+     */
+    private function getActiveIdentifierTypesFromDb(): void
     {
         try {
             global $connection;
@@ -147,9 +195,56 @@ class ValidationController
             header('Content-Type: application/json');
             echo json_encode(['identifierTypes' => $identifierTypes]);
         } catch (Exception $e) {
-            error_log("API Error in getActiveIdentifierTypes: " . $e->getMessage());
+            error_log("API Error in getActiveIdentifierTypesFromDb: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['error' => 'An error occurred while retrieving identifier types']);
+        }
+    }
+
+    /**
+     * Syncs ERNIE identifier types to the local database
+     *
+     * Uses INSERT ... ON DUPLICATE KEY UPDATE (upsert) to handle
+     * new, existing by ernie_id, and existing by name records.
+     * Also updates `pattern` and sets `isShown = 1` for ERNIE-provided types.
+     *
+     * @param array<int, array<string, mixed>> $ernieTypes Identifier types from ERNIE
+     * @return void
+     */
+    private function syncIdentifierTypesToDb(array $ernieTypes): void
+    {
+        global $connection;
+
+        $connection->begin_transaction();
+
+        try {
+            foreach ($ernieTypes as $type) {
+                $ernieId = $type['id'] ?? null;
+                $name = $type['name'] ?? null;
+                if (!$ernieId || !$name) {
+                    continue;
+                }
+
+                $desc = $type['description'] ?? null;
+                $pattern = $type['pattern'] ?? null;
+
+                $sql = "INSERT INTO `Identifier_Type` (`ernie_id`, `name`, `description`, `pattern`, `isShown`)
+                        VALUES (?, ?, ?, ?, 1)
+                        ON DUPLICATE KEY UPDATE
+                        `name` = VALUES(`name`),
+                        `description` = VALUES(`description`),
+                        `pattern` = VALUES(`pattern`),
+                        `isShown` = 1,
+                        `ernie_id` = VALUES(`ernie_id`)";
+                $stmt = $connection->prepare($sql);
+                $stmt->bind_param('isss', $ernieId, $name, $desc, $pattern);
+                $stmt->execute();
+            }
+
+            $connection->commit();
+        } catch (\Exception $e) {
+            $connection->rollback();
+            error_log("ERNIE sync to Identifier_Type failed: " . $e->getMessage());
         }
     }
 
