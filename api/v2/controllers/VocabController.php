@@ -1476,6 +1476,7 @@ class VocabController
             }
 
             $connection->commit();
+            error_log("ERNIE sync to $dbTable completed: " . count($items) . " items synced");
             return true;
 
         } catch (\Exception $e) {
@@ -2339,22 +2340,31 @@ class VocabController
             'refreshRelationTypesCache',
             'getRelationTypesCacheStatus',
             'Relation types',
-            function ($ernieService) {
-                $ernieTypes = $ernieService->getRelationTypesWithCache();
-                if (!empty($ernieTypes)) {
-                    $syncItems = array_map(fn($t) => [
-                        'ernie_id' => $t['id'],
-                        'name' => $t['name'],
-                        'description' => $t['description'] ?? null
-                    ], $ernieTypes);
-                    $this->syncErnieToDb('Relation', $syncItems, [
-                        'ernie_id_col' => 'ernie_id',
-                        'name_col' => 'name',
-                        'description_col' => 'description'
-                    ]);
-                }
-            }
+            $this->syncRelationTypesAfterRefresh(...)
         );
+    }
+
+    /**
+     * Syncs relation types to local DB after a cache refresh
+     *
+     * @param \ErnieService $ernieService The ERNIE service instance
+     * @return void
+     */
+    private function syncRelationTypesAfterRefresh(\ErnieService $ernieService): void
+    {
+        $ernieTypes = $ernieService->getRelationTypesWithCache();
+        if (!empty($ernieTypes)) {
+            $syncItems = array_map(fn($t) => [
+                'ernie_id' => $t['id'],
+                'name' => $t['name'],
+                'description' => $t['description'] ?? null
+            ], $ernieTypes);
+            $this->syncErnieToDb('Relation', $syncItems, [
+                'ernie_id_col' => 'ernie_id',
+                'name_col' => 'name',
+                'description_col' => 'description'
+            ]);
+        }
     }
 
     /**
@@ -2381,13 +2391,22 @@ class VocabController
             'refreshIdentifierTypesCache',
             'getIdentifierTypesCacheStatus',
             'Identifier types',
-            function ($ernieService) {
-                $ernieTypes = $ernieService->getIdentifierTypesWithCache();
-                if (!empty($ernieTypes)) {
-                    $this->syncIdentifierTypesToDb($ernieTypes);
-                }
-            }
+            $this->syncIdentifierTypesAfterRefresh(...)
         );
+    }
+
+    /**
+     * Syncs identifier types to local DB after a cache refresh
+     *
+     * @param \ErnieService $ernieService The ERNIE service instance
+     * @return void
+     */
+    private function syncIdentifierTypesAfterRefresh(\ErnieService $ernieService): void
+    {
+        $ernieTypes = $ernieService->getIdentifierTypesWithCache();
+        if (!empty($ernieTypes)) {
+            $this->syncIdentifierTypesToDb($ernieTypes);
+        }
     }
 
     /**
@@ -2403,6 +2422,10 @@ class VocabController
     /**
      * Syncs ERNIE identifier types to the local database
      *
+     * First deactivates all ERNIE-linked types (isShown=0), then upserts
+     * current ERNIE data with isShown=1. This ensures types removed from
+     * ERNIE are no longer shown.
+     *
      * Uses INSERT ... ON DUPLICATE KEY UPDATE (upsert) to handle
      * new, existing by ernie_id, and existing by name records.
      * Also updates `pattern` and sets `isShown = 1` for ERNIE-provided types.
@@ -2410,13 +2433,16 @@ class VocabController
      * @param array<int, array<string, mixed>> $ernieTypes Identifier types from ERNIE
      * @return void
      */
-    private function syncIdentifierTypesToDb(array $ernieTypes): void
+    public function syncIdentifierTypesToDb(array $ernieTypes): void
     {
         global $connection;
 
         $connection->begin_transaction();
 
         try {
+            // Deactivate all ERNIE-linked types first; upsert below re-activates current ones
+            $connection->query("UPDATE `Identifier_Type` SET `isShown` = 0 WHERE `ernie_id` IS NOT NULL");
+
             foreach ($ernieTypes as $type) {
                 $ernieId = $type['id'] ?? null;
                 $name = $type['name'] ?? null;
@@ -2441,6 +2467,7 @@ class VocabController
             }
 
             $connection->commit();
+            error_log("ERNIE sync to Identifier_Type completed: " . count($ernieTypes) . " types synced");
         } catch (\Exception $e) {
             $connection->rollback();
             error_log("ERNIE sync to Identifier_Type failed: " . $e->getMessage());

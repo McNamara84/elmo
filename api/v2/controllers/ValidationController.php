@@ -140,7 +140,9 @@ class ValidationController
 
                 if (!empty($ernieTypes)) {
                     // Sync to local DB (including patterns and isShown flag)
-                    $this->syncIdentifierTypesToDb($ernieTypes);
+                    require_once __DIR__ . '/VocabController.php';
+                    $vocabController = new \VocabController();
+                    $vocabController->syncIdentifierTypesToDb($ernieTypes);
 
                     // Return in the same format as before
                     $identifierTypes = array_map(fn($t) => [
@@ -198,53 +200,6 @@ class ValidationController
             error_log("API Error in getActiveIdentifierTypesFromDb: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['error' => 'An error occurred while retrieving identifier types']);
-        }
-    }
-
-    /**
-     * Syncs ERNIE identifier types to the local database
-     *
-     * Uses INSERT ... ON DUPLICATE KEY UPDATE (upsert) to handle
-     * new, existing by ernie_id, and existing by name records.
-     * Also updates `pattern` and sets `isShown = 1` for ERNIE-provided types.
-     *
-     * @param array<int, array<string, mixed>> $ernieTypes Identifier types from ERNIE
-     * @return void
-     */
-    private function syncIdentifierTypesToDb(array $ernieTypes): void
-    {
-        global $connection;
-
-        $connection->begin_transaction();
-
-        try {
-            foreach ($ernieTypes as $type) {
-                $ernieId = $type['id'] ?? null;
-                $name = $type['name'] ?? null;
-                if (!$ernieId || !$name) {
-                    continue;
-                }
-
-                $desc = $type['description'] ?? null;
-                $pattern = $type['pattern'] ?? null;
-
-                $sql = "INSERT INTO `Identifier_Type` (`ernie_id`, `name`, `description`, `pattern`, `isShown`)
-                        VALUES (?, ?, ?, ?, 1)
-                        ON DUPLICATE KEY UPDATE
-                        `name` = VALUES(`name`),
-                        `description` = VALUES(`description`),
-                        `pattern` = VALUES(`pattern`),
-                        `isShown` = 1,
-                        `ernie_id` = VALUES(`ernie_id`)";
-                $stmt = $connection->prepare($sql);
-                $stmt->bind_param('isss', $ernieId, $name, $desc, $pattern);
-                $stmt->execute();
-            }
-
-            $connection->commit();
-        } catch (\Exception $e) {
-            $connection->rollback();
-            error_log("ERNIE sync to Identifier_Type failed: " . $e->getMessage());
         }
     }
 
