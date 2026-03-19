@@ -1336,7 +1336,7 @@ Metadata specific to elevation/terrain gravity measurements. This type of data s
 
   ## Data Mapping and Occurences
   </summary>
-The following table gives a quick overview on the occurences of the form fields in comparison to the occurences of the corresponding DataCite metadata as described in the [DataCite 4.5 documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/). Input fields visable to the user are marked **bold** in the table whereas hidden fields are in *italics*.
+The following table gives a quick overview on the occurences of the form fields in comparison to the occurences of the corresponding DataCite metadata as described in the [DataCite 4.6 documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/). Input fields visable to the user are marked **bold** in the table whereas hidden fields are in *italics*.
 
 | Form group                 | **Input Field**                           |            Occurence in ELMO            | Occurence in DataCite metadata scheme | Mapped to in DataCite                                                                                                                                                       |
 | -------------------------- | ----------------------------------------- | :-------------------------------------: | :-----------------------------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
