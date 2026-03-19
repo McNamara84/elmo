@@ -727,6 +727,7 @@ function insertLookupData($connection)
     $lookupData = [
         "Resource_Type" => [
             ["resource_type_general" => "Audiovisual", "description" => "A series of visual representations imparting an impression of motion when shown in succession. May or may not include sound."],
+            ["resource_type_general" => "Award", "description" => "A grant, prize, or other financial or honorary acknowledgment that supports or recognizes research contributions."],
             ["resource_type_general" => "Collection", "description" => "An aggregation of resources, which may encompass collections of one resourceType as well as those of mixed types. A collection is described as a group; its parts may also be separately described."],
             ["resource_type_general" => "ComputationalNotebook", "description" => "A virtual notebook environment used for literate programming."],
             ["resource_type_general" => "DataPaper", "description" => "A factual and objective publication with a focused intent to identify and describe specific data, sets of data, or data collections to facilitate discoverability."],
@@ -737,6 +738,7 @@ function insertLookupData($connection)
             ["resource_type_general" => "Model", "description" => "An abstract, conceptual, graphical, mathematical or visualization model that represents empirical objects, phenomena, or physical processes."],
             ["resource_type_general" => "OutputManagementPlan", "description" => "A formal document that outlines how research outputs are to be handled both during a research project and after the project is completed."],
             ["resource_type_general" => "Preprint", "description" => "A version of a scholarly or scientific paper that precedes formal peer review and publication in a peer-reviewed scholarly or scientific journal."],
+            ["resource_type_general" => "Project", "description" => "An organized research activity with defined goals, timeline, and resources, often funded by grants or institutional support."],
             ["resource_type_general" => "Software", "description" => "A computer program other than a computational notebook, in either source code (text) or compiled form. Use this type for general software components supporting scholarly research. Use the \"ComputationalNotebook\" value for virtual notebooks."],
             ["resource_type_general" => "Sound", "description" => "A resource primarily intended to be heard."],
             ["resource_type_general" => "Standard", "description" => "Something established by authority, custom, or general consent as a model, example, or point of reference."],
@@ -827,6 +829,8 @@ function insertLookupData($connection)
             ["name" => "Obsoletes", "description" => "Indicates A replaces B"],
             ["name" => "IsCollectedBy", "description" => "Indicates A is collected by B"],
             ["name" => "Collects", "description" => "Indicates A collects B"],
+            ["name" => "HasTranslation", "description" => "Indicates A has a translation B"],
+            ["name" => "IsTranslationOf", "description" => "Indicates A is a translation of B"],
         ],
         "Identifier_Type" => [
             ["name" => "ARK", "description" => "A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements)", "pattern" => "^ark:\/\d{5}\/\w+$/", "isShown" => 1],
@@ -847,7 +851,9 @@ function insertLookupData($connection)
             ["name" => "UPC", "description" => "A barcode symbology used for tracking trade items in stores. Its most common form, the UPC-A, consists of 12 numerical digits.", "pattern" => "^\d{12}$", "isShown" => 0],
             ["name" => "URL", "description" => "Also known as web address, a URL is a specific character string that constitutes a reference to a resource. The syntax is: scheme://domain:port/path?query_string#fragment_id.", "pattern" => "(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?", "isShown" => 1],
             ["name" => "URN", "description" => "A unique and persistent identifier of an electronic document. The syntax is: urn:<NID>:<NSS>. The leading urn: sequence is case-insensitive, <NID> is the namespace identifier, <NSS> is the namespace-specific string.", "pattern" => "^urn:nbn:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$", "isShown" => 1],
-            ["name" => "w3id", "description" => "Mostly used to publish vocabularies and ontologies. The letters ‘w3’ stand for “World Wide Web”.", "pattern" => "^https:\/\/w3id\.org\/[a-zA-Z0-9\/._-]+(?:#[a-zA-Z0-9._-]+)?$", "isShown" => 0]
+            ["name" => "w3id", "description" => "Mostly used to publish vocabularies and ontologies. The letters ‘w3’ stand for “World Wide Web”.", "pattern" => "^https:\/\/w3id\.org\/[a-zA-Z0-9\/._-]+(?:#[a-zA-Z0-9._-]+)?$", "isShown" => 0],
+            ["name" => "CSTR", "description" => "China Science and Technology Resource identifier. A persistent identifier used in the Chinese science and technology resource sharing system.", "pattern" => "", "isShown" => 0],
+            ["name" => "RRID", "description" => "Research Resource Identifier. A persistent unique identifier for research resources such as antibodies, organisms, cell lines, and tools.", "pattern" => "^RRID:[A-Za-z]+_[0-9]+$", "isShown" => 0]
         ],
         // ICGEM-related lookup insert
         "File_Format" => [
