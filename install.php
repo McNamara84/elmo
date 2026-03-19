@@ -727,7 +727,6 @@ function insertLookupData($connection)
     $lookupData = [
         "Resource_Type" => [
             ["resource_type_general" => "Audiovisual", "description" => "A series of visual representations imparting an impression of motion when shown in succession. May or may not include sound."],
-            ["resource_type_general" => "Award", "description" => "A grant, prize, or other financial or honorary acknowledgment that supports or recognizes research contributions."],
             ["resource_type_general" => "Collection", "description" => "An aggregation of resources, which may encompass collections of one resourceType as well as those of mixed types. A collection is described as a group; its parts may also be separately described."],
             ["resource_type_general" => "ComputationalNotebook", "description" => "A virtual notebook environment used for literate programming."],
             ["resource_type_general" => "DataPaper", "description" => "A factual and objective publication with a focused intent to identify and describe specific data, sets of data, or data collections to facilitate discoverability."],
@@ -738,14 +737,15 @@ function insertLookupData($connection)
             ["resource_type_general" => "Model", "description" => "An abstract, conceptual, graphical, mathematical or visualization model that represents empirical objects, phenomena, or physical processes."],
             ["resource_type_general" => "OutputManagementPlan", "description" => "A formal document that outlines how research outputs are to be handled both during a research project and after the project is completed."],
             ["resource_type_general" => "Preprint", "description" => "A version of a scholarly or scientific paper that precedes formal peer review and publication in a peer-reviewed scholarly or scientific journal."],
-            ["resource_type_general" => "Project", "description" => "An organized research activity with defined goals, timeline, and resources, often funded by grants or institutional support."],
             ["resource_type_general" => "Software", "description" => "A computer program other than a computational notebook, in either source code (text) or compiled form. Use this type for general software components supporting scholarly research. Use the \"ComputationalNotebook\" value for virtual notebooks."],
             ["resource_type_general" => "Sound", "description" => "A resource primarily intended to be heard."],
             ["resource_type_general" => "Standard", "description" => "Something established by authority, custom, or general consent as a model, example, or point of reference."],
             ["resource_type_general" => "StudyRegistration", "description" => "A detailed, time-stamped description of a research plan, often openly shared in a registry or published in a journal before the study is conducted to lend accountability and transparency in the hypothesis generating and testing process."],
             ["resource_type_general" => "Text", "description" => "A resource consisting primarily of words for reading that is not covered by any other textual resource type in this list."],
             ["resource_type_general" => "Workflow", "description" => "A structured series of steps which can be executed to produce a final outcome, allowing users a means to specify and enact their work in a more reproducible manner."],
-            ["resource_type_general" => "Other", "description" => "If selected, supply a value for ResourceType."]
+            ["resource_type_general" => "Other", "description" => "If selected, supply a value for ResourceType."],
+            ["resource_type_general" => "Award", "description" => "A grant, prize, or other financial or honorary acknowledgment that supports or recognizes research contributions."],
+            ["resource_type_general" => "Project", "description" => "An organized research activity with defined goals, timeline, and resources, often funded by grants or institutional support."]
         ],
         "Rights" => [
             ["text" => "Creative Commons Attribution 4.0 International", "rightsIdentifier" => "CC-BY-4.0", "rightsURI" => "https://creativecommons.org/licenses/by/4.0/legalcode", "forSoftware" => "0"],
