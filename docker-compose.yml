@@ -28,6 +28,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      FUNDER_PID: ${FUNDER_PID:-CFID}
       SHOW_USED_INSTRUMENTS: "true"
       SIMULATE_EMAIL: "true"
       API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
