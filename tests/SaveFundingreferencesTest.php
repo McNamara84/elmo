@@ -377,7 +377,7 @@ final class SaveFundingreferencesTest extends DatabaseTestCase
     {
         [$funderIdString, $funderIdType] = prepareFunderIdDetails('100000936', 'crossref');
 
-        $this->assertEquals('0100000936', $funderIdString, 'Crossref ID should be extracted to 10 digits.');
+        $this->assertEquals('100000936', $funderIdString, 'Crossref ID should be extracted as last 10 digits.');
         $this->assertEquals('Crossref Funder ID', $funderIdType, 'Funder ID Type should be Crossref Funder ID.');
     }
 
