@@ -1,3 +1,5 @@
+import { visibilityOFF, visibilityON } from '../functions.js';
+
 $(document).ready(function() {
     // VISIBILITY HANDLING
     // First, the whole form group and the contents
@@ -11,8 +13,10 @@ $(document).ready(function() {
 
         // Check if a valid model type is selected.
         // This covers null, undefined, and empty strings ''.
-        if (modelType && modelType.toLowerCase() !== 'choose...' && modelType.toLowerCase() !== 'simulated') {
-            // If a valid model type is selected (not 'Choose...' or 'Simulated'), show the card and enable inputs.
+        const modelTypeLower = (modelType || '').toLowerCase();
+        const isSpecialType = modelTypeLower === 'mascon' || modelTypeLower === 'altimetry-derived';
+        if (modelType && modelTypeLower !== 'choose...' && modelTypeLower !== 'simulated' && !isSpecialType) {
+            // If a valid model type is selected (not 'Choose...', 'Simulated', or special types), show the card and enable inputs.
             visibilityON(modelSpecificCard);
         } else {
             // Otherwise, hide the card and disable inputs inside.
