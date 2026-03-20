@@ -15,9 +15,10 @@ $(document).ready(function () {
 		const modelType = normalizeModelType(modelTypeSelect.val());
 		const hasModelType = modelType !== '' && modelType !== 'choose...';
 		const isAltimetry = modelType === 'altimetry-derived';
-
+		const isMASCON = modelType === 'mascon';
+		toShow = hasModelType && (isAltimetry || isMASCON);
 		// Altimetry-specific group and STC are visible only for Altimetry-derived.
-		if (isAltimetry) {
+		if (toShow) {
 			visibilityON(stcCard);
 		} else {
 			visibilityOFF(stcCard);
