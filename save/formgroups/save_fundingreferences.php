@@ -26,15 +26,21 @@ function fundingReferenceArraysExist($postData)
 /**
  * Prepares funder ID string and type.
  *
- * @param string $funderId Raw funder ID.
+ * @param string $funderId    Raw funder ID.
+ * @param string $funderIdTyp The funder ID type from the form ('crossref' or 'ROR').
  *
  * @return array Array with the processed funder ID and the ID type.
  */
-function prepareFunderIdDetails($funderId)
+function prepareFunderIdDetails($funderId, $funderIdTyp = 'crossref')
 {
     if (!empty($funderId)) {
-        $funderIdString = extractLastTenDigits($funderId);
-        $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
+        if ($funderIdTyp === 'ROR') {
+            $funderIdString = $funderId;
+            $funderIdType = 'ROR';
+        } else {
+            $funderIdString = extractLastTenDigits($funderId);
+            $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
+        }
     } else {
         $funderIdString = null;
         $funderIdType = null;
@@ -69,7 +75,7 @@ function saveFundingReferenceEntry($connection, $entry, $resource_id)
         return false;
     }
 
-    [$funderIdString, $funderIdType] = prepareFunderIdDetails($entry['funderId']);
+    [$funderIdString, $funderIdType] = prepareFunderIdDetails($entry['funderId'], $entry['funderIdTyp'] ?? 'crossref');
     $awardUri = !empty($entry['awardUri']) ? $entry['awardUri'] : null;
 
     $funding_reference_id = insertFundingReference(
@@ -123,6 +129,7 @@ function saveFundingReferences($connection, $postData, $resource_id)
             $entry = [
                 'funder' => $postData['funder'][$i] ?? '',
                 'funderId' => $postData['funderId'][$i] ?? '',
+                'funderIdTyp' => $postData['funderidtyp'][$i] ?? 'crossref',
                 'grantNumber' => $postData['grantNummer'][$i] ?? '',
                 'grantName' => $postData['grantName'][$i] ?? '',
                 'awardUri' => $postData['awardURI'][$i] ?? ''
@@ -142,6 +149,7 @@ function saveFundingReferences($connection, $postData, $resource_id)
         $entry = [
             'funder' => $postData['funder'][$i] ?? '',
             'funderId' => $postData['funderId'][$i] ?? '',
+            'funderIdTyp' => $postData['funderidtyp'][$i] ?? 'crossref',
             'grantNumber' => $postData['grantNummer'][$i] ?? '',
             'grantName' => $postData['grantName'][$i] ?? '',
             'awardUri' => $postData['awardURI'][$i] ?? ''

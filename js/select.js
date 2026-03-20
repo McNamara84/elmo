@@ -507,9 +507,11 @@ async function initializeAllDropdownsParallel() {
       .then(r => r.ok ? r.json() : { identifierTypes: [] })
       .catch(() => ({ identifierTypes: [] })),
     
-    funders: fetch('json/funders.json')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => [])
+    funders: (window.ELMO_FEATURES && window.ELMO_FEATURES.funderPidMode === 'ROR')
+      ? Promise.resolve([])
+      : fetch('json/funders.json')
+        .then(r => r.ok ? r.json() : [])
+        .catch(() => [])
   };
 
   try {
@@ -804,10 +806,26 @@ $(document).ready(function () {
 
   /**
    * Sets up the autocomplete functionality for funder input elements.
-   * Optimized to prevent performance issues with large datasets.
+   * Supports two modes based on ELMO_FEATURES.funderPidMode:
+   * - 'CFID' (default): Uses local Crossref Funder Registry data
+   * - 'ROR': Uses server-side ROR affiliation search
    * @param {HTMLElement} inputElement - The input element to attach autocomplete to.
    */
   window.setUpAutocompleteFunder = function (inputElement) {
+    const isRorMode = window.ELMO_FEATURES && window.ELMO_FEATURES.funderPidMode === 'ROR';
+
+    if (isRorMode) {
+      setUpAutocompleteFunderRor(inputElement);
+    } else {
+      setUpAutocompleteFunderCfid(inputElement);
+    }
+  };
+
+  /**
+   * Sets up funder autocomplete using local Crossref Funder Registry data.
+   * @param {HTMLElement} inputElement - The input element to attach autocomplete to.
+   */
+  function setUpAutocompleteFunderCfid(inputElement) {
     // Use globally stored fundersData from parallel load
     const fundersData = window.fundersData || [];
     let searchTimeout;
@@ -871,7 +889,55 @@ $(document).ready(function () {
           .append("<div>" + item.name + "</div>")
           .appendTo(ul);
       };
-  };
+  }
+
+  /**
+   * Sets up funder autocomplete using server-side ROR affiliation search.
+   * @param {HTMLElement} inputElement - The input element to attach autocomplete to.
+   */
+  function setUpAutocompleteFunderRor(inputElement) {
+    let searchTimeout;
+    const MIN_LENGTH = 2;
+
+    $(inputElement)
+      .autocomplete({
+        source: function (request, response) {
+          clearTimeout(searchTimeout);
+
+          if (!request.term || request.term.length < MIN_LENGTH) {
+            response([]);
+            return;
+          }
+
+          searchTimeout = setTimeout(() => {
+            fetch('api/v2/affiliations/search?q=' + encodeURIComponent(request.term) + '&limit=30')
+              .then(r => r.ok ? r.json() : [])
+              .then(data => {
+                response(data.map(item => ({
+                  label: item.name,
+                  value: item.name,
+                  rorId: item.id,
+                  name: item.name
+                })));
+              })
+              .catch(() => response([]));
+          }, 200);
+        },
+        minLength: MIN_LENGTH,
+        select: function (event, ui) {
+          $(this).val(ui.item.name);
+          $(this).siblings(".inputFunderId").val(ui.item.rorId);
+          $(this).siblings(".inputFunderIdTyp").val("ROR");
+          return false;
+        },
+        position: { my: "left bottom", at: "left top", collision: "flip" },
+      })
+      .autocomplete("instance")._renderItem = function (ul, item) {
+        return $("<li>")
+          .append($("<div>").text(item.name))
+          .appendTo(ul);
+      };
+  }
 
   // Note: Relations dropdown is now populated by initializeAllDropdownsParallel()
 

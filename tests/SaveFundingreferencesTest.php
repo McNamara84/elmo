@@ -325,4 +325,109 @@ final class SaveFundingreferencesTest extends DatabaseTestCase
 
         $this->assertEquals(1, $count, 'Es sollte nur eine Verknüpfung zwischen Resource und Funding Reference existieren.');
     }
+
+    /**
+     * Saving a Funding Reference with ROR ID
+     */
+    public function testSaveFundingReferenceWithRorId()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.ROR.FUNDING', 'Test ROR Funding Reference');
+
+        $postData = [
+            'funder' => ['Helmholtz Centre Potsdam GFZ'],
+            'funderId' => ['https://ror.org/04z8jg394'],
+            'funderidtyp' => ['ROR'],
+            'grantNummer' => ['ROR-GRANT-001'],
+            'grantName' => ['ROR Test Grant'],
+            'awardURI' => ['https://example.com/ror-award']
+        ];
+
+        $result = saveFundingReferences($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'The function should return true.');
+
+        $stmt = $this->connection->prepare('SELECT * FROM Funding_Reference WHERE funder = ?');
+        $stmt->bind_param('s', $postData['funder'][0]);
+        $stmt->execute();
+        $fundingReference = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotNull($fundingReference, 'The Funding Reference should have been saved.');
+        $this->assertEquals('https://ror.org/04z8jg394', $fundingReference['funderid'], 'The ROR ID should be stored as a full URL.');
+        $this->assertEquals('ROR', $fundingReference['funderidtyp'], 'The Funder ID Type should be ROR.');
+        $this->assertEquals($postData['grantNummer'][0], $fundingReference['grantnumber']);
+        $this->assertEquals($postData['grantName'][0], $fundingReference['grantname']);
+        $this->assertEquals($postData['awardURI'][0], $fundingReference['awarduri']);
+    }
+
+    /**
+     * Tests prepareFunderIdDetails with ROR funder ID type
+     */
+    public function testPrepareFunderIdDetailsWithRor()
+    {
+        [$funderIdString, $funderIdType] = prepareFunderIdDetails('https://ror.org/04z8jg394', 'ROR');
+
+        $this->assertEquals('https://ror.org/04z8jg394', $funderIdString, 'ROR ID should be stored unchanged as a full URL.');
+        $this->assertEquals('ROR', $funderIdType, 'Funder ID Type should be ROR.');
+    }
+
+    /**
+     * Tests prepareFunderIdDetails with Crossref funder ID type (default)
+     */
+    public function testPrepareFunderIdDetailsWithCrossref()
+    {
+        [$funderIdString, $funderIdType] = prepareFunderIdDetails('100000936', 'crossref');
+
+        $this->assertEquals('0100000936', $funderIdString, 'Crossref ID should be extracted to 10 digits.');
+        $this->assertEquals('Crossref Funder ID', $funderIdType, 'Funder ID Type should be Crossref Funder ID.');
+    }
+
+    /**
+     * Tests prepareFunderIdDetails with empty funder ID
+     */
+    public function testPrepareFunderIdDetailsWithEmptyId()
+    {
+        [$funderIdString, $funderIdType] = prepareFunderIdDetails('', 'ROR');
+
+        $this->assertNull($funderIdString, 'Empty Funder ID should return null.');
+        $this->assertNull($funderIdType, 'Empty Funder ID should return null for the type.');
+    }
+
+    /**
+     * Saving mixed Funding References with Crossref and ROR
+     */
+    public function testSaveMixedCrossrefAndRorFundingReferences()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.MIXED.PID', 'Test Mixed PID Funding');
+
+        $postData = [
+            'funder' => ['National Science Foundation', 'Helmholtz Centre Potsdam GFZ'],
+            'funderId' => ['100000001', 'https://ror.org/04z8jg394'],
+            'funderidtyp' => ['crossref', 'ROR'],
+            'grantNummer' => ['NSF-001', 'GFZ-001'],
+            'grantName' => ['NSF Grant', 'GFZ Grant'],
+            'awardURI' => ['https://example.com/nsf', 'https://example.com/gfz']
+        ];
+
+        $result = saveFundingReferences($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'The function should return true.');
+
+        $stmt = $this->connection->prepare('SELECT * FROM Funding_Reference ORDER BY funding_reference_id ASC');
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $references = [];
+        while ($row = $result->fetch_assoc()) {
+            $references[] = $row;
+        }
+
+        $this->assertCount(2, $references, 'Exactly two Funding References should have been saved.');
+
+        // Crossref entry
+        $this->assertEquals('Crossref Funder ID', $references[0]['funderidtyp']);
+        $this->assertEquals('0100000001', $references[0]['funderid']);
+
+        // ROR entry
+        $this->assertEquals('ROR', $references[1]['funderidtyp']);
+        $this->assertEquals('https://ror.org/04z8jg394', $references[1]['funderid']);
+    }
 }
