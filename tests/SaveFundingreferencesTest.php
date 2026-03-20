@@ -424,7 +424,7 @@ final class SaveFundingreferencesTest extends DatabaseTestCase
 
         // Crossref entry
         $this->assertEquals('Crossref Funder ID', $references[0]['funderidtyp']);
-        $this->assertEquals('0100000001', $references[0]['funderid']);
+        $this->assertEquals('100000001', $references[0]['funderid']);
 
         // ROR entry
         $this->assertEquals('ROR', $references[1]['funderidtyp']);
