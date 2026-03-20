@@ -322,8 +322,7 @@ class ICGEMController extends DatasetController
     }
 
     /**
-     * Inserts errors element into the spherical harmonic model.
-     * Error handling is included as a child element within errors per the XSD schema.
+     * Inserts errors and errorHandling as direct siblings on the harmonicCoefficientsModel element.
      *
      * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
      * @param array<string, mixed> $ggmData The GGM data.
@@ -331,13 +330,10 @@ class ICGEMController extends DatasetController
     protected function insertErrors(SimpleXMLElement $shm, array $ggmData): void
     {
         if (!empty($ggmData['errors'])) {
-            $errorsElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errors', null, self::ICGEM_NAMESPACE_URI);
-            $errorsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorType', $this->prepare($ggmData['errors'], 'errorType'), self::ICGEM_NAMESPACE_URI);
-            
-            // Add errorHandling inside errors element if it exists
-            if (!empty($ggmData['error_handling_approach'])) {
-                $errorsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorHandling', $this->prepare($ggmData['error_handling_approach'], 'errorHandling'), self::ICGEM_NAMESPACE_URI);
-            }
+            $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errors', $this->prepare($ggmData['errors'], 'errorType'), self::ICGEM_NAMESPACE_URI);
+        }
+        if (!empty($ggmData['error_handling_approach'])) {
+            $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errorHandling', $this->prepare($ggmData['error_handling_approach'], 'errorHandling'), self::ICGEM_NAMESPACE_URI);
         }
     }
     /**
@@ -813,7 +809,7 @@ class ICGEMController extends DatasetController
     {
         // Replace hardcoded Windows file paths with the official DataCite schema URL
         $dataciteXmlString = preg_replace(
-            '/file:.*?DataCiteSchema45\.xsd/',
+            '/file:.*?DataCiteSchema46\.xsd/',
             'http://schema.datacite.org/meta/kernel-4/metadata.xsd',
             $dataciteXmlString
         );

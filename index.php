@@ -22,6 +22,9 @@ include_once __DIR__ . '/settings.php';
 // accessible by default.
 include_once __DIR__ . '/includes/feature_toggles.php';
 
+// Treat requests without query parameters as "new records"
+$isNewRecord = empty($_GET);
+
 /** @var bool $showLicense */
 $showLicense = resolveFeatureToggle($showLicense ?? null, false);   
 /** @var bool $showAuthorInstitution */
@@ -30,8 +33,8 @@ $showAuthorInstitution = resolveFeatureToggle($showAuthorInstitution ?? null, tr
 $showContributorPersons = resolveFeatureToggle($showContributorPersons ?? null, true);
 /** @var bool $showContributorInstitutions */
 $showContributorInstitutions = resolveFeatureToggle($showContributorInstitutions ?? null, true);
-/** @var bool $showGcmdThesauri */
-$showGcmdThesauri = resolveFeatureToggle($showGcmdThesauri ?? null, true);
+/** @var bool $showThesauri */
+$showThesauri = resolveFeatureToggle($showThesauri ?? null, true);
 /** @var bool $showFreeKeywords */
 $showFreeKeywords = resolveFeatureToggle($showFreeKeywords ?? null, true);
 /** @var bool $showSpatialTemporalCoverage */
@@ -48,6 +51,8 @@ $showGGMsProperties = resolveFeatureToggle($showGGMsProperties ?? null, false);
 $showMslLabs = resolveFeatureToggle($showMslLabs ?? null, false);
 /** @var bool $showMslVocabs */
 $showMslVocabs = resolveFeatureToggle($showMslVocabs ?? null, false);
+/** @var bool $showMslDefaultFreeKeywords */
+$showMslDefaultFreeKeywords = resolveFeatureToggle($showMslDefaultFreeKeywords ?? null, false);
 /** @var bool $showMslLogo */
 $showMslLogo = resolveFeatureToggle($showMslLogo ?? null, false);
 
@@ -87,7 +92,7 @@ if ($showGGMsProperties) {
 if ($showMslVocabs) {
     include $baseDir . 'formgroups/mslKeywords.html';
 }
-if ($showGcmdThesauri) {
+if ($showThesauri) {
     include $baseDir . 'formgroups/thesaurusKeywords.html';
 }
 if ($showFreeKeywords) {

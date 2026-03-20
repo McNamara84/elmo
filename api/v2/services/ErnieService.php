@@ -61,6 +61,56 @@ class ErnieService
     private string $contributorInstitutionRolesCacheFile;
 
     /**
+     * @var string Path to the thesauri availability cache file
+     */
+    private string $thesauriAvailabilityCacheFile;
+
+    /**
+     * @var string Path to the GCMD Science Keywords cache file
+     */
+    private string $scienceKeywordsCacheFile;
+
+    /**
+     * @var string Path to the GCMD Platforms cache file
+     */
+    private string $platformsCacheFile;
+
+    /**
+     * @var string Path to the GCMD Instruments cache file
+     */
+    private string $instrumentsCacheFile;
+
+    /**
+     * @var string Path to the Chronostratigraphy cache file
+     */
+    private string $chronostratCacheFile;
+
+    /**
+     * @var string Path to the GEMET cache file
+     */
+    private string $gemetCacheFile;
+
+    /**
+     * @var string Path to the description types cache file
+     */
+    private string $descriptionTypesCacheFile;
+
+    /**
+     * @var string Path to the relation types cache file
+     */
+    private string $relationTypesCacheFile;
+
+    /**
+     * @var string Path to the identifier types cache file
+     */
+    private string $identifierTypesCacheFile;
+
+    /**
+     * @var array<string, string> Mapping of thesaurus slugs to cache file paths
+     */
+    private array $thesaurusCacheFiles;
+
+    /**
      * ErnieService constructor.
      * 
      * Initializes the service with configuration from global settings.
@@ -79,6 +129,22 @@ class ErnieService
         $this->pid4instCacheFile = __DIR__ . '/../../../storage/cache/ernie_pid4inst.json';
         $this->contributorPersonRolesCacheFile = __DIR__ . '/../../../storage/cache/ernie_contributor_person_roles.json';
         $this->contributorInstitutionRolesCacheFile = __DIR__ . '/../../../storage/cache/ernie_contributor_institution_roles.json';
+        $this->thesauriAvailabilityCacheFile = __DIR__ . '/../../../storage/cache/ernie_thesauri_availability.json';
+        $this->scienceKeywordsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_science_keywords.json';
+        $this->platformsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_platforms.json';
+        $this->instrumentsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_instruments.json';
+        $this->chronostratCacheFile = __DIR__ . '/../../../storage/cache/ernie_chronostrat_timescale.json';
+        $this->gemetCacheFile = __DIR__ . '/../../../storage/cache/ernie_gemet.json';
+        $this->descriptionTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_description_types.json';
+        $this->relationTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_relation_types.json';
+        $this->identifierTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_identifier_types.json';
+        $this->thesaurusCacheFiles = [
+            'gcmd-science-keywords' => $this->scienceKeywordsCacheFile,
+            'gcmd-platforms' => $this->platformsCacheFile,
+            'gcmd-instruments' => $this->instrumentsCacheFile,
+            'chronostrat-timescale' => $this->chronostratCacheFile,
+            'gemet' => $this->gemetCacheFile,
+        ];
     }
 
     /**
@@ -99,6 +165,16 @@ class ErnieService
     protected function getTitleTypesCacheFile(): string
     {
         return $this->titleTypesCacheFile;
+    }
+
+    /**
+     * Gets the description types cache file path
+     * 
+     * @return string Path to the description types cache file
+     */
+    protected function getDescriptionTypesCacheFile(): string
+    {
+        return $this->descriptionTypesCacheFile;
     }
 
     /**
@@ -129,6 +205,26 @@ class ErnieService
     protected function getContributorInstitutionRolesCacheFile(): string
     {
         return $this->contributorInstitutionRolesCacheFile;
+    }
+
+    /**
+     * Gets the relation types cache file path
+     * 
+     * @return string Path to the relation types cache file
+     */
+    protected function getRelationTypesCacheFile(): string
+    {
+        return $this->relationTypesCacheFile;
+    }
+
+    /**
+     * Gets the identifier types cache file path
+     * 
+     * @return string Path to the identifier types cache file
+     */
+    protected function getIdentifierTypesCacheFile(): string
+    {
+        return $this->identifierTypesCacheFile;
     }
 
     /**
@@ -487,6 +583,11 @@ class ErnieService
     {
         return [
             [
+                'id' => 2,  // ERNIE ID for Award
+                'name' => 'Award',
+                'description' => 'A grant, prize, or other financial or honorary acknowledgment'
+            ],
+            [
                 'id' => 10,  // ERNIE ID for Dataset
                 'name' => 'Dataset',
                 'description' => 'Data encoded in a defined structure'
@@ -495,6 +596,11 @@ class ErnieService
                 'id' => 21,  // ERNIE ID for Other
                 'name' => 'Other',
                 'description' => 'Other resource type not covered by the available options'
+            ],
+            [
+                'id' => 23,  // ERNIE ID for Project
+                'name' => 'Project',
+                'description' => 'An organized research activity with defined goals and resources'
             ]
         ];
     }
@@ -521,6 +627,99 @@ class ErnieService
     public function getCacheStatus(): array
     {
         return $this->getCacheFileStatus($this->getCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Description Types
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches description types from ERNIE API
+     * 
+     * @return array<mixed>|null Raw API response or null on failure
+     */
+    public function fetchDescriptionTypes(): ?array
+    {
+        return $this->fetchFromErnie('/api/v1/description-types/elmo', 'description types');
+    }
+
+    /**
+     * Gets description types with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback (Abstract, Methods, TechnicalInfo, Other) as last resort
+     * 
+     * @return array<mixed> Description types from cache or ERNIE
+     */
+    public function getDescriptionTypesWithCache(): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/description-types/elmo',
+            'description types',
+            $this->getDescriptionTypesCacheFile(),
+            [$this, 'getHardcodedDescriptionTypeFallback']
+        );
+    }
+
+    /**
+     * Returns hardcoded fallback description types
+     * 
+     * This is the absolute last resort when ERNIE, cache, and stale cache are all unavailable.
+     * Abstract, Methods, TechnicalInfo, and Other are the original ELMO description types.
+     * 
+     * @return array<array{id: int, name: string, slug: string}> Minimal fallback description types
+     */
+    private function getHardcodedDescriptionTypeFallback(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'name' => 'Abstract',
+                'slug' => 'Abstract'
+            ],
+            [
+                'id' => 2,
+                'name' => 'Methods',
+                'slug' => 'Methods'
+            ],
+            [
+                'id' => 5,
+                'name' => 'Technical Info',
+                'slug' => 'TechnicalInfo'
+            ],
+            [
+                'id' => 6,
+                'name' => 'Other',
+                'slug' => 'Other'
+            ]
+        ];
+    }
+
+    /**
+     * Forces description types cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshDescriptionTypesCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/description-types/elmo',
+            'description types',
+            $this->getDescriptionTypesCacheFile()
+        );
+    }
+
+    /**
+     * Gets description types cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getDescriptionTypesCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getDescriptionTypesCacheFile());
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -954,5 +1153,370 @@ class ErnieService
     public function getContributorInstitutionRolesCacheStatus(): array
     {
         return $this->getCacheFileStatus($this->getContributorInstitutionRolesCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Thesauri Availability
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Gets the thesauri availability cache file path
+     * 
+     * @return string Path to the thesauri availability cache file
+     */
+    protected function getThesauriAvailabilityCacheFile(): string
+    {
+        return $this->thesauriAvailabilityCacheFile;
+    }
+
+    /**
+     * Fetches thesauri availability from ERNIE API
+     * 
+     * Tries the ELMO-specific endpoint first (requires API key),
+     * falls back to the public endpoint if the ELMO-specific one fails.
+     * 
+     * @return array<string, array{available: bool, displayName: string}>|null Availability data or null on failure
+     */
+    public function fetchThesauriAvailability(): ?array
+    {
+        // Try ELMO-specific endpoint first (requires API key)
+        $data = $this->fetchFromErnie('/api/v1/elmo/vocabularies/thesauri-availability', 'thesauri availability (ELMO)');
+        if ($data !== null) {
+            return $data;
+        }
+
+        // Fall back to public endpoint (no API key needed, but fetchFromErnie sends it anyway — harmless)
+        return $this->fetchFromErnie('/api/v1/vocabularies/thesauri-availability', 'thesauri availability (public)');
+    }
+
+    /**
+     * Gets thesauri availability with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE (ELMO-specific, then public fallback)
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback (only 3 GCMD thesauri) as last resort
+     * 
+     * @return array<string, array{available: bool, displayName: string}> Availability data
+     */
+    public function getThesauriAvailabilityWithCache(): array
+    {
+        // Cannot use generic getDataWithCache() because fetchThesauriAvailability() has custom dual-endpoint logic
+        $cacheFile = $this->getThesauriAvailabilityCacheFile();
+
+        if ($this->isCacheFileValid($cacheFile)) {
+            $cachedData = $this->readCacheFile($cacheFile);
+            if (!empty($cachedData)) {
+                return $cachedData;
+            }
+        }
+
+        $ernieData = $this->fetchThesauriAvailability();
+        if ($ernieData !== null && !empty($ernieData)) {
+            $this->writeCacheFile($cacheFile, $ernieData);
+            return $ernieData;
+        }
+
+        $staleCache = $this->readCacheFile($cacheFile, ignoreExpiry: true);
+        if (!empty($staleCache)) {
+            error_log("ERNIE: Using stale cache as fallback for thesauri availability");
+            return $staleCache;
+        }
+
+        error_log("ERNIE: Using hardcoded fallback for thesauri availability - all other sources unavailable");
+        return $this->getHardcodedThesauriAvailabilityFallback();
+    }
+
+    /**
+     * Returns hardcoded fallback thesauri availability
+     * 
+     * Only the 3 GCMD thesauri are enabled as fallback, matching the original ELMO behavior
+     * before Chronostratigraphy and GEMET were added.
+     * 
+     * @return array<string, array{available: bool, displayName: string}> Minimal fallback availability
+     */
+    private function getHardcodedThesauriAvailabilityFallback(): array
+    {
+        return [
+            'science_keywords' => ['available' => true, 'displayName' => 'GCMD Science Keywords'],
+            'platforms' => ['available' => true, 'displayName' => 'GCMD Platforms'],
+            'instruments' => ['available' => true, 'displayName' => 'GCMD Instruments'],
+            'chronostratigraphy' => ['available' => false, 'displayName' => 'ICS Chronostratigraphy'],
+            'gemet' => ['available' => false, 'displayName' => 'GEMET Thesaurus'],
+        ];
+    }
+
+    /**
+     * Forces thesauri availability cache refresh
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshThesauriAvailabilityCache(): bool
+    {
+        $data = $this->fetchThesauriAvailability();
+        if ($data !== null && !empty($data)) {
+            return $this->writeCacheFile($this->getThesauriAvailabilityCacheFile(), $data);
+        }
+        return false;
+    }
+
+    /**
+     * Gets thesauri availability cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getThesauriAvailabilityCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getThesauriAvailabilityCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Thesaurus Vocabulary Data
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Returns the cache file path for a given thesaurus slug
+     * 
+     * @param string $slug The thesaurus slug (e.g. 'gcmd-science-keywords')
+     * @return string|null Cache file path or null if slug is unknown
+     */
+    protected function getThesaurusCacheFile(string $slug): ?string
+    {
+        return $this->thesaurusCacheFiles[$slug] ?? null;
+    }
+
+    /**
+     * Returns the list of valid thesaurus slugs
+     * 
+     * @return array<string> Valid slug names
+     */
+    public function getValidThesaurusSlugs(): array
+    {
+        return array_keys($this->thesaurusCacheFiles);
+    }
+
+    /**
+     * Gets thesaurus vocabulary data with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Empty array (no hardcoded fallback — thesaurus data is too large and specific)
+     * 
+     * @param string $slug The thesaurus slug (e.g. 'gcmd-science-keywords')
+     * @return array<mixed> Vocabulary data or empty array if unavailable
+     */
+    public function getThesaurusVocabularyWithCache(string $slug): array
+    {
+        $cacheFile = $this->getThesaurusCacheFile($slug);
+        if ($cacheFile === null) {
+            error_log("ERNIE: Unknown thesaurus slug: $slug");
+            return [];
+        }
+
+        return $this->getDataWithCache(
+            "/api/v1/vocabularies/$slug",
+            "thesaurus vocabulary ($slug)",
+            $cacheFile,
+            fn() => []
+        );
+    }
+
+    /**
+     * Forces thesaurus vocabulary cache refresh for a given slug
+     * 
+     * @param string $slug The thesaurus slug
+     * @return bool True if refresh was successful
+     */
+    public function refreshThesaurusVocabularyCache(string $slug): bool
+    {
+        $cacheFile = $this->getThesaurusCacheFile($slug);
+        if ($cacheFile === null) {
+            error_log("ERNIE: Cannot refresh cache for unknown thesaurus slug: $slug");
+            return false;
+        }
+
+        return $this->refreshCacheFromApi(
+            "/api/v1/vocabularies/$slug",
+            "thesaurus vocabulary ($slug)",
+            $cacheFile
+        );
+    }
+
+    /**
+     * Gets thesaurus vocabulary cache status for a given slug
+     * 
+     * @param string $slug The thesaurus slug
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getThesaurusVocabularyCacheStatus(string $slug): array
+    {
+        $cacheFile = $this->getThesaurusCacheFile($slug);
+        if ($cacheFile === null) {
+            return [
+                'exists' => false,
+                'valid' => false,
+                'lastUpdated' => null,
+                'age' => null,
+                'itemCount' => 0,
+                'error' => "Unknown thesaurus slug: $slug"
+            ];
+        }
+
+        return $this->getCacheFileStatus($cacheFile);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Relation Types
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches relation types from ERNIE API
+     * 
+     * @return array<array{id: int, name: string, description: string|null}>|null Array of relation types or null on failure
+     */
+    public function fetchRelationTypes(): ?array
+    {
+        return $this->fetchFromErnie('/api/v1/relation-types/elmo', 'relation types');
+    }
+
+    /**
+     * Gets relation types with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback as last resort
+     * 
+     * @return array<array{id: int, name: string, description: string|null}> Relation types from cache or ERNIE
+     */
+    public function getRelationTypesWithCache(): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/relation-types/elmo',
+            'relation types',
+            $this->getRelationTypesCacheFile(),
+            [$this, 'getHardcodedRelationTypeFallback']
+        );
+    }
+
+    /**
+     * Returns hardcoded fallback relation types
+     * 
+     * This is the absolute last resort when ERNIE, cache, and stale cache are all unavailable.
+     * 
+     * @return array<array{id: int, name: string, description: string|null}> Minimal fallback relation types
+     */
+    private function getHardcodedRelationTypeFallback(): array
+    {
+        return [
+            ['id' => 1, 'name' => 'IsCitedBy', 'description' => 'indicates that B includes A in a citation'],
+            ['id' => 2, 'name' => 'Cites', 'description' => 'indicates that A includes B in a citation'],
+            ['id' => 3, 'name' => 'IsSupplementTo', 'description' => 'indicates that A is a supplement to B'],
+            ['id' => 4, 'name' => 'IsSupplementedBy', 'description' => 'indicates that B is a supplement to A'],
+        ];
+    }
+
+    /**
+     * Forces relation types cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshRelationTypesCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/relation-types/elmo',
+            'relation types',
+            $this->getRelationTypesCacheFile()
+        );
+    }
+
+    /**
+     * Gets relation types cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getRelationTypesCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getRelationTypesCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  Identifier Types
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches identifier types from ERNIE API
+     * 
+     * @return array<array{id: int, name: string, description: string|null, pattern: string|null}>|null Array of identifier types or null on failure
+     */
+    public function fetchIdentifierTypes(): ?array
+    {
+        return $this->fetchFromErnie('/api/v1/identifier-types/elmo', 'identifier types');
+    }
+
+    /**
+     * Gets identifier types with caching logic
+     * 
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache (if ERNIE unavailable)
+     * 4. Hardcoded fallback as last resort
+     * 
+     * @return array<array{id: int, name: string, description: string|null, pattern: string|null}> Identifier types from cache or ERNIE
+     */
+    public function getIdentifierTypesWithCache(): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/identifier-types/elmo',
+            'identifier types',
+            $this->getIdentifierTypesCacheFile(),
+            [$this, 'getHardcodedIdentifierTypeFallback']
+        );
+    }
+
+    /**
+     * Returns hardcoded fallback identifier types
+     * 
+     * This is the absolute last resort when ERNIE, cache, and stale cache are all unavailable.
+     * 
+     * @return array<array{id: int, name: string, description: string|null, pattern: string|null}> Minimal fallback identifier types
+     */
+    private function getHardcodedIdentifierTypeFallback(): array
+    {
+        return [
+            ['id' => 1, 'name' => 'DOI', 'description' => 'A character string used to uniquely identify an object. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.', 'pattern' => '^(?:https?:\/\/(?:dx\\.)?doi\.org\/|doi:)?10\.\d{4,9}\/[\-._;()/:A-Z0-9]+$'],
+            ['id' => 2, 'name' => 'URL', 'description' => 'A specific character string that constitutes a reference to a resource.', 'pattern' => '(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?'],
+            ['id' => 3, 'name' => 'Handle', 'description' => 'An ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).', 'pattern' => '^(hdl:)?\d+(\.\d+)*(\/[^\s]+)?$'],
+            ['id' => 4, 'name' => 'URN', 'description' => 'A unique and persistent identifier of an electronic document.', 'pattern' => '^urn:nbn:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$'],
+        ];
+    }
+
+    /**
+     * Forces identifier types cache refresh by fetching fresh data from ERNIE
+     * 
+     * @return bool True if refresh was successful
+     */
+    public function refreshIdentifierTypesCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/identifier-types/elmo',
+            'identifier types',
+            $this->getIdentifierTypesCacheFile()
+        );
+    }
+
+    /**
+     * Gets identifier types cache status information
+     * 
+     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
+     */
+    public function getIdentifierTypesCacheStatus(): array
+    {
+        return $this->getCacheFileStatus($this->getIdentifierTypesCacheFile());
     }
 }

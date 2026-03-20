@@ -9,14 +9,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { XMLParser } from 'fast-xml-parser';
 
-const isCI = !!process.env.CI;
-
 const XML_REFERENCE_DIR = path.join(__dirname, './outputDataReference');
 const XML_ACTUAL_DIR = path.join(__dirname, './outputDataActual');
 
 test.describe('Dataset Save with XML Verification', () => {
-  test.skip(isCI, 'Download events unreliable in CI environment');
-
   test.beforeAll(() => {
   });
 
@@ -109,12 +105,14 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert dataset language
     expect(actualRoot.language).toBe(refRoot.language);
     
-    // Compare all the descriptions
+    // Compare all descriptions (matched by descriptionType, order may differ)
     const descriptions = toArray(actualRoot.descriptions.description);
     const refDescriptions = toArray(refRoot.descriptions.description);
     expect(descriptions.length).toBe(refDescriptions.length);
-    for (let i = 0; i < descriptions.length; i++) {
-      expect(descriptions[i]['#text']).toBe(refDescriptions[i]['#text']);
+    for (const refDesc of refDescriptions) {
+      const match = descriptions.find((d: any) => d.descriptionType === refDesc.descriptionType);
+      expect(match, `Missing description of type ${refDesc.descriptionType}`).toBeTruthy();
+      expect(match['#text']).toBe(refDesc['#text']);
     }
 
     // Assert keywords present - handle both string and array formats
@@ -165,15 +163,16 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert multiple authors - check length and each property
     const actualAuthors = toArray(actualRoot.creators?.creator);
     const referenceAuthors = toArray(refRoot.creators?.creator);
-    // Assert multiple personal authors (persons)
+    // Assert multiple personal authors (matched by familyName, order may differ)
     const personalCreators = actualAuthors.filter((c: any) => c.creatorName.nameType === 'Personal');
     const refPersonalCreators = referenceAuthors.filter((c: any) => c.creatorName.nameType === 'Personal');
     expect(personalCreators.length).toBe(refPersonalCreators.length);
-    for (let i = 0; i < personalCreators.length; i++) {
-      expect(personalCreators[i].creatorName['#text']).toBe(refPersonalCreators[i].creatorName['#text']);
-      expect(personalCreators[i].givenName).toBe(refPersonalCreators[i].givenName);
-      expect(personalCreators[i].familyName).toBe(refPersonalCreators[i].familyName);
-      expect(personalCreators[i].nameIdentifier['#text']).toBe(refPersonalCreators[i].nameIdentifier['#text']);
+    for (const refCreator of refPersonalCreators) {
+      const match = personalCreators.find((c: any) => c.familyName === refCreator.familyName);
+      expect(match, `Missing personal creator with familyName ${refCreator.familyName}`).toBeTruthy();
+      expect(match.creatorName['#text']).toBe(refCreator.creatorName['#text']);
+      expect(match.givenName).toBe(refCreator.givenName);
+      expect(match.nameIdentifier['#text']).toBe(refCreator.nameIdentifier['#text']);
     }
 
     // Assert organizational authors (institutions)
@@ -198,12 +197,14 @@ test.describe('Dataset Save with XML Verification', () => {
       expect(actualKeywords[i]).toBe(referenceKeywords[i]);
     }
 
-    // Assert multiple descriptions - check length and each value
+    // Assert multiple descriptions (matched by descriptionType, order may differ)
     const actualDescriptions = toArray(actualRoot.descriptions?.description);
     const referenceDescriptions = toArray(refRoot.descriptions?.description);
     expect(actualDescriptions.length).toBe(referenceDescriptions.length);
-    for (let i = 0; i < actualDescriptions.length; i++) {
-      expect(actualDescriptions[i]['#text']).toBe(referenceDescriptions[i]['#text']);
+    for (const refDesc of referenceDescriptions) {
+      const match = actualDescriptions.find((d: any) => d.descriptionType === refDesc.descriptionType);
+      expect(match, `Missing description of type ${refDesc.descriptionType}`).toBeTruthy();
+      expect(match['#text']).toBe(refDesc['#text']);
     }
 
     // Assert multiple related works - check length and each value with attributes
@@ -274,15 +275,56 @@ test.describe('Dataset Save with XML Verification', () => {
 async function prepareReferencaeAndActualXml(page: Page, type: string) {
     // Save XML
     const { xmlContent, parsedXml } = await downloadAndSaveXml(page, type);
+
+    const actualEnvelope = extractEnvelopeNode(parsedXml);
+    if (!actualEnvelope) {
+      const preview = xmlContent.slice(0, 500);
+      throw new Error(`Expected XML envelope in save response, but none was found. Response preview: ${preview}`);
+    }
+    const actualRoot = extractResourceNode(actualEnvelope);
+    if (!actualRoot) {
+      throw new Error('Expected resource node inside XML envelope, but none was found.');
+    }
     
     // Verify XML
     const refRoot = loadReferenceXml(type).envelope.resource;
-    const actualRoot = parsedXml.envelope.resource;
-
     const refEnvelope = loadReferenceXml(type).envelope;
-    const actualEnvelope = parsedXml.envelope;
 
     return { refRoot, actualRoot, refEnvelope, actualEnvelope };
+}
+
+function extractEnvelopeNode(parsedXml: any): any | null {
+  if (!parsedXml || typeof parsedXml !== 'object') {
+    return null;
+  }
+
+  if (parsedXml.envelope && typeof parsedXml.envelope === 'object') {
+    return parsedXml.envelope;
+  }
+
+  const envelopeKey = Object.keys(parsedXml).find((key) => key.endsWith(':envelope'));
+  if (envelopeKey && typeof parsedXml[envelopeKey] === 'object') {
+    return parsedXml[envelopeKey];
+  }
+
+  return null;
+}
+
+function extractResourceNode(envelope: any): any | null {
+  if (!envelope || typeof envelope !== 'object') {
+    return null;
+  }
+
+  if (envelope.resource && typeof envelope.resource === 'object') {
+    return envelope.resource;
+  }
+
+  const resourceKey = Object.keys(envelope).find((key) => key.endsWith(':resource'));
+  if (resourceKey && typeof envelope[resourceKey] === 'object') {
+    return envelope[resourceKey];
+  }
+
+  return null;
 }
 
 /**
@@ -308,10 +350,10 @@ function loadReferenceXml(testName: string): any {
 }
 
 /**
- * Downloads XML from the form save dialog and saves it for verification.
+ * Captures XML from the save response and saves it for verification.
  * 
- * Triggers the form save flow (Save button → Save modal confirmation), waits for the
- * browser download, parses the XML using fast-xml-parser with attribute support,
+ * Triggers the form save flow (Save button -> Save modal confirmation), waits for the
+ * save response, parses the XML using fast-xml-parser with attribute support,
  * and saves both raw XML and parsed JSON representations to the actual output directory.
  * 
  * The parser configuration preserves XML attributes without prefixes, enabling direct
@@ -321,13 +363,33 @@ function loadReferenceXml(testName: string): any {
  * @param {string} testName - Test type identifier for file naming ('minimal', 'extended', or 'extended-multiple')
  * @returns {Promise<{xmlContent: string, parsedXml: any}>} 
  *          Object containing raw XML content and parsed JSON structure
- * @throws {Error} If download fails, file cannot be read, or XML parsing fails
+ * @throws {Error} If response fails or XML parsing fails
  */
 async function downloadAndSaveXml(
   page: Page,
   testName: string
 ): Promise<{ xmlContent: string; parsedXml: any }> {
-  const downloadPromise = page.waitForEvent('download', { timeout: 30000 });
+  // Intercept the save request via page.route() to capture the response body.
+  // Content-Disposition: attachment causes the browser to treat the response as
+  // a file download, which means response.text() returns an empty string.
+  // By using route.fetch() we read the body before the browser consumes it.
+  let capturedBody = '';
+  let capturedStatus = 0;
+  let capturedHeaders: Record<string, string> = {};
+
+  await page.route('**/save/save_data.php', async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.fallback();
+      return;
+    }
+    const response = await route.fetch();
+    capturedStatus = response.status();
+    capturedHeaders = response.headers();
+    const body = await response.body();
+    capturedBody = body.toString('utf-8');
+    // Forward the original response (including download headers) to the browser
+    await route.fulfill({ response, body });
+  });
 
   // Wait for Save button and click
   const saveButton = page.getByRole('button', { name: 'Save' });
@@ -338,7 +400,7 @@ async function downloadAndSaveXml(
   const saveModal = page.locator('#modal-saveas');
   await saveModal.waitFor({ state: 'visible', timeout: 5000 });
 
-  // Fill filename if needed
+  // Fill filename
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
 
@@ -346,14 +408,30 @@ async function downloadAndSaveXml(
   const saveConfirmButton = page.locator('#button-saveas-save');
   await saveConfirmButton.click();
 
-  // Wait for download to complete
-  const download = await downloadPromise;
+  // Wait for the POST response to complete
+  await page.waitForResponse(
+    resp => resp.url().includes('/save/save_data.php') && resp.request().method() === 'POST',
+    { timeout: 30_000 }
+  );
 
-  // Get the downloaded file path
-  const filePath = await download.path();
+  // Clean up route handler
+  await page.unroute('**/save/save_data.php');
 
-  // Read and parse XML
-  const xmlContent = fs.readFileSync(filePath, 'utf-8');
+  // Use the captured body from route interception
+  const xmlContent = capturedBody;
+
+  // Fail fast with detailed diagnostics when save response is broken
+  if (capturedStatus !== 200 || xmlContent.trim().length === 0) {
+    const headerStr = Object.entries(capturedHeaders).map(([k, v]) => `${k}: ${v}`).join(', ');
+    throw new Error(
+      `Save endpoint returned unexpected response.\n` +
+      `  Status: ${capturedStatus}\n` +
+      `  Body length: ${xmlContent.length} (trimmed: ${xmlContent.trim().length})\n` +
+      `  Headers: ${headerStr}\n` +
+      `  Body (first 500 chars): ${JSON.stringify(xmlContent.slice(0, 500))}`
+    );
+  }
+
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: ''

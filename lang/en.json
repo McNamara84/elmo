@@ -146,17 +146,21 @@
         "technicalinfoPlaceholder": "Please enter detailed information that may be associated with design, implementation, operation, use, and/or maintenance of a process, system, or instrument.",
         "other": "Other",
         "otherTooltip": "Please enter other information..",
-        "otherPlaceholder": "Please enter other description information that does not fit into an existing category."
+        "otherPlaceholder": "Please enter other description information that does not fit into an existing category.",
+        "seriesInformation": "Series Information",
+        "seriesInformationTooltip": "Please enter series information...",
+        "seriesInformationPlaceholder": "Please enter information about a repeating series, such as volume, issue, number.",
+        "tableOfContents": "Table of Contents",
+        "tableOfContentsTooltip": "Please enter a table of contents...",
+        "tableOfContentsPlaceholder": "Please enter a listing of the contents of the resource."
     },
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
-            "title": "GCMD Thesauri",
-            "name": "GCMD Thesauri Keywords",
-            "scienceKeywords": "GCMD Science Keywords",
-            "platforms": "GCMD Platforms",
-            "instruments": "GCMD Instruments",
-            "label": "Open thesaurus to choose keywords or start typing..."
+            "title": "Thesauri",
+            "name": "Thesauri Keywords",
+            "label": "Open thesaurus to choose keywords or start typing...",
+            "unavailable": "Thesaurus data currently unavailable."
         },
         "free": {
             "title": "Free Keywords",

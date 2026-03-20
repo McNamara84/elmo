@@ -120,40 +120,13 @@ function saveOrUpdateOriginatingLaboratory($connection, $labName, $labId)
 
 
 /**
- * Gets cached affiliations data to avoid loading the large JSON file multiple times.
- * 
- * @return array|null The affiliations array or null on failure
- */
-function getAffiliationsCache()
-{
-    static $affiliationsCache = null;
-    
-    if ($affiliationsCache === null) {
-        $jsonPath = __DIR__ . '/../../json/affiliations.json';
-        if (!file_exists($jsonPath)) {
-            error_log("Affiliations JSON file not found at: " . $jsonPath);
-            return null;
-        }
-
-        $affiliationsJson = file_get_contents($jsonPath);
-        $affiliationsCache = json_decode($affiliationsJson, true);
-
-        if (!$affiliationsCache) {
-            error_log("Failed to parse affiliations JSON");
-            $affiliationsCache = []; // Set to empty array to prevent repeated load attempts
-            return null;
-        }
-    }
-    
-    return $affiliationsCache;
-}
-
-/**
- * Saves an affiliation into the database using the preferred name from ROR.
- * Handles ROR ID processing and avoids duplicate entries.
+ * Saves an affiliation into the database.
+ * Uses the affiliation name provided by the form (which originates from the
+ * AffiliationController search endpoint that already resolves preferred names).
+ * Avoids loading the large affiliations.json (23 MB) during save.
  *
  * @param mysqli      $connection       The database connection
- * @param string     $affiliation_name The name of the affiliation (not used anymore)
+ * @param string     $affiliation_name The name of the affiliation
  * @param string|null $rorId           The ROR ID (can be full URL)
  *
  * @return int|false The ID of the saved affiliation, or false on failure
@@ -167,32 +140,8 @@ function saveLabAffiliation($connection, $affiliation_name, $rorId)
             return false;
         }
 
-        // Get cached affiliations data
-        $affiliations = getAffiliationsCache();
-        if ($affiliations === null) {
-            return false;
-        }
-
         // Clean ROR ID if provided
         $cleanRorId = str_replace("https://ror.org/", "", $rorId);
-        $fullRorId = "https://ror.org/" . $cleanRorId;
-
-        // Find the matching affiliation in the JSON
-        $matchingAffiliation = null;
-        foreach ($affiliations as $affiliation) {
-            if ($affiliation['id'] === $fullRorId) {
-                $matchingAffiliation = $affiliation;
-                break;
-            }
-        }
-
-        if (!$matchingAffiliation) {
-            error_log("No matching affiliation found for ROR ID: " . $fullRorId);
-            return false;
-        }
-
-        // Use the preferred name from the JSON file
-        $preferredName = $matchingAffiliation['name'];
 
         // Check if the affiliation already exists
         $stmt = $connection->prepare("SELECT affiliation_id FROM Affiliation WHERE rorId = ?");
@@ -205,18 +154,18 @@ function saveLabAffiliation($connection, $affiliation_name, $rorId)
 
             // Update the name to ensure it matches the current preferred name
             $updateStmt = $connection->prepare("UPDATE Affiliation SET name = ? WHERE affiliation_id = ?");
-            $updateStmt->bind_param("si", $preferredName, $row['affiliation_id']);
+            $updateStmt->bind_param("si", $affiliation_name, $row['affiliation_id']);
             $updateStmt->execute();
             $updateStmt->close();
 
             $stmt->close();
-            return $row['affiliation_id']; // Return the existing ID
+            return $row['affiliation_id'];
         }
         $stmt->close();
 
         // Insert a new affiliation if it doesn't exist
         $stmt = $connection->prepare("INSERT INTO Affiliation (name, rorId) VALUES (?, ?)");
-        $stmt->bind_param("ss", $preferredName, $cleanRorId);
+        $stmt->bind_param("ss", $affiliation_name, $cleanRorId);
 
         if (!$stmt->execute()) {
             $stmt->close();

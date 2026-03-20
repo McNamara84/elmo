@@ -3,7 +3,6 @@ parameters:
     paths:
         - api
         - api.php
-        - api_functions.php
         - generate_xml_files.php
         - index.php
         - install.php

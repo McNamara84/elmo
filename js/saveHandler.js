@@ -27,7 +27,14 @@ class SaveHandler {
      */
     initializeEventListeners() {
         $('#button-saveas-save').on('click', () => this.handleSaveConfirm());
-        $('#modal-saveas').on('hidden.bs.modal', () => this.modals.notification.hide());
+        $('#modal-saveas').on('hidden.bs.modal', () => {
+            // Only dismiss the notification when it still shows the preparatory
+            // info alert. After the save completes the notification contains
+            // a success/danger alert and must stay visible.
+            if ($('#modal-notification-body .alert-info').length) {
+                this.modals.notification.hide();
+            }
+        });
 
         // Focus on input field
         $('#modal-saveas').on('shown.bs.modal', () => {

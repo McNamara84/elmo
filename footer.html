@@ -54,8 +54,9 @@
 <!-- Feature Toggles for JavaScript - enables conditional loading of resources -->
 <script>
 window.ELMO_FEATURES = {
-    showGcmdThesauri: <?php echo json_encode($showGcmdThesauri ?? true); ?>,
+    showThesauri: <?php echo json_encode($showThesauri ?? true); ?>,
     showMslVocabs: <?php echo json_encode($showMslVocabs ?? false); ?>,
+    showMslDefaultFreeKeywords: <?php echo json_encode($showMslDefaultFreeKeywords ?? false); ?>,
     showMslLabs: <?php echo json_encode($showMslLabs ?? false); ?>,
     showFreeKeywords: <?php echo json_encode($showFreeKeywords ?? true); ?>,
     showContributorPersons: <?php echo json_encode($showContributorPersons ?? true); ?>,
@@ -70,6 +71,12 @@ window.ELMO_FEATURES = {
 };
 </script>
 
+<!-- Expose "isNewRecord" so JS can apply behavior only for new records -->
+<script>
+  window.elmo = window.elmo || {};
+  window.elmo.isNewRecord = <?php echo !empty($isNewRecord) && $isNewRecord ? 'true' : 'false'; ?>;
+</script>
+
 <!-- jQuery -->
 <script src="node_modules/jquery/dist/jquery.min.js"></script>
 <!-- jQuery UI -->
@@ -81,6 +88,8 @@ window.ELMO_FEATURES = {
 <script src="js/language.js"></script>
 <!-- Thesauri laden -->
 <script src="js/thesauri.js"></script>
+<!-- Loading Description Types dynamically -->
+<script src="js/descriptionTypes.js"></script>
 <!-- Validierungen laden -->
 <script type="module" src="js/validation.js"></script>
 <!-- autocomplete laden -->

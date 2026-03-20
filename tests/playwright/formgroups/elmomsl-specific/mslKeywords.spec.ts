@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../utils';
+import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS, } from '../../utils';
 
 test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
   test.beforeEach(async ({ page }) => {

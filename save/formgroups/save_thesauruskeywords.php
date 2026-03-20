@@ -14,10 +14,12 @@ function saveKeywords($connection, $postData, $resource_id)
 {
     // Defines the fields to process
     $fieldsToProcess = [
-        'gcmdScienceKeywords',  // Thesaurus Keywords
+        'gcmdScienceKeywords',  // GCMD Science Keywords
         'MSLKeywords',          // MSL Keywords
         'platforms',            // GCMD Platforms
-        'instruments'           // GCMD Instruments
+        'instruments',          // GCMD Instruments
+        'chronostratKeywords',  // ICS Chronostratigraphy
+        'gemetKeywords',        // GEMET Thesaurus
     ];
 
     // Iterates over the fields and checks if they exist in the POST data and are not empty

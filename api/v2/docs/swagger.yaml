@@ -746,6 +746,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /vocabs/descriptiontypes:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get description types
+      description: Retrieve all available description types. When ERNIE is configured, types are fetched from ERNIE with caching. Falls back to hardcoded types (Abstract, Methods, TechnicalInfo, Other) if ERNIE is unavailable.
+      operationId: getDescriptionTypes
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DescriptionType"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /validation/patterns/{type}:
     get:
       tags:
@@ -1396,6 +1419,110 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /admin/cache/descriptiontypes/refresh:
+    post:
+      tags:
+        - admin
+      summary: Refresh description types cache
+      description: Forces a refresh of the ERNIE description types cache. Requires API key authentication. This endpoint is typically triggered by ERNIE after description type configuration changes.
+      operationId: refreshDescriptionTypesCache
+      responses:
+        "200":
+          description: Cache refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Description types cache refreshed successfully"
+                  itemCount:
+                    type: integer
+                    example: 6
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                    example: "2026-03-16T10:30:00+00:00"
+        "400":
+          description: ERNIE service is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Failed to fetch data from ERNIE
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/descriptiontypes/status:
+    get:
+      tags:
+        - admin
+      summary: Get description types cache status
+      description: Returns the current status of the ERNIE description types cache including validity, age, and item count.
+      operationId: getDescriptionTypesCacheStatus
+      responses:
+        "200":
+          description: Cache status returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured:
+                    type: boolean
+                    description: Whether ERNIE service is configured
+                    example: true
+                  cache:
+                    type: object
+                    properties:
+                      exists:
+                        type: boolean
+                        example: true
+                      valid:
+                        type: boolean
+                        example: true
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        example: "2026-03-16T10:30:00+00:00"
+                      age:
+                        type: integer
+                        description: Cache age in seconds
+                        example: 3600
+                      ageFormatted:
+                        type: string
+                        example: "1 hour 0 minutes"
+                      ttl:
+                        type: integer
+                        description: Cache TTL in seconds
+                        example: 21600
+                      itemCount:
+                        type: integer
+                        example: 6
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /admin/cache/roles/contributor-persons/refresh:
     post:
       tags:
@@ -1598,6 +1725,214 @@ paths:
                       itemCount:
                         type: integer
                         example: 13
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/relationtypes/refresh:
+    post:
+      tags:
+        - admin
+      summary: Refresh relation types cache
+      description: Forces a refresh of the ERNIE relation types cache and syncs the data to the local database. Requires API key authentication.
+      operationId: refreshRelationTypesCache
+      responses:
+        "200":
+          description: Cache refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Relation types cache refreshed successfully"
+                  itemCount:
+                    type: integer
+                    example: 36
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                    example: "2026-03-08T10:30:00+00:00"
+        "400":
+          description: ERNIE service is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Failed to fetch data from ERNIE
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/relationtypes/status:
+    get:
+      tags:
+        - admin
+      summary: Get relation types cache status
+      description: Returns the current status of the ERNIE relation types cache including validity, age, and item count.
+      operationId: getRelationTypesCacheStatus
+      responses:
+        "200":
+          description: Cache status returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured:
+                    type: boolean
+                    description: Whether ERNIE service is configured
+                    example: true
+                  cache:
+                    type: object
+                    properties:
+                      exists:
+                        type: boolean
+                        example: true
+                      valid:
+                        type: boolean
+                        example: true
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        example: "2026-03-08T10:30:00+00:00"
+                      age:
+                        type: integer
+                        description: Cache age in seconds
+                        example: 3600
+                      ageFormatted:
+                        type: string
+                        example: "1 hour 0 minutes"
+                      ttl:
+                        type: integer
+                        description: Cache TTL in seconds
+                        example: 21600
+                      itemCount:
+                        type: integer
+                        example: 36
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/identifiertypes/refresh:
+    post:
+      tags:
+        - admin
+      summary: Refresh identifier types cache
+      description: Forces a refresh of the ERNIE identifier types cache and syncs the data to the local database. Requires API key authentication.
+      operationId: refreshIdentifierTypesCache
+      responses:
+        "200":
+          description: Cache refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Identifier types cache refreshed successfully"
+                  itemCount:
+                    type: integer
+                    example: 8
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                    example: "2026-03-08T10:30:00+00:00"
+        "400":
+          description: ERNIE service is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Failed to fetch data from ERNIE
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/cache/identifiertypes/status:
+    get:
+      tags:
+        - admin
+      summary: Get identifier types cache status
+      description: Returns the current status of the ERNIE identifier types cache including validity, age, and item count.
+      operationId: getIdentifierTypesCacheStatus
+      responses:
+        "200":
+          description: Cache status returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured:
+                    type: boolean
+                    description: Whether ERNIE service is configured
+                    example: true
+                  cache:
+                    type: object
+                    properties:
+                      exists:
+                        type: boolean
+                        example: true
+                      valid:
+                        type: boolean
+                        example: true
+                      lastUpdated:
+                        type: string
+                        format: date-time
+                        example: "2026-03-08T10:30:00+00:00"
+                      age:
+                        type: integer
+                        description: Cache age in seconds
+                        example: 3600
+                      ageFormatted:
+                        type: string
+                        example: "1 hour 0 minutes"
+                      ttl:
+                        type: integer
+                        description: Cache TTL in seconds
+                        example: 21600
+                      itemCount:
+                        type: integer
+                        example: 8
         "500":
           description: Internal server error
           content:
@@ -2065,6 +2400,25 @@ components:
       required:
         - id
         - name
+    DescriptionType:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier of the description type (ERNIE ID)
+          example: 1
+        name:
+          type: string
+          description: Display name of the description type
+          example: "Abstract"
+        slug:
+          type: string
+          description: URL-friendly identifier used as form field key
+          example: "Abstract"
+      required:
+        - id
+        - name
+        - slug
     Pid4instInstrument:
       type: object
       description: A scientific instrument from the PID4INST catalogue

@@ -129,7 +129,7 @@ $(document).ready(function () {
           .attr("aria-busy", "false")
           .html(getNestedValue(translations, 'modals.feedback.sendButton'))
           .trigger("focus");
-        feedbackForm.attr("aria-busy", "false");
+        feedbackForm.attr({ "aria-busy": "false", "aria-hidden": "false" });
         thankYouMessage
           .hide();
         applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");

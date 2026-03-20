@@ -964,7 +964,7 @@ function fillTemporalFields($row, temporalData) {
  */
 function processSpatialTemporalCoverages(xmlDoc, resolver) {
   const geoLocationNodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Coverage" or @dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
     const geoData = getGeoLocationData(geoLocationNodes.snapshotItem(i));
@@ -989,31 +989,32 @@ function processDescriptions(xmlDoc, resolver) {
   // Get all description elements
   const descriptionNodes = xmlDoc.evaluate(".//ns:descriptions/ns:description", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-  // Create a mapping of description types to form input IDs
-  const descriptionMapping = {
+  // Mapping for Abstract (always static) and dynamic description types
+  const staticMapping = {
     Abstract: "input-abstract",
-    Methods: "input-methods",
-    TechnicalInformation: "input-technicalinfo",
-    Other: "input-other",
   };
+
+  // Dynamic description types use the pattern input-description-{Slug}
+  const dynamicSlugs = ["Methods", "TechnicalInfo", "TechnicalInformation", "SeriesInformation", "TableOfContents", "Other"];
 
   // Process each description node
   for (let i = 0; i < descriptionNodes.snapshotLength; i++) {
     const descriptionNode = descriptionNodes.snapshotItem(i);
     const descriptionType = descriptionNode.getAttribute("descriptionType");
-    const language = descriptionNode.getAttribute("xml:lang") || "en";
     const content = descriptionNode.textContent.trim();
 
-    // Find the corresponding input field
-    const inputId = descriptionMapping[descriptionType];
-    if (inputId) {
-      // Set the content in the appropriate textarea
-      $(`#${inputId}`).val(content);
-
-      // If this is not the Abstract, expand the corresponding accordion section
-      if (descriptionType !== "Abstract") {
-        const collapseId = `collapse-${descriptionType.toLowerCase().replace("information", "info")}`;
-        $(`#${collapseId}`).addClass("show");
+    if (staticMapping[descriptionType]) {
+      // Abstract: static field
+      $(`#${staticMapping[descriptionType]}`).val(content);
+    } else if (dynamicSlugs.indexOf(descriptionType) !== -1) {
+      // Dynamic types: normalize TechnicalInformation -> TechnicalInfo
+      const slug = descriptionType === "TechnicalInformation" ? "TechnicalInfo" : descriptionType;
+      const inputId = "input-description-" + slug;
+      const $input = $(`#${inputId}`);
+      if ($input.length) {
+        $input.val(content);
+        // Expand the accordion section
+        $(`#collapse-description-${slug}`).addClass("show");
       }
     }
   }
@@ -1051,37 +1052,34 @@ function processDates(xmlDoc, resolver) {
  */
 function processKeywords(xmlDoc, resolver) {
   const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  // Thesaurus inputs — may not exist if the thesaurus is disabled via ERNIE availability
   const tagifyInputGCMD = document.querySelector("#input-sciencekeyword");
+  const tagifyInputPlatforms = document.querySelector("#input-platforms");
+  const tagifyInputInstruments = document.querySelector("#input-instruments");
+  const tagifyInputChronostrat = document.querySelector("#input-chronostratigraphy");
+  const tagifyInputGemet = document.querySelector("#input-gemet");
+
+  // Always-present inputs
   const tagifyInputMsl = document.querySelector("#input-mslkeyword");
   const tagifyInputFree = document.querySelector("#input-freekeyword");
-  const tagifyInputPlatforms = document.querySelector("#input-Platforms");
-  const tagifyInputInstruments = document.querySelector("#input-Instruments");
 
-  // Error handling
-  if (
-    !tagifyInputGCMD?._tagify ||
-    !tagifyInputMsl?._tagify ||
-    !tagifyInputFree?._tagify ||
-    !tagifyInputPlatforms?._tagify ||
-    !tagifyInputInstruments?._tagify
-  ) {
-    console.error("One or more Tagify instances are not properly initialized.");
+  if (!tagifyInputFree?._tagify) {
+    console.error("Free keyword Tagify instance is not properly initialized.");
     return;
   }
 
-  // Retrieve existing Tagify instances
-  const tagifyGCMD = tagifyInputGCMD._tagify;
-  const tagifyMsl = tagifyInputMsl._tagify;
   const tagifyFree = tagifyInputFree._tagify;
-  const tagifyPlatforms = tagifyInputPlatforms._tagify;
-  const tagifyInstruments = tagifyInputInstruments._tagify;
+  const tagifyMsl = tagifyInputMsl?._tagify;
 
-  // Clear existing tags
-  tagifyGCMD.removeAllTags();
-  tagifyMsl.removeAllTags();
+  // Clear existing tags on all available inputs
   tagifyFree.removeAllTags();
-  tagifyPlatforms.removeAllTags();
-  tagifyInstruments.removeAllTags();
+  tagifyMsl?.removeAllTags();
+  tagifyInputGCMD?._tagify?.removeAllTags();
+  tagifyInputPlatforms?._tagify?.removeAllTags();
+  tagifyInputInstruments?._tagify?.removeAllTags();
+  tagifyInputChronostrat?._tagify?.removeAllTags();
+  tagifyInputGemet?._tagify?.removeAllTags();
 
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
@@ -1090,7 +1088,6 @@ function processKeywords(xmlDoc, resolver) {
     const valueURI = subjectNode.getAttribute("valueURI") || "";
     const keyword = subjectNode.textContent.trim();
 
-    // Create the tag data
     const tagData = {
       value: keyword,
       scheme: subjectScheme,
@@ -1098,19 +1095,34 @@ function processKeywords(xmlDoc, resolver) {
       id: valueURI,
     };
 
-    // Check the schemeURI and add the tag to the appropriate Tagify instance
+    // Route tag to appropriate Tagify instance based on schemeURI
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
-      // Add the tag to the GCMD Science Keyword input field
-      tagifyGCMD.addTags([tagData]);
+      if (tagifyInputGCMD?._tagify) tagifyInputGCMD._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
-      tagifyPlatforms.addTags([tagData]);
+      if (tagifyInputPlatforms?._tagify) tagifyInputPlatforms._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
-      tagifyInstruments.addTags([tagData]);
+      if (tagifyInputInstruments?._tagify) tagifyInputInstruments._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
+    } else if (
+      schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020" ||
+      subjectScheme === "International Chronostratigraphic Chart" ||
+      subjectScheme === "Chronostratigraphic Chart"
+    ) {
+      if (tagifyInputChronostrat?._tagify) tagifyInputChronostrat._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
+    } else if (
+      schemeURI === "http://www.eionet.europa.eu/gemet/gemetThesaurus" ||
+      schemeURI === "http://www.eionet.europa.eu/gemet/concept/" ||
+      subjectScheme?.includes("GEMET")
+    ) {
+      if (tagifyInputGemet?._tagify) tagifyInputGemet._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
-      // Add the tag to the MSL Keyword input field
-      tagifyMsl.addTags([tagData]);
+      if (tagifyMsl) tagifyMsl.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else {
-      // Add all other tags to the Free Keyword input field
       tagifyFree.addTags([tagData]);
     }
   }
@@ -1364,6 +1376,10 @@ async function loadXmlToForm(xmlDoc) {
   processOriginatingLaboratories(xmlDoc, resolver);
   // Process contributors
   processContributors(xmlDoc, resolver);
+  // Wait for dynamic description type fields to be ready
+  if (window.descriptionTypesReady) {
+    await window.descriptionTypesReady;
+  }
   // Process descriptions
   processDescriptions(xmlDoc, resolver);
   // Process Spatial and Temporal Coverages

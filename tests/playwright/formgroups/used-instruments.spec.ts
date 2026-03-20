@@ -145,14 +145,21 @@ test.describe('Used Instruments form group', () => {
         // Focus on the Tagify input to trigger lazy loading
         await page.locator('.tagify__input').click();
 
+        // Wait until the fixture data has been loaded into the Tagify whitelist
+        await page.waitForFunction(() => {
+            const input: any = document.querySelector('#input-usedinstruments');
+            const tagify = input?._tagify;
+            return !!tagify && Array.isArray(tagify.whitelist) && tagify.whitelist.length >= 3;
+        }, null, { timeout: 10000 });
+
         // Type to trigger search
         await page.locator('.tagify__input').fill('Seis');
 
         // Wait for dropdown to show matching instruments
-        await page.waitForSelector('.tagify__dropdown__item', { timeout: 10000 });
+        const dropdownItems = page.locator('.tagify__dropdown__item');
+        await expect(dropdownItems.first()).toBeVisible({ timeout: 10000 });
 
         // Should show at least the seismometer
-        const dropdownItems = page.locator('.tagify__dropdown__item');
         const count = await dropdownItems.count();
         expect(count).toBeGreaterThan(0);
     });

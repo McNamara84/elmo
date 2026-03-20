@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "99798979842dc62374869830fbd77c31",
+    "content-hash": "2ebf8b8f242a9c4b7a06272a171ca64f",
     "packages": [
         {
             "name": "nikic/fast-route",
@@ -137,272 +137,6 @@
                 }
             ],
             "time": "2026-01-09T18:02:33+00:00"
-        },
-        {
-            "name": "psr/http-message",
-            "version": "2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-fig/http-message.git",
-                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/http-message/zipball/402d35bcb92c70c026d1a6a9883f06b2ead23d71",
-                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.2 || ^8.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.0.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Psr\\Http\\Message\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "PHP-FIG",
-                    "homepage": "https://www.php-fig.org/"
-                }
-            ],
-            "description": "Common interface for HTTP messages",
-            "homepage": "https://github.com/php-fig/http-message",
-            "keywords": [
-                "http",
-                "http-message",
-                "psr",
-                "psr-7",
-                "request",
-                "response"
-            ],
-            "support": {
-                "source": "https://github.com/php-fig/http-message/tree/2.0"
-            },
-            "time": "2023-04-04T09:54:51+00:00"
-        },
-        {
-            "name": "sweetrdf/easyrdf",
-            "version": "1.19.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/sweetrdf/easyrdf.git",
-                "reference": "e1d60a7686cff8177575218d027cc9e100fb0e4c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/sweetrdf/easyrdf/zipball/e1d60a7686cff8177575218d027cc9e100fb0e4c",
-                "reference": "e1d60a7686cff8177575218d027cc9e100fb0e4c",
-                "shasum": ""
-            },
-            "require": {
-                "ext-dom": "*",
-                "ext-mbstring": "*",
-                "ext-pcre": "*",
-                "ext-xmlreader": "*",
-                "lib-libxml": "*",
-                "php": "^8.0",
-                "sweetrdf/rdf-helpers": "^2.0"
-            },
-            "replace": {
-                "easyrdf/easyrdf": "1.1.*"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.0",
-                "laminas/laminas-http": "^2",
-                "phpstan/phpstan": "^1.0",
-                "phpstan/phpstan-phpunit": "^1.0",
-                "phpunit/phpunit": "^9.5.0|^10.0.0",
-                "semsol/arc2": "^3",
-                "sweetrdf/json-ld": "^1.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "EasyRdf\\": "lib"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "BSD-3-Clause"
-            ],
-            "authors": [
-                {
-                    "name": "Nicholas Humfrey",
-                    "email": "njh@aelius.com",
-                    "homepage": "http://www.aelius.com/njh/",
-                    "role": "Developer"
-                },
-                {
-                    "name": "Alexey Zakhlestin",
-                    "email": "indeyets@gmail.com",
-                    "homepage": "http://indeyets.ru/",
-                    "role": "Developer"
-                },
-                {
-                    "name": "Konrad Abicht",
-                    "email": "hi@inspirito.de",
-                    "homepage": "http://inspirito.de/",
-                    "role": "Maintainer, Developer"
-                }
-            ],
-            "description": "EasyRdf is a PHP library designed to make it easy to consume and produce RDF.",
-            "keywords": [
-                "Linked Data",
-                "RDF",
-                "Semantic Web",
-                "Turtle",
-                "rdfa",
-                "sparql"
-            ],
-            "support": {
-                "issues": "https://github.com/sweetrdf/easyrdf/issues",
-                "source": "https://github.com/sweetrdf/easyrdf/tree/1.19.0"
-            },
-            "time": "2026-01-07T14:46:24+00:00"
-        },
-        {
-            "name": "sweetrdf/rdf-helpers",
-            "version": "2.1.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/sweetrdf/rdfHelpers.git",
-                "reference": "0c6b599cc8e28997cc4336b1d893c16d89ed2508"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/sweetrdf/rdfHelpers/zipball/0c6b599cc8e28997cc4336b1d893c16d89ed2508",
-                "reference": "0c6b599cc8e28997cc4336b1d893c16d89ed2508",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0",
-                "sweetrdf/rdf-interface": "^2 | ^3",
-                "zozlak/rdf-constants": "^1.1"
-            },
-            "require-dev": {
-                "phpstan/phpstan": "^1",
-                "phpunit/phpunit": "^10"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "rdfHelpers\\": "src/rdfHelpers"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Mateusz Żółtak",
-                    "email": "zozlak@zozlak.org",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Set of low level helpers for implementing rdfInterface",
-            "homepage": "https://github.com/sweetrdf/rdfHelpers",
-            "support": {
-                "issues": "https://github.com/sweetrdf/rdfHelpers/issues",
-                "source": "https://github.com/sweetrdf/rdfHelpers/tree/2.1.1"
-            },
-            "time": "2025-04-22T13:42:35+00:00"
-        },
-        {
-            "name": "sweetrdf/rdf-interface",
-            "version": "3.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/sweetrdf/rdfInterface.git",
-                "reference": "82b565c724b8ce30ea918bfff2232832c66a912f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/sweetrdf/rdfInterface/zipball/82b565c724b8ce30ea918bfff2232832c66a912f",
-                "reference": "82b565c724b8ce30ea918bfff2232832c66a912f",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0",
-                "psr/http-message": "^1.0 || ^2.0",
-                "zozlak/rdf-constants": "*"
-            },
-            "require-dev": {
-                "phpstan/phpstan": "*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "rdfInterface\\": "src/rdfInterface"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Mateusz Żółtak",
-                    "email": "zozlak@zozlak.org",
-                    "role": "Developer"
-                }
-            ],
-            "description": "A common RDF interface for PHP RDF libraries.",
-            "homepage": "https://github.com/sweetrdf/rdfInterface",
-            "support": {
-                "issues": "https://github.com/sweetrdf/rdfInterface/issues",
-                "source": "https://github.com/sweetrdf/rdfInterface/tree/3.2.0"
-            },
-            "time": "2025-04-28T12:22:37+00:00"
-        },
-        {
-            "name": "zozlak/rdf-constants",
-            "version": "1.2.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/zozlak/RdfConstants.git",
-                "reference": "a8de0b50d23b213a68784ec2cec22b4ad838012b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/zozlak/RdfConstants/zipball/a8de0b50d23b213a68784ec2cec22b4ad838012b",
-                "reference": "a8de0b50d23b213a68784ec2cec22b4ad838012b",
-                "shasum": ""
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "zozlak\\": "src/zozlak"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Mateusz Żółtak",
-                    "email": "zozlak@zozlak.org"
-                }
-            ],
-            "description": "A set of commonly used RDF and XSD constants",
-            "homepage": "https://github.com/zozlak/RdfConstants",
-            "support": {
-                "issues": "https://github.com/zozlak/RdfConstants/issues",
-                "source": "https://github.com/zozlak/RdfConstants/tree/1.2.1"
-            },
-            "time": "2022-08-05T12:50:50+00:00"
         }
     ],
     "packages-dev": [
@@ -617,16 +351,16 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "2.8.0",
+            "version": "2.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "21dc724a0583619cd1652f673303492272778051"
+                "reference": "7d0ed42f28e42d61352a7a79de682e5e67fec884"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/21dc724a0583619cd1652f673303492272778051",
-                "reference": "21dc724a0583619cd1652f673303492272778051",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/7d0ed42f28e42d61352a7a79de682e5e67fec884",
+                "reference": "7d0ed42f28e42d61352a7a79de682e5e67fec884",
                 "shasum": ""
             },
             "require": {
@@ -642,6 +376,7 @@
             "require-dev": {
                 "bamarni/composer-bin-plugin": "^1.8.2",
                 "http-interop/http-factory-tests": "0.9.0",
+                "jshttp/mime-db": "1.54.0.1",
                 "phpunit/phpunit": "^8.5.44 || ^9.6.25"
             },
             "suggest": {
@@ -713,7 +448,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.8.0"
+                "source": "https://github.com/guzzle/psr7/tree/2.9.0"
             },
             "funding": [
                 {
@@ -729,7 +464,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-08-23T21:21:41+00:00"
+            "time": "2026-03-10T16:41:02+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -969,11 +704,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.40",
+            "version": "2.1.42",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/9b2c7aeb83a75d8680ea5e7c9b7fca88052b766b",
-                "reference": "9b2c7aeb83a75d8680ea5e7c9b7fca88052b766b",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/1279e1ce86ba768f0780c9d889852b4e02ff40d0",
+                "reference": "1279e1ce86ba768f0780c9d889852b4e02ff40d0",
                 "shasum": ""
             },
             "require": {
@@ -1018,7 +753,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-23T15:04:35+00:00"
+            "time": "2026-03-17T14:58:32+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -1616,6 +1351,59 @@
             "time": "2024-04-15T12:06:14+00:00"
         },
         {
+            "name": "psr/http-message",
+            "version": "2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-message.git",
+                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/402d35bcb92c70c026d1a6a9883f06b2ead23d71",
+                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2 || ^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Message\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP messages",
+            "homepage": "https://github.com/php-fig/http-message",
+            "keywords": [
+                "http",
+                "http-message",
+                "psr",
+                "psr-7",
+                "request",
+                "response"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/http-message/tree/2.0"
+            },
+            "time": "2023-04-04T09:54:51+00:00"
+        },
+        {
             "name": "ralouphie/getallheaders",
             "version": "3.0.3",
             "source": {
@@ -1971,16 +1759,16 @@
         },
         {
             "name": "sebastian/environment",
-            "version": "9.0.0",
+            "version": "9.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/environment.git",
-                "reference": "bb64d08145b021b67d5f253308a498b73ab0461e"
+                "reference": "e26e9a944bd9d27b3a38a82fc2093d440951bfbe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/environment/zipball/bb64d08145b021b67d5f253308a498b73ab0461e",
-                "reference": "bb64d08145b021b67d5f253308a498b73ab0461e",
+                "url": "https://api.github.com/repos/sebastianbergmann/environment/zipball/e26e9a944bd9d27b3a38a82fc2093d440951bfbe",
+                "reference": "e26e9a944bd9d27b3a38a82fc2093d440951bfbe",
                 "shasum": ""
             },
             "require": {
@@ -2023,7 +1811,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/environment/issues",
                 "security": "https://github.com/sebastianbergmann/environment/security/policy",
-                "source": "https://github.com/sebastianbergmann/environment/tree/9.0.0"
+                "source": "https://github.com/sebastianbergmann/environment/tree/9.0.1"
             },
             "funding": [
                 {
@@ -2043,7 +1831,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-06T04:43:29+00:00"
+            "time": "2026-03-15T07:13:02+00:00"
         },
         {
             "name": "sebastian/exporter",

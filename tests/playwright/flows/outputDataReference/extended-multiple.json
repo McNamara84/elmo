@@ -220,7 +220,7 @@
           },
           {
             "#text": "Sampling rate: 100 Hz. Data format: miniSEED.",
-            "descriptionType": "TechnicalInformation",
+            "descriptionType": "TechnicalInfo",
             "xml:lang": "en"
           },
           {
@@ -261,7 +261,7 @@
       },
       "xmlns": "http://datacite.org/schema/kernel-4",
       "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-      "xsi:schemaLocation": "http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/elmo/schemas/DataCite/DataCiteSchema45.xsd"
+      "xsi:schemaLocation": "http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/elmo/schemas/DataCite/DataCiteSchema46.xsd"
     },
     "MD_Metadata": {
       "fileIdentifier": {

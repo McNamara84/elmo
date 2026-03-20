@@ -65,6 +65,10 @@ function saveFundingReferenceEntry($connection, $entry, $resource_id)
         return true;
     }
 
+    if (empty($entry['funder'])) {
+        return false;
+    }
+
     [$funderIdString, $funderIdType] = prepareFunderIdDetails($entry['funderId']);
     $awardUri = !empty($entry['awardUri']) ? $entry['awardUri'] : null;
 
