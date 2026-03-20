@@ -503,7 +503,7 @@ Occurrence is: 0-n
 
 
 #### Contact Person(s)
-A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). Authors can be labelled as a contact person with the help of a toggle switch button which adds the additional fields required for contact (Email address, Website).
+A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). Authors can be labelled as a contact person with the help of a toggle switch button which adds the additional fields required for contact (Email address, Website).
 
 - Last Name
 
@@ -703,7 +703,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Example value:  `This is the description of a data set that does not fit into the categories of abstract, methods or technical information, but is nevertheless extremely necessary.`
 
 ### Keywords
-Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD Science Keywords" and "Free Keywords" are mapped to `<subject>` in the DataCite 4.5 scheme and to `<descriptiveKeywords> <MD_Keywords> <keyword>` in the ISO scheme. 
+Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD Science Keywords" and "Free Keywords" are mapped to `<subject>` in the DataCite scheme and to `<descriptiveKeywords> <MD_Keywords> <keyword>` in the ISO scheme. 
 
 #### EPOS Multi-Scale Laboratories Keywords
 
