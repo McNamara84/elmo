@@ -2422,9 +2422,9 @@ class VocabController
     /**
      * Syncs ERNIE identifier types to the local database
      *
-     * First deactivates all ERNIE-linked types (isShown=0), then upserts
-     * current ERNIE data with isShown=1. This ensures types removed from
-     * ERNIE are no longer shown.
+     * First deactivates all types (isShown=0), then upserts current ERNIE
+     * data with isShown=1. This ensures types not provided by ERNIE
+     * (including legacy install.php data) are no longer shown.
      *
      * Uses INSERT ... ON DUPLICATE KEY UPDATE (upsert) to handle
      * new, existing by ernie_id, and existing by name records.
@@ -2440,8 +2440,8 @@ class VocabController
         $connection->begin_transaction();
 
         try {
-            // Deactivate all ERNIE-linked types first; upsert below re-activates current ones
-            $connection->query("UPDATE `Identifier_Type` SET `isShown` = 0 WHERE `ernie_id` IS NOT NULL");
+            // Deactivate all types first; upsert below re-activates current ones
+            $connection->query("UPDATE `Identifier_Type` SET `isShown` = 0");
 
             foreach ($ernieTypes as $type) {
                 $ernieId = $type['id'] ?? null;

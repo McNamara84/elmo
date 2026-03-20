@@ -156,9 +156,10 @@ final class IdentifierTypesIntegrationTest extends DatabaseTestCase
     }
 
     /**
-     * Test that locally-added types (no ernie_id) are not affected by sync
+     * Test that locally-added types (no ernie_id) are also deactivated by sync
+     * when not present in ERNIE data (e.g. legacy install.php types like EAN13)
      */
-    public function testSyncDoesNotAffectLocalTypes(): void
+    public function testSyncDeactivatesLocalTypesNotInErnie(): void
     {
         $this->connection->query('DELETE FROM Related_Work');
         $this->connection->query('DELETE FROM Identifier_Type');
@@ -166,14 +167,14 @@ final class IdentifierTypesIntegrationTest extends DatabaseTestCase
         // Insert a local type (no ernie_id) and an ERNIE type
         $this->connection->query(
             "INSERT INTO Identifier_Type (name, description, pattern, isShown) VALUES
-             ('LocalType', 'Local only', '^local$', 1)"
+             ('EAN13', 'Legacy type', '^ean$', 1)"
         );
         $this->connection->query(
             "INSERT INTO Identifier_Type (ernie_id, name, description, pattern, isShown) VALUES
              (100, 'DOI', 'DOI desc', '^doi$', 1)"
         );
 
-        // Sync with only DOI – LocalType should remain unchanged
+        // Sync with only DOI – EAN13 is not in ERNIE and should be deactivated
         $ernieData = [
             ['id' => 100, 'name' => 'DOI', 'description' => 'DOI desc', 'pattern' => '^doi$'],
         ];
@@ -182,12 +183,19 @@ final class IdentifierTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
         $controller->syncIdentifierTypesToDb($ernieData);
 
-        // Local type should still be visible and unchanged
+        // EAN13 should be deactivated
         $result = $this->connection->query(
-            "SELECT isShown FROM Identifier_Type WHERE name = 'LocalType'"
+            "SELECT isShown FROM Identifier_Type WHERE name = 'EAN13'"
         );
         $row = $result->fetch_assoc();
-        $this->assertEquals(1, $row['isShown'], 'Local type (no ernie_id) should not be deactivated');
+        $this->assertEquals(0, $row['isShown'], 'Legacy type not in ERNIE should be deactivated');
+
+        // DOI should still be visible
+        $result = $this->connection->query(
+            "SELECT isShown FROM Identifier_Type WHERE name = 'DOI'"
+        );
+        $row = $result->fetch_assoc();
+        $this->assertEquals(1, $row['isShown'], 'DOI from ERNIE should remain visible');
     }
 
     /**
