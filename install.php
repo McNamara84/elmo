@@ -355,20 +355,24 @@ function createDatabaseStructure($connection): array
 
         "Relation" => "CREATE TABLE IF NOT EXISTS `Relation` (
     `relation_id` INT NOT NULL AUTO_INCREMENT,
+    `ernie_id` INT NULL,
     `name` VARCHAR(100) NOT NULL,
     `description` TEXT(1000) NULL,
     PRIMARY KEY (`relation_id`),
-    UNIQUE KEY `unique_name` (`name`)
+    UNIQUE KEY `unique_name` (`name`),
+    UNIQUE KEY `unique_ernie_id` (`ernie_id`)
     );",
 
         "Identifier_Type" => "CREATE TABLE IF NOT EXISTS `Identifier_Type` (
     `identifier_type_id` INT NOT NULL AUTO_INCREMENT,
+    `ernie_id` INT NULL,
     `name` VARCHAR(45) NOT NULL,
     `description` TEXT(1000) NULL,
     `pattern` VARCHAR(256),
     `isShown` SMALLINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (`identifier_type_id`),
-    UNIQUE KEY `unique_name` (`name`)
+    UNIQUE KEY `unique_name` (`name`),
+    UNIQUE KEY `unique_ernie_id` (`ernie_id`)
     );",
 
         "Related_Work" => "CREATE TABLE IF NOT EXISTS `Related_Work` (
