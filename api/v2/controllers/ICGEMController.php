@@ -809,7 +809,7 @@ class ICGEMController extends DatasetController
     {
         // Replace hardcoded Windows file paths with the official DataCite schema URL
         $dataciteXmlString = preg_replace(
-            '/file:.*?DataCiteSchema45\.xsd/',
+            '/file:.*?DataCiteSchema46\.xsd/',
             'http://schema.datacite.org/meta/kernel-4/metadata.xsd',
             $dataciteXmlString
         );

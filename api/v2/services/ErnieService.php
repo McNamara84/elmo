@@ -583,6 +583,11 @@ class ErnieService
     {
         return [
             [
+                'id' => 2,  // ERNIE ID for Award
+                'name' => 'Award',
+                'description' => 'A grant, prize, or other financial or honorary acknowledgment'
+            ],
+            [
                 'id' => 10,  // ERNIE ID for Dataset
                 'name' => 'Dataset',
                 'description' => 'Data encoded in a defined structure'
@@ -591,6 +596,11 @@ class ErnieService
                 'id' => 21,  // ERNIE ID for Other
                 'name' => 'Other',
                 'description' => 'Other resource type not covered by the available options'
+            ],
+            [
+                'id' => 23,  // ERNIE ID for Project
+                'name' => 'Project',
+                'description' => 'An organized research activity with defined goals and resources'
             ]
         ];
     }

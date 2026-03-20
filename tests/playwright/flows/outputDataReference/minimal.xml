@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <envelope>
     
-<resource xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/elmo/schemas/DataCite/DataCiteSchema45.xsd">
+<resource xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/elmo/schemas/DataCite/DataCiteSchema46.xsd">
   <identifier identifierType="DOI"/>
   <creators>
     <creator>

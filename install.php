@@ -747,7 +747,9 @@ function insertLookupData($connection)
             ["resource_type_general" => "StudyRegistration", "description" => "A detailed, time-stamped description of a research plan, often openly shared in a registry or published in a journal before the study is conducted to lend accountability and transparency in the hypothesis generating and testing process."],
             ["resource_type_general" => "Text", "description" => "A resource consisting primarily of words for reading that is not covered by any other textual resource type in this list."],
             ["resource_type_general" => "Workflow", "description" => "A structured series of steps which can be executed to produce a final outcome, allowing users a means to specify and enact their work in a more reproducible manner."],
-            ["resource_type_general" => "Other", "description" => "If selected, supply a value for ResourceType."]
+            ["resource_type_general" => "Other", "description" => "If selected, supply a value for ResourceType."],
+            ["resource_type_general" => "Award", "description" => "A grant, prize, or other financial or honorary acknowledgment that supports or recognizes research contributions."],
+            ["resource_type_general" => "Project", "description" => "An organized research activity with defined goals, timeline, and resources, often funded by grants or institutional support."]
         ],
         "Rights" => [
             ["text" => "Creative Commons Attribution 4.0 International", "rightsIdentifier" => "CC-BY-4.0", "rightsURI" => "https://creativecommons.org/licenses/by/4.0/legalcode", "forSoftware" => "0"],
@@ -831,6 +833,8 @@ function insertLookupData($connection)
             ["name" => "Obsoletes", "description" => "Indicates A replaces B"],
             ["name" => "IsCollectedBy", "description" => "Indicates A is collected by B"],
             ["name" => "Collects", "description" => "Indicates A collects B"],
+            ["name" => "HasTranslation", "description" => "Indicates A has a translation B"],
+            ["name" => "IsTranslationOf", "description" => "Indicates A is a translation of B"],
         ],
         "Identifier_Type" => [
             ["name" => "ARK", "description" => "A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements)", "pattern" => "^ark:\/\d{5}\/\w+$/", "isShown" => 1],
@@ -851,7 +855,9 @@ function insertLookupData($connection)
             ["name" => "UPC", "description" => "A barcode symbology used for tracking trade items in stores. Its most common form, the UPC-A, consists of 12 numerical digits.", "pattern" => "^\d{12}$", "isShown" => 0],
             ["name" => "URL", "description" => "Also known as web address, a URL is a specific character string that constitutes a reference to a resource. The syntax is: scheme://domain:port/path?query_string#fragment_id.", "pattern" => "(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?", "isShown" => 1],
             ["name" => "URN", "description" => "A unique and persistent identifier of an electronic document. The syntax is: urn:<NID>:<NSS>. The leading urn: sequence is case-insensitive, <NID> is the namespace identifier, <NSS> is the namespace-specific string.", "pattern" => "^urn:nbn:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$", "isShown" => 1],
-            ["name" => "w3id", "description" => "Mostly used to publish vocabularies and ontologies. The letters ‘w3’ stand for “World Wide Web”.", "pattern" => "^https:\/\/w3id\.org\/[a-zA-Z0-9\/._-]+(?:#[a-zA-Z0-9._-]+)?$", "isShown" => 0]
+            ["name" => "w3id", "description" => "Mostly used to publish vocabularies and ontologies. The letters ‘w3’ stand for “World Wide Web”.", "pattern" => "^https:\/\/w3id\.org\/[a-zA-Z0-9\/._-]+(?:#[a-zA-Z0-9._-]+)?$", "isShown" => 0],
+            ["name" => "CSTR", "description" => "China Science and Technology Resource identifier. A persistent identifier used in the Chinese science and technology resource sharing system.", "pattern" => "", "isShown" => 0],
+            ["name" => "RRID", "description" => "Research Resource Identifier. A persistent unique identifier for research resources such as antibodies, organisms, cell lines, and tools.", "pattern" => "^RRID:[A-Za-z]+_[0-9]+$", "isShown" => 0]
         ],
         // ICGEM-related lookup insert
         "File_Format" => [

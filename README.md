@@ -316,7 +316,7 @@ To install them: npm install
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `doi` in the table `Resource`
   - Restrictions: Must be in “prefix/suffix” format
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/identifier/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/identifier/)
   - Example values: `10.5880/GFZ.3.1.2024.002`, `10.5880/pik.2024.001`
   - Mapping: is mapped to `<identifier>` in the DataCite scheme and to `<gmd:fileIdentifier>` as well as `<gmd:identifier> <gmd:MD_Identifier> <gmd:code>` and `<gmd:distributionInfo> <gmd:MD_Distribution> <gmd:transferOptions> <gmd:MD_DigitalTransferOptions> <gmd:onLine> <gmd:CI_OnlineResource>` in the ISO scheme
 
@@ -327,7 +327,7 @@ To install them: npm install
     - Occurrence: 1
     - The corresponding field in the database where the value is saved is called: `year` in the table `year`
     - Restrictions: A year in four-digit format. Values allowed in four-digit format: 1901 to 2155 (due to data type YEAR)
-    - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/publicationyear/#publicationyear)
+    - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/publicationyear/#publicationyear)
     - Example values: `1998`, `2018`
     - Mapping: is mapped to `<publicationYear>` in the DataCite scheme
 
@@ -338,8 +338,8 @@ To install them: npm install
   - Data type: String
   - Occurrence: 1
   - The corresponding field in the database where the value is saved is called: `resource_type_general` in the table `Resource_Type`
-  - Restrictions: must be selected from [controlled list](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/#resourcetypegeneral) 
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/resourcetype/#a-resourcetypegeneral)
+  - Restrictions: must be selected from [controlled list](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/resourceTypeGeneral/#resourcetypegeneral) 
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/resourcetype/#a-resourcetypegeneral)
   - Example values: `Dataset`, `Audiovisual`, `Book`
   - Mapping: mapped to `<resourceType resourceTypeGeneral="XX">` in the DataCite scheme
 
@@ -350,7 +350,7 @@ To install them: npm install
   - Occurrence: 0-1
   - The corresponding field in the database where the value is saved is called: `version` in the table `Resource`
   - Restrictions: None 
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/version/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/version/)
   - Example values: `1.0` `2.1` `3.5`
   - Mapping: mapped to `<version>` in DataCite scheme
 
@@ -361,7 +361,7 @@ To install them: npm install
   - Occurence: 1
   - The corresponding field in the database where the value is saved is called: `name` in the table `Language`
   - Restrictions: must be selected from controlled list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/language/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/language/)
   - Beispielwerte: `Englisch`, `German`, `French`
   - Mapping: mapped to `<language>` element in DataCite scheme and to `<gmd:language>` in ISO scheme 
 
@@ -372,7 +372,7 @@ To install them: npm install
   - Occurrence: 1-n, with n=$maxTitles specified in the settings.php
   - The corresponding field in the database where the value is stored is called: `text` in the table `title`
   - Restrictions: None
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/title/)
   - Example values: `Drone based photogrammetry data at the Geysir`
   - Mapping: mapped to `<titles> <title>` in DataCite scheme and `<identificationInfo> <MD_DataIdentification> <citation> <CI_Citation> <title>` or `...<alternateTitle` depending on the title type
 
@@ -383,7 +383,7 @@ To install them: npm install
   - Occurrence: 1, if the corresponding title is not the main title
   - The corresponding field in the database where the value is stored is called: `name` in the table `Title_Type`
   - Restrictions: must be selected from controlled list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/title/#a-titletype)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/title/#a-titletype)
   - Example values: `Translated Title`
   - Mapping: mapped to `<title titleType="TranslatedTitle">` in the datacite scheme
 
@@ -398,7 +398,7 @@ To install them: npm install
   - Occurrence: 1
   - The corresponding fields in the database where the value is stored is called: `text`and `rightsIdentifier` in the table `Rights`
   - Restrictions: Mandatory field. Must be selected from controlled list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/rights/)
   - Example value: `Creative Commons Attribution 4.0 International (CC-BY-4.0)`
 
 - *Saved in backend (not visible to user):* rightsURI
@@ -408,7 +408,7 @@ To install them: npm install
   - Occurence: 1
   - The corresponding fields in the database where the value is stored is called: `rightsURI` in the table `Rights`
   - Restrictions: Mandatory field. Must be selected from controlled list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/rights/#a-rightsuri)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/rights/#a-rightsuri)
   - Example values: `https://creativecommons.org/licenses/by/4.0/legalcode`
 
 - *Saved in backend (not visible to user):* forSoftware
@@ -427,7 +427,7 @@ Occurrence is: 1-n
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: `familyname` in the table `author`
   - Restrictions: mandatory field, only letters allowed
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#familyname)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/creator/#familyname)
   - Example values: `Jemison`, `Smith`
 
 - First Name
@@ -437,7 +437,7 @@ Occurrence is: 1-n
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: `givenname` in the table `author`
   - Restrictions: mandatory field, only letters allowed
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#givenname)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/creator/#givenname)
   - Example values: `Lisa`, `Elisa`
 
 - Author ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
@@ -447,7 +447,7 @@ Occurrence is: 1-n
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `orcid` in the table `author`
   - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”.
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#nameidentifier)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/creator/#nameidentifier)
   - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
 
 - Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
@@ -457,7 +457,7 @@ Occurrence is: 1-n
   - Occurrence: 0-n
   - The corresponding field in the database where the value is stored is called: `name` in the table `affiliation`
   - Restrictions: None, can be chosen from the dropdown menu or given as free text
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/creator/#affiliation)
   - Example values: `Technische Universität Berlin`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
 - *Saved in backend (not visible to user):* rorId
@@ -466,7 +466,7 @@ Occurrence is: 1-n
   - Occurrence: 0-n
   - The corresponding field in the database where the value is stored is called: `rorId` in the table `affiliation`
   - Restrictions: is automatically saved when an affiliation is chosen
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#a-affiliationidentifier)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/creator/#a-affiliationidentifier)
   - Example values: `03v4gjf40`, `04z8jg394`
 
 
@@ -482,7 +482,7 @@ Occurrence is: 0-n
   - Occurrence: 0-n
   - The corresponding field in the database where the value is stored is called: `institutionname` in the table `Author\_institution`
   - Restrictions: Optional field, but may become mandatory in certain cases.
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#creatorname)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/creator/#creatorname)
   - Example values: `California Digital Library`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
 - Affiliation <a href="https://ror.org/" target="\_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
@@ -492,7 +492,7 @@ Occurrence is: 0-n
   - Occurrence: 0-n
   - The corresponding field in the database where the value is stored is called: `name` in the table `affiliation`
   - Restrictions: None, can be chosen from the dropdown menu or given as free text
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#affiliation)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/creator/#affiliation)
   - Example values: `Technische Universität Berlin`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
 
@@ -502,12 +502,12 @@ Occurrence is: 0-n
   - Occurrence: 0-n
   - The corresponding field in the database where the value is stored is called: `rorId` in the table `affiliation`
   - Restrictions: is automatically saved when an affiliation is chosen
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/creator/#a-affiliationidentifier)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/creator/#a-affiliationidentifier)
   - Example values: `03v4gjf40`, `04z8jg394`
 
 
 #### Contact Person(s)
-A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme (version 4.5) and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). Authors can be labelled as a contact person with the help of a toggle switch button which adds the additional fields required for contact (Email address, Website).
+A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). Authors can be labelled as a contact person with the help of a toggle switch button which adds the additional fields required for contact (Email address, Website).
 
 - Last Name
 
@@ -564,7 +564,7 @@ The controlled list is provided and maintained by Utrecht University ([MSL Labor
   - Occurence: 0-n
   - The corresponding field in the database is called: `laboratoryname` in the table `originating_laboratory`
   - Restrictions: Controlled list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/contributor/#a-contributortype)
   - Example values: `Fragmentation Lab (Ludwig-Maximilians-University Munich, Germany)`, `TecMOD - GRmodel (CNRS-Rennes 1 University, France)`
 
 - *Saved in backend (not visible to user):* LabId, laboratoryAffiliation, laboratoryRorId
@@ -591,7 +591,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `orcid` in the `Contributor_Person` table
   - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-nameidentifierscheme)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/contributor/#a-nameidentifierscheme)
   - Example values: `1452-9875-4521-7893`, `0082-4781-1312-884x`
 
 - Last Name 
@@ -601,7 +601,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurrence: 1, if a contributor person is specified
   - The corresponding field in the database where the value is stored is called: `familyname` in the table `Contributor_Person`
   - Restrictions: Only letters are allowed.
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#familyname)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/contributor/#familyname)
   - Example values: `Jemison`, `Smith`
 
 - First Name
@@ -611,7 +611,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurrence: 1, if a contributor person is specified
   - The corresponding field in the database where the value is stored is called: `givenname` in the table `Contributor_Person`
   - Restrictions: Only letters are allowed
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#givenname)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/contributor/#givenname)
   - Example values: `John`, `Jane`
 
 - Role
@@ -621,7 +621,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurrence: 1-10, if a contributor person is specified
   - The corresponding field in the database where the value is stored is called: `name` in the `Role` table
   - Restrictions: must be selcted from controlled list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/contributor/#a-contributortype)
   - Example values: `Data Manager`, `Project Manager`
 
 - Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
@@ -631,7 +631,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurrence: 0-n
   - The corresponding field in the database where the value is stored is called: `name` in the table `Affiliation`
   - Restrictions: None, can be selected from list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#affiliation)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/contributor/#affiliation)
   - Example values: `Technische Universität Berlin`, `GFZ, Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ`
     - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
 
@@ -645,7 +645,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurrence: 1, if contributing organisation is specified
   - The corresponding field in the database where the value is saved is called: `name` in the table `contributor_institution`
   - Restrictions: None
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#contributorname)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/contributor/#contributorname)
   - Example values: `University of Applied Sciences Potsdam`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
 - Role
@@ -655,7 +655,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurrence: 1-10
   - The corresponding field in the database where the value is stored is called: `name` in the table `Role`
   - Restrictions: must be selected from controlled list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#a-contributortype)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/contributor/#a-contributortype)
   - Example values: `Data Collector`, `Data Curator`.
   
 - Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
@@ -665,7 +665,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurrence: 0-n
   - The corresponding field in the database where the value is stored is called: `name` in the `Affiliation` table
   - Restrictions: None, can be selected from list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/contributor/#affiliation)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/contributor/#affiliation)
   - Example values: `Education and Science Workers' Union`, `Institute of Science and Ethics`
   - Note: As in all affiliation fields the ROR ID is saved, when an affiliation is chosen from the list
  
@@ -676,7 +676,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurence: 1
   - The corresponding field in the database where the value is saved is called: `description` in the table `description` with `type=Abstract`
   - Restrictions: None
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#abstract)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/descriptionType/#abstract)
   - Example value: `The dataset contains a subset of an airborne hyperspectral HyMap image over the Cabo de Gata-Nίjar Natural Park in Spain from 15.06.2005, and soil wet chemistry data based on in-situ soil sampling. The Cabo de Gata-Nίjar Natural Park is a semi-arid mediterranean area in Southern Spain, sparsely populated and with a range of landscape patterns.`
 
 - Methods
@@ -685,7 +685,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurence: 0-1
   - The corresponding field in the database where the value is saved is called: `description` in the table `description` with `type = Methods`
   - Restrictions: None
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#methods)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/descriptionType/#methods)
   - Example value: `Graphical representation of the steps used to reconstruct sequence alignments of the Nudix superfamily, as described in the Materials and Methods section. (A) The pipeline to build the 78-PDB structure guided sequence alignment. (B) The pipeline to build the 324-core sequence alignment guided by the 78-PDB sequence alignment. (C) The pipeline to build the alignment of the complete Nudix clan (38,950 sequences). (D) Illustration of how to combine two alignment into one guided by a scaffold alignment.`
 
 - TechnicalInfo
@@ -694,7 +694,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurence: 0-1
   - The corresponding field in the database where the value is saved is called: `description` in the table `description` with `type = Technical Information`
   - Restrictions: None
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#technicalinfo)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/descriptionType/#technicalinfo)
   - Example value: `Scripts written and run using Wolfram Mathematica (confirmed with versions 10.2 to 11.1). Assumes raw data matches format produced by a LTQ Orbitrap Velos mass spectrometer and exported by the proprietary software (Xcalibur) to a comma-separated values (.csv) file. The .csv files are the expected input into the Mathematica scripts. `
 
 - Other
@@ -703,11 +703,11 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Occurence: 0-1
   - The corresponding field in the database where the value is saved is called: `description` in the table `description` with `type = Other`
   - Restrictions: None
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/descriptionType/#other)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/descriptionType/#other)
   - Example value:  `This is the description of a data set that does not fit into the categories of abstract, methods or technical information, but is nevertheless extremely necessary.`
 
 ### Keywords
-Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD Science Keywords" and "Free Keywords" are mapped to `<subject>` in the DataCite 4.5 scheme and to `<descriptiveKeywords> <MD_Keywords> <keyword>` in the ISO scheme. 
+Contents from the keyword fields "EPOS Multi-Scale Laboratories Keywords", "GCMD Science Keywords" and "Free Keywords" are mapped to `<subject>` in the DataCite scheme and to `<descriptiveKeywords> <MD_Keywords> <keyword>` in the ISO scheme. 
 
 #### EPOS Multi-Scale Laboratories Keywords
 
@@ -720,7 +720,7 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
   - Occurrence: 0-n
   - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
   - Restrictions: Controlled vocabulary
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/subject/)
   - Example values: `Material > minerals > chemical elements > selenium`, `Geochemistry > measured property > selenium`
 
 - *Saved in backend (not visible to user):* scheme, schemeURI, valueURI und language
@@ -730,7 +730,7 @@ Keywords from the [EPOS Multi-Scale Laboratories vocabularies](https://epos-msl.
   - Occurence: 1 for controlled (thesaurus) keywords
   - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
   - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/subject/#a-scheme)
   - Example values: 
     scheme `https://epos-msl.uu.nl/voc/materials/1.3/`, 
     schemeURI `https://epos-msl.uu.nl/voc/materials/1.3/`, 
@@ -748,7 +748,7 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - Occurrence: 0-n
   - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
   - Restrictions: Terms can be selected from controlled list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/subject/)
   - Example Values: `Science Keywords > EARTH SCIENCE > OCEANS > SEA ICE > SEA ICE VOLUME`,`Science Keywords > EARTH SCIENCE > TERRESTRIAL HYDROSPHERE > WATER QUALITY/WATER CHEMISTRY > CONTAMINANTS > SELENIUM`
 
 - *Saved in backend (not visible to user):* scheme, schemeURI, valueURI, language
@@ -758,7 +758,7 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - Occurence: 1 for controlled (thesaurus) keywords
   - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
   - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/subject/#a-scheme)
   - Example values: 
     scheme `NASA/GCMD Earth Science Keywords`, 
     schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"`, 
@@ -773,7 +773,7 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - Occurrence: 0-n
   - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
   - Restrictions: Terms can be selected from controlled list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/subject/)
   - Example Values: `Platforms > Air-based Platforms > Dropwindsondes > DROPWINDSONDES`
 
 - *Saved in backend (not visible to user):* scheme, schemeURI, valueURI, language
@@ -783,7 +783,7 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - Occurence: 1 for controlled (thesaurus) keywords
   - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
   - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/subject/#a-scheme)
   - Example values: 
     scheme `NASA/GCMD Platforms Keywords`, 
     schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms`, 
@@ -798,7 +798,7 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - Occurrence: 0-n
   - The corresponding field in the database is called: `keyword` in the table `thesaurus_keywords`
   - Restrictions: Terms can be selected from controlled list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/subject/)
   - Example Values: `Instruments > Solar/Space Observing Instruments > Photon/Optical Detectors > Charged Coupled Devices > K-LINE CCD/SOLAR OSCILLATIONS`
 
 - *Saved in backend (not visible to user):* scheme, schemeURI, valueURI, language
@@ -808,7 +808,7 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - Occurence: 1 for controlled (thesaurus) keywords
   - The corresponding field in the database where the value is saved is called: `scheme`, `schemeURI`, `valueURI` and `language` in the table `thesaurus_keywords`
   - Restrictions: fields are filled automatically with data provided by the vocabulary provider and maintainer
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/subject/#a-scheme)
   - Example values: 
     scheme `NASA/GCMD Instruments`, 
     schemeURI `https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments`, 
@@ -824,7 +824,7 @@ This field contains free keywords that are not part of a thesaurus.
   - Occurrence: 0-n
   - The corresponding field in the database where the value is saved is called: `free_keyword` in the table `free_keywords`
   - Restrictions: Dublicates are not allowed
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/subject/#a-scheme)
   - Example values: `Seismic tremor`, `Acoustic Emission`
 
 ### Dates
@@ -838,7 +838,7 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
   - Occurrence: 1
   - The corresponding field in the database where the value is stored is called: `dateCreated` in the `resource` table
   - Restrictions: This field must be a valid calendar date
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#created)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/dateType/#created)
   - Example values: `2024-06-05` `1999-04-07`
 
 - Embargo until
@@ -848,7 +848,7 @@ In the ISO scheme: The data from Date created are mapped to `<date>`, while Emba
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `dateEmbargoUntil` in the `resource` table
   - Restrictions: This field must be a valid calendar date
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#available)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/dateType/#available)
   - Example values: `2024-06-15` `2000-12-31`
 
 ### Spatial and temporal coverage
@@ -864,7 +864,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: latitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -90 to +90
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#southboundlatitude)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/geolocation/#southboundlatitude)
   - Example values: `52.0317983498743` `-3.234`
 
 - Latitude Max
@@ -874,7 +874,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   - Occurrence: 0-1, becomes mandatory if Longitude Max is filled
   - The corresponding field in the database where the value is stored is called: latitudeMax in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -90 to +90
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#northboundlatitude)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/geolocation/#northboundlatitude)
   - Example values: `49.72437624376` `-32.82438824398`
   
 - Longitude Min
@@ -884,7 +884,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: longitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#westboundlongitude)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/geolocation/#westboundlongitude)
   - Example values: `108.0317983498743` `-3.04`
   
 - Longitude Max
@@ -894,7 +894,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   - Occurrence: 0-1, becomes mandatory if Latitude Max is filled
   - The corresponding field in the database where the value is stored is called: longitudeMax in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#eastboundlongitude)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/geolocation/#eastboundlongitude)
   - Example values: `99.037543735498743` `-6.4`
   
 - Description
@@ -904,7 +904,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
   - Restrictions: none
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/geolocation/#geolocationplace)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/geolocation/#geolocationplace)
   - Example values: `Several boreholes at regular intervals distributed over the entire surface.`
   
 - Start Date
@@ -914,7 +914,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   - Occurrence: 0-1 
   - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/dateType/#coverage)
   - Example values: `2024-01-02` `1999-08-07`
   
 - Start Time
@@ -924,7 +924,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   - Occurrence: 0-1, optional. If provided, both Start Time and End Time as well as Timezone become mandatory.
   - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/dateType/#coverage)
   - Example values: `10:43:50` `04:00:00`
   
 - End Date
@@ -934,7 +934,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/dateType/#coverage)
   - Example values: `1998-01-02` `2001-07-08`
   
 - End Time
@@ -944,7 +944,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   - Occurrence: 0-1, optional. If provided, both Start Time and End Time as well as Timezone become mandatory.
   - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/dateType/#collected)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/dateType/#coverage)
   - Example values: `11:34:56` `09:00:00`
   
 - Timezone
@@ -967,7 +967,7 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - Occurrence: 1, if relatedIdentifier is <0
   - The corresponding field in the database where the value is saved is called: `relation_fk` in the `Related_Work` table
   - Restrictions: A relation type must be selected, if related work is specified
-  - Relations can be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#b-relationtype)
+  - Relations can be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/relatedidentifier/#b-relationtype)
   - Example values: `IsCitedBy` `IsSupplementTo` `IsContinuedBy`
 
 - Identifier
@@ -977,7 +977,7 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - Occurrence: 1, if relatedIdentifier is <0
   - The corresponding field in the database where the value is stored is called: `Identifier` in the `Related_Work` table
   - Restrictions: Must be specified, if related work specified
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/relatedidentifier/)
   - Example values: `13030/tqb3kh97gh8w`, `0706.0001`, `10.26022/IEDA/112263`
 
 - Identifier Type
@@ -988,7 +988,7 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - The corresponding field in the database where the value is stored is called: `identifier_type_fk` in the `Related_Work` table
   - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
   - Restrictions: Must be selected, if related work is specified
-  - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
+  - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/relatedidentifier/#a-relatedidentifiertype)
   - Example values: `ARK` `arXiv` `EAN13`
 
 ### Funding Reference
@@ -1001,7 +1001,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - Occurence: 0-1, if Funding Reference is specified, then funderName is mandatory. 
   - The corresponding field in the database where the value is stored is called: `funder` in the `Funding_Reference` table
   - Restrictions: Selection from CrossRef funders list is possible, as well as free text
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/fundingreference/)
   - Example values: `Gordon and Betty Moore Foundation`, `Ford Foundation`
 
 - *Saved in backend (not visible to user):* funderId
@@ -1011,7 +1011,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `funderid` in the `Funding_Reference` table
   - Restrictions: is automatically saved, if a funder is selected from the dropdown list
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#funderidentifier)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/fundingreference/#funderidentifier)
   - Example values: `http://dx.doi.org/10.13039/100001214`
 
 - *Saved in backend (not visible to user):* funderidtyp
@@ -1021,7 +1021,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `funderidtyp` in the `Funding_Reference` table
   - Restrictions: can only be "Crossref Funder ID" (if a funder is selected from the dropdown list) or null
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#a-funderidentifiertype)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/fundingreference/#a-funderidentifiertype)
   - Value: `Crossref Funder ID`
 
 - Grant Number
@@ -1031,7 +1031,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `grantnumber` in the `Funding_Reference` table
   - Restrictions: None
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardnumber)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/fundingreference/#awardnumber)
   - Example values: `GBMF3859.01` `GBMF3859.22`
 
 - Grant Name
@@ -1041,7 +1041,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `grantname` in the `Funding_Reference` table
   - Restrictions: None
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#awardtitle)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/fundingreference/#awardtitle)
   - Example values: `Socioenvironmental Monitoring of the Amazon Basin and Xingu`, `Grantmaking at a glance`
 
 - Award URI
@@ -1051,7 +1051,7 @@ This element is optional in the DataCite scheme. However, it is a best practice 
   - Occurence: 0-1
   - The corresponding field in the database where the value is stored is called: `awarduri` in the `Funding_Reference` table
   - Restrictions: None
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/fundingreference/#a-awarduri)
+  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/fundingreference/#a-awarduri)
   - Example values: `https://www.moore.org/grants/list/GBMF3859.01`, `[Grantmaking at a glance](https://doi.org/10.35802/221400)`
 
 ### ICGEM metadata
@@ -1340,7 +1340,7 @@ Metadata specific to elevation/terrain gravity measurements. This type of data s
 
   ## Data Mapping and Occurences
   </summary>
-The following table gives a quick overview on the occurences of the form fields in comparison to the occurences of the corresponding DataCite metadata as described in the [DataCite 4.5 documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/). Input fields visable to the user are marked **bold** in the table whereas hidden fields are in *italics*.
+The following table gives a quick overview on the occurences of the form fields in comparison to the occurences of the corresponding DataCite metadata as described in the [DataCite 4.6 documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/). Input fields visable to the user are marked **bold** in the table whereas hidden fields are in *italics*.
 
 | Form group                 | **Input Field**                           |            Occurence in ELMO            | Occurence in DataCite metadata scheme | Mapped to in DataCite                                                                                                                                                       |
 | -------------------------- | ----------------------------------------- | :-------------------------------------: | :-----------------------------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

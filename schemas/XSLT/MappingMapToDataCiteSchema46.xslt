@@ -13,7 +13,7 @@ http://www.altova.com/mapforce
 	<xsl:template match="/">
 		<xsl:variable name="var1_initial" select="."/>
 		<resource xmlns="http://datacite.org/schema/kernel-4">
-			<xsl:attribute name="xsi:schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance">http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/elmo/schemas/DataCite/DataCiteSchema45.xsd</xsl:attribute>
+			<xsl:attribute name="xsi:schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance">http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/elmo/schemas/DataCite/DataCiteSchema46.xsd</xsl:attribute>
 			<xsl:for-each select="*[local-name()='Resource' and namespace-uri()='']">
 				<xsl:variable name="var2_cur" select="."/>
 				<identifier>
@@ -355,14 +355,14 @@ http://www.altova.com/mapforce
 														<xsl:for-each select="$var29_cur/*[local-name()='timeEnd' and namespace-uri()='']">
 															<xsl:variable name="var38_cur" select="."/>
 															<date>
-																<xsl:attribute name="dateType" namespace="">Collected</xsl:attribute>
+																<xsl:attribute name="dateType" namespace="">Coverage</xsl:attribute>
 																<xsl:value-of select="concat($var30_cur, concat('T', $var33_cur), $var34_cur, '/', $var35_cur, concat('T', .), $var34_cur)"/>
 															</date>
 														</xsl:for-each>
 													</xsl:when>
 													<xsl:otherwise>
 														<date>
-															<xsl:attribute name="dateType" namespace="">Collected</xsl:attribute>
+															<xsl:attribute name="dateType" namespace="">Coverage</xsl:attribute>
 															<xsl:value-of select="concat($var30_cur, concat('T', $var33_cur), $var34_cur, '/', ., '', $var34_cur)"/>
 														</date>
 													</xsl:otherwise>
@@ -387,14 +387,14 @@ http://www.altova.com/mapforce
 													<xsl:for-each select="$var29_cur/*[local-name()='timeEnd' and namespace-uri()='']">
 														<xsl:variable name="var43_cur" select="."/>
 														<date>
-															<xsl:attribute name="dateType" namespace="">Collected</xsl:attribute>
+															<xsl:attribute name="dateType" namespace="">Coverage</xsl:attribute>
 															<xsl:value-of select="concat($var30_cur, '', $var39_cur, '/', $var40_cur, concat('T', .), $var39_cur)"/>
 														</date>
 													</xsl:for-each>
 												</xsl:when>
 												<xsl:otherwise>
 													<date>
-														<xsl:attribute name="dateType" namespace="">Collected</xsl:attribute>
+																<xsl:attribute name="dateType" namespace="">Coverage</xsl:attribute>
 														<xsl:value-of select="concat($var30_cur, '', $var39_cur, '/', ., '', $var39_cur)"/>
 													</date>
 												</xsl:otherwise>
