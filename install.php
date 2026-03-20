@@ -886,8 +886,9 @@ function insertLookupData($connection)
         // ICGEM-related lookup insert
         "File_Format" => [
             ["name" => "icgem1.0", "description" => "icgem1.0 or ICGEM-format is a Linux /Unix ASCII-format for the representation of Earth Gravity Field models in terms of spherical harmonic coefficients"],
-            ["name" => "icgem2.0", "description" => "icgem2.0 has been introduced to indicate time-limited validity periods of the time-varying coefficients"]
-        ],
+            ["name" => "icgem2.0", "description" => "icgem2.0 has been introduced to indicate time-limited validity periods of the time-varying coefficients"],
+            ["name" => "NetCDF", "description" => "NetCDF (Network Common Data Form) is a set of software libraries and machine-independent data formats that support the creation, access, and sharing of array-oriented scientific data"]
+            ],
         "Model_Type" => [
             ["name" => "Static", "description" => "Models of gravity field potential computed from the satellite-based gravity measurements and the spatial details of the gravity field (i.e. short wavelengths or high frequencies) are collected via terrestrial, airborne and shipborne gravity measurements and radar altimetry."],
             ["name" => "Temporal", "description" => "Models derived from input data of dedicated time periods, enabling to monitor the temporal changes in the gravity field."],
@@ -898,7 +899,8 @@ function insertLookupData($connection)
         ],
         "Mathematical_Representation" => [
             ["name" => "Spherical harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of solid spherical harmonics, which are solutions to Laplace's equation in a spherical coordinate system. This representation is the most common for global gravity field models"],
-            ["name" => "Ellipsoidal harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of ellipsoidal harmonics, which are solutions to Laplace's equation in an ellipsoidal coordinate system."]
+            ["name" => "Ellipsoidal harmonics", "description" => "The gravitational potential is expressed as a series exsion in terms of ellipsoidal harmonics, which are solutions to Laplace's equation in an ellipsoidal coordinate system."],
+            ["name" => "Gridded dataset", "description" => " "]
         ],
 
     ];

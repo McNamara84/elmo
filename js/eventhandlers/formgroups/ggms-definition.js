@@ -302,3 +302,127 @@ $(document).ready(function() {
         checkGGMsPropertiesEssential();
     });
 });
+
+/**
+ * @description Handles default values for mathematical representation and file format
+ * based on special model types (altimetry-derived, mascon).
+ * 
+ * @module ggmspropertiesessential
+ */
+$(document).ready(function() {
+    const modelTypeSelect = $('#input-model-type');
+    const mathRepSelect = $('#input-mathematical-representation');
+    const fileFormatSelect = $('#input-file-format');
+
+    if (!modelTypeSelect.length) {
+        return;
+    }
+
+    let previousMathRepValue = '';
+    let previousFileFormatValue = '';
+    let wasSpecialType = false;
+
+    /** Normalizes model type string for comparisons. */
+    function normalizeModelType(value) {
+        return (value || '').toString().trim().toLowerCase();
+    }
+
+    /** Checks if the model type requires gridded dataset defaults. */
+    function isGriddedDatasetType(modelType) {
+        return modelType === 'altimetry-derived' || modelType === 'mascon';
+    }
+
+    /** Sets select to value by text match (case-insensitive), returns true if found. */
+    function setSelectByText(selectElement, targetText) {
+        const target = (targetText || '').toLowerCase();
+        let found = false;
+
+        selectElement.find('option').each(function() {
+            const optionText = ($(this).text() || '').trim().toLowerCase();
+            if (optionText === target) {
+                selectElement.val($(this).val()).trigger('change');
+                found = true;
+                return false;
+            }
+        });
+
+        return found;
+    }
+
+    /** Applies defaults for gridded dataset model types. */
+    function applyGriddedDatasetDefaults(forceOverride) {
+        // Store previous values if entering special mode
+        if (!wasSpecialType) {
+            previousMathRepValue = mathRepSelect.val() || '';
+            previousFileFormatValue = fileFormatSelect.val() || '';
+        }
+
+        // Set mathematical representation to "Gridded dataset"
+        if (mathRepSelect.length && (forceOverride || !mathRepSelect.val())) {
+            setSelectByText(mathRepSelect, 'gridded dataset');
+        }
+
+        // Set file format to "NetCDF"
+        if (fileFormatSelect.length && (forceOverride || !fileFormatSelect.val())) {
+            setSelectByText(fileFormatSelect, 'netcdf');
+        }
+    }
+
+    /** Restores previous values when leaving special model types. */
+    function restorePreviousDefaults() {
+        if (mathRepSelect.length && previousMathRepValue !== '') {
+            mathRepSelect.val(previousMathRepValue).trigger('change');
+        } else if (mathRepSelect.length) {
+            mathRepSelect.val('').trigger('change');
+        }
+
+        if (fileFormatSelect.length && previousFileFormatValue !== '') {
+            fileFormatSelect.val(previousFileFormatValue).trigger('change');
+        } else if (fileFormatSelect.length) {
+            fileFormatSelect.val('').trigger('change');
+        }
+
+        previousMathRepValue = '';
+        previousFileFormatValue = '';
+    }
+
+    /** Handles model type change for gridded dataset defaults. */
+    function handleModelTypeChangeForDefaults() {
+        const modelType = normalizeModelType(modelTypeSelect.val());
+        const isSpecial = isGriddedDatasetType(modelType);
+
+        if (isSpecial) {
+            applyGriddedDatasetDefaults(!wasSpecialType);
+        } else if (wasSpecialType) {
+            restorePreviousDefaults();
+        }
+
+        wasSpecialType = isSpecial;
+    }
+
+    // Track changes to math rep and file format when not in special mode
+    $(document).on('change', '#input-mathematical-representation', function() {
+        const modelType = normalizeModelType(modelTypeSelect.val());
+        if (!isGriddedDatasetType(modelType)) {
+            previousMathRepValue = mathRepSelect.val() || '';
+        }
+    });
+
+    $(document).on('change', '#input-file-format', function() {
+        const modelType = normalizeModelType(modelTypeSelect.val());
+        if (!isGriddedDatasetType(modelType)) {
+            previousFileFormatValue = fileFormatSelect.val() || '';
+        }
+    });
+
+    // Listen for model type changes
+    $(document).on('change', '#input-model-type', handleModelTypeChangeForDefaults);
+
+    // Apply defaults after dropdowns are populated (async)
+    $(document).ajaxComplete(function() {
+        const modelType = normalizeModelType(modelTypeSelect.val());
+        if (isGriddedDatasetType(modelType)) {
+            applyGriddedDatasetDefaults(false);
+        }
+    });
+});
