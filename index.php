@@ -71,6 +71,7 @@ if ($showAuthorInstitution) {
 if ($showGGMsProperties) {
     include $baseDir . 'formgroups/GGMsDefinition.html';
     include $baseDir . 'formgroups/GGMsAltimetryModels.html';
+    include $baseDir . 'formgroups/GGMsMASCONs.html';
     include $baseDir . "formgroups/GGMsModelTypes.html";
     include $baseDir . 'formgroups/GGMsDataSources.html';
     include $baseDir . 'formgroups/GGMsProperties.html';
