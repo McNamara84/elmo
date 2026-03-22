@@ -2,6 +2,7 @@ settings.php
 .vscode/
 .phpunit.result.cache
 .env
+docker-compose.override.yml
 node_modules/
 vendor/
 install.js
