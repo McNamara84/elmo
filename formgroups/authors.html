@@ -34,7 +34,7 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control js-required-on-submit" id="input-author-lastname" name="familynames[]" 
-              pattern="^[\p{L}\s'-]+$"  required />
+              pattern="[^0-9$§?!&%=_*+<>]*"  required />
               <label for="input-author-lastname"><span data-translate="general.lastName">Last Name</span><span
                   class="red-star">*</span></label>
               <div class="invalid-feedback" data-translate="general.lastNameInvalid">
@@ -48,7 +48,7 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control js-required-on-submit" id="input-author-firstname" name="givennames[]" 
-              pattern="^[\p{L}\s'-]+$"  required   />
+              pattern="[^0-9$§?!&%=_*+<>]*"  required   />
               <label for="input-author-firstname"><span data-translate="general.firstName">First Name</span><span
                   class="red-star">*</span></label>
               <div class="invalid-feedback" data-translate="general.firstNameInvalid">

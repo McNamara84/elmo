@@ -154,4 +154,65 @@ test.describe('Author(s) form group', () => {
     await expect(lastName).toHaveValue('Existing');
     await expect(firstName).toHaveValue('Author');
   });
+
+  test('accepts valid international author last names', async ({ page }) => {
+    const lastName = page.locator('#input-author-lastname');
+
+    let isValid: boolean;
+
+    // Arabic name with spaces
+    await lastName.fill('محمد علي');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // German name with umlaut
+    await lastName.fill('Rüdiger');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // Russian name (Cyrillic)
+    await lastName.fill('Александр ');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // Greek name
+    await lastName.fill('Παπαδόπουλος');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // Turkish name with hyphen
+    await lastName.fill('Çalışkan-Şahin');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // Chinese name
+    await lastName.fill('王小明');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // English name with apostrophe and hyphen
+    await lastName.fill("O'Connor-Smith");
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+  });
+
+
+  test('rejects author last names with digits or forbidden symbols', async ({ page }) => {
+    const lastName = page.locator('#input-author-lastname');
+
+    let isValid: boolean;
+
+    await lastName.fill('Ali123');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(false);
+
+    await lastName.fill('Ali$');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(false);
+
+    await lastName.fill('Ali?=§&');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(false);
+  });
+
 });
