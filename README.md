@@ -1435,6 +1435,15 @@ One of ELMO's non-obvious transformations is the **Row Expansion**.
   ## Data validation
   </summary>
 
+
+The metadata editor distinguishes between fields that are always required and fields that only become required under certain conditions when submitting a dataset. The following sections describe which fields are mandatory, how dynamic validation works, and how this affects the Save and Submit workflows.
+
+- **Save vs Submit**
+**Save**:
+Clicking Save stores the current form content locally (download) without enforcing any validation rules. Fields that are only required on submit are treated as optional when saving.
+**Submit**:
+Clicking Submit activates all validation rules and dynamic requirements. The form is only submitted if all required and conditionally required fields are valid.
+
 The metadata editor has some mandatory fields which are necessary for the submission of data. These include the following fields:
 - **Publication Year**, **Resource Type**, **Language of dataset**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email address**, **Descriptions Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
 
