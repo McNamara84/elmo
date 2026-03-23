@@ -1439,10 +1439,84 @@ One of ELMO's non-obvious transformations is the **Row Expansion**.
 The metadata editor distinguishes between fields that are always required and fields that only become required under certain conditions when submitting a dataset. The following sections describe which fields are mandatory, how dynamic validation works, and how this affects the Save and Submit workflows.
 
 - **Save vs Submit**
-**Save**:
+
+**Save:**
 Clicking Save stores the current form content locally (download) without enforcing any validation rules. Fields that are only required on submit are treated as optional when saving.
-**Submit**:
+**Submit:**
 Clicking Submit activates all validation rules and dynamic requirements. The form is only submitted if all required and conditionally required fields are valid.
+
+- **Always required on submit**
+
+The metadata editor has some fields that are always required for a valid submission, independent of dynamic rules:
+**Publication Year**, **Resource Type**, **Language of dataset**, At least one **main Title**, **Author Lastname**, **Author Firstname**, **Abstract (Descriptions)** and **Date created**
+
+Depending on the chosen dataset type or page, additional fields may be required (for example, ICGEM‑specific properties for Global Geopotential Models).
+
+
+- **Dynamic required fields**
+In several form groups, fields become required only under certain conditions. These fields are treated as optional while editing and saving, but must be filled correctly when submitting.
+
+**Authors and Contact person:**
+If an author row is marked as Contact person (checkbox checked), then in that row:
+**Email address** field become required.
+On submit, at least one author must be marked as contact person, otherwise a validation error is shown in the author section.
+
+**Contributor person:**
+For each Contributor person row:
+If any contributor‑person field in the row is filled (e.g. ORCID, last name, first name, role, affiliation), then:
+**Last name**, **first name** and **role** in this row become required on submit.
+If all fields in the row are empty, no contributor‑person field is required.
+
+**Contributor organisation:**
+For each Contributor organisation row:
+If any field in the row is filled (organisation name, role, affiliation), then:
+**Organisation name** and **organisation role** become required on submit.
+If the row is completely empty, all fields remain optional.
+
+**Author institution:**
+For each Author institution row:
+If Author institution affiliation is filled (either as plain text or via Tagify tags), then:
+**Author institution name** becomes required.
+If the affiliation is empty, the institution name is not required.
+
+**Spatial and temporal coverage (STC):**
+Each STC row is validated independently.
+If all fields in a row are empty, no field in that row is required.
+As soon as any field in a row is filled, the following rules apply for that row:
+
+**Bounding box and dates:**
+
+If Max latitude or Max longitude is filled:
+Min latitude, Min longitude, Max latitude, Max longitude, Description, Date start and Date end become required on submit.
+
+If Min latitude, Min longitude or Description is filled:
+Min latitude, Min longitude, Description, Date start and Date end become required.
+
+If Date start or Date end is filled:
+Date start, Date end, Min latitude, Min longitude and Description become required.
+
+**Time and timezone:**
+
+Time fields are optional as long as both time fields are empty.
+
+If Time start or Time end is filled:
+Time start, Time end, Date start, Date end, Min latitude, Min longitude, Description and Timezone become required.
+
+
+**Related works:**
+For each Related work row:
+
+If any of the fields Relation, Identifier or Identifier type is filled, then:
+Relation, Identifier and Identifier type all become required on submit.
+If the row is completely empty, these fields remain optional.
+
+
+**Funding reference:**
+For each Funding reference row:
+If Grant number, Grant name or Award URI is filled, then:
+Funder becomes required on submit.
+If none of these three fields is filled, Funder remains optional.
+
 
 The metadata editor has some mandatory fields which are necessary for the submission of data. These include the following fields:
 - **Publication Year**, **Resource Type**, **Language of dataset**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email address**, **Descriptions Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
