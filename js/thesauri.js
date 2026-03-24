@@ -161,6 +161,47 @@ function getActiveTagifyForState(state) {
     return currentActiveInput || state.tagify;
 }
 
+function updateSelectedKeywordsList(listId, state) {
+    var selectedKeywordsList = document.getElementById(listId);
+    if (!selectedKeywordsList) return;
+    selectedKeywordsList.innerHTML = "";
+    Array.from(state.selectedPaths).forEach(function (fullPath) {
+        let listItem = document.createElement("li");
+        listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+        listItem.textContent = fullPath;
+
+        let removeButton = document.createElement("button");
+        removeButton.classList.add("btn", "btn-sm", "btn-danger");
+        removeButton.innerHTML = "&times;";
+        removeButton.onclick = function () {
+            const activeTagify = getActiveTagifyForState(state);
+            if (activeTagify && typeof activeTagify.removeTag === 'function') {
+                activeTagify.removeTag(fullPath);
+            }
+
+            state.jsTreeIds.forEach(function (treeSelector) {
+                const tree = $(treeSelector).jstree(true);
+                if (!tree) return;
+                const node = findNodeByPath(tree, fullPath);
+                if (node) tree.deselect_node(node.id);
+            });
+
+            state.selectedPaths.delete(fullPath);
+            updateSelectedKeywordsList(listId, state);
+        };
+
+        listItem.appendChild(removeButton);
+        selectedKeywordsList.appendChild(listItem);
+    });
+}
+
+function findNodeByPath(jsTreeInstance, path) {
+    if (!jsTreeInstance) return null;
+    return jsTreeInstance.get_json("#", { flat: true }).find(function (n) {
+        return jsTreeInstance.get_path(n, " > ") === path;
+    });
+}
+
 function syncTreeSelectionFromTagify(config, tagifyInstance) {
     if (!tagifyInstance) return;
 
@@ -214,6 +255,10 @@ export function initTagifyForInput(inputElement, configKey) {
     }
 
     const state = ensureSharedState(config);
+
+    if (config.jsTreeId && !state.jsTreeIds.includes(config.jsTreeId)) {
+        state.jsTreeIds.push(config.jsTreeId);
+    }
 
     // Initialize Tagify if it hasn't been already
     if (!inputElement._tagify) {
@@ -862,53 +907,6 @@ $(document).ready(function () {
                 if (node) tree.select_node(node.id);
             });
         }
-    }
-
-    /**
-     * Updates the selected keywords list element in a modal.
-     */
-    function updateSelectedKeywordsList(listId, state) {
-        var selectedKeywordsList = document.getElementById(listId);
-        if (!selectedKeywordsList) return;
-        selectedKeywordsList.innerHTML = "";
-        Array.from(state.selectedPaths).forEach(function (fullPath) {
-            let listItem = document.createElement("li");
-            listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
-            listItem.textContent = fullPath;
-
-            let removeButton = document.createElement("button");
-            removeButton.classList.add("btn", "btn-sm", "btn-danger");
-            removeButton.innerHTML = "&times;";
-            removeButton.onclick = function () {
-                const activeTagify = getActiveTagifyForState(state);
-                if (activeTagify && typeof activeTagify.removeTag === 'function') {
-                    activeTagify.removeTag(fullPath);
-                }
-
-                state.jsTreeIds.forEach(function (treeSelector) {
-                    const tree = $(treeSelector).jstree(true);
-                    if (!tree) return;
-                    const node = findNodeByPath(tree, fullPath);
-                    if (node) tree.deselect_node(node.id);
-                });
-
-                state.selectedPaths.delete(fullPath);
-                updateSelectedKeywordsList(listId, state);
-            };
-
-            listItem.appendChild(removeButton);
-            selectedKeywordsList.appendChild(listItem);
-        });
-    }
-
-    /**
-     * Finds a node in a jsTree instance by its full path string.
-     */
-    function findNodeByPath(jsTreeInstance, path) {
-        if (!jsTreeInstance) return null;
-        return jsTreeInstance.get_json("#", { flat: true }).find(function (n) {
-            return jsTreeInstance.get_path(n, " > ") === path;
-        });
     }
 
     // Delegated search input listeners

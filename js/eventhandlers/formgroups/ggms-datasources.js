@@ -8,6 +8,9 @@ import { initTagifyForInput } from '../../thesauri.js';
 $(document).ready(function () {
     const datasourceGroup = $("#group-datasources");
     if (datasourceGroup.length === 0) return; // Do nothing if the form group is not on the page
+    const datasourcePlatformsModal = $('#modal-platforms-datasource');
+    const datasourcePlatformsSearch = $('#input-platforms-thesaurussearch-ds');
+    const datasourcePlatformsTree = $('#jstree-platforms-datasource');
 
     // Clone the first row to use as a template for new rows.
     const originalDataSourceRow = datasourceGroup.children(".row").first().clone();
@@ -280,6 +283,16 @@ $(document).ready(function () {
         });
     }
 
+    function resetDatasourcePlatformSearch() {
+        if (!datasourcePlatformsSearch.length) return;
+
+        datasourcePlatformsSearch.val('');
+        const jsTree = datasourcePlatformsTree.jstree(true);
+        if (jsTree) {
+            jsTree.search('');
+        }
+    }
+
     // --- EVENT HANDLERS (Delegated from the static parent 'datasourceGroup') ---
 
     // Add new data source entry.
@@ -334,6 +347,14 @@ $(document).ready(function () {
     datasourceGroup.on('change', 'select[name="datasource_details[]"]', function () {
         const row = $(this).closest('.row');
         handleIsostasyField(row);
+    });
+
+    datasourcePlatformsModal.on('show.bs.modal', function () {
+        resetDatasourcePlatformSearch();
+    });
+
+    datasourcePlatformsModal.on('hidden.bs.modal', function () {
+        resetDatasourcePlatformSearch();
     });
     
     $(document).on('change', '#input-model-type', function() {
