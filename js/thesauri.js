@@ -1,4 +1,68 @@
 /**
+ * Recursively searches a jsTree data array for a specific node ID.
+ * Returns the node (and its children) if found, otherwise returns the original data.
+ */
+export function filterTreeByRoot(nodes, rootId) {
+    if (!rootId || !nodes) return nodes;
+
+    function findNodeById(nodesArray, id) {
+        for (let i = 0; i < nodesArray.length; i++) {
+            if (nodesArray[i].id === id) {
+                return nodesArray[i];
+            }
+            if (nodesArray[i].children && nodesArray[i].children.length > 0) {
+                let foundNode = findNodeById(nodesArray[i].children, id);
+                if (foundNode) {
+                    return foundNode;
+                }
+            }
+        }
+        return null;
+    }
+
+    const rootNode = findNodeById(nodes, rootId);
+    // jsTree expects an array of root nodes, so we wrap the result in an array
+    return rootNode ? [rootNode] : nodes; 
+}
+export let currentActiveInput = null; 
+
+// 3. The Function to hook up new inputs
+export function initTagifyForInput(inputElement, configKey) {
+    const config = THESAURUS_CONFIG[configKey];
+    if (!config) {
+        console.error(`Config for ${configKey} not found.`);
+        return;
+    }
+
+    // Initialize Tagify if it hasn't been already
+    if (!inputElement._tagify) {
+        inputElement._tagify = new Tagify(inputElement, {
+            // Add your standard Tagify settings here
+            enforceWhitelist: true,
+            dropdown: { enabled: 1 }
+        });
+    }
+
+    // Find the closest "Tree" button in the same row
+    const row = inputElement.closest('.row');
+    const treeButton = row.querySelector('.open-thesaurus-tree-btn'); // Replace with your actual button class
+
+    if (treeButton) {
+        // Remove old listeners to prevent double-firing on cloned rows
+        const newTreeButton = treeButton.cloneNode(true);
+        treeButton.parentNode.replaceChild(newTreeButton, treeButton);
+
+        newTreeButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Crucial: Tell the modal WHICH input triggered it
+            currentActiveInput = inputElement._tagify; 
+            
+            // Open the modal (and trigger your lazy loading if needed)
+            $(config.modalId).modal('show');
+        });
+    }
+}
+/**
  * Initializes thesaurus keyword input fields dynamically based on ERNIE availability.
  *
  * Flow:
@@ -74,6 +138,14 @@ $(document).ready(function () {
             selectedListId: 'selected-keywords-gemet',
             helpSectionId: 'help-gemet-keyword',
         },
+        gcmdPlatforms: {
+            apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
+            rootNodeId: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
+            modalId: '#modal-platforms-datasource', // Match your HTML
+            jsTreeId: '#jstree-platforms-datasource',
+            searchInputId: '#input-platforms-thesaurussearch-ds',
+            selectedListId: 'selected-keywords-platforms-ds'
+    }
     };
 
     // MSL root-Lists (unchanged, separate feature)

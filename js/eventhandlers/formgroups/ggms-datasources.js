@@ -3,6 +3,7 @@
  * @module datasources
  */
 import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
+import { initTagifyForInput } from './thesauri.js';
 
 $(document).ready(function () {
     const datasourceGroup = $("#group-datasources");
@@ -43,7 +44,26 @@ $(document).ready(function () {
 
     // Keywords functionality
     // --- Helper functions -------------------------------------------------
+    function addSatelliteDataSource() {
+        // Clone the HTML
+        const newRow = originalDataSourceRow.clone();
+        
+        // Clean up any copied Tagify elements from the clone template
+        newRow.find('tags').remove(); // Tagify creates a <tags> element we don't want copied
+        const rawInput = newRow.find('input[name="satellite_platform[]"]')[0];
+        
+        // Reset the raw input
+        rawInput.value = '';
+        delete rawInput._tagify; // Ensure it's treated as fresh
 
+        // Append to the DOM
+        datasourceGroup.append(newRow);
+
+        // 3. Hook it up to the Engine!
+        initTagifyForInput(rawInput, 'gcmdPlatforms');
+    }
+
+    
     const getJsTree = () => $(jsTreeId).jstree(true);
 
     /**
