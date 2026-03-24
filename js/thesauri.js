@@ -24,43 +24,255 @@ export function filterTreeByRoot(nodes, rootId) {
     // jsTree expects an array of root nodes, so we wrap the result in an array
     return rootNode ? [rootNode] : nodes; 
 }
-export let currentActiveInput = null; 
+export const THESAURUS_CONFIG = {
+    science_keywords: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
+        inputName: 'gcmdScienceKeywords',
+        inputId: 'input-sciencekeyword',
+        modalId: 'modal-sciencekeyword',
+        jsTreeId: 'jstree-sciencekeyword',
+        searchInputId: 'input-sciencekeyword-thesaurussearch',
+        selectedListId: 'selected-keywords-sciencekeyword',
+        helpSectionId: 'help-scienceKeywords-keyword',
+        stateKey: 'input-sciencekeyword'
+    },
+    platforms: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
+        inputName: 'platforms',
+        inputId: 'input-platforms',
+        modalId: 'modal-platforms',
+        jsTreeId: 'jstree-platforms',
+        searchInputId: 'input-platforms-thesaurussearch',
+        selectedListId: 'selected-keywords-platforms',
+        helpSectionId: 'help-gcmd-platforms-keyword',
+        stateKey: 'input-platforms'
+    },
+    instruments: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-instruments',
+        inputName: 'instruments',
+        inputId: 'input-instruments',
+        modalId: 'modal-instruments',
+        jsTreeId: 'jstree-instruments',
+        searchInputId: 'input-instruments-thesaurussearch',
+        selectedListId: 'selected-keywords-instruments',
+        helpSectionId: 'help-gcmd-instruments-keyword',
+        stateKey: 'input-instruments'
+    },
+    chronostratigraphy: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/chronostrat-timescale',
+        inputName: 'chronostratKeywords',
+        inputId: 'input-chronostratigraphy',
+        modalId: 'modal-chronostratigraphy',
+        jsTreeId: 'jstree-chronostratigraphy',
+        searchInputId: 'input-chronostratigraphy-thesaurussearch',
+        selectedListId: 'selected-keywords-chronostratigraphy',
+        helpSectionId: 'help-chronostratigraphy-keyword',
+        stateKey: 'input-chronostratigraphy'
+    },
+    gemet: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/gemet',
+        inputName: 'gemetKeywords',
+        inputId: 'input-gemet',
+        modalId: 'modal-gemet',
+        jsTreeId: 'jstree-gemet',
+        searchInputId: 'input-gemet-thesaurussearch',
+        selectedListId: 'selected-keywords-gemet',
+        helpSectionId: 'help-gemet-keyword',
+        stateKey: 'input-gemet'
+    },
+    gcmdPlatforms: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
+        rootNodeId: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
+        modalId: '#modal-platforms-datasource',
+        jsTreeId: '#jstree-platforms-datasource',
+        searchInputId: '#input-platforms-thesaurussearch-ds',
+        selectedListId: 'selected-keywords-platforms-ds',
+        stateKey: 'gcmdPlatforms',
+        dynamicOnly: true
+    }
+};
+
+export let currentActiveInput = null;
+
+const loadedConfigs = new Map();
+const sharedState = {};
+let keywordConfigurations = [];
+
+function getStateKey(config) {
+    return config.stateKey || config.inputId || config.jsTreeId;
+}
+
+function ensureSharedState(config) {
+    const stateKey = getStateKey(config);
+    if (!sharedState[stateKey]) {
+        sharedState[stateKey] = {
+            whitelist: [],
+            selectedPaths: new Set(),
+            tagify: null,
+            tagifyInstances: new Set(),
+            jsTreeIds: [],
+            isSyncingTree: false
+        };
+    }
+    return sharedState[stateKey];
+}
+
+function ensureConfigRegistered(configKey) {
+    const config = THESAURUS_CONFIG[configKey];
+    if (!config || !config.dynamicOnly) return config;
+
+    const existing = keywordConfigurations.find(function (entry) {
+        return entry.stateKey === config.stateKey;
+    });
+    if (existing) return existing;
+
+    const registeredConfig = {
+        apiEndpoint: config.apiEndpoint,
+        rootNodeId: config.rootNodeId,
+        modalId: config.modalId,
+        jsTreeId: config.jsTreeId,
+        searchInputId: config.searchInputId,
+        selectedKeywordsListId: config.selectedListId,
+        stateKey: config.stateKey,
+        dynamicOnly: true
+    };
+    keywordConfigurations.push(registeredConfig);
+    return registeredConfig;
+}
+
+function clearTreeSelection(tree) {
+    if (!tree) return;
+
+    if (typeof tree.deselect_all === 'function') {
+        tree.deselect_all();
+        return;
+    }
+
+    const selectedNodes = typeof tree.get_selected === 'function' ? tree.get_selected(true) : [];
+    selectedNodes.forEach(function (node) {
+        const nodeId = typeof node === 'string' ? node : node.id;
+        if (nodeId && typeof tree.deselect_node === 'function') {
+            tree.deselect_node(nodeId);
+        }
+    });
+}
+
+function getActiveTagifyForState(state) {
+    return currentActiveInput || state.tagify;
+}
+
+function syncTreeSelectionFromTagify(config, tagifyInstance) {
+    if (!tagifyInstance) return;
+
+    const state = ensureSharedState(config);
+    const tagValues = tagifyInstance.value ? tagifyInstance.value.map(function (tag) {
+        return tag.value;
+    }) : [];
+
+    state.selectedPaths = new Set(tagValues);
+    state.isSyncingTree = true;
+
+    state.jsTreeIds.forEach(function (treeSelector) {
+        const tree = $(treeSelector).jstree(true);
+        if (!tree) return;
+
+        clearTreeSelection(tree);
+        tagValues.forEach(function (value) {
+            const node = findNodeByPath(tree, value);
+            if (node && typeof tree.select_node === 'function') {
+                tree.select_node(node.id);
+            }
+        });
+    });
+
+    state.isSyncingTree = false;
+    updateSelectedKeywordsList(config.selectedListId || config.selectedKeywordsListId, state);
+}
+
+function bindDynamicTreeButton(inputElement, config) {
+    const row = inputElement.closest('.row');
+    if (!row || !config.modalId) return;
+
+    const treeButton = row.querySelector(`.open-thesaurus-tree-btn, [data-bs-target="${config.modalId}"]`);
+    if (!treeButton) return;
+
+    const newTreeButton = treeButton.cloneNode(true);
+    treeButton.parentNode.replaceChild(newTreeButton, treeButton);
+
+    newTreeButton.addEventListener('click', function () {
+        currentActiveInput = inputElement._tagify;
+        syncTreeSelectionFromTagify(config, inputElement._tagify);
+    });
+}
 
 // 3. The Function to hook up new inputs
 export function initTagifyForInput(inputElement, configKey) {
-    const config = THESAURUS_CONFIG[configKey];
+    const config = ensureConfigRegistered(configKey) || THESAURUS_CONFIG[configKey];
     if (!config) {
         console.error(`Config for ${configKey} not found.`);
         return;
     }
 
+    const state = ensureSharedState(config);
+
     // Initialize Tagify if it hasn't been already
     if (!inputElement._tagify) {
         inputElement._tagify = new Tagify(inputElement, {
-            // Add your standard Tagify settings here
-            enforceWhitelist: true,
-            dropdown: { enabled: 1 }
+            whitelist: state.whitelist,
+            enforceWhitelist: state.whitelist.length > 0,
+            placeholder: translations?.keywords?.thesaurus?.label || 'Thesaurus keywords',
+            dropdown: {
+                maxItems: 50,
+                enabled: 3,
+                closeOnSelect: true,
+                classname: 'thesaurus-tagify',
+            },
+            editTags: false
+        });
+    }
+    state.tagifyInstances.add(inputElement._tagify);
+
+    if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+        window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
+            placeholder: inputElement._tagify.settings.placeholder
         });
     }
 
-    // Find the closest "Tree" button in the same row
-    const row = inputElement.closest('.row');
-    const treeButton = row.querySelector('.open-thesaurus-tree-btn'); // Replace with your actual button class
+    if (!inputElement.dataset.thesaurusEventsBound) {
+        inputElement.dataset.thesaurusEventsBound = 'true';
 
-    if (treeButton) {
-        // Remove old listeners to prevent double-firing on cloned rows
-        const newTreeButton = treeButton.cloneNode(true);
-        treeButton.parentNode.replaceChild(newTreeButton, treeButton);
+        inputElement._tagify.on('add', function (e) {
+            if (currentActiveInput !== inputElement._tagify) return;
 
-        newTreeButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            // Crucial: Tell the modal WHICH input triggered it
-            currentActiveInput = inputElement._tagify; 
-            
-            // Open the modal (and trigger your lazy loading if needed)
-            $(config.modalId).modal('show');
+            const tagText = e.detail?.data?.value;
+            if (!tagText) return;
+
+            state.selectedPaths.add(tagText);
+            state.jsTreeIds.forEach(function (treeSelector) {
+                const tree = $(treeSelector).jstree(true);
+                if (!tree) return;
+                const node = findNodeByPath(tree, tagText);
+                if (node) tree.select_node(node.id);
+            });
+        });
+
+        inputElement._tagify.on('remove', function (e) {
+            if (currentActiveInput !== inputElement._tagify) return;
+
+            const tagText = e.detail?.data?.value;
+            if (!tagText) return;
+
+            state.selectedPaths.delete(tagText);
+            state.jsTreeIds.forEach(function (treeSelector) {
+                const tree = $(treeSelector).jstree(true);
+                if (!tree) return;
+                const node = findNodeByPath(tree, tagText);
+                if (node) tree.deselect_node(node.id);
+            });
         });
     }
+
+    bindDynamicTreeButton(inputElement, config);
 }
 /**
  * Initializes thesaurus keyword input fields dynamically based on ERNIE availability.
@@ -80,74 +292,6 @@ $(document).ready(function () {
     const showThesauri = features.showThesauri !== false;
     const showMslVocabs = features.showMslVocabs === true;
 
-    // Track which configs have had their data loaded (lazy loading)
-    const loadedConfigs = new Map();
-
-    /**
-     * Mapping from ERNIE availability keys to ELMO-internal configuration.
-     * Each key corresponds to a thesaurus slug from the availability endpoint.
-     */
-    const THESAURUS_CONFIG = {
-        science_keywords: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
-            inputName: 'gcmdScienceKeywords',
-            inputId: 'input-sciencekeyword',
-            modalId: 'modal-sciencekeyword',
-            jsTreeId: 'jstree-sciencekeyword',
-            searchInputId: 'input-sciencekeyword-thesaurussearch',
-            selectedListId: 'selected-keywords-sciencekeyword',
-            helpSectionId: 'help-scienceKeywords-keyword',
-        },
-        platforms: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
-            inputName: 'platforms',
-            inputId: 'input-platforms',
-            modalId: 'modal-platforms',
-            jsTreeId: 'jstree-platforms',
-            searchInputId: 'input-platforms-thesaurussearch',
-            selectedListId: 'selected-keywords-platforms',
-            helpSectionId: 'help-gcmd-platforms-keyword',
-        },
-        instruments: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-instruments',
-            inputName: 'instruments',
-            inputId: 'input-instruments',
-            modalId: 'modal-instruments',
-            jsTreeId: 'jstree-instruments',
-            searchInputId: 'input-instruments-thesaurussearch',
-            selectedListId: 'selected-keywords-instruments',
-            helpSectionId: 'help-gcmd-instruments-keyword',
-        },
-        chronostratigraphy: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/chronostrat-timescale',
-            inputName: 'chronostratKeywords',
-            inputId: 'input-chronostratigraphy',
-            modalId: 'modal-chronostratigraphy',
-            jsTreeId: 'jstree-chronostratigraphy',
-            searchInputId: 'input-chronostratigraphy-thesaurussearch',
-            selectedListId: 'selected-keywords-chronostratigraphy',
-            helpSectionId: 'help-chronostratigraphy-keyword',
-        },
-        gemet: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/gemet',
-            inputName: 'gemetKeywords',
-            inputId: 'input-gemet',
-            modalId: 'modal-gemet',
-            jsTreeId: 'jstree-gemet',
-            searchInputId: 'input-gemet-thesaurussearch',
-            selectedListId: 'selected-keywords-gemet',
-            helpSectionId: 'help-gemet-keyword',
-        },
-        gcmdPlatforms: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
-            rootNodeId: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
-            modalId: '#modal-platforms-datasource', // Match your HTML
-            jsTreeId: '#jstree-platforms-datasource',
-            searchInputId: '#input-platforms-thesaurussearch-ds',
-            selectedListId: 'selected-keywords-platforms-ds'
-    }
-    };
-
     // MSL root-Lists (unchanged, separate feature)
     const generalRoots = [
         'https://epos-msl.uu.nl/voc/materials/1.3/',
@@ -166,11 +310,7 @@ $(document).ready(function () {
         'https://epos-msl.uu.nl/voc/rockphysics/1.3/'
     ];
 
-    // Keyword configurations array — built dynamically from availability + MSL static config
-    var keywordConfigurations = [];
-
-    // Shared state per inputId so multiple trees can cooperate
-    const sharedState = {};
+    ensureConfigRegistered('gcmdPlatforms');
 
     // Wait for translations, then initialize everything
     document.addEventListener('translationsLoaded', function () {
@@ -243,6 +383,8 @@ $(document).ready(function () {
     function filterAvailableThesauri(availability) {
         const result = [];
         Object.keys(THESAURUS_CONFIG).forEach(function (key) {
+            if (THESAURUS_CONFIG[key].dynamicOnly) return;
+
             if (availability[key] && availability[key].available) {
                 result.push({
                     key: key,
@@ -445,6 +587,10 @@ $(document).ready(function () {
                     loadThesaurusOnDemand(config);
                 });
             }, { once: true });
+
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                currentActiveInput = null;
+            });
         });
     }
 
@@ -485,15 +631,7 @@ $(document).ready(function () {
         var input = $(config.inputId)[0];
         if (!input) return;
 
-        if (!sharedState[config.inputId]) {
-            sharedState[config.inputId] = {
-                whitelist: [],
-                selectedPaths: new Set(),
-                tagify: null,
-                jsTreeIds: []
-            };
-        }
-        const state = sharedState[config.inputId];
+        const state = ensureSharedState(config);
 
         if (!state.jsTreeIds.includes(config.jsTreeId)) {
             state.jsTreeIds.push(config.jsTreeId);
@@ -514,6 +652,7 @@ $(document).ready(function () {
             });
             input._tagify = thesaurusKeywordstagify;
             state.tagify = thesaurusKeywordstagify;
+            state.tagifyInstances.add(thesaurusKeywordstagify);
 
             if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
                 window.applyTagifyAccessibilityAttributes(thesaurusKeywordstagify, input, {
@@ -555,8 +694,7 @@ $(document).ready(function () {
      * @param {Array<Object>|Object} response - The keyword data from the API / JSON file.
      */
     function loadKeywordsForConfig(config, response) {
-        const state = sharedState[config.inputId];
-        if (!state) return;
+        const state = ensureSharedState(config);
 
         const data = response.data ? response.data : response;
         var filteredData = data;
@@ -656,10 +794,10 @@ $(document).ready(function () {
             }
         });
 
-        if (state.tagify) {
-            state.tagify.settings.whitelist = state.whitelist;
-            state.tagify.settings.enforceWhitelist = true;
-        }
+        state.tagifyInstances.forEach(function (tagifyInstance) {
+            tagifyInstance.settings.whitelist = state.whitelist;
+            tagifyInstance.settings.enforceWhitelist = true;
+        });
 
         // Initialize jsTree
         $(config.jsTreeId).jstree({
@@ -687,6 +825,8 @@ $(document).ready(function () {
         });
 
         $(config.jsTreeId).on("changed.jstree", function (e, data) {
+            if (state.isSyncingTree) return;
+
             var newCentralSet = new Set();
 
             state.jsTreeIds.forEach(function (treeSelector) {
@@ -702,17 +842,19 @@ $(document).ready(function () {
             state.selectedPaths = newCentralSet;
             updateSelectedKeywordsList(config.selectedKeywordsListId, state);
 
-            if (state.tagify) {
-                state.tagify.removeAllTags();
+            const activeTagify = getActiveTagifyForState(state);
+            if (activeTagify) {
+                activeTagify.removeAllTags();
                 if (state.selectedPaths.size > 0) {
-                    state.tagify.addTags(Array.from(state.selectedPaths));
+                    activeTagify.addTags(Array.from(state.selectedPaths));
                 }
             }
         });
 
-        // Initial sync: if tagify already has tags, select corresponding nodes
-        if (state.tagify && state.tagify.value && state.tagify.value.length) {
-            var currentValues = state.tagify.value.map(v => v.value);
+        // Initial sync: if the active input already has tags, select corresponding nodes
+        const activeTagify = getActiveTagifyForState(state);
+        if (activeTagify && activeTagify.value && activeTagify.value.length) {
+            var currentValues = activeTagify.value.map(v => v.value);
             currentValues.forEach(function (val) {
                 var tree = $(config.jsTreeId).jstree(true);
                 if (!tree) return;
@@ -738,7 +880,18 @@ $(document).ready(function () {
             removeButton.classList.add("btn", "btn-sm", "btn-danger");
             removeButton.innerHTML = "&times;";
             removeButton.onclick = function () {
-                if (state.tagify) state.tagify.removeTag(fullPath);
+                const activeTagify = getActiveTagifyForState(state);
+                if (activeTagify && typeof activeTagify.removeTag === 'function') {
+                    activeTagify.removeTag(fullPath);
+                }
+
+                state.jsTreeIds.forEach(function (treeSelector) {
+                    const tree = $(treeSelector).jstree(true);
+                    if (!tree) return;
+                    const node = findNodeByPath(tree, fullPath);
+                    if (node) tree.deselect_node(node.id);
+                });
+
                 state.selectedPaths.delete(fullPath);
                 updateSelectedKeywordsList(listId, state);
             };
