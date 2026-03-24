@@ -907,7 +907,7 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
   - Restrictions: Must be selected, if related work is specified
   - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
-  - Example values: `ARK` `arXiv` `EAN13`
+  - Example values: `ARK` `IGSN` `LSID`
 
 ### Funding Reference
 This element is optional in the DataCite scheme. However, it is a best practice to supply funding information when financial support has been received.
