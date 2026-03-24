@@ -284,6 +284,7 @@ $(document).ready(function () {
         });
     }
 
+    /** Resets the shared datasource modal search input so cloned rows do not inherit stale searches. */
     function resetDatasourcePlatformSearch() {
         if (!datasourcePlatformsSearch.length) return;
 
@@ -294,6 +295,12 @@ $(document).ready(function () {
         }
     }
 
+    /**
+     * Applies the datasource-specific placeholder to a platform input and its Tagify UI.
+     *
+     * @param {HTMLInputElement} inputElement - Datasource platform input enhanced by Tagify.
+     * @returns {void}
+     */
     function applyDatasourcePlatformPlaceholder(inputElement) {
         if (!inputElement) return;
 
@@ -303,6 +310,7 @@ $(document).ready(function () {
         const tagifyInstance = inputElement._tagify;
         if (!tagifyInstance) return;
 
+        // Datasource rows use a dedicated prompt so cloned rows match the modal workflow language.
         tagifyInstance.settings.placeholder = datasourcePlatformPlaceholder;
 
         const placeholderElement = inputElement.parentElement?.querySelector('.tagify__input');

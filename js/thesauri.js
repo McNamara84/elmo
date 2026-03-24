@@ -98,10 +98,17 @@ const loadedConfigs = new Map();
 const sharedState = {};
 let keywordConfigurations = [];
 
+/** Returns the shared state key for a thesaurus config. */
 function getStateKey(config) {
     return config.stateKey || config.inputId || config.jsTreeId;
 }
 
+/**
+ * Returns the shared thesaurus state bucket for a config, creating it on first use.
+ *
+ * @param {Object} config - Thesaurus configuration for a generic or datasource-backed input.
+ * @returns {{whitelist: Array, selectedPaths: Set<string>, tagify: Object|null, tagifyInstances: Set<Object>, jsTreeIds: Array<string>, isSyncingTree: boolean}} Shared mutable state for the config.
+ */
 function ensureSharedState(config) {
     const stateKey = getStateKey(config);
     if (!sharedState[stateKey]) {
@@ -117,6 +124,12 @@ function ensureSharedState(config) {
     return sharedState[stateKey];
 }
 
+/**
+ * Registers a dynamic-only config in the runtime keyword configuration list.
+ *
+ * @param {string} configKey - Key from THESAURUS_CONFIG.
+ * @returns {Object|undefined} Existing or newly registered config, or undefined when the key is unknown.
+ */
 function ensureConfigRegistered(configKey) {
     const config = THESAURUS_CONFIG[configKey];
     if (!config || !config.dynamicOnly) return config;
@@ -140,6 +153,12 @@ function ensureConfigRegistered(configKey) {
     return registeredConfig;
 }
 
+/**
+ * Clears the current selection of a jsTree instance using the best available API.
+ *
+ * @param {Object} tree - Active jsTree instance.
+ * @returns {void}
+ */
 function clearTreeSelection(tree) {
     if (!tree) return;
 
@@ -157,10 +176,18 @@ function clearTreeSelection(tree) {
     });
 }
 
+/** Returns the Tagify instance currently driving the shared tree state. */
 function getActiveTagifyForState(state) {
     return currentActiveInput || state.tagify;
 }
 
+/**
+ * Renders the selected-keywords sidebar for the active thesaurus modal.
+ *
+ * @param {string} listId - DOM id of the selected-keywords list element.
+ * @param {{selectedPaths: Set<string>, jsTreeIds: Array<string>, tagify: Object|null}} state - Shared thesaurus state for the current config.
+ * @returns {void}
+ */
 function updateSelectedKeywordsList(listId, state) {
     var selectedKeywordsList = document.getElementById(listId);
     if (!selectedKeywordsList) return;
@@ -195,6 +222,13 @@ function updateSelectedKeywordsList(listId, state) {
     });
 }
 
+/**
+ * Finds a jsTree node by its rendered breadcrumb path.
+ *
+ * @param {Object} jsTreeInstance - Active jsTree instance.
+ * @param {string} path - Full breadcrumb path using ` > ` separators.
+ * @returns {Object|null} Matching jsTree node, or null when no match exists.
+ */
 function findNodeByPath(jsTreeInstance, path) {
     if (!jsTreeInstance) return null;
     return jsTreeInstance.get_json("#", { flat: true }).find(function (n) {
@@ -202,6 +236,13 @@ function findNodeByPath(jsTreeInstance, path) {
     });
 }
 
+/**
+ * Synchronizes the shared jsTree selection to the active Tagify input before a modal opens.
+ *
+ * @param {Object} config - Thesaurus configuration associated with the input.
+ * @param {Object} tagifyInstance - Tagify instance whose values should be reflected in the tree.
+ * @returns {void}
+ */
 function syncTreeSelectionFromTagify(config, tagifyInstance) {
     if (!tagifyInstance) return;
 
@@ -217,6 +258,7 @@ function syncTreeSelectionFromTagify(config, tagifyInstance) {
         const tree = $(treeSelector).jstree(true);
         if (!tree) return;
 
+        // Rebuild the modal tree from the active row's current tags before user interaction.
         clearTreeSelection(tree);
         tagValues.forEach(function (value) {
             const node = findNodeByPath(tree, value);
@@ -230,6 +272,13 @@ function syncTreeSelectionFromTagify(config, tagifyInstance) {
     updateSelectedKeywordsList(config.selectedListId || config.selectedKeywordsListId, state);
 }
 
+/**
+ * Rebinds the datasource-specific tree button so it activates the correct Tagify instance.
+ *
+ * @param {HTMLInputElement} inputElement - Raw input element enhanced by Tagify.
+ * @param {Object} config - Dynamic thesaurus configuration for the input.
+ * @returns {void}
+ */
 function bindDynamicTreeButton(inputElement, config) {
     const row = inputElement.closest('.row');
     if (!row || !config.modalId) return;
@@ -241,6 +290,7 @@ function bindDynamicTreeButton(inputElement, config) {
     treeButton.parentNode.replaceChild(newTreeButton, treeButton);
 
     newTreeButton.addEventListener('click', function () {
+        // The datasource modal is shared across rows, so we must mark which Tagify owns the next sync.
         currentActiveInput = inputElement._tagify;
         syncTreeSelectionFromTagify(config, inputElement._tagify);
     });
@@ -256,6 +306,7 @@ export function initTagifyForInput(inputElement, configKey) {
 
     const state = ensureSharedState(config);
 
+    // Dynamic datasource rows rely on this registration so shared tree updates can see their modal tree.
     if (config.jsTreeId && !state.jsTreeIds.includes(config.jsTreeId)) {
         state.jsTreeIds.push(config.jsTreeId);
     }
@@ -634,6 +685,7 @@ $(document).ready(function () {
             }, { once: true });
 
             modalElement.addEventListener('hidden.bs.modal', function () {
+                // Prevent selections in a reused shared modal from updating a row that is no longer active.
                 currentActiveInput = null;
             });
         });
@@ -889,6 +941,7 @@ $(document).ready(function () {
 
             const activeTagify = getActiveTagifyForState(state);
             if (activeTagify) {
+                // Replace the active row's tags from tree state to keep modal selection authoritative.
                 activeTagify.removeAllTags();
                 if (state.selectedPaths.size > 0) {
                     activeTagify.addTags(Array.from(state.selectedPaths));
