@@ -3,7 +3,7 @@
  * @module datasources
  */
 import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
-import { initTagifyForInput } from './thesauri.js';
+import { initTagifyForInput } from '../../thesauri.js';
 
 $(document).ready(function () {
     const datasourceGroup = $("#group-datasources");
