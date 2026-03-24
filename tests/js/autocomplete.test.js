@@ -169,6 +169,46 @@ describe('autocomplete.js', () => {
     expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/05rrcem69');
   });
 
+  test('author ORCID 0000-0001-5140-8602 keeps one current affiliation', async () => {
+    const data = {
+      person: {
+        name: {
+          'family-name': { value: 'Reference' },
+          'given-names': { value: 'Case' }
+        }
+      },
+      'activities-summary': {
+        employments: {
+          'affiliation-group': [
+            createAffiliationSummary('employment', 'Expected Current Affiliation', '0arefcase1')
+          ]
+        },
+        educations: {
+          'affiliation-group': []
+        }
+      }
+    };
+    fetch.mockResolvedValueOnce({ json: () => Promise.resolve(data) });
+
+    const affInput = document.getElementById('input-author-affiliation');
+    affInput._tagify = new MockTagify(affInput, {});
+
+    const orcidInput = $('#group-author input[name="orcids[]"]');
+    orcidInput.val('0000-0001-5140-8602').trigger('blur');
+    await flushPromises();
+    await flushPromises();
+
+    expect(fetch).toHaveBeenCalledWith('https://pub.orcid.org/v3.0/0000-0001-5140-8602/record', {
+      headers: {
+        Accept: 'application/vnd.orcid+json'
+      }
+    });
+    expect($('#group-author input[name="familynames[]"]').val()).toBe('Reference');
+    expect($('#group-author input[name="givennames[]"]').val()).toBe('Case');
+    expect(affInput._tagify.value).toEqual([{ value: 'Expected Current Affiliation' }]);
+    expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/0arefcase1');
+  });
+
   test('author ORCID blur keeps two current affiliations', async () => {
     const data = {
       person: {
