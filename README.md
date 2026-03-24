@@ -1533,40 +1533,35 @@ Many fields are optional and are only used to enrich the metadata, for example:
 **Related work fields**, **funding reference fields**
 **Spatial and temporal coverage details**
 
-- **Licence and rights**
+**Licence and rights**
 The Licence and rights field has a default value but can be changed to another option.
 
 
-The metadata editor has some mandatory fields which are necessary for the submission of data. These include the following fields:
-- **Publication Year**, **Resource Type**, **Language of dataset**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email address**, **Descriptions Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
+
+- **ICGEM‑specific metadata (Elmo-GEM)**
+On ICGEM pages (Global Geopotential Models), additional domain‑specific metadata fields are available. Some of these fields are required, others are optional but recommended to describe the model in more detail.
+
+**Definition of the model**
+The following fields are required when submitting an ICGEM model:
+
+**Model type**, **Mathematical representation**, **File format** and **Model name**
 
 
-The other fields are optional and are used to further enrich the data set with metadata. The following fields are optional:
-- **DOI**, **Version**, **Rights**, **Author ORCID**, **Author Affiliation**, **Contact Person Website**, **Contact Person Affiliation**, **Contributor ORCID**, **Contributor Role**, **Contributor Lastname**, **Contributor Firstname**, **Contributor Affiliation**, **Contributor Organisation Name**, **Contributor Organisation Role**, **Contributor Organisation Affiliation**, **Description Methods**, **Description TechnicalInfo**, **Description Other**, **Thesaurus Keywords**, **MSL Keywords**, **Free Keywords**, **STC Max Latitude**, **STC Max Longitude**, **STC Time Start**, **STC Time End**, **Related work all fields** and **Funding Reference all fields**.✅
+**Characteristics of the model**
+The following fields describe core characteristics of the model and are required or recommended depending on the model type and internal guidelines:
+
+**Tide syste**, **degree**, **Errors** (error type / error description), **Radius** and **Earth gravity constant**
+
+If the Error type / errors selector is set to calibrated, the Error handling approach free‑text field becomes required and must contain non‑empty text. For all other error types, this field remains optional and is treated as valid even when empty.
 
 
-In certain cases, some subfields within a formgroup become mandatory. This affects the following fields:
+**Data sources**
+The Data sources section is generally optional and is used to provide additional provenance information:
 
-Formgroup Contributors:
-  - **Contributor Role**, **Contributor Lastname** and **Contributor Firstname** become mandatory, if one of the Contributor Person fields is filled in
-  - **Contributor Organisation Name** and **Contributor Organisation Role** become mandatory, if one of the Contributor Organisation fields is filled in (this includes **Contributor Organisation Affiliation**)
+**Type of data source**, **GCMD platforms** and **Description of the data source**
 
-Formgroup Spatial and Temporal Coverages: 
-  - Per default, no specification of any fields is required here when leaving all fields empty. Filling in any of the optional fields results in a change of mandatory fields.
-  - **Min Latitude**, **Min Longitude**, **Description**, **Date Start**, **Date End** and **Timezone** will become mandatory, if only one field of the formgroup gets filled in 
-  - **Max Latitude** becomes mandatory, if **Max Longitude** is filled in and vice versa
-  - **Time Start** becomes mandatory, if **Time End** is filled in and vice versa
+Providing this information is not mandatory for submission but strongly encouraged to improve transparency and reuse of the model.
 
-Formgroup Related works:
-  - **Related work all Fields** becomes mandatory fields, if one of the fields is filled in
-  Formgroup Funding Reference:
-  - **Funder** becomes mandatory, if **Grant Number** or **Grant Name** are specified
-
-As for the ICGEM implementation, more required variables are added to ensure a full description of a Global Gravitational Model:
-- **Model Type**, **Mathematical Representation**, **Model Name**
-
-Meanwhile these variables from required list are not required to publish a GGM:
-- **Resource Type** *(can be mapped to Dataset)*, **Spatio-temporal Coverage** *(can be mapped to global coverage)* 
 </details>
 
 <details>
