@@ -11,6 +11,7 @@ $(document).ready(function () {
     const datasourcePlatformsModal = $('#modal-platforms-datasource');
     const datasourcePlatformsSearch = $('#input-platforms-thesaurussearch-ds');
     const datasourcePlatformsTree = $('#jstree-platforms-datasource');
+    const datasourcePlatformPlaceholder = 'Choose the satellite';
 
     // Clone the first row to use as a template for new rows.
     const originalDataSourceRow = datasourceGroup.children(".row").first().clone();
@@ -293,6 +294,29 @@ $(document).ready(function () {
         }
     }
 
+    function applyDatasourcePlatformPlaceholder(inputElement) {
+        if (!inputElement) return;
+
+        inputElement.setAttribute('data-placeholder', datasourcePlatformPlaceholder);
+        inputElement.setAttribute('placeholder', datasourcePlatformPlaceholder);
+
+        const tagifyInstance = inputElement._tagify;
+        if (!tagifyInstance) return;
+
+        tagifyInstance.settings.placeholder = datasourcePlatformPlaceholder;
+
+        const placeholderElement = inputElement.parentElement?.querySelector('.tagify__input');
+        if (placeholderElement) {
+            placeholderElement.setAttribute('data-placeholder', datasourcePlatformPlaceholder);
+        }
+
+        if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+            window.applyTagifyAccessibilityAttributes(tagifyInstance, inputElement, {
+                placeholder: datasourcePlatformPlaceholder
+            });
+        }
+    }
+
     // --- EVENT HANDLERS (Delegated from the static parent 'datasourceGroup') ---
 
     // Add new data source entry.
@@ -329,6 +353,7 @@ $(document).ready(function () {
         const newInputElem = newRow.find('input[name="satellite_platform[]"]')[0];
         if (newInputElem) {
             initTagifyForInput(newInputElem, 'gcmdPlatforms');
+            applyDatasourcePlatformPlaceholder(newInputElem);
         }
     });
 
@@ -365,6 +390,7 @@ $(document).ready(function () {
 
     document.querySelectorAll('input[name="satellite_platform[]"]').forEach(function (input) {
         initTagifyForInput(input, 'gcmdPlatforms');
+        applyDatasourcePlatformPlaceholder(input);
     });
 
     // Set the correct visibility for the first row when the page loads.
