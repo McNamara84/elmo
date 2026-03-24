@@ -36,6 +36,9 @@ $ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
 // Cache TTL for all ERNIE data in seconds (default: 6 hours)
 $ernieCacheTtl = 21600;
 
+// Funder PID mode: 'CFID' = Crossref Funder ID (default), 'ROR' = ROR ID
+$funderPidMode = getenv('FUNDER_PID') ?: 'CFID';
+
 // URL for primary data upload (shown after successful submit)
 $dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
 

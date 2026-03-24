@@ -399,7 +399,7 @@ function createDatabaseStructure($connection): array
         "Funding_Reference" => "CREATE TABLE IF NOT EXISTS `Funding_Reference` (
    `funding_reference_id` INT NOT NULL AUTO_INCREMENT,
    `funder` VARCHAR(700) NOT NULL,
-   `funderid` VARCHAR(11) NULL,
+   `funderid` VARCHAR(100) NULL,
    `funderidtyp` VARCHAR(55) NULL,
    `grantnumber` VARCHAR(700) NULL,
    `grantname` VARCHAR(700) NULL,

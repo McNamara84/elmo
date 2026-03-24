@@ -551,14 +551,23 @@ http://www.altova.com/mapforce
 									<xsl:for-each select="*[local-name()='funderid' and namespace-uri()='']">
 										<xsl:variable name="var58_cur" select="."/>
 										<funderIdentifier>
-											<xsl:attribute name="schemeURI" namespace="">https://www.crossref.org/services/funder-registry/</xsl:attribute>
-											<xsl:for-each select="$var57_cur/*[local-name()='funderidtyp' and namespace-uri()='']">
-												<xsl:variable name="var59_cur" select="."/>
-												<xsl:attribute name="funderIdentifierType" namespace="">
+											<xsl:choose>
+												<xsl:when test="$var57_cur/*[local-name()='funderidtyp' and namespace-uri()='']='ROR'">
+													<xsl:attribute name="schemeURI" namespace="">https://ror.org/</xsl:attribute>
+													<xsl:attribute name="funderIdentifierType" namespace="">ROR</xsl:attribute>
 													<xsl:value-of select="."/>
-												</xsl:attribute>
-											</xsl:for-each>
-											<xsl:value-of select="concat('https://doi.org/10.13039/', .)"/>
+												</xsl:when>
+												<xsl:otherwise>
+													<xsl:attribute name="schemeURI" namespace="">https://www.crossref.org/services/funder-registry/</xsl:attribute>
+													<xsl:for-each select="$var57_cur/*[local-name()='funderidtyp' and namespace-uri()='']">
+														<xsl:variable name="var59_cur" select="."/>
+														<xsl:attribute name="funderIdentifierType" namespace="">
+															<xsl:value-of select="."/>
+														</xsl:attribute>
+													</xsl:for-each>
+													<xsl:value-of select="concat('https://doi.org/10.13039/', .)"/>
+												</xsl:otherwise>
+											</xsl:choose>
 										</funderIdentifier>
 									</xsl:for-each>
 								</xsl:if>
