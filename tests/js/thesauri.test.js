@@ -60,6 +60,16 @@ const mockVocabularyData = {
   ]
 };
 
+function transformThesauriScript(source) {
+  let script = source;
+  script = script.replace('export function filterTreeByRoot', 'function filterTreeByRoot');
+  script = script.replace('export const THESAURUS_CONFIG =', 'const THESAURUS_CONFIG =');
+  script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
+  script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
+  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, initTagifyForInput };';
+  return script;
+}
+
 describe('thesauri.js', () => {
   let $;
 
@@ -189,7 +199,7 @@ describe('thesauri.js', () => {
     });
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
-    window.eval(script);
+    window.eval(transformThesauriScript(script));
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
@@ -331,7 +341,7 @@ describe('thesauri.js', () => {
     $.getJSON.mockClear();
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
-    window.eval(script);
+    window.eval(transformThesauriScript(script));
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
@@ -379,7 +389,7 @@ describe('thesauri.js', () => {
     });
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
-    window.eval(script);
+    window.eval(transformThesauriScript(script));
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));

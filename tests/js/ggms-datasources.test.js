@@ -5,19 +5,47 @@ class MockTagify {
   constructor(el, settings) {
     this.el = el;
     this.settings = settings;
+    this.value = [];
     this._callbacks = {};
   }
   on(event, cb) {
     this._callbacks[event] = cb;
   }
-  addTags() {}
-  removeAllTags() {}
+  addTags(items) {
+    const arr = Array.isArray(items) ? items : [items];
+    arr.forEach(item => {
+      const tag = typeof item === 'string' ? { value: item } : item;
+      if (!this.value.some(existing => existing.value === tag.value)) {
+        this.value.push(tag);
+      }
+    });
+  }
+  removeAllTags() {
+    this.value = [];
+  }
+  removeTag(tag) {
+    this.value = this.value.filter(item => item.value !== tag);
+  }
+}
+
+function transformThesauriScript(source) {
+  let script = source;
+  script = script.replace('export function filterTreeByRoot', 'function filterTreeByRoot');
+  script = script.replace('export const THESAURUS_CONFIG =', 'const THESAURUS_CONFIG =');
+  script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
+  script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
+  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, initTagifyForInput };';
+  return script;
 }
 
 describe('ggms-datasources.js', () => {
   let $;
   beforeEach(() => {
     document.body.innerHTML = `
+      <div id="thesaurusKeywordsFormGroup" style="display: none;">
+        <div id="accordionThesauri"></div>
+      </div>
+      <div id="thesaurusModalsContainer"></div>
       <div id="group-ggmspropertiesessential">
         <input id="input-model-type" value="Choose..." />
       </div>
@@ -44,11 +72,13 @@ describe('ggms-datasources.js', () => {
             <div class="help-placeholder" data-help-section-id="ds"></div>
           </div>
           <input id="input-datasource-platforms-0" name="satellite_platform[]" />
+          <button id="button-datasource-platforms" data-bs-target="#modal-platforms-datasource"></button>
           <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center visibility-datasources-basic">
             <button class="addDataSource"></button>
           </div>
         </div>
       </div>
+      <input id="input-platforms-thesaurussearch-ds" />
       <div id="jstree-platforms-datasource"></div>
       <ul id="selected-keywords-platforms-ds"></ul>
       <div id="modal-platforms-datasource"></div>
@@ -62,7 +92,23 @@ describe('ggms-datasources.js', () => {
     window.jQuery = $;
 
     $.getJSON = jest.fn((file, cb) => {
-      if (file === 'json/thesauri/gcmdPlatformsKeywords.json') {
+      const availabilityDeferred = {
+        done: jest.fn(function(fn) { fn(this._data); return this; }),
+        fail: jest.fn().mockReturnThis(),
+        _data: {
+          science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
+          platforms: { available: true, displayName: 'GCMD Platforms' },
+          instruments: { available: false, displayName: 'GCMD Instruments' },
+          chronostratigraphy: { available: false, displayName: 'ICS Chronostratigraphy' },
+          gemet: { available: false, displayName: 'GEMET Thesaurus' },
+        },
+      };
+
+      if (file === 'api/v2/vocabs/thesauri/availability') {
+        return availabilityDeferred;
+      }
+
+      if (file === 'api/v2/vocabs/thesauri/gcmd-platforms') {
         cb({ data: [
           {
             id: 'platforms',
@@ -77,10 +123,14 @@ describe('ggms-datasources.js', () => {
             ]
           }
         ] });
+        return { fail: jest.fn().mockReturnThis() };
       }
+
+      if (typeof cb === 'function') {
+        cb({ data: [ { id: 'root', text: 'Root', children: [ { id: 'child', text: 'Child' } ] } ] });
+      }
+      return { fail: jest.fn().mockReturnThis() };
     });
-
-
     // Mock jstree plugin
     (function ($) {
       class JsTreeMock {
@@ -133,6 +183,10 @@ describe('ggms-datasources.js', () => {
         search(str) {
           this.lastSearch = str;
         }
+        deselect_all() {
+          this.selected = [];
+          this.$el.trigger('changed.jstree', [{ instance: this }]);
+        }
       }
       $.fn.jstree = function(arg, arg2) {
         if (arg === undefined || arg === true) {
@@ -154,29 +208,7 @@ describe('ggms-datasources.js', () => {
 
     global.Tagify = MockTagify;
     global.translations = { keywords: { thesaurus: { label: 'initial' } } };
-    // mocking the jstree instance with toy data
-    $.getJSON = jest.fn((file, cb) => {
-      if (file === 'json/thesauri/gcmdPlatformsKeywords.json') {
-        cb({ data: [
-          {
-            id: 'platforms',
-            text: 'Platforms',
-            children: [
-              {
-                id: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
-                text: 'Space-based Platforms',
-                children: [ { id: 'sat', text: 'Satellite' } ]
-              },
-              { id: 'ground', text: 'Ground-based Platforms' }
-            ]
-          }
-        ] });
-      } else {
-        cb({ data: [ { id: 'root', text: 'Root', children: [ { id: 'child', text: 'Child' } ] } ] });
-      }
-    });
-
-
+    window.ELMO_FEATURES = { showThesauri: true, showMslVocabs: false };
 
     const originalIs = $.fn.is;
     $.fn.is = function(selector) {
@@ -192,12 +224,26 @@ describe('ggms-datasources.js', () => {
       select.append('<option value="id">id</option>');
     });
     global.Tagify = MockTagify;
+    window.applyTagifyAccessibilityAttributes = jest.fn((tagifyInstance, inputElement, options = {}) => {
+      const interactiveInput = inputElement.parentElement?.querySelector('.tagify__input');
+      if (interactiveInput && options.placeholder) {
+        interactiveInput.setAttribute('data-placeholder', options.placeholder);
+      }
+    });
+
+    const thesauriScript = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
+    window.eval(transformThesauriScript(thesauriScript));
 
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-datasources.js'), 'utf8');
     script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
+    script = script.replace("import { initTagifyForInput } from '../../thesauri.js';", 'const { initTagifyForInput } = window.__thesauriTestExports;');
     script = script.replace('$(document).ready(function () {', '(function () {');
     script = script.replace(/\n\}\);$/, '\n})();');
     window.eval(script);
+
+    $(document).ready(() => {
+      document.dispatchEvent(new Event('translationsLoaded'));
+    });
   });
 
   afterEach(() => {
@@ -206,7 +252,17 @@ describe('ggms-datasources.js', () => {
     delete global.replaceHelpButtonInClonedRows;
     delete global.setupIdentifierTypesDropdown;
     delete global.Tagify;
+    delete window.ELMO_FEATURES;
+    delete window.applyTagifyAccessibilityAttributes;
+    delete window.__thesauriTestExports;
   });
+
+  function openDatasourceModal(buttonElement) {
+    const event = $.Event('show.bs.modal');
+    event.relatedTarget = buttonElement;
+    $('#modal-platforms-datasource').trigger(event);
+    document.getElementById('modal-platforms-datasource').dispatchEvent(new Event('show.bs.modal'));
+  }
 
   test('initial row visibility is correct for type S', () => {
     const row = $('#group-datasources .row').first();
@@ -215,13 +271,11 @@ describe('ggms-datasources.js', () => {
     expect(row.children('.visibility-datasources-identifier').css('display')).toBe('none');
   });
 
-  test('limits platform keywords to Space-based Platforms for type S', () => {
-    document.dispatchEvent(new Event('translationsLoaded'));
-    const tree = $('#jstree-platforms-datasource').jstree(true);
-    const data = tree.get_json();
-    expect(data).toHaveLength(1);
-    expect(data[0].id).toBe('https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847');
-    expect(data[0].children[0].id).toBe('sat');
+  test('initializes datasource platform Tagify with datasource-specific placeholder', () => {
+    const input = $('input[name="satellite_platform[]"]')[0];
+    expect(input._tagify).toBeInstanceOf(MockTagify);
+    expect(input._tagify.settings.placeholder).toBe('Choose the satellite');
+    expect(input.getAttribute('data-placeholder')).toBe('Choose the satellite');
   });
 
   test('changing type to G shows details and populates options', () => {
@@ -340,6 +394,25 @@ describe('ggms-datasources.js', () => {
     expect(tagifyInstance).toBeInstanceOf(MockTagify);
     expect(tagifyInstance._callbacks.add).toBeDefined();
     expect(tagifyInstance._callbacks.remove).toBeDefined();
+  });
+
+  test('uses datasource-specific placeholder for initial and cloned platform inputs', () => {
+    const firstInput = $('input[name="satellite_platform[]"]')[0];
+    expect(firstInput._tagify.settings.placeholder).toBe('Choose the satellite');
+
+    $('.addDataSource').trigger('click');
+    const clonedInput = $('#group-datasources .row').last().find('input[name="satellite_platform[]"]')[0];
+    expect(clonedInput._tagify.settings.placeholder).toBe('Choose the satellite');
+  });
+
+  test('resets datasource modal search input on open and close', () => {
+    $('#input-platforms-thesaurussearch-ds').val('Satellite');
+    openDatasourceModal(document.getElementById('button-datasource-platforms'));
+    expect($('#input-platforms-thesaurussearch-ds').val()).toBe('');
+
+    $('#input-platforms-thesaurussearch-ds').val('Ground');
+    $('#modal-platforms-datasource').trigger('hidden.bs.modal');
+    expect($('#input-platforms-thesaurussearch-ds').val()).toBe('');
   });
 
   test('remove button deletes row', () => {
