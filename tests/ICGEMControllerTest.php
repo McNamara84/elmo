@@ -1445,7 +1445,7 @@ EOT;
 
         $this->assertStringNotContainsString('file:C\\', $result);
         $this->assertStringNotContainsString('DataCiteSchema46.xsd', $result);
-        $this->assertStringContainsString('http://schema.datacite.org/meta/kernel-4/metadata.xsd', $result);
+        $this->assertStringContainsString('https://schema.datacite.org/meta/kernel-4.7/metadata.xsd', $result);
     }
 
     /**
@@ -1467,7 +1467,7 @@ EOT;
 
         // All file: paths should be replaced
         $this->assertStringNotContainsString('file:', $result);
-        $this->assertStringContainsString('http://schema.datacite.org/meta/kernel-4/metadata.xsd', $result);
+        $this->assertStringContainsString('https://schema.datacite.org/meta/kernel-4.7/metadata.xsd', $result);
     }
 
     /**
@@ -1479,13 +1479,13 @@ EOT;
         $method = $reflection->getMethod('cleanDataCiteSchemaLocation');
         $method->setAccessible(true);
 
-        $xml = '<?xml version="1.0"?><root xsi:schemaLocation="http://schema.datacite.org/meta/kernel-4/metadata.xsd"></root>';
+        $xml = '<?xml version="1.0"?><root xsi:schemaLocation="https://schema.datacite.org/meta/kernel-4.7/metadata.xsd"></root>';
 
         $result = $method->invoke($this->controller, $xml);
 
         // XML should remain unchanged
         $this->assertEquals($xml, $result);
-        $this->assertStringContainsString('http://schema.datacite.org', $result);
+            $this->assertStringContainsString('https://schema.datacite.org', $result);
     }
 
     /**
