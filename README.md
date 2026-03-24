@@ -1517,6 +1517,25 @@ If Grant number, Grant name or Award URI is filled, then:
 Funder becomes required on submit.
 If none of these three fields is filled, Funder remains optional.
 
+- **Optional fields**
+Many fields are optional and are only used to enrich the metadata, for example:
+
+**DOI**, **version**
+**Author person ORCID**, **author person affiliation**, **contact person website**
+**Contributor person ORCID**, **contributor affiliation**
+**Author institution affiliation**, **contributor institution affiliation**
+**Originating laboratory (MSL)**
+**EPOS Multi-Scale Laboratories keywords (MSL)**
+**Descriptions (methods, technical information, other)**
+**GCMD thesauri keywords**
+**Free keywords**
+**Embargo date**
+**Related work fields**, **funding reference fields**
+**Spatial and temporal coverage details**
+
+- **Licence and rights**
+The Licence and rights field has a default value but can be changed to another option.
+
 
 The metadata editor has some mandatory fields which are necessary for the submission of data. These include the following fields:
 - **Publication Year**, **Resource Type**, **Language of dataset**, **Title**, **Title Type**(_not for the first (main) title!_), **Author Lastname**, **Author Firstname**,**Contact Person Lastname**, **Contact Person Firstname**, **Contact Person Email address**, **Descriptions Abstract**, **Date created**, **Min Latitude**, **Min Longitude**, **STC Description**, **STC Date Start**, **STC Date End** und **STC Timezone**.❗
