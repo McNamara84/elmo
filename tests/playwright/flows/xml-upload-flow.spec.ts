@@ -67,6 +67,7 @@ function loadTemplate(relativePath: string): string {
 const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resourceInformation.html');
 const RIGHTS_HTML = loadTemplate('formgroups/rights.html');
 const AUTHORS_HTML = loadTemplate('formgroups/authors.html');
+const AUTHOR_INSTITUTION_HTML = loadTemplate('formgroups/authorInstitution.html');
 const ORIGINATING_LAB_HTML = loadTemplate('formgroups/originatingLaboratory.html');
 const DESCRIPTIONS_HTML = loadTemplate('formgroups/descriptions.html');
 const THESAURUS_HTML = loadTemplate('formgroups/thesaurusKeywords.html');
@@ -88,6 +89,7 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
     ${RESOURCE_INFORMATION_HTML}
     ${RIGHTS_HTML}
     ${AUTHORS_HTML}
+    ${AUTHOR_INSTITUTION_HTML}
     ${ORIGINATING_LAB_HTML}
     ${DESCRIPTIONS_HTML}
     ${THESAURUS_HTML}
@@ -102,6 +104,70 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
     ${MODALS_HTML}
   </body>
 </html>`;
+
+// ─── Mixed-creator XML for Issue #739 regression tests ──────────────────────
+
+const XML_MIXED_PERSON_INSTITUTION_PERSON = `<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+  <identifier identifierType="DOI">10.1234/elmo.mixed</identifier>
+  <publicationYear>2024</publicationYear>
+  <language>en</language>
+  <titles>
+    <title xml:lang="en" titleType="MainTitle">Mixed Creator Test</title>
+  </titles>
+  <creators>
+    <creator>
+      <creatorName nameType="Personal">Smith, Alice</creatorName>
+      <givenName>Alice</givenName>
+      <familyName>Smith</familyName>
+      <affiliation>Test University</affiliation>
+    </creator>
+    <creator>
+      <creatorName nameType="Organizational">ACME Research Corp</creatorName>
+    </creator>
+    <creator>
+      <creatorName nameType="Personal">Jones, Bob</creatorName>
+      <givenName>Bob</givenName>
+      <familyName>Jones</familyName>
+      <affiliation>Test University</affiliation>
+    </creator>
+  </creators>
+  <descriptions>
+    <description descriptionType="Abstract" xml:lang="en">Test abstract.</description>
+  </descriptions>
+  <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
+  <rightsList>
+    <rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0">CC BY 4.0</rights>
+  </rightsList>
+</resource>`;
+
+const XML_MIXED_INSTITUTION_PERSON = `<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+  <identifier identifierType="DOI">10.1234/elmo.mixed2</identifier>
+  <publicationYear>2024</publicationYear>
+  <language>en</language>
+  <titles>
+    <title xml:lang="en" titleType="MainTitle">Institution First Test</title>
+  </titles>
+  <creators>
+    <creator>
+      <creatorName nameType="Organizational">ACME Research Corp</creatorName>
+    </creator>
+    <creator>
+      <creatorName nameType="Personal">Smith, Alice</creatorName>
+      <givenName>Alice</givenName>
+      <familyName>Smith</familyName>
+      <affiliation>Test University</affiliation>
+    </creator>
+  </creators>
+  <descriptions>
+    <description descriptionType="Abstract" xml:lang="en">Test abstract.</description>
+  </descriptions>
+  <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
+  <rightsList>
+    <rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0">CC BY 4.0</rights>
+  </rightsList>
+</resource>`;
 
 const TEST_TRANSLATIONS = {
   general: {
@@ -465,6 +531,31 @@ test.describe('XML Upload Mapping Flow', () => {
       }
     });
 
+    // Register simplified click handlers for add-row buttons since ES modules
+    // cannot load on about:blank pages. These mimic the core cloning logic from
+    // js/eventhandlers/formgroups/author.js and authorInstitution.js.
+    await page.evaluate(() => {
+      const $ = (window as any).jQuery;
+      $('#button-author-add').click(function () {
+        const $container = $('div[data-creator-row]').parent();
+        const $first = $('div[data-creator-row]').first();
+        const $clone = $first.clone(false);
+        $clone.find('input, select, textarea').val('').removeAttr('required');
+        $clone.find('.tagify').remove();
+        $clone.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
+        $container.append($clone);
+      });
+      $('#button-authorinstitution-add').click(function () {
+        const $container = $('div[data-authorinstitution-row]').parent();
+        const $first = $('div[data-authorinstitution-row]').first();
+        const $clone = $first.clone(false);
+        $clone.find('input, select, textarea').val('').removeAttr('required');
+        $clone.find('.tagify').remove();
+        $clone.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
+        $container.append($clone);
+      });
+    });
+
     const appScripts = [
       'js/clear.js',
       'js/select.js',
@@ -557,5 +648,61 @@ test.describe('XML Upload Mapping Flow', () => {
       return element.options[element.selectedIndex]?.text;
     });
     expect(selectedRelation).toBe('IsSupplementTo');
+  });
+
+  // ── Issue #739 regression: mixed person/institution creators ───────
+
+  test('Person, Institution, Person → 2 person rows, 1 institution row, no extra empty rows (Issue #739)', async ({ page }) => {
+    await page.getByRole('button', { name: /Load/i }).click();
+    const modal = page.locator('div#modal-uploadxml');
+    await expect(modal).toBeVisible();
+
+    await page.setInputFiles('#input-uploadxml-file', {
+      name: 'mixed-creators.xml',
+      mimeType: 'text/xml',
+      buffer: Buffer.from(XML_MIXED_PERSON_INSTITUTION_PERSON, 'utf-8'),
+    });
+
+    await expect(page.locator('#input-resourceinformation-title')).toHaveValue('Mixed Creator Test', { timeout: 15000 });
+
+    const personRows = page.locator('#group-author [data-creator-row]');
+    await expect(personRows).toHaveCount(2);
+    await expect(personRows.nth(0).locator('input[name="familynames[]"]')).toHaveValue('Smith');
+    await expect(personRows.nth(0).locator('input[name="givennames[]"]')).toHaveValue('Alice');
+    await expect(personRows.nth(1).locator('input[name="familynames[]"]')).toHaveValue('Jones');
+    await expect(personRows.nth(1).locator('input[name="givennames[]"]')).toHaveValue('Bob');
+
+    // No empty person rows
+    for (let i = 0; i < 2; i++) {
+      const family = await personRows.nth(i).locator('input[name="familynames[]"]').inputValue();
+      expect(family.trim()).not.toBe('');
+    }
+
+    const instRows = page.locator('#group-authorinstitution [data-authorinstitution-row]');
+    await expect(instRows).toHaveCount(1);
+    await expect(instRows.nth(0).locator('input[name="authorinstitutionName[]"]')).toHaveValue('ACME Research Corp');
+  });
+
+  test('Institution, Person → 1 person row, 1 institution row, no extra empty rows (Issue #739)', async ({ page }) => {
+    await page.getByRole('button', { name: /Load/i }).click();
+    const modal = page.locator('div#modal-uploadxml');
+    await expect(modal).toBeVisible();
+
+    await page.setInputFiles('#input-uploadxml-file', {
+      name: 'inst-first.xml',
+      mimeType: 'text/xml',
+      buffer: Buffer.from(XML_MIXED_INSTITUTION_PERSON, 'utf-8'),
+    });
+
+    await expect(page.locator('#input-resourceinformation-title')).toHaveValue('Institution First Test', { timeout: 15000 });
+
+    const personRows = page.locator('#group-author [data-creator-row]');
+    await expect(personRows).toHaveCount(1);
+    await expect(personRows.nth(0).locator('input[name="familynames[]"]')).toHaveValue('Smith');
+    await expect(personRows.nth(0).locator('input[name="givennames[]"]')).toHaveValue('Alice');
+
+    const instRows = page.locator('#group-authorinstitution [data-authorinstitution-row]');
+    await expect(instRows).toHaveCount(1);
+    await expect(instRows.nth(0).locator('input[name="authorinstitutionName[]"]')).toHaveValue('ACME Research Corp');
   });
 });
