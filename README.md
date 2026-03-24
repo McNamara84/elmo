@@ -257,7 +257,7 @@ To install them: npm install
   - The corresponding field in the database where the value is saved is called: `resource_type_general` in the table `Resource_Type`
   - Restrictions: must be selected from [controlled list](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/#resourcetypegeneral) 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/resourcetype/#a-resourcetypegeneral)
-  - Example values: `Dataset`, `Audiovisual`, `Book`
+  - Example values: `Dataset`, `Audiovisual`, `Software`
   - Mapping: mapped to `<resourceType resourceTypeGeneral="XX">` in the DataCite scheme
 
 - Version
@@ -736,11 +736,12 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
 
 - Free Keyword
 
-This field contains free keywords that are not part of a thesaurus.
+  This field contains free keywords that are not part of a thesaurus.
   - Data type: String
   - Occurrence: 0-n
   - The corresponding field in the database where the value is saved is called: `free_keyword` in the table `free_keywords`
   - Restrictions: Dublicates are not allowed
+  - In the Elmo-MSL, the keywords `multi-scale laboratories` and `EPOS` are pre-filled as default values in this field but can be removed by the user.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
   - Example values: `Seismic tremor`, `Acoustic Emission`
 
