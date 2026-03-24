@@ -8,13 +8,7 @@ const KEY_SECTIONS = [
   'main#main-content',
   'form#form-mde',
   '[data-translate="resourceInfo.title"]',
-  '[data-translate="rights.title"]',
   '[data-translate="authors.title"]',
-  '[data-translate="descriptions.title"]',
-  '[data-translate="keywords.free.title"]',
-  '[data-translate="coverage.title"]',
-  '[data-translate="relatedWork.title"]',
-  '[data-translate="funding.title"]',
   'footer.footer',
   '#button-form-submit',
 ];

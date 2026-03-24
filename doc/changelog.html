@@ -6,7 +6,7 @@
             <button class="accordion-button" type="button" data-bs-toggle="collapse"
                 data-bs-target="#collapse-changelog-version12" aria-expanded="true"
                 aria-controls="collapse-changelog-version12">
-                Version 2.0.7 - 2026/03/xx
+                Version 2.0.7 - 2026/03/31
             </button>
         </h2>
         <div id="collapse-changelog-version12" class="accordion-collapse collapse show"
@@ -26,17 +26,24 @@
                             <li>New form group Used Instruments for managing instrument information with PID4INST over ERNIE API</li>
                             <li>Dynamic thesauri management via ERNIE API with support for 5 vocabularies (GCMD Science Keywords, Platforms, Instruments, ICS Chronostratigraphy, GEMET)</li>
                             <li>Dynamic description types from ERNIE API with support for SeriesInformation and TableOfContents</li>
+                            <li>Dynamic relation types for Related Work from ERNIE API</li>
+                            <li>Dynamic identifier types for Related Work from ERNIE API</li>
                             <li>Adjusted rules for versioning and more clear documentation.</li>
                             <li>Added default Keywords for EPOS MSL Edition</li>
+                            <li>Upgraded used DataCite metadata schema from v4.5 to v4.6</li>
+                            <li>Configurable Funder PID type: switchable between Crossref Funder ID and ROR</li>
                         </ul>
                     </li>
                     <li><strong>Fixes:</strong>
                         <ul>
+                            <li>Alignment of add buttons across all form groups with consistent right padding</li>
                             <li>Pre-selected English as the default language in the Resource Information form group</li>
                             <li>Language of Dataset is no longer a mandatory field</li>
                             <li>Fixed EPOS MSL header logo so it is displayed only in the MSL edition as intended.</li>
-                            <li>Hid map search label visually while keeping it accessible for screen readers in the spatial coverage modal</li>
+                            <li>Hide map search label visually while keeping it accessible for screen readers in the spatial coverage modal</li>
                             <li>Spatial and Temporal Coverage: validation now rejects end times before start times when start and end date are equal</li>
+                            <li>Refined person name validation patterns to reject digits and special characters while allowing international names.</li>
+                            <li>Mixed creator types in XML upload created an empty line</li>
                         </ul>
                     </li>
                     <li><strong>Documentation:</strong>

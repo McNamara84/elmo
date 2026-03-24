@@ -239,6 +239,7 @@ label.mandatory-field::after {
 
 .add-button {
     width: 36px;
+    margin-inline-end: 0.75rem;
 }
 
 .map-panel {

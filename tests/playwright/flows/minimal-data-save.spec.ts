@@ -155,11 +155,7 @@ test.describe('Minimal dataset save-as flow', () => {
       );
     }
 
-    await page.evaluate(() => {
-      const modalElement = document.getElementById('modal-notification');
-      const instance = (window as any).bootstrap?.Modal.getInstance(modalElement);
-      instance?.hide();
-    });
+    await notificationModal.locator('.btn-primary').click();
 
     await expect(notificationModal).toBeHidden();
     await page.unroute(SAVE_ENDPOINT);
@@ -204,11 +200,7 @@ test.describe('Minimal dataset save-as flow', () => {
       );
     }
 
-    await page.evaluate(() => {
-      const modalElement = document.getElementById('modal-notification');
-      const instance = (window as any).bootstrap?.Modal.getInstance(modalElement);
-      instance?.hide();
-    });
+    await notificationModal.locator('.btn-primary').click();
     await expect(notificationModal).toBeHidden();
 
     // The user should be able to attempt saving again after an error.

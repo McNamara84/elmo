@@ -352,6 +352,11 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes)
         }
     }
 
+    if (empty($uniqueTitles)) {
+        error_log("No valid titles to save");
+        return false;
+    }
+
     foreach ($uniqueTitles as $title) {
         $stmt = $connection->prepare("INSERT INTO Title 
             (`text`, `Title_Type_fk`, `Resource_resource_id`) 

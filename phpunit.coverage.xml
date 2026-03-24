@@ -9,17 +9,22 @@
         </testsuite>
     </testsuites>
 
+    <coverage includeUncoveredFiles="true">
+        <report>
+            <clover outputFile="clover.xml" />
+        </report>
+    </coverage>
+
     <source>
         <include>
-            <!-- Only include directories with testable code that have tests -->
             <directory suffix=".php">./save</directory>
             <directory suffix=".php">./includes</directory>
             <directory suffix=".php">./api/v2</directory>
+            <file>./api_functions.php</file>
             <file>./send_xml_file.php</file>
             <file>./log_page_event.php</file>
         </include>
         <exclude>
-            <!-- Exclude save_data.php as it's mainly an orchestration file -->
             <file>./save/save_data.php</file>
         </exclude>
     </source>

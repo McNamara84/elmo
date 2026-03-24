@@ -105,24 +105,73 @@ class VocabController
     }
 
     /**
-     * Retrieves relation data from the database and returns it as JSON.
+     * Retrieves relation types, preferring ERNIE data with local DB fallback
+     *
+     * When ERNIE is configured, fetches relation types from ERNIE (with caching),
+     * syncs to local DB, and returns data with local IDs.
+     * Falls back to local database if ERNIE is unavailable.
      *
      * @return void
      */
-    public function getRelations()
+    public function getRelations(): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
+
+            if ($ernieService->isConfigured(logResult: true)) {
+                $ernieTypes = $ernieService->getRelationTypesWithCache();
+
+                if (!empty($ernieTypes)) {
+                    // Sync to local DB for storage purposes
+                    $syncItems = array_map(fn($t) => [
+                        'ernie_id' => $t['id'],
+                        'name' => $t['name'],
+                        'description' => $t['description'] ?? null
+                    ], $ernieTypes);
+                    $this->syncErnieToDb('Relation', $syncItems, [
+                        'ernie_id_col' => 'ernie_id',
+                        'name_col' => 'name',
+                        'description_col' => 'description'
+                    ]);
+
+                    // Return ERNIE data with local IDs
+                    $relations = $this->mapErnieToLocalIds(
+                        'Relation', $ernieTypes, 'relation_id', 'ernie_id',
+                        ['name' => 'name', 'description' => 'description']
+                    );
+                    error_log("Relations: Serving " . count($relations) . " types from ERNIE (cache or fresh)");
+                    header('Content-Type: application/json');
+                    echo json_encode(['relations' => $relations]);
+                    return;
+                }
+            }
+
+            // Fallback: Load from local database
+            error_log("Relations: Falling back to local database");
+            $this->getRelationsFromDb();
+
+        } catch (Exception $e) {
+            error_log("API Error in getRelations: " . $e->getMessage());
+            // Fallback to local DB on any error
+            error_log("Relations: Falling back to local database due to error");
+            $this->getRelationsFromDb();
+        }
+    }
+
+    /**
+     * Fetches relations directly from local database
+     *
+     * @return void Outputs JSON response directly
+     */
+    private function getRelationsFromDb(): void
     {
         global $connection;
-        $stmt = $connection->prepare('SELECT relation_id, name, description FROM Relation');
+        $stmt = $connection->prepare('SELECT relation_id, name, description FROM Relation ORDER BY name ASC');
 
-        if (!$stmt) {
+        if (!$stmt || !$stmt->execute()) {
             http_response_code(500);
-            echo json_encode(['error' => 'Failed to prepare statement: ' . $connection->error]);
-            return;
-        }
-
-        if (!$stmt->execute()) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to execute statement: ' . $stmt->error]);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Failed to query relations']);
             return;
         }
 
@@ -137,14 +186,15 @@ class VocabController
                     'description' => $row['description']
                 ];
             }
+            header('Content-Type: application/json');
             echo json_encode(['relations' => $relations]);
         } else {
             http_response_code(404);
+            header('Content-Type: application/json');
             echo json_encode(['error' => 'No relations found']);
         }
 
         $stmt->close();
-        exit();
     }
 
     /**
@@ -1426,6 +1476,7 @@ class VocabController
             }
 
             $connection->commit();
+            error_log("ERNIE sync to $dbTable completed: " . count($items) . " items synced");
             return true;
 
         } catch (\Exception $e) {
@@ -2273,5 +2324,153 @@ class VocabController
     public function getThesauriAvailabilityCacheStatus(): void
     {
         $this->handleCacheStatus('getThesauriAvailabilityCacheStatus', 'thesauri availability');
+    }
+
+    // ==================== Relation Types (ERNIE) cache management ====================
+
+    /**
+     * Manually refreshes the relation types cache from ERNIE
+     * and syncs the fresh data to the local database.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshRelationTypesCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshRelationTypesCache',
+            'getRelationTypesCacheStatus',
+            'Relation types',
+            $this->syncRelationTypesAfterRefresh(...)
+        );
+    }
+
+    /**
+     * Syncs relation types to local DB after a cache refresh
+     *
+     * @param \ErnieService $ernieService The ERNIE service instance
+     * @return void
+     */
+    private function syncRelationTypesAfterRefresh(\ErnieService $ernieService): void
+    {
+        $ernieTypes = $ernieService->getRelationTypesWithCache();
+        if (!empty($ernieTypes)) {
+            $syncItems = array_map(fn($t) => [
+                'ernie_id' => $t['id'],
+                'name' => $t['name'],
+                'description' => $t['description'] ?? null
+            ], $ernieTypes);
+            $this->syncErnieToDb('Relation', $syncItems, [
+                'ernie_id_col' => 'ernie_id',
+                'name_col' => 'name',
+                'description_col' => 'description'
+            ]);
+        }
+    }
+
+    /**
+     * Gets the status of the ERNIE relation types cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getRelationTypesCacheStatus(): void
+    {
+        $this->handleCacheStatus('getRelationTypesCacheStatus', 'relation types');
+    }
+
+    // ==================== Identifier Types (ERNIE) cache management ====================
+
+    /**
+     * Manually refreshes the identifier types cache from ERNIE
+     * and syncs the fresh data to the local database.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshIdentifierTypesCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshIdentifierTypesCache',
+            'getIdentifierTypesCacheStatus',
+            'Identifier types',
+            $this->syncIdentifierTypesAfterRefresh(...)
+        );
+    }
+
+    /**
+     * Syncs identifier types to local DB after a cache refresh
+     *
+     * @param \ErnieService $ernieService The ERNIE service instance
+     * @return void
+     */
+    private function syncIdentifierTypesAfterRefresh(\ErnieService $ernieService): void
+    {
+        $ernieTypes = $ernieService->getIdentifierTypesWithCache();
+        if (!empty($ernieTypes)) {
+            $this->syncIdentifierTypesToDb($ernieTypes);
+        }
+    }
+
+    /**
+     * Gets the status of the ERNIE identifier types cache
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getIdentifierTypesCacheStatus(): void
+    {
+        $this->handleCacheStatus('getIdentifierTypesCacheStatus', 'identifier types');
+    }
+
+    /**
+     * Syncs ERNIE identifier types to the local database
+     *
+     * First deactivates all types (isShown=0), then upserts current ERNIE
+     * data with isShown=1. This ensures types not provided by ERNIE
+     * (including legacy install.php data) are no longer shown.
+     *
+     * Uses INSERT ... ON DUPLICATE KEY UPDATE (upsert) to handle
+     * new, existing by ernie_id, and existing by name records.
+     * Also updates `pattern` and sets `isShown = 1` for ERNIE-provided types.
+     *
+     * @param array<int, array<string, mixed>> $ernieTypes Identifier types from ERNIE
+     * @return void
+     */
+    public function syncIdentifierTypesToDb(array $ernieTypes): void
+    {
+        global $connection;
+
+        $connection->begin_transaction();
+
+        try {
+            // Deactivate all types first; upsert below re-activates current ones
+            $connection->query("UPDATE `Identifier_Type` SET `isShown` = 0");
+
+            foreach ($ernieTypes as $type) {
+                $ernieId = $type['id'] ?? null;
+                $name = $type['name'] ?? null;
+                if (!$ernieId || !$name) {
+                    continue;
+                }
+
+                $desc = $type['description'] ?? null;
+                $pattern = $type['pattern'] ?? null;
+
+                $sql = "INSERT INTO `Identifier_Type` (`ernie_id`, `name`, `description`, `pattern`, `isShown`)
+                        VALUES (?, ?, ?, ?, 1)
+                        ON DUPLICATE KEY UPDATE
+                        `name` = VALUES(`name`),
+                        `description` = VALUES(`description`),
+                        `pattern` = VALUES(`pattern`),
+                        `isShown` = 1,
+                        `ernie_id` = VALUES(`ernie_id`)";
+                $stmt = $connection->prepare($sql);
+                $stmt->bind_param('isss', $ernieId, $name, $desc, $pattern);
+                $stmt->execute();
+            }
+
+            $connection->commit();
+            error_log("ERNIE sync to Identifier_Type completed: " . count($ernieTypes) . " types synced");
+        } catch (\Exception $e) {
+            $connection->rollback();
+            error_log("ERNIE sync to Identifier_Type failed: " . $e->getMessage());
+        }
     }
 }
