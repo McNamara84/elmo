@@ -124,7 +124,7 @@ This section outlines the automatic processes handled by the Docker environment 
     This rebuilds the `web` service (and any other services specified in `docker-compose.yaml` that depend on the build context), ensuring your updated project files are included in the new container image.
 
 
-If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/gfz-metadata-editor-msl-v2/issues)!
+If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/elmo/issues)!
 
 
 <details>
@@ -263,15 +263,9 @@ To install them: npm install
   - Data type: String
   - Occurrence: 1
   - The corresponding field in the database where the value is saved is called: `resource_type_general` in the table `Resource_Type`
-<<<<<<< github-elmo-update
-  - Restrictions: must be selected from [controlled list](https://datacite-metadata-schema.readthedocs.io/en/4.5/appendices/appendix-1/resourceTypeGeneral/#resourcetypegeneral) 
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/resourcetype/#a-resourcetypegeneral)
-  - Example values: `Dataset`, `Audiovisual`, `Software`
-=======
   - Restrictions: must be selected from [controlled list](https://datacite-metadata-schema.readthedocs.io/en/4.6/appendices/appendix-1/resourceTypeGeneral/#resourcetypegeneral) 
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/resourcetype/#a-resourcetypegeneral)
-  - Example values: `Dataset`, `Audiovisual`, `Book`
->>>>>>> main
+  - Example values: `Dataset`, `Audiovisual`, `Software`
   - Mapping: mapped to `<resourceType resourceTypeGeneral="XX">` in the DataCite scheme
 
 - Version
@@ -755,12 +749,8 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - Occurrence: 0-n
   - The corresponding field in the database where the value is saved is called: `free_keyword` in the table `free_keywords`
   - Restrictions: Dublicates are not allowed
-<<<<<<< github-elmo-update
   - In the Elmo-MSL, the keywords `multi-scale laboratories` and `EPOS` are pre-filled as default values in this field but can be removed by the user.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/subject/#a-scheme)
-=======
-  - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/subject/#a-scheme)
->>>>>>> main
   - Example values: `Seismic tremor`, `Acoustic Emission`
 
 ### Dates
@@ -924,13 +914,8 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - The corresponding field in the database where the value is stored is called: `identifier_type_fk` in the `Related_Work` table
   - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
   - Restrictions: Must be selected, if related work is specified
-<<<<<<< github-elmo-update
-  - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.5/properties/relatedidentifier/#a-relatedidentifiertype)
-  - Example values: `ARK` `IGSN` `LSID`
-=======
   - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.6/properties/relatedidentifier/#a-relatedidentifiertype)
-  - Example values: `ARK` `arXiv` `EAN13`
->>>>>>> main
+  - Example values: `ARK` `IGSN` `LSID`
 
 ### Funding Reference
 This element is optional in the DataCite scheme. However, it is a best practice to supply funding information when financial support has been received.
