@@ -1593,7 +1593,7 @@ Providing this information is not mandatory for submission but strongly encourag
 
 ## Contributing
 
-We appreciate every contribution to this project! You can use the feedback form at the bottom of the page on the [test server](https://env.rz-vm182.gfz.de/elmo), create an issue on github or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template, so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.
+We appreciate every contribution to this project! You can use the feedback form at the bottom of the page on your local instance, create an issue on GitHub, or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template, so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.
 
 ## Testing
 
