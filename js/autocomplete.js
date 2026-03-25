@@ -12,17 +12,88 @@ function normalizeRorId(rorId) {
 }
 
 /**
+ * Reads an ORCID date part from either the API object format or a direct value.
+ *
+ * @param {Object|number|string|null|undefined} part - ORCID date part.
+ * @returns {number|null} Parsed integer value or null when unavailable.
+ */
+function parseOrcidDatePart(part) {
+  if (part === null || part === undefined) {
+    return null;
+  }
+
+  const rawValue = typeof part === 'object' ? part.value : part;
+  const parsedValue = Number.parseInt(rawValue, 10);
+
+  return Number.isNaN(parsedValue) ? null : parsedValue;
+}
+
+/**
+ * Returns the last valid day for a year/month combination.
+ *
+ * @param {number} year - Full year.
+ * @param {number} month - Month number in the range 1-12.
+ * @returns {number} Last day of the given month.
+ */
+function getLastDayOfMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+
+/**
+ * Resolves an ORCID affiliation end date. Partial dates are normalized to the
+ * end of the given period so affiliations are not filtered too early.
+ *
+ * @param {Object} affiliation - The affiliation summary from ORCID.
+ * @returns {Date|null} Normalized end date or null when none exists.
+ */
+function getAffiliationEndDate(affiliation) {
+  const endDate = affiliation?.['end-date'];
+
+  if (!endDate) {
+    return null;
+  }
+
+  const year = parseOrcidDatePart(endDate.year);
+  if (year === null) {
+    return null;
+  }
+
+  const month = parseOrcidDatePart(endDate.month) ?? 12;
+  const day = parseOrcidDatePart(endDate.day) ?? getLastDayOfMonth(year, month);
+
+  return new Date(year, month - 1, day);
+}
+
+/**
+ * Determines whether an ORCID affiliation should be treated as current.
+ * Affiliations without end date are considered current.
+ *
+ * @param {Object} affiliation - The affiliation summary from ORCID.
+ * @param {Date} [now=new Date()] - Reference date for comparisons.
+ * @returns {boolean} True when the affiliation is current.
+ */
+function isCurrentAffiliation(affiliation, now = new Date()) {
+  const endDate = getAffiliationEndDate(affiliation);
+
+  if (!endDate) {
+    return true;
+  }
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return endDate >= today;
+}
+
+/**
  * Extracts affiliation information from an ORCID affiliation summary.
- * This helper collects both current and past affiliations as long as they
- * provide a ROR disambiguated organization, matching the behaviour described
- * in the UI copy.
+ * Only current affiliations are collected. Historical affiliations are
+ * filtered by ORCID end date before they reach the UI.
  *
  * @param {Object} affiliation - The affiliation summary from ORCID.
  * @param {Set<string>} affiliationSet - Accumulator for affiliation names.
  * @param {Set<string>} rorIds - Accumulator for normalized ROR identifiers.
  */
 function collectAffiliation(affiliation, affiliationSet, rorIds) {
-  if (!affiliation?.organization) {
+  if (!affiliation?.organization || !isCurrentAffiliation(affiliation)) {
     return;
   }
 
@@ -50,7 +121,7 @@ function collectAffiliation(affiliation, affiliationSet, rorIds) {
  * When a valid ORCID is entered and the input field loses focus:
  * 1. Fetches the author's data from the ORCID API
  * 2. Fills in their last name and first name
- * 3. Adds their current and past affiliations to the affiliations field
+ * 3. Adds their current affiliations to the affiliations field
  * 4. Stores corresponding ROR IDs in a hidden field
  * 
  * @listens blur - Triggers when an ORCID input field loses focus
@@ -136,7 +207,7 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
  * When a valid ORCID is entered and the input field loses focus:
  * 1. Fetches the contributor's data from the ORCID API
  * 2. Fills in their last name and first name
- * 3. Adds their current and past affiliations to the affiliations field
+ * 3. Adds their current affiliations to the affiliations field
  * 4. Stores corresponding ROR IDs in a hidden field
  * 
  * @listens blur - Triggers when an ORCID input field loses focus
@@ -217,6 +288,9 @@ $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     normalizeRorId,
+    parseOrcidDatePart,
+    getAffiliationEndDate,
+    isCurrentAffiliation,
     collectAffiliation
   };
 }
