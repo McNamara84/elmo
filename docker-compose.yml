@@ -31,6 +31,7 @@ services:
       SHOW_USED_INSTRUMENTS: "true"
       SIMULATE_EMAIL: "true"
       API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
+      LOCAL_DEVELOPMENT: "true"
     depends_on:
       - db
     restart: unless-stopped
