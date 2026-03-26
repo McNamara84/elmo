@@ -83,6 +83,7 @@ export const THESAURUS_CONFIG = {
     gcmdPlatforms: {
         apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
         rootNodeId: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
+        // Datasource controls are pre-rendered outside the generic thesauri generator, so this dynamic config keeps selectors.
         modalId: '#modal-platforms-datasource',
         jsTreeId: '#jstree-platforms-datasource',
         searchInputId: '#input-platforms-thesaurussearch-ds',
@@ -296,6 +297,34 @@ function bindDynamicTreeButton(inputElement, config) {
     });
 }
 
+/**
+ * Removes a Tagify instance from shared thesaurus state when its owning input is destroyed.
+ *
+ * @param {Object} config - Thesaurus configuration for the input.
+ * @param {HTMLInputElement} inputElement - Input element that owns the Tagify instance.
+ * @returns {void}
+ */
+export function cleanupTagifyForInput(inputElement, configKey) {
+    if (!inputElement) return;
+
+    const config = ensureConfigRegistered(configKey) || THESAURUS_CONFIG[configKey];
+    if (!config) return;
+
+    const tagifyInstance = inputElement._tagify;
+    if (!tagifyInstance) return;
+
+    const state = ensureSharedState(config);
+    state.tagifyInstances.delete(tagifyInstance);
+
+    if (state.tagify === tagifyInstance) {
+        state.tagify = null;
+    }
+
+    if (currentActiveInput === tagifyInstance) {
+        currentActiveInput = null;
+    }
+}
+
 // 3. The Function to hook up new inputs
 export function initTagifyForInput(inputElement, configKey) {
     const config = ensureConfigRegistered(configKey) || THESAURUS_CONFIG[configKey];
@@ -365,6 +394,10 @@ export function initTagifyForInput(inputElement, configKey) {
                 const node = findNodeByPath(tree, tagText);
                 if (node) tree.deselect_node(node.id);
             });
+        });
+
+        inputElement._tagify.on('destroy', function () {
+            cleanupTagifyForInput(inputElement, configKey);
         });
     }
 

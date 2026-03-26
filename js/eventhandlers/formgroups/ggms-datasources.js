@@ -3,7 +3,7 @@
  * @module datasources
  */
 import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
-import { initTagifyForInput } from '../../thesauri.js';
+import { cleanupTagifyForInput, initTagifyForInput } from '../../thesauri.js';
 
 $(document).ready(function () {
     const datasourceGroup = $("#group-datasources");
@@ -367,7 +367,18 @@ $(document).ready(function () {
 
     // Remove a data source entry.
     datasourceGroup.on("click", ".removeButton", function () {
-        $(this).closest(".row").remove();
+        const row = $(this).closest('.row');
+        const platformInput = row.find('input[name="satellite_platform[]"]')[0];
+
+        if (platformInput?._tagify) {
+            cleanupTagifyForInput(platformInput, 'gcmdPlatforms');
+            if (typeof platformInput._tagify.destroy === 'function') {
+                platformInput._tagify.destroy();
+            }
+            delete platformInput._tagify;
+        }
+
+        row.remove();
     });
 
     // Update fields when the data source type changes.
