@@ -80,7 +80,7 @@ export const THESAURUS_CONFIG = {
         helpSectionId: 'help-gemet-keyword',
         stateKey: 'input-gemet'
     },
-    gcmdPlatforms: {
+    satellitePlatforms: {
         apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
         rootNodeId: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
         // Datasource controls are pre-rendered outside the generic thesauri generator, so this dynamic config keeps selectors.
@@ -88,7 +88,7 @@ export const THESAURUS_CONFIG = {
         jsTreeId: '#jstree-platforms-datasource',
         searchInputId: '#input-platforms-thesaurussearch-ds',
         selectedListId: 'selected-keywords-platforms-ds',
-        stateKey: 'gcmdPlatforms',
+        stateKey: 'satellitePlatforms',
         dynamicOnly: true
     }
 };
@@ -439,7 +439,7 @@ $(document).ready(function () {
         'https://epos-msl.uu.nl/voc/rockphysics/1.3/'
     ];
 
-    ensureConfigRegistered('gcmdPlatforms');
+    ensureConfigRegistered('satellitePlatforms');
 
     // Wait for translations, then initialize everything
     document.addEventListener('translationsLoaded', function () {

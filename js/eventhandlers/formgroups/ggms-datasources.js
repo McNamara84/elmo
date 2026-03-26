@@ -360,7 +360,7 @@ $(document).ready(function () {
 
         const newInputElem = newRow.find('input[name="satellite_platform[]"]')[0];
         if (newInputElem) {
-            initTagifyForInput(newInputElem, 'gcmdPlatforms');
+            initTagifyForInput(newInputElem, 'satellitePlatforms');
             applyDatasourcePlatformPlaceholder(newInputElem);
         }
     });
@@ -371,7 +371,7 @@ $(document).ready(function () {
         const platformInput = row.find('input[name="satellite_platform[]"]')[0];
 
         if (platformInput?._tagify) {
-            cleanupTagifyForInput(platformInput, 'gcmdPlatforms');
+            cleanupTagifyForInput(platformInput, 'satellitePlatforms');
             if (typeof platformInput._tagify.destroy === 'function') {
                 platformInput._tagify.destroy();
             }
@@ -408,7 +408,7 @@ $(document).ready(function () {
     // --- INITIALIZATION ---
 
     document.querySelectorAll('input[name="satellite_platform[]"]').forEach(function (input) {
-        initTagifyForInput(input, 'gcmdPlatforms');
+        initTagifyForInput(input, 'satellitePlatforms');
         applyDatasourcePlatformPlaceholder(input);
     });
 

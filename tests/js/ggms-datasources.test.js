@@ -435,11 +435,11 @@ describe('ggms-datasources.js', () => {
 
     const rows = $('#group-datasources .row');
     const clonedInput = rows.last().find('input[name="satellite_platform[]"]')[0];
-    expect(window.__thesauriTestExports.getTagifyInstanceCount('gcmdPlatforms')).toBe(2);
+    expect(window.__thesauriTestExports.getTagifyInstanceCount('satellitePlatforms')).toBe(2);
 
     rows.last().find('.removeButton').trigger('click');
 
-    expect(window.__thesauriTestExports.getTagifyInstanceCount('gcmdPlatforms')).toBe(1);
+    expect(window.__thesauriTestExports.getTagifyInstanceCount('satellitePlatforms')).toBe(1);
     expect(clonedInput._tagify).toBeUndefined();
   });
 
