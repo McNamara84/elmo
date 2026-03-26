@@ -7,17 +7,17 @@
     "jquery-ui": "^1.14.2",
     "jstree": "^3.3.17",
     "mark.js": "^8.11.1",
-    "swagger-ui-dist": "^5.31.2"
+    "swagger-ui-dist": "^5.32.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
-    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
     "@playwright/test": "^1.58.2",
-    "@types/node": "^25.3.0",
-    "babel-jest": "^30.2.0",
-    "fast-xml-parser": "^5.3.7",
-    "jest": "^30.2.0",
-    "jest-environment-jsdom": "^30.2.0",
+    "@types/node": "^25.5.0",
+    "babel-jest": "^30.3.0",
+    "fast-xml-parser": "^5.5.9",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
     "nyc": "^18.0.0",
     "playwright": "^1.58.2"
   },
@@ -25,10 +25,6 @@
     "test": "jest",
     "test:e2e": "npx playwright test",
     "test:e2e:coverage": "nyc --reporter=html --reporter=text npx playwright test"
-  },
-  "overrides": {
-    "glob": "^11.1.0",
-    "js-yaml": "^3.14.2"
   },
   "nyc": {
     "include": [
