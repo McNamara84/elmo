@@ -50,7 +50,10 @@ require_once __DIR__ . '/save/formgroups/save_usedinstruments.php';
 require_once __DIR__ . '/save/formgroups/save_fundingreferences.php';
 
 if ($showGGMsProperties) {
-    require_once __DIR__ . '/save/formgroups/save_ggmsproperties.php';
+    require_once __DIR__ . '/save/formgroups/save_ggms_properties.php';
+    require_once __DIR__ . '/save/formgroups/save_ggms_definition.php';
+    require_once __DIR__ . '/save/formgroups/save_ggms_modeltypes.php';
+    require_once __DIR__ . '/save/formgroups/save_ggms_datasources.php';
 }
 
 error_log("send_xml_file.php: Save functions included");
