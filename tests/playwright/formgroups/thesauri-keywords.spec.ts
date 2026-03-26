@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { REPO_ROOT, SELECTORS } from '../utils';
-import { injectScript, injectStylesheet } from '../utils/assets';
+import { injectModuleScript, injectScript, injectStylesheet } from '../utils/assets';
 
 declare const translations: any;
 
@@ -218,7 +218,7 @@ test.describe('Thesauri Keywords Form Group', () => {
       };
     });
 
-    await injectScript(page, 'js/thesauri.js');
+    await injectModuleScript(page, 'js/thesauri.js');
 
     // Set up language handlers and fire translationsLoaded to trigger dynamic init
     await page.evaluate(() => {
