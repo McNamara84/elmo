@@ -316,7 +316,7 @@ test.describe('Thesauri Keywords Form Group', () => {
     const dropdown = page.locator('.tagify__dropdown');
     await expect(dropdown).toBeVisible({ timeout: 5000 });
     const suggestion = dropdown.locator('.tagify__dropdown__item');
-    await expect(suggestion.first()).toContainText('AQUACULTURE');
+    await expect(suggestion.first()).toContainText('AQUATIC');
 
     // Verify the modal was never opened
     await expect(scienceModal).toBeHidden();
