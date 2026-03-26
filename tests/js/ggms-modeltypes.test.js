@@ -7,6 +7,10 @@ describe('ggms-modeltypes.js', () => {
     beforeEach(() => {
         // Load jQuery
         $ = require('jquery');
+        global.$ = $;
+        global.jQuery = $;
+        window.$ = $;
+        window.jQuery = $;
                 // Define helper functions that are used in ggms-modeltypes.js
         window.visibilityON = function(element) {
             element.removeClass('d-none');
@@ -92,22 +96,27 @@ describe('ggms-modeltypes.js', () => {
             </div>
         `;
 
-         // Load the script to be tested
         const scriptPath = path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-modeltypes.js');
         let scriptContent = fs.readFileSync(scriptPath, 'utf8');
 
-        // Strip the $(document).ready() wrapper to ensure the code runs synchronously in the test.
         scriptContent = scriptContent
+            .replace(
+                "import { visibilityOFF, visibilityON } from '../functions.js';",
+                "const { visibilityOFF, visibilityON } = require('../../js/eventhandlers/functions.js');"
+            )
             .replace('$(document).ready(function() {', '')
-            .replace(/}\);?\s*$/, ''); // Removes the final }); or });
-        
-        // Use a function constructor to scope the script and pass jQuery
-        new Function('$', scriptContent)($);
+            .replace(/}\);?\s*$/, '');
+
+        new Function('$', 'require', scriptContent)($, require);
     });
 
     afterEach(() => {
         // Clean up the DOM
         document.body.innerHTML = '';
+        delete global.$;
+        delete global.jQuery;
+        delete window.$;
+        delete window.jQuery;
         // Reset modules to ensure clean state for each test
         jest.resetModules();
     });
