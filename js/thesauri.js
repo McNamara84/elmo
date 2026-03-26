@@ -491,8 +491,9 @@ $(document).ready(function () {
                     }
                 });
 
-                // Setup lazy loading for modals
+                // Setup lazy loading for modals and input fields
                 setupLazyLoadingForModals();
+                setupLazyLoadingForInputs();
 
                 // Show the form group
                 const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
@@ -664,6 +665,7 @@ $(document).ready(function () {
         });
 
         setupLazyLoadingForModals();
+        setupLazyLoadingForInputs();
     }
 
     /**
@@ -725,7 +727,41 @@ $(document).ready(function () {
     }
 
     /**
-     * Loads thesaurus vocabulary data on demand when modal is first opened.
+     * Sets up lazy loading triggered by focusing a Tagify input field.
+     * This ensures the autocomplete whitelist is populated even when the
+     * user starts typing without opening the jsTree modal first.
+     * The loadedConfigs guard inside loadThesaurusOnDemand prevents
+     * duplicate network requests.
+     */
+    function setupLazyLoadingForInputs() {
+        const inputConfigsMap = new Map();
+
+        keywordConfigurations.forEach(config => {
+            if (!config.inputId) return;
+            if (!inputConfigsMap.has(config.inputId)) {
+                inputConfigsMap.set(config.inputId, []);
+            }
+            inputConfigsMap.get(config.inputId).push(config);
+        });
+
+        inputConfigsMap.forEach((configs, inputId) => {
+            const inputElement = document.querySelector(inputId);
+            if (!inputElement) return;
+
+            const tagifyWrapper = inputElement.closest('.tagify') || inputElement.parentElement?.querySelector('.tagify') || inputElement;
+
+            tagifyWrapper.addEventListener('focus', function () {
+                configs.forEach(config => {
+                    loadThesaurusOnDemand(config);
+                });
+            }, { once: true, capture: true });
+        });
+    }
+
+    /**
+     * Loads thesaurus vocabulary data on demand.
+     * Triggered when a modal is opened for the first time OR when
+     * a Tagify input field receives focus.
      * Fetches from the ELMO API proxy endpoint (ERNIE-backed) or local JSON for MSL.
      *
      * @param {Object} config - The configuration object for the keyword input.

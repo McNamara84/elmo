@@ -593,6 +593,16 @@ class ErnieService
                 'description' => 'Data encoded in a defined structure'
             ],
             [
+                'id' => 22,  // ERNIE ID for Poster
+                'name' => 'Poster',
+                'description' => 'A visual presentation of information, data, or findings'
+            ],
+            [
+                'id' => 24,  // ERNIE ID for Presentation
+                'name' => 'Presentation',
+                'description' => 'Slides or other presentation material shared as a research output'
+            ],
+            [
                 'id' => 21,  // ERNIE ID for Other
                 'name' => 'Other',
                 'description' => 'Other resource type not covered by the available options'
@@ -1417,6 +1427,7 @@ class ErnieService
             ['id' => 2, 'name' => 'Cites', 'description' => 'indicates that A includes B in a citation'],
             ['id' => 3, 'name' => 'IsSupplementTo', 'description' => 'indicates that A is a supplement to B'],
             ['id' => 4, 'name' => 'IsSupplementedBy', 'description' => 'indicates that B is a supplement to A'],
+            ['id' => 39, 'name' => 'Other', 'description' => 'indicates another relationship type that requires additional context'],
         ];
     }
 
@@ -1493,6 +1504,8 @@ class ErnieService
             ['id' => 2, 'name' => 'URL', 'description' => 'A specific character string that constitutes a reference to a resource.', 'pattern' => '(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?'],
             ['id' => 3, 'name' => 'Handle', 'description' => 'An ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).', 'pattern' => '^(hdl:)?\d+(\.\d+)*(\/[^\s]+)?$'],
             ['id' => 4, 'name' => 'URN', 'description' => 'A unique and persistent identifier of an electronic document.', 'pattern' => '^urn:nbn:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$'],
+            ['id' => 19, 'name' => 'RAiD', 'description' => 'A Research Activity Identifier used to identify and link research projects or activities.', 'pattern' => '^(?:https?:\/\/raid\.org\/)?10\.\d{4,9}\/raid\.[A-Za-z0-9._-]+$'],
+            ['id' => 22, 'name' => 'SWHID', 'description' => 'A persistent Software Heritage identifier for source code artifacts and revisions.', 'pattern' => '^swh:1:[a-z]{3}:[0-9a-f]{40}(;origin=.*)?$'],
         ];
     }
 

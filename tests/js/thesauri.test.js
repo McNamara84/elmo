@@ -272,6 +272,29 @@ describe('thesauri.js', () => {
     expect(input._tagify.settings.placeholder).toBe('updated');
   });
 
+  test('loads thesaurus data when Tagify input receives focus without opening modal', () => {
+    // Before any interaction, jsTree should NOT be initialized
+    const treeBefore = $('#jstree-sciencekeyword').jstree(true);
+    expect(treeBefore).toBeUndefined();
+
+    // Tagify whitelist should be empty
+    const input = document.getElementById('input-sciencekeyword');
+    expect(input._tagify.settings.whitelist).toHaveLength(0);
+    expect(input._tagify.settings.enforceWhitelist).toBe(false);
+
+    // Simulate focus on the Tagify wrapper / input (capture phase)
+    const tagifyWrapper = input.closest('.tagify') || input.parentElement.querySelector('.tagify') || input;
+    tagifyWrapper.dispatchEvent(new Event('focus', { bubbles: false }));
+
+    // After focus trigger, the whitelist should be populated
+    expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
+    expect(input._tagify.settings.enforceWhitelist).toBe(true);
+
+    // jsTree should also be initialized
+    const treeAfter = $('#jstree-sciencekeyword').jstree(true);
+    expect(treeAfter).toBeDefined();
+  });
+
   test('loads thesaurus data only when modal is opened (lazy loading)', () => {
     // Before opening modal, jsTree should not be initialized
     const tree = $('#jstree-sciencekeyword').jstree(true);

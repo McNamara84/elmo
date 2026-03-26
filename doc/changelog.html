@@ -30,12 +30,13 @@
                             <li>Dynamic identifier types for Related Work from ERNIE API</li>
                             <li>Adjusted rules for versioning and more clear documentation.</li>
                             <li>Added default Keywords for EPOS MSL Edition</li>
-                            <li>Upgraded used DataCite metadata schema from v4.5 to v4.6</li>
+                            <li>Upgraded used DataCite metadata schema from v4.5 to v4.7</li>
                             <li>Configurable Funder PID type: switchable between Crossref Funder ID and ROR</li>
                         </ul>
                     </li>
                     <li><strong>Fixes:</strong>
                         <ul>
+                            <li>Fetching of old ORCID affiliations now correctly filters ended affiliations</li>
                             <li>Alignment of add buttons across all form groups with consistent right padding</li>
                             <li>Pre-selected English as the default language in the Resource Information form group</li>
                             <li>Language of Dataset is no longer a mandatory field</li>
@@ -44,6 +45,7 @@
                             <li>Spatial and Temporal Coverage: validation now rejects end times before start times when start and end date are equal</li>
                             <li>Refined person name validation patterns to reject digits and special characters while allowing international names.</li>
                             <li>Mixed creator types in XML upload created an empty line</li>
+                            <li>Lazy loading for thesauri input fields not working</li>
                         </ul>
                     </li>
                     <li><strong>Documentation:</strong>
