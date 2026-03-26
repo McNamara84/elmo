@@ -7,6 +7,7 @@ class MockTagify {
     this.settings = settings;
     this.value = [];
     this._callbacks = {};
+    this.destroyed = false;
   }
   on(event, cb) {
     this._callbacks[event] = cb;
@@ -26,6 +27,12 @@ class MockTagify {
   removeTag(tag) {
     this.value = this.value.filter(item => item.value !== tag);
   }
+  destroy() {
+    this.destroyed = true;
+    if (this._callbacks.destroy) {
+      this._callbacks.destroy();
+    }
+  }
 }
 
 function transformThesauriScript(source) {
@@ -33,8 +40,9 @@ function transformThesauriScript(source) {
   script = script.replace('export function filterTreeByRoot', 'function filterTreeByRoot');
   script = script.replace('export const THESAURUS_CONFIG =', 'const THESAURUS_CONFIG =');
   script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
+  script = script.replace('export function cleanupTagifyForInput', 'function cleanupTagifyForInput');
   script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
-  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, initTagifyForInput };';
+  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, cleanupTagifyForInput, initTagifyForInput, getTagifyInstanceCount(configKey) { const config = THESAURUS_CONFIG[configKey]; return sharedState[config.stateKey]?.tagifyInstances?.size ?? 0; } };';
   return script;
 }
 
@@ -236,7 +244,7 @@ describe('ggms-datasources.js', () => {
 
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-datasources.js'), 'utf8');
     script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
-    script = script.replace("import { initTagifyForInput } from '../../thesauri.js';", 'const { initTagifyForInput } = window.__thesauriTestExports;');
+    script = script.replace("import { cleanupTagifyForInput, initTagifyForInput } from '../../thesauri.js';", 'const { cleanupTagifyForInput, initTagifyForInput } = window.__thesauriTestExports;');
     script = script.replace('$(document).ready(function () {', '(function () {');
     script = script.replace(/\n\}\);$/, '\n})();');
     window.eval(script);
@@ -420,6 +428,19 @@ describe('ggms-datasources.js', () => {
     const newRow = $('#group-datasources .row').last();
     newRow.find('.removeButton').trigger('click');
     expect($('#group-datasources .row').length).toBe(1);
+  });
+
+  test('remove button cleans orphaned datasource Tagify instances from shared thesaurus state', () => {
+    $('.addDataSource').trigger('click');
+
+    const rows = $('#group-datasources .row');
+    const clonedInput = rows.last().find('input[name="satellite_platform[]"]')[0];
+    expect(window.__thesauriTestExports.getTagifyInstanceCount('gcmdPlatforms')).toBe(2);
+
+    rows.last().find('.removeButton').trigger('click');
+
+    expect(window.__thesauriTestExports.getTagifyInstanceCount('gcmdPlatforms')).toBe(1);
+    expect(clonedInput._tagify).toBeUndefined();
   });
 
   test('has "Elevation/Terrain" option when model type becomes Topographic', () => {
