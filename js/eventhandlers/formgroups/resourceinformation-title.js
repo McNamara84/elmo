@@ -42,13 +42,13 @@ $(document).ready(function () {
 
     // Adjust Title Input field width
     newTitleRow.find(".col-10.col-sm-11.col-md-11.col-lg-11")
-      .removeClass("col-sm-11 col-md-11 col-lg-11")
-      .addClass("col-11 col-md-8 col-lg-8");
+      .removeClass("col-10 col-sm-11 col-md-11 col-lg-11")
+      .addClass("col-10 col-sm-5 col-md-8 col-lg-8");
 
     // Adjust Title Type Dropdown width and make it visible
     newTitleRow.find("#container-resourceinformation-titletype")
       .removeClass("col-10 col-md-3 unvisible")
-      .addClass("col-10 col-md-3 col-lg-3");
+      .addClass("col-10 col-sm-5 col-md-3 col-lg-3");
 
     // Control the visibility of the title type dropdown.
     if (titlesNumber === 0) {
@@ -70,7 +70,7 @@ $(document).ready(function () {
       text: "-",
       type: "button",
       class: "btn btn-danger removeTitle",
-    }).css("width", "36px").click(function () {
+    }).css({ "width": "36px", "margin-inline-end": "0.75rem" }).click(function () {
       // Remove the current row and decrement the titles counter.
       $(this).closest(".row").remove();
       titlesNumber--;
@@ -92,5 +92,11 @@ $(document).ready(function () {
     if (titlesNumber >= maxTitles) {
       $addTitleBtn.prop("disabled", true);
     }
+  });
+
+  // Listen for clear event to reset title counter and button state
+  $(document).on('elmo:clearTitles', function () {
+    titlesNumber = 1;
+    $("#button-resourceinformation-addtitle").prop("disabled", false);
   });
 });

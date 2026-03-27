@@ -190,7 +190,8 @@ describe('clear.js - clearInputFields', () => {
             $('input[name="title[]"]').closest('.row').not(':first').remove();
             $('input[name="title[]"]:first').val('');
             $('#input-resourceinformation-titletype').val(window.mainTitleTypeId || '');
-          
+            // Notify title module to reset its internal counter
+            $(document).trigger('elmo:clearTitles');          
             // Reset Rights License select field
             $('#input-rights-license').val('');
           
@@ -421,5 +422,24 @@ describe('clear.js - clearInputFields', () => {
         expect($('#input-file-format').prop('selectedIndex')).toBe(0);
         expect($('#input-model-name').val()).toBe('');
         expect($('#input-product-type').val()).toBe('Gravity Field');
+    });
+
+    test('clearInputFields triggers elmo:clearTitles event to re-enable add title button', () => {
+        // Set up a disabled add-title button
+        document.body.insertAdjacentHTML('beforeend',
+            '<button id="button-resourceinformation-addtitle" disabled></button>'
+        );
+
+        // Listen for the custom event and re-enable the button (simulates resourceinformation-title.js)
+        $(document).on('elmo:clearTitles', function () {
+            $('#button-resourceinformation-addtitle').prop('disabled', false);
+        });
+
+        clearInputFields();
+
+        expect($('#button-resourceinformation-addtitle').prop('disabled')).toBe(false);
+
+        // Clean up event handler
+        $(document).off('elmo:clearTitles');
     });
 });
