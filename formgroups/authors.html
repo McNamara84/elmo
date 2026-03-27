@@ -82,7 +82,7 @@
         <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 contact-person-input">
           <div class="input-group has-validation">
             <div class="form-floating">
-              <input type="email" class="form-control" name="cpEmail[]"
+              <input type="email" class="form-control input-with-help input-right-no-round-corners" name="cpEmail[]"
                 pattern="^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$"
                 id="input-contactperson-email"  />
               <label for="input-contactperson-email"><span data-translate="contactPersons.email">Email
@@ -91,6 +91,11 @@
               <div class="invalid-feedback" data-translate="contactPersons.emailInvalid">
                 Please provide a valid email address in the format xxx.xxx@xxx.xxx.
               </div>
+            </div>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-contactperson-email"></i>
+              </span>
             </div>
           </div>
         </div>
