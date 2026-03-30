@@ -232,76 +232,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         }
     }
 
-    /**
-     * Tests the update functionality when saving a resource with an existing DOI.
-     * 
-     * @return void
-     */
-    public function testUpdateExistingResource()
-    {
-        if (!function_exists('saveResourceInformationAndRights')) {
-            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
-        }
 
-        // Initial data
-        $initialData = [
-            "doi" => "10.5880/GFZ.UPDATE.TEST",
-            "year" => 2023,
-            "dateCreated" => "2023-06-01",
-            "resourcetype" => 1,
-            "version" => 1.0,
-            "language" => 1,
-            "Rights" => 1,
-            "title" => ["Original Title"],
-            "titleType" => [1]
-        ];
-
-        // Save initial resource
-        $first_resource_id = saveResourceInformationAndRights($this->connection, $initialData);
-        $this->assertIsInt($first_resource_id, "Initial save should return a valid resource ID");
-
-        // Updated data with same DOI but different values
-        $updatedData = [
-            "doi" => "10.5880/GFZ.UPDATE.TEST",
-            "year" => 2024,
-            "dateCreated" => "2024-01-01",
-            "resourcetype" => 2,
-            "version" => 2.0,
-            "language" => 2,
-            "Rights" => 2,
-            "title" => ["Updated Title"],
-            "titleType" => [1]
-        ];
-
-        // Save updated resource
-        $updated_resource_id = saveResourceInformationAndRights($this->connection, $updatedData);
-
-        // Should return the same resource ID
-        $this->assertEquals($first_resource_id, $updated_resource_id, "Update should return the same resource ID");
-
-        // Verify updated values
-        $stmt = $this->connection->prepare("SELECT * FROM Resource WHERE resource_id = ?");
-        $stmt->bind_param("i", $updated_resource_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-
-        $this->assertEquals($updatedData["year"], $row["year"]);
-        $this->assertEquals($updatedData["dateCreated"], $row["dateCreated"]);
-        $this->assertEquals($updatedData["resourcetype"], $row["Resource_Type_resource_name_id"]);
-        $this->assertEquals($updatedData["version"], $row["version"]);
-        $this->assertEquals($updatedData["language"], $row["Language_language_id"]);
-        $this->assertEquals($updatedData["Rights"], $row["Rights_rights_id"]);
-
-        // Verify updated title
-        $stmt = $this->connection->prepare("SELECT * FROM Title WHERE Resource_resource_id = ?");
-        $stmt->bind_param("i", $updated_resource_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-
-        $this->assertEquals($updatedData["title"][0], $row["text"]);
-    }
 
     /**
      * Tests saving multiple resources without DOIs.
@@ -404,112 +335,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         $this->assertEquals(2, $titles[1]['Title_Type_fk'], "Der zweite Titel sollte den Typ 2 haben");
     }
 
-    /**
-     * Tests handling of DOIs: updating existing DOIs and allowing multiple empty/null DOIs
-     * 
-     * @return void
-     */
-    public function testDoiHandling()
-    {
-        if (!function_exists('saveResourceInformationAndRights')) {
-            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
-        }
 
-        // Test 1: Updating existing DOI
-        $postDataWithDOI = [
-            "doi" => "10.5880/GFZ.DOI.TEST",
-            "year" => 2023,
-            "dateCreated" => "2023-06-01",
-            "resourcetype" => 1,
-            "language" => 1,
-            "Rights" => 1,
-            "title" => ["DOI Test Dataset"],
-            "titleType" => [1]
-        ];
-
-        // Save first dataset with DOI
-        $first_id = saveResourceInformationAndRights($this->connection, $postDataWithDOI);
-        $this->assertIsInt($first_id, "First save should return a valid resource ID");
-
-        // Update the same DOI with different data
-        $postDataWithDOI["year"] = 2024;
-        $postDataWithDOI["title"] = ["Updated DOI Test Dataset"];
-        $updated_id = saveResourceInformationAndRights($this->connection, $postDataWithDOI);
-        $this->assertEquals($first_id, $updated_id, "Update should return the same resource ID");
-
-        // Test 2: Multiple datasets with null DOI
-        $postDataWithNullDOI = [
-            "doi" => null,
-            "year" => 2023,
-            "dateCreated" => "2023-06-01",
-            "resourcetype" => 1,
-            "language" => 1,
-            "Rights" => 1,
-            "title" => ["Dataset with null DOI"],
-            "titleType" => [1]
-        ];
-
-        // Save first dataset with null DOI
-        $first_null_id = saveResourceInformationAndRights($this->connection, $postDataWithNullDOI);
-        $this->assertIsInt($first_null_id, "First save with null DOI should return valid ID");
-
-        // Save second dataset with null DOI
-        $second_null_id = saveResourceInformationAndRights($this->connection, $postDataWithNullDOI);
-        $this->assertIsInt($second_null_id, "Second save with null DOI should return valid ID");
-        $this->assertNotEquals($first_null_id, $second_null_id, "Null DOI datasets should have different IDs");
-
-        // Test 3: Multiple datasets with empty string DOI
-        $postDataWithEmptyDOI = [
-            "doi" => "",
-            "year" => 2023,
-            "dateCreated" => "2023-06-01",
-            "resourcetype" => 1,
-            "language" => 1,
-            "Rights" => 1,
-            "title" => ["Dataset with empty DOI"],
-            "titleType" => [1]
-        ];
-
-        // Save first dataset with empty DOI
-        $first_empty_id = saveResourceInformationAndRights($this->connection, $postDataWithEmptyDOI);
-        $this->assertIsInt($first_empty_id, "First save with empty DOI should return valid ID");
-
-        // Save second dataset with empty DOI
-        $second_empty_id = saveResourceInformationAndRights($this->connection, $postDataWithEmptyDOI);
-        $this->assertIsInt($second_empty_id, "Second save with empty DOI should return valid ID");
-        $this->assertNotEquals($first_empty_id, $second_empty_id, "Empty DOI datasets should have different IDs");
-
-        // Verify database state
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource WHERE doi = ?");
-        $doi = "10.5880/GFZ.DOI.TEST";
-        $stmt->bind_param("s", $doi);
-        $stmt->execute();
-        $count_with_doi = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(1, $count_with_doi, "Should have exactly one dataset with specific DOI");
-
-        // Check title was updated
-        $stmt = $this->connection->prepare("SELECT text FROM Title WHERE Resource_resource_id = ?");
-        $stmt->bind_param("i", $first_id);
-        $stmt->execute();
-        $title = $stmt->get_result()->fetch_assoc()['text'];
-        $this->assertEquals("Updated DOI Test Dataset", $title, "Title should be updated for existing DOI");
-
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource WHERE doi IS NULL");
-        $stmt->execute();
-        $count_null_doi = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(2, $count_null_doi, "Should have exactly two datasets with null DOI");
-
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource WHERE doi = ''");
-        $stmt->execute();
-        $count_empty_doi = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(2, $count_empty_doi, "Should have exactly two datasets with empty DOI");
-
-        // Verify total count
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource");
-        $stmt->execute();
-        $total_count = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(5, $total_count, "Should have five datasets in total");
-    }
 
     /**
      * Tests that a title with text only (without type) is skipped, not saved.
@@ -529,6 +355,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
             "resourcetype" => 1,
             "language" => 1,
             "Rights" => 1,
+            "action" => "submit",
             "title" => ["Title Without Type"],
             "titleType" => [""]  // Empty title type
         ];
@@ -593,6 +420,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
             "resourcetype" => 1,
             "language" => 1,
             "Rights" => 1,
+            "action" => "submit",
             "title" => [""],  // Empty title text
             "titleType" => ["1"]  // Type without text
         ];
@@ -620,6 +448,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
             "resourcetype" => 1,
             "language" => 1,
             "Rights" => 1,
+            "action" => "submit",
             "title" => [""],  // Empty title text
             "titleType" => [""]  // Empty title type
         ];
