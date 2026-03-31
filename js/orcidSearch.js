@@ -51,6 +51,10 @@ async function searchOrcid(query, rows = 10) {
     headers: { 'Accept': 'application/vnd.orcid+json' }
   });
   if (!response.ok) {
+    if (response.status >= 400 && response.status < 500) {
+      // Client errors (e.g. malformed query due to special characters) → treat as no results
+      return [];
+    }
     throw new Error(`ORCID API returned ${response.status}`);
   }
   const data = await response.json();
@@ -268,7 +272,7 @@ $(document).ready(function () {
       console.error('ORCID search error:', error);
       showOrcidSearchAlert(
         document.querySelector('[data-translate="orcidSearch.error"]')?.textContent
-        || 'Error fetching results. Please try again.',
+        || 'The ORCID service is temporarily unavailable. Please try again later.',
         'danger'
       );
     } finally {
@@ -307,7 +311,7 @@ $(document).ready(function () {
       console.error('Error fetching ORCID record:', error);
       showOrcidSearchAlert(
         document.querySelector('[data-translate="orcidSearch.error"]')?.textContent
-        || 'Error fetching results. Please try again.',
+        || 'The ORCID service is temporarily unavailable. Please try again later.',
         'danger'
       );
     }

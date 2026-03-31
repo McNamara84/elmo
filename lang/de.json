@@ -349,7 +349,7 @@
         "columnAffiliation": "Affiliation(en)",
         "accept": "Übernehmen",
         "searching": "Suche läuft...",
-        "error": "Fehler beim Abrufen. Bitte erneut versuchen.",
+        "error": "Der ORCID-Dienst ist vorübergehend nicht erreichbar. Bitte versuchen Sie es später erneut.",
         "searchButtonTitle": "ORCID nach Name suchen",
         "inputRequired": "Bitte geben Sie mindestens einen Vor- oder Nachnamen ein."
     },

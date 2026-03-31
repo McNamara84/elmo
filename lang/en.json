@@ -348,7 +348,7 @@
         "columnAffiliation": "Affiliation(s)",
         "accept": "Accept",
         "searching": "Searching...",
-        "error": "Error fetching results. Please try again.",
+        "error": "The ORCID service is temporarily unavailable. Please try again later.",
         "searchButtonTitle": "Search ORCID by name",
         "inputRequired": "Please enter at least a first or last name."
     },

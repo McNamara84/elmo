@@ -346,7 +346,7 @@
         "columnAffiliation": "Affiliation(s)",
         "accept": "Accepter",
         "searching": "Recherche en cours...",
-        "error": "Erreur lors de la recherche. Veuillez réessayer.",
+        "error": "Le service ORCID est temporairement indisponible. Veuillez réessayer plus tard.",
         "searchButtonTitle": "Rechercher ORCID par nom",
         "inputRequired": "Veuillez saisir au moins un prénom ou un nom."
     },

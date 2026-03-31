@@ -254,6 +254,13 @@ describe('orcidSearch.js', () => {
       await expect(orcidSearchModule.searchOrcid('test')).rejects.toThrow('ORCID API returned 500');
     });
 
+    test('returns empty array on 400 client error', async () => {
+      fetch.mockResolvedValueOnce({ ok: false, status: 400 });
+
+      const results = await orcidSearchModule.searchOrcid('test');
+      expect(results).toEqual([]);
+    });
+
     test('respects custom rows parameter', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
