@@ -405,6 +405,9 @@ class ICGEMController extends DatasetController
                     
                     case 'M': // Model
                         $modelDetailElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelDetail', null, self::ICGEM_NAMESPACE_URI);
+                        if (!empty($dataSource['details'])) {
+                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
+                        }
                         if (!empty($dataSource['M_identifier'])) {
                             $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifier', $this->prepare($dataSource['M_identifier'], 'identifier'), self::ICGEM_NAMESPACE_URI);
                         }

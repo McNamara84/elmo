@@ -870,6 +870,19 @@ final class ICGEMControllerTest extends TestCase
                 'M_identifier' => null,
                 'M_identifier_type' => null,
                 'M_name' => null
+            ],
+            [
+                'type' => 'M',
+                'description' => 'Reference model input',
+                'details' => 'Global Gravitational Model',
+                'S_value_name' => null,
+                'S_value_uri' => null,
+                'S_scheme_name' => null,
+                'S_scheme_uri' => null,
+                'T_Isostasy_compensation_depth' => null,
+                'M_identifier' => '10.5880/icgem.2024.001',
+                'M_identifier_type' => 'DOI',
+                'M_name' => 'ICGEM_Global_Model_2024'
             ]
         ];
 
@@ -887,7 +900,7 @@ final class ICGEMControllerTest extends TestCase
         $children = $xml->children('http://icgem.gfz.de/schema');
         $sources = $children->inputDataSource;
         
-        $this->assertCount(2, $sources);
+        $this->assertCount(3, $sources);
         
         // First source (Satellite)
         $sourceChildren = $sources[0]->children('http://icgem.gfz.de/schema');
@@ -900,6 +913,16 @@ final class ICGEMControllerTest extends TestCase
         $sourceChildren = $sources[1]->children('http://icgem.gfz.de/schema');
         $this->assertEquals('Ground data', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Ground gravity', (string)$sourceChildren->description);
+
+        // Third source (Model)
+        $sourceChildren = $sources[2]->children('http://icgem.gfz.de/schema');
+        $this->assertEquals('Model', (string)$sourceChildren->inputDataSourceType);
+        $this->assertEquals('Reference model input', (string)$sourceChildren->description);
+        $modelDetailChildren = $sourceChildren->modelDetail->children('http://icgem.gfz.de/schema');
+        $this->assertEquals('Global Gravitational Model', (string)$modelDetailChildren->description);
+        $this->assertEquals('10.5880/icgem.2024.001', (string)$modelDetailChildren->identifier);
+        $this->assertEquals('DOI', (string)$modelDetailChildren->identifierType);
+        $this->assertEquals('ICGEM_Global_Model_2024', (string)$modelDetailChildren->name);
     }
 
     /**
