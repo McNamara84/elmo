@@ -643,11 +643,11 @@ function createDatabaseStructure($connection): array
 
         "Ellipsoidal_Parameters" => "CREATE TABLE IF NOT EXISTS `Ellipsoidal_Parameters` (
     `ellipsoidal_parameter_id` INT NOT NULL AUTO_INCREMENT,
-    `semimajor_axis_a` FLOAT (9,2) NOT NULL,
-    `semiminor_axis_b` FLOAT (9,2) NULL,
-    `flattening` FLOAT NULL,
-    `reciprocal_flattening` FLOAT NULL,
-    `excentricity` FLOAT NULL,
+    `semimajor_axis_a` DOUBLE NOT NULL,
+    `semiminor_axis_b` DOUBLE NULL,
+    `flattening` DOUBLE NULL,
+    `reciprocal_flattening` DOUBLE NULL,
+    `excentricity` DOUBLE NULL,
     `description` TEXT NULL,
     PRIMARY KEY (`ellipsoidal_parameter_id`)
         );",
