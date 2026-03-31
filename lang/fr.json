@@ -333,6 +333,23 @@
             "close": "Fermer"
         }
     },
+    "orcidSearch": {
+        "modalTitle": "Rechercher ORCID",
+        "lastName": "Nom",
+        "firstName": "Prénom",
+        "searchButton": "Rechercher",
+        "resultsHeading": "Résultats de la recherche",
+        "noResults": "Aucun résultat trouvé.",
+        "columnOrcid": "ORCID",
+        "columnLastName": "Nom",
+        "columnFirstName": "Prénom",
+        "columnAffiliation": "Affiliation(s)",
+        "accept": "Accepter",
+        "searching": "Recherche en cours...",
+        "error": "Le service ORCID est temporairement indisponible. Veuillez réessayer plus tard.",
+        "searchButtonTitle": "Rechercher ORCID par nom",
+        "inputRequired": "Veuillez saisir au moins un prénom ou un nom."
+    },
     "welcome": {
         "title": "Bienvenue sur ELMO 😊",
         "paragraph1": "Bienvenue sur ELMO – le nouvel éditeur de métadonnées en ligne des GFZ Data Services.",

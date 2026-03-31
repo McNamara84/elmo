@@ -336,6 +336,23 @@
             "close": "Schließen"
         }
     },
+    "orcidSearch": {
+        "modalTitle": "ORCID durchsuchen",
+        "lastName": "Nachname",
+        "firstName": "Vorname",
+        "searchButton": "Suchen",
+        "resultsHeading": "Suchergebnisse",
+        "noResults": "Keine Ergebnisse gefunden.",
+        "columnOrcid": "ORCID",
+        "columnLastName": "Nachname",
+        "columnFirstName": "Vorname",
+        "columnAffiliation": "Affiliation(en)",
+        "accept": "Übernehmen",
+        "searching": "Suche läuft...",
+        "error": "Der ORCID-Dienst ist vorübergehend nicht erreichbar. Bitte versuchen Sie es später erneut.",
+        "searchButtonTitle": "ORCID nach Name suchen",
+        "inputRequired": "Bitte geben Sie mindestens einen Vor- oder Nachnamen ein."
+    },
     "welcome": {
         "title": "Willkommen bei ELMO 😊",
         "paragraph1": "Willkommen bei ELMO – dem neuen Online-Metadateneditor der GFZ Data Services.",

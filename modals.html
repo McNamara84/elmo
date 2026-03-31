@@ -249,6 +249,68 @@
     </div>
   </div>
 <!-- Feedback Modal -->
+<!-- ORCID Search Modal -->
+<div class="modal fade" id="modal-orcid-search" tabindex="-1" aria-labelledby="modal-orcid-search-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-orcid-search-label" data-translate="orcidSearch.modalTitle">Search ORCID</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="orcid-search-context-group" value="">
+                <input type="hidden" id="orcid-search-context-row-index" value="">
+                <div class="row mb-3">
+                    <div class="col-12 col-sm-5 mb-2 mb-sm-0">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="input-orcid-search-firstname" autocomplete="off" />
+                            <label for="input-orcid-search-firstname" data-translate="orcidSearch.firstName">First Name</label>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-5 mb-2 mb-sm-0">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="input-orcid-search-lastname" autocomplete="off" />
+                            <label for="input-orcid-search-lastname" data-translate="orcidSearch.lastName">Last Name</label>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-2 d-grid">
+                        <button type="button" class="btn btn-primary h-100" id="button-orcid-search-execute"
+                            data-translate="orcidSearch.searchButton">Search</button>
+                    </div>
+                </div>
+                <div id="orcid-search-alert" class="alert alert-warning d-none" role="alert"></div>
+                <div id="orcid-search-spinner" class="text-center d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden" data-translate="orcidSearch.searching">Searching...</span>
+                    </div>
+                    <p class="mt-2" data-translate="orcidSearch.searching">Searching...</p>
+                </div>
+                <div id="orcid-search-results" class="d-none">
+                    <h6 data-translate="orcidSearch.resultsHeading">Search Results</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm" id="orcid-search-results-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col" data-translate="orcidSearch.columnOrcid">ORCID</th>
+                                    <th scope="col" data-translate="orcidSearch.columnLastName">Last Name</th>
+                                    <th scope="col" data-translate="orcidSearch.columnFirstName">First Name</th>
+                                    <th scope="col" data-translate="orcidSearch.columnAffiliation">Affiliation(s)</th>
+                                    <th scope="col"><span class="visually-hidden">Action</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="orcid-search-results-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="orcid-search-no-results" class="d-none text-center text-muted py-3">
+                    <p data-translate="orcidSearch.noResults">No results found.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Feedback Modal -->
 <div class="modal fade" id="modal-feedback" tabindex="-1" aria-labelledby="label-feedbackmodal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
