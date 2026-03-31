@@ -87,13 +87,45 @@ function renderOrcidSearchResults(results) {
     const affiliationText = Array.isArray(institutions) ? institutions.join(', ') : String(institutions);
 
     const tr = document.createElement('tr');
-    tr.innerHTML =
-      `<td><a href="https://orcid.org/${orcidId}" target="_blank" rel="noopener noreferrer">${orcidId}</a></td>` +
-      `<td>${familyNames}</td>` +
-      `<td>${givenNames}</td>` +
-      `<td><small>${affiliationText}</small></td>` +
-      `<td><button type="button" class="btn btn-sm btn-outline-primary orcid-search-accept-btn" ` +
-      `data-orcid="${orcidId}" data-translate="orcidSearch.accept">Accept</button></td>`;
+
+    // ORCID link cell
+    const tdOrcid = document.createElement('td');
+    const link = document.createElement('a');
+    link.href = `https://orcid.org/${encodeURIComponent(orcidId)}`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = orcidId;
+    tdOrcid.appendChild(link);
+    tr.appendChild(tdOrcid);
+
+    // Family name cell
+    const tdFamily = document.createElement('td');
+    tdFamily.textContent = familyNames;
+    tr.appendChild(tdFamily);
+
+    // Given name cell
+    const tdGiven = document.createElement('td');
+    tdGiven.textContent = givenNames;
+    tr.appendChild(tdGiven);
+
+    // Affiliation cell
+    const tdAff = document.createElement('td');
+    const small = document.createElement('small');
+    small.textContent = affiliationText;
+    tdAff.appendChild(small);
+    tr.appendChild(tdAff);
+
+    // Accept button cell
+    const tdAction = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-sm btn-outline-primary orcid-search-accept-btn';
+    btn.dataset.orcid = orcidId;
+    btn.setAttribute('data-translate', 'orcidSearch.accept');
+    btn.textContent = 'Accept';
+    tdAction.appendChild(btn);
+    tr.appendChild(tdAction);
+
     tbody.appendChild(tr);
   });
 }
