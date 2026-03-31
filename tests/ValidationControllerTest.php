@@ -1,5 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
+
 
 require_once __DIR__ . '/../api/v2/controllers/ValidationController.php';
 
@@ -8,7 +12,7 @@ require_once __DIR__ . '/../api/v2/controllers/ValidationController.php';
  * 
  * Tests the controller methods for identifier type validation
  */
-class ValidationControllerTest extends DatabaseTestCase
+final class ValidationControllerTest extends DatabaseTestCase
 {
     private \ValidationController $controller;
 
@@ -17,14 +21,28 @@ class ValidationControllerTest extends DatabaseTestCase
         parent::setUp();
         $this->controller = new \ValidationController();
         
-        // Ensure test data exists
-        $this->connection->query("
-            INSERT INTO Identifier_Type (identifier_type_id, name, pattern, description) 
-            VALUES 
-                (100, 'TestDOI', '^10\\.\\d{4,9}/[-._;()/:A-Z0-9]+$', 'Test DOI Pattern'),
-                (101, 'TestORCID', '^\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]$', 'Test ORCID Pattern')
-            ON DUPLICATE KEY UPDATE pattern=VALUES(pattern)
-        ");
+        // Ensure test data exists using prepared statement to preserve backslashes
+        $stmt = $this->connection->prepare(
+            "INSERT INTO Identifier_Type (identifier_type_id, name, pattern, description) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE pattern=VALUES(pattern)"
+        );
+        $id = 100;
+        $name = 'TestDOI';
+        $pattern = '^10\.\d{4,9}/[-._;()/:A-Z0-9]+$';
+        $desc = 'Test DOI Pattern';
+        $stmt->bind_param('isss', $id, $name, $pattern, $desc);
+        $stmt->execute();
+        $stmt->close();
+
+        $stmt = $this->connection->prepare(
+            "INSERT INTO Identifier_Type (identifier_type_id, name, pattern, description) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE pattern=VALUES(pattern)"
+        );
+        $id = 101;
+        $name = 'TestORCID';
+        $pattern = '^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$';
+        $desc = 'Test ORCID Pattern';
+        $stmt->bind_param('isss', $id, $name, $pattern, $desc);
+        $stmt->execute();
+        $stmt->close();
     }
 
     public function testGetPatternReturnsPatternForValidType(): void

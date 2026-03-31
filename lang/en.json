@@ -17,10 +17,10 @@
         "orcid": "ORCID",
         "orcidInvalid": "Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))",
         "lastName": "Last Name",
-        "lastNameInvalid": "Please provide a lastname. Only letters are allowed.",
-        "firstNameInvalid": "Please provide a firstname. Only letters are allowed.",
+        "lastNameInvalid": "Please provide a lastname. Letters only. No digits or special characters (e.g. $, %, _).",
+        "firstNameInvalid": "Please provide a firstname. Letters only. No digits or special characters (e.g. $, %, _).",
         "firstName": "First Name",
-        "affiliation": "Affiliation(s)",
+        "affiliation": "Affiliation",
         "roleLabel": "Role(s)",
         "add": "+",
         "cancel": "Cancel",
@@ -52,7 +52,11 @@
         "submitError": "Failed to submit dataset.",
         "errorHeading": "Error",
         "successHeading": "Success! Your metadata has been submitted.",
-        "successMessage": "Thank you for cooperating with us. You will be contacted via email by the data curation team of GFZ Data Services shortly."
+        "successMessage": "Thank you for cooperating with us. You will be contacted via email by the data curation team of GFZ Data Services shortly.",
+        "dataUploadTitle": "Upload primary data",
+        "dataUploadMessage": "Only the <strong>metadata</strong> has been submitted to GFZ Data Services. Please upload your primary data (research data) via the following link to the Nextcloud:",
+        "dataUploadLinkText": "Upload primary data here",
+        "dataUploadFileNameHint": "Please name your file(s) according to the title of your dataset:"
     },
     "autosave": {
         "status": {
@@ -83,13 +87,13 @@
         "title": "Resource Information",
         "doi": "DOI",
         "doiValid": "A new DOI will be registered.",
-        "doiInvalid": "Please use format 10.ORGANISATION/ID (i.e.: 10.57757/IUGG23-3081) or leave empty.",
+        "doiInvalid": "Please use the format 10.ORGANISATION/ID (i.e.: 10.57757/IUGG23-3081) or leave empty.",
         "publicationYear": "Publication Year (YYYY)",
         "yearPlaceholder": "YYYY",
         "publicationYearInvalid": "Please provide a valid year ranging from 1901-2155 (4 digits in the format YYYY).",
         "resourceType": "Resource Type",
         "version": "Version",
-        "versionInvalid": "If unsure leave blank",
+        "versionInvalid": "Please use digits.digits as the format. If unsure leave blank",
         "datasetLanguage": "Language of dataset",
         "resourceTitle": "Title",
         "resourceTitleInvalid": "Please provide a descriptive title (that does not repeat the paper title, but describes the data).",
@@ -100,12 +104,12 @@
         "licenseTitle": "License"
     },
     "authors": {
-        "title": "Author(s)",
+        "title": "Author: Persons",
         "affiliationInvalid": "Please provide an affiliation.",
         "InstitutionsNameInvalid": "Please provide an Institution name."
     },
     "authorsInstitutions": {
-        "title": "Author Institution",
+        "title": "Author: Institutions",
         "name": "Author Institution name"
     },
     "contactPersons": {
@@ -117,11 +121,11 @@
         "websiteInvalid": "Please provide a valid URL."
     },
     "contributorPersons": {
-        "title": "Contributor (Persons)"
+        "title": "Contributor: Persons"
     },
     "contributorInstitutions": {
-        "title": "Contributor (Institutions)",
-        "organization": "Organisation name",
+        "title": "Contributor: Institutions",
+        "organization": "Institution name",
         "organizationInvalid": "Please enter a valid organization name."
     },
     "laboratory": {
@@ -142,17 +146,21 @@
         "technicalinfoPlaceholder": "Please enter detailed information that may be associated with design, implementation, operation, use, and/or maintenance of a process, system, or instrument.",
         "other": "Other",
         "otherTooltip": "Please enter other information..",
-        "otherPlaceholder": "Please enter other description information that does not fit into an existing category."
+        "otherPlaceholder": "Please enter other description information that does not fit into an existing category.",
+        "seriesInformation": "Series Information",
+        "seriesInformationTooltip": "Please enter series information...",
+        "seriesInformationPlaceholder": "Please enter information about a repeating series, such as volume, issue, number.",
+        "tableOfContents": "Table of Contents",
+        "tableOfContentsTooltip": "Please enter a table of contents...",
+        "tableOfContentsPlaceholder": "Please enter a listing of the contents of the resource."
     },
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
-            "title": "GCMD Thesauri",
-            "name": "GCMD Thesauri Keywords",
-            "scienceKeywords": "GCMD Science Keywords",
-            "platforms": "GCMD Platforms",
-            "instruments": "GCMD Instruments",
-            "label": "Open thesaurus to choose keywords or start typing..."
+            "title": "Thesauri",
+            "name": "Thesauri Keywords",
+            "label": "Open thesaurus to choose keywords or start typing...",
+            "unavailable": "Thesaurus data currently unavailable."
         },
         "free": {
             "title": "Free Keywords",
@@ -180,10 +188,19 @@
         "end": "End",
         "dateTimeInvalid": "Please enter a valid date.",
         "endDateError": "End date must not be before start date.",
+        "endTimeError": "When start and end date are the same, end time must not be before start time.",
         "timezone": "Timezone",
         "timezoneInvalid": "Please choose a timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)",
         "mapSearch": "Search for place names"
+    },
+    "usedInstruments": {
+        "title": "Used Instruments",
+        "placeholder": "Search and select instruments...",
+        "required": "Please select at least one instrument.",
+        "loading": "Loading instrument list...",
+        "unavailable": "Instrument list currently unavailable. Please try again later.",
+        "selected": "selected instruments"
     },
     "relatedWork": {
         "title": "Related work",
@@ -249,13 +266,13 @@
         "clearTooltip": "Delete all entries or content.",
         "load": "Load",
         "loadTooltip": "Load saved data or content.",
-        "saveAs": "Save",
+        "saveAs": "Save as",
         "saveAsTooltip": "Save the current data or content under a new file name.",
         "submit": "Submit",
         "submitTooltip": "Transmit the entered data or content.",
         "legalNotice": "Legal Notice",
         "PrivacyPolicy": "Privacy Policy",
-        "elmoGuide": "Elmo Guide"
+        "elmoGuide": "Guide"
     },
     "modals": {
         "feedback": {
@@ -307,6 +324,15 @@
             "high": "high",
             "normal": "normal",
             "low": "low"
+        },
+        "validationFailed": {
+            "title": "Submission not possible",
+            "greeting": "Dear user,",
+            "body": "it appears that you want to submit data. Unfortunately, you have not filled in all the required fields.",
+            "saveHint": "If you have already agreed with the data curation team that your submission is not yet complete, you can press <strong>Save as</strong> and then send the generated XML file to <a href='mailto:{email}'>{email}</a> by email.",
+            "fixHint": "Otherwise, please complete the fields marked in red and try again.",
+            "guideHint": "If you need further help filling in the form, you can find the <a href='doc/help.php' target='_blank'>ELMO Guide</a> here.",
+            "close": "Close"
         }
     },
     "welcome": {

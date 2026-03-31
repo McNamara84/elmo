@@ -1,5 +1,7 @@
 <?php
-require_once __DIR__ . '/settings.php';
+if (!defined('UNIT_TESTING')) {
+    require_once __DIR__ . '/settings.php';
+}
 
 if (!function_exists('handle_log_page_event')) {
     /**

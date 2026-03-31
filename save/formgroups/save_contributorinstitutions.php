@@ -15,6 +15,9 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
 {
     $valid_roles = getValidRoles($connection);
 
+    // Validate only on submit
+    $action = $postData['action'] ?? 'save_and_download';
+
     if (
         !isset(
         $postData['cbOrganisationName'],
@@ -34,16 +37,25 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
     for ($i = 0; $i < $len; $i++) {
         $entry = [
             'name' => $postData['cbOrganisationName'][$i] ?? '',
-            'roles' => $postData['cbOrganisationRoles'][$i] ?? ''
+            'roles' => $postData['cbOrganisationRoles'][$i] ?? '',
+            'affiliation' => $postData['OrganisationAffiliation'][$i] ?? ''
         ];
 
-        if (!validateContributorInstitutionDependencies($entry)) {
-            $allSuccessful = false;
-            continue;
+
+        if ($action === 'submit') {
+            if (!validateContributorInstitutionDependencies($entry)) {
+                $allSuccessful = false;
+                continue;
+            }
         }
 
         // Skip if no data provided
-        if (empty($entry['name']) && empty($entry['roles'])) {
+        if (empty($entry['name']) && empty($entry['roles']) && empty($entry['affiliation'])) {
+            continue;
+        }
+
+        // Skip if roles are empty (required field)
+        if (empty($entry['roles'])) {
             continue;
         }
 

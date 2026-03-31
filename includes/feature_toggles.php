@@ -12,6 +12,7 @@
  *   $showContributorInstitutions - Show Contributor Institutions section (default: true)
  *   $showCoverage         - Show Spatial/Temporal Coverage section (default: true)
  *   $showFeedbackLink     - Show feedback button in footer (default: false)
+ *   $showUsedInstruments  - Show Used Instruments / PID4INST selection (default: false)
  *   $showGGMsProperties   - Show ICGEM/GGMs specific fields (default: false)
  * 
  * Example in settings.php:

@@ -28,7 +28,7 @@ const contributorGroupMarkup = String.raw`
         <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
-              <input type="text" class="form-control" id="input-contributor-lastname" pattern="^[a-zA-ZäöéüÄÖÜß \-]*$"
+              <input type="text" class="form-control" id="input-contributor-lastname" pattern="[^0-9$§?!&%=_*+<>]*"
                 name="cbPersonLastname[]" />
               <label for="input-contributor-lastname" data-translate="general.lastName">Last Name</label>
               <div class="invalid-feedback" data-translate="general.lastNameInvalid">Please provide a lastname. Only letters are allowed.</div>
@@ -38,7 +38,7 @@ const contributorGroupMarkup = String.raw`
         <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
-              <input type="text" class="form-control" id="input-contributor-firstname" pattern="^[a-zA-ZäöéüÄÖÜß \-.]*$"
+              <input type="text" class="form-control" id="input-contributor-firstname" pattern="[^0-9$§?!&%=_*+<>]*"
                 name="cbPersonFirstname[]" />
               <label for="input-contributor-firstname" data-translate="general.firstName">First Name</label>
               <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
@@ -233,7 +233,6 @@ test.describe('Contributor (Persons) form group', () => {
     });
 
     await page.goto(`${APP_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => {
       const roleInput: any = document.querySelector('#input-contributor-personrole');
       const affiliationInput: any = document.querySelector('#input-contributorpersons-affiliation');
@@ -340,7 +339,6 @@ test.describe('Contributor (Persons) form group', () => {
 
     await page.locator('#input-contributor-orcid').fill('1234');
     await page.locator('#input-contributor-firstname').click();
-    await page.waitForTimeout(400);
 
     expect(requests).toHaveLength(0);
     await expect(page.locator('#input-contributor-lastname')).toHaveValue('Existing');

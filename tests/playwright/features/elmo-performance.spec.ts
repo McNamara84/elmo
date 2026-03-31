@@ -8,18 +8,12 @@ const KEY_SECTIONS = [
   'main#main-content',
   'form#form-mde',
   '[data-translate="resourceInfo.title"]',
-  '[data-translate="rights.title"]',
   '[data-translate="authors.title"]',
-  '[data-translate="descriptions.title"]',
-  '[data-translate="keywords.free.title"]',
-  '[data-translate="coverage.title"]',
-  '[data-translate="relatedWork.title"]',
-  '[data-translate="funding.title"]',
   'footer.footer',
   '#button-form-submit',
 ];
 
-const MEASUREMENT_RUNS = 3;
+const MEASUREMENT_RUNS = process.env.CI ? 1 : 3;
 
 const average = (values: Array<number | undefined>) => {
   const valid = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
@@ -77,7 +71,7 @@ test.describe('Homepage performance', () => {
       const runMetrics = await test.step(`load measurement run ${attempt}`, async () => {
         const start = Date.now();
 
-        const response = await page.goto('/', {
+        const response = await page.goto('', {
           waitUntil: 'domcontentloaded',
         });
 

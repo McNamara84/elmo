@@ -27,7 +27,14 @@ class SaveHandler {
      */
     initializeEventListeners() {
         $('#button-saveas-save').on('click', () => this.handleSaveConfirm());
-        $('#modal-saveas').on('hidden.bs.modal', () => this.modals.notification.hide());
+        $('#modal-saveas').on('hidden.bs.modal', () => {
+            // Only dismiss the notification when it still shows the preparatory
+            // info alert. After the save completes the notification contains
+            // a success/danger alert and must stay visible.
+            if ($('#modal-notification-body .alert-info').length) {
+                this.modals.notification.hide();
+            }
+        });
 
         // Focus on input field
         $('#modal-saveas').on('shown.bs.modal', () => {
@@ -114,6 +121,24 @@ class SaveHandler {
             translations.alerts.savingInfo);
 
         try {
+            /**
+            * Reset form validation state before saving.
+            * Prevents submit validation styles from persisting on save.
+            */
+            const formEl = this.$form[0];
+            formEl.classList.remove('was-validated');
+
+            formEl.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+                el.classList.remove('is-invalid', 'is-valid');
+                el.removeAttribute('aria-invalid');
+            });
+
+            formEl.querySelectorAll('.js-required-on-submit').forEach(el => {
+                el.removeAttribute('required');
+            });
+
+            $(formEl).find('.tagify').removeClass('is-invalid is-valid');
+            
             const formData = new FormData(this.$form[0]);
             formData.append('filename', filename);
             formData.append('action', 'save_and_download');

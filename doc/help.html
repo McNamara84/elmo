@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include_once "../settings.php";
 ?>
 <!DOCTYPE html>
@@ -64,30 +64,37 @@ include_once "../settings.php";
                             <a class="nav-link" href="#help-resourceinformation" data-bs-dismiss="offcanvas">Resource
                                 Information</a>
                         </li>
+                        <?php if ($showLicense ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-rights" data-bs-dismiss="offcanvas">Licenses and rights</a>
                         </li>
-
+                        <?php endif; ?> 
                         <li class="nav-item">
                             <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors</a>
                         </li>
+                        <?php if ($showAuthorInstitution ?? true): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors Institution</a>
+                            <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors Institution</a> 
                         </li>
+                        <?php endif; ?> 
                         <?php if ($showMslLabs ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-originatinglaboratory"
                                 data-bs-dismiss="offcanvas">Originating Laboratory</a>
                         </li>
                         <?php endif; ?>
+                        <?php if ($showContributorPersons ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-contributorpersons" data-bs-dismiss="offcanvas">Contributor
                                 Persons</a>
                         </li>
+                        <?php endif; ?>
+                        <?php if ($showContributorInstitutions ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-contributorinstitutions"
                                 data-bs-dismiss="offcanvas">Contributor Institutions</a>
                         </li>
+                        <?php endif; ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-descriptions" data-bs-dismiss="offcanvas">Description(s)</a>
                         </li>
@@ -97,30 +104,59 @@ include_once "../settings.php";
                                 Keywords</a>
                         </li>
                         <?php endif; ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#help-scienceKeywords" data-bs-dismiss="offcanvas">Keywords</a>
+                        <?php if ($showThesauri ?? true): ?>
+                        <li class="nav-item thesaurus-nav" data-thesaurus="science_keywords" style="display:none">
+                            <a class="nav-link" href="#help-scienceKeywords" data-bs-dismiss="offcanvas">GCMD Science Keywords</a>
                         </li>
+                        <li class="nav-item thesaurus-nav" data-thesaurus="platforms" style="display:none">
+                            <a class="nav-link" href="#help-platformsKeywords" data-bs-dismiss="offcanvas">GCMD Platforms</a>
+                        </li>
+                        <li class="nav-item thesaurus-nav" data-thesaurus="instruments" style="display:none">
+                            <a class="nav-link" href="#help-instrumentsKeywords" data-bs-dismiss="offcanvas">GCMD Instruments</a>
+                        </li>
+                        <li class="nav-item thesaurus-nav" data-thesaurus="chronostratigraphy" style="display:none">
+                            <a class="nav-link" href="#help-chronostratigraphy" data-bs-dismiss="offcanvas">ICS Chronostratigraphy</a>
+                        </li>
+                        <li class="nav-item thesaurus-nav" data-thesaurus="gemet" style="display:none">
+                            <a class="nav-link" href="#help-gemet" data-bs-dismiss="offcanvas">GEMET</a>
+                        </li>
+                        <?php endif; ?>
+                        <?php if ($showFreeKeywords ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-freeKeywords" data-bs-dismiss="offcanvas">Free Keywords</a>
                         </li>
+                        <?php endif; ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-dates" data-bs-dismiss="offcanvas">Dates</a>
                         </li>
+                        <?php if ($showSpatialTemporalCoverage ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-tsc" data-bs-dismiss="offcanvas">Spatial and Temporal
                                 coverage</a>
                         </li>
+                        <?php endif; ?>
+                        <?php if ($showRelatedWork ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-relatedwork" data-bs-dismiss="offcanvas">Related Work</a>
                         </li>
+                        <?php endif; ?>
+                        <?php if ($showUsedInstruments ?? false): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-usedinstruments" data-bs-dismiss="offcanvas">Used Instruments</a>
+                        </li>
+                        <?php endif; ?>
+                        <?php if ($showFundingReference ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-fundingreference" data-bs-dismiss="offcanvas">Funding
                                 Reference</a>
                         </li>
+                        <?php endif; ?>
+                        <?php if ($showGGMsProperties ?? true): ?>
                         <!-- ICGEM-related content -->
                         <li class="nav-item">
                             <a class="nav-link" href="#help-model-characteristics" data-bs-dismiss="offcanvas">Gravitational Models Properties</a>
                         </li>
+                        <?php endif; ?>
                     </ul>
                 </div>
             </div>
@@ -155,7 +191,7 @@ include_once "../settings.php";
                     <?php if (!($showLicense ?? true)): ?>
                     <p>By default, this publication will be published under a Creative Commons Attribution 4.0 (CC-BY) license. 
                         This follows the GFZ German Research Centre for Geosciences' Guidelines for open science.
-                        If your dataset requires another license, please contact us at datapub@gfz.de for further advice.
+                        If your dataset requires another license, please contact us at <?php echo htmlspecialchars($xmlSubmitAddress ?? 'datapub@gfz.de'); ?> for further advice.
                     </p>
                     <?php endif; ?>
                 </div>
@@ -211,7 +247,7 @@ include_once "../settings.php";
                         } else {
                             echo '<p><em>No resource types available.</em></p>';
                         }
-                    } catch (Exception $e) {
+                    } catch (Throwable $e) {
                         echo '<p><em>Resource types list could not be loaded. Please refer to the dropdown in the form.</em></p>';
                     }
                     ?>
@@ -222,7 +258,7 @@ include_once "../settings.php";
                         first time, this field can be left empty. If it has been updated, specify the version number
                         here.
                         The suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
-                        changes in the dataset. Major changes typically require registration of a new DOI.
+                        changes in the dataset. Use the format digits.digits, for example 1.4. Major changes typically require registration of a new DOI.
                     </p>
                     <p><strong>Optional field. If unsure, leave blank.</strong></p>
                 </div>
@@ -234,11 +270,8 @@ include_once "../settings.php";
                 <div id="help-resourceinformation-title">
                     <h4>Title</h4>
                     <p>The title of the dataset. Please note that the title shall describe the data and not repeat
-                        the title of the corresponding article! The first row is reserved for the main title. You
-                        can specify
-                        up to
-                        <?php echo $maxTitles-1; ?> additional titles if your dataset is known by multiple names
-                        or translations.
+                        the title of the corresponding article! The first row is reserved for the main title. You can specify up to
+                        <?php echo $maxTitles-1; ?> additional title if your dataset is known by multiple names or translations.
                     </p>
                 </div>
                 <div id="help-resourceinformation-titletype">
@@ -267,6 +300,13 @@ include_once "../settings.php";
                     <li><a href="https://creativecommons.org/licenses/by/4.0/ " target="_blank">Creative
                             Commons Attribution 4.0 International</a>: Authorises the free use, distribution and
                         adaptation of the work as long as the author is named.</li>
+                    <li><a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">
+                            Creative Commons Attribution-NonCommercial 4.0 International
+                        </a>:
+                        Allows use, distribution, and adaptation of the work for non-commercial purposes only.
+                        <strong class="text-danger">This license requires prior consultation. Please clarify the
+                            usage with us in advance.</strong>
+                    </li>
                     <li><a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">Creative
                             Commons Zero v1.0 Universal</a>: Waives all rights to the work so that it can be used
                         without any restrictions.</li>
@@ -274,14 +314,6 @@ include_once "../settings.php";
                             target="_blank">European Union Public License 2.0</a>: An open source copyleft licence
                         developed by the European Union to promote the distribution and use of software within the
                         EU.</li>
-                    <li><a href="https://www.gnu.org/licenses/gpl-3.0-standalone.html" target="_blank">GNU General
-                            Public License v3.0 or later</a> (for Software): An open source copyleft licence that
-                        ensures that the source code remains freely available and that changes must be published
-                        under the same licence.</li>
-                    <li><a href="https://opensource.org/license/mit/" target="_blank">MIT License</a> (for
-                        Software): Allows free use, distribution and editing of the source code as long as the
-                        copyright information is retained.
-                    </li>
                     <li><a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License 2.0</a>
                         (for Software): Allows the free use and distribution of the source code as long as the
                         licence conditions are complied with.</li>
@@ -289,14 +321,15 @@ include_once "../settings.php";
                             License</a>
                         (for Software) : A permissive license allowing redistribution and use in source and binary
                         forms, with or without modification, as long as certain conditions are met.</li>
-                    <li>
-                        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">
-                            Creative Commons Attribution-NonCommercial 4.0 International
-                        </a>:
-                        Allows use, distribution, and adaptation of the work for non-commercial purposes only.
-                        <strong class="text-danger">This license requires prior consultation. Please clarify the
-                            usage with us in advance.</strong>
+                    <li><a href="https://opensource.org/license/mit/" target="_blank">MIT License</a> (for
+                        Software): Allows free use, distribution and editing of the source code as long as the
+                        copyright information is retained.
                     </li>
+                    <li><a href="https://www.gnu.org/licenses/gpl-3.0-standalone.html" target="_blank">GNU General
+                            Public License v3.0 or later</a> (for Software): An open source copyleft licence that
+                        ensures that the source code remains freely available and that changes must be published
+                        under the same licence.</li>
+
                 </ul>
             </div>
             <div class="section-divider"></div>
@@ -336,7 +369,7 @@ include_once "../settings.php";
                         For more information about ROR, visit <a href="https://ror.org"
                             target="_blank">https://ror.org</a>.</p>
                 </div>
-                <div>
+                <div id="help-contactperson-email">
                     <h4>Contact Person(s)</h4>
                     <p>Person with knowledge of how to access, troubleshoot, or otherwise field issues related
                         to
@@ -345,14 +378,22 @@ include_once "../settings.php";
                     <p>After filling in the list of authors, the Contact Person can be selected by simply
                         clicking the button on the left. The email address of the author, who is labelled as the
                         contact person, must also be provided. The specification of a website is optional.</p>
+                    <h5>Email</h5>
+                    <p>Please provide a valid email address (e.g. name@institution.org). This address
+                        may be used by others to contact the responsible person for questions about the dataset.</p>
+                    <p><strong>Required field.</strong></p>
+                </div>
+                <div id="help-contactperson-website">
                     <h5>Website</h5>
                     <p>Professional or specialized website, excluding any private websites. The specification of
                         a
                         website, such as that of your institution, offers further contact options in case of
                         questions.</p>
+                    <p><strong>Optional field.</strong></p>
                 </div>
             </div>
             <!-- formgroup authors Institution -->
+            <?php if ($showAuthorInstitution ?? true): ?>
             <div id="help-authors-institution" class="section-content">
                 <div id="help-author-institution-fg">
                     <h3>Author Institution(s)</h3>
@@ -363,8 +404,9 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
-            <?php if ($showMslLabs ?? false): ?>
+            <?php endif; ?>
             <!-- formgroup originating laboratory -->
+            <?php if ($showMslLabs ?? false): ?>
             <div id="help-originatinglaboratory" class="section-content">
                 <div id="help-originatinglaboratory-fg">
                     <h3>Originating Laboratory</h3>
@@ -387,6 +429,7 @@ include_once "../settings.php";
             <hr>            
             <?php endif; ?>
             <!-- formgroup contributor persons -->
+            <?php if ($showContributorPersons ?? true): ?> 
             <div id="help-contributorpersons" class="section-content">
                 <div id="help-contributorpersons-fg">
                     <h3>Contributor Persons</h3>
@@ -516,7 +559,9 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
             <!-- formgroup contributor institutions -->
+            <?php if ($showContributorInstitutions ?? true): ?>  
             <div id="help-contributorinstitutions" class="section-content">
                 <div id="help-contributorinstitutions-fg">
                     <h3>Contributor Institutions</h3>
@@ -622,6 +667,7 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
             <!-- formgroup descriptions -->
             <div id="help-descriptions" class="section-content">
                 <div id="help-descriptions-fg">
@@ -669,24 +715,32 @@ include_once "../settings.php";
                             (e.g. http://doi.org/10.5880/GFZ.4.1.2019.005)</li>
                     </ul>
                 </div>
-                <div id="help-description-methods">
+                <div id="help-description-methods" data-description-slug="Methods" style="display:none">
                     <h4>Methods</h4>
                     <p>The methodology employed for the study or research.</p>
                 </div>
-                <div id="help-description-technicalinfo">
+                <div id="help-description-technicalinfo" data-description-slug="TechnicalInfo" style="display:none">
                     <h4>Technical Information</h4>
                     <p>Detailed information that may be associated with design, implementation, operation, use,
                         and/or maintenance of a process, system, or instrument.</p>
                 </div>
-                <div id="help-description-other">
+                <div id="help-description-seriesinformation" data-description-slug="SeriesInformation" style="display:none">
+                    <h4>Series Information</h4>
+                    <p>Information about a repeating series, such as volume, issue, number.</p>
+                </div>
+                <div id="help-description-tableofcontents" data-description-slug="TableOfContents" style="display:none">
+                    <h4>Table of Contents</h4>
+                    <p>A listing of the contents of the resource.</p>
+                </div>
+                <div id="help-description-other" data-description-slug="Other" style="display:none">
                     <h4>Other</h4>
                     <p>Other description information that does not fit into an existing category.</p>
                 </div>
             </div>
             <div class="section-divider"></div>
-            <?php if ($showMslVocabs ?? false): ?>
             <hr>
             <!-- formgroup MSL Keywords -->
+            <?php if ($showMslVocabs ?? false): ?>
             <div id="help-mslkeywords" class="section-content">
                 <div id="help-mslKeywords-keyword">
                     <h3>EPOS Multi-Scale Laboratories Keywords</h3>
@@ -717,65 +771,86 @@ include_once "../settings.php";
                 </div>
             </div>
             <div class="section-divider"></div>
-            <?php endif; ?>
             <hr>
-            <!-- formgroup GCMD Platforms Keywords -->
-            <div id="help-platformsKeywords" class="section-content">
-                <div id="help-gcmd-platforms-keyword">
-                    <h3>GCMD Platforms Keywords</h3>
-                    <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                    <p>Please click on the Thesaurus button to the right to select keywords from the tree or
-                        start
-                        typing to use the autocomplete function. </p>
-                    <p>GCMD Platforms are important for identifying the sources of data collection. We recommend
-                        selecting relevant platform keywords to provide context about how your dataset was
-                        acquired.
-                    </p>
+            <?php endif; ?>
+            <!-- Thesaurus help sections — shown dynamically based on ERNIE availability -->
+            <?php if ($showThesauri ?? true): ?>
+            <div class="thesaurus-help" data-thesaurus="platforms" style="display:none">
+                <div id="help-platformsKeywords" class="section-content">
+                    <div id="help-gcmd-platforms-keyword">
+                        <h3>GCMD Platforms Keywords</h3>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                            start typing to use the autocomplete function.</p>
+                        <p>GCMD Platforms are important for identifying the sources of data collection. We recommend
+                            selecting relevant platform keywords to provide context about how your dataset was
+                            acquired.</p>
+                    </div>
                 </div>
             </div>
-            <!-- formgroup GCMD Instruments Keywords -->
-            <div id="help-instrumentsKeywords" class="section-content">
-                <div id="help-gcmd-instruments-keyword">
-                    <h3>GCMD Instruments Keywords</h3>
-                    <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                    <p>Please click on the Thesaurus button to the right to select keywords from the tree or
-                        start
-                        typing to use the autocomplete function. </p>
-                    <p>GCMD Instruments help specify the tools used for data collection. We encourage you to
-                        select
-                        appropriate instrument keywords to give users a clear understanding of how your data was
-                        measured or observed.</p>
+            <div class="thesaurus-help" data-thesaurus="instruments" style="display:none">
+                <div id="help-instrumentsKeywords" class="section-content">
+                    <div id="help-gcmd-instruments-keyword">
+                        <h3>GCMD Instruments Keywords</h3>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                            start typing to use the autocomplete function.</p>
+                        <p>GCMD Instruments help specify the tools used for data collection. We encourage you to
+                            select appropriate instrument keywords to give users a clear understanding of how your
+                            data was measured or observed.</p>
+                    </div>
                 </div>
             </div>
-            <!-- formgroup GCMD Science Keywords -->
-            <div id="help-scienceKeywords" class="section-content">
-                <div id="help-scienceKeywords-keyword">
-                    <h3>GCMD Science Keywords</h3>
-                    <!-- Feld der Form Group Thesaurus Keywords wird hier erklärt -->
-                    <p>Please click on the Thesaurus button to the right to select keywords from the tree
-                        or start typing to use the autocomplete function. </p>
-                    <p>GCMD Science Keywords are essential for filtering options within the GFZ Metadata Portal.
-                        Therefore, we highly recommend selecting at least one GCMD Science Keyword to describe
-                        your
-                        dataset (you are welcome to add more if relevant).</p>
+            <div class="thesaurus-help" data-thesaurus="science_keywords" style="display:none">
+                <div id="help-scienceKeywords" class="section-content">
+                    <div id="help-scienceKeywords-keyword">
+                        <h3>GCMD Science Keywords</h3>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree
+                            or start typing to use the autocomplete function.</p>
+                        <p>GCMD Science Keywords are essential for filtering options within the GFZ Metadata Portal.
+                            Therefore, we highly recommend selecting at least one GCMD Science Keyword to describe
+                            your dataset (you are welcome to add more if relevant).</p>
+                    </div>
+                    <div id="help-keywords-keywordviewer">
+                        <h4>Keyword Viewer</h4>
+                        <p>Please try to choose your keywords as specific as possible. Always check if there is a
+                            more fitting keyword further down the hierarchy. Definitions of keywords can be read via
+                            mouse over, if provided by the thesaurus maintainer.</p>
+                        <p>To open the hierarchy ("tree"), click on the small arrow or double-click the keyword.
+                            Choose a keyword by clicking on it and thereby checking the checkbox. The keyword is than
+                            automatically added. Selected keywords have a checkmark in their checkbox.</p>
+                        <p>You can also use the search bar on top. It searches the keywords and their definitions or
+                            descriptions.</p>
+                    </div>
                 </div>
-                <!-- Explains use of thesaurus modal and the Keyword "tree"-->
-                <div id="help-keywords-keywordviewer">
-                    <h4>Keyword Viewer</h4>
-                    <p>Please try to choose your keywords as specific as possible. Always check if there is a
-                        more fitting keyword further down the hierarchy. Definitions of keywords can be read via
-                        mouse
-                        over, if provided by the thesaurus maintainer.</p>
-                    <p>To open the hierarchy ("tree"), click on the small arrow or double-click the keyword.
-                        Choose a keyword by clicking on it and thereby checking the checkbox. The keyword is than
-                        automatically added. Selected keywords have a checkmark in their checkbox.</p>
-                    <p>You can also use the search bar on top. It searches the keywords and their definitions or
-                        descriptions.</p>
+            </div>
+            <div class="thesaurus-help" data-thesaurus="chronostratigraphy" style="display:none">
+                <div id="help-chronostratigraphy" class="section-content">
+                    <div id="help-chronostratigraphy-keyword">
+                        <h3>ICS Chronostratigraphy</h3>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                            start typing to use the autocomplete function.</p>
+                        <p>The International Chronostratigraphic Chart provides a standardised framework of
+                            geological time units. Select chronostratigraphic terms to indicate the geological age
+                            or time period relevant to your dataset.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="thesaurus-help" data-thesaurus="gemet" style="display:none">
+                <div id="help-gemet" class="section-content">
+                    <div id="help-gemet-keyword">
+                        <h3>GEMET Thesaurus</h3>
+                        <p>Please click on the Thesaurus button to the right to select keywords from the tree or
+                            start typing to use the autocomplete function.</p>
+                        <p>GEMET (General European Multilingual Environmental Thesaurus) provides environmental
+                            terminology for categorising your dataset. Select GEMET terms to improve the
+                            discoverability of environment-related research data.</p>
+                    </div>
                 </div>
             </div>
             <div class="section-divider"></div>
             <hr>
-            <!-- formgroup descriptions -->
+            <?php endif; ?>
+            <!-- formgroup free keywords -->
+            <?php if ($showFreeKeywords ?? true): ?>
             <div id="help-freeKeywords" class="section-content">
                 <h3>Free Keywords</h3>
                 <p>Free keywords are user-defined tags that complement predefined thesaurus terms.
@@ -786,6 +861,7 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
             <!-- formgroup descriptions -->
             <div id="help-dates" class="section-content">
                 <div id="help-dates-fg">
@@ -820,6 +896,7 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>
             <!-- formgroup temporal and spacial coverage -->
+            <?php if ($showSpatialTemporalCoverage ?? true): ?>
             <div id="help-tsc" class="section-content">
                 <div id="help-stc-fg">
                     <h3>Spatial and Temporal coverage</h3>
@@ -888,7 +965,42 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
+            <!-- formgroup used instruments -->
+            <?php if ($showUsedInstruments ?? false): ?>
+            <div id="help-usedinstruments" class="section-content">
+                <div id="help-usedinstruments-fg">
+                    <h3>Used Instruments</h3>
+                    <p>
+                        Select the instruments that were used to collect or generate your research data.
+                        Start typing to search the PID4INST instrument catalogue and select instruments from the
+                        autocomplete suggestions.
+                    </p>
+                    <p>
+                        Each instrument is identified by a persistent identifier (PID) from the PID4INST registry.
+                        The selected instruments will be stored as related identifiers with the relation type
+                        "IsCollectedBy" in the DataCite metadata.
+                    </p>
+                    <p><strong>Mandatory field. Please select at least one instrument.</strong></p>
+                </div>
+                <div id="help-usedinstruments-input">
+                    <h4>Instrument Search</h4>
+                    <p>
+                        Type at least one character to see matching instruments from the PID4INST catalogue.
+                        Instruments are displayed as "Name (Instrument Types)" to help you identify the correct one.
+                        You can select multiple instruments by clicking on them in the dropdown list.
+                    </p>
+                    <p>
+                        Only instruments from the catalogue can be selected. If your instrument is not listed,
+                        please contact the data management team.
+                    </p>
+                </div>
+            </div>
+            <div class="section-divider"></div>
+            <hr>
+            <?php endif; ?>
             <!-- formgroup related work-->
+            <?php if ($showRelatedWork ?? true): ?>
             <div id="help-relatedwork" class="section-content">
                 <div id="help-relatedwork-fg">
                     <h3>Related Work</h3>
@@ -906,57 +1018,35 @@ include_once "../settings.php";
                 <div id="help-relatedwork-relation">
                     <h4>Relation Type</h4>
                     <p>The following different relation types are available for selection:</p>
-                    <ul>
-                        <li><strong>IsCitedBy:</strong> indicates that B includes A in a citation</li>
-                        <li><strong>Cites:</strong> indicates that A includes B in a citation</li>
-                        <li><strong>IsSupplementTo:</strong> indicates that A is a supplement to B</li>
-                        <li><strong>IsSupplementedBy:</strong> indicates that B is a supplement to A</li>
-                        <li><strong>IsContinuedBy:</strong> indicates A is continued by the work B</li>
-                        <li><strong>Continues:</strong> indicates A is a continuation of the work B</li>
-                        <li><strong>Describes:</strong> indicates A describes B</li>
-                        <li><strong>IsDescribedBy:</strong> indicates A is described by B</li>
-                        <li><strong>HasMetadata:</strong> indicates resource A has additional metadata B</li>
-                        <li><strong>IsMetadataFor:</strong> indicates additional metadata A for a resource B
-                        </li>
-                        <li><strong>HasVersion:</strong> indicates A has a version B</li>
-                        <li><strong>IsVersionOf:</strong> indicates A is a version of B</li>
-                        <li><strong>IsNewVersionOf:</strong> indicates A is a new edition of B, where the new
-                            edition has been modified or updated</li>
-                        <li><strong>IsPreviousVersionOf:</strong> indicates A is a previous edition of B</li>
-                        <li><strong>IsPartOf:</strong> indicates A is a portion of B; may be used for elements
-                            of a series</li>
-                        <li><strong>HasPart:</strong> indicates A includes the part B</li>
-                        <li><strong>IsPublishedIn:</strong> indicates A is published inside B, but is
-                            independent of other things published inside of B</li>
-                        <li><strong>IsReferencedBy:</strong> indicates A is used as a source of information by B
-                        </li>
-                        <li><strong>References:</strong> indicates B is used as a source of information for A
-                        </li>
-                        <li><strong>IsDocumentedBy:</strong> indicates B is documentation about/explaining A (e.g.
-                            points to software documentation or a data report)
-                        </li>
-                        <li><strong>Documents:</strong> indicates A is documentation about/explaining B (e.g. points
-                            to
-                            software documentation or a data report)</li>
-                        <li><strong>IsCompiledBy:</strong> indicates B is used to compile or create A</li>
-                        <li><strong>Compiles:</strong> indicates B is the result of a compile or creation event
-                            using A</li>
-                        <li><strong>IsVariantFormOf:</strong> indicates A is a variant or different form of B
-                        </li>
-                        <li><strong>IsOriginalFormOf:</strong> indicates A is the original form of B</li>
-                        <li><strong>IsIdenticalTo:</strong> indicates that A is identical to B, for use when
-                            there is a need to register two separate instances of the same resource</li>
-                        <li><strong>IsReviewedBy:</strong> indicates that A is reviewed by B</li>
-                        <li><strong>Reviews:</strong> indicates that A is a review of B</li>
-                        <li><strong>IsDerivedFrom:</strong> indicates B is a source upon which A is based</li>
-                        <li><strong>IsSourceOf:</strong> indicates A is a source upon which B is based</li>
-                        <li><strong>IsRequiredBy:</strong> Indicates A is required by B</li>
-                        <li><strong>Requires:</strong> Indicates A requires B</li>
-                        <li><strong>Obsoletes:</strong> Indicates A replaces B</li>
-                        <li><strong>IsObsoletedBy:</strong> Indicates A is replaced by B</li>
-                        <li><strong>IsCollectedBy:</strong> Indicates A is collected by B</li>
-                        <li><strong>Collects:</strong> Indicates A collects B</li>
-                    </ul>
+                    <?php
+                    // Fetch relation types dynamically from ERNIE API (with cache/fallback)
+                    require_once __DIR__ . '/../api/v2/services/ErnieService.php';
+
+                    try {
+                        if (!isset($ernieService)) {
+                            $ernieService = new ErnieService();
+                        }
+                        $relationTypes = $ernieService->getRelationTypesWithCache();
+
+                        if (is_array($relationTypes) && count($relationTypes) > 0) {
+                            echo '<ul>';
+                            foreach ($relationTypes as $type) {
+                                $name = htmlspecialchars($type['name'] ?? '');
+                                $description = htmlspecialchars($type['description'] ?? '');
+                                echo '<li><strong>' . $name . ':</strong>';
+                                if (!empty($description)) {
+                                    echo ' ' . $description;
+                                }
+                                echo '</li>';
+                            }
+                            echo '</ul>';
+                        } else {
+                            echo '<p><em>No relation types available.</em></p>';
+                        }
+                    } catch (Throwable $e) {
+                        echo '<p><em>Relation types list could not be loaded. Please refer to the dropdown in the form.</em></p>';
+                    }
+                    ?>
                 </div>
                 <div id="help-relatedwork-identifier">
                     <h4>Identifier</h4>
@@ -965,32 +1055,41 @@ include_once "../settings.php";
                 <div id="help-relatedwork-identifiertype">
                     <h4>Identifier Type</h4>
                     <p>The type of the Related Identifier.</p>
-                    <ul>
-                        <li><strong>ARK:</strong> A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements).</li>
-                        <!-- arXiv: Repository for scientific preprints in math, physics, astronomy, etc. -->
-                        <!-- bibcode: Standardized 19-character identifier for scientific literature. -->
-                        <li><strong>DOI:</strong> A character string used to uniquely identify an object. Format should be 10.ORGANISATION/ID.</li>
-                        <!-- EAN13: 13-digit barcode standard, superset of UPC. -->
-                        <!-- EISSN: Electronic ISSN for periodicals. -->
-                        <li><strong>Handle:</strong> This refers specifically to an ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).</li>
-                        <li><strong>IGSN:</strong> A code that uniquely identifies samples from our natural environment and related features-of-interest.</li>
-                        <!-- ISBN: Unique book identifier, 10 or 13 digits. -->
-                        <!-- ISSN: 8-digit identifier for periodicals. -->
-                        <!-- ISTC: Unique number for textual works, 16 characters. -->
-                        <!-- LISSN: Linking ISSN for collocation among media versions. -->
-                        <li><strong>LSID:</strong> A unique identifier for data in the Life Science domain. Format: urn:lsid:authority:namespace:identifier:revision.</li>
-                        <!-- PMID: Unique number for PubMed records. -->
-                        <!-- PURL: Persistent URL with protocol, resolver, and name. -->
-                        <!-- UPC: Barcode for trade items, 12 digits. -->
-                        <li><strong>URL:</strong> Also known as web address, a URL is a specific character string that constitutes a reference to a resource. The syntax is: scheme://domain:port/path?query_string#fragment_id.</li>
-                        <li><strong>URN:</strong> A Uniform Resource Name (URN) is a type of URI that uses the syntax: urn:&lt;NID&gt;:&lt;NSS&gt;. The leading urn: sequence is case-insensitive, &lt;NID&gt; is the namespace identifier, &lt;NSS&gt; is the namespace-specific string.</li>
-                        <!-- w3id: Used for vocabularies and ontologies, stands for “World Wide Web”. -->
-                    </ul>
+                    <?php
+                    // Fetch identifier types dynamically from ERNIE API (with cache/fallback)
+                    try {
+                        if (!isset($ernieService)) {
+                            require_once __DIR__ . '/../api/v2/services/ErnieService.php';
+                            $ernieService = new ErnieService();
+                        }
+                        $identifierTypes = $ernieService->getIdentifierTypesWithCache();
+
+                        if (is_array($identifierTypes) && count($identifierTypes) > 0) {
+                            echo '<ul>';
+                            foreach ($identifierTypes as $type) {
+                                $name = htmlspecialchars($type['name'] ?? '');
+                                $description = htmlspecialchars($type['description'] ?? '');
+                                echo '<li><strong>' . $name . ':</strong>';
+                                if (!empty($description)) {
+                                    echo ' ' . $description;
+                                }
+                                echo '</li>';
+                            }
+                            echo '</ul>';
+                        } else {
+                            echo '<p><em>No identifier types available.</em></p>';
+                        }
+                    } catch (Throwable $e) {
+                        echo '<p><em>Identifier types list could not be loaded. Please refer to the dropdown in the form.</em></p>';
+                    }
+                    ?>
                 </div>
             </div>
             <div class="section-divider"></div>
             <hr>
+            <?php endif; ?>
             <!-- formgroup funding reference -->
+            <?php if ($showFundingReference ?? true): ?>
             <div id="help-fundingreference" class="section-content">
                 <div id="help-fundingreference-fg">
                     <h3>Funding Reference</h3>
@@ -1020,6 +1119,7 @@ include_once "../settings.php";
                     <p>Optional link or identifier to detailed information about the award. This can be a URL pointing to the grant on the funder's website or a DOI.</p>
                 </div>
             </div>
+            <?php endif; ?>
             <!-- formgroup GGMs Properties -->
             <?php if ($showGGMsProperties ?? false): ?>
             <div id="help-model-characteristics" class="section-content">
@@ -1414,6 +1514,45 @@ include_once "../settings.php";
     <!-- Custom jQuery Script -->
     <script src="helpMenu.js"></script>
     <script src="search.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('../api/v2/vocabs/thesauri/availability')
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                Object.keys(data).forEach(function (key) {
+                    if (data[key].available) {
+                        document.querySelectorAll('[data-thesaurus="' + key + '"]').forEach(function (el) {
+                            el.style.display = '';
+                        });
+                    }
+                });
+            })
+            .catch(function () {
+                // On error show all thesaurus sections as fallback
+                document.querySelectorAll('[data-thesaurus]').forEach(function (el) {
+                    el.style.display = '';
+                });
+            });
+
+        // Show/hide description type help sections based on ERNIE API
+        fetch('../api/v2/vocabs/descriptiontypes')
+            .then(function (response) { return response.json(); })
+            .then(function (types) {
+                var activeSlugs = types.map(function (t) { return t.slug; });
+                document.querySelectorAll('[data-description-slug]').forEach(function (el) {
+                    if (activeSlugs.indexOf(el.getAttribute('data-description-slug')) !== -1) {
+                        el.style.display = '';
+                    }
+                });
+            })
+            .catch(function () {
+                // On error show all description type sections as fallback
+                document.querySelectorAll('[data-description-slug]').forEach(function (el) {
+                    el.style.display = '';
+                });
+            });
+    });
+    </script>
 </body>
 
 </html>

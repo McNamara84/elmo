@@ -1,7 +1,8 @@
 <?php
-namespace Tests;
 
-require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+declare(strict_types=1);
+
+namespace Tests;
 
 /**
  * Test class for DatasetController
@@ -9,7 +10,7 @@ require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
  * Tests the controller methods for retrieving dataset information
  * including authors, contributors, titles, descriptions, etc.
  */
-class DatasetControllerTest extends DatabaseTestCase
+final class DatasetControllerTest extends DatabaseTestCase
 {
     private \DatasetController $controller;
     private int $resourceId;
@@ -17,6 +18,7 @@ class DatasetControllerTest extends DatabaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
         $this->controller = new \DatasetController();
         
         // Create a test resource with all related data
@@ -31,22 +33,19 @@ class DatasetControllerTest extends DatabaseTestCase
         $conn = $this->connection;
 
         // Insert Resource
-        $stmt = $conn->prepare("INSERT INTO Resource (version, language, publicationYear, currentSchemaVersion) VALUES (1, 'en', 2024, '1.0')");
+        $stmt = $conn->prepare("INSERT INTO Resource (version, Language_language_id, year) VALUES (1, 1, 2024)");
         $stmt->execute();
         $this->resourceId = (int) $conn->insert_id;
         $stmt->close();
 
-        // Insert Title Type
-        $conn->query("INSERT INTO Title_Type (title_type_id, name) VALUES (1, 'Main Title') ON DUPLICATE KEY UPDATE name=name");
-
-        // Insert Title
-        $stmt = $conn->prepare("INSERT INTO Title (text, Title_Type_fk, Resource_resource_id) VALUES ('Test Dataset Title', 1, ?)");
+        // Insert Title (Title_Type id 2 = 'Main Title' from install.php seed data)
+        $stmt = $conn->prepare("INSERT INTO Title (text, Title_Type_fk, Resource_resource_id) VALUES ('Test Dataset Title', 2, ?)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
         $stmt->close();
 
         // Insert Description
-        $stmt = $conn->prepare("INSERT INTO Description (description_abstract, resource_id) VALUES ('Test abstract description', ?)");
+        $stmt = $conn->prepare("INSERT INTO Description (type, description, resource_id) VALUES ('Abstract', 'Test abstract description', ?)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
         $stmt->close();
@@ -70,9 +69,8 @@ class DatasetControllerTest extends DatabaseTestCase
         $stmt->execute();
         $stmt->close();
 
-        // Insert Contributor Person with Role
+        // Insert Contributor Person with Role (Role id 1 = 'Data Collector' from install.php seed data)
         $conn->query("INSERT INTO Contributor_Person (contributor_person_id, familyname, givenname, orcid) VALUES (1, 'Smith', 'Jane', '0000-0002-3456-7890')");
-        $conn->query("INSERT INTO Role (role_id, name) VALUES (1, 'DataCollector') ON DUPLICATE KEY UPDATE name=name");
         $conn->query("INSERT INTO Contributor_Person_has_Role (Contributor_Person_contributor_person_id, Role_role_id) VALUES (1, 1)");
         $stmt = $conn->prepare("INSERT INTO Resource_has_Contributor_Person (Resource_resource_id, Contributor_Person_contributor_person_id) VALUES (?, 1)");
         $stmt->bind_param('i', $this->resourceId);
@@ -87,25 +85,21 @@ class DatasetControllerTest extends DatabaseTestCase
         $stmt->close();
 
         // Insert Spatial Temporal Coverage
-        $conn->query("INSERT INTO Spatial_Temporal_Coverage (spatial_temporal_coverage_id, latMin, latMax, lonMin, lonMax, dateStart, dateEnd) VALUES (1, 52.0, 53.0, 13.0, 14.0, '2024-01-01', '2024-12-31')");
+        $conn->query("INSERT INTO Spatial_Temporal_Coverage (spatial_temporal_coverage_id, latitudeMin, latitudeMax, longitudeMin, longitudeMax, dateStart, dateEnd) VALUES (1, 52.0, 53.0, 13.0, 14.0, '2024-01-01', '2024-12-31')");
         $stmt = $conn->prepare("INSERT INTO Resource_has_Spatial_Temporal_Coverage (Resource_resource_id, Spatial_Temporal_Coverage_spatial_temporal_coverage_id) VALUES (?, 1)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
         $stmt->close();
 
-        // Insert Relation and Identifier Type for Related Work
-        $conn->query("INSERT INTO Relation (relation_id, name) VALUES (1, 'IsCitedBy') ON DUPLICATE KEY UPDATE name=name");
-        $conn->query("INSERT INTO Identifier_Type (identifier_type_id, name) VALUES (1, 'DOI') ON DUPLICATE KEY UPDATE name=name");
-
-        // Insert Related Work
-        $conn->query("INSERT INTO Related_Work (related_work_id, Identifier, relation_fk, identifier_type_fk) VALUES (1, '10.1234/test', 1, 1)");
+        // Insert Related Work (Relation id 1 = 'IsCitedBy', Identifier_Type id 4 = 'DOI' from install.php seed data)
+        $conn->query("INSERT INTO Related_Work (related_work_id, Identifier, relation_fk, identifier_type_fk) VALUES (1, '10.1234/test', 1, 4)");
         $stmt = $conn->prepare("INSERT INTO Resource_has_Related_Work (Resource_resource_id, Related_Work_related_work_id) VALUES (?, 1)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
         $stmt->close();
 
         // Insert Funding Reference
-        $conn->query("INSERT INTO Funding_Reference (funding_reference_id, funder, funderIdentifier, funderIdentifierType, awardNumber, awardTitle, awardURI) VALUES (1, 'Test Funder', 'fund-123', 'Crossref', 'AWARD-001', 'Test Award', 'https://award.test')");
+        $conn->query("INSERT INTO Funding_Reference (funding_reference_id, funder, funderid, funderidtyp, grantnumber, grantname, awarduri) VALUES (1, 'Test Funder', 'fund-123', 'Crossref', 'AWARD-001', 'Test Award', 'https://award.test')");
         $stmt = $conn->prepare("INSERT INTO Resource_has_Funding_Reference (Resource_resource_id, Funding_Reference_funding_reference_id) VALUES (?, 1)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
@@ -142,7 +136,7 @@ class DatasetControllerTest extends DatabaseTestCase
 
         $this->assertIsArray($descriptions);
         $this->assertNotEmpty($descriptions);
-        $this->assertEquals('Test abstract description', $descriptions[0]['description_abstract']);
+        $this->assertEquals('Test abstract description', $descriptions[0]['description']);
     }
 
     public function testGetAuthorsReturnsPersonAuthors(): void
@@ -196,7 +190,7 @@ class DatasetControllerTest extends DatabaseTestCase
 
         $this->assertIsArray($roles);
         $this->assertNotEmpty($roles);
-        $this->assertEquals('DataCollector', $roles[0]['name']);
+        $this->assertEquals('Data Collector', $roles[0]['name']);
     }
 
     public function testGetContactPersonsReturnsCorrectData(): void
@@ -217,10 +211,10 @@ class DatasetControllerTest extends DatabaseTestCase
 
         $this->assertIsArray($coverage);
         $this->assertNotEmpty($coverage);
-        $this->assertEquals(52.0, $coverage[0]['latMin']);
-        $this->assertEquals(53.0, $coverage[0]['latMax']);
-        $this->assertEquals(13.0, $coverage[0]['lonMin']);
-        $this->assertEquals(14.0, $coverage[0]['lonMax']);
+        $this->assertEquals(52.0, $coverage[0]['latitudeMin']);
+        $this->assertEquals(53.0, $coverage[0]['latitudeMax']);
+        $this->assertEquals(13.0, $coverage[0]['longitudeMin']);
+        $this->assertEquals(14.0, $coverage[0]['longitudeMax']);
     }
 
     public function testGetRelatedWorksReturnsCorrectStructure(): void
@@ -241,7 +235,7 @@ class DatasetControllerTest extends DatabaseTestCase
         $this->assertIsArray($funding);
         $this->assertNotEmpty($funding);
         $this->assertEquals('Test Funder', $funding[0]['funder']);
-        $this->assertEquals('AWARD-001', $funding[0]['awardNumber']);
+        $this->assertEquals('AWARD-001', $funding[0]['grantnumber']);
     }
 
     public function testGetThesaurusKeywordsReturnsCorrectData(): void
@@ -283,7 +277,7 @@ class DatasetControllerTest extends DatabaseTestCase
     public function testGetAuthorsWithNoAuthorsReturnsEmptyArray(): void
     {
         // Create a resource without authors
-        $stmt = $this->connection->prepare("INSERT INTO Resource (version, language, publicationYear) VALUES (1, 'en', 2024)");
+        $stmt = $this->connection->prepare("INSERT INTO Resource (version, Language_language_id, year) VALUES (1, 1, 2024)");
         $stmt->execute();
         $emptyResourceId = (int) $this->connection->insert_id;
         $stmt->close();
@@ -297,7 +291,7 @@ class DatasetControllerTest extends DatabaseTestCase
     public function testGetContributorsWithNoContributorsReturnsEmptyStructure(): void
     {
         // Create a resource without contributors
-        $stmt = $this->connection->prepare("INSERT INTO Resource (version, language, publicationYear) VALUES (1, 'en', 2024)");
+        $stmt = $this->connection->prepare("INSERT INTO Resource (version, Language_language_id, year) VALUES (1, 1, 2024)");
         $stmt->execute();
         $emptyResourceId = (int) $this->connection->insert_id;
         $stmt->close();

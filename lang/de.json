@@ -17,10 +17,10 @@
         "orcid": "ORCID",
         "orcidInvalid": "Bitte geben Sie eine gültige ORCID ein (XXXX-XXXX-XXXX-XXX(X))",
         "lastName": "Nachname",
-        "lastNameInvalid": "Bitte geben Sie einen Nachnamen ein. Nur Buchstaben sind erlaubt.",
-        "firstNameInvalid": "Bitte geben Sie einen Vornamen ein. Nur Buchstaben sind erlaubt.",
+        "lastNameInvalid": "Bitte geben Sie einen Nachnamen ein. Nur Buchstaben. Keine Ziffern oder Sonderzeichen (z.B. $, %, _).",
+        "firstNameInvalid": "Bitte geben Sie einen Vornamen ein.  Nur Buchstaben. Keine Ziffern oder Sonderzeichen (z.B. $, %, _).",
         "firstName": "Vorname",
-        "affiliation": "Zugehörigkeit(en)",
+        "affiliation": "Affiliation",
         "roleLabel": "Rolle(n)",
         "add": "+",
         "cancel": "Abbrechen",
@@ -52,7 +52,11 @@
         "submitError": "Datensatz konnte nicht übermittelt werden.",
         "errorHeading": "Fehler",
         "successHeading": "Erfolg! Ihre Metadaten wurden übermittelt.",
-        "successMessage": "Vielen Dank für Ihre Kooperation. Sie werden in Kürze per E-Mail vom Datenkuratierungsteam der GFZ Data Services kontaktiert."
+        "successMessage": "Vielen Dank für Ihre Kooperation. Sie werden in Kürze per E-Mail vom Datenkuratierungsteam der GFZ Data Services kontaktiert.",
+        "dataUploadTitle": "Primärdaten hochladen",
+        "dataUploadMessage": "Es wurden nur die <strong>Metadaten</strong> an GFZ Data Services übermittelt. Bitte laden Sie Ihre Primärdaten (Forschungsdaten) über den folgenden Link in der Nextcloud hoch:",
+        "dataUploadLinkText": "Primärdaten hier hochladen",
+        "dataUploadFileNameHint": "Bitte benennen Sie Ihre Datei(en) passend zum Titel Ihres Datensatzes:"
 
     },
     "autosave": {
@@ -90,7 +94,7 @@
         "publicationYearInvalid": "Bitte geben Sie ein gültiges Jahr zwischen 1901-2155 ein (4 Ziffern im Format JJJJ).",
         "resourceType": "Ressourcentyp",
         "version": "Version",
-        "versionInvalid": "Bei Unsicherheit leer lassen.",
+        "versionInvalid": "Bitte verwenden Sie Ziffern.Ziffern als Format. Bei Unsicherheit leer lassen.",
         "datasetLanguage": "Sprache des Datensatzes",
         "resourceTitle": "Titel",
         "resourceTitleInvalid": "Bitte geben Sie einen beschreibenden Titel an (der nicht den Titel der Arbeit wiederholt, sondern die Daten beschreibt).",
@@ -101,12 +105,12 @@
         "licenseTitle": "Lizenz"
     },
     "authors": {
-        "title": "Autor(en)",
+        "title": "Autor: Personen",
         "affiliationInvalid": "Bitte geben Sie eine Zugehörigkeit an.",
         "InstitutionsNameInvalid": "Bitte geben Sie den Namen der Institution an."
     },
     "authorsInstitutions": {
-        "title": "Autor Institution",
+        "title": "Autor: Institutionen",
         "name": "Name der Autor Institution"
     },
     "contactPersons": {
@@ -118,11 +122,11 @@
         "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
     },
     "contributorPersons": {
-        "title": "Beitragende (Personen)"
+        "title": "Beitragende: Personen"
     },
     "contributorInstitutions": {
-        "title": "Beitragende (Organisationen)",
-        "organization": "Name der Organisation",
+        "title": "Beitragende: Institutionen",
+        "organization": "Name der Institution",
         "organizationInvalid": "Bitte geben Sie einen gültigen Organisationsnamen ein."
     },
     "laboratory": {
@@ -143,17 +147,21 @@
         "technicalinfoPlaceholder": "Bitte detaillierte Informationen angeben, die mit dem Entwurf, der Implementierung, dem Betrieb, der Verwendung und/oder der Wartung eines Prozesses, Systems oder Instruments in Verbindung stehen können.",
         "other": "Sonstiges",
         "otherTooltip": "Bitte geben Sie sonstige Informationen ein..",
-        "otherPlaceholder": "Bitte weitere Beschreibungen eingeben, die nicht in eine der bestehenden Kategorien passen."
+        "otherPlaceholder": "Bitte weitere Beschreibungen eingeben, die nicht in eine der bestehenden Kategorien passen.",
+        "seriesInformation": "Serieninformation",
+        "seriesInformationTooltip": "Bitte geben Sie Serieninformationen ein...",
+        "seriesInformationPlaceholder": "Bitte Informationen zu einer wiederkehrenden Serie eingeben, wie Band, Ausgabe, Nummer.",
+        "tableOfContents": "Inhaltsverzeichnis",
+        "tableOfContentsTooltip": "Bitte geben Sie ein Inhaltsverzeichnis ein...",
+        "tableOfContentsPlaceholder": "Bitte ein Inhaltsverzeichnis der Ressource eingeben."
     },
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
-            "title": "GCMD Thesauri",
-            "name": "GCMD Thesauri Keywords",
-            "scienceKeywords": "GCMD Science Keywords",
-            "platforms": "GCMD Plattformen",
-            "instruments": "GCMD Instrumente",
-            "label": "Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe..."
+            "title": "Thesauri",
+            "name": "Thesauri Keywords",
+            "label": "Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe...",
+            "unavailable": "Thesaurus-Daten sind derzeit nicht verfügbar."
         },
         "free": {
             "title": "Freie Schlagworte",
@@ -181,10 +189,19 @@
         "end": "Ende",
         "dateTimeInvalid": "Bitte geben Sie ein gültiges Datum an.",
         "endDateError": "Das Enddatum darf nicht vor dem Startdatum liegen.",
+        "endTimeError": "Bei gleichem Datum darf die Endzeit nicht vor der Startzeit liegen.",
         "timezone": "Zeitzone",
         "timezoneInvalid": "Bitte wählen Sie die Zeitzone",
         "mapInfo": "(Bitte wählen Sie Koordinaten per Rechteck oder Markierung)",
         "mapSearch": "Bitte geben Sie einen Ort ein..."
+    },
+    "usedInstruments": {
+        "title": "Verwendete Instrumente",
+        "placeholder": "Instrumente suchen und auswählen...",
+        "required": "Bitte wählen Sie mindestens ein Instrument aus.",
+        "loading": "Instrumentenliste wird geladen...",
+        "unavailable": "Instrumentenliste derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
+        "selected": "ausgewählte Instrumente"
     },
     "relatedWork": {
         "title": "Verwandte Werke",
@@ -250,13 +267,13 @@
         "clearTooltip": "Alle Einträge oder Inhalte löschen.",
         "load": "Laden",
         "loadTooltip": "Gespeicherte Daten oder Inhalte laden.",
-        "saveAs": "Speichern",
+        "saveAs": "Speichern unter",
         "saveAsTooltip": "Aktuelle Daten oder Inhalte unter neuem Dateinamen speichern.",
         "submit": "Absenden",
         "submitTooltip": "Eingegebene Daten oder Inhalte übermitteln.",
         "legalNotice": "Impressum",
         "PrivacyPolicy": "Datenschutzerklärung",
-        "elmoGuide": "Elmo Anleitung"
+        "elmoGuide": "Anleitung"
     },
     "modals": {
         "feedback": {
@@ -308,6 +325,15 @@
             "high": "hoch",
             "normal": "normal",
             "low": "niedrig"
+        },
+        "validationFailed": {
+            "title": "Übermittlung nicht möglich",
+            "greeting": "Liebe Nutzerin, lieber Nutzer,",
+            "body": "es scheint, als möchten Sie Daten übermitteln. Leider haben Sie nicht alle Pflichtfelder ausgefüllt.",
+            "saveHint": "Falls Sie bereits mit dem Datenkuratierungsteam vereinbart haben, dass Ihre Einreichung noch nicht vollständig ist, können Sie auf <strong>Speichern unter</strong> klicken und die erzeugte XML-Datei per E-Mail an <a href='mailto:{email}'>{email}</a> senden.",
+            "fixHint": "Andernfalls füllen Sie bitte die rot markierten Felder aus und versuchen Sie es erneut.",
+            "guideHint": "Wenn Sie weitere Hilfe beim Ausfüllen des Formulars benötigen, finden Sie den <a href='doc/help.php' target='_blank'>ELMO Guide</a> hier.",
+            "close": "Schließen"
         }
     },
     "welcome": {

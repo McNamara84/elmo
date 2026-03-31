@@ -16,7 +16,8 @@ function clearInputFields() {
     $('input[name="title[]"]').closest('.row').not(':first').remove();
     $('input[name="title[]"]:first').val('');
     $('#input-resourceinformation-titletype').val(window.mainTitleTypeId || '');
-  
+    // Notify title module to reset its internal counter
+    $(document).trigger('elmo:clearTitles');  
     // Reset Rights License select field
     $('#input-rights-license').val('');
   
@@ -62,9 +63,7 @@ function clearInputFields() {
   
     // Clear descriptions
     $('#input-abstract').val('');
-    $('#input-methods').val('');
-    $('#input-technicalinfo').val('');
-    $('#input-other').val('');
+    $('#accordion-description textarea[id^="input-description-"]').val('');
   
     // Clear all Tagify fields
     const tagifySelectors = [
@@ -99,6 +98,17 @@ function clearInputFields() {
     // Reset Related Works
     $('#group-relatedwork .row[related-work-row]').not(':first').remove();  // Remove all rows except the first one
     $('#group-relatedwork .row[related-work-row]:first').find('input, select').val('').trigger('change');  // Clear the first row
+
+    // Reset Used Instruments (Tagify)
+    var instrumentsInput = document.getElementById('input-usedinstruments');
+    if (instrumentsInput && instrumentsInput._tagify) {
+        instrumentsInput._tagify.removeAllTags();
+    }
+    // Also clear hidden inputs for instruments
+    var hiddenContainer = document.getElementById('usedinstruments-hidden-inputs');
+    if (hiddenContainer) {
+        hiddenContainer.innerHTML = '';
+    }
 
     // Clear Funding References
     $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();

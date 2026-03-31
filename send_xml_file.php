@@ -30,7 +30,7 @@ require_once __DIR__ . '/settings.php';
 error_log("send_xml_file.php: settings.php included");
 
 // Make global variables from settings.php available
-global $connection, $showGGMsProperties;
+global $connection, $showGGMsProperties, $showUsedInstruments;
 global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
 global $xmlSubmitAddress;
 
@@ -46,10 +46,14 @@ require_once __DIR__ . '/save/formgroups/save_descriptions.php';
 require_once __DIR__ . '/save/formgroups/save_thesauruskeywords.php';
 require_once __DIR__ . '/save/formgroups/save_spatialtemporalcoverage.php';
 require_once __DIR__ . '/save/formgroups/save_relatedwork.php';
+require_once __DIR__ . '/save/formgroups/save_usedinstruments.php';
 require_once __DIR__ . '/save/formgroups/save_fundingreferences.php';
 
 if ($showGGMsProperties) {
-    require_once __DIR__ . '/save/formgroups/save_ggmsproperties.php';
+    require_once __DIR__ . '/save/formgroups/save_ggms_properties.php';
+    require_once __DIR__ . '/save/formgroups/save_ggms_definition.php';
+    require_once __DIR__ . '/save/formgroups/save_ggms_modeltypes.php';
+    require_once __DIR__ . '/save/formgroups/save_ggms_datasources.php';
 }
 
 error_log("send_xml_file.php: Save functions included");
@@ -168,6 +172,9 @@ try {
     saveFreeKeywords($connection, $_POST, $resource_id);
     saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
     saveRelatedWork($connection, $_POST, $resource_id);
+    if ($showUsedInstruments ?? false) {
+        saveUsedInstruments($connection, $_POST, $resource_id);
+    }
     saveFundingReferences($connection, $_POST, $resource_id);
 
     error_log("send_xml_file.php: All data saved successfully");
@@ -407,7 +414,7 @@ if (!$simulateEmail) {
         'message' => "Sorry, we encountered an error when sending the email:\n\n" . 
                      $e->getMessage() . "\n\n" .
                      "Your data has been saved in our system with Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
-                     "Please contact the data curation team at datapub@gfz.de. In your Email, make sure to reference this Resource ID.\n\n" .
+                     "Please contact the data curation team at {$xmlSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .
                      "Thank you for your understanding.\n" .
                      "ELMO team"
     ]);

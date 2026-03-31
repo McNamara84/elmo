@@ -1,7 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
+
 
 /**
  * Testklasse für die Funktionalität zum Speichern von Ressourceninformationen und Rechten.
@@ -9,7 +11,7 @@ use mysqli_sql_exception;
  * Diese Klasse enthält verschiedene Testfälle, die die korrekte Funktionsweise
  * der saveResourceInformationAndRights-Funktion unter verschiedenen Bedingungen überprüfen.
  */
-class SaveResourceInformationAndRightsTest extends DatabaseTestCase
+final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
 {
     /**
      * Testet das Speichern von Ressourceninformationen und Rechten mit allen Feldern.
@@ -507,5 +509,206 @@ class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         $stmt->execute();
         $total_count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(5, $total_count, "Should have five datasets in total");
+    }
+
+    /**
+     * Tests that a title with text only (without type) is skipped, not saved.
+     * 
+     * @return void
+     */
+    public function testTitleWithTextOnlyNullType()
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        $postData = [
+            "doi" => "10.5880/GFZ.TITLE.NULL.TYPE.TEST",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Title Without Type"],
+            "titleType" => [""]  // Empty title type
+        ];
+
+        $resource_id = saveResourceInformationAndRights($this->connection, $postData);
+        // Should return false because title without type is skipped, no valid titles remain
+        $this->assertFalse($resource_id, "Should return false when title has no type (text-only titles not allowed)");
+    }
+
+    /**
+     * Tests saving a title with both text and a valid type.
+     * 
+     * @return void
+     */
+    public function testTitleWithTextAndValidType()
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        $postData = [
+            "doi" => "10.5880/GFZ.TITLE.VALID.TYPE.TEST",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Title With Valid Type"],
+            "titleType" => ["1"]  // Valid type ID
+        ];
+
+        $resource_id = saveResourceInformationAndRights($this->connection, $postData);
+        $this->assertIsInt($resource_id, "Should return a valid resource ID");
+        $this->assertGreaterThan(0, $resource_id);
+
+        // Verify title was saved with correct type
+        $stmt = $this->connection->prepare("SELECT * FROM Title WHERE Resource_resource_id = ?");
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+
+        $this->assertEquals("Title With Valid Type", $row["text"], "Title text should be saved");
+        $this->assertEquals(1, $row["Title_Type_fk"], "Title type should be saved as integer 1");
+    }
+
+    /**
+     * Tests that a title with type but no text is skipped (not saved).
+     * 
+     * @return void
+     */
+    public function testTitleWithTypeButNoText()
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        $postData = [
+            "doi" => "10.5880/GFZ.TITLE.TYPE.NO.TEXT.TEST",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => [""],  // Empty title text
+            "titleType" => ["1"]  // Type without text
+        ];
+
+        $resource_id = saveResourceInformationAndRights($this->connection, $postData);
+        // Should return false because type without text is invalid, no valid titles remain
+        $this->assertFalse($resource_id, "Should return false when title has type but no text");
+    }
+
+    /**
+     * Tests that completely empty title entries are skipped.
+     * 
+     * @return void
+     */
+    public function testCompletelyEmptyTitleEntry()
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        $postData = [
+            "doi" => "10.5880/GFZ.TITLE.EMPTY.TEST",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => [""],  // Empty title text
+            "titleType" => [""]  // Empty title type
+        ];
+
+        $resource_id = saveResourceInformationAndRights($this->connection, $postData);
+        // Should return false because there are no valid titles for a resource
+        $this->assertFalse($resource_id, "Should return false when all titles are empty");
+    }
+
+    /**
+     * Tests that invalid title type IDs are skipped with logging.
+     * 
+     * @return void
+     */
+    public function testInvalidTitleTypeId()
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        $postData = [
+            "doi" => "10.5880/GFZ.TITLE.INVALID.TYPE.TEST",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Title With Invalid Type"],
+            "titleType" => ["9999"]  // Non-existent type ID
+        ];
+
+        $resource_id = saveResourceInformationAndRights($this->connection, $postData);
+        // Should return false because invalid type is skipped and no valid titles remain
+        $this->assertFalse($resource_id, "Should return false when title type ID doesn't exist in database");
+    }
+
+    /**
+     * Tests mixed title scenarios: some valid, some invalid.
+     * Valid titles should be saved, invalid ones skipped.
+     * 
+     * @return void
+     */
+    public function testMixedTitlesWithSomeValid()
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        $postData = [
+            "doi" => "10.5880/GFZ.TITLE.MIXED.TEST",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => [
+                "Valid Title 1",      // Valid
+                "",                   // Invalid (no text)
+                "Valid Title 2",      // Valid
+                "Invalid No Type"     // Invalid (no type)
+            ],
+            "titleType" => [
+                "1",  // Valid type
+                "1",  // Invalid (no text to go with)
+                "2",  // Valid type
+                ""    // Invalid (no type)
+            ]
+        ];
+
+        $resource_id = saveResourceInformationAndRights($this->connection, $postData);
+        $this->assertIsInt($resource_id, "Should return a valid resource ID");
+        $this->assertGreaterThan(0, $resource_id);
+
+        // Verify only valid titles were saved
+        $stmt = $this->connection->prepare("SELECT * FROM Title WHERE Resource_resource_id = ? ORDER BY title_id");
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $this->assertEquals(2, $result->num_rows, "Should have exactly 2 valid titles saved");
+
+        $titles = [];
+        while ($row = $result->fetch_assoc()) {
+            $titles[] = $row;
+        }
+
+        $this->assertEquals("Valid Title 1", $titles[0]["text"], "First valid title should be saved");
+        $this->assertEquals(1, $titles[0]["Title_Type_fk"], "First valid title should have type 1");
+        $this->assertEquals("Valid Title 2", $titles[1]["text"], "Second valid title should be saved");
+        $this->assertEquals(2, $titles[1]["Title_Type_fk"], "Second valid title should have type 2");
     }
 }

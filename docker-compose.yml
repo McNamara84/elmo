@@ -27,6 +27,17 @@ services:
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      FUNDER_PID: ${FUNDER_PID:-CFID}
+      # Flags for MSL
+      SHOW_MSL_LABS: "false"
+      SHOW_MSL_VOCABS: "false"
+      SHOW_MSL_DEFAULT_FREE_KEYWORDS: "false"
+      SHOW_MSL_LOGO: "false"
+      SHOW_USED_INSTRUMENTS: "true"
+      SIMULATE_EMAIL: "true"
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
+      LOCAL_DEVELOPMENT: "true"
     depends_on:
       - db
     restart: unless-stopped

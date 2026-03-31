@@ -1,6 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../save/validation.php';
@@ -11,7 +15,13 @@ require_once __DIR__ . '/../save/validation.php';
  * These tests ensure that the validation logic for required fields,
  * dependencies and data structures behaves as expected.
  */
-class ValidationFunctionsTest extends TestCase
+#[CoversFunction('validateRequiredFields')]
+#[CoversFunction('validateArrayDependencies')]
+#[CoversFunction('validateContributorPersonDependencies')]
+#[CoversFunction('validateContributorInstitutionDependencies')]
+#[CoversFunction('validateFundingReferenceDependencies')]
+#[CoversFunction('validateRelatedWorkDependencies')]
+final class ValidationFunctionsTest extends TestCase
 {
     /**
      * Validates that all required fields being present returns true.
@@ -275,6 +285,48 @@ class ValidationFunctionsTest extends TestCase
             'longitudeMax' => 2
         ];
         $this->assertFalse(validateSTCDependencies($entry));
+    }
+
+    /**
+     * Ensures STC validation fails when end time is before start time on the same date.
+     *
+     * @return void
+     */
+    public function testValidateSTCDependenciesSameDateEndTimeBeforeStartTime(): void
+    {
+        $entry = [
+            'latitudeMin' => 1,
+            'longitudeMin' => 1,
+            'description' => 'd',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-01',
+            'timeStart' => '12:00',
+            'timeEnd' => '11:59',
+            'timezone' => 'UTC'
+        ];
+
+        $this->assertFalse(validateSTCDependencies($entry));
+    }
+
+    /**
+     * Ensures STC validation accepts a valid time range on the same date.
+     *
+     * @return void
+     */
+    public function testValidateSTCDependenciesSameDateValidTimeOrder(): void
+    {
+        $entry = [
+            'latitudeMin' => 1,
+            'longitudeMin' => 1,
+            'description' => 'd',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-01',
+            'timeStart' => '11:00',
+            'timeEnd' => '11:30',
+            'timezone' => 'UTC'
+        ];
+
+        $this->assertTrue(validateSTCDependencies($entry));
     }
 
     /**

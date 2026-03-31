@@ -39,13 +39,12 @@
     "require": {
         "php": "^8.3 || ^8.4 || ^8.5",
         "nikic/fast-route": "^1.3",
-        "phpmailer/phpmailer": "^7.0",
-        "sweetrdf/easyrdf": "^1.16"
+        "phpmailer/phpmailer": "^7.0"
     },
     "require-dev": {
         "guzzlehttp/guzzle": "^7.9",
         "phpstan/phpstan": "^2.1",
-        "phpunit/phpunit": "^12.5"
+        "phpunit/phpunit": "^13"
     },
     "autoload": {
         "classmap": [

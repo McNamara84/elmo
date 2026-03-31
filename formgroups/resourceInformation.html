@@ -80,7 +80,7 @@
             <div class="input-group has-validation">
               <div class="form-floating">
                 <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                  id="input-resourceinformation-version" name="version" pattern="[0-9\.]{0,5}"  />
+                  id="input-resourceinformation-version" name="version" pattern="^\d+\.\d+$"  />
                 <label for="input-resourceinformation-version" data-translate="resourceInfo.version"></label>
                 <div class="invalid-feedback" data-translate="resourceInfo.versionInvalid"></div>
               </div>
@@ -95,11 +95,11 @@
           <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <select class="form-select js-required-on-submit" id="input-resourceinformation-language" name="language" required>
+                <select class="form-select" id="input-resourceinformation-language" name="language">
                   <option disabled selected hidden value="" data-translate="general.choose"></option>
                 </select>
                 <label for="input-resourceinformation-language">
-                  <span data-translate="resourceInfo.datasetLanguage"></span><span class="red-star">*</span>
+                  <span data-translate="resourceInfo.datasetLanguage"></span>
                 </label>
               </div>
             </div>
@@ -146,11 +146,9 @@
             </div>
           </div>
           <!-- Button for cloning new rows for other titles -->
-          <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
-            <div class="align-items-center">
-              <button type="button" class="btn btn-primary addTitle add-button" id="button-resourceinformation-addtitle"
-               data-translate="general.add"></button>
-            </div>
+          <div class="col-2 col-md-1 col-lg-1 p-1 d-flex justify-content-end align-items-center">
+            <button type="button" class="btn btn-primary addTitle add-button" id="button-resourceinformation-addtitle"
+             data-translate="general.add"></button>
           </div>
         </div>
       </div>

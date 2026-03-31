@@ -1,51 +1,57 @@
 <?php
 require_once __DIR__ . '/../../../settings.php';
-require_once __DIR__ . '/ICGEMController.php'; // Require parent class with ICGEM-specific methods.
 
-
-class DatasetController extends ICGEMController
+class DatasetController
 {
-    // private mysqli $connection;
-    // private mixed $logger;
+    protected mysqli $connection;
+    protected mixed $logger;
 
     public function __construct() 
     {
-        parent::__construct(); // Constructor for this class is in ICGEMController!
+        global $connection;
+        $this->connection = $connection;
+        $this->logger = null; // Optional logger
     }
 
     /**
-     * Loads and parses the lastUpdated information from thesauri JSON files.
+     * Loads and parses the lastUpdated information from thesauri cache files.
      * 
-     * This method reads the lastUpdated timestamps from various JSON files containing
-     * keyword definitions. It handles GCMD Platform, Instrument, and Science keywords,
-     * as well as MSL vocabularies.
+     * This method reads the lastUpdated timestamps from ERNIE cache files
+     * in storage/cache/ and from the local MSL vocabularies JSON file.
      *
-     * @return array<mixed> An associative array where keys are the JSON filename bases (without extension)
+     * @return array<mixed> An associative array where keys are thesaurus identifiers
      *               and values are their corresponding lastUpdated timestamps.
-     *               Format: [
-     *                   'gcmdPlatformsKeywords' => 'YYYY-MM-DD',
-     *                   'gcmdInstrumentsKeywords' => 'YYYY-MM-DD',
-     *                   'gcmdScienceKeywords' => 'YYYY-MM-DD',
-     *                   'msl-vocabularies' => 'YYYY-MM-DD'
-     *               ]
      * @return array<mixed>
      */
     private function loadThesauriData(): array
     {
         $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
-        $jsonDir = $baseDir . '/json/thesauri'; // Path to the 'thesauri' folder
-
         $keywordData = [];
 
-        // Scan the directory for all .json files inside the thesauri folder
-        $files = glob($jsonDir . '/*.json');  // Match all .json files in thesauri
+        // ERNIE cache files for thesauri
+        $cacheFiles = [
+            'gcmdScienceKeywords' => $baseDir . '/storage/cache/ernie_gcmd_science_keywords.json',
+            'gcmdPlatformsKeywords' => $baseDir . '/storage/cache/ernie_gcmd_platforms.json',
+            'gcmdInstrumentsKeywords' => $baseDir . '/storage/cache/ernie_gcmd_instruments.json',
+            'chronostratTimescale' => $baseDir . '/storage/cache/ernie_chronostrat_timescale.json',
+            'gemet' => $baseDir . '/storage/cache/ernie_gemet.json',
+        ];
 
-        foreach ($files as $file) {
-            $fileNameBase = basename($file, '.json'); // Extract the file name without extension
-            $data = json_decode(file_get_contents($file), true);
+        foreach ($cacheFiles as $key => $file) {
+            if (file_exists($file)) {
+                $data = json_decode(file_get_contents($file), true);
+                if ($data && isset($data['lastUpdated'])) {
+                    $keywordData[$key] = $data['lastUpdated'];
+                }
+            }
+        }
 
+        // MSL vocabularies remain in local JSON
+        $mslFile = $baseDir . '/json/thesauri/msl-vocabularies.json';
+        if (file_exists($mslFile)) {
+            $data = json_decode(file_get_contents($mslFile), true);
             if ($data && isset($data['lastUpdated'])) {
-                $keywordData[$fileNameBase] = $data['lastUpdated']; // Store lastUpdated for each file
+                $keywordData['msl-vocabularies'] = $data['lastUpdated'];
             }
         }
 
@@ -638,10 +644,9 @@ class DatasetController extends ICGEMController
             chmod($outputDir, 0777);
         }
         // Especially for saving xml transformed in different schemas
-        $filename = "resource_$id.xml";
-        if ($prefix) {
-            $filename = $outputDir . "/" . $prefix . "_" . $filename;
-        }
+        $filename = $prefix
+            ? $prefix . "_resource_$id.xml"
+            : "resource_$id.xml";
 
         return $outputDir . "/" . $filename;
     }
@@ -919,13 +924,17 @@ class DatasetController extends ICGEMController
             }
         }
 
-        // Descriptions
+        // Descriptions (only valid DataCite types)
         $descriptions = $this->getDescriptions($connection, $id);
+        $validDescriptionTypes = ['Abstract', 'Methods', 'SeriesInformation', 'TableOfContents', 'TechnicalInfo', 'Other'];
         $descriptionsXml = $xml->addChild('Descriptions');
         foreach ($descriptions as $description) {
-            $descriptionXml = $descriptionsXml->addChild('Description');
-            $descriptionXml->addChild('type', htmlspecialchars($description['type']));
-            $descriptionXml->addChild('description', htmlspecialchars($description['description']));
+            // Only include descriptions with valid DataCite types
+            if (in_array($description['type'], $validDescriptionTypes)) {
+                $descriptionXml = $descriptionsXml->addChild('Description');
+                $descriptionXml->addChild('type', htmlspecialchars($description['type']));
+                $descriptionXml->addChild('description', htmlspecialchars($description['description']));
+            }
         }
 
         // Thesaurus Keywords
@@ -946,11 +955,13 @@ class DatasetController extends ICGEMController
             // Load lastUpdated data from JSON files
             $keywordData = $this->loadThesauriData();
 
-            // Map JSON file keys to XSD element names
+            // Map cache file keys to XSD element names
             $lastUpdatedMapping = [
                 'gcmdPlatformsKeywords' => 'lastUpdatedGcmdPlatformsKeywords',
                 'gcmdInstrumentsKeywords' => 'lastUpdatedGcmdInstrumentsKeywords',
                 'gcmdScienceKeywords' => 'lastUpdatedGcmdScienceKeywords',
+                'chronostratTimescale' => 'lastUpdatedChronostratTimescale',
+                'gemet' => 'lastUpdatedGemet',
                 'msl-vocabularies' => 'lastUpdatedMslVocabularies'
             ];
 
@@ -1004,11 +1015,38 @@ class DatasetController extends ICGEMController
             $relatedWorksXml = $xml->addChild('RelatedWorks');
             foreach ($relatedWorks as $work) {
                 $workXml = $relatedWorksXml->addChild('RelatedWork');
-                $workXml->addChild('Identifier', htmlspecialchars($work['Identifier']));
+                $identifier = $work['Identifier'] ?? '';
+                $workXml->addChild(
+                    'Identifier',
+                    htmlspecialchars((string) $identifier, ENT_XML1, 'UTF-8')
+                );
+                $relationName = '';
+                if (isset($work['Relation'])) {
+                    if (is_array($work['Relation'])) {
+                        $relationName = $work['Relation']['name'] ?? '';
+                    } else {
+                        $relationName = $work['Relation'];
+                    }
+                }
                 $relationXml = $workXml->addChild('Relation');
-                $relationXml->addChild('name', htmlspecialchars($work['Relation']['name']));
+                $relationXml->addChild(
+                    'name',
+                    htmlspecialchars((string) $relationName, ENT_XML1, 'UTF-8')
+                );
+                $identifierTypeName = '';
+                if (isset($work['IdentifierType'])) {
+                    if (is_array($work['IdentifierType'])) {
+                        $identifierTypeName = $work['IdentifierType']['name'] ?? '';
+                    } else {
+                        $identifierTypeName = $work['IdentifierType'];
+                    }
+                }
+
                 $identifierTypeXml = $workXml->addChild('IdentifierType');
-                $identifierTypeXml->addChild('name', htmlspecialchars($work['IdentifierType']['name']));
+                $identifierTypeXml->addChild(
+                    'name',
+                    htmlspecialchars((string) $identifierTypeName, ENT_XML1, 'UTF-8')
+                );
             }
         }
 
@@ -1077,7 +1115,7 @@ class DatasetController extends ICGEMController
                 'outputPrefix' => 'iso'
             ],
             'datacite' => [
-                'xsltFile' => 'MappingMapToDataCiteSchema45.xslt',
+                'xsltFile' => 'MappingMapToDataCiteSchema47.xslt',
                 'outputPrefix' => 'datacite'
             ]
         ];
@@ -1107,6 +1145,9 @@ class DatasetController extends ICGEMController
         // Create XSLT processor, configure it, and perform the transformation
         $proc = new XSLTProcessor;
         $proc->importStyleSheet($xsl);
+        // Pass the contact email as an XSLT parameter
+        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
+        $proc->setParameter('', 'contactEmail', $contactEmail);
         $newXml = $proc->transformToXML($xml);
 
         if ($newXml === false) {
@@ -1278,7 +1319,7 @@ XML;
                 header('Content-Type: application/xml; charset=utf-8');
                 echo $combinedXml;
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             if ($returnAsString) {
                 throw $e;
             }

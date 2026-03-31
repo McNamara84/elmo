@@ -1,0 +1,24 @@
+<div class="card mb-2">
+  <div class="card-header">
+    <b data-translate="usedInstruments.title">Used Instruments</b>
+    <i class="bi bi-question-circle-fill" data-help-section-id="help-usedinstruments-fg"></i>
+  </div>
+  <div class="card-body reduce-padding">
+    <div id="group-usedinstruments">
+      <div class="row align-items-center">
+        <!-- Tagify input field for instrument autocomplete -->
+        <div class="input-group input-margin-top-bottom">
+          <label for="input-usedinstruments" class="visually-hidden">Used Instruments</label>
+          <input type="text" class="form-control input-with-help input-right-no-round-corners round-corners-left"
+            name="usedInstruments" id="input-usedinstruments"
+            data-translate-placeholder="usedInstruments.placeholder" />
+          <span class="input-group-text">
+            <i class="bi bi-question-circle-fill" data-help-section-id="help-usedinstruments-input"></i>
+          </span>
+        </div>
+      </div>
+      <!-- Hidden inputs for instrument PIDs and PID types (populated by JS) -->
+      <div id="usedinstruments-hidden-inputs"></div>
+    </div>
+  </div>
+</div>

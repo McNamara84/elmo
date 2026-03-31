@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Tests;
 
+
 require_once __DIR__ . '/DatabaseTestCase.php';
 
 /**
  * Integration tests for Resource Types functionality with ERNIE integration
  */
-class ResourceTypesIntegrationTest extends DatabaseTestCase
+final class ResourceTypesIntegrationTest extends DatabaseTestCase
 {
     /**
      * Test that getResourceTypes endpoint returns valid JSON
@@ -78,9 +79,9 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('syncResourceTypesToDb');
-        $method->setAccessible(true);
-        $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('syncErnieToDb');
+        $syncItems = array_map(fn($t) => ['ernie_id' => $t['id'], 'name' => $t['name'], 'description' => $t['description'] ?? null], $ernieData);
+        $method->invoke($controller, 'Resource_Type', $syncItems, ['ernie_id_col' => 'ernie_id', 'name_col' => 'resource_type_general', 'description_col' => 'description']);
 
         // Verify data was inserted
         $result = $this->connection->query(
@@ -120,9 +121,9 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('syncResourceTypesToDb');
-        $method->setAccessible(true);
-        $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('syncErnieToDb');
+        $syncItems = array_map(fn($t) => ['ernie_id' => $t['id'], 'name' => $t['name'], 'description' => $t['description'] ?? null], $ernieData);
+        $method->invoke($controller, 'Resource_Type', $syncItems, ['ernie_id_col' => 'ernie_id', 'name_col' => 'resource_type_general', 'description_col' => 'description']);
 
         // Verify data was updated
         $result = $this->connection->query(
@@ -158,9 +159,9 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('syncResourceTypesToDb');
-        $method->setAccessible(true);
-        $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('syncErnieToDb');
+        $syncItems = array_map(fn($t) => ['ernie_id' => $t['id'], 'name' => $t['name'], 'description' => $t['description'] ?? null], $ernieData);
+        $method->invoke($controller, 'Resource_Type', $syncItems, ['ernie_id_col' => 'ernie_id', 'name_col' => 'resource_type_general', 'description_col' => 'description']);
 
         // Verify ernie_id was linked to existing record
         $result = $this->connection->query(
@@ -195,8 +196,7 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
 
         $reflection = new \ReflectionClass($controller);
         $method = $reflection->getMethod('mapErnieToLocalIds');
-        $method->setAccessible(true);
-        $result = $method->invoke($controller, $ernieData);
+        $result = $method->invoke($controller, 'Resource_Type', $ernieData, 'resource_name_id', 'ernie_id', ['name' => 'resource_type_general', 'description' => 'description']);
 
         $this->assertCount(1, $result);
         $this->assertEquals($localId, $result[0]['id']);
@@ -207,9 +207,9 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
     }
 
     /**
-     * Test that syncResourceTypesToDb returns boolean and uses transaction
+     * Test that syncErnieToDb for resource types returns boolean and uses transaction
      */
-    public function testSyncResourceTypesToDbReturnsBoolean(): void
+    public function testSyncErnieToDbReturnsBoolean(): void
     {
         $ernieData = [
             ['id' => 999, 'name' => 'TestType', 'description' => 'Test'],
@@ -219,9 +219,9 @@ class ResourceTypesIntegrationTest extends DatabaseTestCase
         $controller = new \VocabController();
 
         $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('syncResourceTypesToDb');
-        $method->setAccessible(true);
-        $result = $method->invoke($controller, $ernieData);
+        $method = $reflection->getMethod('syncErnieToDb');
+        $syncItems = array_map(fn($t) => ['ernie_id' => $t['id'], 'name' => $t['name'], 'description' => $t['description'] ?? null], $ernieData);
+        $result = $method->invoke($controller, 'Resource_Type', $syncItems, ['ernie_id_col' => 'ernie_id', 'name_col' => 'resource_type_general', 'description_col' => 'description']);
 
         $this->assertIsBool($result);
         $this->assertTrue($result);

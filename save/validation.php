@@ -149,6 +149,41 @@ function validateKeywordEntries($keywordData, $requiredFields = ['value', 'id', 
 }
 
 /**
+ * Normalizes a time string for safe lexical comparison.
+ *
+ * Accepted formats are HH:MM and HH:MM:SS.
+ *
+ * @param string $timeValue Raw time string.
+ * @return string|null Normalized HH:MM:SS time or null for invalid input.
+ */
+function normalizeTimeForComparison($timeValue)
+{
+    if (!is_string($timeValue) || trim($timeValue) === '') {
+        return null;
+    }
+
+    $timeValue = trim($timeValue);
+    if (!preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', $timeValue)) {
+        return null;
+    }
+
+    $parts = explode(':', $timeValue);
+    if (count($parts) === 2) {
+        $parts[] = '0';
+    }
+
+    $hours = (int) $parts[0];
+    $minutes = (int) $parts[1];
+    $seconds = (int) $parts[2];
+
+    if ($hours < 0 || $hours > 23 || $minutes < 0 || $minutes > 59 || $seconds < 0 || $seconds > 59) {
+        return null;
+    }
+
+    return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+}
+
+/**
  * Validates dependencies for Spatial Temporal Coverage entries.
  * 
  * @param array $entry The STC entry data
@@ -169,8 +204,25 @@ function validateSTCDependencies($entry)
         return false;
     }
 
+    // If dates are equal and both times are present, end time must not be before start time
+    if (
+        !empty($entry['dateStart']) &&
+        !empty($entry['dateEnd']) &&
+        $entry['dateStart'] === $entry['dateEnd'] &&
+        !empty($entry['timeStart']) &&
+        !empty($entry['timeEnd'])
+    ) {
+        $timeStart = normalizeTimeForComparison((string) $entry['timeStart']);
+        $timeEnd = normalizeTimeForComparison((string) $entry['timeEnd']);
+
+        if ($timeStart !== null && $timeEnd !== null && $timeEnd < $timeStart) {
+            return false;
+        }
+    }
+
     return true;
 }
+
 
 /**
  * Validates related work entries.

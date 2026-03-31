@@ -221,6 +221,10 @@ function processCreators(xmlDoc, resolver) {
   // Select all <creator> elements inside <creators> using namespace resolver
   const creatorNodes = xmlDoc.evaluate(".//ns:creators/ns:creator", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
+  // Separate counter for person authors to avoid index mismatch when creators
+  // contain a mix of persons and institutions (fixes #739)
+  let personIndex = 0;
+
   for (let i = 0; i < creatorNodes.snapshotLength; i++) {
     const creatorNode = creatorNodes.snapshotItem(i);
 
@@ -254,14 +258,15 @@ function processCreators(xmlDoc, resolver) {
     // If givenName or familyName exists, we treat this as a personal author
     if (givenName || familyName) {
       let $row;
-      if (i === 0) {
-        // For the first creator, use the first existing row in the form
+      if (personIndex === 0) {
+        // For the first person creator, use the first existing row in the form
         $row = $("div[data-creator-row]").eq(0);
       } else {
-        // For subsequent creators, simulate click on "add author" button to create new row
+        // For subsequent person creators, simulate click on "add author" button to create new row
         $("#button-author-add").click();
-        $row = $("div[data-creator-row]").eq(i);
+        $row = $("div[data-creator-row]").eq(personIndex);
       }
+      personIndex++;
 
       // Populate the personal author fields
       $row.find('input[name="orcids[]"]').val(orcid);
@@ -964,7 +969,7 @@ function fillTemporalFields($row, temporalData) {
  */
 function processSpatialTemporalCoverages(xmlDoc, resolver) {
   const geoLocationNodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Coverage" or @dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
     const geoData = getGeoLocationData(geoLocationNodes.snapshotItem(i));
@@ -989,31 +994,32 @@ function processDescriptions(xmlDoc, resolver) {
   // Get all description elements
   const descriptionNodes = xmlDoc.evaluate(".//ns:descriptions/ns:description", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-  // Create a mapping of description types to form input IDs
-  const descriptionMapping = {
+  // Mapping for Abstract (always static) and dynamic description types
+  const staticMapping = {
     Abstract: "input-abstract",
-    Methods: "input-methods",
-    TechnicalInformation: "input-technicalinfo",
-    Other: "input-other",
   };
+
+  // Dynamic description types use the pattern input-description-{Slug}
+  const dynamicSlugs = ["Methods", "TechnicalInfo", "TechnicalInformation", "SeriesInformation", "TableOfContents", "Other"];
 
   // Process each description node
   for (let i = 0; i < descriptionNodes.snapshotLength; i++) {
     const descriptionNode = descriptionNodes.snapshotItem(i);
     const descriptionType = descriptionNode.getAttribute("descriptionType");
-    const language = descriptionNode.getAttribute("xml:lang") || "en";
     const content = descriptionNode.textContent.trim();
 
-    // Find the corresponding input field
-    const inputId = descriptionMapping[descriptionType];
-    if (inputId) {
-      // Set the content in the appropriate textarea
-      $(`#${inputId}`).val(content);
-
-      // If this is not the Abstract, expand the corresponding accordion section
-      if (descriptionType !== "Abstract") {
-        const collapseId = `collapse-${descriptionType.toLowerCase().replace("information", "info")}`;
-        $(`#${collapseId}`).addClass("show");
+    if (staticMapping[descriptionType]) {
+      // Abstract: static field
+      $(`#${staticMapping[descriptionType]}`).val(content);
+    } else if (dynamicSlugs.indexOf(descriptionType) !== -1) {
+      // Dynamic types: normalize TechnicalInformation -> TechnicalInfo
+      const slug = descriptionType === "TechnicalInformation" ? "TechnicalInfo" : descriptionType;
+      const inputId = "input-description-" + slug;
+      const $input = $(`#${inputId}`);
+      if ($input.length) {
+        $input.val(content);
+        // Expand the accordion section
+        $(`#collapse-description-${slug}`).addClass("show");
       }
     }
   }
@@ -1051,37 +1057,34 @@ function processDates(xmlDoc, resolver) {
  */
 function processKeywords(xmlDoc, resolver) {
   const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  // Thesaurus inputs — may not exist if the thesaurus is disabled via ERNIE availability
   const tagifyInputGCMD = document.querySelector("#input-sciencekeyword");
+  const tagifyInputPlatforms = document.querySelector("#input-platforms");
+  const tagifyInputInstruments = document.querySelector("#input-instruments");
+  const tagifyInputChronostrat = document.querySelector("#input-chronostratigraphy");
+  const tagifyInputGemet = document.querySelector("#input-gemet");
+
+  // Always-present inputs
   const tagifyInputMsl = document.querySelector("#input-mslkeyword");
   const tagifyInputFree = document.querySelector("#input-freekeyword");
-  const tagifyInputPlatforms = document.querySelector("#input-Platforms");
-  const tagifyInputInstruments = document.querySelector("#input-Instruments");
 
-  // Error handling
-  if (
-    !tagifyInputGCMD?._tagify ||
-    !tagifyInputMsl?._tagify ||
-    !tagifyInputFree?._tagify ||
-    !tagifyInputPlatforms?._tagify ||
-    !tagifyInputInstruments?._tagify
-  ) {
-    console.error("One or more Tagify instances are not properly initialized.");
+  if (!tagifyInputFree?._tagify) {
+    console.error("Free keyword Tagify instance is not properly initialized.");
     return;
   }
 
-  // Retrieve existing Tagify instances
-  const tagifyGCMD = tagifyInputGCMD._tagify;
-  const tagifyMsl = tagifyInputMsl._tagify;
   const tagifyFree = tagifyInputFree._tagify;
-  const tagifyPlatforms = tagifyInputPlatforms._tagify;
-  const tagifyInstruments = tagifyInputInstruments._tagify;
+  const tagifyMsl = tagifyInputMsl?._tagify;
 
-  // Clear existing tags
-  tagifyGCMD.removeAllTags();
-  tagifyMsl.removeAllTags();
+  // Clear existing tags on all available inputs
   tagifyFree.removeAllTags();
-  tagifyPlatforms.removeAllTags();
-  tagifyInstruments.removeAllTags();
+  tagifyMsl?.removeAllTags();
+  tagifyInputGCMD?._tagify?.removeAllTags();
+  tagifyInputPlatforms?._tagify?.removeAllTags();
+  tagifyInputInstruments?._tagify?.removeAllTags();
+  tagifyInputChronostrat?._tagify?.removeAllTags();
+  tagifyInputGemet?._tagify?.removeAllTags();
 
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
@@ -1090,7 +1093,6 @@ function processKeywords(xmlDoc, resolver) {
     const valueURI = subjectNode.getAttribute("valueURI") || "";
     const keyword = subjectNode.textContent.trim();
 
-    // Create the tag data
     const tagData = {
       value: keyword,
       scheme: subjectScheme,
@@ -1098,19 +1100,34 @@ function processKeywords(xmlDoc, resolver) {
       id: valueURI,
     };
 
-    // Check the schemeURI and add the tag to the appropriate Tagify instance
+    // Route tag to appropriate Tagify instance based on schemeURI
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
-      // Add the tag to the GCMD Science Keyword input field
-      tagifyGCMD.addTags([tagData]);
+      if (tagifyInputGCMD?._tagify) tagifyInputGCMD._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
-      tagifyPlatforms.addTags([tagData]);
+      if (tagifyInputPlatforms?._tagify) tagifyInputPlatforms._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
-      tagifyInstruments.addTags([tagData]);
+      if (tagifyInputInstruments?._tagify) tagifyInputInstruments._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
+    } else if (
+      schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020" ||
+      subjectScheme === "International Chronostratigraphic Chart" ||
+      subjectScheme === "Chronostratigraphic Chart"
+    ) {
+      if (tagifyInputChronostrat?._tagify) tagifyInputChronostrat._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
+    } else if (
+      schemeURI === "http://www.eionet.europa.eu/gemet/gemetThesaurus" ||
+      schemeURI === "http://www.eionet.europa.eu/gemet/concept/" ||
+      subjectScheme?.includes("GEMET")
+    ) {
+      if (tagifyInputGemet?._tagify) tagifyInputGemet._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
-      // Add the tag to the MSL Keyword input field
-      tagifyMsl.addTags([tagData]);
+      if (tagifyMsl) tagifyMsl.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else {
-      // Add all other tags to the Free Keyword input field
       tagifyFree.addTags([tagData]);
     }
   }
@@ -1118,11 +1135,17 @@ function processKeywords(xmlDoc, resolver) {
 
 /**
  * Process related identifiers from XML and populate the formgroup Related Works
+ * When showUsedInstruments is active, entries with relationType="IsCollectedBy" are
+ * filtered out and handled by processUsedInstruments() instead.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
 function processRelatedWorks(xmlDoc, resolver) {
   const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  // Collect entries, optionally filtering out instruments
+  const showUsedInstruments = window.ELMO_FEATURES && window.ELMO_FEATURES.showUsedInstruments;
+  let entries = [];
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -1130,25 +1153,83 @@ function processRelatedWorks(xmlDoc, resolver) {
     const identifierType = identifierNode.getAttribute("relatedIdentifierType");
     const identifierValue = identifierNode.textContent;
 
+    // Skip IsCollectedBy entries when Used Instruments feature is active
+    if (showUsedInstruments && relationType === "IsCollectedBy") {
+      continue;
+    }
+
+    entries.push({ relationType, identifierType, identifierValue });
+  }
+
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+
     // Find last row
     const $lastRow = $('input[name="rIdentifier[]"]').last().closest(".row");
 
     // Set values
-    $lastRow.find('input[name="rIdentifier[]"]').val(identifierValue);
-    $lastRow.find('select[name="rIdentifierType[]"]').val(identifierType);
+    $lastRow.find('input[name="rIdentifier[]"]').val(entry.identifierValue);
+    $lastRow.find('select[name="rIdentifierType[]"]').val(entry.identifierType);
     // Match relation by visible text instead of value
     $lastRow
       .find('select[name="relation[]"]:first option')
       .filter(function () {
-        return $(this).text() === relationType; // Match by visible text
+        return $(this).text() === entry.relationType; // Match by visible text
       })
       .prop("selected", true);
 
     // clone row for the next entry, if there is one
-    if (i < identifierNodes.snapshotLength - 1) {
+    if (i < entries.length - 1) {
       // Add Related Work
       $("#button-relatedwork-add").click();
     }
+  }
+}
+
+/**
+ * Process related identifiers with relationType="IsCollectedBy" from XML
+ * and populate the Used Instruments Tagify field.
+ * Only active when the showUsedInstruments feature toggle is enabled.
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processUsedInstruments(xmlDoc, resolver) {
+  if (!window.ELMO_FEATURES || !window.ELMO_FEATURES.showUsedInstruments) {
+    return;
+  }
+
+  const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  const instruments = [];
+
+  for (let i = 0; i < identifierNodes.snapshotLength; i++) {
+    const identifierNode = identifierNodes.snapshotItem(i);
+    const relationType = identifierNode.getAttribute("relationType");
+
+    if (relationType !== "IsCollectedBy") {
+      continue;
+    }
+
+    const pidType = identifierNode.getAttribute("relatedIdentifierType") || "Handle";
+    const pid = identifierNode.textContent.trim();
+
+    instruments.push({
+      pid: pid,
+      pidType: pidType,
+      name: pid, // Use PID as name fallback; Tagify will show the PID
+      instrumentTypes: []
+    });
+  }
+
+  if (instruments.length > 0 && window.usedInstrumentsModule) {
+    // Ensure API data is loaded so Tagify can match instruments
+    window.usedInstrumentsModule.loadInstrumentsFromAPI();
+
+    // Use a short delay to allow API data to potentially load
+    // then add instruments by their PID data
+    setTimeout(function () {
+      window.usedInstrumentsModule.addInstrumentsByData(instruments);
+    }, 500);
   }
 }
 
@@ -1300,6 +1381,10 @@ async function loadXmlToForm(xmlDoc) {
   processOriginatingLaboratories(xmlDoc, resolver);
   // Process contributors
   processContributors(xmlDoc, resolver);
+  // Wait for dynamic description type fields to be ready
+  if (window.descriptionTypesReady) {
+    await window.descriptionTypesReady;
+  }
   // Process descriptions
   processDescriptions(xmlDoc, resolver);
   // Process Spatial and Temporal Coverages
@@ -1308,6 +1393,8 @@ async function loadXmlToForm(xmlDoc) {
   processKeywords(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
+  // Process Used Instruments (IsCollectedBy entries)
+  processUsedInstruments(xmlDoc, resolver);
   // Process Funders
   processFunders(xmlDoc, resolver);
   // Process Dates
@@ -1337,6 +1424,7 @@ if (typeof module !== 'undefined' && module.exports) {
         populateFormWithContributors,
         parseTemporalData,
         getGeoLocationData,
-        fillSpatialFields
+        fillSpatialFields,
+        processUsedInstruments
     };
 }

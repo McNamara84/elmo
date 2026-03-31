@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { REPO_ROOT, SELECTORS } from '../utils';
+import { injectModuleScript, injectScript, injectStylesheet } from '../utils/assets';
 
 declare const translations: any;
 
@@ -9,12 +10,103 @@ const SCIENCE_PATH = 'Science Keywords > EARTH SCIENCE > AGRICULTURE > AGRICULTU
 const PLATFORMS_PATH = 'Platforms > Air-based Platforms > BALLOONS';
 
 const THESAURI_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/thesaurusKeywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
-const TEST_ROUTE_PATH = '/gcmd-thesauri-test';
+
+/**
+ * Minimal mock vocabulary data used instead of large production JSON files.
+ * Contains exactly the hierarchical paths the tests exercise.
+ */
+const MOCK_SCIENCE_KEYWORDS = {
+  data: [
+    {
+      id: 'sk-1', text: 'Science Keywords', scheme: 'GCMD',
+      schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+      language: 'en',
+      children: [
+        {
+          id: 'sk-2', text: 'EARTH SCIENCE', scheme: 'GCMD',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+          language: 'en',
+          children: [
+            {
+              id: 'sk-3', text: 'AGRICULTURE', scheme: 'GCMD',
+              schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+              language: 'en',
+              children: [
+                {
+                  id: 'sk-4', text: 'AGRICULTURAL AQUATIC SCIENCES', scheme: 'GCMD',
+                  schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+                  language: 'en',
+                  children: [
+                    {
+                      id: 'sk-5', text: 'AQUACULTURE', scheme: 'GCMD',
+                      schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+                      language: 'en',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const MOCK_PLATFORMS = {
+  data: [
+    {
+      id: 'pl-1', text: 'Platforms', scheme: 'GCMD',
+      schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms',
+      language: 'en',
+      children: [
+        {
+          id: 'pl-2', text: 'Air-based Platforms', scheme: 'GCMD',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms',
+          language: 'en',
+          children: [
+            {
+              id: 'pl-3', text: 'BALLOONS', scheme: 'GCMD',
+              schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms',
+              language: 'en',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const MOCK_INSTRUMENTS = {
+  data: [
+    {
+      id: 'in-1', text: 'Instruments', scheme: 'GCMD',
+      schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+      language: 'en',
+      children: [
+        {
+          id: 'in-2', text: 'Spectrometers', scheme: 'GCMD',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+          language: 'en',
+          description: 'Instruments that measure spectra',
+          children: [
+            {
+              id: 'in-3', text: 'Infrared Spectrometer', scheme: 'GCMD',
+              schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+              language: 'en',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+const TEST_ROUTE_PATH = '/thesauri-keywords-test';
 const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>GCMD Thesauri Keywords Playground</title>
+    <title>Thesauri Keywords Playground</title>
   </head>
   <body>
     <nav class="p-2 border-bottom">
@@ -34,30 +126,29 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
   </body>
 </html>`;
 
-async function waitForTranslations(page: import('@playwright/test').Page) {
+/**
+ * Mock availability response — science_keywords and platforms are available,
+ * instruments are available. chronostratigraphy and gemet are disabled.
+ */
+const MOCK_AVAILABILITY = {
+  science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
+  platforms: { available: true, displayName: 'GCMD Platforms' },
+  instruments: { available: true, displayName: 'GCMD Instruments' },
+  chronostratigraphy: { available: false, displayName: 'ICS Chronostratigraphy' },
+  gemet: { available: false, displayName: 'GEMET' },
+};
+
+async function waitForThesauriInit(page: import('@playwright/test').Page) {
+  // Wait until the accordion has been populated with at least one item
   await page.waitForFunction(() => {
-    const globalTranslations = (window as any).translations;
-    const lexicalTranslations = typeof translations !== 'undefined' ? (translations as any) : undefined;
-    const label = globalTranslations?.keywords?.thesaurus?.label ?? lexicalTranslations?.keywords?.thesaurus?.label;
-    if (label) {
-      (window as any).__translationsReady = true;
-      return true;
-    }
-    if (!(window as any).__waitingForTranslations) {
-      (window as any).__waitingForTranslations = true;
-      document.addEventListener(
-        'translationsLoaded',
-        () => {
-          (window as any).__translationsReady = true;
-        },
-        { once: true }
-      );
-    }
-    return Boolean((window as any).__translationsReady);
-  });
+    const accordion = document.getElementById('accordionThesauri');
+    return accordion && accordion.children.length > 0;
+  }, { timeout: 15000 });
+  // Wait until Tagify is initialised on the first available input
+  await page.waitForFunction(() => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify), { timeout: 15000 });
 }
 
-test.describe('GCMD Thesauri Keywords Form Group', () => {
+test.describe('Thesauri Keywords Form Group', () => {
   test.beforeEach(async ({ page }) => {
     await page.route(`**${TEST_ROUTE_PATH}`, async route => {
       await route.fulfill({
@@ -67,35 +158,48 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
       });
     });
 
-    await page.route('**/json/thesauri/*', async route => {
-      const url = new URL(route.request().url());
-      const filePath = path.join(REPO_ROOT, url.pathname);
-      const body = readFileSync(filePath, 'utf8');
+    // Mock the ERNIE-backed availability endpoint
+    await page.route('**/api/v2/vocabs/thesauri/availability', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body,
+        body: JSON.stringify(MOCK_AVAILABILITY),
       });
+    });
+
+    // Mock vocabulary API endpoints with inline test data
+    await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords', async route => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_SCIENCE_KEYWORDS) });
+    });
+    await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms', async route => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_PLATFORMS) });
+    });
+    await page.route('**/api/v2/vocabs/thesauri/gcmd-instruments', async route => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_INSTRUMENTS) });
     });
 
     await page.goto(TEST_ROUTE_PATH);
 
-    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
-    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.css') });
-    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/jstree/dist/themes/default/style.min.css') });
+    await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
+    await injectStylesheet(page, 'node_modules/@yaireo/tagify/dist/tagify.css');
+    await injectStylesheet(page, 'node_modules/jstree/dist/themes/default/style.min.css');
 
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery/dist/jquery.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jstree/dist/jstree.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.js') });
+    await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
+    await injectScript(page, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js');
+    await injectScript(page, 'node_modules/jstree/dist/jstree.min.js');
+    await injectScript(page, 'node_modules/@yaireo/tagify/dist/tagify.js');
 
     await page.evaluate(() => {
+      (window as any).ELMO_FEATURES = { showThesauri: true };
+
       (window as any).translations = {
         keywords: {
           thesaurus: {
             label: 'Open thesaurus to choose keywords or start typing...',
+            name: 'Thesauri Keywords',
           },
           searchPlaceholder: 'Search for keywords...',
+          selectedKeywords: 'Selected Keywords',
         },
       };
 
@@ -114,102 +218,72 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
       };
     });
 
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'js/thesauri.js') });
+    await injectModuleScript(page, 'js/thesauri.js');
 
+    // Set up language handlers and fire translationsLoaded to trigger dynamic init
     await page.evaluate(() => {
       if (typeof (window as any).__setupLanguageHandlers === 'function') {
         (window as any).__setupLanguageHandlers();
       }
-      const translationTexts: Record<string, string> = {
-        'keywords.thesaurus.name': 'GCMD Thesauri Keywords',
-        'keywords.sciencekeywords': 'GCMD Science Keywords',
-        'keywords.Platforms': 'GCMD Platforms',
-        'keywords.selectedKeywords': 'Selected Keywords',
-      };
-      document.querySelectorAll('[data-translate]').forEach(element => {
-        const key = element.getAttribute('data-translate');
-        if (!key) return;
-        const text = translationTexts[key];
-        if (text) {
-          element.textContent = text;
-        }
-      });
-      const scienceButton = document.querySelector('button[data-bs-target="#collapseScienceKeywords"]');
-      if (scienceButton) {
-        scienceButton.setAttribute('aria-expanded', 'true');
-      }
-      document
-        .querySelectorAll('#button-sciencekeyword-open, #platformKeywordsThesaurus, #openInstrumentsThesaurus')
-        .forEach(element => {
-          element.setAttribute('aria-label', 'Thesaurus öffnen');
-        });
+      // Fill the static data-translate header
+      const header = document.querySelector('[data-translate="keywords.thesaurus.name"]');
+      if (header) header.textContent = 'Thesauri Keywords';
+
       document.dispatchEvent(new Event('translationsLoaded'));
     });
 
-    await waitForTranslations(page);
-    await page.evaluate(() => {
-      const scienceButton = document.querySelector('button[data-bs-target="#collapseScienceKeywords"]');
-      if (scienceButton) {
-        scienceButton.setAttribute('aria-expanded', 'true');
-        scienceButton.classList.remove('collapsed');
-      }
-    });
-    await expect(page.locator('#accordionThesauri')).toBeVisible();
-    await page.waitForSelector('#input-sciencekeyword', { state: 'attached' });
-    await page.waitForFunction(() => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify));
+    await waitForThesauriInit(page);
   });
 
   test('renders accessible accordion sections and controls', async ({ page }) => {
     const header = page.locator('b[data-translate="keywords.thesaurus.name"]');
     await expect(header).toBeVisible();
-    await expect(header).toContainText('GCMD Thesauri Keywords');
+    await expect(header).toContainText('Thesauri Keywords');
 
+    // Only 3 available thesauri should generate accordion items
     const accordionItems = page.locator('#accordionThesauri .accordion-item');
     await expect(accordionItems).toHaveCount(3);
 
     const sectionConfigs = [
       {
         name: 'GCMD Science Keywords',
-        target: '#collapseScienceKeywords',
-        buttonSelector: 'button[data-bs-target="#collapseScienceKeywords"]',
+        collapseId: 'collapse-science_keywords',
         expanded: 'true',
         helpId: 'help-scienceKeywords-keyword',
         inputId: '#input-sciencekeyword',
         expectedName: 'gcmdScienceKeywords',
-        modalButton: '#button-sciencekeyword-open',
+        modalButton: '#button-science_keywords-open',
         modalTarget: '#modal-sciencekeyword',
       },
       {
         name: 'GCMD Platforms',
-        target: '#collapsePlatforms',
-        buttonSelector: 'button[data-bs-target="#collapsePlatforms"]',
+        collapseId: 'collapse-platforms',
         expanded: 'false',
         helpId: 'help-gcmd-platforms-keyword',
-        inputId: '#input-Platforms',
+        inputId: '#input-platforms',
         expectedName: 'platforms',
-        modalButton: '#platformKeywordsThesaurus',
-        modalTarget: '#modal-Platforms',
+        modalButton: '#button-platforms-open',
+        modalTarget: '#modal-platforms',
       },
       {
         name: 'GCMD Instruments',
-        target: '#collapseInstruments',
-        buttonSelector: 'button[data-bs-target="#collapseInstruments"]',
+        collapseId: 'collapse-instruments',
         expanded: 'false',
         helpId: 'help-gcmd-instruments-keyword',
-        inputId: '#input-Instruments',
+        inputId: '#input-instruments',
         expectedName: 'instruments',
-        modalButton: '#openInstrumentsThesaurus',
+        modalButton: '#button-instruments-open',
         modalTarget: '#modal-instruments',
       },
     ] as const;
 
     for (const config of sectionConfigs) {
-      const button = page.locator(config.buttonSelector);
-      await expect(button).toHaveAttribute('aria-controls', config.target.slice(1));
+      const button = page.locator(`button[data-bs-target="#${config.collapseId}"]`);
+      await expect(button).toHaveAttribute('aria-controls', config.collapseId);
       await expect(button).toHaveAttribute('aria-expanded', config.expanded);
       await expect(button).toHaveText(config.name);
 
-      const helpIcon = page.locator(`${config.target} i.bi-question-circle-fill`);
+      const helpIcon = page.locator(`#${config.collapseId} i.bi-question-circle-fill`);
       await expect(helpIcon).toHaveAttribute('data-help-section-id', config.helpId);
 
       const input = page.locator(config.inputId);
@@ -217,12 +291,39 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
 
       const modalButton = page.locator(config.modalButton);
       await expect(modalButton).toHaveAttribute('data-bs-target', config.modalTarget);
-      await expect(modalButton).toHaveAttribute('aria-label', 'Thesaurus öffnen');
     }
   });
 
+  test('populates Tagify autocomplete when input is focused without opening modal first', async ({ page }) => {
+    // Verify the modal has NOT been opened yet
+    const scienceModal = page.locator('#modal-sciencekeyword');
+    await expect(scienceModal).toBeHidden();
+
+    // Click on the Tagify input to trigger focus-based lazy loading
+    const tagifyInput = page.locator('#collapse-science_keywords .tagify__input');
+    await tagifyInput.click();
+
+    // Wait for the API call to complete and whitelist to be populated
+    await page.waitForFunction(() => {
+      const input = document.getElementById('input-sciencekeyword') as any;
+      return input?._tagify?.settings?.whitelist?.length > 0;
+    }, { timeout: 10000 });
+
+    // Type enough characters to trigger the dropdown (dropdown.enabled: 3)
+    await tagifyInput.pressSequentially('AQU', { delay: 100 });
+
+    // Verify the autocomplete dropdown appears with matching suggestions
+    const dropdown = page.locator('.tagify__dropdown');
+    await expect(dropdown).toBeVisible({ timeout: 5000 });
+    const suggestion = dropdown.locator('.tagify__dropdown__item');
+    await expect(suggestion.first()).toContainText('AQUATIC');
+
+    // Verify the modal was never opened
+    await expect(scienceModal).toBeHidden();
+  });
+
   test('synchronises science keyword selections between tree, summary list, and Tagify input', async ({ page }) => {
-    await page.locator('#button-sciencekeyword-open').click();
+    await page.locator('#button-science_keywords-open').click();
     const scienceModal = page.locator('#modal-sciencekeyword');
     await expect(scienceModal).toBeVisible();
 
@@ -251,42 +352,42 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
       tree.select_node(match.id);
     }, SCIENCE_PATH);
 
-    const selectedItems = page.locator('#selected-keywords-gcmd li');
+    const selectedItems = page.locator('#selected-keywords-sciencekeyword li');
     await expect(selectedItems).toHaveCount(1);
     await expect(selectedItems.first()).toContainText(SCIENCE_PATH);
 
-    const scienceTags = page.locator('#thesaurusKeywordsGroup #collapseScienceKeywords .tagify__tag');
+    const scienceTags = page.locator('#thesaurusKeywordsGroup #collapse-science_keywords .tagify__tag');
     await expect(scienceTags).toHaveCount(1);
     await expect(scienceTags.first()).toContainText('AQUACULTURE');
 
     await selectedItems.first().locator('button').click();
-    await expect(page.locator('#selected-keywords-gcmd li')).toHaveCount(0);
+    await expect(page.locator('#selected-keywords-sciencekeyword li')).toHaveCount(0);
     await expect(scienceTags).toHaveCount(0);
     await expect(page.locator('#jstree-sciencekeyword .jstree-clicked')).toHaveCount(0);
   });
 
-  test('supports searching, keyboard access, and persistence across GCMD thesauri modals', async ({ page }) => {
-    const platformsButton = page.locator('button[data-bs-target="#collapsePlatforms"]');
+  test('supports searching, keyboard access, and persistence across thesauri modals', async ({ page }) => {
+    const platformsButton = page.locator('button[data-bs-target="#collapse-platforms"]');
     await platformsButton.press(' ');
     await expect(platformsButton).toHaveAttribute('aria-expanded', 'true');
 
-    const openPlatformsModal = page.locator('#platformKeywordsThesaurus');
+    const openPlatformsModal = page.locator('#button-platforms-open');
     await openPlatformsModal.focus();
     await openPlatformsModal.press('Enter');
 
-    const platformsModal = page.locator('#modal-Platforms');
+    const platformsModal = page.locator('#modal-platforms');
     await expect(platformsModal).toBeVisible();
 
     await page.waitForFunction(() => {
-      const tree = (window as any).jQuery?.('#jstree-Platforms').jstree(true);
+      const tree = (window as any).jQuery?.('#jstree-platforms').jstree(true);
       return Boolean(tree && tree.get_json('#', { flat: true }).length);
     });
 
-    const searchInput = page.locator('#input-Platforms-thesaurussearch');
-    await expect(searchInput).toHaveAttribute('aria-label', 'Search for keywords');
+    const searchInput = page.locator('#input-platforms-thesaurussearch');
+    await expect(searchInput).toHaveAttribute('aria-label', 'Search for keywords...');
     await searchInput.fill('BALLOONS');
 
-    const highlighted = page.locator('#jstree-Platforms .jstree-search');
+    const highlighted = page.locator('#jstree-platforms .jstree-search');
     await expect(highlighted).not.toHaveCount(0);
     const uppercaseResult = highlighted.filter({ hasText: 'BALLOONS' });
     await expect(uppercaseResult).not.toHaveCount(0);
@@ -294,15 +395,15 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
     await searchInput.press('Enter');
     await expect(platformsModal).toBeVisible();
 
-    await page.waitForFunction(() => document.querySelectorAll('#jstree-Platforms .jstree-search').length > 0);
+    await page.waitForFunction(() => document.querySelectorAll('#jstree-platforms .jstree-search').length > 0);
 
     await page.evaluate(() => {
-      const tree = (window as any).jQuery?.('#jstree-Platforms').jstree(true);
+      const tree = (window as any).jQuery?.('#jstree-platforms').jstree(true);
       tree?.open_all();
     });
 
     await page.evaluate((targetPath) => {
-      const tree = (window as any).jQuery?.('#jstree-Platforms').jstree(true);
+      const tree = (window as any).jQuery?.('#jstree-platforms').jstree(true);
       if (!tree) {
         throw new Error('Platforms tree is not ready');
       }
@@ -316,25 +417,25 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
       tree.select_node(match.id);
     }, PLATFORMS_PATH);
 
-    const selectedNode = page.locator('#jstree-Platforms .jstree-clicked');
+    const selectedNode = page.locator('#jstree-platforms .jstree-clicked');
     await expect(selectedNode).toHaveText(/BALLOONS/);
 
-    const selectedPlatforms = page.locator('#selected-keywords-Platforms-gcmd li');
+    const selectedPlatforms = page.locator('#selected-keywords-platforms li');
     await expect(selectedPlatforms).toHaveCount(1);
     await expect(selectedPlatforms.first()).toContainText('BALLOONS');
 
     await platformsModal.locator('.modal-footer button.btn-primary').click();
     await expect(platformsModal).toBeHidden();
 
-    const platformTags = page.locator('#collapsePlatforms .tagify__tag');
+    const platformTags = page.locator('#collapse-platforms .tagify__tag');
     await expect(platformTags).toHaveCount(1);
-    await expect(page.locator('#input-Platforms')).toHaveValue(/BALLOONS/);
+    await expect(page.locator('#input-platforms')).toHaveValue(/BALLOONS/);
 
-    const instrumentsButton = page.locator('button[data-bs-target="#collapseInstruments"]');
+    const instrumentsButton = page.locator('button[data-bs-target="#collapse-instruments"]');
     await instrumentsButton.press('Enter');
     await expect(instrumentsButton).toHaveAttribute('aria-expanded', 'true');
 
-    const instrumentsModalButton = page.locator('#openInstrumentsThesaurus');
+    const instrumentsModalButton = page.locator('#button-instruments-open');
     await instrumentsModalButton.click();
     const instrumentsModal = page.locator('#modal-instruments');
     await expect(instrumentsModal).toBeVisible();
@@ -353,7 +454,7 @@ test.describe('GCMD Thesauri Keywords Form Group', () => {
   test('updates Tagify placeholders when switching languages', async ({ page }) => {
     const getPlaceholders = async () => {
       return page.evaluate(() => {
-        const ids = ['#input-sciencekeyword', '#input-Platforms', '#input-Instruments'];
+        const ids = ['#input-sciencekeyword', '#input-platforms', '#input-instruments'];
         return ids.map((selector) => {
           const element = document.querySelector(selector) as any;
           const tagifyInput = element?._tagify;

@@ -26,6 +26,8 @@ function saveRelatedWork($connection, $postData, $resource_id)
         return true; // No data provided is valid
     }
 
+    $action = $postData['action'] ?? 'save_and_download';
+
     $allSuccessful = true;
     $len = count($postData['rIdentifier']);
 
@@ -36,32 +38,65 @@ function saveRelatedWork($connection, $postData, $resource_id)
             'identifierType' => $postData['rIdentifierType'][$i] ?? ''
         ];
 
-        // Validate dependencies for this entry
-        if (!validateRelatedWorkDependencies($entry)) {
-            error_log('Related Work entry validation failed: ' . json_encode($entry));
-            $allSuccessful = false;
-            continue;
-        }
-
         // Skip if no data provided for this entry
-        if (empty($entry['identifier']) && empty($entry['relation']) && empty($entry['identifierType'])) {
+        if (
+            $entry['identifier'] === '' &&
+            $entry['relation'] === '' &&
+            $entry['identifierType'] === ''
+        ) {
             continue;
         }
 
-        $relation_id = getRelationId($connection, $entry['relation']);
-        $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
+        // Skip if required fields are missing
+        if ($entry['identifier'] === '' || $entry['relation'] === '') {
+            continue;
+        }
 
-        if ($relation_id !== null && $identifier_type_id !== null) {
-            $related_work_id = insertRelatedWork($connection, $entry['identifier'], $relation_id, $identifier_type_id);
-            if ($related_work_id) {
-                linkResourceToRelatedWork($connection, $resource_id, $related_work_id);
+        if ($action === 'submit') {
+            if (!validateRelatedWorkDependencies($entry)) {
+                error_log('Related Work entry validation failed: ' . json_encode($entry));
+                $allSuccessful = false;
+                continue;
+            }
+
+            $relation_id = getRelationId($connection, $entry['relation']);
+            $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
+
+            if ($relation_id === null || $identifier_type_id === null) {
+                error_log('Failed to retrieve IDs for Related Work entry : ' . json_encode($entry));
+                $allSuccessful = false;
+                continue;
+            }
+
+        } else {
+            if ($entry['relation'] === '' || $entry['relation'] === null) {
+                $relation_id = null;
             } else {
-                error_log('Failed to link resource to Related Work for entry: ' . json_encode($entry));
+                $relation_id = getRelationId($connection, $entry['relation']);
+            }
+
+            if ($entry['identifierType'] === '' || $entry['identifierType'] === null) {
+                $identifier_type_id = null;
+            } else {
+                $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
+            }
+
+        }
+
+        $related_work_id = insertRelatedWork(
+            $connection,
+            $entry['identifier'],
+            $relation_id,
+            $identifier_type_id
+        );
+
+        if ($related_work_id) {
+            linkResourceToRelatedWork($connection, $resource_id, $related_work_id);
+        } else {
+            error_log('Failed to link resource to Related Work for entry: ' . json_encode($entry));
+            if ($action === 'submit') {
                 $allSuccessful = false;
             }
-        } else {
-            error_log('Failed to retrieve IDs for Related Work entry: ' . json_encode($entry));
-            $allSuccessful = false;
         }
     }
 

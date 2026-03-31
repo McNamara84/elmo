@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS } from '../utils';
+import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS } from '../../utils';
 
 test.describe('Originating Laboratory', () => {
     test.beforeEach(async ({ page }) => {
@@ -79,7 +79,6 @@ test.describe('Originating Laboratory', () => {
 
   test('Help button displays Originating Laboratory help modal', async ({ page }) => {
     await enableHelp(page);
-    await page.waitForTimeout(500);
 
     // Open help for originating laboratory
     await page.locator('[data-help-section-id="help-originatinglaboratory-fg"]').click();

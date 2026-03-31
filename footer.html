@@ -54,17 +54,28 @@
 <!-- Feature Toggles for JavaScript - enables conditional loading of resources -->
 <script>
 window.ELMO_FEATURES = {
-    showGcmdThesauri: <?php echo json_encode($showGcmdThesauri ?? true); ?>,
+    showThesauri: <?php echo json_encode($showThesauri ?? true); ?>,
     showMslVocabs: <?php echo json_encode($showMslVocabs ?? false); ?>,
+    showMslDefaultFreeKeywords: <?php echo json_encode($showMslDefaultFreeKeywords ?? false); ?>,
     showMslLabs: <?php echo json_encode($showMslLabs ?? false); ?>,
     showFreeKeywords: <?php echo json_encode($showFreeKeywords ?? true); ?>,
     showContributorPersons: <?php echo json_encode($showContributorPersons ?? true); ?>,
     showContributorInstitutions: <?php echo json_encode($showContributorInstitutions ?? true); ?>,
     showGGMsProperties: <?php echo json_encode($showGGMsProperties ?? false); ?>,
     showSpatialTemporalCoverage: <?php echo json_encode($showSpatialTemporalCoverage ?? true); ?>,
+    showUsedInstruments: <?php echo json_encode($showUsedInstruments ?? false); ?>,
     showRelatedWork: <?php echo json_encode($showRelatedWork ?? true); ?>,
-    showFundingReference: <?php echo json_encode($showFundingReference ?? true); ?>
+    showFundingReference: <?php echo json_encode($showFundingReference ?? true); ?>,
+    funderPidMode: <?php echo json_encode($funderPidMode ?? 'CFID'); ?>,
+    dataUploadUrl: <?php echo json_encode($dataUploadUrl ?? ''); ?>,
+    xmlSubmitAddress: <?php echo json_encode($xmlSubmitAddress ?? 'datapub@gfz.de'); ?>
 };
+</script>
+
+<!-- Expose "isNewRecord" so JS can apply behavior only for new records -->
+<script>
+  window.elmo = window.elmo || {};
+  window.elmo.isNewRecord = <?php echo !empty($isNewRecord) && $isNewRecord ? 'true' : 'false'; ?>;
 </script>
 
 <!-- jQuery -->
@@ -77,7 +88,9 @@ window.ELMO_FEATURES = {
 <!-- Language switch -->
 <script src="js/language.js"></script>
 <!-- Thesauri laden -->
-<script src="js/thesauri.js"></script>
+<script type="module" src="js/thesauri.js"></script>
+<!-- Loading Description Types dynamically -->
+<script src="js/descriptionTypes.js"></script>
 <!-- Validierungen laden -->
 <script type="module" src="js/validation.js"></script>
 <!-- autocomplete laden -->
@@ -90,6 +103,8 @@ window.ELMO_FEATURES = {
 <script src="js/originatingLaboratories.js"></script>
 <!-- JS-Datei für die Tags einbinden -->
 <script src="js/freekeywordTags.js"></script>
+<!-- JS-Datei für Used Instruments Tagify einbinden -->
+<script src="js/usedInstruments.js"></script>
 <!-- affiliations laden -->
 <script src="js/affiliations.js"></script>
 <!-- Darkmode-Funktionen eingebunden -->

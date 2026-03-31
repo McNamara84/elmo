@@ -155,17 +155,22 @@ $(document).ready(function () {
     $('#button-form-submit').on('click', function (e) {
       resetSubmitOnlyFields();
 
+      // Apply specific rules
+      validateFundingReferenceRequirements();
+      validateRelatedWorkRequirements();
+      validateSpatialTemporalCoverageRequirements();
+      validateContributorOrganisationRequirements();
+      validateContributorPersonRequirements();
+
       form.querySelectorAll('.js-required-on-submit').forEach(el => {
         el.setAttribute('required', 'required');
       });
 
-      // Let browser validate
-      if (!form.checkValidity()) {
-        e.preventDefault();
-        e.stopPropagation();
-        form.classList.add('was-validated');
-      }
-
+      // Validation is handled by submitHandler.handleSubmit() in validation.js.
+      // The form has novalidate, so no native browser validation occurs.
+      // Do NOT call e.preventDefault() here – the submit event must fire
+      // so that validation.js can route it to handleSubmit(), which shows
+      // the validation-failed modal when fields are invalid.
     });
   }
 });

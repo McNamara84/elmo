@@ -33,8 +33,14 @@ $apiKeyTimezone = 'your_timezone_api_key';
 // ERNIE Integration (External Vocabulary Service)
 $ernieUrl = getenv('ERNIE_URL') ?: '';
 $ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
-// Cache TTL for ERNIE Resource Types in seconds (default: 6 hours)
-$ernieResourceTypesCacheTtl = 21600;
+// Cache TTL for all ERNIE data in seconds (default: 6 hours)
+$ernieCacheTtl = 21600;
+
+// Funder PID mode: 'CFID' = Crossref Funder ID (default), 'ROR' = ROR ID
+$funderPidMode = getenv('FUNDER_PID') ?: 'CFID';
+
+// URL for primary data upload (shown after successful submit)
+$dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
 
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
 // maximale Anzahl der eingebbaren Titel
@@ -47,8 +53,8 @@ $showMslLogo = false;
 $showContributorPersons = true;
 // Show Contributor Institutios form group
 $showContributorInstitutions = true;
-// Show GCMD Thesauri form group
-$showGcmdThesauri = true;
+// Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
+$showThesauri = true;
 // Show Free Keywords form group
 $showFreeKeywords = true;
 // Show Spatial and Temporal Coverage form group
@@ -72,6 +78,16 @@ $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabular
 $showMslVocabs = false;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+
+// SETTINGS FOR PID4INST INSTRUMENTS
+// Show Used Instruments form group (PID4INST via ERNIE API)
+$showUsedInstruments = false;
+
+$envShowUsedInstruments = getenv('SHOW_USED_INSTRUMENTS');
+
+if ($envShowUsedInstruments !== false) {
+    $showUsedInstruments = filter_var($envShowUsedInstruments, FILTER_VALIDATE_BOOLEAN);
+}
 
 // SETTINGS FOR ICGEM
 // Show ICGEM form groups (GGMs Properties and Characteristics of the model)
