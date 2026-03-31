@@ -567,8 +567,8 @@ function createDatabaseStructure($connection): array
     `Error_Handling_Approach` TEXT NULL,
     `Tide_System` VARCHAR(100) NULL,
     `degree` INT NULL,
-    `radius` FLOAT(9,2) NULL,
-    `earth_gravity_constant` FLOAT NULL,
+    `radius` DOUBLE NULL,
+    `earth_gravity_constant` DOUBLE NULL,
     PRIMARY KEY (`GGM_Properties_id`)
 );",
 
