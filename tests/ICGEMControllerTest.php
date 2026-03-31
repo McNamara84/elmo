@@ -944,27 +944,24 @@ final class ICGEMControllerTest extends TestCase
         $sourceChildren = $sources[2]->children('http://icgem.gfz.de/schema');
         $this->assertEquals('Model', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Reference model input', (string)$sourceChildren->description);
-        $modelDetailChildren = $sourceChildren->modelDetail->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Global Gravitational Model', (string)$modelDetailChildren->description);
-        $this->assertEquals('10.5880/icgem.2024.001', (string)$modelDetailChildren->identifier);
-        $this->assertEquals('DOI', (string)$modelDetailChildren->identifierType);
-        $this->assertEquals('ICGEM_Global_Model_2024', (string)$modelDetailChildren->name);
+        $this->assertEquals('Global Gravitational Model', (string)$sourceChildren->modelDetail);
+        $this->assertEquals('10.5880/icgem.2024.001', (string)$sourceChildren->identifier);
+        $this->assertEquals('DOI', (string)$sourceChildren->identifierType);
+        $this->assertEquals('ICGEM_Global_Model_2024', (string)$sourceChildren->name);
 
         // Fourth source (Terrain detail without compensation depth)
         $sourceChildren = $sources[3]->children('http://icgem.gfz.de/schema');
         $this->assertEquals('Elevation/Terrain', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Topography input', (string)$sourceChildren->description);
-        $terrainDetailChildren = $sourceChildren->elevationTerrainDetail->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Bathymetry', (string)$terrainDetailChildren->description);
-        $this->assertSame('', (string)$terrainDetailChildren->compensationDepth);
+        $this->assertEquals('Bathymetry', (string)$sourceChildren->elevationTerrainDetail);
+        $this->assertSame('', (string)$sourceChildren->compensationDepth);
 
         // Fifth source (Terrain detail with compensation depth)
         $sourceChildren = $sources[4]->children('http://icgem.gfz.de/schema');
         $this->assertEquals('Elevation/Terrain', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Isostasy input', (string)$sourceChildren->description);
-        $terrainDetailChildren = $sourceChildren->elevationTerrainDetail->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Isostasy', (string)$terrainDetailChildren->description);
-        $this->assertEquals('1000', (string)$terrainDetailChildren->compensationDepth);
+        $this->assertEquals('Isostasy', (string)$sourceChildren->elevationTerrainDetail);
+        $this->assertEquals('1000', (string)$sourceChildren->compensationDepth);
     }
 
     /**
