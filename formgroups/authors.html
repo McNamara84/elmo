@@ -16,7 +16,7 @@
             </label>
             <!-- ORCID Input Field -->
             <div class="form-floating flex-grow-1">
-              <input type="text" class="form-control input-with-help input-right-no-round-corners"
+              <input type="text" class="form-control input-right-no-round-corners"
                 id="input-author-orcid" name="orcids[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" maxlength="19" />
               <label for="input-author-orcid" data-translate="general.ORCID">ORCID</label>
               <div class="invalid-feedback" data-translate="general.orcidInvalid">
@@ -24,7 +24,7 @@
               </div>
             </div>
             <!-- ORCID Search Button -->
-            <button type="button" class="btn btn-outline-secondary orcid-search-btn input-right-no-round-corners"
+            <button type="button" class="btn btn-outline-secondary orcid-search-btn input-with-help"
               data-bs-toggle="modal" data-bs-target="#modal-orcid-search"
               data-translate-title="orcidSearch.searchButtonTitle" title="Search ORCID by name"
               aria-label="Search ORCID by name">
