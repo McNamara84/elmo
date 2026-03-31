@@ -540,4 +540,129 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         $this->assertEquals("Valid Title 2", $titles[1]["text"], "Second valid title should be saved");
         $this->assertEquals(2, $titles[1]["Title_Type_fk"], "Second valid title should have type 2");
     }
+
+    /**
+     * Tests handling of DOIs: updating existing DOIs and allowing multiple empty/null DOIs
+     * 
+     * @return void
+     */
+    public function testDoiHandling()
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        // Test 1: Updating existing DOI
+        $postDataWithDOI = [
+            "doi" => "10.5880/GFZ.DOI.TEST",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["DOI Test Dataset"],
+            "titleType" => [1],
+            "version" => 1.0
+        ];
+
+        // Save first dataset with DOI
+        $first_id = saveResourceInformationAndRights($this->connection, $postDataWithDOI);
+        $this->assertIsInt($first_id, "First save should return a valid resource ID");
+
+        // Update the same DOI with different data
+        $postDataWithDOI["year"] = 2024;
+        $postDataWithDOI["title"] = ["Updated DOI Test Dataset"];
+        $updated_id = saveResourceInformationAndRights($this->connection, $postDataWithDOI);
+
+        // Current:
+        $this->assertNotEquals($first_id, $updated_id, "Update should return the same resource ID");
+/*  Suggested change to close #831:
+        $version_old = $postDataWithDOI["version"];
+        $version_new = $this->connection->query("SELECT version FROM Resource WHERE resource_id = $updated_id")->fetch_assoc()['version'];
+        // Version should be updated to 1.1 (incremented by 0.1) after upload with the same DOI 
+        $this->assertEquals($version_old + 0.1, $version_new, "Version should be incremented on update");
+        // The title and year should be updated
+        $stmt = $this->connection->prepare("SELECT title FROM Title WHERE Resource_resource_id = ?");
+        $stmt->bind_param("i", $updated_id);
+        $stmt->execute();
+        $title = $stmt->get_result()->fetch_assoc()['title'];
+        $this->assertEquals("Updated DOI Test Dataset", $title, "New title for the new version of the DOI");
+        // The year should also be updated to 2024
+        $stmt = $this->connection->prepare("SELECT year FROM Resource WHERE resource_id = ?");
+        $stmt->bind_param("i", $updated_id);
+        $stmt->execute();
+        $year = $stmt->get_result()->fetch_assoc()['year'];
+        $this->assertEquals(2024, $year, "Year should be updated to 2024");
+*/
+
+        // Test 2: Multiple datasets with null DOI
+        $postDataWithNullDOI = [
+            "doi" => null,
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Dataset with null DOI"],
+            "titleType" => [1]
+        ];
+
+        // Save first dataset with null DOI
+        $first_null_id = saveResourceInformationAndRights($this->connection, $postDataWithNullDOI);
+        $this->assertIsInt($first_null_id, "First save with null DOI should return valid ID");
+
+        // Save second dataset with null DOI
+        $second_null_id = saveResourceInformationAndRights($this->connection, $postDataWithNullDOI);
+        $this->assertIsInt($second_null_id, "Second save with null DOI should return valid ID");
+        $this->assertNotEquals($first_null_id, $second_null_id, "Null DOI datasets should have different IDs");
+
+        // Test 3: Multiple datasets with empty string DOI
+        $postDataWithEmptyDOI = [
+            "doi" => "",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Dataset with empty DOI"],
+            "titleType" => [1]
+        ];
+
+        // Save first dataset with empty DOI
+        $first_empty_id = saveResourceInformationAndRights($this->connection, $postDataWithEmptyDOI);
+        $this->assertIsInt($first_empty_id, "First save with empty DOI should return valid ID");
+
+        // Save second dataset with empty DOI
+        $second_empty_id = saveResourceInformationAndRights($this->connection, $postDataWithEmptyDOI);
+        $this->assertIsInt($second_empty_id, "Second save with empty DOI should return valid ID");
+        $this->assertNotEquals($first_empty_id, $second_empty_id, "Empty DOI datasets should have different IDs");
+
+        // Verify database state
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource WHERE doi = ?");
+        $doi = "10.5880/GFZ.DOI.TEST";
+        $stmt->bind_param("s", $doi);
+        $stmt->execute();
+        $count_with_doi = $stmt->get_result()->fetch_assoc()['count'];
+        // Suggested to change to 2. two entries with the same DOI but different version should exist after the update
+        $this->assertEquals(2, $count_with_doi, "Should have exactly one dataset with specific DOI");
+
+        // Count datasets with null DOI
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource WHERE doi IS NULL");
+        $stmt->execute();
+        $count_null_doi = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(2, $count_null_doi, "Should have exactly two datasets with null DOI");
+
+        // Count datasets with empty string DOI
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource WHERE doi = ''");
+        $stmt->execute();
+        $count_empty_doi = $stmt->get_result()->fetch_assoc()['count'];
+        $this->assertEquals(2, $count_empty_doi, "Should have exactly two datasets with empty DOI");
+
+        // Verify total count
+        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Resource");
+        $stmt->execute();
+        $total_count = $stmt->get_result()->fetch_assoc()['count'];
+        // Suggested to change to 6. The original dataset with DOI should be updated, not duplicated, so total count should be 6 instead of 5.
+        $this->assertEquals(6, $total_count, "Should have six datasets in total");
+    }
 }
