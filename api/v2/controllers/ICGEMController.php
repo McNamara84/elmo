@@ -396,10 +396,15 @@ class ICGEMController extends DatasetController
                         break;
                     
                     case 'T': // Topographic/Elevation Terrain
-                        if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
+                        if (!empty($dataSource['details']) || !empty($dataSource['T_Isostasy_compensation_depth'])) {
                             $elevTerrainElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':elevationTerrainDetail', null, self::ICGEM_NAMESPACE_URI);
-                            $compDepthElement = $elevTerrainElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', $this->prepare($dataSource['T_Isostasy_compensation_depth'], 'compensationDepth'), self::ICGEM_NAMESPACE_URI);
-                            $compDepthElement->addAttribute('uom', 'm');
+                            if (!empty($dataSource['details'])) {
+                                $elevTerrainElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
+                            }
+                            if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
+                                $compDepthElement = $elevTerrainElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', $this->prepare($dataSource['T_Isostasy_compensation_depth'], 'compensationDepth'), self::ICGEM_NAMESPACE_URI);
+                                $compDepthElement->addAttribute('uom', 'm');
+                            }
                         }
                         break;
                     
