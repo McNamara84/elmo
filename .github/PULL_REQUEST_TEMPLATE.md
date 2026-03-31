@@ -7,23 +7,25 @@
 [Describe the steps needed to test this]
 
 ## Checklist
-#### My code is styled, reviewed and understandable
-- [ ] PHP code is documented using PHPDoc.
-- [ ] JavaScript code is documented using JSDoc.
 
-#### My code is documented
-- [ ] ELMO Guide (`./doc/help.html`) has been updated.
-- [ ] README has been updated.
-- [ ] API documentation (`./api/v2/docs`) has been updated.
-- [ ] changelog (`./doc/changelog.html`) has been updated.
+### Code Quality
+- [ ] My code follows the style guide.
+- [ ] I have self-reviewed my code.
+- [ ] I added comments for hard-to-understand code.
+- [ ] My changes do not create new warnings in the browser console.
 
-#### My code is productive  
-This PR is covered with the tests. Tests are added first for code that runs often, has a high failure impact, or is difficult to validate through manual testing.
-- [ ] PHPUnit
-- [ ] JS
-- [ ] Playwright
-- [ ] My changes do not create new warnings in the test browser console.
-- [ ] My code meets accessibility guidelines.
+### Documentation
+- [ ] If applicable, PHP code is documented using PHPDoc.
+- [ ] If applicable, JavaScript code is documented using JSDoc.
+- [ ] If needed, the ELMO Guide ('./doc/help.html') has been updated.
+- [ ] If needed, the README has been updated.
+- [ ] If needed, the API documentation ('./api/v2/docs') has been updated.
+- [ ] If a new feature was added or a bug fixed, the changelog ('./doc/changelog.html') has been updated.
+
+### Testing
+- [ ] If needed, Playwright tests have been updated or added.
+- [ ] If needed, unit tests have been updated or added.
+- [ ] If needed, jest tests have been updated or added.
 
 
 ## Known Issues
