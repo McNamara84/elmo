@@ -221,6 +221,10 @@ function processCreators(xmlDoc, resolver) {
   // Select all <creator> elements inside <creators> using namespace resolver
   const creatorNodes = xmlDoc.evaluate(".//ns:creators/ns:creator", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
+  // Separate counter for person authors to avoid index mismatch when creators
+  // contain a mix of persons and institutions (fixes #739)
+  let personIndex = 0;
+
   for (let i = 0; i < creatorNodes.snapshotLength; i++) {
     const creatorNode = creatorNodes.snapshotItem(i);
 
@@ -254,14 +258,15 @@ function processCreators(xmlDoc, resolver) {
     // If givenName or familyName exists, we treat this as a personal author
     if (givenName || familyName) {
       let $row;
-      if (i === 0) {
-        // For the first creator, use the first existing row in the form
+      if (personIndex === 0) {
+        // For the first person creator, use the first existing row in the form
         $row = $("div[data-creator-row]").eq(0);
       } else {
-        // For subsequent creators, simulate click on "add author" button to create new row
+        // For subsequent person creators, simulate click on "add author" button to create new row
         $("#button-author-add").click();
-        $row = $("div[data-creator-row]").eq(i);
+        $row = $("div[data-creator-row]").eq(personIndex);
       }
+      personIndex++;
 
       // Populate the personal author fields
       $row.find('input[name="orcids[]"]').val(orcid);

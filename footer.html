@@ -66,6 +66,7 @@ window.ELMO_FEATURES = {
     showUsedInstruments: <?php echo json_encode($showUsedInstruments ?? false); ?>,
     showRelatedWork: <?php echo json_encode($showRelatedWork ?? true); ?>,
     showFundingReference: <?php echo json_encode($showFundingReference ?? true); ?>,
+    funderPidMode: <?php echo json_encode($funderPidMode ?? 'CFID'); ?>,
     dataUploadUrl: <?php echo json_encode($dataUploadUrl ?? ''); ?>,
     xmlSubmitAddress: <?php echo json_encode($xmlSubmitAddress ?? 'datapub@gfz.de'); ?>
 };
@@ -87,7 +88,7 @@ window.ELMO_FEATURES = {
 <!-- Language switch -->
 <script src="js/language.js"></script>
 <!-- Thesauri laden -->
-<script src="js/thesauri.js"></script>
+<script type="module" src="js/thesauri.js"></script>
 <!-- Loading Description Types dynamically -->
 <script src="js/descriptionTypes.js"></script>
 <!-- Validierungen laden -->

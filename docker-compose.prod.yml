@@ -42,9 +42,12 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for Standard ELMO (all form groups enabled)
       SHOW_MSL_LABS: "false"
       SHOW_MSL_VOCABS: "false"
+      SHOW_MSL_DEFAULT_FREE_KEYWORDS: "false"
+      SHOW_MSL_LOGO: "false"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_USED_INSTRUMENTS: "true"
       SHOW_THESAURI: "true"
@@ -92,9 +95,11 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_LABS: "true"
       SHOW_MSL_VOCABS: "true"
+      SHOW_MSL_DEFAULT_FREE_KEYWORDS: "true"
       SHOW_MSL_LOGO: "true"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_USED_INSTRUMENTS: "false"

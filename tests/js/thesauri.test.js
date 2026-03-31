@@ -60,6 +60,17 @@ const mockVocabularyData = {
   ]
 };
 
+function transformThesauriScript(source) {
+  let script = source;
+  script = script.replace('export function filterTreeByRoot', 'function filterTreeByRoot');
+  script = script.replace('export const THESAURUS_CONFIG =', 'const THESAURUS_CONFIG =');
+  script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
+  script = script.replace('export function cleanupTagifyForInput', 'function cleanupTagifyForInput');
+  script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
+  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, initTagifyForInput };';
+  return script;
+}
+
 describe('thesauri.js', () => {
   let $;
 
@@ -189,7 +200,7 @@ describe('thesauri.js', () => {
     });
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
-    window.eval(script);
+    window.eval(transformThesauriScript(script));
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
@@ -259,6 +270,29 @@ describe('thesauri.js', () => {
     global.translations.keywords.thesaurus.label = 'updated';
     document.dispatchEvent(new Event('translationsLoaded'));
     expect(input._tagify.settings.placeholder).toBe('updated');
+  });
+
+  test('loads thesaurus data when Tagify input receives focus without opening modal', () => {
+    // Before any interaction, jsTree should NOT be initialized
+    const treeBefore = $('#jstree-sciencekeyword').jstree(true);
+    expect(treeBefore).toBeUndefined();
+
+    // Tagify whitelist should be empty
+    const input = document.getElementById('input-sciencekeyword');
+    expect(input._tagify.settings.whitelist).toHaveLength(0);
+    expect(input._tagify.settings.enforceWhitelist).toBe(false);
+
+    // Simulate focus on the Tagify wrapper / input (capture phase)
+    const tagifyWrapper = input.closest('.tagify') || input.parentElement.querySelector('.tagify') || input;
+    tagifyWrapper.dispatchEvent(new Event('focus', { bubbles: false }));
+
+    // After focus trigger, the whitelist should be populated
+    expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
+    expect(input._tagify.settings.enforceWhitelist).toBe(true);
+
+    // jsTree should also be initialized
+    const treeAfter = $('#jstree-sciencekeyword').jstree(true);
+    expect(treeAfter).toBeDefined();
   });
 
   test('loads thesaurus data only when modal is opened (lazy loading)', () => {
@@ -331,7 +365,7 @@ describe('thesauri.js', () => {
     $.getJSON.mockClear();
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
-    window.eval(script);
+    window.eval(transformThesauriScript(script));
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
@@ -379,7 +413,7 @@ describe('thesauri.js', () => {
     });
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
-    window.eval(script);
+    window.eval(transformThesauriScript(script));
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));

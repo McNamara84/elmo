@@ -146,6 +146,16 @@ export async function injectScript(page: Page, filePath: string): Promise<void> 
 }
 
 /**
+ * Inject an ES module script into the page by loading content from filesystem or remote.
+ * @param page Playwright page object
+ * @param filePath Relative path from REPO_ROOT
+ */
+export async function injectModuleScript(page: Page, filePath: string): Promise<void> {
+  const content = await loadFileContent(filePath);
+  await page.addScriptTag({ content, type: 'module' });
+}
+
+/**
  * Inject a stylesheet into the page by loading content from filesystem or remote
  * @param page Playwright page object
  * @param filePath Relative path from REPO_ROOT (e.g., 'node_modules/bootstrap/dist/css/bootstrap.min.css')

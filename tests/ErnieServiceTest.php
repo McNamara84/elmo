@@ -477,12 +477,14 @@ final class ErnieServiceTest extends TestCase
         $result = $service->getResourceTypesWithCache();
 
         $this->assertIsArray($result);
-        // Should return hardcoded fallback (Award, Dataset, Other, Project)
-        $this->assertCount(4, $result);
+        // Should return hardcoded fallback including new 4.7 types
+        $this->assertCount(6, $result);
         $this->assertSame('Award', $result[0]['name']);
         $this->assertSame('Dataset', $result[1]['name']);
-        $this->assertSame('Other', $result[2]['name']);
-        $this->assertSame('Project', $result[3]['name']);
+        $this->assertSame('Poster', $result[2]['name']);
+        $this->assertSame('Presentation', $result[3]['name']);
+        $this->assertSame('Other', $result[4]['name']);
+        $this->assertSame('Project', $result[5]['name']);
     }
 
     /**
@@ -727,7 +729,7 @@ final class ErnieServiceTest extends TestCase
         $service = $this->createTestableService('', '');
         $result = $service->getResourceTypesWithCache();
 
-        $this->assertCount(4, $result);
+        $this->assertCount(6, $result);
         
         // Verify Award
         $this->assertSame(2, $result[0]['id']);
@@ -738,16 +740,26 @@ final class ErnieServiceTest extends TestCase
         $this->assertSame(10, $result[1]['id']);
         $this->assertSame('Dataset', $result[1]['name']);
         $this->assertNotEmpty($result[1]['description']);
+
+        // Verify Poster
+        $this->assertSame(22, $result[2]['id']);
+        $this->assertSame('Poster', $result[2]['name']);
+        $this->assertNotEmpty($result[2]['description']);
+
+        // Verify Presentation
+        $this->assertSame(24, $result[3]['id']);
+        $this->assertSame('Presentation', $result[3]['name']);
+        $this->assertNotEmpty($result[3]['description']);
         
         // Verify Other
-        $this->assertSame(21, $result[2]['id']);
-        $this->assertSame('Other', $result[2]['name']);
-        $this->assertNotEmpty($result[2]['description']);
+        $this->assertSame(21, $result[4]['id']);
+        $this->assertSame('Other', $result[4]['name']);
+        $this->assertNotEmpty($result[4]['description']);
         
         // Verify Project
-        $this->assertSame(23, $result[3]['id']);
-        $this->assertSame('Project', $result[3]['name']);
-        $this->assertNotEmpty($result[3]['description']);
+        $this->assertSame(23, $result[5]['id']);
+        $this->assertSame('Project', $result[5]['name']);
+        $this->assertNotEmpty($result[5]['description']);
     }
 
     /**
@@ -760,11 +772,13 @@ final class ErnieServiceTest extends TestCase
         $result = $service->getResourceTypesWithCache();
 
         // Should use hardcoded fallback
-        $this->assertCount(4, $result);
+        $this->assertCount(6, $result);
         $this->assertSame('Award', $result[0]['name']);
         $this->assertSame('Dataset', $result[1]['name']);
-        $this->assertSame('Other', $result[2]['name']);
-        $this->assertSame('Project', $result[3]['name']);
+        $this->assertSame('Poster', $result[2]['name']);
+        $this->assertSame('Presentation', $result[3]['name']);
+        $this->assertSame('Other', $result[4]['name']);
+        $this->assertSame('Project', $result[5]['name']);
     }
 
     // ==================== Title Types: getTitleTypesCacheStatus() Tests ====================
@@ -2624,11 +2638,12 @@ final class ErnieServiceTest extends TestCase
         $result = $service->getRelationTypesWithCache();
 
         $this->assertIsArray($result);
-        $this->assertCount(4, $result);
+            $this->assertCount(5, $result);
         $this->assertSame('IsCitedBy', $result[0]['name']);
         $this->assertSame('Cites', $result[1]['name']);
         $this->assertSame('IsSupplementTo', $result[2]['name']);
         $this->assertSame('IsSupplementedBy', $result[3]['name']);
+            $this->assertSame('Other', $result[4]['name']);
     }
 
     /**
@@ -2679,9 +2694,9 @@ final class ErnieServiceTest extends TestCase
         $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
         $result = $service->getRelationTypesWithCache();
 
-        $this->assertCount(4, $result);
+        $this->assertCount(5, $result);
         $this->assertSame('IsCitedBy', $result[0]['name']);
-        $this->assertSame('IsSupplementedBy', $result[3]['name']);
+        $this->assertSame('Other', $result[4]['name']);
     }
 
     /**
@@ -2841,11 +2856,13 @@ final class ErnieServiceTest extends TestCase
         $result = $service->getIdentifierTypesWithCache();
 
         $this->assertIsArray($result);
-        $this->assertCount(4, $result);
+        $this->assertCount(6, $result);
         $this->assertSame('DOI', $result[0]['name']);
         $this->assertSame('URL', $result[1]['name']);
         $this->assertSame('Handle', $result[2]['name']);
         $this->assertSame('URN', $result[3]['name']);
+        $this->assertSame('RAiD', $result[4]['name']);
+        $this->assertSame('SWHID', $result[5]['name']);
     }
 
     /**
@@ -2896,9 +2913,9 @@ final class ErnieServiceTest extends TestCase
         $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
         $result = $service->getIdentifierTypesWithCache();
 
-        $this->assertCount(4, $result);
+        $this->assertCount(6, $result);
         $this->assertSame('DOI', $result[0]['name']);
-        $this->assertSame('URN', $result[3]['name']);
+        $this->assertSame('SWHID', $result[5]['name']);
     }
 
     /**

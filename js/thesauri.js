@@ -1,4 +1,409 @@
 /**
+ * Recursively searches a jsTree data array for a specific node ID.
+ * Returns the node (and its children) if found, otherwise returns the original data.
+ */
+export function filterTreeByRoot(nodes, rootId) {
+    if (!rootId || !nodes) return nodes;
+
+    function findNodeById(nodesArray, id) {
+        for (let i = 0; i < nodesArray.length; i++) {
+            if (nodesArray[i].id === id) {
+                return nodesArray[i];
+            }
+            if (nodesArray[i].children && nodesArray[i].children.length > 0) {
+                let foundNode = findNodeById(nodesArray[i].children, id);
+                if (foundNode) {
+                    return foundNode;
+                }
+            }
+        }
+        return null;
+    }
+
+    const rootNode = findNodeById(nodes, rootId);
+    // jsTree expects an array of root nodes, so we wrap the result in an array
+    return rootNode ? [rootNode] : nodes; 
+}
+export const THESAURUS_CONFIG = {
+    science_keywords: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
+        inputName: 'gcmdScienceKeywords',
+        inputId: 'input-sciencekeyword',
+        modalId: 'modal-sciencekeyword',
+        jsTreeId: 'jstree-sciencekeyword',
+        searchInputId: 'input-sciencekeyword-thesaurussearch',
+        selectedListId: 'selected-keywords-sciencekeyword',
+        helpSectionId: 'help-scienceKeywords-keyword',
+        stateKey: 'input-sciencekeyword'
+    },
+    platforms: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
+        inputName: 'platforms',
+        inputId: 'input-platforms',
+        modalId: 'modal-platforms',
+        jsTreeId: 'jstree-platforms',
+        searchInputId: 'input-platforms-thesaurussearch',
+        selectedListId: 'selected-keywords-platforms',
+        helpSectionId: 'help-gcmd-platforms-keyword',
+        stateKey: 'input-platforms'
+    },
+    instruments: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-instruments',
+        inputName: 'instruments',
+        inputId: 'input-instruments',
+        modalId: 'modal-instruments',
+        jsTreeId: 'jstree-instruments',
+        searchInputId: 'input-instruments-thesaurussearch',
+        selectedListId: 'selected-keywords-instruments',
+        helpSectionId: 'help-gcmd-instruments-keyword',
+        stateKey: 'input-instruments'
+    },
+    chronostratigraphy: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/chronostrat-timescale',
+        inputName: 'chronostratKeywords',
+        inputId: 'input-chronostratigraphy',
+        modalId: 'modal-chronostratigraphy',
+        jsTreeId: 'jstree-chronostratigraphy',
+        searchInputId: 'input-chronostratigraphy-thesaurussearch',
+        selectedListId: 'selected-keywords-chronostratigraphy',
+        helpSectionId: 'help-chronostratigraphy-keyword',
+        stateKey: 'input-chronostratigraphy'
+    },
+    gemet: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/gemet',
+        inputName: 'gemetKeywords',
+        inputId: 'input-gemet',
+        modalId: 'modal-gemet',
+        jsTreeId: 'jstree-gemet',
+        searchInputId: 'input-gemet-thesaurussearch',
+        selectedListId: 'selected-keywords-gemet',
+        helpSectionId: 'help-gemet-keyword',
+        stateKey: 'input-gemet'
+    },
+    satellitePlatforms: {
+        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
+        rootNodeId: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
+        // Datasource controls are pre-rendered outside the generic thesauri generator, so this dynamic config keeps selectors.
+        modalId: '#modal-platforms-datasource',
+        jsTreeId: '#jstree-platforms-datasource',
+        searchInputId: '#input-platforms-thesaurussearch-ds',
+        selectedListId: 'selected-keywords-platforms-ds',
+        stateKey: 'satellitePlatforms',
+        dynamicOnly: true
+    }
+};
+
+export let currentActiveInput = null;
+
+const loadedConfigs = new Map();
+const sharedState = {};
+let keywordConfigurations = [];
+
+/** Returns the shared state key for a thesaurus config. */
+function getStateKey(config) {
+    return config.stateKey || config.inputId || config.jsTreeId;
+}
+
+/**
+ * Returns the shared thesaurus state bucket for a config, creating it on first use.
+ *
+ * @param {Object} config - Thesaurus configuration for a generic or datasource-backed input.
+ * @returns {{whitelist: Array, selectedPaths: Set<string>, tagify: Object|null, tagifyInstances: Set<Object>, jsTreeIds: Array<string>, isSyncingTree: boolean}} Shared mutable state for the config.
+ */
+function ensureSharedState(config) {
+    const stateKey = getStateKey(config);
+    if (!sharedState[stateKey]) {
+        sharedState[stateKey] = {
+            whitelist: [],
+            selectedPaths: new Set(),
+            tagify: null,
+            tagifyInstances: new Set(),
+            jsTreeIds: [],
+            isSyncingTree: false
+        };
+    }
+    return sharedState[stateKey];
+}
+
+/**
+ * Registers a dynamic-only config in the runtime keyword configuration list.
+ *
+ * @param {string} configKey - Key from THESAURUS_CONFIG.
+ * @returns {Object|undefined} Existing or newly registered config, or undefined when the key is unknown.
+ */
+function ensureConfigRegistered(configKey) {
+    const config = THESAURUS_CONFIG[configKey];
+    if (!config || !config.dynamicOnly) return config;
+
+    const existing = keywordConfigurations.find(function (entry) {
+        return entry.stateKey === config.stateKey;
+    });
+    if (existing) return existing;
+
+    const registeredConfig = {
+        apiEndpoint: config.apiEndpoint,
+        rootNodeId: config.rootNodeId,
+        modalId: config.modalId,
+        jsTreeId: config.jsTreeId,
+        searchInputId: config.searchInputId,
+        selectedKeywordsListId: config.selectedListId,
+        stateKey: config.stateKey,
+        dynamicOnly: true
+    };
+    keywordConfigurations.push(registeredConfig);
+    return registeredConfig;
+}
+
+/**
+ * Clears the current selection of a jsTree instance using the best available API.
+ *
+ * @param {Object} tree - Active jsTree instance.
+ * @returns {void}
+ */
+function clearTreeSelection(tree) {
+    if (!tree) return;
+
+    if (typeof tree.deselect_all === 'function') {
+        tree.deselect_all();
+        return;
+    }
+
+    const selectedNodes = typeof tree.get_selected === 'function' ? tree.get_selected(true) : [];
+    selectedNodes.forEach(function (node) {
+        const nodeId = typeof node === 'string' ? node : node.id;
+        if (nodeId && typeof tree.deselect_node === 'function') {
+            tree.deselect_node(nodeId);
+        }
+    });
+}
+
+/** Returns the Tagify instance currently driving the shared tree state. */
+function getActiveTagifyForState(state) {
+    return currentActiveInput || state.tagify;
+}
+
+/**
+ * Renders the selected-keywords sidebar for the active thesaurus modal.
+ *
+ * @param {string} listId - DOM id of the selected-keywords list element.
+ * @param {{selectedPaths: Set<string>, jsTreeIds: Array<string>, tagify: Object|null}} state - Shared thesaurus state for the current config.
+ * @returns {void}
+ */
+function updateSelectedKeywordsList(listId, state) {
+    var selectedKeywordsList = document.getElementById(listId);
+    if (!selectedKeywordsList) return;
+    selectedKeywordsList.innerHTML = "";
+    Array.from(state.selectedPaths).forEach(function (fullPath) {
+        let listItem = document.createElement("li");
+        listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+        listItem.textContent = fullPath;
+
+        let removeButton = document.createElement("button");
+        removeButton.classList.add("btn", "btn-sm", "btn-danger");
+        removeButton.innerHTML = "&times;";
+        removeButton.onclick = function () {
+            const activeTagify = getActiveTagifyForState(state);
+            if (activeTagify && typeof activeTagify.removeTag === 'function') {
+                activeTagify.removeTag(fullPath);
+            }
+
+            state.jsTreeIds.forEach(function (treeSelector) {
+                const tree = $(treeSelector).jstree(true);
+                if (!tree) return;
+                const node = findNodeByPath(tree, fullPath);
+                if (node) tree.deselect_node(node.id);
+            });
+
+            state.selectedPaths.delete(fullPath);
+            updateSelectedKeywordsList(listId, state);
+        };
+
+        listItem.appendChild(removeButton);
+        selectedKeywordsList.appendChild(listItem);
+    });
+}
+
+/**
+ * Finds a jsTree node by its rendered breadcrumb path.
+ *
+ * @param {Object} jsTreeInstance - Active jsTree instance.
+ * @param {string} path - Full breadcrumb path using ` > ` separators.
+ * @returns {Object|null} Matching jsTree node, or null when no match exists.
+ */
+function findNodeByPath(jsTreeInstance, path) {
+    if (!jsTreeInstance) return null;
+    return jsTreeInstance.get_json("#", { flat: true }).find(function (n) {
+        return jsTreeInstance.get_path(n, " > ") === path;
+    });
+}
+
+/**
+ * Synchronizes the shared jsTree selection to the active Tagify input before a modal opens.
+ *
+ * @param {Object} config - Thesaurus configuration associated with the input.
+ * @param {Object} tagifyInstance - Tagify instance whose values should be reflected in the tree.
+ * @returns {void}
+ */
+function syncTreeSelectionFromTagify(config, tagifyInstance) {
+    if (!tagifyInstance) return;
+
+    const state = ensureSharedState(config);
+    const tagValues = tagifyInstance.value ? tagifyInstance.value.map(function (tag) {
+        return tag.value;
+    }) : [];
+
+    state.selectedPaths = new Set(tagValues);
+    state.isSyncingTree = true;
+
+    state.jsTreeIds.forEach(function (treeSelector) {
+        const tree = $(treeSelector).jstree(true);
+        if (!tree) return;
+
+        // Rebuild the modal tree from the active row's current tags before user interaction.
+        clearTreeSelection(tree);
+        tagValues.forEach(function (value) {
+            const node = findNodeByPath(tree, value);
+            if (node && typeof tree.select_node === 'function') {
+                tree.select_node(node.id);
+            }
+        });
+    });
+
+    state.isSyncingTree = false;
+    updateSelectedKeywordsList(config.selectedListId || config.selectedKeywordsListId, state);
+}
+
+/**
+ * Rebinds the datasource-specific tree button so it activates the correct Tagify instance.
+ *
+ * @param {HTMLInputElement} inputElement - Raw input element enhanced by Tagify.
+ * @param {Object} config - Dynamic thesaurus configuration for the input.
+ * @returns {void}
+ */
+function bindDynamicTreeButton(inputElement, config) {
+    const row = inputElement.closest('.row');
+    if (!row || !config.modalId) return;
+
+    const treeButton = row.querySelector(`.open-thesaurus-tree-btn, [data-bs-target="${config.modalId}"]`);
+    if (!treeButton) return;
+
+    const newTreeButton = treeButton.cloneNode(true);
+    treeButton.parentNode.replaceChild(newTreeButton, treeButton);
+
+    newTreeButton.addEventListener('click', function () {
+        // The datasource modal is shared across rows, so we must mark which Tagify owns the next sync.
+        currentActiveInput = inputElement._tagify;
+        syncTreeSelectionFromTagify(config, inputElement._tagify);
+    });
+}
+
+/**
+ * Removes a Tagify instance from shared thesaurus state when its owning input is destroyed.
+ *
+ * @param {Object} config - Thesaurus configuration for the input.
+ * @param {HTMLInputElement} inputElement - Input element that owns the Tagify instance.
+ * @returns {void}
+ */
+export function cleanupTagifyForInput(inputElement, configKey) {
+    if (!inputElement) return;
+
+    const config = ensureConfigRegistered(configKey) || THESAURUS_CONFIG[configKey];
+    if (!config) return;
+
+    const tagifyInstance = inputElement._tagify;
+    if (!tagifyInstance) return;
+
+    const state = ensureSharedState(config);
+    state.tagifyInstances.delete(tagifyInstance);
+
+    if (state.tagify === tagifyInstance) {
+        state.tagify = null;
+    }
+
+    if (currentActiveInput === tagifyInstance) {
+        currentActiveInput = null;
+    }
+}
+
+// 3. The Function to hook up new inputs
+export function initTagifyForInput(inputElement, configKey) {
+    const config = ensureConfigRegistered(configKey) || THESAURUS_CONFIG[configKey];
+    if (!config) {
+        console.error(`Config for ${configKey} not found.`);
+        return;
+    }
+
+    const state = ensureSharedState(config);
+
+    // Dynamic datasource rows rely on this registration so shared tree updates can see their modal tree.
+    if (config.jsTreeId && !state.jsTreeIds.includes(config.jsTreeId)) {
+        state.jsTreeIds.push(config.jsTreeId);
+    }
+
+    // Initialize Tagify if it hasn't been already
+    if (!inputElement._tagify) {
+        inputElement._tagify = new Tagify(inputElement, {
+            whitelist: state.whitelist,
+            enforceWhitelist: state.whitelist.length > 0,
+            placeholder: translations?.keywords?.thesaurus?.label || 'Thesaurus keywords',
+            dropdown: {
+                maxItems: 50,
+                enabled: 3,
+                closeOnSelect: true,
+                classname: 'thesaurus-tagify',
+            },
+            editTags: false
+        });
+    }
+    state.tagifyInstances.add(inputElement._tagify);
+
+    if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
+        window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
+            placeholder: inputElement._tagify.settings.placeholder
+        });
+    }
+
+    if (!inputElement.dataset.thesaurusEventsBound) {
+        inputElement.dataset.thesaurusEventsBound = 'true';
+
+        inputElement._tagify.on('add', function (e) {
+            if (currentActiveInput !== inputElement._tagify) return;
+
+            const tagText = e.detail?.data?.value;
+            if (!tagText) return;
+
+            state.selectedPaths.add(tagText);
+            state.jsTreeIds.forEach(function (treeSelector) {
+                const tree = $(treeSelector).jstree(true);
+                if (!tree) return;
+                const node = findNodeByPath(tree, tagText);
+                if (node) tree.select_node(node.id);
+            });
+        });
+
+        inputElement._tagify.on('remove', function (e) {
+            if (currentActiveInput !== inputElement._tagify) return;
+
+            const tagText = e.detail?.data?.value;
+            if (!tagText) return;
+
+            state.selectedPaths.delete(tagText);
+            state.jsTreeIds.forEach(function (treeSelector) {
+                const tree = $(treeSelector).jstree(true);
+                if (!tree) return;
+                const node = findNodeByPath(tree, tagText);
+                if (node) tree.deselect_node(node.id);
+            });
+        });
+
+        inputElement._tagify.on('destroy', function () {
+            cleanupTagifyForInput(inputElement, configKey);
+        });
+    }
+
+    bindDynamicTreeButton(inputElement, config);
+}
+/**
  * Initializes thesaurus keyword input fields dynamically based on ERNIE availability.
  *
  * Flow:
@@ -15,66 +420,6 @@ $(document).ready(function () {
     const features = window.ELMO_FEATURES || {};
     const showThesauri = features.showThesauri !== false;
     const showMslVocabs = features.showMslVocabs === true;
-
-    // Track which configs have had their data loaded (lazy loading)
-    const loadedConfigs = new Map();
-
-    /**
-     * Mapping from ERNIE availability keys to ELMO-internal configuration.
-     * Each key corresponds to a thesaurus slug from the availability endpoint.
-     */
-    const THESAURUS_CONFIG = {
-        science_keywords: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
-            inputName: 'gcmdScienceKeywords',
-            inputId: 'input-sciencekeyword',
-            modalId: 'modal-sciencekeyword',
-            jsTreeId: 'jstree-sciencekeyword',
-            searchInputId: 'input-sciencekeyword-thesaurussearch',
-            selectedListId: 'selected-keywords-sciencekeyword',
-            helpSectionId: 'help-scienceKeywords-keyword',
-        },
-        platforms: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
-            inputName: 'platforms',
-            inputId: 'input-platforms',
-            modalId: 'modal-platforms',
-            jsTreeId: 'jstree-platforms',
-            searchInputId: 'input-platforms-thesaurussearch',
-            selectedListId: 'selected-keywords-platforms',
-            helpSectionId: 'help-gcmd-platforms-keyword',
-        },
-        instruments: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-instruments',
-            inputName: 'instruments',
-            inputId: 'input-instruments',
-            modalId: 'modal-instruments',
-            jsTreeId: 'jstree-instruments',
-            searchInputId: 'input-instruments-thesaurussearch',
-            selectedListId: 'selected-keywords-instruments',
-            helpSectionId: 'help-gcmd-instruments-keyword',
-        },
-        chronostratigraphy: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/chronostrat-timescale',
-            inputName: 'chronostratKeywords',
-            inputId: 'input-chronostratigraphy',
-            modalId: 'modal-chronostratigraphy',
-            jsTreeId: 'jstree-chronostratigraphy',
-            searchInputId: 'input-chronostratigraphy-thesaurussearch',
-            selectedListId: 'selected-keywords-chronostratigraphy',
-            helpSectionId: 'help-chronostratigraphy-keyword',
-        },
-        gemet: {
-            apiEndpoint: 'api/v2/vocabs/thesauri/gemet',
-            inputName: 'gemetKeywords',
-            inputId: 'input-gemet',
-            modalId: 'modal-gemet',
-            jsTreeId: 'jstree-gemet',
-            searchInputId: 'input-gemet-thesaurussearch',
-            selectedListId: 'selected-keywords-gemet',
-            helpSectionId: 'help-gemet-keyword',
-        },
-    };
 
     // MSL root-Lists (unchanged, separate feature)
     const generalRoots = [
@@ -94,11 +439,7 @@ $(document).ready(function () {
         'https://epos-msl.uu.nl/voc/rockphysics/1.3/'
     ];
 
-    // Keyword configurations array — built dynamically from availability + MSL static config
-    var keywordConfigurations = [];
-
-    // Shared state per inputId so multiple trees can cooperate
-    const sharedState = {};
+    ensureConfigRegistered('satellitePlatforms');
 
     // Wait for translations, then initialize everything
     document.addEventListener('translationsLoaded', function () {
@@ -150,8 +491,9 @@ $(document).ready(function () {
                     }
                 });
 
-                // Setup lazy loading for modals
+                // Setup lazy loading for modals and input fields
                 setupLazyLoadingForModals();
+                setupLazyLoadingForInputs();
 
                 // Show the form group
                 const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
@@ -171,6 +513,8 @@ $(document).ready(function () {
     function filterAvailableThesauri(availability) {
         const result = [];
         Object.keys(THESAURUS_CONFIG).forEach(function (key) {
+            if (THESAURUS_CONFIG[key].dynamicOnly) return;
+
             if (availability[key] && availability[key].available) {
                 result.push({
                     key: key,
@@ -321,6 +665,7 @@ $(document).ready(function () {
         });
 
         setupLazyLoadingForModals();
+        setupLazyLoadingForInputs();
     }
 
     /**
@@ -373,11 +718,50 @@ $(document).ready(function () {
                     loadThesaurusOnDemand(config);
                 });
             }, { once: true });
+
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                // Prevent selections in a reused shared modal from updating a row that is no longer active.
+                currentActiveInput = null;
+            });
         });
     }
 
     /**
-     * Loads thesaurus vocabulary data on demand when modal is first opened.
+     * Sets up lazy loading triggered by focusing a Tagify input field.
+     * This ensures the autocomplete whitelist is populated even when the
+     * user starts typing without opening the jsTree modal first.
+     * The loadedConfigs guard inside loadThesaurusOnDemand prevents
+     * duplicate network requests.
+     */
+    function setupLazyLoadingForInputs() {
+        const inputConfigsMap = new Map();
+
+        keywordConfigurations.forEach(config => {
+            if (!config.inputId) return;
+            if (!inputConfigsMap.has(config.inputId)) {
+                inputConfigsMap.set(config.inputId, []);
+            }
+            inputConfigsMap.get(config.inputId).push(config);
+        });
+
+        inputConfigsMap.forEach((configs, inputId) => {
+            const inputElement = document.querySelector(inputId);
+            if (!inputElement) return;
+
+            const tagifyWrapper = inputElement.closest('.tagify') || inputElement.parentElement?.querySelector('.tagify') || inputElement;
+
+            tagifyWrapper.addEventListener('focus', function () {
+                configs.forEach(config => {
+                    loadThesaurusOnDemand(config);
+                });
+            }, { once: true, capture: true });
+        });
+    }
+
+    /**
+     * Loads thesaurus vocabulary data on demand.
+     * Triggered when a modal is opened for the first time OR when
+     * a Tagify input field receives focus.
      * Fetches from the ELMO API proxy endpoint (ERNIE-backed) or local JSON for MSL.
      *
      * @param {Object} config - The configuration object for the keyword input.
@@ -413,15 +797,7 @@ $(document).ready(function () {
         var input = $(config.inputId)[0];
         if (!input) return;
 
-        if (!sharedState[config.inputId]) {
-            sharedState[config.inputId] = {
-                whitelist: [],
-                selectedPaths: new Set(),
-                tagify: null,
-                jsTreeIds: []
-            };
-        }
-        const state = sharedState[config.inputId];
+        const state = ensureSharedState(config);
 
         if (!state.jsTreeIds.includes(config.jsTreeId)) {
             state.jsTreeIds.push(config.jsTreeId);
@@ -442,6 +818,7 @@ $(document).ready(function () {
             });
             input._tagify = thesaurusKeywordstagify;
             state.tagify = thesaurusKeywordstagify;
+            state.tagifyInstances.add(thesaurusKeywordstagify);
 
             if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
                 window.applyTagifyAccessibilityAttributes(thesaurusKeywordstagify, input, {
@@ -483,8 +860,7 @@ $(document).ready(function () {
      * @param {Array<Object>|Object} response - The keyword data from the API / JSON file.
      */
     function loadKeywordsForConfig(config, response) {
-        const state = sharedState[config.inputId];
-        if (!state) return;
+        const state = ensureSharedState(config);
 
         const data = response.data ? response.data : response;
         var filteredData = data;
@@ -584,10 +960,10 @@ $(document).ready(function () {
             }
         });
 
-        if (state.tagify) {
-            state.tagify.settings.whitelist = state.whitelist;
-            state.tagify.settings.enforceWhitelist = true;
-        }
+        state.tagifyInstances.forEach(function (tagifyInstance) {
+            tagifyInstance.settings.whitelist = state.whitelist;
+            tagifyInstance.settings.enforceWhitelist = true;
+        });
 
         // Initialize jsTree
         $(config.jsTreeId).jstree({
@@ -615,6 +991,8 @@ $(document).ready(function () {
         });
 
         $(config.jsTreeId).on("changed.jstree", function (e, data) {
+            if (state.isSyncingTree) return;
+
             var newCentralSet = new Set();
 
             state.jsTreeIds.forEach(function (treeSelector) {
@@ -630,17 +1008,20 @@ $(document).ready(function () {
             state.selectedPaths = newCentralSet;
             updateSelectedKeywordsList(config.selectedKeywordsListId, state);
 
-            if (state.tagify) {
-                state.tagify.removeAllTags();
+            const activeTagify = getActiveTagifyForState(state);
+            if (activeTagify) {
+                // Replace the active row's tags from tree state to keep modal selection authoritative.
+                activeTagify.removeAllTags();
                 if (state.selectedPaths.size > 0) {
-                    state.tagify.addTags(Array.from(state.selectedPaths));
+                    activeTagify.addTags(Array.from(state.selectedPaths));
                 }
             }
         });
 
-        // Initial sync: if tagify already has tags, select corresponding nodes
-        if (state.tagify && state.tagify.value && state.tagify.value.length) {
-            var currentValues = state.tagify.value.map(v => v.value);
+        // Initial sync: if the active input already has tags, select corresponding nodes
+        const activeTagify = getActiveTagifyForState(state);
+        if (activeTagify && activeTagify.value && activeTagify.value.length) {
+            var currentValues = activeTagify.value.map(v => v.value);
             currentValues.forEach(function (val) {
                 var tree = $(config.jsTreeId).jstree(true);
                 if (!tree) return;
@@ -648,42 +1029,6 @@ $(document).ready(function () {
                 if (node) tree.select_node(node.id);
             });
         }
-    }
-
-    /**
-     * Updates the selected keywords list element in a modal.
-     */
-    function updateSelectedKeywordsList(listId, state) {
-        var selectedKeywordsList = document.getElementById(listId);
-        if (!selectedKeywordsList) return;
-        selectedKeywordsList.innerHTML = "";
-        Array.from(state.selectedPaths).forEach(function (fullPath) {
-            let listItem = document.createElement("li");
-            listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
-            listItem.textContent = fullPath;
-
-            let removeButton = document.createElement("button");
-            removeButton.classList.add("btn", "btn-sm", "btn-danger");
-            removeButton.innerHTML = "&times;";
-            removeButton.onclick = function () {
-                if (state.tagify) state.tagify.removeTag(fullPath);
-                state.selectedPaths.delete(fullPath);
-                updateSelectedKeywordsList(listId, state);
-            };
-
-            listItem.appendChild(removeButton);
-            selectedKeywordsList.appendChild(listItem);
-        });
-    }
-
-    /**
-     * Finds a node in a jsTree instance by its full path string.
-     */
-    function findNodeByPath(jsTreeInstance, path) {
-        if (!jsTreeInstance) return null;
-        return jsTreeInstance.get_json("#", { flat: true }).find(function (n) {
-            return jsTreeInstance.get_path(n, " > ") === path;
-        });
     }
 
     // Delegated search input listeners

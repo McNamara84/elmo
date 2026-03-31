@@ -1115,7 +1115,7 @@ class DatasetController
                 'outputPrefix' => 'iso'
             ],
             'datacite' => [
-                'xsltFile' => 'MappingMapToDataCiteSchema46.xslt',
+                'xsltFile' => 'MappingMapToDataCiteSchema47.xslt',
                 'outputPrefix' => 'datacite'
             ]
         ];

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { REPO_ROOT, SELECTORS } from '../utils';
-import { injectScript, injectStylesheet } from '../utils/assets';
+import { injectModuleScript, injectScript, injectStylesheet } from '../utils/assets';
 
 declare const translations: any;
 
@@ -218,7 +218,7 @@ test.describe('Thesauri Keywords Form Group', () => {
       };
     });
 
-    await injectScript(page, 'js/thesauri.js');
+    await injectModuleScript(page, 'js/thesauri.js');
 
     // Set up language handlers and fire translationsLoaded to trigger dynamic init
     await page.evaluate(() => {
@@ -292,6 +292,34 @@ test.describe('Thesauri Keywords Form Group', () => {
       const modalButton = page.locator(config.modalButton);
       await expect(modalButton).toHaveAttribute('data-bs-target', config.modalTarget);
     }
+  });
+
+  test('populates Tagify autocomplete when input is focused without opening modal first', async ({ page }) => {
+    // Verify the modal has NOT been opened yet
+    const scienceModal = page.locator('#modal-sciencekeyword');
+    await expect(scienceModal).toBeHidden();
+
+    // Click on the Tagify input to trigger focus-based lazy loading
+    const tagifyInput = page.locator('#collapse-science_keywords .tagify__input');
+    await tagifyInput.click();
+
+    // Wait for the API call to complete and whitelist to be populated
+    await page.waitForFunction(() => {
+      const input = document.getElementById('input-sciencekeyword') as any;
+      return input?._tagify?.settings?.whitelist?.length > 0;
+    }, { timeout: 10000 });
+
+    // Type enough characters to trigger the dropdown (dropdown.enabled: 3)
+    await tagifyInput.pressSequentially('AQU', { delay: 100 });
+
+    // Verify the autocomplete dropdown appears with matching suggestions
+    const dropdown = page.locator('.tagify__dropdown');
+    await expect(dropdown).toBeVisible({ timeout: 5000 });
+    const suggestion = dropdown.locator('.tagify__dropdown__item');
+    await expect(suggestion.first()).toContainText('AQUATIC');
+
+    // Verify the modal was never opened
+    await expect(scienceModal).toBeHidden();
   });
 
   test('synchronises science keyword selections between tree, summary list, and Tagify input', async ({ page }) => {

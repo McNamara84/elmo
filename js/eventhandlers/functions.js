@@ -37,7 +37,7 @@ function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-wit
 * @returns {jQuery} A jQuery object representing the Remove button.
 */
 function createRemoveButton() {
-  return $('<button type="button" class="btn btn-danger removeButton" style="width: 36px;" aria-label="Remove entry"><span aria-hidden="true">-</span></button>');
+  return $('<button type="button" class="btn btn-danger removeButton" style="width: 36px; margin-inline-end: 0.75rem;" aria-label="Remove entry"><span aria-hidden="true">-</span></button>');
 }
 
 /**

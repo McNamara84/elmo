@@ -22,7 +22,7 @@ const mockOrcidRecord = {
                     'disambiguated-organization-identifier': 'https://ror.org/05p8bnz29'
                   }
                 },
-                'end-date': { year: 1965 }
+                'end-date': null
               }
             }
           ]
@@ -42,7 +42,58 @@ const mockOrcidRecord = {
                     'disambiguated-organization-identifier': '05rrcem69'
                   }
                 },
-                'end-date': { year: 1937 }
+                'end-date': null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+};
+
+const mockOrcidRecordWithEndedAffiliations = {
+  person: {
+    name: {
+      'family-name': { value: 'Carberry' },
+      'given-names': { value: 'Josiah' }
+    }
+  },
+  'activities-summary': {
+    employments: {
+      'affiliation-group': [
+        {
+          summaries: [
+            {
+              'employment-summary': {
+                organization: {
+                  name: 'Brown University',
+                  'disambiguated-organization': {
+                    'disambiguation-source': 'ROR',
+                    'disambiguated-organization-identifier': 'https://ror.org/05p8bnz29'
+                  }
+                },
+                'end-date': { year: { value: '1965' } }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    educations: {
+      'affiliation-group': [
+        {
+          summaries: [
+            {
+              'education-summary': {
+                organization: {
+                  name: 'Yale University',
+                  'disambiguated-organization': {
+                    'disambiguation-source': 'ROR',
+                    'disambiguated-organization-identifier': '05rrcem69'
+                  }
+                },
+                'end-date': { year: { value: '1937' } }
               }
             }
           ]
@@ -77,6 +128,26 @@ test.describe('Author(s) form group', () => {
     await expect(affiliationTags.nth(0)).toContainText('Brown University');
     await expect(affiliationTags.nth(1)).toContainText('Yale University');
     await expect(page.locator('#input-author-rorid')).toHaveValue('https://ror.org/05p8bnz29,https://ror.org/05rrcem69');
+  });
+
+  test('filters ended affiliations from ORCID preload', async ({ page }) => {
+    await page.route('**/pub.orcid.org/v3.0/**', async route => {
+      await route.fulfill({
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(mockOrcidRecordWithEndedAffiliations)
+      });
+    });
+
+    await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
+    await page.getByRole('textbox', { name: 'Last Name*' }).click();
+
+    await expect(page.getByRole('textbox', { name: 'Last Name*' })).toHaveValue('Carberry');
+    await expect(page.getByRole('textbox', { name: 'First Name*' })).toHaveValue('Josiah');
+
+    const affiliationTags = page.locator(`${SELECTORS.formGroups.authors} tag`);
+    await expect(affiliationTags).toHaveCount(0);
+    await expect(page.locator('#input-author-rorid')).toHaveValue('');
   });
 
   test('shows contact person fields when toggled and clears them when disabled', async ({ page }) => {
@@ -154,4 +225,65 @@ test.describe('Author(s) form group', () => {
     await expect(lastName).toHaveValue('Existing');
     await expect(firstName).toHaveValue('Author');
   });
+
+  test('accepts valid international author last names', async ({ page }) => {
+    const lastName = page.locator('#input-author-lastname');
+
+    let isValid: boolean;
+
+    // Arabic name with spaces
+    await lastName.fill('محمد علي');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // German name with umlaut
+    await lastName.fill('Rüdiger');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // Russian name (Cyrillic)
+    await lastName.fill('Александр ');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // Greek name
+    await lastName.fill('Παπαδόπουλος');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // Turkish name with hyphen
+    await lastName.fill('Çalışkan-Şahin');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // Chinese name
+    await lastName.fill('王小明');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+
+    // English name with apostrophe and hyphen
+    await lastName.fill("O'Connor-Smith");
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(true);
+  });
+
+
+  test('rejects author last names with digits or forbidden symbols', async ({ page }) => {
+    const lastName = page.locator('#input-author-lastname');
+
+    let isValid: boolean;
+
+    await lastName.fill('Ali123');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(false);
+
+    await lastName.fill('Ali$');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(false);
+
+    await lastName.fill('Ali?=§&');
+    isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
+    expect(isValid).toBe(false);
+  });
+
 });

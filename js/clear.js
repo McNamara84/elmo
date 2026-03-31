@@ -16,7 +16,8 @@ function clearInputFields() {
     $('input[name="title[]"]').closest('.row').not(':first').remove();
     $('input[name="title[]"]:first').val('');
     $('#input-resourceinformation-titletype').val(window.mainTitleTypeId || '');
-  
+    // Notify title module to reset its internal counter
+    $(document).trigger('elmo:clearTitles');  
     // Reset Rights License select field
     $('#input-rights-license').val('');
   

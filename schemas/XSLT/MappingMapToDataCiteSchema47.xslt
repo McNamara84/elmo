@@ -13,7 +13,7 @@ http://www.altova.com/mapforce
 	<xsl:template match="/">
 		<xsl:variable name="var1_initial" select="."/>
 		<resource xmlns="http://datacite.org/schema/kernel-4">
-			<xsl:attribute name="xsi:schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance">http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/elmo/schemas/DataCite/DataCiteSchema46.xsd</xsl:attribute>
+			<xsl:attribute name="xsi:schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance">http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.7/metadata.xsd</xsl:attribute>
 			<xsl:for-each select="*[local-name()='Resource' and namespace-uri()='']">
 				<xsl:variable name="var2_cur" select="."/>
 				<identifier>
