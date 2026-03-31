@@ -21,42 +21,180 @@ require_once __DIR__ . '/save_thesauruskeywords.php';
 require_once __DIR__ . '/save_relatedwork.php';
 
 /**
+ * Returns a POST field as a sequential array.
+ *
+ * Browser-submitted FormData omits disabled controls, so type-specific arrays are sparse by row.
+ * We normalize them to sequential queues and consume values only for row types that actually submit them.
+ *
+ * @param array $postData Raw POST data
+ * @param string $fieldName POST field name
+ * @return array Sequential field values
+ */
+function getSequentialPostFieldValues(array $postData, string $fieldName): array
+{
+    $values = $postData[$fieldName] ?? [];
+
+    if (!is_array($values)) {
+        return [];
+    }
+
+    return array_values($values);
+}
+
+/**
+ * Consumes the next value from a sequential POST field queue.
+ *
+ * @param array $values Sequential field values
+ * @param int $cursor Current queue position, updated by reference
+ * @return mixed|null Next value or null when exhausted
+ */
+function consumeSequentialPostFieldValue(array $values, int &$cursor)
+{
+    if (!array_key_exists($cursor, $values)) {
+        return null;
+    }
+
+    $value = $values[$cursor];
+    $cursor++;
+
+    return $value;
+}
+
+/**
+ * Returns a field value either by row index or by consuming the next queued value.
+ *
+ * @param array $values Sequential field values
+ * @param int $cursor Current queue position, updated by reference when queue mode is used
+ * @param bool $isRowAligned Whether the field array is aligned 1:1 with datasource rows
+ * @param int $rowIndex Datasource row index
+ * @return mixed|null Field value or null when missing
+ */
+function getMappedPostFieldValue(array $values, int &$cursor, bool $isRowAligned, int $rowIndex)
+{
+    if ($isRowAligned) {
+        return $values[$rowIndex] ?? null;
+    }
+
+    return consumeSequentialPostFieldValue($values, $cursor);
+}
+
+/**
  * Extracts individual data source rows from POST arrays.
- * Each row in the form contains ALL fields, but only type-specific fields are populated.
+ * The frontend disables non-applicable controls per row, so only type-specific fields are submitted.
+ * Row order therefore comes from datasource_type[] and datasource_description[], while the remaining
+ * arrays must be consumed as sparse queues based on the row type.
  * 
  * @param array $postData Raw POST data with array fields
  * @return array Array of individual data source row objects, indexed 0..N
  */
 function extractDataSourceRows(array $postData): array
 {
-    $types = $postData['datasource_type'] ?? [];
-    $total_length = count($types);
+    $types = getSequentialPostFieldValues($postData, 'datasource_type');
 
-    if ($total_length === 0) {
+    if (count($types) === 0) {
         return [];
     }
 
-    // Use postData variable names directly as keys
-    $post_variables = [
-        'datasource_details', 'compensation_depth',
-        'satellite_platform', 'dIdentifier', 'dIdentifierType',
-        'dName'
+    $fieldValues = [
+        'datasource_description' => getSequentialPostFieldValues($postData, 'datasource_description'),
+        'datasource_details' => getSequentialPostFieldValues($postData, 'datasource_details'),
+        'compensation_depth' => getSequentialPostFieldValues($postData, 'compensation_depth'),
+        'satellite_platform' => getSequentialPostFieldValues($postData, 'satellite_platform'),
+        'dIdentifier' => getSequentialPostFieldValues($postData, 'dIdentifier'),
+        'dIdentifierType' => getSequentialPostFieldValues($postData, 'dIdentifierType'),
+        'dName' => getSequentialPostFieldValues($postData, 'dName')
     ];
 
+    $fieldCursors = array_fill_keys(array_keys($fieldValues), 0);
+    $fieldAlignment = [];
+    foreach ($fieldValues as $fieldName => $values) {
+        $fieldAlignment[$fieldName] = count($values) === count($types);
+    }
+
     $rows = [];
-    for ($i = 0; $i < $total_length; $i++) {
-        $this_type = $types[$i];
-        
-        // Start building the row with universal fields that are always present
+    foreach ($types as $rowIndex => $type) {
         $row = [
-            'type' => $this_type,
-            'description' => $postData['datasource_description'][$i] ?? null
+            'type' => $type,
+            'description' => getMappedPostFieldValue(
+                $fieldValues['datasource_description'],
+                $fieldCursors['datasource_description'],
+                $fieldAlignment['datasource_description'],
+                $rowIndex
+            ),
+            'datasource_details' => null,
+            'compensation_depth' => null,
+            'satellite_platform' => null,
+            'dIdentifier' => null,
+            'dIdentifierType' => null,
+            'dName' => null
         ];
 
-        // Copy all fields from POST at the same index
-        // Arrays may be different lengths - some fields (like datasource_details) may not exist for all row types
-        foreach ($post_variables as $variable) {
-            $row[$variable] = $postData[$variable][$i] ?? null;
+        switch (trim((string) $type)) {
+            case 'S':
+                $row['satellite_platform'] = getMappedPostFieldValue(
+                    $fieldValues['satellite_platform'],
+                    $fieldCursors['satellite_platform'],
+                    $fieldAlignment['satellite_platform'],
+                    $rowIndex
+                );
+                break;
+
+            case 'G':
+            case 'A':
+                $row['datasource_details'] = getMappedPostFieldValue(
+                    $fieldValues['datasource_details'],
+                    $fieldCursors['datasource_details'],
+                    $fieldAlignment['datasource_details'],
+                    $rowIndex
+                );
+                break;
+
+            case 'T':
+                $row['datasource_details'] = getMappedPostFieldValue(
+                    $fieldValues['datasource_details'],
+                    $fieldCursors['datasource_details'],
+                    $fieldAlignment['datasource_details'],
+                    $rowIndex
+                );
+
+                if ($fieldAlignment['compensation_depth']) {
+                    $row['compensation_depth'] = getMappedPostFieldValue(
+                        $fieldValues['compensation_depth'],
+                        $fieldCursors['compensation_depth'],
+                        true,
+                        $rowIndex
+                    );
+                } elseif (trim((string) ($row['datasource_details'] ?? '')) === 'Isostasy') {
+                    $row['compensation_depth'] = consumeSequentialPostFieldValue($fieldValues['compensation_depth'], $fieldCursors['compensation_depth']);
+                }
+                break;
+
+            case 'M':
+                $row['datasource_details'] = getMappedPostFieldValue(
+                    $fieldValues['datasource_details'],
+                    $fieldCursors['datasource_details'],
+                    $fieldAlignment['datasource_details'],
+                    $rowIndex
+                );
+                $row['dIdentifier'] = getMappedPostFieldValue(
+                    $fieldValues['dIdentifier'],
+                    $fieldCursors['dIdentifier'],
+                    $fieldAlignment['dIdentifier'],
+                    $rowIndex
+                );
+                $row['dIdentifierType'] = getMappedPostFieldValue(
+                    $fieldValues['dIdentifierType'],
+                    $fieldCursors['dIdentifierType'],
+                    $fieldAlignment['dIdentifierType'],
+                    $rowIndex
+                );
+                $row['dName'] = getMappedPostFieldValue(
+                    $fieldValues['dName'],
+                    $fieldCursors['dName'],
+                    $fieldAlignment['dName'],
+                    $rowIndex
+                );
+                break;
         }
         
         $rows[] = $row;
@@ -156,6 +294,7 @@ function prepareDataSourceForDb(array $row): array
         'T_Isostasy_compensation_depth' => null,
         'M_identifier' => null,
         'M_identifier_type' => null,
+        'M_name' => null,
     ];
 
     // Populate type-specific columns from the $row array (which uses postData names)
@@ -191,18 +330,11 @@ function prepareDataSourceForDb(array $row): array
             break;
             
         case 'M': // Model
-            // Note: The name of the model is put in 'details'
             if (!empty($row['dName'])) {
                 $dbRow['M_name'] = trim($row['dName']);
-                if(!empty($row['details'])) {
-                    $dbRow['details'] = $row['dName'] . ": " . $dbRow['details'];
-                }
             }
             if (!empty($row['dIdentifier'])) {
                 $dbRow['M_identifier'] = trim($row['dIdentifier']);
-            }
-            if (!empty($row['dIdentifierType'])) {
-                $dbRow['M_identifier_type'] = trim($row['dIdentifierType']);
             }
             if (!empty($row['dIdentifierType'])) {
                 $dbRow['M_identifier_type'] = trim($row['dIdentifierType']);
