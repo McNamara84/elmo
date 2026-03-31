@@ -171,7 +171,7 @@ function fillRowFromOrcidRecord(row, data, fieldMapping) {
 /**
  * Field mapping for author person rows.
  */
-const AUTHOR_FIELD_MAPPING = {
+var AUTHOR_FIELD_MAPPING = {
   familyName: 'input[name="familynames[]"]',
   givenName: 'input[name="givennames[]"]',
   affiliation: 'input-author-affiliation',
@@ -181,7 +181,7 @@ const AUTHOR_FIELD_MAPPING = {
 /**
  * Field mapping for contributor person rows.
  */
-const CONTRIBUTOR_FIELD_MAPPING = {
+var CONTRIBUTOR_FIELD_MAPPING = {
   familyName: 'input[name="cbPersonLastname[]"]',
   givenName: 'input[name="cbPersonFirstname[]"]',
   affiliation: 'input-contributorpersons-affiliation',
