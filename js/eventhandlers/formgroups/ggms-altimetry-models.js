@@ -154,5 +154,6 @@ $(document).ready(function () {
 			applyAltimetryFileFormatDefault(false);
 		}
 	});
+	$(document).on('toggle', '#altimetryMSS', visibilityToggle('#altimetryMSS'));
 	toggleAltimetrySpecificGroups();
 });
