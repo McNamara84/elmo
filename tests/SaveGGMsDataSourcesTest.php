@@ -92,12 +92,16 @@ final class SaveGGMsDataSourcesTest extends DatabaseTestCase
     /**
      * Generate mock data for a Terrain/Topography data source
      */
-    public static function terrainRow(int $compensationDepth = 500): array
+    public static function terrainRow(int $compensationDepth = 0): array
     {
+        // compensation_depth is only meaningful for Isostasy terrain rows.
+        // Use 'Isostasy' detail when a depth is provided so the queue-consumption
+        // logic in extractDataSourceRows() correctly consumes the value.
+        $hasDepth = $compensationDepth > 0;
         return [
             'type' => 'T',
-            'datasource_details' => 'Digital Elevation Model (DEM/DTM)',
-            'compensation_depth' => (string)$compensationDepth,
+            'datasource_details' => $hasDepth ? 'Isostasy' : 'Digital Elevation Model (DEM/DTM)',
+            'compensation_depth' => $hasDepth ? (string)$compensationDepth : '',
             'description' => 'Topographic data for gravity field modeling',
             'satellite_platform' => '',
             'identifier' => '',
@@ -147,13 +151,36 @@ final class SaveGGMsDataSourcesTest extends DatabaseTestCase
         
         foreach ($rows as $row) {
             $postData['datasource_type'][] = $row['type'];
-            $postData['datasource_details'][] = $row['datasource_details'] ?? $row['details'] ?? '';
-            $postData['compensation_depth'][] = $row['compensation_depth'] ?? '';
-            $postData['satellite_platform'][] = $row['satellite_platform'] ?? '';
-            $postData['dIdentifier'][] = $row['dIdentifier'] ?? $row['identifier'] ?? '';
-            $postData['dIdentifierType'][] = $row['dIdentifierType'] ?? $row['identifier_type'] ?? '';
-            $postData['dName'][] = $row['dName'] ?? $row['model_name'] ?? '';
+            // description is always submitted (even if empty) because the control is always enabled
             $postData['datasource_description'][] = $row['description'] ?? '';
+
+            // Type-specific fields: only push non-empty values, mirroring the browser's behaviour
+            // of not submitting disabled or irrelevant form controls. This keeps the queues sparse,
+            // so consumeSequentialPostFieldValue maps each value to the correct row.
+            $details = $row['datasource_details'] ?? $row['details'] ?? '';
+            if ($details !== '') {
+                $postData['datasource_details'][] = $details;
+            }
+            $depth = $row['compensation_depth'] ?? '';
+            if ($depth !== '') {
+                $postData['compensation_depth'][] = $depth;
+            }
+            $platform = $row['satellite_platform'] ?? '';
+            if ($platform !== '') {
+                $postData['satellite_platform'][] = $platform;
+            }
+            $identifier = $row['dIdentifier'] ?? $row['identifier'] ?? '';
+            if ($identifier !== '') {
+                $postData['dIdentifier'][] = $identifier;
+            }
+            $identifierType = $row['dIdentifierType'] ?? $row['identifier_type'] ?? '';
+            if ($identifierType !== '') {
+                $postData['dIdentifierType'][] = $identifierType;
+            }
+            $name = $row['dName'] ?? $row['model_name'] ?? '';
+            if ($name !== '') {
+                $postData['dName'][] = $name;
+            }
         }
         
         return $postData;
@@ -330,7 +357,7 @@ final class SaveGGMsDataSourcesTest extends DatabaseTestCase
         
         $this->assertNotNull($dbRecord);
         $this->assertEquals('T', $dbRecord['type']);
-        $this->assertEquals('Digital Elevation Model (DEM/DTM)', $dbRecord['details']);
+        $this->assertEquals('Isostasy', $dbRecord['details']);
         $this->assertEquals(750, $dbRecord['T_Isostasy_compensation_depth']);
         
         // Assert that other type-specific fields are NULL for type T
@@ -409,7 +436,35 @@ final class SaveGGMsDataSourcesTest extends DatabaseTestCase
             $this->assertTrue($found, "Platform {$platform} should have a keyword");
         }
     }
-    
+
+    /**
+     * Test: Multiple platforms in one satellite row all share the same description after
+     * expansion into individual Data_Sources rows.
+     *
+     * expandSatellitePlatformsToRows() must propagate the original description to every
+     * expanded row so that the provenance context is not lost.
+     */
+    public function testExpandedSatellitePlatformsShareDescription(): void
+    {
+        $resource_id = $this->createResource('test.satellite.desc.sharing', 'Test Satellite Description Sharing');
+
+        $mockData = self::satelliteRow(['GRACE', 'GOCE']);
+        $postData = self::rowsToPostData([$mockData]);
+
+        \saveGGMsDataSources($this->connection, $postData, $resource_id);
+
+        $dataSources = $this->getDataSourcesForResource($resource_id);
+        $this->assertCount(2, $dataSources, 'Two platforms should produce two Data_Sources rows');
+
+        foreach ($dataSources as $ds) {
+            $this->assertSame(
+                'Space-borne gravity measurement satellites',
+                $ds['description'],
+                'Every expanded satellite row must carry the original description unchanged'
+            );
+        }
+    }
+
     /**
      * Test: Save Model (M) data source
      * Assert: Data source saved AND related work created with IsDerivedFrom relation
@@ -500,7 +555,7 @@ final class SaveGGMsDataSourcesTest extends DatabaseTestCase
         
         // 5. Verify Terrain type has correct fields and compensation depth
         $tRecord = array_values(array_filter($dataSources, fn($ds) => $ds['type'] === 'T'))[0];
-        $this->assertEquals('Digital Elevation Model (DEM/DTM)', $tRecord['details']);
+        $this->assertEquals('Isostasy', $tRecord['details']);
         $this->assertEquals(600, $tRecord['T_Isostasy_compensation_depth']);
         $this->assertNull($tRecord['S_value_name']);
         $this->assertNull($tRecord['M_identifier']);
