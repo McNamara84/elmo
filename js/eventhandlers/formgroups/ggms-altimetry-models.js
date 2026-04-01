@@ -20,20 +20,6 @@ $(document).ready(function () {
 		return (value || '').toString().trim().toLowerCase();
 	}
 
-	/** Forces Model Types card to temporal sub-section only. */
-	function forceTemporalModelProperties() {
-		const staticSection = $('.visibility-modeltype-static');
-		const temporalSection = $('.visibility-modeltype-temporal');
-		const topographicSection = $('.visibility-modeltype-topographic');
-
-		visibilityOFF(staticSection);
-		visibilityOFF(topographicSection);
-		visibilityON(temporalSection);
-
-		const helpButton = $('#model-specific-card .bi-question-circle-fill');
-		helpButton.attr('data-help-section-id', 'help-temporal');
-	}
-
 	/** Adds one auto-managed datasource row of type M for altimetry. */
 	function ensureAltimetryModelDatasource() {
 		if (!datasourceGroup.length) {
@@ -144,7 +130,6 @@ $(document).ready(function () {
 			visibilityON(modelSpecificCard);
 			visibilityOFF(characteristicsCard);
 
-			forceTemporalModelProperties();
 			ensureAltimetryModelDatasource();
 			applyAltimetryFileFormatDefault(!wasAltimetry);
 		} else {
