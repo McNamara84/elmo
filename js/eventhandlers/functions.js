@@ -49,6 +49,7 @@ function updateOverlayLabels() {
   }
 }
 
+// turn the element off by 1. adding d-none, 2. setting aria-hidden to true, and 3. disabling all form controls within it
 function visibilityOFF(elementOrSelector) {
   const $el = $(elementOrSelector);
   if (!$el.length) return;
@@ -57,6 +58,7 @@ function visibilityOFF(elementOrSelector) {
   $el.find('input, select, textarea, button').prop('disabled', true);
 }
 
+// turn the element on by 1. removing d-none, 2. setting aria-hidden to false, and 3. enabling all form controls within it
 function visibilityON(elementOrSelector) {
   const $el = $(elementOrSelector);
   if (!$el.length) return;
@@ -64,15 +66,26 @@ function visibilityON(elementOrSelector) {
   $el.removeClass('d-none').attr('aria-hidden', 'false');
   $el.find('input, select, textarea, button').prop('disabled', false);
 }
+// if the element is visible, hide it; if it's hidden, show it
+function visibilityToggle(elementOrSelector) {
+  const $el = $(elementOrSelector);
+  if (!$el.length) return;
 
-// ...existing code...
+  const isVisible = !$el.hasClass('d-none');
+  if (isVisible) {
+    visibilityOFF($el);
+  } else {
+    visibilityON($el);
+  }
+}
 
 export {
   replaceHelpButtonInClonedRows,
   createRemoveButton,
   updateOverlayLabels,
   visibilityOFF,
-  visibilityON
+  visibilityON,
+  visibilityToggle
 };
 
 // Expose functions for both browser and Node environments
@@ -82,7 +95,8 @@ if (typeof module !== 'undefined' && module.exports) {
     createRemoveButton,
     updateOverlayLabels,
     visibilityOFF,
-    visibilityON
+    visibilityON,
+    visibilityToggle
   };
 }
 
@@ -92,4 +106,5 @@ if (typeof window !== 'undefined') {
   window.updateOverlayLabelsWrapper = updateOverlayLabels;
   window.visibilityOFF = visibilityOFF;
   window.visibilityON = visibilityON;
+  window.visibilityToggle = visibilityToggle;
 }
