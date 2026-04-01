@@ -99,6 +99,240 @@ const loadedConfigs = new Map();
 const sharedState = {};
 let keywordConfigurations = [];
 
+/**
+ * Shows a loading spinner in the jsTree container.
+ * @param {string} jsTreeId - The selector for the jsTree container.
+ */
+function showLoadingSpinner(jsTreeId) {
+    const container = $(jsTreeId);
+    if (container.length && !container.find('.thesaurus-loading-spinner').length) {
+        container.html(`
+            <div class="thesaurus-loading-spinner d-flex justify-content-center align-items-center p-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span class="ms-2">${translations?.general?.loading || 'Loading thesaurus...'}</span>
+            </div>
+        `);
+    }
+}
+
+/**
+ * Hides the loading spinner from the jsTree container.
+ * @param {string} jsTreeId - The selector for the jsTree container.
+ */
+function hideLoadingSpinner(jsTreeId) {
+    $(jsTreeId).find('.thesaurus-loading-spinner').remove();
+}
+
+/**
+ * Loads thesaurus vocabulary data on demand.
+ * Triggered when a modal is opened for the first time OR when
+ * a Tagify input field receives focus.
+ * Fetches from the ELMO API proxy endpoint (ERNIE-backed) or local JSON for MSL.
+ *
+ * @param {Object} config - The configuration object for the keyword input.
+ */
+function loadThesaurusOnDemand(config) {
+    if (loadedConfigs.has(config.jsTreeId)) return;
+
+    loadedConfigs.set(config.jsTreeId, 'loading');
+    showLoadingSpinner(config.jsTreeId);
+
+    $.getJSON(config.apiEndpoint, function (data) {
+        loadKeywordsForConfig(config, data);
+        loadedConfigs.set(config.jsTreeId, 'loaded');
+        hideLoadingSpinner(config.jsTreeId);
+    }).fail(function (jqxhr, textStatus, error) {
+        console.error('Failed to load thesaurus:', config.apiEndpoint, textStatus, error);
+        loadedConfigs.set(config.jsTreeId, 'error');
+        $(config.jsTreeId).html(`
+            <div class="alert alert-danger m-2">
+                ${translations?.keywords?.thesaurus?.unavailable || 'Error loading thesaurus data.'}
+            </div>
+        `);
+    });
+}
+
+/**
+ * Loads and processes keyword data, initializing jsTree.
+ * Called when modal is opened for the first time (lazy loading).
+ *
+ * @param {Object} config - Configuration object for the keyword input field.
+ * @param {Array<Object>|Object} response - The keyword data from the API / JSON file.
+ */
+function loadKeywordsForConfig(config, response) {
+    const state = ensureSharedState(config);
+
+    const data = response.data ? response.data : response;
+    var filteredData = data;
+    var suggestedKeywords = [];
+
+    function ensureArray(x) {
+        if (Array.isArray(x)) return x;
+        if (x && Array.isArray(x.data)) return x.data;
+        return [];
+    }
+
+    var availableNodes = ensureArray(data);
+
+    // If rootNodes/rootNodeId exist, load only those subtrees (e.g., MSL general/domain)
+    if (config.rootNodes || config.rootNodeId) {
+        function findNodeById(nodes, id) {
+            if (!Array.isArray(nodes)) return null;
+            for (var i = 0; i < nodes.length; i++) {
+                if (!nodes[i]) continue;
+                if (nodes[i].id === id) return nodes[i];
+                if (nodes[i].children) {
+                    var foundNode = findNodeById(nodes[i].children, id);
+                    if (foundNode) return foundNode;
+                }
+            }
+            return null;
+        }
+
+        if (config.rootNodes && Array.isArray(config.rootNodes)) {
+            var collected = [];
+            config.rootNodes.forEach(function (rootId) {
+                var n = findNodeById(availableNodes, rootId);
+                if (n) collected.push(n);
+                else console.warn('root not found:', rootId, 'in', config.apiEndpoint);
+            });
+            if (collected.length === 0) {
+                console.error('No valid rootNodes found in', config.apiEndpoint);
+                return;
+            }
+            filteredData = collected;
+        } else if (config.rootNodeId) {
+            var sel = findNodeById(availableNodes, config.rootNodeId);
+            if (sel) filteredData = [sel];
+            else {
+                console.error('Root node with ID', config.rootNodeId, 'not found in', config.apiEndpoint);
+                return;
+            }
+        }
+    }
+
+    function processNodes(nodes) {
+        if (!Array.isArray(nodes)) return [];
+        return nodes.map(function (node) {
+            if (!node) return node;
+            if (node.children) {
+                node.children = processNodes(node.children);
+            }
+            node.a_attr = node.a_attr || { title: node.description || "" };
+            node.original = node.original || {
+                scheme: node.scheme || "",
+                schemeURI: node.schemeURI || "",
+                language: node.language || ""
+            };
+            return node;
+        });
+    }
+
+    var processedData = processNodes(filteredData);
+
+    function buildWhitelistFromNodes(nodes, parentPath) {
+        parentPath = parentPath || [];
+        if (!Array.isArray(nodes)) return;
+        nodes.forEach(function (item) {
+            if (!item) return;
+            var textToAdd = parentPath.concat(item.text).join(' > ');
+            suggestedKeywords.push({
+                value: textToAdd,
+                id: item.id,
+                scheme: item.scheme,
+                schemeURI: item.schemeURI,
+                language: item.language
+            });
+            if (item.children) {
+                buildWhitelistFromNodes(item.children, parentPath.concat(item.text));
+            }
+        });
+    }
+
+    buildWhitelistFromNodes(filteredData);
+
+    // Merge suggestedKeywords into sharedState.whitelist, avoid duplicates
+    const existingValues = new Set(state.whitelist.map(w => w.value));
+    suggestedKeywords.forEach(s => {
+        if (!existingValues.has(s.value)) {
+            state.whitelist.push(s);
+            existingValues.add(s.value);
+        }
+    });
+
+    state.tagifyInstances.forEach(function (tagifyInstance) {
+        tagifyInstance.settings.whitelist = state.whitelist;
+        tagifyInstance.settings.enforceWhitelist = true;
+    });
+
+    // Initialize jsTree
+    $(config.jsTreeId).jstree({
+        core: {
+            data: processedData,
+            themes: { icons: false }
+        },
+        checkbox: {
+            keep_selected_style: true,
+            three_state: false
+        },
+        plugins: ['search', 'checkbox'],
+        search: {
+            show_only_matches: true,
+            search_callback: function (str, node) {
+                return node.text.toLowerCase().indexOf(str.toLowerCase()) !== -1 ||
+                    (node.a_attr && node.a_attr.title && node.a_attr.title.toLowerCase().indexOf(str.toLowerCase()) !== -1);
+            }
+        }
+    });
+
+    $(config.searchInputId).on("input", function () {
+        var tree = $(config.jsTreeId).jstree(true);
+        if (tree) tree.search($(this).val());
+    });
+
+    $(config.jsTreeId).on("changed.jstree", function (e, data) {
+        if (state.isSyncingTree) return;
+
+        var newCentralSet = new Set();
+
+        state.jsTreeIds.forEach(function (treeSelector) {
+            var tree = $(treeSelector).jstree(true);
+            if (!tree) return;
+            var nodes = tree.get_selected(true);
+            nodes.forEach(function (n) {
+                var p = tree.get_path(n, " > ");
+                if (p) newCentralSet.add(p);
+            });
+        });
+
+        state.selectedPaths = newCentralSet;
+        updateSelectedKeywordsList(config.selectedKeywordsListId, state);
+
+        const activeTagify = getActiveTagifyForState(state);
+        if (activeTagify) {
+            // Replace the active row's tags from tree state to keep modal selection authoritative.
+            activeTagify.removeAllTags();
+            if (state.selectedPaths.size > 0) {
+                activeTagify.addTags(Array.from(state.selectedPaths));
+            }
+        }
+    });
+
+    // Initial sync: if the active input already has tags, select corresponding nodes
+    const activeTagify = getActiveTagifyForState(state);
+    if (activeTagify && activeTagify.value && activeTagify.value.length) {
+        var currentValues = activeTagify.value.map(v => v.value);
+        currentValues.forEach(function (val) {
+            var tree = $(config.jsTreeId).jstree(true);
+            if (!tree) return;
+            var node = findNodeByPath(tree, val);
+            if (node) tree.select_node(node.id);
+        });
+    }
+}
+
 /** Returns the shared state key for a thesaurus config. */
 function getStateKey(config) {
     return config.stateKey || config.inputId || config.jsTreeId;
@@ -354,6 +588,15 @@ export function initTagifyForInput(inputElement, configKey) {
             },
             editTags: false
         });
+
+        // Trigger whitelist fetch on first focus/input so users who type before
+        // opening the modal still get autocomplete suggestions.
+        const tagifyWrapper = inputElement._tagify.DOM?.scope;
+        if (tagifyWrapper) {
+            tagifyWrapper.addEventListener('focus', function () {
+                loadThesaurusOnDemand(config);
+            }, { once: true, capture: true });
+        }
     }
     state.tagifyInstances.add(inputElement._tagify);
 
@@ -669,32 +912,6 @@ $(document).ready(function () {
     }
 
     /**
-     * Shows a loading spinner in the jsTree container.
-     * @param {string} jsTreeId - The selector for the jsTree container.
-     */
-    function showLoadingSpinner(jsTreeId) {
-        const container = $(jsTreeId);
-        if (container.length && !container.find('.thesaurus-loading-spinner').length) {
-            container.html(`
-                <div class="thesaurus-loading-spinner d-flex justify-content-center align-items-center p-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <span class="ms-2">${translations?.general?.loading || 'Loading thesaurus...'}</span>
-                </div>
-            `);
-        }
-    }
-
-    /**
-     * Hides the loading spinner from the jsTree container.
-     * @param {string} jsTreeId - The selector for the jsTree container.
-     */
-    function hideLoadingSpinner(jsTreeId) {
-        $(jsTreeId).find('.thesaurus-loading-spinner').remove();
-    }
-
-    /**
      * Sets up lazy loading event listeners for all thesaurus modals.
      * Vocabulary data is loaded only when a modal is opened for the first time.
      */
@@ -759,35 +976,6 @@ $(document).ready(function () {
     }
 
     /**
-     * Loads thesaurus vocabulary data on demand.
-     * Triggered when a modal is opened for the first time OR when
-     * a Tagify input field receives focus.
-     * Fetches from the ELMO API proxy endpoint (ERNIE-backed) or local JSON for MSL.
-     *
-     * @param {Object} config - The configuration object for the keyword input.
-     */
-    function loadThesaurusOnDemand(config) {
-        if (loadedConfigs.has(config.jsTreeId)) return;
-
-        loadedConfigs.set(config.jsTreeId, 'loading');
-        showLoadingSpinner(config.jsTreeId);
-
-        $.getJSON(config.apiEndpoint, function (data) {
-            loadKeywordsForConfig(config, data);
-            loadedConfigs.set(config.jsTreeId, 'loaded');
-            hideLoadingSpinner(config.jsTreeId);
-        }).fail(function (jqxhr, textStatus, error) {
-            console.error('Failed to load thesaurus:', config.apiEndpoint, textStatus, error);
-            loadedConfigs.set(config.jsTreeId, 'error');
-            $(config.jsTreeId).html(`
-                <div class="alert alert-danger m-2">
-                    ${translations?.keywords?.thesaurus?.unavailable || 'Error loading thesaurus data.'}
-                </div>
-            `);
-        });
-    }
-
-    /**
      * Initializes a keyword input field with Tagify only (no data loading yet).
      * Vocabulary data will be loaded lazily when the modal is opened.
      *
@@ -848,185 +1036,6 @@ $(document).ready(function () {
                     if (node) tree.deselect_node(node.id);
                 });
                 state.selectedPaths.delete(tagText);
-            });
-        }
-    }
-
-    /**
-     * Loads and processes keyword data, initializing jsTree.
-     * Called when modal is opened for the first time (lazy loading).
-     *
-     * @param {Object} config - Configuration object for the keyword input field.
-     * @param {Array<Object>|Object} response - The keyword data from the API / JSON file.
-     */
-    function loadKeywordsForConfig(config, response) {
-        const state = ensureSharedState(config);
-
-        const data = response.data ? response.data : response;
-        var filteredData = data;
-        var suggestedKeywords = [];
-
-        function ensureArray(x) {
-            if (Array.isArray(x)) return x;
-            if (x && Array.isArray(x.data)) return x.data;
-            return [];
-        }
-
-        var availableNodes = ensureArray(data);
-
-        // If rootNodes/rootNodeId exist, load only those subtrees (e.g., MSL general/domain)
-        if (config.rootNodes || config.rootNodeId) {
-            function findNodeById(nodes, id) {
-                if (!Array.isArray(nodes)) return null;
-                for (var i = 0; i < nodes.length; i++) {
-                    if (!nodes[i]) continue;
-                    if (nodes[i].id === id) return nodes[i];
-                    if (nodes[i].children) {
-                        var foundNode = findNodeById(nodes[i].children, id);
-                        if (foundNode) return foundNode;
-                    }
-                }
-                return null;
-            }
-
-            if (config.rootNodes && Array.isArray(config.rootNodes)) {
-                var collected = [];
-                config.rootNodes.forEach(function (rootId) {
-                    var n = findNodeById(availableNodes, rootId);
-                    if (n) collected.push(n);
-                    else console.warn('root not found:', rootId, 'in', config.apiEndpoint);
-                });
-                if (collected.length === 0) {
-                    console.error('No valid rootNodes found in', config.apiEndpoint);
-                    return;
-                }
-                filteredData = collected;
-            } else if (config.rootNodeId) {
-                var sel = findNodeById(availableNodes, config.rootNodeId);
-                if (sel) filteredData = [sel];
-                else {
-                    console.error('Root node with ID', config.rootNodeId, 'not found in', config.apiEndpoint);
-                    return;
-                }
-            }
-        }
-
-        function processNodes(nodes) {
-            if (!Array.isArray(nodes)) return [];
-            return nodes.map(function (node) {
-                if (!node) return node;
-                if (node.children) {
-                    node.children = processNodes(node.children);
-                }
-                node.a_attr = node.a_attr || { title: node.description || "" };
-                node.original = node.original || {
-                    scheme: node.scheme || "",
-                    schemeURI: node.schemeURI || "",
-                    language: node.language || ""
-                };
-                return node;
-            });
-        }
-
-        var processedData = processNodes(filteredData);
-
-        function buildWhitelistFromNodes(nodes, parentPath) {
-            parentPath = parentPath || [];
-            if (!Array.isArray(nodes)) return;
-            nodes.forEach(function (item) {
-                if (!item) return;
-                var textToAdd = parentPath.concat(item.text).join(' > ');
-                suggestedKeywords.push({
-                    value: textToAdd,
-                    id: item.id,
-                    scheme: item.scheme,
-                    schemeURI: item.schemeURI,
-                    language: item.language
-                });
-                if (item.children) {
-                    buildWhitelistFromNodes(item.children, parentPath.concat(item.text));
-                }
-            });
-        }
-
-        buildWhitelistFromNodes(filteredData);
-
-        // Merge suggestedKeywords into sharedState.whitelist, avoid duplicates
-        const existingValues = new Set(state.whitelist.map(w => w.value));
-        suggestedKeywords.forEach(s => {
-            if (!existingValues.has(s.value)) {
-                state.whitelist.push(s);
-                existingValues.add(s.value);
-            }
-        });
-
-        state.tagifyInstances.forEach(function (tagifyInstance) {
-            tagifyInstance.settings.whitelist = state.whitelist;
-            tagifyInstance.settings.enforceWhitelist = true;
-        });
-
-        // Initialize jsTree
-        $(config.jsTreeId).jstree({
-            core: {
-                data: processedData,
-                themes: { icons: false }
-            },
-            checkbox: {
-                keep_selected_style: true,
-                three_state: false
-            },
-            plugins: ['search', 'checkbox'],
-            search: {
-                show_only_matches: true,
-                search_callback: function (str, node) {
-                    return node.text.toLowerCase().indexOf(str.toLowerCase()) !== -1 ||
-                        (node.a_attr && node.a_attr.title && node.a_attr.title.toLowerCase().indexOf(str.toLowerCase()) !== -1);
-                }
-            }
-        });
-
-        $(config.searchInputId).on("input", function () {
-            var tree = $(config.jsTreeId).jstree(true);
-            if (tree) tree.search($(this).val());
-        });
-
-        $(config.jsTreeId).on("changed.jstree", function (e, data) {
-            if (state.isSyncingTree) return;
-
-            var newCentralSet = new Set();
-
-            state.jsTreeIds.forEach(function (treeSelector) {
-                var tree = $(treeSelector).jstree(true);
-                if (!tree) return;
-                var nodes = tree.get_selected(true);
-                nodes.forEach(function (n) {
-                    var p = tree.get_path(n, " > ");
-                    if (p) newCentralSet.add(p);
-                });
-            });
-
-            state.selectedPaths = newCentralSet;
-            updateSelectedKeywordsList(config.selectedKeywordsListId, state);
-
-            const activeTagify = getActiveTagifyForState(state);
-            if (activeTagify) {
-                // Replace the active row's tags from tree state to keep modal selection authoritative.
-                activeTagify.removeAllTags();
-                if (state.selectedPaths.size > 0) {
-                    activeTagify.addTags(Array.from(state.selectedPaths));
-                }
-            }
-        });
-
-        // Initial sync: if the active input already has tags, select corresponding nodes
-        const activeTagify = getActiveTagifyForState(state);
-        if (activeTagify && activeTagify.value && activeTagify.value.length) {
-            var currentValues = activeTagify.value.map(v => v.value);
-            currentValues.forEach(function (val) {
-                var tree = $(config.jsTreeId).jstree(true);
-                if (!tree) return;
-                var node = findNodeByPath(tree, val);
-                if (node) tree.select_node(node.id);
             });
         }
     }
