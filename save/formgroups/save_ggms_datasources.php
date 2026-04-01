@@ -106,7 +106,12 @@ function extractDataSourceRows(array $postData): array
     ];
 
     $fieldCursors = array_fill_keys(array_keys($fieldValues), 0);
-    // datasource_description is submitted by every row type and is therefore always row-aligned.
+    // datasource_description is a free-text descrription, which works for all the data sources.
+    // Backend expects that the browser submits it for every row,
+    // even as an empty string when the user leaves it blank. It is therefore row-aligned with
+    // datasource_type[] and can be accessed by index. If this field were ever conditionally
+    // disabled in the HTML it would become sparse and would need queue-based consumption instead.
+    //
     // All type-specific fields (details, platform, etc.) are only submitted by the rows that use
     // them, so they must always be consumed as a sequential queue - never treated as row-aligned.
 
