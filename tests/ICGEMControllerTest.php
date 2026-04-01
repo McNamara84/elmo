@@ -872,6 +872,19 @@ final class ICGEMControllerTest extends TestCase
                 'M_name' => null
             ],
             [
+                'type' => 'A',
+                'description' => 'Satellite altimetry data',
+                'details' => 'Direct observations from altimetry satellites',
+                'S_value_name' => null,
+                'S_value_uri' => null,
+                'S_scheme_name' => null,
+                'S_scheme_uri' => null,
+                'T_Isostasy_compensation_depth' => null,
+                'M_identifier' => null,
+                'M_identifier_type' => null,
+                'M_name' => null
+            ],
+            [
                 'type' => 'M',
                 'description' => 'Reference model input',
                 'details' => 'Global Gravitational Model',
@@ -926,7 +939,7 @@ final class ICGEMControllerTest extends TestCase
         $children = $xml->children('http://icgem.gfz.de/schema');
         $sources = $children->inputDataSource;
         
-        $this->assertCount(5, $sources);
+        $this->assertCount(6, $sources);
         
         // First source (Satellite)
         $sourceChildren = $sources[0]->children('http://icgem.gfz.de/schema');
@@ -939,9 +952,16 @@ final class ICGEMControllerTest extends TestCase
         $sourceChildren = $sources[1]->children('http://icgem.gfz.de/schema');
         $this->assertEquals('Ground data', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Ground gravity', (string)$sourceChildren->description);
+        $this->assertEquals('Terrestrial data', (string)$sourceChildren->groundDetail);
 
-        // Third source (Model)
+        // Third source (Altimetry)
         $sourceChildren = $sources[2]->children('http://icgem.gfz.de/schema');
+        $this->assertEquals('Altimetry', (string)$sourceChildren->inputDataSourceType);
+        $this->assertEquals('Satellite altimetry data', (string)$sourceChildren->description);
+        $this->assertEquals('Direct observations from altimetry satellites', (string)$sourceChildren->altimetryDetail);
+
+        // Fourth source (Model)
+        $sourceChildren = $sources[3]->children('http://icgem.gfz.de/schema');
         $this->assertEquals('Model', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Reference model input', (string)$sourceChildren->description);
         $this->assertEquals('Global Gravitational Model', (string)$sourceChildren->modelDetail);
@@ -949,15 +969,15 @@ final class ICGEMControllerTest extends TestCase
         $this->assertEquals('DOI', (string)$sourceChildren->identifierType);
         $this->assertEquals('ICGEM_Global_Model_2024', (string)$sourceChildren->name);
 
-        // Fourth source (Terrain detail without compensation depth)
-        $sourceChildren = $sources[3]->children('http://icgem.gfz.de/schema');
+        // Fifth source (Terrain detail without compensation depth)
+        $sourceChildren = $sources[4]->children('http://icgem.gfz.de/schema');
         $this->assertEquals('Elevation/Terrain', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Topography input', (string)$sourceChildren->description);
         $this->assertEquals('Bathymetry', (string)$sourceChildren->elevationTerrainDetail);
         $this->assertSame('', (string)$sourceChildren->compensationDepth);
 
-        // Fifth source (Terrain detail with compensation depth)
-        $sourceChildren = $sources[4]->children('http://icgem.gfz.de/schema');
+        // Sixth source (Terrain detail with compensation depth)
+        $sourceChildren = $sources[5]->children('http://icgem.gfz.de/schema');
         $this->assertEquals('Elevation/Terrain', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Isostasy input', (string)$sourceChildren->description);
         $this->assertEquals('Isostasy', (string)$sourceChildren->elevationTerrainDetail);

@@ -131,4 +131,127 @@ final class SaveGGMsDataSourcesSparsePostTest extends DatabaseTestCase
         $this->assertSame('DOI', $model['M_identifier_type']);
         $this->assertSame('ICGEM_Global_Model_2024', $model['M_name']);
     }
+
+    /**
+     * Test: Unknown type code in datasource_type raises a RuntimeException.
+     *
+     * An unrecognised type must never silently consume (or fail to consume) cursor-based
+     * fields, because that would misalign every subsequent row.
+     */
+    public function testUnknownTypeCodeThrowsRuntimeException(): void
+    {
+        $postData = [
+            'datasource_type'       => ['G', 'X', 'M'],
+            'datasource_description' => ['Ground desc', 'Unknown desc', 'Model desc'],
+            'datasource_details'    => ['Terrestrial', 'Global Gravitational Model'],
+            'dIdentifier'           => ['10.5880/icgem.2024.001'],
+            'dIdentifierType'       => ['DOI'],
+            'dName'                 => ['ICGEM_Global_Model_2024'],
+        ];
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches("/Unknown data source type 'X'/");
+
+        \extractDataSourceRows($postData);
+    }
+
+    /**
+     * Test: Alignment false-positive scenario — [S, G, M] with the same number of
+     * datasource_details values as row types must NOT be treated as row-aligned.
+     *
+     * The browser only submits details for G and M (2 values). If an extra entry were
+     * present, the old heuristic would flag count==count and map details[0] onto row 0 (S).
+     * With the hardcoded queue approach the mapping must always be:
+     *   queue[0] → G, queue[1] → M  (S is skipped entirely).
+     *
+     * We simulate the coincidental equal-length case by injecting a 3rd details entry
+     * that must NOT end up on the S row.
+     */
+    public function testAlignmentFalsePositiveDoesNotPolluteSatelliteRow(): void
+    {
+        $postData = [
+            'datasource_type'        => ['S', 'G', 'M'],
+            'datasource_description' => ['Sat desc', 'Ground desc', 'Model desc'],
+            // 3 detail values == 3 types: would trigger the old false-positive alignment
+            'datasource_details'     => ['Terrestrial', 'Global Gravitational Model', 'Stray entry'],
+            'satellite_platform'     => [$this->satellitePlatformPayload('GRACE')],
+            'dIdentifier'            => ['10.5880/icgem.2024.001'],
+            'dIdentifierType'        => ['DOI'],
+            'dName'                  => ['ICGEM_Global_Model_2024'],
+        ];
+
+        $rows = \extractDataSourceRows($postData);
+
+        $this->assertCount(3, $rows);
+
+        // S row must have no details (queue not consumed for type S)
+        $this->assertNull($rows[0]['datasource_details'], 'S row must not receive a datasource_details value');
+
+        // G row must receive the first queued details entry
+        $this->assertSame('Terrestrial', $rows[1]['datasource_details']);
+
+        // M row must receive the second queued details entry
+        $this->assertSame('Global Gravitational Model', $rows[2]['datasource_details']);
+    }
+
+    /**
+     * Test: Multiple satellite rows mixed with other sparse types.
+     *
+     * Two S rows (each with its own platform) followed by G and M must each receive
+     * only their own platform payload and leave the details queue intact for G and M.
+     */
+    public function testMultipleSatelliteRowsCombinedWithSparseTypes(): void
+    {
+        $postData = [
+            'datasource_type'        => ['S', 'S', 'G', 'M'],
+            'datasource_description' => ['Sat1 desc', 'Sat2 desc', 'Ground desc', 'Model desc'],
+            'satellite_platform'     => [
+                $this->satellitePlatformPayload('GRACE'),
+                $this->satellitePlatformPayload('GOCE'),
+            ],
+            'datasource_details'     => ['Terrestrial', 'Global Gravitational Model'],
+            'dIdentifier'            => ['10.5880/icgem.2024.001'],
+            'dIdentifierType'        => ['DOI'],
+            'dName'                  => ['ICGEM_Global_Model_2024'],
+        ];
+
+        $rows = \extractDataSourceRows($postData);
+
+        $this->assertCount(4, $rows);
+
+        // Both S rows must have their own platform payloads
+        $platform0 = json_decode($rows[0]['satellite_platform'], true);
+        $platform1 = json_decode($rows[1]['satellite_platform'], true);
+        $this->assertStringContainsString('GRACE', $platform0[0]['value']);
+        $this->assertStringContainsString('GOCE', $platform1[0]['value']);
+
+        // S rows must not have details
+        $this->assertNull($rows[0]['datasource_details']);
+        $this->assertNull($rows[1]['datasource_details']);
+
+        // G and M rows must have their details from the queue
+        $this->assertSame('Terrestrial', $rows[2]['datasource_details']);
+        $this->assertSame('Global Gravitational Model', $rows[3]['datasource_details']);
+    }
+
+    /**
+     * Test: Empty datasource_details for a type that requires it (G) triggers a
+     * validation error when action=submit.
+     */
+    public function testEmptyDetailsForGroundTypeFailsValidationOnSubmit(): void
+    {
+        $resourceId = $this->createResource('test.empty.details', 'Empty Details Validation');
+
+        $postData = [
+            'action'                 => 'submit',
+            'datasource_type'        => ['G'],
+            'datasource_description' => ['Ground desc'],
+            'datasource_details'     => [''],   // empty — required for type G
+        ];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessageMatches("/datasource_details.*required.*G/i");
+
+        \saveGGMsDataSources($this->connection, $postData, $resourceId);
+    }
 }
