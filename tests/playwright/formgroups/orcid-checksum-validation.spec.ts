@@ -119,20 +119,17 @@ test.describe('ORCID Checksum Validation', () => {
 
   test('validates ORCID ending with X', async ({ page }) => {
     const orcidInput = page.locator('#input-author-orcid');
-    // 0000-0001-6772-672X is a real ORCID with X check digit
-    await orcidInput.fill('0000-0001-6772-672X');
+    // 0000-0001-2345-672X has a valid X check digit (ISO 7064 Mod 11-2)
+    await orcidInput.fill('0000-0001-2345-672X');
     await page.locator('#input-author-lastname').click();
 
     await expect(orcidInput).toHaveClass(/is-valid/);
   });
 
   test('contributor person ORCID field also validates checksum', async ({ page }) => {
-    // Ensure the contributor persons form group is visible
-    const contributorGroup = page.locator(SELECTORS.formGroups.contributorPersons);
-
-    const orcidInput = contributorGroup.locator('input[name="cbORCID[]"]').first();
+    const orcidInput = page.locator('#input-contributor-orcid');
     await orcidInput.fill('0000-0002-1825-0098');
-    await contributorGroup.locator('input[name="cbPersonLastName[]"]').first().click();
+    await page.locator('#input-contributor-lastname').click();
 
     await expect(orcidInput).toHaveClass(/is-invalid/);
   });
