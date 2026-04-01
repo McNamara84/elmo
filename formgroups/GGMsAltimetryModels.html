@@ -1,33 +1,11 @@
 <div class="card mb-2">
 	<div class="card-header">
-		<b>Altimetry-derived model properties</b>
+		<b>Altimetry-derived model properties</b> <!-- Main form group that works for all product types -->
 		<i class="bi bi-question-circle-fill" data-help-section-id="help-altimetry-properties" aria-hidden="true"></i>
 	</div>
 	<div class="card-body">
 		<div id="group-ggmsaltimetrymodels">
 			<div class="row">
-				<!-- Product Type -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
-					<div class="input-group has-validation">
-						<div class="form-floating">
-							<select class="form-select input-with-help input-right-no-round-corners" id="input-product-type" name="product_type" required>
-								<option value="" data-translate="general.choose">Choose...</option>
-								<option value="Mean sea surface">Mean sea surface</option>
-								<option value="Mean dynamic ocean topography">Mean dynamic ocean topography</option>
-								<option value="Errors">Errors</option>
-								<option value="Bathymerty">Bathymerty</option>
-							</select>
-							<label for="input-product-type">Product type <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide product type.</div>
-						</div>
-						<div class="input-group-append">
-							<span class="input-group-text">
-								<i class="bi bi-question-circle-fill" data-help-section-id="help-product-type" aria-hidden="true"></i>
-							</span>
-						</div>
-					</div>
-				</div>
-
 				<!-- Reference Ellipsoid -->
 				<div class="col-12 col-md-6 col-lg-4 p-1">
 					<div class="input-group has-validation">
@@ -114,6 +92,45 @@
 						</div>
 					</div>
 				</div>
+			</div>
+			<div class="row mt-2">
+				<!-- Product Type(s) choice. Shows/hides the form groups -->
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" name="altimetryModelOptions" id="checkbox-altimetryMSS" value="option1">
+					<label class="form-check-label" for="checkbox-altimetryMSS">Mean sea surface</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" name="altimetryModelOptions" id="checkbox-altimetryMDOT" value="option2">
+					<label class="form-check-label" for="checkbox-altimetryMDOT">Mean dynamic ocean topography</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" name="altimetryModelOptions" id="checkbox-altimetryGRA" value="option3">
+					<label class="form-check-label" for="checkbox-altimetryGRA">Gravity over oceans</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" name="altimetryModelOptions" id="checkbox-altimetryBathymetry" value="option4">
+					<label class="form-check-label" for="checkbox-altimetryBathymetry">Bathymetry</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" name="altimetryModelOptions" id="checkbox-altimetryErrors" value="option5">
+					<label class="form-check-label" for="checkbox-altimetryErrors">Errors</label>
+				</div>
+			</div>
+			<div class="row mt-2">
+				<input type="checkbox" class="btn-check col-2" id="altimetryMSS" autocomplete="off">
+				<label class="btn btn-outline-primary" for="altimetryMSS">Mean sea surface</label>
+
+				<input type="checkbox" class="btn-check col-4" id="altimetryMDOT" autocomplete="off">
+				<label class="btn btn-outline-primary" for="altimetryMDOT">Mean dynamic ocean topography</label>
+
+				<input type="checkbox" class="btn-check col-2" id="altimetryGRA" autocomplete="off">
+				<label class="btn btn-outline-primary" for="altimetryGRA">Gravity over oceans</label>	
+				
+				<input type="checkbox" class="btn-check col-2" id="altimetryBathymetry" autocomplete="off">
+				<label class="btn btn-outline-primary" for="altimetryBathymetry">Bathymetry</label>
+				
+				<input type="checkbox" class="btn-check col-2" id="altimetryErrors" autocomplete="off">
+				<label class="btn btn-outline-primary" for="altimetryErrors">Errors</label>
 			</div>
 		</div>
 	</div>
