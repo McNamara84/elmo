@@ -93,6 +93,10 @@ describe('autocomplete.js', () => {
     global.Tagify = MockTagify;
     global.fetch = jest.fn();
 
+    // Provide isValidOrcidChecksum globally (loaded via separate script in production)
+    const orcidValidationScript = fs.readFileSync(path.resolve(__dirname, '../../js/validation/orcidValidation.js'), 'utf8');
+    window.eval(orcidValidationScript);
+
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/autocomplete.js'), 'utf8');
     window.eval(script);
     await flushPromises();
@@ -158,7 +162,7 @@ describe('autocomplete.js', () => {
     affInput._tagify = new MockTagify(affInput, {});
 
     const orcidInput = $('#group-author input[name="orcids[]"]');
-    orcidInput.val('1111-1111-1111-1111').trigger('blur');
+    orcidInput.val('1111-1111-1111-1115').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -240,7 +244,7 @@ describe('autocomplete.js', () => {
     affInput._tagify = new MockTagify(affInput, {});
 
     const orcidInput = $('#group-author input[name="orcids[]"]');
-    orcidInput.val('2222-2222-2222-2222').trigger('blur');
+    orcidInput.val('2222-2222-2222-2229').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -284,7 +288,7 @@ describe('autocomplete.js', () => {
     affInput._tagify = new MockTagify(affInput, {});
 
     const orcidInput = $('#group-author input[name="orcids[]"]');
-    orcidInput.val('3333-3333-3333-3333').trigger('blur');
+    orcidInput.val('3333-3333-3333-3332').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -329,7 +333,7 @@ describe('autocomplete.js', () => {
     affInput._tagify = new MockTagify(affInput, {});
 
     const orcidInput = $('#group-author input[name="orcids[]"]');
-    orcidInput.val('4444-4444-4444-4444').trigger('blur');
+    orcidInput.val('4444-4444-4444-4446').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -355,7 +359,7 @@ describe('autocomplete.js', () => {
     fetch.mockResolvedValueOnce({ json: () => Promise.resolve(data) });
 
     const orcidInput = $('#group-author input[name="orcids[]"]');
-    orcidInput.val('0000-0000-0000-0000').trigger('blur');
+    orcidInput.val('0000-0000-0000-0001').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -391,7 +395,7 @@ describe('autocomplete.js', () => {
     affInput._tagify = new MockTagify(affInput, {});
 
     const orcidInput = $('#group-contributorperson input[name="cbORCID[]"]');
-    orcidInput.val('5555-5555-5555-5555').trigger('blur');
+    orcidInput.val('5555-5555-5555-555X').trigger('blur');
     await flushPromises();
     await flushPromises();
 
