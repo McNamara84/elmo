@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/save_affiliations.php';
+require_once __DIR__ . '/../validation.php';
 
 /**
  * Saves contact person information in the database.
@@ -31,6 +32,7 @@ function saveContactPerson($connection, $postData, $resource_id)
     $websites = $postData['cpOnlineResource'] ?? [];
     $affiliations = $postData['personAffiliation'] ?? [];
     $rorIds = $postData['authorPersonRorIds'] ?? [];
+    $action = $postData['action'] ?? 'save_and_download';
 
     $maxLen = count($familynames);
 
@@ -41,6 +43,12 @@ function saveContactPerson($connection, $postData, $resource_id)
         $orcid = trim($orcids[$i] ?? '');
         // Remove ORCID URL prefix if present (defense against frontend bypass)
         $orcid = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $orcid);
+
+        // Validate ORCID checksum on submit
+        if ($action === 'submit' && $orcid !== '' && !isValidOrcidChecksum($orcid)) {
+            throw new Exception("Invalid ORCID checksum: {$orcid}");
+        }
+
         $email = trim($emails[$i] ?? '');
         $website = isset($websites[$i]) ? preg_replace('#^https?://#', '', $websites[$i]) : '';
         $affiliation_data = $affiliations[$i] ?? '';
