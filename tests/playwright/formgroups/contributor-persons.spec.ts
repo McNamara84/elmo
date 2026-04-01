@@ -278,7 +278,7 @@ test.describe('Contributor (Persons) form group', () => {
       });
     });
 
-    await page.locator('#input-contributor-orcid').fill('0000-0003-1825-0097');
+    await page.locator('#input-contributor-orcid').fill('0000-0003-1825-0094');
     await page.locator('#input-contributor-lastname').click();
 
     await expect(page.locator('#input-contributor-lastname')).toHaveValue('Nguyen');
