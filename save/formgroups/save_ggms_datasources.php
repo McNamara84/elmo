@@ -106,10 +106,9 @@ function extractDataSourceRows(array $postData): array
     ];
 
     $fieldCursors = array_fill_keys(array_keys($fieldValues), 0);
-    $fieldAlignment = [];
-    foreach ($fieldValues as $fieldName => $values) {
-        $fieldAlignment[$fieldName] = count($values) === count($types);
-    }
+    // datasource_description is submitted by every row type and is therefore always row-aligned.
+    // All type-specific fields (details, platform, etc.) are only submitted by the rows that use
+    // them, so they must always be consumed as a sequential queue - never treated as row-aligned.
 
     $rows = [];
     foreach ($types as $rowIndex => $type) {
@@ -118,7 +117,7 @@ function extractDataSourceRows(array $postData): array
             'description' => getMappedPostFieldValue(
                 $fieldValues['datasource_description'],
                 $fieldCursors['datasource_description'],
-                $fieldAlignment['datasource_description'],
+                true,
                 $rowIndex
             ),
             'datasource_details' => null,
@@ -131,70 +130,57 @@ function extractDataSourceRows(array $postData): array
 
         switch (trim((string) $type)) {
             case 'S':
-                $row['satellite_platform'] = getMappedPostFieldValue(
+                $row['satellite_platform'] = consumeSequentialPostFieldValue(
                     $fieldValues['satellite_platform'],
-                    $fieldCursors['satellite_platform'],
-                    $fieldAlignment['satellite_platform'],
-                    $rowIndex
+                    $fieldCursors['satellite_platform']
                 );
                 break;
 
             case 'G':
             case 'A':
-                $row['datasource_details'] = getMappedPostFieldValue(
+                $row['datasource_details'] = consumeSequentialPostFieldValue(
                     $fieldValues['datasource_details'],
-                    $fieldCursors['datasource_details'],
-                    $fieldAlignment['datasource_details'],
-                    $rowIndex
+                    $fieldCursors['datasource_details']
                 );
                 break;
 
             case 'T':
-                $row['datasource_details'] = getMappedPostFieldValue(
+                $row['datasource_details'] = consumeSequentialPostFieldValue(
                     $fieldValues['datasource_details'],
-                    $fieldCursors['datasource_details'],
-                    $fieldAlignment['datasource_details'],
-                    $rowIndex
+                    $fieldCursors['datasource_details']
                 );
 
-                if ($fieldAlignment['compensation_depth']) {
-                    $row['compensation_depth'] = getMappedPostFieldValue(
+                if (trim((string) ($row['datasource_details'] ?? '')) === 'Isostasy') {
+                    $row['compensation_depth'] = consumeSequentialPostFieldValue(
                         $fieldValues['compensation_depth'],
-                        $fieldCursors['compensation_depth'],
-                        true,
-                        $rowIndex
+                        $fieldCursors['compensation_depth']
                     );
-                } elseif (trim((string) ($row['datasource_details'] ?? '')) === 'Isostasy') {
-                    $row['compensation_depth'] = consumeSequentialPostFieldValue($fieldValues['compensation_depth'], $fieldCursors['compensation_depth']);
                 }
                 break;
 
             case 'M':
-                $row['datasource_details'] = getMappedPostFieldValue(
+                $row['datasource_details'] = consumeSequentialPostFieldValue(
                     $fieldValues['datasource_details'],
-                    $fieldCursors['datasource_details'],
-                    $fieldAlignment['datasource_details'],
-                    $rowIndex
+                    $fieldCursors['datasource_details']
                 );
-                $row['dIdentifier'] = getMappedPostFieldValue(
+                $row['dIdentifier'] = consumeSequentialPostFieldValue(
                     $fieldValues['dIdentifier'],
-                    $fieldCursors['dIdentifier'],
-                    $fieldAlignment['dIdentifier'],
-                    $rowIndex
+                    $fieldCursors['dIdentifier']
                 );
-                $row['dIdentifierType'] = getMappedPostFieldValue(
+                $row['dIdentifierType'] = consumeSequentialPostFieldValue(
                     $fieldValues['dIdentifierType'],
-                    $fieldCursors['dIdentifierType'],
-                    $fieldAlignment['dIdentifierType'],
-                    $rowIndex
+                    $fieldCursors['dIdentifierType']
                 );
-                $row['dName'] = getMappedPostFieldValue(
+                $row['dName'] = consumeSequentialPostFieldValue(
                     $fieldValues['dName'],
-                    $fieldCursors['dName'],
-                    $fieldAlignment['dName'],
-                    $rowIndex
+                    $fieldCursors['dName']
                 );
                 break;
+
+            default:
+                throw new \RuntimeException(
+                    "Unknown data source type '{$type}' at row index {$rowIndex}. Expected one of: S, G, A, T, M."
+                );
         }
         
         $rows[] = $row;
