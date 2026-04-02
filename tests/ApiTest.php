@@ -369,9 +369,9 @@ final class ApiTest extends DatabaseTestCase
 
         $getDeletedResponse = $this->client->get($getUrl);
         $this->assertEquals(
-            404,
+            204,
             $getDeletedResponse->getStatusCode(),
-            'Expected deleted draft to return 404. Response: ' . $getDeletedResponse->getBody()
+            'Expected deleted draft to return 204. Response: ' . $getDeletedResponse->getBody()
         );
     }
 }
