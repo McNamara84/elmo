@@ -140,9 +140,8 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
     await expect(page.locator('#input-resourceinformation-doi')).toHaveValue('10.82433/B09Z-4K37');
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue('2025');
 
-    // Language: expect "en" is selected
-    const langValue = await page.locator('#input-resourceinformation-language').inputValue();
-    expect(langValue).toBeTruthy();
+    // Language: the uploaded XML specifies <language>en</language>
+    await expect(page.locator('#input-resourceinformation-language')).toHaveValue('en');
 
     // Resource type: expect "Dataset" is selected (value may be an ID)
     const rtText = await page.locator('#input-resourceinformation-resourcetype option:checked').textContent();
@@ -176,7 +175,11 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
     await expect(page.locator('#input-abstract')).toHaveValue(/comprehensive test abstract/);
 
     // ── Step 7: Methods description (dynamically loaded accordion) ────
-    // Wait for the description-types promise (resolves with [] on API error)
+    // Guard: ensure the promise exists before awaiting (avoids no-op on script failure)
+    await page.waitForFunction(
+      () => (window as any).descriptionTypesReady instanceof Promise,
+      { timeout: 10_000 },
+    );
     await page.evaluate(() => (window as any).descriptionTypesReady);
 
     const methodsInput = page.locator('#input-description-Methods');
@@ -266,6 +269,10 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
     );
 
     // Wait for async processing to finish
+    await page.waitForFunction(
+      () => (window as any).descriptionTypesReady instanceof Promise,
+      { timeout: 10_000 },
+    );
     await page.evaluate(() => (window as any).descriptionTypesReady);
 
     // Spot-check a few fields to verify full mapping succeeded

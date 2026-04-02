@@ -455,13 +455,14 @@ describe('autosaveService', () => {
     expect(service.draftId).toBeNull();
   });
 
-  test('clears stale draftId from localStorage when checkForExistingDraft gets 404', async () => {
+  test('surfaces error when checkForExistingDraft gets 404 with stored draftId', async () => {
     window.localStorage.setItem('elmo.autosave.draftId', 'old-draft-id');
 
     const fetchMock = jest.fn().mockResolvedValue({
       ok: false,
       status: 404,
-      json: () => Promise.resolve({ error: 'Draft not found' })
+      json: () => Promise.resolve({ error: 'Draft not found' }),
+      text: () => Promise.resolve('{"error":"Draft not found"}')
     });
 
     const service = new AutosaveService('form-mde', {
@@ -475,9 +476,14 @@ describe('autosaveService', () => {
     service.start();
     await Promise.resolve();
     await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
 
-    expect(window.localStorage.getItem('elmo.autosave.draftId')).toBeNull();
-    expect(service.draftId).toBeNull();
+    // 404 should surface as error (API returns 204 for missing drafts)
+    const statusEl = document.getElementById('autosave-status');
+    expect(statusEl.dataset.state).toBe('error');
+    // draftId should NOT be silently cleared
+    expect(window.localStorage.getItem('elmo.autosave.draftId')).toBe('old-draft-id');
   });
 
   test('does not clear draftId when 204 response is for session/latest (no stored draft)', async () => {

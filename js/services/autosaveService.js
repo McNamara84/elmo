@@ -305,14 +305,8 @@ class AutosaveService {
       }
 
       if (response.status === 404) {
-        // 404 for a known draftId means the draft was deleted server-side
-        if (this.draftId) {
-          this.draftId = null;
-          this.removeStoredDraftId();
-          this.updateStatus('idle');
-          return;
-        }
-        // 404 for session/latest is unexpected (likely misconfigured route)
+        // Since the API now returns 204 for "not found", a 404 always
+        // indicates a misconfigured route or unavailable endpoint.
         const errorMessage = await this.extractErrorMessage(response);
         this.updateStatus('error', errorMessage || 'Draft endpoint not found');
         return;
