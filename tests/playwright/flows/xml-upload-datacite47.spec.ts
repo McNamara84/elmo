@@ -120,7 +120,7 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
   test('uploads DataCite 4.7 XML and verifies all major fields are populated', async ({ page }) => {
 
     // ── Step 1: Open upload modal and load XML ─────────────────────────
-    await page.getByRole('button', { name: /Load/i }).click();
+    await page.locator('#button-form-load').click();
     const modal = page.locator('div#modal-uploadxml');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
@@ -249,7 +249,7 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
       DATACITE_47_XML.replace(/^<\?xml[^?]*\?>\s*/, '')
     }\n</envelope>`;
 
-    await page.getByRole('button', { name: /Load/i }).click();
+    await page.locator('#button-form-load').click();
     const modal = page.locator('div#modal-uploadxml');
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
