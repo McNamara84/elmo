@@ -158,7 +158,6 @@ class DoiController
         $responseBody = curl_exec($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
-        curl_close($ch);
 
         if ($responseBody === false || $error !== '') {
             return null;
