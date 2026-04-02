@@ -35,7 +35,7 @@ describe('doiLookupService.js', () => {
   });
 
   describe('lookupDoi', () => {
-    test('calls correct URL with encoded DOI', async () => {
+    test('calls correct URL with unencoded DOI', async () => {
       global.fetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ found: true, attributes: { doi: '10.1234/test' } }),
@@ -45,14 +45,14 @@ describe('doiLookupService.js', () => {
       const result = await service.lookupDoi('10.1234/test');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost/api/v2/doi/lookup/10.1234%2Ftest',
+        'http://localhost/api/v2/doi/lookup/10.1234/test',
         expect.objectContaining({ method: 'GET' })
       );
       expect(result.found).toBe(true);
       expect(result.attributes.doi).toBe('10.1234/test');
     });
 
-    test('encodes DOI with slashes properly', async () => {
+    test('preserves slashes in DOI path', async () => {
       global.fetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ found: true }),
@@ -62,7 +62,7 @@ describe('doiLookupService.js', () => {
       await service.lookupDoi('10.1234/test');
 
       const url = global.fetch.mock.calls[0][0];
-      expect(url).toBe('http://localhost/api/v2/doi/lookup/10.1234%2Ftest');
+      expect(url).toBe('http://localhost/api/v2/doi/lookup/10.1234/test');
     });
 
     test('throws on non-ok response', async () => {
