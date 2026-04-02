@@ -133,4 +133,55 @@ test.describe('ORCID Checksum Validation', () => {
 
     await expect(orcidInput).toHaveClass(/is-invalid/);
   });
+
+  test('ORCID search result clears invalid state', async ({ page }) => {
+    const orcidInput = page.locator('#input-author-orcid');
+
+    // 1. Enter invalid ORCID → field turns red
+    await orcidInput.fill('0000-0002-1825-0098');
+    await page.locator('#input-author-lastname').click();
+    await expect(orcidInput).toHaveClass(/is-invalid/);
+
+    // 2. Mock ORCID search API + record lookup
+    await page.route('**/pub.orcid.org/v3.0/expanded-search/**', async route => {
+      await route.fulfill({
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          'expanded-result': [{
+            'orcid-id': '0000-0002-1825-0097',
+            'given-names': 'Josiah',
+            'family-names': 'Carberry',
+            'institution-name': ['Brown University']
+          }]
+        })
+      });
+    });
+
+    await page.route('**/pub.orcid.org/v3.0/0000-0002-1825-0097/record', async route => {
+      await route.fulfill({
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          person: { name: { 'family-name': { value: 'Carberry' }, 'given-names': { value: 'Josiah' } } },
+          'activities-summary': { employments: { 'affiliation-group': [] }, educations: { 'affiliation-group': [] } }
+        })
+      });
+    });
+
+    // 3. Open search modal, search, and select result
+    const searchBtn = page.locator(`${SELECTORS.formGroups.authors} .orcid-search-btn`).first();
+    await searchBtn.click();
+    await page.locator('#input-orcid-search-lastname').fill('Carberry');
+    await page.locator('#button-orcid-search-execute').click();
+    const acceptBtn = page.locator('.orcid-search-accept-btn').first();
+    await expect(acceptBtn).toBeVisible();
+    await acceptBtn.click();
+
+    // 4. ORCID field should now be valid (green)
+    await expect(page.locator('#modal-orcid-search')).toBeHidden();
+    await expect(orcidInput).toHaveValue('0000-0002-1825-0097');
+    await expect(orcidInput).toHaveClass(/is-valid/);
+    await expect(orcidInput).not.toHaveClass(/is-invalid/);
+  });
 });

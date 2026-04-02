@@ -296,8 +296,13 @@ $(document).ready(function () {
       });
       const data = await response.json();
 
-      // Fill ORCID field
-      context.row.find(context.orcidField).val(orcid);
+      // Fill ORCID field and re-validate (clears any prior invalid state)
+      const orcidInputEl = context.row.find(context.orcidField);
+      orcidInputEl.val(orcid);
+      orcidInputEl[0]?.dispatchEvent(new Event('input', { bubbles: true }));
+      if (typeof validateOrcidField === 'function') {
+        validateOrcidField(orcidInputEl[0]);
+      }
 
       // Fill remaining fields using shared logic from autocomplete.js
       fillRowFromOrcidRecord(context.row, data, context.fieldMapping);
