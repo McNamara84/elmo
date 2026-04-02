@@ -28,7 +28,7 @@ class DraftController
         $this->retentionDays = (int) (getenv('ELMO_DRAFT_RETENTION_DAYS') ?: 30);
 
         if (!is_dir($this->storageRoot)) {
-            mkdir($this->storageRoot, 0775, true);
+            @mkdir($this->storageRoot, 0775, true);
         }
     }
 
