@@ -20,7 +20,7 @@ class DraftController
     private int $retentionDays;
 
     /**
-     * Creates the controller instance and ensures the storage directory exists.
+     * Creates the controller instance and resolves storage configuration.
      */
     public function __construct()
     {
