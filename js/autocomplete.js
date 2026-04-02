@@ -218,7 +218,7 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
   const row = orcidInput.closest('[data-creator-row]');
   const orcid = orcidInput.val();
 
-  if (orcid.match(/^\d{4}-\d{4}-\d{4}-(\d{4}|\d{3}X)$/)) {
+  if (orcid.match(/^\d{4}-\d{4}-\d{4}-(\d{4}|\d{3}X)$/) && isValidOrcidChecksum(orcid)) {
     fetch(`https://pub.orcid.org/v3.0/${orcid}/record`, {
       headers: {
         'Accept': 'application/vnd.orcid+json'
@@ -261,7 +261,7 @@ $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () 
   const row = orcidInput.closest('[contributor-person-row]');
   const orcid = orcidInput.val();
 
-  if (orcid.match(/^\d{4}-\d{4}-\d{4}-(\d{4}|\d{3}X)$/)) {
+  if (orcid.match(/^\d{4}-\d{4}-\d{4}-(\d{4}|\d{3}X)$/) && isValidOrcidChecksum(orcid)) {
     fetch(`https://pub.orcid.org/v3.0/${orcid}/record`, {
       headers: {
         'Accept': 'application/vnd.orcid+json'

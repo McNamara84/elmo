@@ -16,6 +16,7 @@
         "pleaseChoose": "Please choose",
         "orcid": "ORCID",
         "orcidInvalid": "Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))",
+        "orcidChecksumInvalid": "The ORCID checksum is invalid. Please verify the ORCID at <a href='https://orcid.org' target='_blank'>orcid.org</a>.",
         "lastName": "Last Name",
         "lastNameInvalid": "Please provide a lastname. Letters only. No digits or special characters (e.g. $, %, _).",
         "firstNameInvalid": "Please provide a firstname. Letters only. No digits or special characters (e.g. $, %, _).",

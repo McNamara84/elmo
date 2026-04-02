@@ -371,7 +371,7 @@ Occurrence is: 1-n
   - Data type: String
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `orcid` in the table `author`
-  - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”.
+  - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx”. Validated using the ISO 7064 Mod 11-2 checksum algorithm.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/creator/#nameidentifier)
   - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
 
@@ -515,7 +515,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - Data type: String
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `orcid` in the `Contributor_Person` table
-  - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx-xxxx”
+  - Restrictions: Must be in the format “xxxx-xxxx-xxxx-xxxx”. Validated using the ISO 7064 Mod 11-2 checksum algorithm.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/contributor/#a-nameidentifierscheme)
   - Example values: `1452-9875-4521-7893`, `0082-4781-1312-884x`
 

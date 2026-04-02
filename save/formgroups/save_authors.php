@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/save_affiliations.php';
+require_once __DIR__ . '/../validation.php';
 
 /**
  * Filters the input author data and returns only those authors 
@@ -182,6 +183,12 @@ function saveAuthors($connection, $postData, $resource_id)
             $orcid = trim($orcids[$i] ?? '');
             // Remove ORCID URL prefix if present (defense against frontend bypass)
             $orcid = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $orcid);
+
+            // Validate ORCID checksum on submit
+            if ($action === 'submit' && $orcid !== '' && !isValidOrcidChecksum($orcid)) {
+                throw new Exception("Invalid ORCID checksum: {$orcid}");
+            }
+
             $affiliation_data = trim($personAffiliations[$i] ?? '');
             $rorId_data = trim($personRorIds[$i] ?? '');
 

@@ -125,6 +125,30 @@ function validateContributorInstitutionDependencies($entry)
 }
 
 /**
+ * Validates the checksum of an ORCID identifier using ISO 7064 Mod 11-2.
+ *
+ * @param string $orcid The ORCID identifier (with hyphens, e.g. "0000-0002-1825-0097")
+ * @return bool True if the checksum is valid, false otherwise
+ */
+function isValidOrcidChecksum(string $orcid): bool
+{
+    $digits = str_replace('-', '', $orcid);
+    if (strlen($digits) !== 16 || !preg_match('/^\d{15}[\dX]$/', $digits)) {
+        return false;
+    }
+
+    $total = 0;
+    for ($i = 0; $i < 15; $i++) {
+        $total = ($total + intval($digits[$i])) * 2;
+    }
+    $remainder = $total % 11;
+    $checkDigit = (12 - $remainder) % 11;
+    $expectedChar = $checkDigit === 10 ? 'X' : strval($checkDigit);
+
+    return $digits[15] === $expectedChar;
+}
+
+/**
  * Validates that all required fields are present in JSON-structured keyword entries.
  *
  * @param array $keywordData The decoded JSON data to validate

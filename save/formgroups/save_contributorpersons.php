@@ -49,6 +49,11 @@ function saveContributorPersons($connection, $postData, $resource_id)
         $entry['orcid'] = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $entry['orcid']);
         $entry['orcid'] = trim($entry['orcid']);
 
+        // Validate ORCID checksum on submit
+        if ($action === 'submit' && $entry['orcid'] !== '' && !isValidOrcidChecksum($entry['orcid'])) {
+            throw new Exception("Invalid ORCID checksum: {$entry['orcid']}");
+        }
+
         if ($action === 'submit') {
             if (!validateContributorPersonDependencies($entry)) {
                 $allSuccessful = false;
