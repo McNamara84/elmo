@@ -140,8 +140,10 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
     await expect(page.locator('#input-resourceinformation-doi')).toHaveValue('10.82433/B09Z-4K37');
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue('2025');
 
-    // Language: the uploaded XML specifies <language>en</language>
-    await expect(page.locator('#input-resourceinformation-language')).toHaveValue('en');
+    // Language: the uploaded XML specifies <language>en</language>;
+    // dropdown values are numeric IDs, so check the selected option's visible text
+    const langText = await page.locator('#input-resourceinformation-language option:checked').textContent();
+    expect(langText?.trim().toLowerCase()).toContain('english');
 
     // Resource type: expect "Dataset" is selected (value may be an ID)
     const rtText = await page.locator('#input-resourceinformation-resourcetype option:checked').textContent();

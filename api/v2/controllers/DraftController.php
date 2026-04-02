@@ -26,11 +26,19 @@ class DraftController
     {
         $this->storageRoot = rtrim(getenv('ELMO_DRAFT_STORAGE') ?: (__DIR__ . '/../../../storage/drafts'), DIRECTORY_SEPARATOR);
         $this->retentionDays = (int) (getenv('ELMO_DRAFT_RETENTION_DAYS') ?: 30);
+    }
 
+    /**
+     * Ensures the storage root directory exists and is writable.
+     *
+     * @throws \RuntimeException When the directory cannot be created.
+     */
+    private function ensureStorageRoot(): void
+    {
         if (!is_dir($this->storageRoot)) {
             // Suppress warning from race when another process creates the dir concurrently
             if (!@mkdir($this->storageRoot, 0775, true) && !is_dir($this->storageRoot)) {
-                error_log('DraftController: failed to create storage directory: ' . $this->storageRoot);
+                throw new \RuntimeException('DraftController: cannot create storage directory: ' . $this->storageRoot);
             }
         }
     }
@@ -290,12 +298,20 @@ class DraftController
      */
     private function persistRecord(array $record): void
     {
+        $this->ensureStorageRoot();
+
         $dir = $this->sessionDirectory($record['sessionId']);
         if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
+            if (!@mkdir($dir, 0775, true) && !is_dir($dir)) {
+                throw new \RuntimeException('DraftController: cannot create session directory: ' . $dir);
+            }
         }
 
-        file_put_contents($this->recordPath($record['sessionId'], $record['id']), json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $path = $this->recordPath($record['sessionId'], $record['id']);
+        $bytes = file_put_contents($path, json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        if ($bytes === false) {
+            throw new \RuntimeException('DraftController: failed to write draft file: ' . $path);
+        }
     }
 
     /**
