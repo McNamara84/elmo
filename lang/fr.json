@@ -357,5 +357,18 @@
         "paragraph2": "Veuillez saisir vos informations et cliquer sur « Soumettre » pour transmettre vos métadonnées aux curatrices et curateurs des GFZ Data Services. Nous vous recommandons également d’enregistrer une copie de vos métadonnées sur votre ordinateur pour vos dossiers.",
         "paragraph3": "Pour plus d'informations, veuillez consulter nos <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>instructions de publication</a>.",
         "button": "Continuer"
+    },
+    "doiPrefill": {
+        "modalTitle": "Préremplissage à partir du DOI",
+        "modalMessage": "Les métadonnées suivantes ont été trouvées pour ce DOI. Souhaitez-vous préremplir le formulaire ? Les entrées existantes seront écrasées.",
+        "confirm": "Appliquer",
+        "cancel": "Annuler",
+        "loading": "Recherche du DOI…",
+        "versionHint": "Veuillez vérifier et ajuster le numéro de version si nécessaire.",
+        "previewTitle": "Titre",
+        "previewAuthors": "Auteurs",
+        "previewType": "Type de ressource",
+        "previewYear": "Année de publication",
+        "previewLicense": "Licence"
     }
 }
