@@ -325,7 +325,14 @@ class DraftController
         }
 
         $path = $this->recordPath($record['sessionId'], $record['id']);
-        $bytes = file_put_contents($path, json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        try {
+            $json = json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new \RuntimeException('DraftController: failed to encode draft as JSON: ' . $e->getMessage());
+        }
+
+        $bytes = file_put_contents($path, $json);
         if ($bytes === false) {
             throw new \RuntimeException('DraftController: failed to write draft file: ' . $path);
         }

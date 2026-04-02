@@ -217,9 +217,9 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
     expect(keywordValue.toLowerCase()).toContain('seismology');
 
     // ── Step 11: Funding Reference ─────────────────────────────────────
-    await expect(page.locator('#input-funder').first()).toHaveValue('Deutsche Forschungsgemeinschaft');
-    await expect(page.locator('#input-grantnumber').first()).toHaveValue('DFG-12345');
-    await expect(page.locator('#input-grantname').first()).toHaveValue('Seismic Monitoring Network Expansion');
+    await expect(page.locator('input[name="funder[]"]').first()).toHaveValue('Deutsche Forschungsgemeinschaft');
+    await expect(page.locator('input[name="grantNummer[]"]').first()).toHaveValue('DFG-12345');
+    await expect(page.locator('input[name="grantName[]"]').first()).toHaveValue('Seismic Monitoring Network Expansion');
 
     // ── Step 12: Related Work ──────────────────────────────────────────
     await expect(page.locator('#input-relatedwork-identifier').first()).toHaveValue('10.5555/example-supplement');
@@ -280,7 +280,7 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
 
     // Spot-check a few fields to verify full mapping succeeded
     await expect(page.locator('#input-abstract')).toHaveValue(/comprehensive test abstract/);
-    await expect(page.locator('#input-funder').first()).toHaveValue('Deutsche Forschungsgemeinschaft');
-    await expect(page.locator('#input-grantnumber').first()).toHaveValue('DFG-12345');
+    await expect(page.locator('input[name="funder[]"]').first()).toHaveValue('Deutsche Forschungsgemeinschaft');
+    await expect(page.locator('input[name="grantNummer[]"]').first()).toHaveValue('DFG-12345');
   });
 });
