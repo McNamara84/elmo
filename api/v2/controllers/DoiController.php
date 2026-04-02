@@ -265,6 +265,9 @@ class DoiController
 
     /**
      * Sends a JSON response with the given HTTP status code.
+     *
+     * @param int $status HTTP status code.
+     * @param array<string, mixed>|null $payload Data to encode as JSON.
      */
     private function respond(int $status, ?array $payload): void
     {
