@@ -274,4 +274,15 @@ final class DraftControllerTest extends TestCase
 
         $this->assertSame(403, $forbiddenStatus);
     }
+
+    public function testGetNonExistentDraftReturns204(): void
+    {
+        $controller = new DraftController();
+        [$status, $data] = $this->captureResponse(function () use ($controller) {
+            $controller->get(['id' => 'aaaabbbbccccdddd1111222233334444']);
+        });
+
+        $this->assertSame(204, $status);
+        $this->assertNull($data);
+    }
 }

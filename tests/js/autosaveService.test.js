@@ -429,4 +429,79 @@ describe('autosaveService', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('/mde-msl/api/v2/drafts');
     expect(service.apiBaseUrl).toBe('/mde-msl/api/v2');
   });
+
+  test('clears stale draftId from localStorage when checkForExistingDraft gets 204', async () => {
+    window.localStorage.setItem('elmo.autosave.draftId', 'stale-draft-id');
+
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      json: () => Promise.resolve(null)
+    });
+
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 0,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft'
+    });
+
+    service.start();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(window.localStorage.getItem('elmo.autosave.draftId')).toBeNull();
+    expect(service.draftId).toBeNull();
+  });
+
+  test('clears stale draftId from localStorage when checkForExistingDraft gets 404', async () => {
+    window.localStorage.setItem('elmo.autosave.draftId', 'old-draft-id');
+
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: () => Promise.resolve({ error: 'Draft not found' })
+    });
+
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 0,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft'
+    });
+
+    service.start();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(window.localStorage.getItem('elmo.autosave.draftId')).toBeNull();
+    expect(service.draftId).toBeNull();
+  });
+
+  test('does not clear draftId when 204 response is for session/latest (no stored draft)', async () => {
+    // No stored draftId => service queries session/latest
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      json: () => Promise.resolve(null)
+    });
+
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 0,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft'
+    });
+
+    service.start();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // draftId should remain null (was never set)
+    expect(service.draftId).toBeNull();
+    expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts/session/latest');
+  });
 });

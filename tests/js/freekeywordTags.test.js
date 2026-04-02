@@ -81,13 +81,13 @@ describe('freekeywordTags.js', () => {
     errSpy.mockRestore();
   });
 
-  test('logs when no keywords returned', () => {
+  test('does not log when no keywords returned', () => {
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     loadScript(() => ({
       done(cb) { cb([]); return { fail: jest.fn() }; },
       fail: jest.fn()
     }));
-    expect(logSpy).toHaveBeenCalledWith('ELMO currently has no curated keywords.');
+    expect(logSpy).not.toHaveBeenCalledWith('ELMO currently has no curated keywords.');
     const input = document.getElementById('input-freekeyword');
     expect(input._tagify.settings.whitelist).toEqual([]);
     logSpy.mockRestore();
