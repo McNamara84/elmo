@@ -32,8 +32,8 @@ $(document).ready(function () {
     if (show) {
       if (!$spinner.length) {
         $doiInput.closest('.input-group').after(
-          '<div id="doi-lookup-spinner" class="doi-lookup-loading">' +
-          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>' +
+          '<div id="doi-lookup-spinner" class="doi-lookup-loading" role="status" aria-live="polite">' +
+          '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' +
           ' <span data-translate="doiPrefill.loading">Looking up DOI…</span></div>'
         );
       }
