@@ -226,13 +226,15 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
     expect(licenseText?.toLowerCase()).toContain('cc');
 
     // ── Step 14: No console errors ─────────────────────────────────────
-    // Filter out known harmless warnings
+    // Filter known CI-environment messages (no ERNIE API key / external services)
     const realErrors = consoleErrors.filter(
       (e) =>
         !e.includes('favicon.ico') &&
-        !e.includes('api/v2/drafts') &&
         !e.includes('google.maps') &&
-        !e.includes('installHook'),
+        !e.includes('installHook') &&
+        !e.includes('API key not found') &&
+        !e.includes('503') &&
+        !e.includes('thesauri availability'),
     );
     expect(realErrors, `Unexpected console errors: ${realErrors.join('\n')}`).toEqual([]);
 

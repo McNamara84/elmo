@@ -70,11 +70,20 @@ test.describe('Console errors regression', () => {
     await page.evaluate(() => (window as any).descriptionTypesReady);
 
     // Filter out known external/non-critical warnings
-    const criticalErrors = jsErrors.filter(
+    const criticalJsErrors = jsErrors.filter(
       (e) => !e.includes('google.maps') && !e.includes('installHook'),
     );
+    expect(criticalJsErrors).toEqual([]);
 
-    expect(criticalErrors).toEqual([]);
+    // Assert no unexpected console.error messages
+    const realConsoleErrors = consoleErrors.filter(
+      (e) =>
+        !e.includes('favicon.ico') &&
+        !e.includes('API key not found') &&
+        !e.includes('503') &&
+        !e.includes('thesauri availability'),
+    );
+    expect(realConsoleErrors).toEqual([]);
   });
 
   test('descriptionTypesReady promise resolves', async ({ page }) => {
@@ -109,8 +118,8 @@ test.describe('Console errors regression', () => {
   test('no duplicate HTML IDs on upload modal', async ({ page }) => {
     await navigateToHome(page);
 
-    // Wait for the upload modal element to be in the DOM
-    await page.waitForSelector('#modal-uploadxml', { timeout: 10_000 });
+    // Wait for the upload modal element to exist in the DOM (it is hidden until opened)
+    await page.locator('#modal-uploadxml').waitFor({ state: 'attached', timeout: 10_000 });
 
     // Verify the upload modal ID is unique (was duplicated on both div and h5)
     const uploadModalCount = await page.evaluate(() => {
@@ -187,5 +196,11 @@ test.describe('XML Upload field population regression', () => {
     await expect(page.locator('input[name="grantName[]"]').first()).toHaveValue(
       'Test Grant Title',
     );
+
+    // No uncaught JS exceptions during upload
+    const criticalJsErrors = jsErrors.filter(
+      (e) => !e.includes('google.maps') && !e.includes('installHook'),
+    );
+    expect(criticalJsErrors).toEqual([]);
   });
 });
