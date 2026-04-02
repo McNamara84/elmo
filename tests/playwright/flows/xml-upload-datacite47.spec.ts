@@ -81,7 +81,24 @@ const DATACITE_47_XML = `<?xml version="1.0" encoding="UTF-8"?>
 </resource>`;
 
 test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
+  /** Console errors and JS exceptions collected across the test. */
+  let consoleErrors: string[];
+  let jsErrors: string[];
+
   test.beforeEach(async ({ page }) => {
+    consoleErrors = [];
+    jsErrors = [];
+
+    // Register listeners BEFORE navigation to capture initialization-time errors
+    page.on('pageerror', (err) => {
+      jsErrors.push(err.message);
+    });
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
     await navigateToHome(page);
 
     // Wait for the page to be fully loaded: dropdowns populated, description types loaded
@@ -101,17 +118,6 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
   });
 
   test('uploads DataCite 4.7 XML and verifies all major fields are populated', async ({ page }) => {
-    // Collect console errors during the test
-    const consoleErrors: string[] = [];
-    page.on('console', msg => {
-      if (msg.type() === 'error') {
-        const text = msg.text();
-        // Ignore known harmless messages
-        if (!text.includes('Google Maps') && !text.includes('favicon')) {
-          consoleErrors.push(text);
-        }
-      }
-    });
 
     // ── Step 1: Open upload modal and load XML ─────────────────────────
     await page.getByRole('button', { name: /Load/i }).click();
@@ -220,15 +226,52 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
     expect(licenseText?.toLowerCase()).toContain('cc');
 
     // ── Step 14: No console errors ─────────────────────────────────────
-    // Filter out harmless warnings that may still appear
+    // Filter out known harmless warnings
     const realErrors = consoleErrors.filter(
-      e =>
-        !e.includes('net::ERR') &&
-        !e.includes('404') &&
-        !e.includes('curated keywords') &&
-        !e.includes('thesauri availability') && // Docker permission issue with DraftController mkdir
-        !e.includes('Permission denied'),
+      (e) =>
+        !e.includes('favicon.ico') &&
+        !e.includes('api/v2/drafts') &&
+        !e.includes('google.maps') &&
+        !e.includes('installHook'),
     );
     expect(realErrors, `Unexpected console errors: ${realErrors.join('\n')}`).toEqual([]);
+
+    // No uncaught JS exceptions (pageerror)
+    const criticalJsErrors = jsErrors.filter(
+      (e) => !e.includes('google.maps') && !e.includes('installHook'),
+    );
+    expect(criticalJsErrors, `Unexpected JS errors: ${criticalJsErrors.join('\n')}`).toEqual([]);
+  });
+
+  test('uploads envelope-wrapped XML and populates fields correctly', async ({ page }) => {
+    // Wrap the DataCite XML inside an <envelope> element (the format produced by
+    // the ELMO API when exporting multiple schemas in a single file).
+    const envelopeXml = `<?xml version="1.0" encoding="UTF-8"?>\n<envelope>\n${
+      DATACITE_47_XML.replace(/^<\?xml[^?]*\?>\s*/, '')
+    }\n</envelope>`;
+
+    await page.getByRole('button', { name: /Load/i }).click();
+    const modal = page.locator('div#modal-uploadxml');
+    await expect(modal).toBeVisible({ timeout: 5_000 });
+
+    await page.setInputFiles('#input-uploadxml-file', {
+      name: 'datacite47-envelope.xml',
+      mimeType: 'text/xml',
+      buffer: Buffer.from(envelopeXml, 'utf-8'),
+    });
+
+    // Title proves that loadXmlToForm found <resource> inside <envelope>
+    await expect(page.locator('#input-resourceinformation-title')).toHaveValue(
+      'Full DataCite 4.7 Upload Test',
+      { timeout: 20_000 },
+    );
+
+    // Wait for async processing to finish
+    await page.evaluate(() => (window as any).descriptionTypesReady);
+
+    // Spot-check a few fields to verify full mapping succeeded
+    await expect(page.locator('#input-abstract')).toHaveValue(/comprehensive test abstract/);
+    await expect(page.locator('#input-funder').first()).toHaveValue('Deutsche Forschungsgemeinschaft');
+    await expect(page.locator('#input-grantnumber').first()).toHaveValue('DFG-12345');
   });
 });

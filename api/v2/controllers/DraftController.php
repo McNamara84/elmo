@@ -28,7 +28,9 @@ class DraftController
         $this->retentionDays = (int) (getenv('ELMO_DRAFT_RETENTION_DAYS') ?: 30);
 
         if (!is_dir($this->storageRoot)) {
-            @mkdir($this->storageRoot, 0775, true);
+            if (!mkdir($this->storageRoot, 0775, true) && !is_dir($this->storageRoot)) {
+                error_log('DraftController: failed to create storage directory: ' . $this->storageRoot);
+            }
         }
     }
 

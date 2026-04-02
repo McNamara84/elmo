@@ -294,13 +294,27 @@ class AutosaveService {
         credentials: 'include'
       });
 
-      if (response.status === 204 || response.status === 404) {
+      if (response.status === 204) {
         // Clear stale draft ID so the next save creates a fresh draft
         if (this.draftId) {
           this.draftId = null;
           this.removeStoredDraftId();
         }
         this.updateStatus('idle');
+        return;
+      }
+
+      if (response.status === 404) {
+        // 404 for a known draftId means the draft was deleted server-side
+        if (this.draftId) {
+          this.draftId = null;
+          this.removeStoredDraftId();
+          this.updateStatus('idle');
+          return;
+        }
+        // 404 for session/latest is unexpected (likely misconfigured route)
+        const errorMessage = await this.extractErrorMessage(response);
+        this.updateStatus('error', errorMessage || 'Draft endpoint not found');
         return;
       }
 

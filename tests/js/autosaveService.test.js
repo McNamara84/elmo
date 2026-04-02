@@ -504,4 +504,33 @@ describe('autosaveService', () => {
     expect(service.draftId).toBeNull();
     expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts/session/latest');
   });
+
+  test('surfaces error when 404 on session/latest (misconfigured route)', async () => {
+    // No stored draftId => service queries session/latest
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: () => Promise.resolve({ error: 'Route not found' }),
+      text: () => Promise.resolve('Route not found')
+    });
+
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 0,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft'
+    });
+
+    service.start();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // Should surface as error, not silently ignored
+    expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts/session/latest');
+    const statusEl = document.getElementById('autosave-status');
+    expect(statusEl.dataset.state).toBe('error');
+  });
 });
