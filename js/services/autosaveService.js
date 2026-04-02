@@ -295,6 +295,11 @@ class AutosaveService {
       });
 
       if (response.status === 204 || response.status === 404) {
+        // Clear stale draft ID so the next save creates a fresh draft
+        if (this.draftId) {
+          this.draftId = null;
+          this.removeStoredDraftId();
+        }
         this.updateStatus('idle');
         return;
       }

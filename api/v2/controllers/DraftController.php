@@ -126,7 +126,7 @@ class DraftController
         }
 
         if (!$record) {
-            $this->respond(404, ['error' => 'Draft not found']);
+            $this->respond(204, null);
             return;
         }
 
