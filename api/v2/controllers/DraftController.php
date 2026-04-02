@@ -31,7 +31,7 @@ class DraftController
     /**
      * Ensures the storage root directory exists and is writable.
      *
-     * @throws \RuntimeException When the directory cannot be created.
+     * @throws \RuntimeException When the directory cannot be created or is not writable.
      */
     private function ensureStorageRoot(): void
     {
@@ -40,6 +40,9 @@ class DraftController
             if (!@mkdir($this->storageRoot, 0775, true) && !is_dir($this->storageRoot)) {
                 throw new \RuntimeException('DraftController: cannot create storage directory: ' . $this->storageRoot);
             }
+        }
+        if (!is_writable($this->storageRoot)) {
+            throw new \RuntimeException('DraftController: storage directory is not writable: ' . $this->storageRoot);
         }
     }
 
@@ -63,7 +66,14 @@ class DraftController
 
         $draftId = bin2hex(random_bytes(16));
         $record = $this->createRecord($draftId, $sessionId, $payload['payload']);
-        $this->persistRecord($record);
+
+        try {
+            $this->persistRecord($record);
+        } catch (\RuntimeException $e) {
+            error_log($e->getMessage());
+            $this->respond(500, ['error' => 'Failed to persist draft']);
+            return;
+        }
 
         $this->respond(201, $this->responseMetadata($record));
     }
@@ -108,7 +118,14 @@ class DraftController
         $record['updatedAt'] = $this->now();
         $record['checksum'] = $this->checksum($record['payload']);
 
-        $this->persistRecord($record);
+        try {
+            $this->persistRecord($record);
+        } catch (\RuntimeException $e) {
+            error_log($e->getMessage());
+            $this->respond(500, ['error' => 'Failed to persist draft']);
+            return;
+        }
+
         $this->respond(200, $this->responseMetadata($record));
     }
 

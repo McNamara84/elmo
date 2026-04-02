@@ -167,7 +167,8 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
     // ── Step 5: Contributor Person (DataCollector) ──────────────────────
     // Note: ContactPerson is mapped via ISO pointOfContact only, not from
     // pure DataCite XML. We verify the DataCollector contributor instead.
-    const contributorPersonRows = page.locator('#group-contributorperson div[contributor-person-row]');
+    // Scope by attribute (not #group-contributorperson which is a duplicate ID in the DOM).
+    const contributorPersonRows = page.locator('div[contributor-person-row]');
     const cpLastName = contributorPersonRows.first().locator('[id^="input-contributor-lastname"]');
     await expect(cpLastName).toHaveValue('Schmidt', { timeout: 10_000 });
     const cpFirstName = contributorPersonRows.first().locator('[id^="input-contributor-firstname"]');
