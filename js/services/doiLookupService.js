@@ -49,8 +49,7 @@ class DoiLookupService {
    * @returns {Promise<{found: boolean, attributes?: Object}>}
    */
   async lookupDoi(doi) {
-    const encoded = encodeURIComponent(doi);
-    const url = `${this.apiBaseUrl}/doi/lookup/${encoded}`;
+    const url = `${this.apiBaseUrl}/doi/lookup/${doi}`;
 
     const response = await this.fetchImpl(url, {
       method: 'GET',
