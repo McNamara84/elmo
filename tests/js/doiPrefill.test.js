@@ -56,6 +56,24 @@ describe('doiPrefill.js', () => {
     });
   });
 
+  /* ── decodeHtmlEntities ─────────────────────────────────────── */
+
+  describe('decodeHtmlEntities', () => {
+    test('decodes &gt; and &lt; entities', () => {
+      expect(mod.decodeHtmlEntities('EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS')).toBe(
+        'EARTH SCIENCE > SOLID EARTH > GEODETICS'
+      );
+    });
+
+    test('decodes &amp; entity', () => {
+      expect(mod.decodeHtmlEntities('A &amp; B')).toBe('A & B');
+    });
+
+    test('passes through plain text unchanged', () => {
+      expect(mod.decodeHtmlEntities('Geophysics')).toBe('Geophysics');
+    });
+  });
+
   /* ── normalizeRole ──────────────────────────────────────────── */
 
   describe('normalizeRole', () => {
@@ -376,6 +394,17 @@ describe('doiPrefill.js', () => {
       mod.prefillKeywords([]);
       const tagify = document.querySelector('#input-freekeyword')._tagify;
       expect(tagify.addTags).not.toHaveBeenCalled();
+    });
+
+    test('decodes HTML entities in keyword values', () => {
+      mod.prefillKeywords([
+        { subject: 'EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS' },
+      ]);
+
+      const tagify = document.querySelector('#input-freekeyword')._tagify;
+      expect(tagify.addTags).toHaveBeenCalledWith([
+        expect.objectContaining({ value: 'EARTH SCIENCE > SOLID EARTH > GEODETICS' }),
+      ]);
     });
   });
 
