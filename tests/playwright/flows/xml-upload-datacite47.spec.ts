@@ -176,11 +176,8 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
     await expect(page.locator('#input-abstract')).toHaveValue(/comprehensive test abstract/);
 
     // ── Step 7: Methods description (dynamically loaded accordion) ────
-    // Description types are loaded from ERNIE API; wait for them
-    await page.waitForFunction(
-      () => document.querySelectorAll('#accordion-description .accordion-item[data-description-slug]').length > 0,
-      { timeout: 15_000 },
-    );
+    // Wait for the description-types promise (resolves with [] on API error)
+    await page.evaluate(() => (window as any).descriptionTypesReady);
 
     const methodsInput = page.locator('#input-description-Methods');
     if (await methodsInput.count() > 0) {
