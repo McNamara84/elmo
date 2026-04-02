@@ -23,6 +23,18 @@ function getTagify(el) {
   return el?._tagify ?? null;
 }
 
+/**
+ * Decodes HTML entities in a string (e.g. "&gt;" → ">").
+ * DataCite subjects may contain HTML-encoded characters.
+ * @param {string} str
+ * @returns {string}
+ */
+function decodeHtmlEntities(str) {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = str;
+  return textarea.value;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Vocabulary mapping helpers (fetched once, cached)                  */
 /* ------------------------------------------------------------------ */
@@ -156,9 +168,9 @@ async function prefillTitles(titles) {
       $('#input-resourceinformation-titletype').val(mapTitleTypeFromJson(t.titleType, mapping));
     } else {
       $('#button-resourceinformation-addtitle').click();
-      const $lastRow = $('input[name="title[]"]').last().closest('.row');
-      $lastRow.find('input[name="title[]"]').val(t.title || '');
-      $lastRow.find('select[name="titleType[]"]').val(mapTitleTypeFromJson(t.titleType, mapping));
+      const $row = $('input[name="title[]"]').eq(i).closest('.row');
+      $row.find('input[name="title[]"]').val(t.title || '');
+      $row.find('select[name="titleType[]"]').val(mapTitleTypeFromJson(t.titleType, mapping));
     }
   });
 }
@@ -503,8 +515,11 @@ function prefillKeywords(subjects) {
   const tagifyMsl = getTagify(document.querySelector('#input-mslkeyword'));
 
   subjects.forEach(s => {
-    const keyword = (typeof s === 'string') ? s : (s.subject || '');
-    if (!keyword) return;
+    const rawKeyword = (typeof s === 'string') ? s : (s.subject || '');
+    if (!rawKeyword) return;
+
+    // Decode HTML entities (DataCite may deliver e.g. "&gt;" instead of ">")
+    const keyword = decodeHtmlEntities(rawKeyword);
 
     const schemeURI = s.schemeURI || '';
     const subjectScheme = s.subjectScheme || '';
@@ -790,6 +805,7 @@ function escapeHtml(str) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     getTagify,
+    decodeHtmlEntities,
     normalizeRole,
     mapTitleTypeFromJson,
     prefillResourceInfo,
