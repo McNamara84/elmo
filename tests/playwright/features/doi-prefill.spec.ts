@@ -135,6 +135,7 @@ test.describe('DOI Prefill Feature', () => {
     await page.goto(TEST_ROUTE_PATH);
 
     // Inject dependencies
+    await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
     await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
     await injectScript(page, 'node_modules/jquery-ui/dist/jquery-ui.min.js');
     await injectScript(page, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js');
