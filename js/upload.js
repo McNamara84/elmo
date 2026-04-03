@@ -50,6 +50,7 @@ $(document).ready(function () {
         $('#input-uploadxml-file').val('');
         setUploadLoadingState(false);
         $('#xml-upload-status').addClass('d-none');
+        $('#panel-uploadxml-dropfile').removeClass('border-primary');
     });
 });
 
@@ -107,6 +108,7 @@ function setUploadLoadingState(loading) {
         fileInput.prop('disabled', true);
         dropZone.addClass('pe-none opacity-50');
         spinner.removeClass('d-none');
+        $('#xml-upload-status').addClass('d-none').text('');
     } else {
         fileInput.prop('disabled', false);
         dropZone.removeClass('pe-none opacity-50');
@@ -121,7 +123,13 @@ function setUploadLoadingState(loading) {
  */
 function showUploadToast(fileName, type) {
     const toastEl = document.getElementById('toast-upload-feedback');
-    if (!toastEl) return;
+    if (!toastEl) {
+        var fallbackMsg = type === 'success'
+            ? fileName + ' successfully loaded'
+            : 'Error loading ' + fileName;
+        showUploadStatus(fallbackMsg, type === 'success' ? 'success' : 'danger');
+        return;
+    }
 
     if (!window.bootstrap || !window.bootstrap.Toast) {
         var fallbackMsg = type === 'success'

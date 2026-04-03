@@ -202,6 +202,16 @@ describe('upload module coverage', () => {
 
             expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
         });
+
+        test('clears previous status message when entering loading state', () => {
+            uploadModule.showUploadStatus('Old error', 'danger');
+            expect($('#xml-upload-status').hasClass('d-none')).toBe(false);
+
+            uploadModule.setUploadLoadingState(true);
+
+            expect($('#xml-upload-status').hasClass('d-none')).toBe(true);
+            expect($('#xml-upload-status').text()).toBe('');
+        });
     });
 
     describe('showUploadToast', () => {
@@ -287,7 +297,20 @@ describe('upload module coverage', () => {
 
             // Should not throw
             expect(() => uploadModule.showUploadToast('test.xml', 'success')).not.toThrow();
-            expect(global.bootstrap.Toast).not.toHaveBeenCalled();
+            // Should fall back to in-modal status
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-success')).toBe(true);
+            expect(statusElement.text()).toContain('test.xml');
+        });
+
+        test('falls back to showUploadStatus for danger when toast element is missing', () => {
+            document.getElementById('toast-upload-feedback').remove();
+
+            uploadModule.showUploadToast('bad.xml', 'danger');
+
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-danger')).toBe(true);
+            expect(statusElement.text()).toContain('bad.xml');
         });
 
         test('falls back to showUploadStatus when bootstrap.Toast is unavailable', () => {
@@ -541,6 +564,14 @@ describe('upload module coverage', () => {
             $('#modal-uploadxml').trigger('hidden.bs.modal');
 
             expect($('#xml-upload-status').hasClass('d-none')).toBe(true);
+        });
+
+        test('clears drag highlight on modal hidden event', () => {
+            $('#panel-uploadxml-dropfile').addClass('border-primary');
+
+            $('#modal-uploadxml').trigger('hidden.bs.modal');
+
+            expect($('#panel-uploadxml-dropfile').hasClass('border-primary')).toBe(false);
         });
     });
 
