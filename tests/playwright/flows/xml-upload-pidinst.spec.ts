@@ -173,17 +173,21 @@ const MOCK_LICENSES = [
 
 const MOCK_API_DATA: Record<string, any> = {
   'json/timezones.json': [{ label: 'UTC+00:00 (Africa/Abidjan)' }],
-  'api/v2/vocabs/resourcetypes': MOCK_RESOURCE_TYPES,
-  'api/v2/vocabs/languages': MOCK_LANGUAGES,
-  'api/v2/vocabs/titletypes': MOCK_TITLE_TYPES,
-  'api/v2/vocabs/licenses/all': MOCK_LICENSES,
-  'api/v2/vocabs/licenses/software': MOCK_LICENSES,
-  'api/v2/vocabs/pid4inst/instruments': MOCK_INSTRUMENTS_API,
   'json/affiliations.json': [{
     id: 'aff-1',
     name: 'GFZ German Research Centre for Geosciences',
     other: ['GFZ'],
   }],
+  'json/funders.json': [],
+  'json/msl-labs.json': [],
+  'api/v2/vocabs/resourcetypes': MOCK_RESOURCE_TYPES,
+  'api/v2/vocabs/languages': MOCK_LANGUAGES,
+  'api/v2/vocabs/titletypes': MOCK_TITLE_TYPES,
+  'api/v2/vocabs/licenses/all': MOCK_LICENSES,
+  'api/v2/vocabs/licenses/software': MOCK_LICENSES,
+  'api/v2/vocabs/relations': { relations: [] },
+  'api/v2/vocabs/pid4inst/instruments': MOCK_INSTRUMENTS_API,
+  'api/v2/validation/identifiertypes/active': { identifierTypes: [] },
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -270,6 +274,7 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     // Mock fetch() for about:blank pages (page.route doesn't work there)
     await page.evaluate((data) => {
       const mockDataMap = new Map(Object.entries(data.mockData));
+      (window as any).__unmockedFetchUrls = [] as string[];
 
       (window as any).__originalFetch = window.fetch;
       window.fetch = function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -291,9 +296,11 @@ test.describe('XML Upload with PIDINST Instruments', () => {
           }));
         }
 
-        console.warn('Unmocked fetch URL:', url);
-        return Promise.resolve(new Response('[]', {
-          status: 200,
+        // Fail fast: record unmocked URL and return 404 so missing mocks surface immediately
+        (window as any).__unmockedFetchUrls.push(url);
+        return Promise.resolve(new Response(JSON.stringify({ error: 'Unmocked fetch URL: ' + url }), {
+          status: 404,
+          statusText: 'Not Found (unmocked)',
           headers: { 'Content-Type': 'application/json' },
         }));
       };
@@ -310,9 +317,9 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     await page.evaluate((data) => {
       const mockDataMap = new Map(Object.entries(data.mockData));
       const $ = (window as any).jQuery;
+      (window as any).__unmockedAjaxUrls = [] as string[];
 
       if ($ && $.ajax) {
-        const originalAjax = $.ajax;
         $.ajax = function (urlOrSettings: any, settings?: any) {
           let url: string;
           let opts: any;
@@ -336,7 +343,15 @@ test.describe('XML Upload with PIDINST Instruments', () => {
             }
           }
 
-          return originalAjax.call($, urlOrSettings, settings);
+          // Fail fast: record unmocked URL and return a deterministic error
+          (window as any).__unmockedAjaxUrls.push(url);
+          const deferred = $.Deferred();
+          setTimeout(() => {
+            if (opts.error) opts.error({ status: 404, statusText: 'Not Found (unmocked)' }, 'error', 'Unmocked $.ajax URL: ' + url);
+            if (opts.complete) opts.complete({ status: 404 }, 'error');
+            deferred.reject({ status: 404, statusText: 'Not Found (unmocked)' }, 'error', 'Unmocked $.ajax URL: ' + url);
+          }, 0);
+          return deferred.promise();
         };
       }
     }, { mockData: MOCK_API_DATA });
@@ -388,6 +403,15 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     );
 
     await waitForEditorReady(page);
+  });
+
+  test.afterEach(async ({ page }) => {
+    // Verify no unmocked URLs were requested during the test
+    const unmockedFetch = await page.evaluate(() => (window as any).__unmockedFetchUrls || []);
+    expect(unmockedFetch, 'Unmocked fetch URLs were requested').toEqual([]);
+
+    const unmockedAjax = await page.evaluate(() => (window as any).__unmockedAjaxUrls || []);
+    expect(unmockedAjax, 'Unmocked $.ajax URLs were requested').toEqual([]);
   });
 
   test('loads XML with 1 instrument and shows it persistently in Used Instruments', async ({ page }) => {

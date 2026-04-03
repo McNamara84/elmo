@@ -1222,8 +1222,17 @@ async function processUsedInstruments(xmlDoc, resolver) {
   }
 
   if (pidList.length > 0 && window.usedInstrumentsModule) {
-    // Wait for API data; on failure addInstrumentsByPid will use PID-only fallback tags
-    const result = await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+    // Cap the API wait so a slow/unreachable PID4INST endpoint does not block
+    // the entire XML import.  Five seconds is enough for a cached response;
+    // if it takes longer the user still gets PID-only fallback tags.
+    var API_TIMEOUT_MS = 5000;
+    var timeoutPromise = new Promise(function (resolve) {
+      setTimeout(function () { resolve({ success: false, dataLoaded: false }); }, API_TIMEOUT_MS);
+    });
+    var result = await Promise.race([
+      window.usedInstrumentsModule.loadInstrumentsFromAPI(),
+      timeoutPromise
+    ]);
     if (!result.dataLoaded) {
       console.warn('PID4INST API data not available; instruments will be added with PID-only display.');
     }

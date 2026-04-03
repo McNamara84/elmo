@@ -57,7 +57,7 @@ function initUsedInstrumentsModule() {
 
     /**
      * Promise for the current or completed load operation.
-     * @type {Promise<void>|null}
+     * @type {Promise<{success: boolean, dataLoaded: boolean}>|null}
      */
     var loadPromise = null;
 
