@@ -462,7 +462,7 @@ describe('upload module coverage', () => {
             expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(false);
         });
 
-        test('closes modal and shows error toast when onerror is triggered', () => {
+        test('closes modal and shows read-error toast when onerror is triggered', () => {
             const mockFile = new Blob(['test'], { type: 'text/xml' });
             mockFile.name = 'data.xml';
             
@@ -471,10 +471,12 @@ describe('upload module coverage', () => {
             
             // Modal should be closed
             expect($.fn.modal).toHaveBeenCalledWith('hide');
-            // Toast should display error
+            // Toast should display read error
             expect(window.bootstrap.Toast).toHaveBeenCalled();
             const toastEl = document.getElementById('toast-upload-feedback');
             expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            expect(messageEl.textContent).toBe('Error reading file: data.xml');
             // Loading state should be reset
             expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
             expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
@@ -535,7 +537,7 @@ describe('upload module coverage', () => {
             expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
         });
 
-        test('closes modal and shows error toast for invalid XML (parsererror)', async () => {
+        test('closes modal and shows processing-error toast for invalid XML (parsererror)', async () => {
             // Mock DOMParser to return parsererror
             const originalDOMParser = global.DOMParser;
             global.DOMParser = class {
@@ -558,17 +560,19 @@ describe('upload module coverage', () => {
             
             // Modal should be closed
             expect($.fn.modal).toHaveBeenCalledWith('hide');
-            // Toast should display error
+            // Toast should display processing error
             expect(window.bootstrap.Toast).toHaveBeenCalled();
             const toastEl = document.getElementById('toast-upload-feedback');
             expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            expect(messageEl.textContent).toBe('Error processing XML file: broken.xml');
             // Loading state should be reset
             expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
             
             global.DOMParser = originalDOMParser;
         });
 
-        test('closes modal and shows error toast when loadXmlToForm throws', async () => {
+        test('closes modal and shows processing-error toast when loadXmlToForm throws', async () => {
             window.loadXmlToForm = jest.fn().mockRejectedValue(new Error('Load failed'));
             
             const validXml = '<?xml version="1.0"?><root></root>';
@@ -585,15 +589,17 @@ describe('upload module coverage', () => {
             
             // Modal should be closed
             expect($.fn.modal).toHaveBeenCalledWith('hide');
-            // Toast should display error
+            // Toast should display processing error
             expect(window.bootstrap.Toast).toHaveBeenCalled();
             const toastEl = document.getElementById('toast-upload-feedback');
             expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            expect(messageEl.textContent).toBe('Error processing XML file: fail.xml');
             // Loading state should be reset
             expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
         });
 
-        test('shows error toast on parse error', async () => {
+        test('shows processing-error toast on parse error', async () => {
             const originalDOMParser = global.DOMParser;
             global.DOMParser = class {
                 parseFromString() {

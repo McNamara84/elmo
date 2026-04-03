@@ -171,8 +171,16 @@ describe('upload.js', () => {
             expect(uploadModule.buildUploadMessage('test.xml', 'success')).toBe('test.xml successfully loaded');
         });
 
-        test('builds error message with fallback', () => {
+        test('builds generic error message with fallback', () => {
             expect(uploadModule.buildUploadMessage('test.xml', 'danger')).toBe('Error loading file: test.xml');
+        });
+
+        test('builds read-error message with errorKey', () => {
+            expect(uploadModule.buildUploadMessage('test.xml', 'danger', 'modals.upload.errorReading')).toBe('Error reading file: test.xml');
+        });
+
+        test('builds processing-error message with errorKey', () => {
+            expect(uploadModule.buildUploadMessage('test.xml', 'danger', 'modals.upload.errorProcessing')).toBe('Error processing XML file: test.xml');
         });
 
         test('uses translation for success when available', () => {
@@ -181,6 +189,15 @@ describe('upload.js', () => {
                 return null;
             })};
             expect(uploadModule.buildUploadMessage('data.xml', 'success')).toBe('data.xml erfolgreich geladen');
+            delete window.elmo;
+        });
+
+        test('uses translation for specific errorKey when available', () => {
+            window.elmo = { translate: jest.fn((key) => {
+                if (key === 'modals.upload.errorProcessing') return 'Fehler beim Verarbeiten der XML-Datei';
+                return null;
+            })};
+            expect(uploadModule.buildUploadMessage('data.xml', 'danger', 'modals.upload.errorProcessing')).toBe('Fehler beim Verarbeiten der XML-Datei: data.xml');
             delete window.elmo;
         });
     });

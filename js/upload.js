@@ -85,14 +85,21 @@ function translateWithFallback(key, fallback) {
  * Builds the toast/fallback message for a given file name and type
  * @param {string} fileName - The uploaded file name
  * @param {string} type - 'success' or 'danger'
+ * @param {string} [errorKey] - Optional specific i18n key for the error message
  * @returns {string}
  */
-function buildUploadMessage(fileName, type) {
+function buildUploadMessage(fileName, type, errorKey) {
     if (type === 'success') {
         const successText = translateWithFallback('modals.upload.successToast', 'successfully loaded');
         return fileName + ' ' + successText;
     }
-    const errorText = translateWithFallback('modals.upload.errorToast', 'Error loading file');
+    const key = errorKey || 'modals.upload.errorToast';
+    const fallbacks = {
+        'modals.upload.errorReading': 'Error reading file',
+        'modals.upload.errorProcessing': 'Error processing XML file',
+        'modals.upload.errorToast': 'Error loading file'
+    };
+    const errorText = translateWithFallback(key, fallbacks[key] || 'Error loading file');
     return errorText + ': ' + fileName;
 }
 
@@ -126,14 +133,14 @@ function handleXmlFile(file) {
             console.error('Error:', error);
             setUploadLoadingState(false);
             $('#modal-uploadxml').modal('hide');
-            showUploadToast(file.name, 'danger');
+            showUploadToast(file.name, 'danger', 'modals.upload.errorProcessing');
         }
     };
 
     reader.onerror = function () {
         setUploadLoadingState(false);
         $('#modal-uploadxml').modal('hide');
-        showUploadToast(file.name, 'danger');
+        showUploadToast(file.name, 'danger', 'modals.upload.errorReading');
     };
 
     reader.readAsText(file);
@@ -165,16 +172,17 @@ function setUploadLoadingState(loading) {
  * Shows a Bootstrap toast notification after upload
  * @param {string} fileName - The name of the uploaded file
  * @param {string} type - 'success' or 'danger'
+ * @param {string} [errorKey] - Optional specific i18n key for the error message
  */
-function showUploadToast(fileName, type) {
+function showUploadToast(fileName, type, errorKey) {
     const toastEl = document.getElementById('toast-upload-feedback');
     if (!toastEl) {
-        showUploadStatus(buildUploadMessage(fileName, type), type === 'success' ? 'success' : 'danger');
+        showUploadStatus(buildUploadMessage(fileName, type, errorKey), type === 'success' ? 'success' : 'danger');
         return;
     }
 
     if (!window.bootstrap || !window.bootstrap.Toast) {
-        showUploadStatus(buildUploadMessage(fileName, type), type === 'success' ? 'success' : 'danger');
+        showUploadStatus(buildUploadMessage(fileName, type, errorKey), type === 'success' ? 'success' : 'danger');
         return;
     }
 
@@ -182,7 +190,7 @@ function showUploadToast(fileName, type) {
     const iconEl = document.getElementById('toast-upload-feedback-icon');
 
     if (!messageEl || !iconEl) {
-        showUploadStatus(buildUploadMessage(fileName, type), type === 'success' ? 'success' : 'danger');
+        showUploadStatus(buildUploadMessage(fileName, type, errorKey), type === 'success' ? 'success' : 'danger');
         return;
     }
 
@@ -196,7 +204,7 @@ function showUploadToast(fileName, type) {
         iconEl.className = 'bi bi-exclamation-triangle-fill me-2';
     }
 
-    messageEl.textContent = buildUploadMessage(fileName, type);
+    messageEl.textContent = buildUploadMessage(fileName, type, errorKey);
 
     const toast = new window.bootstrap.Toast(toastEl, { delay: 5000 });
     toast.show();
