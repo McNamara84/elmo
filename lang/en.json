@@ -198,7 +198,6 @@
     "usedInstruments": {
         "title": "Used Instruments",
         "placeholder": "Search and select instruments...",
-        "required": "Please select at least one instrument.",
         "loading": "Loading instrument list...",
         "unavailable": "Instrument list currently unavailable. Please try again later.",
         "selected": "selected instruments"
