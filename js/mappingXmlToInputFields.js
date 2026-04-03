@@ -1190,7 +1190,9 @@ function processRelatedWorks(xmlDoc, resolver) {
  * Process related identifiers with relationType="IsCollectedBy" from XML
  * and populate the Used Instruments Tagify field.
  * Only active when the showUsedInstruments feature toggle is enabled.
- * Waits for the PID4INST API data to load, then matches instruments by PID.
+ * Adds PID-only tags immediately so the import pipeline is never blocked,
+ * then triggers a background API load that upgrades them with full metadata
+ * (name, instrument types) once the data arrives.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
