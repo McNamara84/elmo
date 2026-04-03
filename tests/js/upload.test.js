@@ -78,20 +78,32 @@ describe('upload.js', () => {
     describe('file validation', () => {
         test('accepts files with .xml extension', () => {
             const file = { name: 'test.xml', type: 'text/xml' };
-            const isValid = file.type === 'text/xml' || file.name.endsWith('.xml');
+            const isValid = file && (file.type === 'text/xml' || file.type === 'application/xml' || (file.name && file.name.endsWith('.xml')));
             expect(isValid).toBe(true);
         });
 
         test('accepts files with text/xml type', () => {
             const file = { name: 'test', type: 'text/xml' };
-            const isValid = file.type === 'text/xml' || file.name.endsWith('.xml');
+            const isValid = file && (file.type === 'text/xml' || file.type === 'application/xml' || (file.name && file.name.endsWith('.xml')));
+            expect(isValid).toBe(true);
+        });
+
+        test('accepts files with application/xml type', () => {
+            const file = { name: 'test', type: 'application/xml' };
+            const isValid = file && (file.type === 'text/xml' || file.type === 'application/xml' || (file.name && file.name.endsWith('.xml')));
             expect(isValid).toBe(true);
         });
 
         test('rejects files without .xml extension and wrong type', () => {
             const file = { name: 'test.txt', type: 'text/plain' };
-            const isValid = file.type === 'text/xml' || file.name.endsWith('.xml');
+            const isValid = file && (file.type === 'text/xml' || file.type === 'application/xml' || (file.name && file.name.endsWith('.xml')));
             expect(isValid).toBe(false);
+        });
+
+        test('does not throw when file is undefined', () => {
+            const file = undefined;
+            const isValid = file && (file.type === 'text/xml' || file.type === 'application/xml' || (file.name && file.name.endsWith('.xml')));
+            expect(isValid).toBeFalsy();
         });
     });
 });

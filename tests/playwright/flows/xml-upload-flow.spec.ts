@@ -367,6 +367,8 @@ async function uploadSampleXml(page: Page) {
 
   // Verify success toast is shown with file name
   const toast = page.locator('#toast-upload-feedback');
+  await expect(toast).toBeVisible();
+  await expect(toast).toHaveClass(/show/);
   await expect(toast).toHaveClass(/text-bg-success/);
   const toastMessage = page.locator('#toast-upload-feedback-message');
   await expect(toastMessage).toContainText('sample-upload.xml');

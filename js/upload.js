@@ -38,7 +38,7 @@ $(document).ready(function () {
         dropZone.removeClass('border-primary');
 
         const file = event.originalEvent.dataTransfer.files[0];
-        if (file && file.type === 'text/xml' || file.name.endsWith('.xml')) {
+        if (file && (file.type === 'text/xml' || file.type === 'application/xml' || (file.name && file.name.endsWith('.xml')))) {
             handleXmlFile(file);
         } else {
             showUploadStatus('Please upload an XML file.', 'danger');
@@ -145,6 +145,14 @@ function showUploadToast(fileName, type) {
 
     const messageEl = document.getElementById('toast-upload-feedback-message');
     const iconEl = document.getElementById('toast-upload-feedback-icon');
+
+    if (!messageEl || !iconEl) {
+        var fallbackMsg = type === 'success'
+            ? fileName + ' successfully loaded'
+            : 'Error loading ' + fileName;
+        showUploadStatus(fallbackMsg, type === 'success' ? 'success' : 'danger');
+        return;
+    }
 
     toastEl.classList.remove('text-bg-success', 'text-bg-danger');
 

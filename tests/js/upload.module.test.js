@@ -313,6 +313,18 @@ describe('upload module coverage', () => {
             expect(statusElement.text()).toContain('bad.xml');
         });
 
+        test('falls back to showUploadStatus when toast child elements are missing', () => {
+            document.getElementById('toast-upload-feedback-message').remove();
+            document.getElementById('toast-upload-feedback-icon').remove();
+
+            uploadModule.showUploadToast('test.xml', 'success');
+
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-success')).toBe(true);
+            expect(statusElement.text()).toContain('test.xml');
+            expect(window.bootstrap.Toast).not.toHaveBeenCalled();
+        });
+
         test('falls back to showUploadStatus when bootstrap.Toast is unavailable', () => {
             delete window.bootstrap;
 
