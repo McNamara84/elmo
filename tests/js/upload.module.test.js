@@ -8,7 +8,7 @@ describe('upload module coverage', () => {
     let uploadModule;
     let $;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         // Set up jQuery
         $ = require('jquery');
         global.$ = $;
@@ -22,12 +22,34 @@ describe('upload module coverage', () => {
             <div id="modal-uploadxml" class="modal">
                 <input type="file" id="input-uploadxml-file">
                 <div id="panel-uploadxml-dropfile" class="drop-zone"></div>
+                <div id="upload-spinner-overlay" class="d-none text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
                 <div id="xml-upload-status" class="alert d-none"></div>
+            </div>
+            <div class="toast-container">
+                <div id="toast-upload-feedback" class="toast align-items-center border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body" id="toast-upload-feedback-body">
+                            <i id="toast-upload-feedback-icon" class="bi me-2"></i>
+                            <span id="toast-upload-feedback-message"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
 
         // Mock bootstrap modal
         $.fn.modal = jest.fn();
+
+        // Mock bootstrap Toast
+        global.bootstrap = {
+            Toast: jest.fn(function (el, opts) {
+                this.el = el;
+                this.opts = opts;
+                this.show = jest.fn();
+            })
+        };
 
         // Mock mapXmlToFormFields (used by handleXmlFile)
         window.mapXmlToFormFields = jest.fn();
@@ -50,6 +72,9 @@ describe('upload module coverage', () => {
 
         // Require the module
         uploadModule = require('../../js/upload.js');
+
+        // Flush microtasks so $(document).ready() callbacks have fired
+        await new Promise(resolve => setTimeout(resolve, 0));
     });
 
     afterEach(() => {
@@ -61,6 +86,7 @@ describe('upload module coverage', () => {
         delete window.jQuery;
         delete window.mapXmlToFormFields;
         delete global.FileReader;
+        delete global.bootstrap;
     });
 
     describe('module exports', () => {
@@ -70,6 +96,14 @@ describe('upload module coverage', () => {
 
         test('exports showUploadStatus function', () => {
             expect(typeof uploadModule.showUploadStatus).toBe('function');
+        });
+
+        test('exports setUploadLoadingState function', () => {
+            expect(typeof uploadModule.setUploadLoadingState).toBe('function');
+        });
+
+        test('exports showUploadToast function', () => {
+            expect(typeof uploadModule.showUploadToast).toBe('function');
         });
     });
 
@@ -125,6 +159,108 @@ describe('upload module coverage', () => {
         });
     });
 
+    describe('setUploadLoadingState', () => {
+        test('disables file input when loading', () => {
+            uploadModule.setUploadLoadingState(true);
+
+            expect($('#input-uploadxml-file').prop('disabled')).toBe(true);
+        });
+
+        test('adds visual disabled classes to drop zone when loading', () => {
+            uploadModule.setUploadLoadingState(true);
+
+            const dropZone = $('#panel-uploadxml-dropfile');
+            expect(dropZone.hasClass('pe-none')).toBe(true);
+            expect(dropZone.hasClass('opacity-50')).toBe(true);
+        });
+
+        test('shows spinner overlay when loading', () => {
+            uploadModule.setUploadLoadingState(true);
+
+            expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(false);
+        });
+
+        test('re-enables file input when not loading', () => {
+            uploadModule.setUploadLoadingState(true);
+            uploadModule.setUploadLoadingState(false);
+
+            expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
+        });
+
+        test('removes visual disabled classes from drop zone when not loading', () => {
+            uploadModule.setUploadLoadingState(true);
+            uploadModule.setUploadLoadingState(false);
+
+            const dropZone = $('#panel-uploadxml-dropfile');
+            expect(dropZone.hasClass('pe-none')).toBe(false);
+            expect(dropZone.hasClass('opacity-50')).toBe(false);
+        });
+
+        test('hides spinner overlay when not loading', () => {
+            uploadModule.setUploadLoadingState(true);
+            uploadModule.setUploadLoadingState(false);
+
+            expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
+        });
+    });
+
+    describe('showUploadToast', () => {
+        test('sets success styling and message', () => {
+            uploadModule.showUploadToast('test.xml', 'success');
+
+            const toastEl = document.getElementById('toast-upload-feedback');
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            const iconEl = document.getElementById('toast-upload-feedback-icon');
+
+            expect(toastEl.classList.contains('text-bg-success')).toBe(true);
+            expect(toastEl.classList.contains('text-bg-danger')).toBe(false);
+            expect(iconEl.className).toContain('bi-check-circle-fill');
+            expect(messageEl.textContent).toBe('test.xml successfully loaded');
+        });
+
+        test('sets danger styling and message', () => {
+            uploadModule.showUploadToast('broken.xml', 'danger');
+
+            const toastEl = document.getElementById('toast-upload-feedback');
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            const iconEl = document.getElementById('toast-upload-feedback-icon');
+
+            expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
+            expect(toastEl.classList.contains('text-bg-success')).toBe(false);
+            expect(iconEl.className).toContain('bi-exclamation-triangle-fill');
+            expect(messageEl.textContent).toBe('Error loading broken.xml');
+        });
+
+        test('creates Bootstrap Toast with 5s delay and calls show', () => {
+            uploadModule.showUploadToast('test.xml', 'success');
+
+            expect(global.bootstrap.Toast).toHaveBeenCalledWith(
+                document.getElementById('toast-upload-feedback'),
+                { delay: 5000 }
+            );
+            const toastInstance = global.bootstrap.Toast.mock.instances[0];
+            expect(toastInstance.show).toHaveBeenCalled();
+        });
+
+        test('removes previous type class when switching types', () => {
+            uploadModule.showUploadToast('a.xml', 'success');
+            const toastEl = document.getElementById('toast-upload-feedback');
+            expect(toastEl.classList.contains('text-bg-success')).toBe(true);
+
+            uploadModule.showUploadToast('b.xml', 'danger');
+            expect(toastEl.classList.contains('text-bg-success')).toBe(false);
+            expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
+        });
+
+        test('does nothing when toast element is missing', () => {
+            document.getElementById('toast-upload-feedback').remove();
+
+            // Should not throw
+            expect(() => uploadModule.showUploadToast('test.xml', 'success')).not.toThrow();
+            expect(global.bootstrap.Toast).not.toHaveBeenCalled();
+        });
+    });
+
     describe('handleXmlFile', () => {
         let mockFileReader;
 
@@ -173,7 +309,16 @@ describe('upload module coverage', () => {
             expect(mockFileReader.onerror).toBeInstanceOf(Function);
         });
 
-        test('shows error status when onerror is triggered', () => {
+        test('enables loading state when called', () => {
+            const mockFile = new Blob(['test'], { type: 'text/xml' });
+
+            uploadModule.handleXmlFile(mockFile);
+
+            expect($('#input-uploadxml-file').prop('disabled')).toBe(true);
+            expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(false);
+        });
+
+        test('shows error status and disables loading state when onerror is triggered', () => {
             const mockFile = new Blob(['test'], { type: 'text/xml' });
             
             uploadModule.handleXmlFile(mockFile);
@@ -182,6 +327,9 @@ describe('upload module coverage', () => {
             const statusElement = $('#xml-upload-status');
             expect(statusElement.hasClass('alert-danger')).toBe(true);
             expect(statusElement.text()).toBe('Error reading file');
+            // Loading state should be reset
+            expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
+            expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
         });
 
         test('processes valid XML in onload handler', async () => {
@@ -210,17 +358,33 @@ describe('upload module coverage', () => {
             expect($.fn.modal).toHaveBeenCalledWith('hide');
         });
 
-        test('shows success status after loading valid XML', async () => {
+        test('shows success toast with filename after loading valid XML', async () => {
             const validXml = '<?xml version="1.0"?><root></root>';
             const mockFile = new Blob([validXml], { type: 'text/xml' });
-            
+            mockFile.name = 'dataset.xml';
+
             uploadModule.handleXmlFile(mockFile);
             await mockFileReader.onload({
                 target: { result: validXml }
             });
-            
-            const statusElement = $('#xml-upload-status');
-            expect(statusElement.hasClass('alert-success')).toBe(true);
+
+            expect(global.bootstrap.Toast).toHaveBeenCalled();
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            expect(messageEl.textContent).toContain('dataset.xml');
+            expect(messageEl.textContent).toContain('successfully loaded');
+        });
+
+        test('disables loading state after successful load', async () => {
+            const validXml = '<?xml version="1.0"?><root></root>';
+            const mockFile = new Blob([validXml], { type: 'text/xml' });
+
+            uploadModule.handleXmlFile(mockFile);
+            await mockFileReader.onload({
+                target: { result: validXml }
+            });
+
+            expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
+            expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
         });
 
         test('shows error status for invalid XML (parsererror)', async () => {
@@ -245,6 +409,8 @@ describe('upload module coverage', () => {
             
             const statusElement = $('#xml-upload-status');
             expect(statusElement.hasClass('alert-danger')).toBe(true);
+            // Loading state should be reset
+            expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
             
             global.DOMParser = originalDOMParser;
         });
@@ -265,6 +431,66 @@ describe('upload module coverage', () => {
             
             const statusElement = $('#xml-upload-status');
             expect(statusElement.hasClass('alert-danger')).toBe(true);
+            // Loading state should be reset
+            expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
+        });
+
+        test('does not show toast on error', async () => {
+            const originalDOMParser = global.DOMParser;
+            global.DOMParser = class {
+                parseFromString() {
+                    const doc = document.implementation.createDocument('', '', null);
+                    const errorEl = document.createElement('parsererror');
+                    doc.appendChild(errorEl);
+                    return doc;
+                }
+            };
+
+            const invalidXml = 'not valid xml <';
+            const mockFile = new Blob([invalidXml], { type: 'text/xml' });
+
+            uploadModule.handleXmlFile(mockFile);
+            await mockFileReader.onload({
+                target: { result: invalidXml }
+            });
+
+            // Toast should NOT be shown for errors
+            expect(global.bootstrap.Toast).not.toHaveBeenCalled();
+
+            global.DOMParser = originalDOMParser;
+        });
+    });
+
+    describe('modal reset on close', () => {
+        test('resets file input on modal hidden event', () => {
+            // Set a value first
+            const fileInput = $('#input-uploadxml-file');
+            // Simulate a dirty state
+            uploadModule.setUploadLoadingState(true);
+
+            // Trigger the hidden.bs.modal event
+            $('#modal-uploadxml').trigger('hidden.bs.modal');
+
+            expect(fileInput.val()).toBe('');
+            expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
+        });
+
+        test('resets loading state on modal hidden event', () => {
+            uploadModule.setUploadLoadingState(true);
+
+            $('#modal-uploadxml').trigger('hidden.bs.modal');
+
+            expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
+            expect($('#panel-uploadxml-dropfile').hasClass('pe-none')).toBe(false);
+        });
+
+        test('hides status message on modal hidden event', () => {
+            uploadModule.showUploadStatus('Some error', 'danger');
+            expect($('#xml-upload-status').hasClass('d-none')).toBe(false);
+
+            $('#modal-uploadxml').trigger('hidden.bs.modal');
+
+            expect($('#xml-upload-status').hasClass('d-none')).toBe(true);
         });
     });
 

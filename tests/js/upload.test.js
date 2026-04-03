@@ -19,12 +19,34 @@ describe('upload.js', () => {
                 <div id="panel-uploadxml-dropfile" class="border">
                     Drop XML file here
                 </div>
+                <div id="upload-spinner-overlay" class="d-none text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+                <div id="xml-upload-status" class="alert d-none"></div>
             </div>
-            <div id="xml-upload-status" class="alert d-none"></div>
+            <div class="toast-container">
+                <div id="toast-upload-feedback" class="toast align-items-center border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body" id="toast-upload-feedback-body">
+                            <i id="toast-upload-feedback-icon" class="bi me-2"></i>
+                            <span id="toast-upload-feedback-message"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
         
         // Mock Bootstrap modal
         $.fn.modal = jest.fn();
+
+        // Mock bootstrap Toast
+        global.bootstrap = {
+            Toast: jest.fn(function (el, opts) {
+                this.el = el;
+                this.opts = opts;
+                this.show = jest.fn();
+            })
+        };
         
         // Mock loadXmlToForm
         global.loadXmlToForm = jest.fn().mockResolvedValue(true);
@@ -46,11 +68,11 @@ describe('upload.js', () => {
         document.body.innerHTML = '';
         jest.clearAllMocks();
         jest.resetModules();
+        delete global.bootstrap;
     });
 
     describe('showUploadStatus', () => {
         test('displays success message with correct class', () => {
-            // Define the function for testing
             function showUploadStatus(message, type) {
                 const statusElement = $('#xml-upload-status');
                 statusElement.removeClass()
@@ -99,7 +121,6 @@ describe('upload.js', () => {
             // Second call with danger
             showUploadStatus('Error', 'danger');
             expect($('#xml-upload-status').hasClass('alert-danger')).toBe(true);
-            // Note: jQuery removeClass() without args removes all classes in this context
         });
     });
 
@@ -109,7 +130,6 @@ describe('upload.js', () => {
             const file = new Blob([mockXmlContent], { type: 'text/xml' });
             file.name = 'test.xml';
 
-            // Create mock FileReader
             const mockFileReader = {
                 readAsText: jest.fn(),
                 onload: null,
@@ -140,8 +160,6 @@ describe('upload.js', () => {
             }
 
             handleXmlFile(file);
-
-            // Trigger the onload callback
             mockFileReader.onload({ target: { result: mockXmlContent } });
         });
 
@@ -149,10 +167,8 @@ describe('upload.js', () => {
             const mockInvalidXml = 'invalid';
             const file = new Blob([mockInvalidXml], { type: 'text/xml' });
             
-            let errorShown = false;
             function showUploadStatus(message, type) {
                 if (type === 'danger') {
-                    errorShown = true;
                     expect(message).toContain('Error');
                     done();
                 }
@@ -221,9 +237,125 @@ describe('upload.js', () => {
         });
     });
 
+    describe('setUploadLoadingState', () => {
+        test('disables inputs and shows spinner when loading=true', () => {
+            function setUploadLoadingState(loading) {
+                const fileInput = $('#input-uploadxml-file');
+                const dropZone = $('#panel-uploadxml-dropfile');
+                const spinner = $('#upload-spinner-overlay');
+
+                if (loading) {
+                    fileInput.prop('disabled', true);
+                    dropZone.addClass('pe-none opacity-50');
+                    spinner.removeClass('d-none');
+                } else {
+                    fileInput.prop('disabled', false);
+                    dropZone.removeClass('pe-none opacity-50');
+                    spinner.addClass('d-none');
+                }
+            }
+
+            setUploadLoadingState(true);
+
+            expect($('#input-uploadxml-file').prop('disabled')).toBe(true);
+            expect($('#panel-uploadxml-dropfile').hasClass('pe-none')).toBe(true);
+            expect($('#panel-uploadxml-dropfile').hasClass('opacity-50')).toBe(true);
+            expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(false);
+        });
+
+        test('enables inputs and hides spinner when loading=false', () => {
+            function setUploadLoadingState(loading) {
+                const fileInput = $('#input-uploadxml-file');
+                const dropZone = $('#panel-uploadxml-dropfile');
+                const spinner = $('#upload-spinner-overlay');
+
+                if (loading) {
+                    fileInput.prop('disabled', true);
+                    dropZone.addClass('pe-none opacity-50');
+                    spinner.removeClass('d-none');
+                } else {
+                    fileInput.prop('disabled', false);
+                    dropZone.removeClass('pe-none opacity-50');
+                    spinner.addClass('d-none');
+                }
+            }
+
+            setUploadLoadingState(true);
+            setUploadLoadingState(false);
+
+            expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
+            expect($('#panel-uploadxml-dropfile').hasClass('pe-none')).toBe(false);
+            expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
+        });
+    });
+
+    describe('showUploadToast', () => {
+        test('displays success toast with correct file name', () => {
+            function showUploadToast(fileName, type) {
+                const toastEl = document.getElementById('toast-upload-feedback');
+                if (!toastEl) return;
+                const messageEl = document.getElementById('toast-upload-feedback-message');
+                const iconEl = document.getElementById('toast-upload-feedback-icon');
+
+                toastEl.classList.remove('text-bg-success', 'text-bg-danger');
+
+                if (type === 'success') {
+                    toastEl.classList.add('text-bg-success');
+                    iconEl.className = 'bi bi-check-circle-fill me-2';
+                    messageEl.textContent = fileName + ' successfully loaded';
+                } else {
+                    toastEl.classList.add('text-bg-danger');
+                    iconEl.className = 'bi bi-exclamation-triangle-fill me-2';
+                    messageEl.textContent = 'Error loading ' + fileName;
+                }
+
+                var toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+                toast.show();
+            }
+
+            showUploadToast('my-data.xml', 'success');
+
+            const toastEl = document.getElementById('toast-upload-feedback');
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            expect(toastEl.classList.contains('text-bg-success')).toBe(true);
+            expect(messageEl.textContent).toBe('my-data.xml successfully loaded');
+            expect(global.bootstrap.Toast).toHaveBeenCalled();
+        });
+
+        test('displays danger toast with correct file name', () => {
+            function showUploadToast(fileName, type) {
+                const toastEl = document.getElementById('toast-upload-feedback');
+                if (!toastEl) return;
+                const messageEl = document.getElementById('toast-upload-feedback-message');
+                const iconEl = document.getElementById('toast-upload-feedback-icon');
+
+                toastEl.classList.remove('text-bg-success', 'text-bg-danger');
+
+                if (type === 'success') {
+                    toastEl.classList.add('text-bg-success');
+                    iconEl.className = 'bi bi-check-circle-fill me-2';
+                    messageEl.textContent = fileName + ' successfully loaded';
+                } else {
+                    toastEl.classList.add('text-bg-danger');
+                    iconEl.className = 'bi bi-exclamation-triangle-fill me-2';
+                    messageEl.textContent = 'Error loading ' + fileName;
+                }
+
+                var toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+                toast.show();
+            }
+
+            showUploadToast('bad.xml', 'danger');
+
+            const toastEl = document.getElementById('toast-upload-feedback');
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
+            expect(messageEl.textContent).toBe('Error loading bad.xml');
+        });
+    });
+
     describe('drag and drop', () => {
         test('dropzone adds border-primary class on dragover', () => {
-            // Manually trigger jQuery event binding
             const dropZone = $('#panel-uploadxml-dropfile');
             
             dropZone.on('dragover', function (event) {

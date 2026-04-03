@@ -365,9 +365,12 @@ async function uploadSampleXml(page: Page) {
     document.querySelectorAll('.modal-backdrop').forEach(node => node.remove());
   });
 
-  const status = page.locator('#xml-upload-status');
-  await expect(status).toHaveClass(/alert-success/);
-  await expect(status).toContainText('XML file successfully loaded');
+  // Verify success toast is shown with file name
+  const toast = page.locator('#toast-upload-feedback');
+  await expect(toast).toHaveClass(/text-bg-success/);
+  const toastMessage = page.locator('#toast-upload-feedback-message');
+  await expect(toastMessage).toContainText('sample-upload.xml');
+  await expect(toastMessage).toContainText('successfully loaded');
 }
 
 test.describe('XML Upload Mapping Flow', () => {
