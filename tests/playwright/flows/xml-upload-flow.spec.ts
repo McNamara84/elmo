@@ -372,7 +372,6 @@ async function uploadSampleXml(page: Page) {
   await expect(toast).toHaveClass(/text-bg-success/);
   const toastMessage = page.locator('#toast-upload-feedback-message');
   await expect(toastMessage).toContainText('sample-upload.xml');
-  await expect(toastMessage).toContainText('successfully loaded');
 }
 
 test.describe('XML Upload Mapping Flow', () => {

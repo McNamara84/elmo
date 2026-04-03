@@ -78,6 +78,7 @@ describe('upload module coverage', () => {
     });
 
     afterEach(() => {
+        uploadModule.clearStatusHideTimer();
         jest.clearAllTimers();
         jest.useRealTimers();
         document.body.innerHTML = '';
