@@ -414,8 +414,20 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     expect(hidden.pids).toEqual(['21.11157/0001']);
     expect(hidden.pidTypes).toEqual(['Handle']);
 
-    // STABILITY CHECK: Wait 2 seconds and verify tag is still there (no race condition)
-    await page.waitForTimeout(2000);
+    // STABILITY CHECK: Verify tag count remains stable (no race condition removing tags)
+    let stableCount = 0;
+    await expect.poll(
+      async () => {
+        const currentTags = await getInstrumentTags(page);
+        if (currentTags.length === 1) {
+          stableCount++;
+        } else {
+          stableCount = 0;
+        }
+        return stableCount;
+      },
+      { timeout: 5_000, intervals: [200], message: 'Tag count should remain stable at 1' },
+    ).toBeGreaterThanOrEqual(3);
 
     const tagsAfterWait = await getInstrumentTags(page);
     expect(tagsAfterWait).toHaveLength(1);
@@ -474,8 +486,20 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     const pidIndex0001 = hidden.pids.indexOf('21.11157/0001');
     expect(hidden.pidTypes[pidIndex0001]).toBe('Handle');
 
-    // STABILITY CHECK: Wait 2 seconds and verify tags are still there
-    await page.waitForTimeout(2000);
+    // STABILITY CHECK: Verify tag count remains stable (no race condition removing tags)
+    let stableCount = 0;
+    await expect.poll(
+      async () => {
+        const currentTags = await getInstrumentTags(page);
+        if (currentTags.length === 3) {
+          stableCount++;
+        } else {
+          stableCount = 0;
+        }
+        return stableCount;
+      },
+      { timeout: 5_000, intervals: [200], message: 'Tag count should remain stable at 3' },
+    ).toBeGreaterThanOrEqual(3);
 
     const tagsAfterWait = await getInstrumentTags(page);
     expect(tagsAfterWait).toHaveLength(3);

@@ -1222,15 +1222,13 @@ async function processUsedInstruments(xmlDoc, resolver) {
   }
 
   if (pidList.length > 0 && window.usedInstrumentsModule) {
-    try {
-      // Wait for API data to be fully loaded before matching
-      await window.usedInstrumentsModule.loadInstrumentsFromAPI();
-    } catch (e) {
-      console.warn('Could not load PID4INST instruments for XML import:', e);
-      return;
+    // Wait for API data; on failure addInstrumentsByPid will use PID-only fallback tags
+    const result = await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+    if (!result.dataLoaded) {
+      console.warn('PID4INST API data not available; instruments will be added with PID-only display.');
     }
 
-    // Match instruments by PID against loaded API data
+    // Match instruments by PID against loaded API data (falls back to PID-only tags for unmatched entries)
     window.usedInstrumentsModule.addInstrumentsByPid(pidList);
   }
 }

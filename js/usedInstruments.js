@@ -232,15 +232,15 @@ function initUsedInstrumentsModule() {
     /**
      * Fetches PID4INST instruments from the API and updates the Tagify whitelist.
      * Uses lazy loading - only called when user first interacts with the field.
-     * Returns a Promise that resolves when the data has been loaded (or rejects on failure).
+     * Always resolves (never rejects) so callers don't need error handling.
      * If data is already loaded, resolves immediately.
      * 
-     * @returns {Promise<void>}
+     * @returns {Promise<{success: boolean, dataLoaded: boolean}>}
      */
     function loadInstrumentsFromAPI() {
         // If data is already loaded, resolve immediately
         if (dataLoaded) {
-            return Promise.resolve();
+            return Promise.resolve({ success: true, dataLoaded: true });
         }
 
         // If a load is already in progress, return the existing promise
@@ -255,7 +255,7 @@ function initUsedInstrumentsModule() {
             instrumentsTagify.loading(true);
         }
 
-        loadPromise = new Promise(function (resolve, reject) {
+        loadPromise = new Promise(function (resolve) {
             $.ajax({
                 url: 'api/v2/vocabs/pid4inst/instruments',
                 method: 'GET',
@@ -266,13 +266,13 @@ function initUsedInstrumentsModule() {
                     try {
                         if (!Array.isArray(data)) {
                             console.error('PID4INST API returned unexpected data format:', data);
-                            resolve();
+                            resolve({ success: false, dataLoaded: false });
                             return;
                         }
 
                         if (data.length === 0) {
                             console.log('No PID4INST instruments available.');
-                            resolve();
+                            resolve({ success: true, dataLoaded: false });
                             return;
                         }
 
@@ -301,10 +301,10 @@ function initUsedInstrumentsModule() {
                                 instrumentsTagify.dropdown.refilter.call(instrumentsTagify);
                             }
                         }
-                        resolve();
+                        resolve({ success: true, dataLoaded: true });
                     } catch (error) {
                         console.error('Error processing PID4INST instrument data:', error);
-                        resolve();
+                        resolve({ success: false, dataLoaded: false });
                     }
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {
@@ -313,7 +313,7 @@ function initUsedInstrumentsModule() {
                         statusText: jqXHR.statusText,
                         error: errorThrown
                     });
-                    reject(new Error('Failed to fetch PID4INST instruments: ' + textStatus));
+                    resolve({ success: false, dataLoaded: false });
                 })
                 .always(function () {
                     loadInProgress = false;
@@ -365,31 +365,39 @@ function initUsedInstrumentsModule() {
     /**
      * Looks up instruments by their PIDs in the loaded API data and adds
      * the matched ones as Tagify tags with full metadata (name, types).
-     * Instruments not found in the API data are silently skipped.
-     * Requires that loadInstrumentsFromAPI() has been awaited first.
+     * For PIDs not found in the API data, PID-only fallback tags are added
+     * so that imported metadata is never silently lost.
      * 
      * @param {Array<{pid: string, pidType: string}>} pidList - PIDs to look up and add
      */
     function addInstrumentsByPid(pidList) {
         if (!instrumentsTagify || !Array.isArray(pidList) || pidList.length === 0) return;
 
-        var matchedInstruments = [];
+        var instrumentsToAdd = [];
         pidList.forEach(function (entry) {
             var found = instrumentData.find(function (apiInst) {
                 return apiInst.pid === entry.pid;
             });
             if (found) {
-                matchedInstruments.push({
+                instrumentsToAdd.push({
                     pid: found.pid,
                     pidType: found.pidType || entry.pidType || 'Handle',
                     name: found.name,
                     instrumentTypes: found.instrumentTypes || []
                 });
+            } else {
+                // Fallback: add PID-only tag so imported data is not lost
+                instrumentsToAdd.push({
+                    pid: entry.pid,
+                    pidType: entry.pidType || 'Handle',
+                    name: entry.pid,
+                    instrumentTypes: []
+                });
             }
         });
 
-        if (matchedInstruments.length > 0) {
-            addInstrumentsByData(matchedInstruments);
+        if (instrumentsToAdd.length > 0) {
+            addInstrumentsByData(instrumentsToAdd);
         }
     }
 
