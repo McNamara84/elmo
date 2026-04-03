@@ -74,7 +74,7 @@ function isXmlFile(file) {
  * @returns {string}
  */
 function translateWithFallback(key, fallback) {
-    var translate = (window.elmo && typeof window.elmo.translate === 'function')
+    const translate = (window.elmo && typeof window.elmo.translate === 'function')
         ? window.elmo.translate
         : null;
     return (translate && translate(key)) || fallback;
@@ -88,10 +88,10 @@ function translateWithFallback(key, fallback) {
  */
 function buildUploadMessage(fileName, type) {
     if (type === 'success') {
-        var successText = translateWithFallback('modals.upload.successToast', 'successfully loaded');
+        const successText = translateWithFallback('modals.upload.successToast', 'successfully loaded');
         return fileName + ' ' + successText;
     }
-    var errorText = translateWithFallback('modals.upload.errorToast', 'Error loading file');
+    const errorText = translateWithFallback('modals.upload.errorToast', 'Error loading file');
     return errorText + ': ' + fileName;
 }
 
@@ -194,7 +194,7 @@ function showUploadToast(fileName, type) {
 
     messageEl.textContent = buildUploadMessage(fileName, type);
 
-    var toast = new window.bootstrap.Toast(toastEl, { delay: 5000 });
+    const toast = new window.bootstrap.Toast(toastEl, { delay: 5000 });
     toast.show();
 }
 

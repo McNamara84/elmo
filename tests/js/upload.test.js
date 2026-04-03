@@ -59,6 +59,8 @@ describe('upload.js', () => {
         jest.resetModules();
         delete window.bootstrap;
         delete global.FileReader;
+        delete global.$;
+        delete global.jQuery;
         delete window.$;
         delete window.jQuery;
     });
