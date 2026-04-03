@@ -79,6 +79,7 @@ describe('upload module coverage', () => {
 
     afterEach(() => {
         jest.clearAllTimers();
+        jest.useRealTimers();
         document.body.innerHTML = '';
         jest.clearAllMocks();
         delete global.$;
@@ -461,15 +462,19 @@ describe('upload module coverage', () => {
             expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(false);
         });
 
-        test('shows error status and disables loading state when onerror is triggered', () => {
+        test('closes modal and shows error toast when onerror is triggered', () => {
             const mockFile = new Blob(['test'], { type: 'text/xml' });
+            mockFile.name = 'data.xml';
             
             uploadModule.handleXmlFile(mockFile);
             mockFileReader.onerror();
             
-            const statusElement = $('#xml-upload-status');
-            expect(statusElement.hasClass('alert-danger')).toBe(true);
-            expect(statusElement.text()).toBe('Error reading file');
+            // Modal should be closed
+            expect($.fn.modal).toHaveBeenCalledWith('hide');
+            // Toast should display error
+            expect(window.bootstrap.Toast).toHaveBeenCalled();
+            const toastEl = document.getElementById('toast-upload-feedback');
+            expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
             // Loading state should be reset
             expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
             expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
@@ -530,7 +535,7 @@ describe('upload module coverage', () => {
             expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
         });
 
-        test('shows error status for invalid XML (parsererror)', async () => {
+        test('closes modal and shows error toast for invalid XML (parsererror)', async () => {
             // Mock DOMParser to return parsererror
             const originalDOMParser = global.DOMParser;
             global.DOMParser = class {
@@ -544,25 +549,31 @@ describe('upload module coverage', () => {
             
             const invalidXml = 'not valid xml <';
             const mockFile = new Blob([invalidXml], { type: 'text/xml' });
+            mockFile.name = 'broken.xml';
             
             uploadModule.handleXmlFile(mockFile);
             await mockFileReader.onload({
                 target: { result: invalidXml }
             });
             
-            const statusElement = $('#xml-upload-status');
-            expect(statusElement.hasClass('alert-danger')).toBe(true);
+            // Modal should be closed
+            expect($.fn.modal).toHaveBeenCalledWith('hide');
+            // Toast should display error
+            expect(window.bootstrap.Toast).toHaveBeenCalled();
+            const toastEl = document.getElementById('toast-upload-feedback');
+            expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
             // Loading state should be reset
             expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
             
             global.DOMParser = originalDOMParser;
         });
 
-        test('shows error when loadXmlToForm throws', async () => {
+        test('closes modal and shows error toast when loadXmlToForm throws', async () => {
             window.loadXmlToForm = jest.fn().mockRejectedValue(new Error('Load failed'));
             
             const validXml = '<?xml version="1.0"?><root></root>';
             const mockFile = new Blob([validXml], { type: 'text/xml' });
+            mockFile.name = 'fail.xml';
             
             uploadModule.handleXmlFile(mockFile);
             await mockFileReader.onload({
@@ -572,13 +583,17 @@ describe('upload module coverage', () => {
             // Wait for promise rejection to be handled
             await new Promise(resolve => setTimeout(resolve, 0));
             
-            const statusElement = $('#xml-upload-status');
-            expect(statusElement.hasClass('alert-danger')).toBe(true);
+            // Modal should be closed
+            expect($.fn.modal).toHaveBeenCalledWith('hide');
+            // Toast should display error
+            expect(window.bootstrap.Toast).toHaveBeenCalled();
+            const toastEl = document.getElementById('toast-upload-feedback');
+            expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
             // Loading state should be reset
             expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
         });
 
-        test('does not show toast on error', async () => {
+        test('shows error toast on parse error', async () => {
             const originalDOMParser = global.DOMParser;
             global.DOMParser = class {
                 parseFromString() {
@@ -591,14 +606,19 @@ describe('upload module coverage', () => {
 
             const invalidXml = 'not valid xml <';
             const mockFile = new Blob([invalidXml], { type: 'text/xml' });
+            mockFile.name = 'bad.xml';
 
             uploadModule.handleXmlFile(mockFile);
             await mockFileReader.onload({
                 target: { result: invalidXml }
             });
 
-            // Toast should NOT be shown for errors
-            expect(window.bootstrap.Toast).not.toHaveBeenCalled();
+            // Error toast should be shown
+            expect(window.bootstrap.Toast).toHaveBeenCalled();
+            const toastEl = document.getElementById('toast-upload-feedback');
+            expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            expect(messageEl.textContent).toContain('bad.xml');
 
             global.DOMParser = originalDOMParser;
         });

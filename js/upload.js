@@ -125,13 +125,15 @@ function handleXmlFile(file) {
         } catch (error) {
             console.error('Error:', error);
             setUploadLoadingState(false);
-            showUploadStatus(translateWithFallback('modals.upload.errorProcessing', 'Error processing XML file') + ': ' + error.message, 'danger');
+            $('#modal-uploadxml').modal('hide');
+            showUploadToast(file.name, 'danger');
         }
     };
 
     reader.onerror = function () {
         setUploadLoadingState(false);
-        showUploadStatus(translateWithFallback('modals.upload.errorReading', 'Error reading file'), 'danger');
+        $('#modal-uploadxml').modal('hide');
+        showUploadToast(file.name, 'danger');
     };
 
     reader.readAsText(file);
