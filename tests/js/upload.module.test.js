@@ -105,6 +105,18 @@ describe('upload module coverage', () => {
         test('exports showUploadToast function', () => {
             expect(typeof uploadModule.showUploadToast).toBe('function');
         });
+
+        test('exports isXmlFile function', () => {
+            expect(typeof uploadModule.isXmlFile).toBe('function');
+        });
+
+        test('exports translateWithFallback function', () => {
+            expect(typeof uploadModule.translateWithFallback).toBe('function');
+        });
+
+        test('exports buildUploadMessage function', () => {
+            expect(typeof uploadModule.buildUploadMessage).toBe('function');
+        });
     });
 
     describe('showUploadStatus', () => {

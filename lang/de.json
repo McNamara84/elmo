@@ -305,7 +305,10 @@
             "dropZoneInfo": "XML-Datei hier ablegen",
             "loading": "Datei wird verarbeitet...",
             "successToast": "erfolgreich geladen",
-            "errorToast": "Fehler beim Laden der Datei"
+            "errorToast": "Fehler beim Laden der Datei",
+            "invalidFileType": "Bitte laden Sie eine XML-Datei hoch.",
+            "errorProcessing": "Fehler beim Verarbeiten der XML-Datei",
+            "errorReading": "Fehler beim Lesen der Datei"
         },
         "changelog": {
             "title": "Änderungsprotokoll",

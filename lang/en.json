@@ -304,7 +304,10 @@
             "dropZoneInfo": "Drop XML file here",
             "loading": "Processing file...",
             "successToast": "successfully loaded",
-            "errorToast": "Error loading file"
+            "errorToast": "Error loading file",
+            "invalidFileType": "Please upload an XML file.",
+            "errorProcessing": "Error processing XML file",
+            "errorReading": "Error reading file"
         },
         "changelog": {
             "title": "Changelog",

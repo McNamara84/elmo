@@ -12,8 +12,10 @@ $(document).ready(function () {
     // Event handler for file input change
     $('#input-uploadxml-file').on('change', function (event) {
         const file = event.target.files[0];
-        if (file) {
+        if (isXmlFile(file)) {
             handleXmlFile(file);
+        } else if (file) {
+            showUploadStatus(translateWithFallback('modals.upload.invalidFileType', 'Please upload an XML file.'), 'danger');
         }
     });
 
@@ -38,10 +40,10 @@ $(document).ready(function () {
         dropZone.removeClass('border-primary');
 
         const file = event.originalEvent.dataTransfer.files[0];
-        if (file && (file.type === 'text/xml' || file.type === 'application/xml' || (file.name && file.name.endsWith('.xml')))) {
+        if (isXmlFile(file)) {
             handleXmlFile(file);
         } else {
-            showUploadStatus('Please upload an XML file.', 'danger');
+            showUploadStatus(translateWithFallback('modals.upload.invalidFileType', 'Please upload an XML file.'), 'danger');
         }
     });
 
@@ -53,6 +55,45 @@ $(document).ready(function () {
         $('#panel-uploadxml-dropfile').removeClass('border-primary');
     });
 });
+
+/**
+ * Checks whether a file is a valid XML file by type or extension
+ * @param {File|undefined} file - The file to check
+ * @returns {boolean} True if the file is an XML file
+ */
+function isXmlFile(file) {
+    if (!file) return false;
+    if (file.type === 'text/xml' || file.type === 'application/xml') return true;
+    return !!(file.name && file.name.endsWith('.xml'));
+}
+
+/**
+ * Returns a translated string with a safe fallback
+ * @param {string} key - The i18n key
+ * @param {string} fallback - Fallback string if translation is unavailable
+ * @returns {string}
+ */
+function translateWithFallback(key, fallback) {
+    var translate = (window.elmo && typeof window.elmo.translate === 'function')
+        ? window.elmo.translate
+        : null;
+    return (translate && translate(key)) || fallback;
+}
+
+/**
+ * Builds the toast/fallback message for a given file name and type
+ * @param {string} fileName - The uploaded file name
+ * @param {string} type - 'success' or 'danger'
+ * @returns {string}
+ */
+function buildUploadMessage(fileName, type) {
+    if (type === 'success') {
+        var successText = translateWithFallback('modals.upload.successToast', 'successfully loaded');
+        return fileName + ' ' + successText;
+    }
+    var errorText = translateWithFallback('modals.upload.errorToast', 'Error loading file');
+    return errorText + ': ' + fileName;
+}
 
 /**
  * Handles the uploaded XML file
@@ -83,13 +124,13 @@ function handleXmlFile(file) {
         } catch (error) {
             console.error('Error:', error);
             setUploadLoadingState(false);
-            showUploadStatus('Error processing XML file: ' + error.message, 'danger');
+            showUploadStatus(translateWithFallback('modals.upload.errorProcessing', 'Error processing XML file') + ': ' + error.message, 'danger');
         }
     };
 
     reader.onerror = function () {
         setUploadLoadingState(false);
-        showUploadStatus('Error reading file', 'danger');
+        showUploadStatus(translateWithFallback('modals.upload.errorReading', 'Error reading file'), 'danger');
     };
 
     reader.readAsText(file);
@@ -124,33 +165,20 @@ function setUploadLoadingState(loading) {
 function showUploadToast(fileName, type) {
     const toastEl = document.getElementById('toast-upload-feedback');
     if (!toastEl) {
-        var fallbackMsg = type === 'success'
-            ? fileName + ' successfully loaded'
-            : 'Error loading ' + fileName;
-        showUploadStatus(fallbackMsg, type === 'success' ? 'success' : 'danger');
+        showUploadStatus(buildUploadMessage(fileName, type), type === 'success' ? 'success' : 'danger');
         return;
     }
 
     if (!window.bootstrap || !window.bootstrap.Toast) {
-        var fallbackMsg = type === 'success'
-            ? fileName + ' successfully loaded'
-            : 'Error loading ' + fileName;
-        showUploadStatus(fallbackMsg, type === 'success' ? 'success' : 'danger');
+        showUploadStatus(buildUploadMessage(fileName, type), type === 'success' ? 'success' : 'danger');
         return;
     }
-
-    var translate = (window.elmo && typeof window.elmo.translate === 'function')
-        ? window.elmo.translate
-        : null;
 
     const messageEl = document.getElementById('toast-upload-feedback-message');
     const iconEl = document.getElementById('toast-upload-feedback-icon');
 
     if (!messageEl || !iconEl) {
-        var fallbackMsg = type === 'success'
-            ? fileName + ' successfully loaded'
-            : 'Error loading ' + fileName;
-        showUploadStatus(fallbackMsg, type === 'success' ? 'success' : 'danger');
+        showUploadStatus(buildUploadMessage(fileName, type), type === 'success' ? 'success' : 'danger');
         return;
     }
 
@@ -159,14 +187,12 @@ function showUploadToast(fileName, type) {
     if (type === 'success') {
         toastEl.classList.add('text-bg-success');
         iconEl.className = 'bi bi-check-circle-fill me-2';
-        var successText = translate ? translate('modals.upload.successToast') : null;
-        messageEl.textContent = fileName + ' ' + (successText || 'successfully loaded');
     } else {
         toastEl.classList.add('text-bg-danger');
         iconEl.className = 'bi bi-exclamation-triangle-fill me-2';
-        var errorText = translate ? translate('modals.upload.errorToast') : null;
-        messageEl.textContent = (errorText || 'Error loading file') + ': ' + fileName;
     }
+
+    messageEl.textContent = buildUploadMessage(fileName, type);
 
     var toast = new window.bootstrap.Toast(toastEl, { delay: 5000 });
     toast.show();
@@ -192,5 +218,5 @@ function showUploadStatus(message, type) {
 
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { handleXmlFile, showUploadStatus, setUploadLoadingState, showUploadToast };
+    module.exports = { handleXmlFile, showUploadStatus, setUploadLoadingState, showUploadToast, isXmlFile, translateWithFallback, buildUploadMessage };
 }
