@@ -1193,9 +1193,8 @@ function processRelatedWorks(xmlDoc, resolver) {
  * Waits for the PID4INST API data to load, then matches instruments by PID.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
- * @returns {Promise<void>}
  */
-async function processUsedInstruments(xmlDoc, resolver) {
+function processUsedInstruments(xmlDoc, resolver) {
   if (!window.ELMO_FEATURES || !window.ELMO_FEATURES.showUsedInstruments) {
     return;
   }
@@ -1222,23 +1221,17 @@ async function processUsedInstruments(xmlDoc, resolver) {
   }
 
   if (pidList.length > 0 && window.usedInstrumentsModule) {
-    // Cap the API wait so a slow/unreachable PID4INST endpoint does not block
-    // the entire XML import.  Five seconds is enough for a cached response;
-    // if it takes longer the user still gets PID-only fallback tags.
-    var API_TIMEOUT_MS = 5000;
-    var timeoutPromise = new Promise(function (resolve) {
-      setTimeout(function () { resolve({ success: false, dataLoaded: false }); }, API_TIMEOUT_MS);
-    });
-    var result = await Promise.race([
-      window.usedInstrumentsModule.loadInstrumentsFromAPI(),
-      timeoutPromise
-    ]);
-    if (!result.dataLoaded) {
-      console.warn('PID4INST API data not available; instruments will be added with PID-only display.');
-    }
-
-    // Match instruments by PID against loaded API data (falls back to PID-only tags for unmatched entries)
+    // Add PID-only tags immediately so the import pipeline is never blocked
+    // by a slow/unreachable PID4INST endpoint.
     window.usedInstrumentsModule.addInstrumentsByPid(pidList);
+
+    // Fire-and-forget: load API data in the background and upgrade the
+    // PID-only tags with full metadata (name, types) once available.
+    window.usedInstrumentsModule.loadInstrumentsFromAPI().then(function (result) {
+      if (result.dataLoaded) {
+        window.usedInstrumentsModule.upgradeInstrumentTags();
+      }
+    });
   }
 }
 
@@ -1403,7 +1396,7 @@ async function loadXmlToForm(xmlDoc) {
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
   // Process Used Instruments (IsCollectedBy entries)
-  await processUsedInstruments(xmlDoc, resolver);
+  processUsedInstruments(xmlDoc, resolver);
   // Process Funders
   processFunders(xmlDoc, resolver);
   // Process Dates

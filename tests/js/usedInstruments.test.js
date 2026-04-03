@@ -307,8 +307,8 @@ describe('usedInstruments.js', () => {
         function loadWithApiData(apiData) {
             loadScript();
 
-            // Manually set up the API data by calling addInstrumentsByData first,
-            // then load from API to populate internal instrumentData
+            // Mock $.ajax to return the given data, then call loadInstrumentsFromAPI()
+            // so the module's internal instrumentData array is populated.
             const mockDeferred = $.Deferred();
             $.ajax = jest.fn(() => {
                 setTimeout(() => mockDeferred.resolve(apiData), 0);
@@ -406,6 +406,94 @@ describe('usedInstruments.js', () => {
             expect(pidInputs[0].value).toBe('21.11157/0001');
             expect(pidTypeInputs).toHaveLength(1);
             expect(pidTypeInputs[0].value).toBe('Handle');
+        });
+    });
+
+    describe('upgradeInstrumentTags', () => {
+        function loadWithApiData(apiData) {
+            loadScript();
+
+            const mockDeferred = $.Deferred();
+            $.ajax = jest.fn(() => {
+                setTimeout(() => mockDeferred.resolve(apiData), 0);
+                const promise = mockDeferred.promise();
+                promise.done = function (cb) { mockDeferred.done(cb); return this; };
+                promise.fail = function (cb) { mockDeferred.fail(cb); return this; };
+                promise.always = function (cb) { mockDeferred.always(cb); return this; };
+                return promise;
+            });
+
+            return window.usedInstrumentsModule.loadInstrumentsFromAPI();
+        }
+
+        test('upgrades PID-only tags with full API metadata', async () => {
+            loadScript();
+
+            // Step 1: Add PID-only tags (no API data loaded yet)
+            window.usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21.11157/0001', pidType: 'Handle' }
+            ]);
+
+            const input = document.getElementById('input-usedinstruments');
+            // Should be PID-only
+            expect(input._tagify.value[0].name).toBe('21.11157/0001');
+
+            // Step 2: Load API data into the same module instance
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Broadband Seismometer STS-2', instrumentTypes: ['Seismometer'] }
+            ];
+            const mockDeferred = $.Deferred();
+            $.ajax = jest.fn(() => {
+                setTimeout(() => mockDeferred.resolve(apiData), 0);
+                const promise = mockDeferred.promise();
+                promise.done = function (cb) { mockDeferred.done(cb); return this; };
+                promise.fail = function (cb) { mockDeferred.fail(cb); return this; };
+                promise.always = function (cb) { mockDeferred.always(cb); return this; };
+                return promise;
+            });
+            await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+
+            // Step 3: Upgrade
+            window.usedInstrumentsModule.upgradeInstrumentTags();
+
+            expect(input._tagify.value).toHaveLength(1);
+            expect(input._tagify.value[0].name).toBe('Broadband Seismometer STS-2');
+            expect(input._tagify.value[0].value).toBe('Broadband Seismometer STS-2 (Seismometer)');
+            expect(input._tagify.value[0].pid).toBe('21.11157/0001');
+        });
+
+        test('leaves already-enriched tags untouched', async () => {
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Seismometer', instrumentTypes: ['Seismometer'] }
+            ];
+            await loadWithApiData(apiData);
+
+            // Add via addInstrumentsByPid which already matched against API
+            window.usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21.11157/0001', pidType: 'Handle' }
+            ]);
+
+            const input = document.getElementById('input-usedinstruments');
+            expect(input._tagify.value[0].name).toBe('Seismometer');
+
+            // Upgrade should be a no-op
+            window.usedInstrumentsModule.upgradeInstrumentTags();
+            expect(input._tagify.value).toHaveLength(1);
+            expect(input._tagify.value[0].name).toBe('Seismometer');
+        });
+
+        test('does nothing when no API data is loaded', () => {
+            loadScript();
+
+            window.usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21.11157/0001', pidType: 'Handle' }
+            ]);
+
+            const input = document.getElementById('input-usedinstruments');
+            // No API data → upgradeInstrumentTags should not change anything
+            window.usedInstrumentsModule.upgradeInstrumentTags();
+            expect(input._tagify.value).toHaveLength(1);
+            expect(input._tagify.value[0].name).toBe('21.11157/0001');
         });
     });
 });

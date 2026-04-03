@@ -402,6 +402,56 @@ function initUsedInstrumentsModule() {
     }
 
     /**
+     * Upgrades existing PID-only tags with full API metadata once the API
+     * data becomes available.  A tag is considered PID-only when its `name`
+     * equals its `pid` (the fallback format set by addInstrumentsByPid).
+     * Tags that already have rich metadata are left untouched.
+     */
+    function upgradeInstrumentTags() {
+        if (!instrumentsTagify || instrumentData.length === 0) return;
+
+        var currentTags = instrumentsTagify.value || [];
+        var upgraded = false;
+
+        var newTags = currentTags.map(function (tag) {
+            // Only upgrade PID-only fallback tags (name === pid)
+            if (tag.name !== tag.pid) return tag;
+
+            var found = instrumentData.find(function (apiInst) {
+                return apiInst.pid === tag.pid;
+            });
+            if (!found) return tag;
+
+            upgraded = true;
+            return {
+                value: formatInstrumentDisplay(found),
+                pid: found.pid,
+                pidType: found.pidType || tag.pidType || 'Handle',
+                name: found.name,
+                instrumentTypes: found.instrumentTypes || []
+            };
+        });
+
+        if (!upgraded) return;
+
+        // Ensure upgraded tags are in the whitelist
+        var currentWhitelist = instrumentsTagify.settings.whitelist || [];
+        newTags.forEach(function (tag) {
+            var exists = currentWhitelist.some(function (w) { return w.pid === tag.pid; });
+            if (!exists) {
+                currentWhitelist.push(tag);
+            }
+        });
+        instrumentsTagify.settings.whitelist = currentWhitelist;
+        instrumentsTagify.whitelist = currentWhitelist;
+
+        // Replace all tags atomically
+        instrumentsTagify.removeAllTags();
+        instrumentsTagify.addTags(newTags);
+        updateHiddenInputs();
+    }
+
+    /**
      * Gets PIDs of all currently selected instruments.
      * 
      * @returns {Array<{pid: string, pidType: string}>}
@@ -425,6 +475,7 @@ function initUsedInstrumentsModule() {
     window.usedInstrumentsModule = {
         addInstrumentsByData: addInstrumentsByData,
         addInstrumentsByPid: addInstrumentsByPid,
+        upgradeInstrumentTags: upgradeInstrumentTags,
         getSelectedInstruments: getSelectedInstruments,
         loadInstrumentsFromAPI: loadInstrumentsFromAPI
     };

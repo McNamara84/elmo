@@ -420,18 +420,25 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     // Wait for title to verify XML was loaded
     await expect(page.locator('#input-resourceinformation-title')).toHaveValue('Single Instrument Test');
 
-    // Wait for the instrument tag to appear (allow time for API load + matching)
+    // Wait for the instrument tag to appear (PID-only tags are added immediately)
     await expect.poll(
       async () => (await getInstrumentTags(page)).length,
       { timeout: 15_000, message: 'Expected 1 instrument tag to appear' },
     ).toBe(1);
 
-    // Verify the tag has correct PID data (matched from API by PID, not by name)
+    // Wait for the background API upgrade to replace PID-only display with real name
+    await expect.poll(
+      async () => {
+        const t = await getInstrumentTags(page);
+        return t[0]?.value ?? '';
+      },
+      { timeout: 15_000, intervals: [200], message: 'Expected tag to upgrade to API name' },
+    ).toContain('Broadband Seismometer STS-2');
+
+    // Verify the tag has correct PID data
     const tags = await getInstrumentTags(page);
     expect(tags[0].pid).toBe('21.11157/0001');
     expect(tags[0].pidType).toBe('Handle');
-    // The display value should come from the API data (real name), not the raw PID
-    expect(tags[0].value).toContain('Broadband Seismometer STS-2');
 
     // Verify hidden inputs are set correctly for form submission
     const hidden = await getHiddenInstrumentInputs(page);
@@ -467,11 +474,20 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     // Wait for title to verify XML was loaded
     await expect(page.locator('#input-resourceinformation-title')).toHaveValue('Three Instruments Test');
 
-    // Wait for all 3 instrument tags to appear
+    // Wait for all 3 instrument tags to appear (PID-only tags are added immediately)
     await expect.poll(
       async () => (await getInstrumentTags(page)).length,
       { timeout: 15_000, message: 'Expected 3 instrument tags to appear' },
     ).toBe(3);
+
+    // Wait for background API upgrade to replace PID-only display with real names
+    await expect.poll(
+      async () => {
+        const t = await getInstrumentTags(page);
+        return t.every((tag: any) => tag.value !== tag.pid);
+      },
+      { timeout: 15_000, intervals: [200], message: 'Expected all tags to upgrade to API names' },
+    ).toBe(true);
 
     const tags = await getInstrumentTags(page);
 
