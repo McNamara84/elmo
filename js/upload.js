@@ -160,7 +160,7 @@ function showUploadToast(fileName, type) {
         messageEl.textContent = (errorText || 'Error loading file') + ': ' + fileName;
     }
 
-    var toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+    var toast = new window.bootstrap.Toast(toastEl, { delay: 5000 });
     toast.show();
 }
 

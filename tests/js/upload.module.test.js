@@ -42,8 +42,8 @@ describe('upload module coverage', () => {
         // Mock bootstrap modal
         $.fn.modal = jest.fn();
 
-        // Mock bootstrap Toast
-        global.bootstrap = {
+        // Mock bootstrap Toast (attach to window to match production guard)
+        window.bootstrap = {
             Toast: jest.fn(function (el, opts) {
                 this.el = el;
                 this.opts = opts;
@@ -86,7 +86,7 @@ describe('upload module coverage', () => {
         delete window.jQuery;
         delete window.mapXmlToFormFields;
         delete global.FileReader;
-        delete global.bootstrap;
+        delete window.bootstrap;
     });
 
     describe('module exports', () => {
@@ -274,11 +274,11 @@ describe('upload module coverage', () => {
         test('creates Bootstrap Toast with 5s delay and calls show', () => {
             uploadModule.showUploadToast('test.xml', 'success');
 
-            expect(global.bootstrap.Toast).toHaveBeenCalledWith(
+            expect(window.bootstrap.Toast).toHaveBeenCalledWith(
                 document.getElementById('toast-upload-feedback'),
                 { delay: 5000 }
             );
-            const toastInstance = global.bootstrap.Toast.mock.instances[0];
+            const toastInstance = window.bootstrap.Toast.mock.instances[0];
             expect(toastInstance.show).toHaveBeenCalled();
         });
 
@@ -314,7 +314,7 @@ describe('upload module coverage', () => {
         });
 
         test('falls back to showUploadStatus when bootstrap.Toast is unavailable', () => {
-            delete global.bootstrap;
+            delete window.bootstrap;
 
             uploadModule.showUploadToast('test.xml', 'success');
 
@@ -324,7 +324,7 @@ describe('upload module coverage', () => {
         });
 
         test('falls back to showUploadStatus for danger when bootstrap.Toast is unavailable', () => {
-            delete global.bootstrap;
+            delete window.bootstrap;
 
             uploadModule.showUploadToast('bad.xml', 'danger');
 
@@ -441,7 +441,7 @@ describe('upload module coverage', () => {
                 target: { result: validXml }
             });
 
-            expect(global.bootstrap.Toast).toHaveBeenCalled();
+            expect(window.bootstrap.Toast).toHaveBeenCalled();
             const messageEl = document.getElementById('toast-upload-feedback-message');
             expect(messageEl.textContent).toContain('dataset.xml');
             expect(messageEl.textContent).toContain('successfully loaded');
@@ -528,7 +528,7 @@ describe('upload module coverage', () => {
             });
 
             // Toast should NOT be shown for errors
-            expect(global.bootstrap.Toast).not.toHaveBeenCalled();
+            expect(window.bootstrap.Toast).not.toHaveBeenCalled();
 
             global.DOMParser = originalDOMParser;
         });
