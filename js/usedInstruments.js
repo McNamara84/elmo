@@ -56,6 +56,12 @@ function initUsedInstrumentsModule() {
     var loadInProgress = false;
 
     /**
+     * Promise for the current or completed load operation.
+     * @type {Promise<void>|null}
+     */
+    var loadPromise = null;
+
+    /**
      * Gets a nested value from an object using dot notation.
      * 
      * @param {Object} obj - The object to search within
@@ -226,9 +232,22 @@ function initUsedInstrumentsModule() {
     /**
      * Fetches PID4INST instruments from the API and updates the Tagify whitelist.
      * Uses lazy loading - only called when user first interacts with the field.
+     * Returns a Promise that resolves when the data has been loaded (or rejects on failure).
+     * If data is already loaded, resolves immediately.
+     * 
+     * @returns {Promise<void>}
      */
     function loadInstrumentsFromAPI() {
-        if (loadInProgress) return;
+        // If data is already loaded, resolve immediately
+        if (dataLoaded) {
+            return Promise.resolve();
+        }
+
+        // If a load is already in progress, return the existing promise
+        if (loadInProgress && loadPromise) {
+            return loadPromise;
+        }
+
         loadInProgress = true;
 
         // Show loading indicator in dropdown
@@ -236,56 +255,75 @@ function initUsedInstrumentsModule() {
             instrumentsTagify.loading(true);
         }
 
-        $.ajax({
-            url: 'api/v2/vocabs/pid4inst/instruments',
-            method: 'GET',
-            dataType: 'json',
-            timeout: 30000
-        })
-            .done(function (data) {
-                try {
-                    if (!Array.isArray(data)) {
-                        console.error('PID4INST API returned unexpected data format:', data);
-                        return;
-                    }
-
-                    if (data.length === 0) {
-                        console.log('No PID4INST instruments available.');
-                        return;
-                    }
-
-                    // Store full instrument data
-                    instrumentData = data;
-                    dataLoaded = true;
-
-                    // Update Tagify whitelist
-                    if (instrumentsTagify) {
-                        var whitelist = buildWhitelist();
-                        instrumentsTagify.settings.whitelist = whitelist;
-                        instrumentsTagify.whitelist = whitelist;
-
-                        // If the dropdown is open, refilter
-                        if (instrumentsTagify.dropdown.visible) {
-                            instrumentsTagify.dropdown.refilter.call(instrumentsTagify);
+        loadPromise = new Promise(function (resolve, reject) {
+            $.ajax({
+                url: 'api/v2/vocabs/pid4inst/instruments',
+                method: 'GET',
+                dataType: 'json',
+                timeout: 30000
+            })
+                .done(function (data) {
+                    try {
+                        if (!Array.isArray(data)) {
+                            console.error('PID4INST API returned unexpected data format:', data);
+                            resolve();
+                            return;
                         }
+
+                        if (data.length === 0) {
+                            console.log('No PID4INST instruments available.');
+                            resolve();
+                            return;
+                        }
+
+                        // Store full instrument data
+                        instrumentData = data;
+                        dataLoaded = true;
+
+                        // Update Tagify whitelist while preserving existing tags
+                        if (instrumentsTagify) {
+                            var existingTags = instrumentsTagify.value || [];
+                            var whitelist = buildWhitelist();
+
+                            // Re-add any existing tags that might not be in the API whitelist
+                            existingTags.forEach(function (tag) {
+                                var exists = whitelist.some(function (w) { return w.pid === tag.pid; });
+                                if (!exists) {
+                                    whitelist.push(tag);
+                                }
+                            });
+
+                            instrumentsTagify.settings.whitelist = whitelist;
+                            instrumentsTagify.whitelist = whitelist;
+
+                            // If the dropdown is open, refilter
+                            if (instrumentsTagify.dropdown.visible) {
+                                instrumentsTagify.dropdown.refilter.call(instrumentsTagify);
+                            }
+                        }
+                        resolve();
+                    } catch (error) {
+                        console.error('Error processing PID4INST instrument data:', error);
+                        resolve();
                     }
-                } catch (error) {
-                    console.error('Error processing PID4INST instrument data:', error);
-                }
-            })
-            .fail(function (jqXHR, textStatus, errorThrown) {
-                console.warn('Failed to fetch PID4INST instruments:', {
-                    status: jqXHR.status,
-                    statusText: jqXHR.statusText,
-                    error: errorThrown
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    console.warn('Failed to fetch PID4INST instruments:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        error: errorThrown
+                    });
+                    reject(new Error('Failed to fetch PID4INST instruments: ' + textStatus));
+                })
+                .always(function () {
+                    loadInProgress = false;
+                    if (instrumentsTagify) {
+                        instrumentsTagify.loading(false);
+                    }
                 });
-            })
-            .always(function () {
-                loadInProgress = false;
-                if (instrumentsTagify) {
-                    instrumentsTagify.loading(false);
-                }
-            });
+        });
+
+        return loadPromise;
     }
 
     /**
@@ -325,6 +363,37 @@ function initUsedInstrumentsModule() {
     }
 
     /**
+     * Looks up instruments by their PIDs in the loaded API data and adds
+     * the matched ones as Tagify tags with full metadata (name, types).
+     * Instruments not found in the API data are silently skipped.
+     * Requires that loadInstrumentsFromAPI() has been awaited first.
+     * 
+     * @param {Array<{pid: string, pidType: string}>} pidList - PIDs to look up and add
+     */
+    function addInstrumentsByPid(pidList) {
+        if (!instrumentsTagify || !Array.isArray(pidList) || pidList.length === 0) return;
+
+        var matchedInstruments = [];
+        pidList.forEach(function (entry) {
+            var found = instrumentData.find(function (apiInst) {
+                return apiInst.pid === entry.pid;
+            });
+            if (found) {
+                matchedInstruments.push({
+                    pid: found.pid,
+                    pidType: found.pidType || entry.pidType || 'Handle',
+                    name: found.name,
+                    instrumentTypes: found.instrumentTypes || []
+                });
+            }
+        });
+
+        if (matchedInstruments.length > 0) {
+            addInstrumentsByData(matchedInstruments);
+        }
+    }
+
+    /**
      * Gets PIDs of all currently selected instruments.
      * 
      * @returns {Array<{pid: string, pidType: string}>}
@@ -347,6 +416,7 @@ function initUsedInstrumentsModule() {
     // Expose API for XML import and other modules
     window.usedInstrumentsModule = {
         addInstrumentsByData: addInstrumentsByData,
+        addInstrumentsByPid: addInstrumentsByPid,
         getSelectedInstruments: getSelectedInstruments,
         loadInstrumentsFromAPI: loadInstrumentsFromAPI
     };

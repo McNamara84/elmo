@@ -1190,17 +1190,19 @@ function processRelatedWorks(xmlDoc, resolver) {
  * Process related identifiers with relationType="IsCollectedBy" from XML
  * and populate the Used Instruments Tagify field.
  * Only active when the showUsedInstruments feature toggle is enabled.
+ * Waits for the PID4INST API data to load, then matches instruments by PID.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
+ * @returns {Promise<void>}
  */
-function processUsedInstruments(xmlDoc, resolver) {
+async function processUsedInstruments(xmlDoc, resolver) {
   if (!window.ELMO_FEATURES || !window.ELMO_FEATURES.showUsedInstruments) {
     return;
   }
 
   const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-  const instruments = [];
+  const pidList = [];
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -1213,23 +1215,23 @@ function processUsedInstruments(xmlDoc, resolver) {
     const pidType = identifierNode.getAttribute("relatedIdentifierType") || "Handle";
     const pid = identifierNode.textContent.trim();
 
-    instruments.push({
+    pidList.push({
       pid: pid,
-      pidType: pidType,
-      name: pid, // Use PID as name fallback; Tagify will show the PID
-      instrumentTypes: []
+      pidType: pidType
     });
   }
 
-  if (instruments.length > 0 && window.usedInstrumentsModule) {
-    // Ensure API data is loaded so Tagify can match instruments
-    window.usedInstrumentsModule.loadInstrumentsFromAPI();
+  if (pidList.length > 0 && window.usedInstrumentsModule) {
+    try {
+      // Wait for API data to be fully loaded before matching
+      await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+    } catch (e) {
+      console.warn('Could not load PID4INST instruments for XML import:', e);
+      return;
+    }
 
-    // Use a short delay to allow API data to potentially load
-    // then add instruments by their PID data
-    setTimeout(function () {
-      window.usedInstrumentsModule.addInstrumentsByData(instruments);
-    }, 500);
+    // Match instruments by PID against loaded API data
+    window.usedInstrumentsModule.addInstrumentsByPid(pidList);
   }
 }
 
@@ -1394,7 +1396,7 @@ async function loadXmlToForm(xmlDoc) {
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
   // Process Used Instruments (IsCollectedBy entries)
-  processUsedInstruments(xmlDoc, resolver);
+  await processUsedInstruments(xmlDoc, resolver);
   // Process Funders
   processFunders(xmlDoc, resolver);
   // Process Dates
