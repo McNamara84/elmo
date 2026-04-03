@@ -50,10 +50,16 @@ describe('upload.js', () => {
 
         jest.resetModules();
         uploadModule = require('../../js/upload.js');
+        // Flush microtasks for jQuery 4 $(document).ready()
         await new Promise(resolve => setTimeout(resolve, 0));
+
+        // Install fake timers after setup to prevent real 10s timeouts from leaking
+        jest.useFakeTimers();
     });
 
     afterEach(() => {
+        jest.clearAllTimers();
+        jest.useRealTimers();
         document.body.innerHTML = '';
         jest.clearAllMocks();
         jest.resetModules();
@@ -131,6 +137,14 @@ describe('upload.js', () => {
 
         test('handles file with no name property', () => {
             expect(uploadModule.isXmlFile({ type: 'text/plain' })).toBe(false);
+        });
+
+        test('accepts uppercase .XML extension', () => {
+            expect(uploadModule.isXmlFile({ name: 'DATA.XML', type: '' })).toBe(true);
+        });
+
+        test('accepts mixed case .Xml extension', () => {
+            expect(uploadModule.isXmlFile({ name: 'file.Xml', type: '' })).toBe(true);
         });
     });
 

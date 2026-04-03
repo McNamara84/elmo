@@ -169,6 +169,30 @@ describe('upload module coverage', () => {
 
             jest.useRealTimers();
         });
+
+        test('cancels previous hide timer when called again', () => {
+            jest.useFakeTimers();
+
+            uploadModule.showUploadStatus('First message', 'success');
+            // Advance 8 seconds (not enough to trigger first hide)
+            jest.advanceTimersByTime(8000);
+            expect($('#xml-upload-status').hasClass('d-none')).toBe(false);
+
+            // Show a second message — should cancel the first timer
+            uploadModule.showUploadStatus('Second message', 'danger');
+            expect($('#xml-upload-status').text()).toBe('Second message');
+
+            // Advance 3 seconds — would have hidden if first timer wasn't cancelled
+            jest.advanceTimersByTime(3000);
+            expect($('#xml-upload-status').hasClass('d-none')).toBe(false);
+            expect($('#xml-upload-status').text()).toBe('Second message');
+
+            // Advance remaining 7 seconds — second timer fires
+            jest.advanceTimersByTime(7000);
+            expect($('#xml-upload-status').hasClass('d-none')).toBe(true);
+
+            jest.useRealTimers();
+        });
     });
 
     describe('setUploadLoadingState', () => {

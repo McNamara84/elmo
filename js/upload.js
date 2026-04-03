@@ -64,7 +64,7 @@ $(document).ready(function () {
 function isXmlFile(file) {
     if (!file) return false;
     if (file.type === 'text/xml' || file.type === 'application/xml') return true;
-    return !!(file.name && file.name.endsWith('.xml'));
+    return !!(file.name && file.name.toLowerCase().endsWith('.xml'));
 }
 
 /**
@@ -203,6 +203,8 @@ function showUploadToast(fileName, type) {
  * @param {string} message - The message to display
  * @param {string} type - Bootstrap alert type (success, danger, etc.)
  */
+let _statusHideTimer = null;
+
 function showUploadStatus(message, type) {
     const statusElement = $('#xml-upload-status');
     statusElement.removeClass()
@@ -210,9 +212,15 @@ function showUploadStatus(message, type) {
         .removeClass('d-none')
         .text(message);
 
+    // Cancel any previous hide timer
+    if (_statusHideTimer) {
+        clearTimeout(_statusHideTimer);
+    }
+
     // Hide message after 10 seconds
-    setTimeout(() => {
+    _statusHideTimer = setTimeout(() => {
         statusElement.addClass('d-none');
+        _statusHideTimer = null;
     }, 10000);
 }
 
