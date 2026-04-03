@@ -124,23 +124,26 @@ function handleXmlFile(file) {
             // Load XML data into form
             await loadXmlToForm(xmlDoc);
 
-            // Close modal and show success toast
+            // Show success toast; close modal only when toast is available
             setUploadLoadingState(false);
-            $('#modal-uploadxml').modal('hide');
-            showUploadToast(file.name, 'success');
+            if (showUploadToast(file.name, 'success')) {
+                $('#modal-uploadxml').modal('hide');
+            }
 
         } catch (error) {
             console.error('Error:', error);
             setUploadLoadingState(false);
-            $('#modal-uploadxml').modal('hide');
-            showUploadToast(file.name, 'danger', 'modals.upload.errorProcessing');
+            if (showUploadToast(file.name, 'danger', 'modals.upload.errorProcessing')) {
+                $('#modal-uploadxml').modal('hide');
+            }
         }
     };
 
     reader.onerror = function () {
         setUploadLoadingState(false);
-        $('#modal-uploadxml').modal('hide');
-        showUploadToast(file.name, 'danger', 'modals.upload.errorReading');
+        if (showUploadToast(file.name, 'danger', 'modals.upload.errorReading')) {
+            $('#modal-uploadxml').modal('hide');
+        }
     };
 
     reader.readAsText(file);
@@ -173,17 +176,18 @@ function setUploadLoadingState(loading) {
  * @param {string} fileName - The name of the uploaded file
  * @param {string} type - 'success' or 'danger'
  * @param {string} [errorKey] - Optional specific i18n key for the error message
+ * @returns {boolean} True if the toast was shown, false if the in-modal fallback was used
  */
 function showUploadToast(fileName, type, errorKey) {
     const toastEl = document.getElementById('toast-upload-feedback');
     if (!toastEl) {
         showUploadStatus(buildUploadMessage(fileName, type, errorKey), type === 'success' ? 'success' : 'danger');
-        return;
+        return false;
     }
 
     if (!window.bootstrap || !window.bootstrap.Toast) {
         showUploadStatus(buildUploadMessage(fileName, type, errorKey), type === 'success' ? 'success' : 'danger');
-        return;
+        return false;
     }
 
     const messageEl = document.getElementById('toast-upload-feedback-message');
@@ -191,7 +195,7 @@ function showUploadToast(fileName, type, errorKey) {
 
     if (!messageEl || !iconEl) {
         showUploadStatus(buildUploadMessage(fileName, type, errorKey), type === 'success' ? 'success' : 'danger');
-        return;
+        return false;
     }
 
     toastEl.classList.remove('text-bg-success', 'text-bg-danger');
@@ -208,6 +212,7 @@ function showUploadToast(fileName, type, errorKey) {
 
     const toast = new window.bootstrap.Toast(toastEl, { delay: 5000 });
     toast.show();
+    return true;
 }
 
 /**

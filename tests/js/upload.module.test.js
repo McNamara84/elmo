@@ -351,54 +351,60 @@ describe('upload module coverage', () => {
             expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
         });
 
-        test('does nothing when toast element is missing', () => {
+        test('returns true when toast is successfully shown', () => {
+            const result = uploadModule.showUploadToast('test.xml', 'success');
+            expect(result).toBe(true);
+            expect(window.bootstrap.Toast).toHaveBeenCalled();
+        });
+
+        test('does nothing when toast element is missing and returns false', () => {
             document.getElementById('toast-upload-feedback').remove();
 
-            // Should not throw
-            expect(() => uploadModule.showUploadToast('test.xml', 'success')).not.toThrow();
+            const result = uploadModule.showUploadToast('test.xml', 'success');
+            expect(result).toBe(false);
             // Should fall back to in-modal status
             const statusElement = $('#xml-upload-status');
             expect(statusElement.hasClass('alert-success')).toBe(true);
             expect(statusElement.text()).toContain('test.xml');
         });
 
-        test('falls back to showUploadStatus for danger when toast element is missing', () => {
+        test('falls back to showUploadStatus for danger when toast element is missing and returns false', () => {
             document.getElementById('toast-upload-feedback').remove();
 
-            uploadModule.showUploadToast('bad.xml', 'danger');
-
+            const result = uploadModule.showUploadToast('bad.xml', 'danger');
+            expect(result).toBe(false);
             const statusElement = $('#xml-upload-status');
             expect(statusElement.hasClass('alert-danger')).toBe(true);
             expect(statusElement.text()).toContain('bad.xml');
         });
 
-        test('falls back to showUploadStatus when toast child elements are missing', () => {
+        test('falls back to showUploadStatus when toast child elements are missing and returns false', () => {
             document.getElementById('toast-upload-feedback-message').remove();
             document.getElementById('toast-upload-feedback-icon').remove();
 
-            uploadModule.showUploadToast('test.xml', 'success');
-
+            const result = uploadModule.showUploadToast('test.xml', 'success');
+            expect(result).toBe(false);
             const statusElement = $('#xml-upload-status');
             expect(statusElement.hasClass('alert-success')).toBe(true);
             expect(statusElement.text()).toContain('test.xml');
             expect(window.bootstrap.Toast).not.toHaveBeenCalled();
         });
 
-        test('falls back to showUploadStatus when bootstrap.Toast is unavailable', () => {
+        test('falls back to showUploadStatus when bootstrap.Toast is unavailable and returns false', () => {
             delete window.bootstrap;
 
-            uploadModule.showUploadToast('test.xml', 'success');
-
+            const result = uploadModule.showUploadToast('test.xml', 'success');
+            expect(result).toBe(false);
             const statusElement = $('#xml-upload-status');
             expect(statusElement.hasClass('alert-success')).toBe(true);
             expect(statusElement.text()).toContain('test.xml');
         });
 
-        test('falls back to showUploadStatus for danger when bootstrap.Toast is unavailable', () => {
+        test('falls back to showUploadStatus for danger when bootstrap.Toast is unavailable and returns false', () => {
             delete window.bootstrap;
 
-            uploadModule.showUploadToast('bad.xml', 'danger');
-
+            const result = uploadModule.showUploadToast('bad.xml', 'danger');
+            expect(result).toBe(false);
             const statusElement = $('#xml-upload-status');
             expect(statusElement.hasClass('alert-danger')).toBe(true);
             expect(statusElement.text()).toContain('bad.xml');
@@ -535,6 +541,45 @@ describe('upload module coverage', () => {
 
             expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
             expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
+        });
+
+        test('keeps modal open and shows in-modal status when toast is unavailable on success', async () => {
+            // Remove toast element to trigger fallback
+            document.getElementById('toast-upload-feedback').remove();
+
+            const validXml = '<?xml version="1.0"?><root></root>';
+            const mockFile = new Blob([validXml], { type: 'text/xml' });
+            mockFile.name = 'data.xml';
+
+            uploadModule.handleXmlFile(mockFile);
+            await mockFileReader.onload({
+                target: { result: validXml }
+            });
+
+            // Modal should NOT be closed
+            expect($.fn.modal).not.toHaveBeenCalledWith('hide');
+            // In-modal status should show success
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-success')).toBe(true);
+            expect(statusElement.text()).toContain('data.xml');
+        });
+
+        test('keeps modal open and shows in-modal status when toast is unavailable on error', () => {
+            // Remove toast element to trigger fallback
+            document.getElementById('toast-upload-feedback').remove();
+
+            const mockFile = new Blob(['test'], { type: 'text/xml' });
+            mockFile.name = 'fail.xml';
+
+            uploadModule.handleXmlFile(mockFile);
+            mockFileReader.onerror();
+
+            // Modal should NOT be closed
+            expect($.fn.modal).not.toHaveBeenCalledWith('hide');
+            // In-modal status should show error
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-danger')).toBe(true);
+            expect(statusElement.text()).toContain('fail.xml');
         });
 
         test('closes modal and shows processing-error toast for invalid XML (parsererror)', async () => {
