@@ -299,7 +299,13 @@
         },
         "upload": {
             "title": "Sélectionner un fichier XML :",
-            "dropZoneInfo": "Déposer le fichier XML ici"
+            "dropZoneInfo": "Déposer le fichier XML ici",
+            "loading": "Traitement du fichier...",
+            "successToast": "chargé avec succès",
+            "errorToast": "Erreur lors du chargement du fichier",
+            "invalidFileType": "Veuillez télécharger un fichier XML.",
+            "errorProcessing": "Erreur lors du traitement du fichier XML",
+            "errorReading": "Erreur lors de la lecture du fichier"
         },
         "changelog": {
             "title": "Journal des modifications",

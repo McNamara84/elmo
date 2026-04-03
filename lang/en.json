@@ -301,7 +301,13 @@
         },
         "upload": {
             "title": "Select XML file:",
-            "dropZoneInfo": "Drop XML file here"
+            "dropZoneInfo": "Drop XML file here",
+            "loading": "Processing file...",
+            "successToast": "successfully loaded",
+            "errorToast": "Error loading file",
+            "invalidFileType": "Please upload an XML file.",
+            "errorProcessing": "Error processing XML file",
+            "errorReading": "Error reading file"
         },
         "changelog": {
             "title": "Changelog",
