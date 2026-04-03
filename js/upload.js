@@ -44,6 +44,13 @@ $(document).ready(function () {
             showUploadStatus('Please upload an XML file.', 'danger');
         }
     });
+
+    // Reset modal state when closed
+    $('#modal-uploadxml').on('hidden.bs.modal', function () {
+        $('#input-uploadxml-file').val('');
+        setUploadLoadingState(false);
+        $('#xml-upload-status').addClass('d-none');
+    });
 });
 
 /**
@@ -51,6 +58,8 @@ $(document).ready(function () {
  * @param {File} file - The uploaded XML file
  */
 function handleXmlFile(file) {
+    setUploadLoadingState(true);
+
     const reader = new FileReader();
 
     reader.onload = async function (event) {
@@ -65,17 +74,20 @@ function handleXmlFile(file) {
             // Load XML data into form
             await loadXmlToForm(xmlDoc);
 
-            // Close modal and show success message
+            // Close modal and show success toast
+            setUploadLoadingState(false);
             $('#modal-uploadxml').modal('hide');
-            showUploadStatus('XML file successfully loaded', 'success');
+            showUploadToast(file.name, 'success');
 
         } catch (error) {
             console.error('Error:', error);
+            setUploadLoadingState(false);
             showUploadStatus('Error processing XML file: ' + error.message, 'danger');
         }
     };
 
     reader.onerror = function () {
+        setUploadLoadingState(false);
         showUploadStatus('Error reading file', 'danger');
     };
 
@@ -83,7 +95,55 @@ function handleXmlFile(file) {
 }
 
 /**
- * Shows upload status message
+ * Toggles loading state in the upload modal
+ * @param {boolean} loading - Whether the loading state should be active
+ */
+function setUploadLoadingState(loading) {
+    const fileInput = $('#input-uploadxml-file');
+    const dropZone = $('#panel-uploadxml-dropfile');
+    const spinner = $('#upload-spinner-overlay');
+
+    if (loading) {
+        fileInput.prop('disabled', true);
+        dropZone.addClass('pe-none opacity-50');
+        spinner.removeClass('d-none');
+    } else {
+        fileInput.prop('disabled', false);
+        dropZone.removeClass('pe-none opacity-50');
+        spinner.addClass('d-none');
+    }
+}
+
+/**
+ * Shows a Bootstrap toast notification after upload
+ * @param {string} fileName - The name of the uploaded file
+ * @param {string} type - 'success' or 'danger'
+ */
+function showUploadToast(fileName, type) {
+    const toastEl = document.getElementById('toast-upload-feedback');
+    if (!toastEl) return;
+
+    const messageEl = document.getElementById('toast-upload-feedback-message');
+    const iconEl = document.getElementById('toast-upload-feedback-icon');
+
+    toastEl.classList.remove('text-bg-success', 'text-bg-danger');
+
+    if (type === 'success') {
+        toastEl.classList.add('text-bg-success');
+        iconEl.className = 'bi bi-check-circle-fill me-2';
+        messageEl.textContent = fileName + ' successfully loaded';
+    } else {
+        toastEl.classList.add('text-bg-danger');
+        iconEl.className = 'bi bi-exclamation-triangle-fill me-2';
+        messageEl.textContent = 'Error loading ' + fileName;
+    }
+
+    var toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+    toast.show();
+}
+
+/**
+ * Shows upload status message inside the modal
  * @param {string} message - The message to display
  * @param {string} type - Bootstrap alert type (success, danger, etc.)
  */
@@ -102,5 +162,5 @@ function showUploadStatus(message, type) {
 
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { handleXmlFile, showUploadStatus };
+    module.exports = { handleXmlFile, showUploadStatus, setUploadLoadingState, showUploadToast };
 }

@@ -302,7 +302,10 @@
         },
         "upload": {
             "title": "XML-Datei auswählen:",
-            "dropZoneInfo": "XML-Datei hier ablegen"
+            "dropZoneInfo": "XML-Datei hier ablegen",
+            "loading": "Datei wird verarbeitet...",
+            "successToast": "erfolgreich geladen",
+            "errorToast": "Fehler beim Laden der Datei"
         },
         "changelog": {
             "title": "Änderungsprotokoll",
