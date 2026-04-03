@@ -205,7 +205,7 @@ describe('upload module coverage', () => {
     });
 
     describe('showUploadToast', () => {
-        test('sets success styling and message', () => {
+        test('sets success styling and message with fallback', () => {
             uploadModule.showUploadToast('test.xml', 'success');
 
             const toastEl = document.getElementById('toast-upload-feedback');
@@ -218,7 +218,37 @@ describe('upload module coverage', () => {
             expect(messageEl.textContent).toBe('test.xml successfully loaded');
         });
 
-        test('sets danger styling and message', () => {
+        test('uses i18n translation for success message when available', () => {
+            window.elmo = { translate: jest.fn((key) => {
+                if (key === 'modals.upload.successToast') return 'erfolgreich geladen';
+                return null;
+            })};
+
+            uploadModule.showUploadToast('data.xml', 'success');
+
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            expect(messageEl.textContent).toBe('data.xml erfolgreich geladen');
+            expect(window.elmo.translate).toHaveBeenCalledWith('modals.upload.successToast');
+
+            delete window.elmo;
+        });
+
+        test('uses i18n translation for error message when available', () => {
+            window.elmo = { translate: jest.fn((key) => {
+                if (key === 'modals.upload.errorToast') return 'Fehler beim Laden der Datei';
+                return null;
+            })};
+
+            uploadModule.showUploadToast('broken.xml', 'danger');
+
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            expect(messageEl.textContent).toBe('Fehler beim Laden der Datei: broken.xml');
+            expect(window.elmo.translate).toHaveBeenCalledWith('modals.upload.errorToast');
+
+            delete window.elmo;
+        });
+
+        test('sets danger styling and message with fallback', () => {
             uploadModule.showUploadToast('broken.xml', 'danger');
 
             const toastEl = document.getElementById('toast-upload-feedback');
@@ -228,7 +258,7 @@ describe('upload module coverage', () => {
             expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
             expect(toastEl.classList.contains('text-bg-success')).toBe(false);
             expect(iconEl.className).toContain('bi-exclamation-triangle-fill');
-            expect(messageEl.textContent).toBe('Error loading broken.xml');
+            expect(messageEl.textContent).toBe('Error loading file: broken.xml');
         });
 
         test('creates Bootstrap Toast with 5s delay and calls show', () => {
@@ -258,6 +288,26 @@ describe('upload module coverage', () => {
             // Should not throw
             expect(() => uploadModule.showUploadToast('test.xml', 'success')).not.toThrow();
             expect(global.bootstrap.Toast).not.toHaveBeenCalled();
+        });
+
+        test('falls back to showUploadStatus when bootstrap.Toast is unavailable', () => {
+            delete global.bootstrap;
+
+            uploadModule.showUploadToast('test.xml', 'success');
+
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-success')).toBe(true);
+            expect(statusElement.text()).toContain('test.xml');
+        });
+
+        test('falls back to showUploadStatus for danger when bootstrap.Toast is unavailable', () => {
+            delete global.bootstrap;
+
+            uploadModule.showUploadToast('bad.xml', 'danger');
+
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-danger')).toBe(true);
+            expect(statusElement.text()).toContain('bad.xml');
         });
     });
 

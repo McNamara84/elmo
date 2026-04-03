@@ -294,19 +294,25 @@ describe('upload.js', () => {
             function showUploadToast(fileName, type) {
                 const toastEl = document.getElementById('toast-upload-feedback');
                 if (!toastEl) return;
+                if (!window.bootstrap || !window.bootstrap.Toast) return;
+
+                var translate = (window.elmo && typeof window.elmo.translate === 'function')
+                    ? window.elmo.translate : null;
+
                 const messageEl = document.getElementById('toast-upload-feedback-message');
                 const iconEl = document.getElementById('toast-upload-feedback-icon');
-
                 toastEl.classList.remove('text-bg-success', 'text-bg-danger');
 
                 if (type === 'success') {
                     toastEl.classList.add('text-bg-success');
                     iconEl.className = 'bi bi-check-circle-fill me-2';
-                    messageEl.textContent = fileName + ' successfully loaded';
+                    var successText = translate ? translate('modals.upload.successToast') : null;
+                    messageEl.textContent = fileName + ' ' + (successText || 'successfully loaded');
                 } else {
                     toastEl.classList.add('text-bg-danger');
                     iconEl.className = 'bi bi-exclamation-triangle-fill me-2';
-                    messageEl.textContent = 'Error loading ' + fileName;
+                    var errorText = translate ? translate('modals.upload.errorToast') : null;
+                    messageEl.textContent = (errorText || 'Error loading file') + ': ' + fileName;
                 }
 
                 var toast = new bootstrap.Toast(toastEl, { delay: 5000 });
@@ -326,19 +332,25 @@ describe('upload.js', () => {
             function showUploadToast(fileName, type) {
                 const toastEl = document.getElementById('toast-upload-feedback');
                 if (!toastEl) return;
+                if (!window.bootstrap || !window.bootstrap.Toast) return;
+
+                var translate = (window.elmo && typeof window.elmo.translate === 'function')
+                    ? window.elmo.translate : null;
+
                 const messageEl = document.getElementById('toast-upload-feedback-message');
                 const iconEl = document.getElementById('toast-upload-feedback-icon');
-
                 toastEl.classList.remove('text-bg-success', 'text-bg-danger');
 
                 if (type === 'success') {
                     toastEl.classList.add('text-bg-success');
                     iconEl.className = 'bi bi-check-circle-fill me-2';
-                    messageEl.textContent = fileName + ' successfully loaded';
+                    var successText = translate ? translate('modals.upload.successToast') : null;
+                    messageEl.textContent = fileName + ' ' + (successText || 'successfully loaded');
                 } else {
                     toastEl.classList.add('text-bg-danger');
                     iconEl.className = 'bi bi-exclamation-triangle-fill me-2';
-                    messageEl.textContent = 'Error loading ' + fileName;
+                    var errorText = translate ? translate('modals.upload.errorToast') : null;
+                    messageEl.textContent = (errorText || 'Error loading file') + ': ' + fileName;
                 }
 
                 var toast = new bootstrap.Toast(toastEl, { delay: 5000 });
@@ -350,7 +362,39 @@ describe('upload.js', () => {
             const toastEl = document.getElementById('toast-upload-feedback');
             const messageEl = document.getElementById('toast-upload-feedback-message');
             expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
-            expect(messageEl.textContent).toBe('Error loading bad.xml');
+            expect(messageEl.textContent).toBe('Error loading file: bad.xml');
+        });
+
+        test('uses i18n translations when available', () => {
+            window.elmo = { translate: jest.fn((key) => {
+                if (key === 'modals.upload.successToast') return 'erfolgreich geladen';
+                return null;
+            })};
+
+            function showUploadToast(fileName, type) {
+                const toastEl = document.getElementById('toast-upload-feedback');
+                if (!toastEl) return;
+                if (!window.bootstrap || !window.bootstrap.Toast) return;
+
+                var translate = (window.elmo && typeof window.elmo.translate === 'function')
+                    ? window.elmo.translate : null;
+
+                const messageEl = document.getElementById('toast-upload-feedback-message');
+                toastEl.classList.remove('text-bg-success', 'text-bg-danger');
+                toastEl.classList.add('text-bg-success');
+                var successText = translate ? translate('modals.upload.successToast') : null;
+                messageEl.textContent = fileName + ' ' + (successText || 'successfully loaded');
+
+                var toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+                toast.show();
+            }
+
+            showUploadToast('data.xml', 'success');
+
+            const messageEl = document.getElementById('toast-upload-feedback-message');
+            expect(messageEl.textContent).toBe('data.xml erfolgreich geladen');
+
+            delete window.elmo;
         });
     });
 

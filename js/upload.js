@@ -123,6 +123,18 @@ function showUploadToast(fileName, type) {
     const toastEl = document.getElementById('toast-upload-feedback');
     if (!toastEl) return;
 
+    if (!window.bootstrap || !window.bootstrap.Toast) {
+        var fallbackMsg = type === 'success'
+            ? fileName + ' successfully loaded'
+            : 'Error loading ' + fileName;
+        showUploadStatus(fallbackMsg, type === 'success' ? 'success' : 'danger');
+        return;
+    }
+
+    var translate = (window.elmo && typeof window.elmo.translate === 'function')
+        ? window.elmo.translate
+        : null;
+
     const messageEl = document.getElementById('toast-upload-feedback-message');
     const iconEl = document.getElementById('toast-upload-feedback-icon');
 
@@ -131,11 +143,13 @@ function showUploadToast(fileName, type) {
     if (type === 'success') {
         toastEl.classList.add('text-bg-success');
         iconEl.className = 'bi bi-check-circle-fill me-2';
-        messageEl.textContent = fileName + ' successfully loaded';
+        var successText = translate ? translate('modals.upload.successToast') : null;
+        messageEl.textContent = fileName + ' ' + (successText || 'successfully loaded');
     } else {
         toastEl.classList.add('text-bg-danger');
         iconEl.className = 'bi bi-exclamation-triangle-fill me-2';
-        messageEl.textContent = 'Error loading ' + fileName;
+        var errorText = translate ? translate('modals.upload.errorToast') : null;
+        messageEl.textContent = (errorText || 'Error loading file') + ': ' + fileName;
     }
 
     var toast = new bootstrap.Toast(toastEl, { delay: 5000 });
