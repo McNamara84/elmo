@@ -7,7 +7,7 @@ describe('authorInstitution.js', () => {
 
   beforeEach(() => {
     // Set fixed time
-    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z'));
+    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z').getTime());
     suffix = Date.now(); // 1717072496000 in this example
 
     // Basic HTML structure for the test

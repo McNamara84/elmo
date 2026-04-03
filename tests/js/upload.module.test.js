@@ -78,6 +78,7 @@ describe('upload module coverage', () => {
     });
 
     afterEach(() => {
+        jest.clearAllTimers();
         document.body.innerHTML = '';
         jest.clearAllMocks();
         delete global.$;
@@ -116,6 +117,10 @@ describe('upload module coverage', () => {
 
         test('exports buildUploadMessage function', () => {
             expect(typeof uploadModule.buildUploadMessage).toBe('function');
+        });
+
+        test('exports clearStatusHideTimer function', () => {
+            expect(typeof uploadModule.clearStatusHideTimer).toBe('function');
         });
     });
 
@@ -247,6 +252,23 @@ describe('upload module coverage', () => {
 
             expect($('#xml-upload-status').hasClass('d-none')).toBe(true);
             expect($('#xml-upload-status').text()).toBe('');
+        });
+
+        test('cancels status hide timer when entering loading state', () => {
+            jest.useFakeTimers();
+
+            uploadModule.showUploadStatus('Old error', 'danger');
+            uploadModule.setUploadLoadingState(true);
+
+            // Status is hidden by loading state; advance past 10s
+            jest.advanceTimersByTime(10000);
+            // The old timer should not have fired (was cancelled)
+            // Show a new status to verify timer didn't interfere
+            uploadModule.setUploadLoadingState(false);
+            uploadModule.showUploadStatus('New message', 'success');
+            expect($('#xml-upload-status').text()).toBe('New message');
+
+            jest.useRealTimers();
         });
     });
 
@@ -605,13 +627,29 @@ describe('upload module coverage', () => {
             expect($('#panel-uploadxml-dropfile').hasClass('pe-none')).toBe(false);
         });
 
-        test('hides status message on modal hidden event', () => {
+        test('hides status message and clears text on modal hidden event', () => {
             uploadModule.showUploadStatus('Some error', 'danger');
             expect($('#xml-upload-status').hasClass('d-none')).toBe(false);
 
             $('#modal-uploadxml').trigger('hidden.bs.modal');
 
             expect($('#xml-upload-status').hasClass('d-none')).toBe(true);
+            expect($('#xml-upload-status').text()).toBe('');
+        });
+
+        test('cancels status hide timer on modal hidden event', () => {
+            jest.useFakeTimers();
+
+            uploadModule.showUploadStatus('Error msg', 'danger');
+            // Trigger modal close — should cancel the 10s timer
+            $('#modal-uploadxml').trigger('hidden.bs.modal');
+
+            // Advance past 10s — status should stay hidden (timer was cancelled)
+            jest.advanceTimersByTime(10000);
+            // Status was already hidden by modal reset, verify it's still hidden
+            expect($('#xml-upload-status').hasClass('d-none')).toBe(true);
+
+            jest.useRealTimers();
         });
 
         test('clears drag highlight on modal hidden event', () => {

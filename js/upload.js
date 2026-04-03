@@ -51,7 +51,8 @@ $(document).ready(function () {
     $('#modal-uploadxml').on('hidden.bs.modal', function () {
         $('#input-uploadxml-file').val('');
         setUploadLoadingState(false);
-        $('#xml-upload-status').addClass('d-none');
+        clearStatusHideTimer();
+        $('#xml-upload-status').addClass('d-none').text('');
         $('#panel-uploadxml-dropfile').removeClass('border-primary');
     });
 });
@@ -149,6 +150,7 @@ function setUploadLoadingState(loading) {
         fileInput.prop('disabled', true);
         dropZone.addClass('pe-none opacity-50');
         spinner.removeClass('d-none');
+        clearStatusHideTimer();
         $('#xml-upload-status').addClass('d-none').text('');
     } else {
         fileInput.prop('disabled', false);
@@ -205,6 +207,16 @@ function showUploadToast(fileName, type) {
  */
 let _statusHideTimer = null;
 
+/**
+ * Cancels any pending auto-hide timer for the status element
+ */
+function clearStatusHideTimer() {
+    if (_statusHideTimer) {
+        clearTimeout(_statusHideTimer);
+        _statusHideTimer = null;
+    }
+}
+
 function showUploadStatus(message, type) {
     const statusElement = $('#xml-upload-status');
     statusElement.removeClass()
@@ -213,9 +225,7 @@ function showUploadStatus(message, type) {
         .text(message);
 
     // Cancel any previous hide timer
-    if (_statusHideTimer) {
-        clearTimeout(_statusHideTimer);
-    }
+    clearStatusHideTimer();
 
     // Hide message after 10 seconds
     _statusHideTimer = setTimeout(() => {
@@ -226,5 +236,5 @@ function showUploadStatus(message, type) {
 
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { handleXmlFile, showUploadStatus, setUploadLoadingState, showUploadToast, isXmlFile, translateWithFallback, buildUploadMessage };
+    module.exports = { handleXmlFile, showUploadStatus, setUploadLoadingState, showUploadToast, isXmlFile, translateWithFallback, buildUploadMessage, clearStatusHideTimer };
 }
