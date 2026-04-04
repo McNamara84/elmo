@@ -76,9 +76,9 @@ function saveFundingReferenceEntry($connection, $entry, $resource_id)
     }
 
     [$funderIdString, $funderIdType] = prepareFunderIdDetails($entry['funderId'], $entry['funderIdTyp'] ?? 'crossref');
-    $awardUri = !empty($entry['awardUri']) ? $entry['awardUri'] : null;
-    $grantNumber = !empty($entry['grantNumber']) ? $entry['grantNumber'] : null;
-    $grantName = !empty($entry['grantName']) ? $entry['grantName'] : null;
+    $awardUri = trim($entry['awardUri']) !== '' ? trim($entry['awardUri']) : null;
+    $grantNumber = trim($entry['grantNumber']) !== '' ? trim($entry['grantNumber']) : null;
+    $grantName = trim($entry['grantName']) !== '' ? trim($entry['grantName']) : null;
 
     $funding_reference_id = insertFundingReference(
         $connection,

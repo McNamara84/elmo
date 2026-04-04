@@ -1054,12 +1054,12 @@ final class SaveAuthorsTest extends DatabaseTestCase
      * Two identical authors without ORCID should produce only 1 Author_Person row.
      * Note: Author_person.orcid is NOT NULL, so empty ORCIDs are stored as empty strings.
      */
-    public function testSaveDuplicateAuthorPersonWithNullOrcid()
+    public function testSaveDuplicateAuthorPersonWithEmptyOrcid()
     {
-        $resource_id = $this->createResource('GFZ.TEST.DUP.NULL.ORCID', 'Test Duplicate NULL ORCID');
+        $resource_id = $this->createResource('GFZ.TEST.DUP.EMPTY.ORCID', 'Test Duplicate Empty ORCID');
 
         $authorData = [
-            'familynames' => ['NullOrcid', 'NullOrcid'],
+            'familynames' => ['EmptyOrcid', 'EmptyOrcid'],
             'givennames' => ['Author', 'Author'],
             'orcids' => ['', ''],
             'personAffiliation' => ['', ''],
@@ -1071,7 +1071,7 @@ final class SaveAuthorsTest extends DatabaseTestCase
         $stmt = $this->connection->prepare(
             'SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?'
         );
-        $fn = 'NullOrcid';
+        $fn = 'EmptyOrcid';
         $gn = 'Author';
         $stmt->bind_param('ss', $fn, $gn);
         $stmt->execute();
@@ -1115,28 +1115,28 @@ final class SaveAuthorsTest extends DatabaseTestCase
     /**
      * Bug #767: Same author with empty ORCID reused across two resources.
      */
-    public function testSameAuthorWithNullOrcidReusedAcrossResources()
+    public function testSameAuthorWithEmptyOrcidReusedAcrossResources()
     {
         $resourceData1 = [
-            'doi' => '10.5880/GFZ.TEST.AUTH.NULL.RES1',
+            'doi' => '10.5880/GFZ.TEST.AUTH.EMPTY.RES1',
             'year' => 2023,
             'dateCreated' => '2023-06-01',
             'resourcetype' => 1,
             'language' => 1,
             'Rights' => 1,
-            'title' => ['Test Author Null Res1'],
+            'title' => ['Test Author Empty ORCID Res1'],
             'titleType' => [1],
         ];
         $resource_id_1 = saveResourceInformationAndRights($this->connection, $resourceData1);
 
         $resourceData2 = [
-            'doi' => '10.5880/GFZ.TEST.AUTH.NULL.RES2',
+            'doi' => '10.5880/GFZ.TEST.AUTH.EMPTY.RES2',
             'year' => 2023,
             'dateCreated' => '2023-06-01',
             'resourcetype' => 1,
             'language' => 1,
             'Rights' => 1,
-            'title' => ['Test Author Null Res2'],
+            'title' => ['Test Author Empty ORCID Res2'],
             'titleType' => [1],
         ];
         $resource_id_2 = saveResourceInformationAndRights($this->connection, $resourceData2);
@@ -1171,14 +1171,14 @@ final class SaveAuthorsTest extends DatabaseTestCase
      */
     public function testAuthorLegacyEmptyOrcidMatchedByFormSave()
     {
-        $resource_id = $this->createResource('GFZ.TEST.LEGACY.NULL.AUTH', 'Test Legacy NULL Author');
+        $resource_id = $this->createResource('GFZ.TEST.LEGACY.EMPTY.AUTH', 'Test Legacy Empty Author');
 
         // Pre-insert an author with empty ORCID (column is NOT NULL)
         $stmt = $this->connection->prepare(
             'INSERT INTO Author_person (familyname, givenname, orcid) VALUES (?, ?, ?)'
         );
         $fn = 'LegacyAuthor';
-        $gn = 'NullOrcid';
+        $gn = 'EmptyOrcid';
         $emptyOrcid = '';
         $stmt->bind_param('sss', $fn, $gn, $emptyOrcid);
         $stmt->execute();
@@ -1188,7 +1188,7 @@ final class SaveAuthorsTest extends DatabaseTestCase
         // Save via the form handler with empty string
         $authorData = [
             'familynames' => ['LegacyAuthor'],
-            'givennames' => ['NullOrcid'],
+            'givennames' => ['EmptyOrcid'],
             'orcids' => [''],
             'personAffiliation' => [''],
             'authorPersonRorIds' => ['']
