@@ -1050,8 +1050,9 @@ final class SaveAuthorsTest extends DatabaseTestCase
     }
 
     /**
-     * Bug #767: Duplicate Author_Person rows when ORCID is NULL.
+     * Bug #767: Duplicate Author_Person rows when ORCID is empty.
      * Two identical authors without ORCID should produce only 1 Author_Person row.
+     * Note: Author_person.orcid is NOT NULL, so empty ORCIDs are stored as empty strings.
      */
     public function testSaveDuplicateAuthorPersonWithNullOrcid()
     {
@@ -1068,19 +1069,20 @@ final class SaveAuthorsTest extends DatabaseTestCase
         saveAuthors($this->connection, $authorData, $resource_id);
 
         $stmt = $this->connection->prepare(
-            'SELECT COUNT(*) as count FROM Author_person WHERE familyname = ? AND givenname = ?'
+            'SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?'
         );
         $fn = 'NullOrcid';
         $gn = 'Author';
         $stmt->bind_param('ss', $fn, $gn);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertEquals(1, $count, 'Bug #767: Duplicate Author_Person created when ORCID is NULL.');
+        $this->assertCount(1, $rows, 'Bug #767: Duplicate Author_Person created when ORCID is empty.');
+        $this->assertSame('', $rows[0]['orcid'], 'Empty ORCID should be stored as empty string (column is NOT NULL).');
     }
 
     /**
-     * Bug #767: Authors with different ORCIDs (one NULL, one filled) should NOT be duplicates.
+     * Bug #767: Authors with different ORCIDs (one empty, one filled) should NOT be duplicates.
      */
     public function testAuthorsWithDifferentOrcidAreNotDuplicates()
     {
@@ -1089,7 +1091,7 @@ final class SaveAuthorsTest extends DatabaseTestCase
         $authorData = [
             'familynames' => ['SameName', 'SameName'],
             'givennames' => ['SameGiven', 'SameGiven'],
-            'orcids' => ['', '0000-0002-1234-5678'],
+            'orcids' => ['', '0000-0002-1825-0097'],
             'personAffiliation' => ['', ''],
             'authorPersonRorIds' => ['', '']
         ];
@@ -1097,19 +1099,21 @@ final class SaveAuthorsTest extends DatabaseTestCase
         saveAuthors($this->connection, $authorData, $resource_id);
 
         $stmt = $this->connection->prepare(
-            'SELECT COUNT(*) as count FROM Author_person WHERE familyname = ? AND givenname = ?'
+            'SELECT orcid FROM Author_person WHERE familyname = ? AND givenname = ? ORDER BY orcid'
         );
         $fn = 'SameName';
         $gn = 'SameGiven';
         $stmt->bind_param('ss', $fn, $gn);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertEquals(2, $count, 'Authors with different ORCIDs (NULL vs filled) should be stored separately.');
+        $this->assertCount(2, $rows, 'Authors with different ORCIDs (empty vs filled) should be stored separately.');
+        $this->assertSame('', $rows[0]['orcid'], 'First author should have empty ORCID.');
+        $this->assertSame('0000-0002-1825-0097', $rows[1]['orcid'], 'Second author should have the specified ORCID.');
     }
 
     /**
-     * Bug #767: Same author with NULL ORCID reused across two resources.
+     * Bug #767: Same author with empty ORCID reused across two resources.
      */
     public function testSameAuthorWithNullOrcidReusedAcrossResources()
     {
@@ -1149,14 +1153,56 @@ final class SaveAuthorsTest extends DatabaseTestCase
         saveAuthors($this->connection, $authorData, $resource_id_2);
 
         $stmt = $this->connection->prepare(
-            'SELECT COUNT(*) as count FROM Author_person WHERE familyname = ? AND givenname = ?'
+            'SELECT * FROM Author_person WHERE familyname = ? AND givenname = ?'
         );
         $fn = 'CrossRes';
         $gn = 'Author';
         $stmt->bind_param('ss', $fn, $gn);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertEquals(1, $count, 'Bug #767: Same author with NULL ORCID should be reused across resources.');
+        $this->assertCount(1, $rows, 'Bug #767: Same author with empty ORCID should be reused across resources.');
+        $this->assertSame('', $rows[0]['orcid'], 'Reused author ORCID should remain empty string.');
+    }
+
+    /**
+     * Bug #767: Pre-existing Author_Person row with empty ORCID must be found by form save.
+     * Note: Author_person.orcid is NOT NULL, so we test with empty strings (not SQL NULL).
+     */
+    public function testAuthorLegacyEmptyOrcidMatchedByFormSave()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.LEGACY.NULL.AUTH', 'Test Legacy NULL Author');
+
+        // Pre-insert an author with empty ORCID (column is NOT NULL)
+        $stmt = $this->connection->prepare(
+            'INSERT INTO Author_person (familyname, givenname, orcid) VALUES (?, ?, ?)'
+        );
+        $fn = 'LegacyAuthor';
+        $gn = 'NullOrcid';
+        $emptyOrcid = '';
+        $stmt->bind_param('sss', $fn, $gn, $emptyOrcid);
+        $stmt->execute();
+        $legacyId = $stmt->insert_id;
+        $stmt->close();
+
+        // Save via the form handler with empty string
+        $authorData = [
+            'familynames' => ['LegacyAuthor'],
+            'givennames' => ['NullOrcid'],
+            'orcids' => [''],
+            'personAffiliation' => [''],
+            'authorPersonRorIds' => ['']
+        ];
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT author_person_id FROM Author_person WHERE familyname = ? AND givenname = ?'
+        );
+        $stmt->bind_param('ss', $fn, $gn);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(1, $rows, 'Pre-existing row with empty ORCID should be matched by form save.');
+        $this->assertEquals($legacyId, $rows[0]['author_person_id'], 'The pre-existing legacy author ID should be reused.');
     }
 }

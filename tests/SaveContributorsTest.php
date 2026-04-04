@@ -437,6 +437,7 @@ final class SaveContributorsTest extends DatabaseTestCase
     /**
      * Bug #767: Duplicate Contributor_Person rows when ORCID is NULL.
      * Two identical contributor persons without ORCID should produce only 1 row.
+     * Empty ORCID must be stored as SQL NULL.
      */
     public function testSaveDuplicateContributorPersonWithNullOrcid()
     {
@@ -464,15 +465,16 @@ final class SaveContributorsTest extends DatabaseTestCase
         saveContributorPersons($this->connection, $postData, $resource_id);
 
         $stmt = $this->connection->prepare(
-            'SELECT COUNT(*) as count FROM Contributor_Person WHERE familyname = ? AND givenname = ?'
+            'SELECT * FROM Contributor_Person WHERE familyname = ? AND givenname = ?'
         );
         $ln = 'DupContrib';
         $fn = 'Person';
         $stmt->bind_param('ss', $ln, $fn);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertEquals(1, $count, 'Bug #767: Duplicate Contributor_Person created when ORCID is NULL.');
+        $this->assertCount(1, $rows, 'Bug #767: Duplicate Contributor_Person created when ORCID is NULL.');
+        $this->assertNull($rows[0]['orcid'], 'Empty ORCID should be stored as SQL NULL.');
     }
 
     /**
@@ -495,7 +497,7 @@ final class SaveContributorsTest extends DatabaseTestCase
         $postData = [
             'cbPersonLastname' => ['SameContrib', 'SameContrib'],
             'cbPersonFirstname' => ['Person', 'Person'],
-            'cbORCID' => ['', '0000-0002-9999-8888'],
+            'cbORCID' => ['', '0000-0002-9079-593X'],
             'cbAffiliation' => ['', ''],
             'cbpRorIds' => ['', ''],
             'cbPersonRoles' => [['Data Collector'], ['Data Curator']]
@@ -504,14 +506,67 @@ final class SaveContributorsTest extends DatabaseTestCase
         saveContributorPersons($this->connection, $postData, $resource_id);
 
         $stmt = $this->connection->prepare(
-            'SELECT COUNT(*) as count FROM Contributor_Person WHERE familyname = ? AND givenname = ?'
+            'SELECT orcid FROM Contributor_Person WHERE familyname = ? AND givenname = ? ORDER BY orcid'
         );
         $ln = 'SameContrib';
         $fn = 'Person';
         $stmt->bind_param('ss', $ln, $fn);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertEquals(2, $count, 'Contributor persons with different ORCIDs should be stored separately.');
+        $this->assertCount(2, $rows, 'Contributor persons with different ORCIDs should be stored separately.');
+        $this->assertNull($rows[0]['orcid'], 'First contributor should have NULL ORCID.');
+        $this->assertNotNull($rows[1]['orcid'], 'Second contributor should have a filled ORCID.');
+    }
+
+    /**
+     * Bug #767: Legacy Contributor_Person row with SQL NULL ORCID must be found when saving with empty ORCID.
+     */
+    public function testContributorLegacyNullOrcidMatchedByFormSave()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.LEGACY.NULL.CONTRIB",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Legacy NULL Contributor"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        // Pre-insert a contributor with SQL NULL ORCID (legacy row)
+        $stmt = $this->connection->prepare(
+            'INSERT INTO Contributor_Person (familyname, givenname, orcid) VALUES (?, ?, NULL)'
+        );
+        $ln = 'LegacyContrib';
+        $fn = 'NullOrcid';
+        $stmt->bind_param('ss', $ln, $fn);
+        $stmt->execute();
+        $legacyId = $stmt->insert_id;
+        $stmt->close();
+
+        // Save via form handler with empty string (should normalize to NULL and match)
+        $postData = [
+            'cbPersonLastname' => ['LegacyContrib'],
+            'cbPersonFirstname' => ['NullOrcid'],
+            'cbORCID' => [''],
+            'cbAffiliation' => [''],
+            'cbpRorIds' => [''],
+            'cbPersonRoles' => [['Data Collector']]
+        ];
+
+        saveContributorPersons($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT contributor_person_id FROM Contributor_Person WHERE familyname = ? AND givenname = ?'
+        );
+        $stmt->bind_param('ss', $ln, $fn);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(1, $rows, 'Legacy row with SQL NULL ORCID should be matched by form save.');
+        $this->assertEquals($legacyId, $rows[0]['contributor_person_id'], 'The pre-existing legacy contributor ID should be reused.');
     }
 }

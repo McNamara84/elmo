@@ -433,6 +433,7 @@ final class SaveFundingreferencesTest extends DatabaseTestCase
 
     /**
      * Bug #767: Duplicate funding references when ALL optional fields are NULL.
+     * Empty strings from the form must be normalized to SQL NULL and deduplicated via <=>.
      */
     public function testSaveDuplicateFundingReferenceWithNullFields()
     {
@@ -448,13 +449,17 @@ final class SaveFundingreferencesTest extends DatabaseTestCase
 
         saveFundingReferences($this->connection, $postData, $resource_id);
 
-        $stmt = $this->connection->prepare('SELECT COUNT(*) as count FROM Funding_Reference WHERE funder = ?');
+        $stmt = $this->connection->prepare('SELECT * FROM Funding_Reference WHERE funder = ?');
         $funder = 'Only Funder Name';
         $stmt->bind_param('s', $funder);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertEquals(1, $count, 'Bug #767: Duplicate funding reference created when all optional fields are NULL.');
+        $this->assertCount(1, $rows, 'Bug #767: Duplicate funding reference created when all optional fields are NULL.');
+        $this->assertNull($rows[0]['funderid'], 'Empty funderid should be stored as SQL NULL.');
+        $this->assertNull($rows[0]['grantnumber'], 'Empty grant number should be stored as SQL NULL.');
+        $this->assertNull($rows[0]['grantname'], 'Empty grant name should be stored as SQL NULL.');
+        $this->assertNull($rows[0]['awarduri'], 'Empty award URI should be stored as SQL NULL.');
     }
 
     /**
@@ -474,13 +479,15 @@ final class SaveFundingreferencesTest extends DatabaseTestCase
 
         saveFundingReferences($this->connection, $postData, $resource_id);
 
-        $stmt = $this->connection->prepare('SELECT COUNT(*) as count FROM Funding_Reference WHERE funder = ?');
+        $stmt = $this->connection->prepare('SELECT * FROM Funding_Reference WHERE funder = ?');
         $funder = 'Partial Funder';
         $stmt->bind_param('s', $funder);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertEquals(1, $count, 'Bug #767: Duplicate created when only awardUri is NULL.');
+        $this->assertCount(1, $rows, 'Bug #767: Duplicate created when only awardUri is NULL.');
+        $this->assertNull($rows[0]['awarduri'], 'Empty award URI should be stored as SQL NULL.');
+        $this->assertNotNull($rows[0]['grantnumber'], 'Filled grant number should not be NULL.');
     }
 
     /**
@@ -546,5 +553,44 @@ final class SaveFundingreferencesTest extends DatabaseTestCase
         $linkCount = $stmt->get_result()->fetch_assoc()['count'];
 
         $this->assertEquals(2, $linkCount, 'The single funding reference should be linked to both resources.');
+    }
+
+    /**
+     * Bug #767: Legacy rows with SQL NULL must be found when saving with empty form fields.
+     * Pre-inserts a row with NULL columns, then verifies the save function matches it via <=>.
+     */
+    public function testFundingReferenceLegacyNullMatchedByFormSave()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.LEGACY.NULL.FR', 'Test Legacy NULL Funding');
+
+        // Pre-insert a row with SQL NULLs (simulating a legacy row)
+        $stmt = $this->connection->prepare(
+            'INSERT INTO Funding_Reference (funder, funderid, funderidtyp, grantnumber, grantname, awarduri)
+             VALUES (?, NULL, NULL, NULL, NULL, NULL)'
+        );
+        $funder = 'Legacy Funder';
+        $stmt->bind_param('s', $funder);
+        $stmt->execute();
+        $legacyId = $stmt->insert_id;
+        $stmt->close();
+
+        // Now save via the form handler with empty strings (which should be normalized to NULL)
+        $postData = [
+            'funder' => ['Legacy Funder'],
+            'funderId' => [''],
+            'grantNummer' => [''],
+            'grantName' => [''],
+            'awardURI' => ['']
+        ];
+        saveFundingReferences($this->connection, $postData, $resource_id);
+
+        // The save function should have found the pre-existing row, not created a new one
+        $stmt = $this->connection->prepare('SELECT funding_reference_id FROM Funding_Reference WHERE funder = ?');
+        $stmt->bind_param('s', $funder);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(1, $rows, 'Legacy row with SQL NULLs should be matched by form save with empty strings.');
+        $this->assertEquals($legacyId, $rows[0]['funding_reference_id'], 'The pre-existing legacy row ID should be reused.');
     }
 }

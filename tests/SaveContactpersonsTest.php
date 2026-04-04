@@ -338,6 +338,7 @@ final class SaveContactpersonsTest extends DatabaseTestCase
     /**
      * Bug #767: Duplicate Contact_Person rows when ORCID and website are NULL.
      * Two identical contact persons without ORCID/website should produce only 1 row.
+     * Empty optional fields must be stored as SQL NULL.
      */
     public function testSaveDuplicateContactPersonWithNullOrcidAndWebsite()
     {
@@ -366,16 +367,18 @@ final class SaveContactpersonsTest extends DatabaseTestCase
         saveContactPerson($this->connection, $postData, $resource_id);
 
         $stmt = $this->connection->prepare(
-            'SELECT COUNT(*) as count FROM Contact_Person WHERE familyname = ? AND givenname = ? AND email = ?'
+            'SELECT * FROM Contact_Person WHERE familyname = ? AND givenname = ? AND email = ?'
         );
         $fn = 'DupContact';
         $gn = 'Person';
         $email = 'dup@example.com';
         $stmt->bind_param('sss', $fn, $gn, $email);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertEquals(1, $count, 'Bug #767: Duplicate Contact_Person created when ORCID and website are NULL.');
+        $this->assertCount(1, $rows, 'Bug #767: Duplicate Contact_Person created when ORCID and website are NULL.');
+        $this->assertNull($rows[0]['orcid'], 'Empty ORCID should be stored as SQL NULL.');
+        $this->assertNull($rows[0]['website'], 'Empty website should be stored as SQL NULL.');
     }
 
     /**
@@ -408,15 +411,17 @@ final class SaveContactpersonsTest extends DatabaseTestCase
         saveContactPerson($this->connection, $postData, $resource_id);
 
         $stmt = $this->connection->prepare(
-            'SELECT COUNT(*) as count FROM Contact_Person WHERE familyname = ? AND email = ?'
+            'SELECT website FROM Contact_Person WHERE familyname = ? AND email = ? ORDER BY website'
         );
         $fn = 'WebContact';
         $email = 'web@example.com';
         $stmt->bind_param('ss', $fn, $email);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertEquals(2, $count, 'Contact persons with different websites (NULL vs filled) should be stored separately.');
+        $this->assertCount(2, $rows, 'Contact persons with different websites (NULL vs filled) should be stored separately.');
+        $this->assertNull($rows[0]['website'], 'First contact should have NULL website.');
+        $this->assertNotNull($rows[1]['website'], 'Second contact should have a filled website.');
     }
 
     /**
@@ -449,14 +454,68 @@ final class SaveContactpersonsTest extends DatabaseTestCase
         saveContactPerson($this->connection, $postData, $resource_id);
 
         $stmt = $this->connection->prepare(
-            'SELECT COUNT(*) as count FROM Contact_Person WHERE familyname = ? AND email = ?'
+            'SELECT * FROM Contact_Person WHERE familyname = ? AND email = ?'
         );
         $fn = 'PartialContact';
         $email = 'partial@example.com';
         $stmt->bind_param('ss', $fn, $email);
         $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $this->assertEquals(1, $count, 'Bug #767: Duplicate Contact_Person created when ORCID is NULL but website is filled.');
+        $this->assertCount(1, $rows, 'Bug #767: Duplicate Contact_Person created when ORCID is NULL but website is filled.');
+        $this->assertNull($rows[0]['orcid'], 'Empty ORCID should be stored as SQL NULL.');
+        $this->assertNotNull($rows[0]['website'], 'Filled website should not be NULL.');
+    }
+
+    /**
+     * Bug #767: Legacy Contact_Person row with SQL NULL must be found when saving with empty fields.
+     */
+    public function testContactPersonLegacyNullMatchedByFormSave()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.LEGACY.NULL.CONTACT",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Legacy NULL Contact Person"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        // Pre-insert a contact person with SQL NULLs (legacy row)
+        $stmt = $this->connection->prepare(
+            'INSERT INTO Contact_Person (familyname, givenname, orcid, email, website) VALUES (?, ?, NULL, ?, NULL)'
+        );
+        $fn = 'LegacyContact';
+        $gn = 'NullFields';
+        $email = 'legacy@example.com';
+        $stmt->bind_param('sss', $fn, $gn, $email);
+        $stmt->execute();
+        $legacyId = $stmt->insert_id;
+        $stmt->close();
+
+        // Save via form handler with empty strings (should normalize to NULL and match)
+        $postData = [
+            'familynames' => ['LegacyContact'],
+            'givennames' => ['NullFields'],
+            'orcids' => [''],
+            'cpEmail' => ['legacy@example.com'],
+            'cpOnlineResource' => [''],
+            'personAffiliation' => [''],
+            'authorPersonRorIds' => ['']
+        ];
+        saveContactPerson($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT contact_person_id FROM Contact_Person WHERE familyname = ? AND email = ?'
+        );
+        $stmt->bind_param('ss', $fn, $email);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(1, $rows, 'Legacy row with SQL NULLs should be matched by form save.');
+        $this->assertEquals($legacyId, $rows[0]['contact_person_id'], 'The pre-existing legacy contact person ID should be reused.');
     }
 }

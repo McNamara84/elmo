@@ -51,6 +51,9 @@ function saveContactPerson($connection, $postData, $resource_id)
 
         $email = trim($emails[$i] ?? '');
         $website = isset($websites[$i]) ? preg_replace('#^https?://#', '', $websites[$i]) : '';
+        // Normalize empty optional fields to NULL for consistent DB storage and duplicate detection
+        $orcid = $orcid !== '' ? $orcid : null;
+        $website = $website !== '' ? $website : null;
         $affiliation_data = $affiliations[$i] ?? '';
         $rorId_data = $rorIds[$i] ?? '';
 

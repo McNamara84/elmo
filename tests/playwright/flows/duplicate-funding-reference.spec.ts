@@ -1,5 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-import { navigateToHome } from '../utils';
+import { test, expect } from '@playwright/test';
+import { completeMinimalDatasetForm, navigateToHome, SELECTORS } from '../utils';
 
 const SAVE_ENDPOINT = '**/save/save_data.php';
 const MOCK_XML_RESPONSE = `<?xml version="1.0" encoding="UTF-8"?>\n<dataset>Test duplicate funding</dataset>`;
@@ -18,39 +18,12 @@ test.describe('Bug #767 – Duplicate Funding Reference with NULL optional field
     await navigateToHome(page);
   });
 
-  async function fillMandatoryFields(page: Page) {
-    await page.getByRole('textbox', { name: 'Publication Year (YYYY)*' }).fill('2026');
-
-    await page.waitForFunction(() => {
-      const el = document.querySelector('#input-resourceinformation-resourcetype') as HTMLSelectElement;
-      return el && el.options.length > 1;
-    }, { timeout: 10_000 });
-    await page.selectOption('#input-resourceinformation-resourcetype', '5');
-
-    await page.waitForFunction(() => {
-      const el = document.querySelector('#input-resourceinformation-language') as HTMLSelectElement;
-      return el && el.options.length > 1;
-    }, { timeout: 10_000 });
-    await page.selectOption('#input-resourceinformation-language', '1');
-
-    await page.getByRole('textbox', { name: 'Title*' }).fill('Bug 767 E2E Test');
-    await page.fill('#input-author-lastname', 'TestAuthor');
-    await page.fill('#input-author-firstname', 'E2E');
-
-    await page.getByText('ContactPerson?').click();
-    const emailField = page.getByRole('textbox', { name: 'Email address*' });
-    await expect(emailField).toBeVisible();
-    await emailField.fill('bug767@example.com');
-
-    await page.getByRole('textbox', { name: 'Abstract*' }).fill('Bug 767 duplicate funding reference test.');
-    await page.getByRole('textbox', { name: 'Date created*' }).fill('2026-04-04');
-  }
-
   test('serializes duplicate funder-only entries correctly in form data', async ({ page }) => {
-    await fillMandatoryFields(page);
+    await completeMinimalDatasetForm(page);
 
     // Fill the first funding reference row (only funder name, optional fields empty)
-    const firstFunder = page.locator('[funding-reference-row]').first().locator('.inputFunder');
+    const fundingGroup = page.locator(SELECTORS.formGroups.fundingReference);
+    const firstFunder = fundingGroup.locator('.inputFunder').first();
     await firstFunder.fill('Test Funder Only');
 
     // Add a second identical funding reference row
@@ -62,8 +35,8 @@ test.describe('Bug #767 – Duplicate Funding Reference with NULL optional field
     await secondFunder.fill('Test Funder Only');
 
     // Trigger save
-    await page.click('#button-form-save');
-    const saveModal = page.locator('#modal-saveas');
+    await page.locator('#button-form-save').click();
+    const saveModal = page.locator(SELECTORS.modals.saveAs);
     await expect(saveModal).toBeVisible({ timeout: 10_000 });
     await page.fill('#input-saveas-filename', 'bug-767-duplicate-funding');
 
@@ -107,11 +80,12 @@ test.describe('Bug #767 – Duplicate Funding Reference with NULL optional field
     await page.unroute(SAVE_ENDPOINT);
   });
 
-  test('duplicate funding reference with only funder name results in single row after save', async ({ page }) => {
-    await fillMandatoryFields(page);
+  test('duplicate funding reference with only funder name is accepted by mocked backend', async ({ page }) => {
+    await completeMinimalDatasetForm(page);
 
     // Fill only the funder name (all optional fields stay empty)
-    const firstFunder = page.locator('[funding-reference-row]').first().locator('.inputFunder');
+    const fundingGroup = page.locator(SELECTORS.formGroups.fundingReference);
+    const firstFunder = fundingGroup.locator('.inputFunder').first();
     await firstFunder.fill('Duplicate Funder E2E');
 
     // Add second identical row
@@ -122,29 +96,50 @@ test.describe('Bug #767 – Duplicate Funding Reference with NULL optional field
     const secondFunder = rows.nth(1).locator('.inputFunder');
     await secondFunder.fill('Duplicate Funder E2E');
 
-    // Save via the real backend (no mocking)
-    await page.click('#button-form-save');
-    const saveModal = page.locator('#modal-saveas');
+    // Trigger save with mocked backend
+    await page.locator('#button-form-save').click();
+    const saveModal = page.locator(SELECTORS.modals.saveAs);
     await expect(saveModal).toBeVisible({ timeout: 10_000 });
     await page.fill('#input-saveas-filename', 'bug-767-real-save');
 
+    let capturedRequestBody = '';
+    await page.route(SAVE_ENDPOINT, async (route) => {
+      const bodyBuffer = route.request().postDataBuffer();
+      capturedRequestBody = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/xml',
+        headers: {
+          'Content-Disposition': 'attachment; filename="bug-767-real-save.xml"',
+        },
+        body: MOCK_XML_RESPONSE,
+      });
+    });
+
+    const downloadPromise = page.waitForEvent('download', { timeout: 30_000 });
     const responsePromise = page.waitForResponse(
       response => response.url().includes('save_data.php'),
       { timeout: 30_000 },
     );
 
-    const downloadPromise = page.waitForEvent('download', { timeout: 30_000 });
     await saveModal.getByRole('button', { name: 'Save' }).click();
 
     const [, response] = await Promise.all([downloadPromise, responsePromise]);
     expect(response.status()).toBe(200);
 
-    // Verify the notification shows success (not an error)
-    const notificationModal = page.locator('#modal-notification');
+    // Both duplicate funders should be serialized in the request body
+    const funderMatches = capturedRequestBody.match(/name="funder\[\]"/g);
+    expect(funderMatches).not.toBeNull();
+    expect(funderMatches!.length).toBe(2);
+
+    // Verify success notification appears (no error alerts)
+    const notificationModal = page.locator(SELECTORS.modals.notification);
     await expect(notificationModal).toBeVisible({ timeout: 10_000 });
 
     const dangerAlert = notificationModal.locator('.alert-danger');
     const dangerCount = await dangerAlert.count();
     expect(dangerCount, 'Save should not produce error alerts').toBe(0);
+
+    await page.unroute(SAVE_ENDPOINT);
   });
 });

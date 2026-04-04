@@ -71,7 +71,8 @@ function saveContributorPersons($connection, $postData, $resource_id)
         }
 
         // Get or create contributor person
-        $contributor_person_id = saveOrUpdateContributorPerson($connection, $entry['lastname'], $entry['firstname'], $entry['orcid']);
+        $orcidOrNull = $entry['orcid'] !== '' ? $entry['orcid'] : null;
+        $contributor_person_id = saveOrUpdateContributorPerson($connection, $entry['lastname'], $entry['firstname'], $orcidOrNull);
 
         // Link resource to contributor person
         if (!linkResourceToContributorPerson($connection, $resource_id, $contributor_person_id)) {
