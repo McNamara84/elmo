@@ -124,11 +124,12 @@ function saveFundingReferences($connection, $postData, $resource_id)
     }
     $action = $postData['action'] ?? 'save_and_download';
 
-    $allSuccessful = true;
+    // Build trimmed entries once so validation and saving see the same values
     $len = count($postData['funder']);
+    $entries = [];
 
     for ($i = 0; $i < $len; $i++) {
-        $entry = [
+        $entries[] = [
             'funder' => trim($postData['funder'][$i] ?? ''),
             'funderId' => trim($postData['funderId'][$i] ?? ''),
             'funderIdTyp' => $postData['funderidtyp'][$i] ?? 'crossref',
@@ -136,14 +137,20 @@ function saveFundingReferences($connection, $postData, $resource_id)
             'grantName' => trim($postData['grantName'][$i] ?? ''),
             'awardUri' => trim($postData['awardURI'][$i] ?? '')
         ];
+    }
 
-        // Only perform strict validation on SUBMIT
-        if ($action === 'submit') {
+    // Validate all entries before any DB writes to avoid partial saves
+    if ($action === 'submit') {
+        foreach ($entries as $entry) {
             if (!validateFundingReferenceDependencies($entry)) {
                 return false;
             }
         }
+    }
 
+    $allSuccessful = true;
+
+    foreach ($entries as $entry) {
         if (!saveFundingReferenceEntry($connection, $entry, $resource_id)) {
             $allSuccessful = false;
         }
