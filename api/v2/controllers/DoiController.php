@@ -272,6 +272,7 @@ class DoiController
     {
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
 
         if ($payload === null) {
             return;

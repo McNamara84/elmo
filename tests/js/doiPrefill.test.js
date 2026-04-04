@@ -483,6 +483,46 @@ describe('doiPrefill.js', () => {
     });
   });
 
+  /* ── prefillRights ──────────────────────────────────────────── */
+
+  describe('prefillRights', () => {
+    beforeEach(() => {
+      document.body.innerHTML = '<select id="input-rights-license"><option value="">--</option><option value="1">CC BY 4.0</option></select>';
+      mod._resetCaches();
+    });
+
+    test('matches license case-insensitively (DataCite lowercase vs ELMO uppercase)', async () => {
+      // Simulate ELMO DB: keys are uppercase
+      $.getJSON = jest.fn().mockResolvedValue([
+        { rights_id: 1, rightsIdentifier: 'CC-BY-4.0', text: 'CC BY 4.0' },
+      ]);
+
+      // DataCite returns lowercase
+      await mod.prefillRights([
+        { rightsIdentifier: 'cc-by-4.0', rights: 'Creative Commons Attribution 4.0 International' },
+      ]);
+
+      expect($('#input-rights-license').val()).toBe('1');
+    });
+
+    test('matches license with exact case', async () => {
+      $.getJSON = jest.fn().mockResolvedValue([
+        { rights_id: 1, rightsIdentifier: 'CC-BY-4.0', text: 'CC BY 4.0' },
+      ]);
+
+      await mod.prefillRights([
+        { rightsIdentifier: 'CC-BY-4.0', rights: 'Creative Commons Attribution 4.0 International' },
+      ]);
+
+      expect($('#input-rights-license').val()).toBe('1');
+    });
+
+    test('handles empty rightsList gracefully', async () => {
+      await mod.prefillRights([]);
+      expect($('#input-rights-license').val()).toBe('');
+    });
+  });
+
   /* ── buildPrefillPreview ────────────────────────────────────── */
 
   describe('buildPrefillPreview', () => {

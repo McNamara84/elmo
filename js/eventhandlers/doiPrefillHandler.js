@@ -13,6 +13,7 @@ $(document).ready(function () {
 
   const lookupService = new DoiLookupService();
   let lastLookedUpDoi = '';
+  let isLookupActive = false;
 
   /**
    * Validates whether a string looks like a DOI (10.xxxx/...).
@@ -65,14 +66,19 @@ $(document).ready(function () {
     const freshConfirm = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(freshConfirm, confirmBtn);
 
-    freshConfirm.addEventListener('click', async function () {
+    freshConfirm.addEventListener('click', function () {
+      // Wait for the modal to be fully hidden (transition + backdrop removed)
+      // before manipulating the DOM, to avoid breaking Bootstrap's transitionend.
+      $(modalEl).one('hidden.bs.modal', async function () {
+        lastLookedUpDoi = '';
+        toggleSpinner(true);
+        try {
+          await applyDoiPrefill(attributes, lookupService);
+        } finally {
+          toggleSpinner(false);
+        }
+      });
       modal.hide();
-      toggleSpinner(true);
-      try {
-        await applyDoiPrefill(attributes, lookupService);
-      } finally {
-        toggleSpinner(false);
-      }
     });
 
     // Wire cancel button
@@ -92,9 +98,10 @@ $(document).ready(function () {
   $doiInput.on('blur', async function () {
     const doi = $(this).val().trim();
 
-    // Skip if empty, invalid format, or same DOI already loaded
-    if (!doi || !isValidDoiFormat(doi) || doi === lastLookedUpDoi) return;
+    // Skip if empty, invalid format, same DOI already loaded, or lookup in progress
+    if (!doi || !isValidDoiFormat(doi) || doi === lastLookedUpDoi || isLookupActive) return;
 
+    isLookupActive = true;
     toggleSpinner(true);
     try {
       const result = await lookupService.lookupDoi(doi);
@@ -108,6 +115,8 @@ $(document).ready(function () {
     } catch (err) {
       console.warn('DOI lookup failed:', err);
       toggleSpinner(false);
+    } finally {
+      isLookupActive = false;
     }
   });
 });

@@ -53,7 +53,7 @@ async function getLicenseMapping() {
   try {
     const data = await $.getJSON('./api/v2/vocabs/licenses/all');
     _licenseMappingCache = {};
-    data.forEach(l => { _licenseMappingCache[l.rightsIdentifier] = l.rights_id.toString(); });
+    data.forEach(l => { _licenseMappingCache[l.rightsIdentifier.toUpperCase()] = l.rights_id.toString(); });
   } catch {
     _licenseMappingCache = { 'CC-BY-4.0': '1', 'CC0-1.0': '2' };
   }
@@ -639,8 +639,10 @@ async function prefillRights(rightsList) {
       if (match) identifier = match[1];
     }
 
-    if (identifier && mapping[identifier]) {
-      $('#input-rights-license').val(mapping[identifier]);
+    // Compare case-insensitively (ELMO stores CC-BY-4.0, DataCite returns cc-by-4.0)
+    const key = identifier.toUpperCase();
+    if (key && mapping[key]) {
+      $('#input-rights-license').val(mapping[key]);
       return; // Use first matching license
     }
   }
