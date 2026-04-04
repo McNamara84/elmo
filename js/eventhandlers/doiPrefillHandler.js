@@ -70,7 +70,6 @@ $(document).ready(function () {
       // Wait for the modal to be fully hidden (transition + backdrop removed)
       // before manipulating the DOM, to avoid breaking Bootstrap's transitionend.
       $(modalEl).one('hidden.bs.modal', async function () {
-        lastLookedUpDoi = '';
         toggleSpinner(true);
         try {
           await applyDoiPrefill(attributes, lookupService);
@@ -118,5 +117,11 @@ $(document).ready(function () {
     } finally {
       isLookupActive = false;
     }
+  });
+
+  // Reset DOI lookup guard when the form is cleared, so the same DOI can be
+  // looked up again after a manual form reset.
+  $('#button-form-reset').on('click', function () {
+    lastLookedUpDoi = '';
   });
 });
