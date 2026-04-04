@@ -60,29 +60,30 @@ function prepareFunderIdDetails($funderId, $funderIdTyp = 'crossref')
  */
 function saveFundingReferenceEntry($connection, $entry, $resource_id)
 {
+    // Trim and normalize all fields upfront so whitespace-only input
+    // is treated the same as truly empty input in the guards below.
+    $funder = trim($entry['funder'] ?? '');
+    $funderId = trim($entry['funderId'] ?? '');
+    $grantNumber = trim($entry['grantNumber'] ?? '');
+    $grantName = trim($entry['grantName'] ?? '');
+    $awardUri = trim($entry['awardUri'] ?? '');
 
-    if (
-        empty($entry['funder']) &&
-        empty($entry['funderId']) &&
-        empty($entry['grantNumber']) &&
-        empty($entry['grantName']) &&
-        empty($entry['awardUri'])
-    ) {
+    if ($funder === '' && $funderId === '' && $grantNumber === '' && $grantName === '' && $awardUri === '') {
         return true;
     }
 
-    if (empty($entry['funder'])) {
+    if ($funder === '') {
         return false;
     }
 
-    [$funderIdString, $funderIdType] = prepareFunderIdDetails($entry['funderId'], $entry['funderIdTyp'] ?? 'crossref');
-    $awardUri = trim($entry['awardUri']) !== '' ? trim($entry['awardUri']) : null;
-    $grantNumber = trim($entry['grantNumber']) !== '' ? trim($entry['grantNumber']) : null;
-    $grantName = trim($entry['grantName']) !== '' ? trim($entry['grantName']) : null;
+    [$funderIdString, $funderIdType] = prepareFunderIdDetails($funderId, $entry['funderIdTyp'] ?? 'crossref');
+    $awardUri = $awardUri !== '' ? $awardUri : null;
+    $grantNumber = $grantNumber !== '' ? $grantNumber : null;
+    $grantName = $grantName !== '' ? $grantName : null;
 
     $funding_reference_id = insertFundingReference(
         $connection,
-        $entry['funder'],
+        $funder,
         $funderIdString,
         $funderIdType,
         $grantNumber,
