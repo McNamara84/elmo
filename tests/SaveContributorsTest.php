@@ -433,4 +433,85 @@ final class SaveContributorsTest extends DatabaseTestCase
             $this->assertEquals($postData["cbOrganisationName"][$i], $result["name"], "Der Name der Institution " . ($i + 1) . " wurde nicht korrekt gespeichert.");
         }
     }
+
+    /**
+     * Bug #767: Duplicate Contributor_Person rows when ORCID is NULL.
+     * Two identical contributor persons without ORCID should produce only 1 row.
+     */
+    public function testSaveDuplicateContributorPersonWithNullOrcid()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.DUP.NULL.CONTRIB",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Duplicate NULL ORCID Contributor"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            'cbPersonLastname' => ['DupContrib', 'DupContrib'],
+            'cbPersonFirstname' => ['Person', 'Person'],
+            'cbORCID' => ['', ''],
+            'cbAffiliation' => ['', ''],
+            'cbpRorIds' => ['', ''],
+            'cbPersonRoles' => [['Data Collector'], ['Data Collector']]
+        ];
+
+        saveContributorPersons($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT COUNT(*) as count FROM Contributor_Person WHERE familyname = ? AND givenname = ?'
+        );
+        $ln = 'DupContrib';
+        $fn = 'Person';
+        $stmt->bind_param('ss', $ln, $fn);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(1, $count, 'Bug #767: Duplicate Contributor_Person created when ORCID is NULL.');
+    }
+
+    /**
+     * Bug #767: Contributor persons with different ORCIDs (one NULL, one filled) are not duplicates.
+     */
+    public function testContributorPersonsWithDifferentOrcidAreNotDuplicates()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.DIFF.ORCID.CONTRIB",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Different ORCID Contributor"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            'cbPersonLastname' => ['SameContrib', 'SameContrib'],
+            'cbPersonFirstname' => ['Person', 'Person'],
+            'cbORCID' => ['', '0000-0002-9999-8888'],
+            'cbAffiliation' => ['', ''],
+            'cbpRorIds' => ['', ''],
+            'cbPersonRoles' => [['Data Collector'], ['Data Curator']]
+        ];
+
+        saveContributorPersons($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT COUNT(*) as count FROM Contributor_Person WHERE familyname = ? AND givenname = ?'
+        );
+        $ln = 'SameContrib';
+        $fn = 'Person';
+        $stmt->bind_param('ss', $ln, $fn);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(2, $count, 'Contributor persons with different ORCIDs should be stored separately.');
+    }
 }

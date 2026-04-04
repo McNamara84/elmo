@@ -179,15 +179,16 @@ function saveFundingReferences($connection, $postData, $resource_id)
 function insertFundingReference($connection, $funder, $funderId, $funderIdType, $grantNumber, $grantName, $awardUri)
 {
     // Check if the funding reference already exists
+    // Using <=> (NULL-safe equal) to correctly compare NULL values in MariaDB/MySQL
     $checkQuery = "
         SELECT funding_reference_id
         FROM Funding_Reference
         WHERE funder = ?
-          AND (funderid = ?)
-          AND (funderidtyp = ?)
-          AND (grantnumber = ?)
-          AND (grantname = ?)
-          AND (awarduri = ?)";
+          AND funderid <=> ?
+          AND funderidtyp <=> ?
+          AND grantnumber <=> ?
+          AND grantname <=> ?
+          AND awarduri <=> ?";
     $checkStmt = $connection->prepare($checkQuery);
     if (!$checkStmt) {
         error_log("Prepare failed for existence check: " . $connection->error);

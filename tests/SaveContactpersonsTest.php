@@ -334,4 +334,129 @@ final class SaveContactpersonsTest extends DatabaseTestCase
         $result = $stmt->get_result();
         $this->assertEquals(1, $result->num_rows, "Die zweite Contact Person sollte gespeichert worden sein.");
     }
+
+    /**
+     * Bug #767: Duplicate Contact_Person rows when ORCID and website are NULL.
+     * Two identical contact persons without ORCID/website should produce only 1 row.
+     */
+    public function testSaveDuplicateContactPersonWithNullOrcidAndWebsite()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.DUP.NULL.CONTACT",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Duplicate NULL Contact Person"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            'familynames' => ['DupContact', 'DupContact'],
+            'givennames' => ['Person', 'Person'],
+            'orcids' => ['', ''],
+            'cpEmail' => ['dup@example.com', 'dup@example.com'],
+            'cpOnlineResource' => ['', ''],
+            'personAffiliation' => ['', ''],
+            'authorPersonRorIds' => ['', '']
+        ];
+
+        saveContactPerson($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT COUNT(*) as count FROM Contact_Person WHERE familyname = ? AND givenname = ? AND email = ?'
+        );
+        $fn = 'DupContact';
+        $gn = 'Person';
+        $email = 'dup@example.com';
+        $stmt->bind_param('sss', $fn, $gn, $email);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(1, $count, 'Bug #767: Duplicate Contact_Person created when ORCID and website are NULL.');
+    }
+
+    /**
+     * Bug #767: Contact persons with different websites (one NULL, one filled) are not duplicates.
+     */
+    public function testContactPersonsWithDifferentWebsiteAreNotDuplicates()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.DIFF.WEB.CONTACT",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Different Website Contact Person"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            'familynames' => ['WebContact', 'WebContact'],
+            'givennames' => ['Person', 'Person'],
+            'orcids' => ['', ''],
+            'cpEmail' => ['web@example.com', 'web@example.com'],
+            'cpOnlineResource' => ['', 'http://example.com'],
+            'personAffiliation' => ['', ''],
+            'authorPersonRorIds' => ['', '']
+        ];
+
+        saveContactPerson($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT COUNT(*) as count FROM Contact_Person WHERE familyname = ? AND email = ?'
+        );
+        $fn = 'WebContact';
+        $email = 'web@example.com';
+        $stmt->bind_param('ss', $fn, $email);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(2, $count, 'Contact persons with different websites (NULL vs filled) should be stored separately.');
+    }
+
+    /**
+     * Bug #767: Duplicate detection when only ORCID is NULL but website is filled.
+     */
+    public function testSaveDuplicateContactPersonWithNullOrcidButFilledWebsite()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.PARTIAL.NULL.CONTACT",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Partial NULL Contact Person"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            'familynames' => ['PartialContact', 'PartialContact'],
+            'givennames' => ['Person', 'Person'],
+            'orcids' => ['', ''],
+            'cpEmail' => ['partial@example.com', 'partial@example.com'],
+            'cpOnlineResource' => ['http://partial.example.com', 'http://partial.example.com'],
+            'personAffiliation' => ['', ''],
+            'authorPersonRorIds' => ['', '']
+        ];
+
+        saveContactPerson($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT COUNT(*) as count FROM Contact_Person WHERE familyname = ? AND email = ?'
+        );
+        $fn = 'PartialContact';
+        $email = 'partial@example.com';
+        $stmt->bind_param('ss', $fn, $email);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(1, $count, 'Bug #767: Duplicate Contact_Person created when ORCID is NULL but website is filled.');
+    }
 }

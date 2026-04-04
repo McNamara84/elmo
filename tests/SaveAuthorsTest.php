@@ -1048,4 +1048,115 @@ final class SaveAuthorsTest extends DatabaseTestCase
             "Es sollten 7 einzigartige Affiliationen gespeichert worden sein (5 neue + 2 bestehende)."
         );
     }
+
+    /**
+     * Bug #767: Duplicate Author_Person rows when ORCID is NULL.
+     * Two identical authors without ORCID should produce only 1 Author_Person row.
+     */
+    public function testSaveDuplicateAuthorPersonWithNullOrcid()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.DUP.NULL.ORCID', 'Test Duplicate NULL ORCID');
+
+        $authorData = [
+            'familynames' => ['NullOrcid', 'NullOrcid'],
+            'givennames' => ['Author', 'Author'],
+            'orcids' => ['', ''],
+            'personAffiliation' => ['', ''],
+            'authorPersonRorIds' => ['', '']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT COUNT(*) as count FROM Author_person WHERE familyname = ? AND givenname = ?'
+        );
+        $fn = 'NullOrcid';
+        $gn = 'Author';
+        $stmt->bind_param('ss', $fn, $gn);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(1, $count, 'Bug #767: Duplicate Author_Person created when ORCID is NULL.');
+    }
+
+    /**
+     * Bug #767: Authors with different ORCIDs (one NULL, one filled) should NOT be duplicates.
+     */
+    public function testAuthorsWithDifferentOrcidAreNotDuplicates()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.DIFF.ORCID', 'Test Different ORCID');
+
+        $authorData = [
+            'familynames' => ['SameName', 'SameName'],
+            'givennames' => ['SameGiven', 'SameGiven'],
+            'orcids' => ['', '0000-0002-1234-5678'],
+            'personAffiliation' => ['', ''],
+            'authorPersonRorIds' => ['', '']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT COUNT(*) as count FROM Author_person WHERE familyname = ? AND givenname = ?'
+        );
+        $fn = 'SameName';
+        $gn = 'SameGiven';
+        $stmt->bind_param('ss', $fn, $gn);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(2, $count, 'Authors with different ORCIDs (NULL vs filled) should be stored separately.');
+    }
+
+    /**
+     * Bug #767: Same author with NULL ORCID reused across two resources.
+     */
+    public function testSameAuthorWithNullOrcidReusedAcrossResources()
+    {
+        $resourceData1 = [
+            'doi' => '10.5880/GFZ.TEST.AUTH.NULL.RES1',
+            'year' => 2023,
+            'dateCreated' => '2023-06-01',
+            'resourcetype' => 1,
+            'language' => 1,
+            'Rights' => 1,
+            'title' => ['Test Author Null Res1'],
+            'titleType' => [1],
+        ];
+        $resource_id_1 = saveResourceInformationAndRights($this->connection, $resourceData1);
+
+        $resourceData2 = [
+            'doi' => '10.5880/GFZ.TEST.AUTH.NULL.RES2',
+            'year' => 2023,
+            'dateCreated' => '2023-06-01',
+            'resourcetype' => 1,
+            'language' => 1,
+            'Rights' => 1,
+            'title' => ['Test Author Null Res2'],
+            'titleType' => [1],
+        ];
+        $resource_id_2 = saveResourceInformationAndRights($this->connection, $resourceData2);
+
+        $authorData = [
+            'familynames' => ['CrossRes'],
+            'givennames' => ['Author'],
+            'orcids' => [''],
+            'personAffiliation' => [''],
+            'authorPersonRorIds' => ['']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id_1);
+        saveAuthors($this->connection, $authorData, $resource_id_2);
+
+        $stmt = $this->connection->prepare(
+            'SELECT COUNT(*) as count FROM Author_person WHERE familyname = ? AND givenname = ?'
+        );
+        $fn = 'CrossRes';
+        $gn = 'Author';
+        $stmt->bind_param('ss', $fn, $gn);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(1, $count, 'Bug #767: Same author with NULL ORCID should be reused across resources.');
+    }
 }

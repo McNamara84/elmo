@@ -112,7 +112,8 @@ function saveContributorPersons($connection, $postData, $resource_id)
 function saveOrUpdateContributorPerson($connection, $lastname, $firstname, $orcid)
 {
 
-    $stmt = $connection->prepare("SELECT contributor_person_id FROM Contributor_Person WHERE familyname = ? AND givenname = ? AND orcid = ?");
+    // Using <=> (NULL-safe equal) for orcid which can be NULL
+    $stmt = $connection->prepare("SELECT contributor_person_id FROM Contributor_Person WHERE familyname = ? AND givenname = ? AND orcid <=> ?");
     $stmt->bind_param("sss", $lastname, $firstname, $orcid);
     $stmt->execute();
     $result = $stmt->get_result();
