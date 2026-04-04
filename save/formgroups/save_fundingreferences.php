@@ -124,39 +124,25 @@ function saveFundingReferences($connection, $postData, $resource_id)
     }
     $action = $postData['action'] ?? 'save_and_download';
 
-    // Only perform strict validation on SUBMIT
-    if ($action === 'submit') {
-        $len = count($postData['funder']);
-
-        for ($i = 0; $i < $len; $i++) {
-            $entry = [
-                'funder' => $postData['funder'][$i] ?? '',
-                'funderId' => $postData['funderId'][$i] ?? '',
-                'funderIdTyp' => $postData['funderidtyp'][$i] ?? 'crossref',
-                'grantNumber' => $postData['grantNummer'][$i] ?? '',
-                'grantName' => $postData['grantName'][$i] ?? '',
-                'awardUri' => $postData['awardURI'][$i] ?? ''
-            ];
-
-            if (!validateFundingReferenceDependencies($entry)) {
-                return false;
-            }
-        }
-
-    }
-
     $allSuccessful = true;
     $len = count($postData['funder']);
 
     for ($i = 0; $i < $len; $i++) {
         $entry = [
-            'funder' => $postData['funder'][$i] ?? '',
-            'funderId' => $postData['funderId'][$i] ?? '',
+            'funder' => trim($postData['funder'][$i] ?? ''),
+            'funderId' => trim($postData['funderId'][$i] ?? ''),
             'funderIdTyp' => $postData['funderidtyp'][$i] ?? 'crossref',
-            'grantNumber' => $postData['grantNummer'][$i] ?? '',
-            'grantName' => $postData['grantName'][$i] ?? '',
-            'awardUri' => $postData['awardURI'][$i] ?? ''
+            'grantNumber' => trim($postData['grantNummer'][$i] ?? ''),
+            'grantName' => trim($postData['grantName'][$i] ?? ''),
+            'awardUri' => trim($postData['awardURI'][$i] ?? '')
         ];
+
+        // Only perform strict validation on SUBMIT
+        if ($action === 'submit') {
+            if (!validateFundingReferenceDependencies($entry)) {
+                return false;
+            }
+        }
 
         if (!saveFundingReferenceEntry($connection, $entry, $resource_id)) {
             $allSuccessful = false;
