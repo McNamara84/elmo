@@ -1190,6 +1190,9 @@ function processRelatedWorks(xmlDoc, resolver) {
  * Process related identifiers with relationType="IsCollectedBy" from XML
  * and populate the Used Instruments Tagify field.
  * Only active when the showUsedInstruments feature toggle is enabled.
+ * Adds PID-only tags immediately so the import pipeline is never blocked,
+ * then triggers a background API load that upgrades them with full metadata
+ * (name, instrument types) once the data arrives.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
@@ -1200,7 +1203,7 @@ function processUsedInstruments(xmlDoc, resolver) {
 
   const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-  const instruments = [];
+  const pidList = [];
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -1213,23 +1216,24 @@ function processUsedInstruments(xmlDoc, resolver) {
     const pidType = identifierNode.getAttribute("relatedIdentifierType") || "Handle";
     const pid = identifierNode.textContent.trim();
 
-    instruments.push({
+    pidList.push({
       pid: pid,
-      pidType: pidType,
-      name: pid, // Use PID as name fallback; Tagify will show the PID
-      instrumentTypes: []
+      pidType: pidType
     });
   }
 
-  if (instruments.length > 0 && window.usedInstrumentsModule) {
-    // Ensure API data is loaded so Tagify can match instruments
-    window.usedInstrumentsModule.loadInstrumentsFromAPI();
+  if (pidList.length > 0 && window.usedInstrumentsModule) {
+    // Add PID-only tags immediately so the import pipeline is never blocked
+    // by a slow/unreachable PID4INST endpoint.
+    window.usedInstrumentsModule.addInstrumentsByPid(pidList);
 
-    // Use a short delay to allow API data to potentially load
-    // then add instruments by their PID data
-    setTimeout(function () {
-      window.usedInstrumentsModule.addInstrumentsByData(instruments);
-    }, 500);
+    // Fire-and-forget: load API data in the background and upgrade the
+    // PID-only tags with full metadata (name, types) once available.
+    window.usedInstrumentsModule.loadInstrumentsFromAPI().then(function (result) {
+      if (result.dataLoaded) {
+        window.usedInstrumentsModule.upgradeInstrumentTags();
+      }
+    });
   }
 }
 

@@ -20,15 +20,29 @@ class DraftController
     private int $retentionDays;
 
     /**
-     * Creates the controller instance and ensures the storage directory exists.
+     * Creates the controller instance and resolves storage configuration.
      */
     public function __construct()
     {
         $this->storageRoot = rtrim(getenv('ELMO_DRAFT_STORAGE') ?: (__DIR__ . '/../../../storage/drafts'), DIRECTORY_SEPARATOR);
         $this->retentionDays = (int) (getenv('ELMO_DRAFT_RETENTION_DAYS') ?: 30);
+    }
 
+    /**
+     * Ensures the storage root directory exists and is writable.
+     *
+     * @throws \RuntimeException When the directory cannot be created or is not writable.
+     */
+    private function ensureStorageRoot(): void
+    {
         if (!is_dir($this->storageRoot)) {
-            mkdir($this->storageRoot, 0775, true);
+            // Suppress warning from race when another process creates the dir concurrently
+            if (!@mkdir($this->storageRoot, 0775, true) && !is_dir($this->storageRoot)) {
+                throw new \RuntimeException('DraftController: cannot create storage directory: ' . $this->storageRoot);
+            }
+        }
+        if (!is_writable($this->storageRoot)) {
+            throw new \RuntimeException('DraftController: storage directory is not writable: ' . $this->storageRoot);
         }
     }
 
@@ -52,7 +66,14 @@ class DraftController
 
         $draftId = bin2hex(random_bytes(16));
         $record = $this->createRecord($draftId, $sessionId, $payload['payload']);
-        $this->persistRecord($record);
+
+        try {
+            $this->persistRecord($record);
+        } catch (\RuntimeException $e) {
+            error_log($e->getMessage());
+            $this->respond(500, ['error' => 'Failed to persist draft']);
+            return;
+        }
 
         $this->respond(201, $this->responseMetadata($record));
     }
@@ -97,7 +118,14 @@ class DraftController
         $record['updatedAt'] = $this->now();
         $record['checksum'] = $this->checksum($record['payload']);
 
-        $this->persistRecord($record);
+        try {
+            $this->persistRecord($record);
+        } catch (\RuntimeException $e) {
+            error_log($e->getMessage());
+            $this->respond(500, ['error' => 'Failed to persist draft']);
+            return;
+        }
+
         $this->respond(200, $this->responseMetadata($record));
     }
 
@@ -126,7 +154,7 @@ class DraftController
         }
 
         if (!$record) {
-            $this->respond(404, ['error' => 'Draft not found']);
+            $this->respond(204, null);
             return;
         }
 
@@ -287,12 +315,27 @@ class DraftController
      */
     private function persistRecord(array $record): void
     {
+        $this->ensureStorageRoot();
+
         $dir = $this->sessionDirectory($record['sessionId']);
         if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
+            if (!@mkdir($dir, 0775, true) && !is_dir($dir)) {
+                throw new \RuntimeException('DraftController: cannot create session directory: ' . $dir);
+            }
         }
 
-        file_put_contents($this->recordPath($record['sessionId'], $record['id']), json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $path = $this->recordPath($record['sessionId'], $record['id']);
+
+        try {
+            $json = json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new \RuntimeException('DraftController: failed to encode draft as JSON: ' . $e->getMessage());
+        }
+
+        $bytes = file_put_contents($path, $json);
+        if ($bytes === false) {
+            throw new \RuntimeException('DraftController: failed to write draft file: ' . $path);
+        }
     }
 
     /**

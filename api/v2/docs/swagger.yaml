@@ -1191,12 +1191,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        "404":
-          description: Draft not found for the current session
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+        "204":
+          description: Draft not found for the current session (no body)
         "500":
           description: Internal server error
           content:

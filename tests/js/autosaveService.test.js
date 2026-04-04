@@ -429,4 +429,114 @@ describe('autosaveService', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('/mde-msl/api/v2/drafts');
     expect(service.apiBaseUrl).toBe('/mde-msl/api/v2');
   });
+
+  test('clears stale draftId from localStorage when checkForExistingDraft gets 204', async () => {
+    window.localStorage.setItem('elmo.autosave.draftId', 'stale-draft-id');
+
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      json: () => Promise.resolve(null)
+    });
+
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 0,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft'
+    });
+
+    service.start();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(window.localStorage.getItem('elmo.autosave.draftId')).toBeNull();
+    expect(service.draftId).toBeNull();
+  });
+
+  test('surfaces error when checkForExistingDraft gets 404 with stored draftId', async () => {
+    window.localStorage.setItem('elmo.autosave.draftId', 'old-draft-id');
+
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: () => Promise.resolve({ error: 'Draft not found' }),
+      text: () => Promise.resolve('{"error":"Draft not found"}')
+    });
+
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 0,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft'
+    });
+
+    service.start();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // 404 should surface as error (API returns 204 for missing drafts)
+    const statusEl = document.getElementById('autosave-status');
+    expect(statusEl.dataset.state).toBe('error');
+    // draftId should NOT be silently cleared
+    expect(window.localStorage.getItem('elmo.autosave.draftId')).toBe('old-draft-id');
+  });
+
+  test('does not clear draftId when 204 response is for session/latest (no stored draft)', async () => {
+    // No stored draftId => service queries session/latest
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      json: () => Promise.resolve(null)
+    });
+
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 0,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft'
+    });
+
+    service.start();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // draftId should remain null (was never set)
+    expect(service.draftId).toBeNull();
+    expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts/session/latest');
+  });
+
+  test('surfaces error when 404 on session/latest (misconfigured route)', async () => {
+    // No stored draftId => service queries session/latest
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: () => Promise.resolve({ error: 'Route not found' }),
+      text: () => Promise.resolve('Route not found')
+    });
+
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 0,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft'
+    });
+
+    service.start();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // Should surface as error, not silently ignored
+    expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts/session/latest');
+    const statusEl = document.getElementById('autosave-status');
+    expect(statusEl.dataset.state).toBe('error');
+  });
 });
