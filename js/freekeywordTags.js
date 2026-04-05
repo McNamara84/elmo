@@ -165,13 +165,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.error('Error processing keyword data:', error);
                 }
             })
-            .fail((jqXHR, textStatus, errorThrown) => {
-                console.warn('Failed to fetch keywords:', {
-                    status: jqXHR.status,
-                    statusText: jqXHR.statusText,
-                    responseText: jqXHR.responseText,
-                    error: errorThrown
-                });
+            .fail(() => {
+                // Silently ignore – curated keywords are optional
             });
     }
 
