@@ -27,6 +27,8 @@ $connection = connectDb();
 $apiKeyElmo = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
 // Google Maps API Key
 $apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
+// Google Maps Map ID (required for AdvancedMarkerElement)
+$mapIdGoogleMaps = '';
 // API Key for https://timezonedb.com/
 $apiKeyTimezone = 'your_timezone_api_key';
 
