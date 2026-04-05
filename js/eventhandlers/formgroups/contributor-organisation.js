@@ -44,10 +44,6 @@ $(document).ready(function () {
       const oldFor = $(this).attr("for");
       if (oldFor) $(this).attr("for", `${oldFor}-${rowIndex}`);
     });
-    newContributorRow.find("i.bi-question-circle-fill").each(function () {
-      const helpId = $(this).data("help-section-id");
-      if (helpId) $(this).attr("data-help-section-id", `${helpId}-${rowIndex}`);
-    });
 
     // Append the new row
     contributorOrgGroup.append(newContributorRow);
