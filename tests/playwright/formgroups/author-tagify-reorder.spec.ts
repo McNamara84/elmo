@@ -40,11 +40,13 @@ test.describe('Issue #962 – Tagify not initiated in cloned rows after reorder'
     const tagifyWrapper = newRow.locator('.tagify');
     await expect(tagifyWrapper).toHaveCount(1, { timeout: 5000 });
 
-    // Step 5: Verify tagify._tagify is set on the input element
-    const hasTagifyInstance = await newRow.locator('input[name="personAffiliation[]"]').evaluate(
-      (el: HTMLInputElement) => !!(el as any)._tagify
-    );
-    expect(hasTagifyInstance).toBe(true);
+    // Step 5: Verify tagify._tagify is set on the input element (poll to wait for async init)
+    await expect.poll(
+      () => newRow.locator('input[name="personAffiliation[]"]').evaluate(
+        (el: HTMLInputElement) => !!(el as any)._tagify
+      ),
+      { timeout: 5000 }
+    ).toBe(true);
   });
 
   test('author persons: tagify remains functional in existing rows after reorder', async ({ page }) => {
@@ -66,12 +68,15 @@ test.describe('Issue #962 – Tagify not initiated in cloned rows after reorder'
     const rows = authorGroup.locator('[data-creator-row]');
     const firstRow = rows.nth(0);
     const tagifyWrapper = firstRow.locator('.tagify');
-    await expect(tagifyWrapper).toHaveCount(1);
+    await expect(tagifyWrapper).toHaveCount(1, { timeout: 5000 });
 
-    const hasTagifyInstance = await firstRow.locator('input[name="personAffiliation[]"]').evaluate(
-      (el: HTMLInputElement) => !!(el as any)._tagify
-    );
-    expect(hasTagifyInstance).toBe(true);
+    // Poll to wait for async Tagify initialization
+    await expect.poll(
+      () => firstRow.locator('input[name="personAffiliation[]"]').evaluate(
+        (el: HTMLInputElement) => !!(el as any)._tagify
+      ),
+      { timeout: 5000 }
+    ).toBe(true);
   });
 
   test('author institutions: tagify initialized in new rows after first row moved to end', async ({ page }) => {
@@ -104,10 +109,12 @@ test.describe('Issue #962 – Tagify not initiated in cloned rows after reorder'
     const tagifyWrapper = newRow.locator('.tagify');
     await expect(tagifyWrapper).toHaveCount(1, { timeout: 5000 });
 
-    const hasTagifyInstance = await newRow.locator('input[name="institutionAffiliation[]"]').evaluate(
-      (el: HTMLInputElement) => !!(el as any)._tagify
-    );
-    expect(hasTagifyInstance).toBe(true);
+    await expect.poll(
+      () => newRow.locator('input[name="institutionAffiliation[]"]').evaluate(
+        (el: HTMLInputElement) => !!(el as any)._tagify
+      ),
+      { timeout: 5000 }
+    ).toBe(true);
   });
 
   test('contributor persons: tagify initialized in new rows after first row moved to end', async ({ page }) => {
@@ -132,17 +139,18 @@ test.describe('Issue #962 – Tagify not initiated in cloned rows after reorder'
     const rows = contribGroup.locator('[contributor-person-row]');
     await expect(rows).toHaveCount(3);
 
-    // The newest row should have affiliation tagify
+    // The newest row should have affiliation tagify (wait for async init)
     const newRow = rows.nth(2);
     const tagifyWrappers = newRow.locator('.tagify');
     // Contributor persons have 2 tagify instances: role + affiliation
-    const tagifyCount = await tagifyWrappers.count();
-    expect(tagifyCount).toBeGreaterThanOrEqual(1);
+    await expect.poll(() => tagifyWrappers.count(), { timeout: 5000 }).toBeGreaterThanOrEqual(1);
 
-    const hasAffiliationTagify = await newRow.locator('input[name="cbAffiliation[]"]').evaluate(
-      (el: HTMLInputElement) => !!(el as any)._tagify
-    );
-    expect(hasAffiliationTagify).toBe(true);
+    await expect.poll(
+      () => newRow.locator('input[name="cbAffiliation[]"]').evaluate(
+        (el: HTMLInputElement) => !!(el as any)._tagify
+      ),
+      { timeout: 5000 }
+    ).toBe(true);
   });
 
   test('contributor organisations: tagify initialized in new rows after first row moved to end', async ({ page }) => {
@@ -167,10 +175,9 @@ test.describe('Issue #962 – Tagify not initiated in cloned rows after reorder'
     const rows = contribGroup.locator('[contributors-row]');
     await expect(rows).toHaveCount(3);
 
-    // The newest row should have affiliation tagify
+    // The newest row should have affiliation tagify (wait for async init)
     const newRow = rows.nth(2);
     const tagifyWrappers = newRow.locator('.tagify');
-    const tagifyCount = await tagifyWrappers.count();
-    expect(tagifyCount).toBeGreaterThanOrEqual(1);
+    await expect.poll(() => tagifyWrappers.count(), { timeout: 5000 }).toBeGreaterThanOrEqual(1);
   });
 });
