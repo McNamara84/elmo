@@ -62,12 +62,11 @@ $(document).ready(function () {
   }
 
   function addAuthorRow() {
-    const sourceRow = authorGroup.children().first();
-    if (!sourceRow || sourceRow.length === 0) return null;
+    if (!originalAuthorRow || originalAuthorRow.length === 0) return null;
 
-    // New row by cloning the first template
-    // false = do not clone event handlers
-    const newAuthorRow = sourceRow.clone(false);
+    // Clone from the stored original template (not the current first child)
+    // to avoid double-suffixed IDs after drag-and-drop reorder
+    const newAuthorRow = originalAuthorRow.clone(false);
 
     // Each new row is assigned a sequential number (index)
     // Example: 1 = first copy, 2 = second copy, etc.

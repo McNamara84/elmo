@@ -10,6 +10,12 @@ $(document).ready(function () {
 
   let authorInstitutionIndex = 1; // Start index for new rows
 
+  const authorInstitutionGroup = $("#group-authorinstitution");
+
+  // Store a clean clone of the original row before any user interaction
+  // to avoid double-suffixed IDs after drag-and-drop reorder
+  const originalAuthorInstitutionRow = authorInstitutionGroup.children().first().clone();
+
   /**
   * Initialize sortable drag-and-drop behavior for author-institution rows.
  */
@@ -23,9 +29,7 @@ $(document).ready(function () {
   });
 
   $("#button-authorinstitution-add").click(function () {
-    const authorInstitutionGroup = $("#group-authorinstitution");
-    const firstAuthorInstitutionLine = authorInstitutionGroup.children().first();
-    const newAuthorInstitutionRow = firstAuthorInstitutionLine.clone();
+    const newAuthorInstitutionRow = originalAuthorInstitutionRow.clone();
 
     // Reset input values and remove validation classes
     newAuthorInstitutionRow.find("input").val("").removeClass("is-invalid is-valid");

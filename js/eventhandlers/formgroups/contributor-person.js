@@ -19,10 +19,14 @@ $(document).ready(function () {
    */
   let personIndex = 1; // Start bei 1, Originalzeile = 0
 
+  const contributorPersonGroup = $("#group-contributorperson");
+
+  // Store a clean clone of the original row before any user interaction
+  // to avoid double-suffixed IDs after drag-and-drop reorder
+  const originalContributorPersonRow = contributorPersonGroup.children().first().clone();
+
   $("#button-contributor-addperson").click(function () {
-    const contributorGroup = $("#group-contributorperson");
-    const firstContributorRow = contributorGroup.children().first();
-    const newContributorRow = firstContributorRow.clone();
+    const newContributorRow = originalContributorPersonRow.clone();
 
     // Reset input fields & validation
     newContributorRow.find("input").val("").removeClass("is-invalid is-valid").removeAttr("required");
@@ -59,7 +63,7 @@ $(document).ready(function () {
     newContributorRow.find("label[for='input-contributor-personrole']").attr("for", roleId);
 
     // Append the new row
-    contributorGroup.append(newContributorRow);
+    contributorPersonGroup.append(newContributorRow);
 
     // Initialize Tagify for roles
     setupRolesDropdown(["person", "both"], `#${roleId}`);

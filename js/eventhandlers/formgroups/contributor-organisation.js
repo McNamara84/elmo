@@ -8,10 +8,14 @@ import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.
 
 $(document).ready(function () {
 
+  const contributorOrgGroup = $("#group-contributororganisation");
+
+  // Store a clean clone of the original row before any user interaction
+  // to avoid double-suffixed IDs after drag-and-drop reorder
+  const originalContributorOrgRow = contributorOrgGroup.children().first().clone();
+
   $("#button-contributor-addorganisation").click(function () {
-    const contributorGroup = $("#group-contributororganisation");
-    const firstContributorRow = contributorGroup.children().first();
-    const newContributorRow = firstContributorRow.clone();
+    const newContributorRow = originalContributorOrgRow.clone();
 
     // Reset input values & validation
     newContributorRow.find("input").val("").removeClass("is-invalid is-valid").removeAttr("required");
@@ -25,7 +29,7 @@ $(document).ready(function () {
     newContributorRow.find(".addContributor").replaceWith(createRemoveButton());
 
     // Generate new IDs based on the current number of rows
-    const rowIndex = contributorGroup.children().length;
+    const rowIndex = contributorOrgGroup.children().length;
     newContributorRow.find("input").each(function () {
       const oldId = $(this).attr("id");
       if (oldId) $(this).attr("id", `${oldId}-${rowIndex}`);
@@ -40,7 +44,7 @@ $(document).ready(function () {
     });
 
     // Append the new row
-    contributorGroup.append(newContributorRow);
+    contributorOrgGroup.append(newContributorRow);
 
     // Initialize plugins
     newContributorRow.find("input[id^='input-contributor-organisationrole']").each(function () {
