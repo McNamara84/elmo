@@ -4,7 +4,7 @@
  * @module contributorPerson
  */
 
-import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
+import { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } from '../functions.js';
 
 $(document).ready(function () {
 
@@ -36,6 +36,9 @@ $(document).ready(function () {
 
     // Replace help buttons
     replaceHelpButtonInClonedRows(newContributorRow);
+
+    // Apply translations to the cloned row
+    translateClonedRow(newContributorRow);
 
     // Replace Add button with Remove button
     newContributorRow.find(".addContributorPerson").replaceWith(createRemoveButton());

@@ -4,7 +4,7 @@
  * @module authorInstitution
  */
 
-import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
+import { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } from '../functions.js';
 
 $(document).ready(function () {
 
@@ -63,6 +63,9 @@ $(document).ready(function () {
 
     // Replace help icons and format properly
     replaceHelpButtonInClonedRows(newAuthorInstitutionRow);
+
+    // Apply translations to the cloned row
+    translateClonedRow(newAuthorInstitutionRow);
 
     // Replace the add button in the new row with a remove button
     newAuthorInstitutionRow.find("#button-authorinstitution-add").replaceWith(createRemoveButton());

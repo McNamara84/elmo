@@ -67,6 +67,7 @@ describe('author.js', () => {
     // Mock functions
     window.createRemoveButton = jest.fn(() => $('<button type="button" class="removeButton"></button>'));
     window.replaceHelpButtonInClonedRows = jest.fn();
+    window.translateClonedRow = jest.fn();
     window.autocompleteAffiliations = jest.fn();
     window.affiliationsData = [{ id: '1', name: 'Inst' }];
 

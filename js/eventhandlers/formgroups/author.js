@@ -4,7 +4,7 @@
  * @module author
  */
 
-import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
+import { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } from '../functions.js';
 
 $(document).ready(function () {
   /**
@@ -114,6 +114,9 @@ $(document).ready(function () {
 
     // 5. Customize help buttons
     replaceHelpButtonInClonedRows(newAuthorRow);
+
+    // 5b. Apply translations to the cloned row
+    translateClonedRow(newAuthorRow);
 
     // 6. Insert new row in DOM
     authorGroup.append(newAuthorRow);
