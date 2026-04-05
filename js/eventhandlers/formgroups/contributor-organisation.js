@@ -14,6 +14,8 @@ $(document).ready(function () {
   // to avoid double-suffixed IDs after drag-and-drop reorder
   const originalContributorOrgRow = contributorOrgGroup.children().first().clone();
 
+  let contributorOrgIndex = 1; // Monotonically increasing counter for unique IDs
+
   $("#button-contributor-addorganisation").click(function () {
     const newContributorRow = originalContributorOrgRow.clone();
 
@@ -31,8 +33,9 @@ $(document).ready(function () {
     // Replace add button with remove button
     newContributorRow.find(".addContributor").replaceWith(createRemoveButton());
 
-    // Generate new IDs based on the current number of rows
-    const rowIndex = contributorOrgGroup.children().length;
+    // Generate new IDs from a monotonically increasing counter
+    // to guarantee uniqueness even after row removal.
+    const rowIndex = contributorOrgIndex++;
     newContributorRow.find("input").each(function () {
       const oldId = $(this).attr("id");
       if (oldId) $(this).attr("id", `${oldId}-${rowIndex}`);

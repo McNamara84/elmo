@@ -54,6 +54,8 @@ $(document).ready(function () {
   // Store a clean clone of the original author row
   const originalAuthorRow = authorGroup.children().first().clone();
 
+  let authorIndex = 1; // Monotonically increasing counter for unique IDs
+
   function escapeSelector(value) {
     if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
       return CSS.escape(value);
@@ -68,9 +70,9 @@ $(document).ready(function () {
     // to avoid double-suffixed IDs after drag-and-drop reorder
     const newAuthorRow = originalAuthorRow.clone(false);
 
-    // Each new row is assigned a sequential number (index)
-    // Example: 1 = first copy, 2 = second copy, etc.
-    const index = authorGroup.children().length;
+    // Each new row is assigned a sequential number from a monotonically
+    // increasing counter to guarantee unique IDs even after row removal.
+    const index = authorIndex++;
 
     // 1. Reset input fields + assign new IDs
     newAuthorRow.find("input, select").each(function () {
