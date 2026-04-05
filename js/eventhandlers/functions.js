@@ -68,8 +68,9 @@ function visibilityON(elementOrSelector) {
 /**
  * Applies the current translations to a freshly cloned row.
  * Templates captured at document-ready time contain untranslated text;
- * this function updates data-translate and data-translate-placeholder
- * elements so labels, placeholders and tooltips match the active language.
+ * this function updates data-translate, data-translate-placeholder and
+ * data-translate-title elements so labels, placeholders, titles and
+ * aria-labels match the active language.
  *
  * @param {jQuery} row - The cloned row to translate.
  */
@@ -91,6 +92,14 @@ function translateClonedRow(row) {
     const value = translate(key);
     if (value) {
       $(this).attr('placeholder', value);
+    }
+  });
+  row.find('[data-translate-title]').each(function () {
+    const key = $(this).data('translate-title');
+    const value = translate(key);
+    if (value) {
+      $(this).attr('title', value);
+      $(this).attr('aria-label', value);
     }
   });
 }

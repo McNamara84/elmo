@@ -64,6 +64,7 @@ $(document).ready(function () {
     newContributorRow.find("label[for='input-contributor-lastname']").attr("for", lastnameId);
     newContributorRow.find("label[for='input-contributor-orcid']").attr("for", orcidId);
     newContributorRow.find("label[for='input-contributor-personrole']").attr("for", roleId);
+    newContributorRow.find("label[for='input-contributorpersons-affiliation']").attr("for", affId);
 
     // Append the new row
     contributorPersonGroup.append(newContributorRow);
