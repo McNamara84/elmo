@@ -1091,6 +1091,7 @@ function processKeywords(xmlDoc, resolver) {
     const subjectScheme = subjectNode.getAttribute("subjectScheme") || "";
     const schemeURI = subjectNode.getAttribute("schemeURI") || "";
     const valueURI = subjectNode.getAttribute("valueURI") || "";
+    const language = subjectNode.getAttribute("xml:lang") || "en";
     const keyword = subjectNode.textContent.trim();
 
     const tagData = {
@@ -1098,6 +1099,7 @@ function processKeywords(xmlDoc, resolver) {
       scheme: subjectScheme,
       schemeURI: schemeURI,
       id: valueURI,
+      language: language,
     };
 
     // Route tag to appropriate Tagify instance based on schemeURI
