@@ -173,6 +173,15 @@ final class SaveKeywordsTest extends DatabaseTestCase
         while ($row = $result->fetch_assoc()) {
             $this->assertNull($row['language'], "Language should be NULL when not provided.");
             $this->assertNull($row['valueURI'], "valueURI should be NULL when not provided.");
+            $this->assertNull($row['schemeURI'], "schemeURI should be NULL when not provided.");
+
+            if ($row['keyword'] === 'Keyword1') {
+                // gcmdScienceKeywords entry: no scheme provided → NULL
+                $this->assertNull($row['scheme'], "scheme should be NULL for gcmdScienceKeywords when not provided.");
+            } else {
+                // MSLKeywords entry: scheme is hardcoded to 'EPOS MSL vocabulary'
+                $this->assertSame('EPOS MSL vocabulary', $row['scheme'], "scheme should be 'EPOS MSL vocabulary' for MSLKeywords.");
+            }
         }
     }
 

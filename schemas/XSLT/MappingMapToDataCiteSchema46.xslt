@@ -127,24 +127,24 @@ http://www.altova.com/mapforce
 					<xsl:for-each select="*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()='']">
 						<xsl:variable name="var11_cur" select="."/>
 						<subject>
-							<xsl:if test="*[local-name()='scheme' and namespace-uri()=''] != ''">
+							<xsl:if test="normalize-space(*[local-name()='scheme' and namespace-uri()='']) != ''">
 								<xsl:attribute name="subjectScheme" namespace="">
-									<xsl:value-of select="*[local-name()='scheme' and namespace-uri()='']"/>
+									<xsl:value-of select="normalize-space(*[local-name()='scheme' and namespace-uri()=''])"/>
 								</xsl:attribute>
 							</xsl:if>
-							<xsl:if test="*[local-name()='schemeURI' and namespace-uri()=''] != ''">
+							<xsl:if test="normalize-space(*[local-name()='schemeURI' and namespace-uri()='']) != ''">
 								<xsl:attribute name="schemeURI" namespace="">
-									<xsl:value-of select="*[local-name()='schemeURI' and namespace-uri()='']"/>
+									<xsl:value-of select="normalize-space(*[local-name()='schemeURI' and namespace-uri()=''])"/>
 								</xsl:attribute>
 							</xsl:if>
-							<xsl:if test="*[local-name()='valueURI' and namespace-uri()=''] != ''">
+							<xsl:if test="normalize-space(*[local-name()='valueURI' and namespace-uri()='']) != ''">
 								<xsl:attribute name="valueURI" namespace="">
-									<xsl:value-of select="*[local-name()='valueURI' and namespace-uri()='']"/>
+									<xsl:value-of select="normalize-space(*[local-name()='valueURI' and namespace-uri()=''])"/>
 								</xsl:attribute>
 							</xsl:if>
-							<xsl:if test="*[local-name()='language' and namespace-uri()=''] != ''">
+							<xsl:if test="normalize-space(*[local-name()='language' and namespace-uri()='']) != ''">
 								<xsl:attribute name="xml:lang">
-									<xsl:value-of select="*[local-name()='language' and namespace-uri()='']"/>
+									<xsl:value-of select="normalize-space(*[local-name()='language' and namespace-uri()=''])"/>
 								</xsl:attribute>
 							</xsl:if>
 							<xsl:value-of select="*[local-name()='keyword' and namespace-uri()='']"/>

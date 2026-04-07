@@ -151,41 +151,20 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
   });
 
   test('processKeywords loads tags with all metadata fields including language', async ({ page }) => {
-    // Load the XML mapping module and process keywords
+    // Inject the production mapping module so processKeywords is available globally
+    await injectScript(page, 'js/mappingXmlToInputFields.js');
+
     const tagData = await page.evaluate((xmlString) => {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
       const ns = 'http://datacite.org/schema/kernel-4';
       const resolver = (prefix: string) => prefix === 'ns' ? ns : null;
 
-      const subjectNodes = xmlDoc.evaluate('.//ns:subjects/ns:subject', xmlDoc, resolver,
-        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+      // Call the production processKeywords function
+      (window as any).processKeywords(xmlDoc, resolver);
 
-      const tagifyInputGCMD = document.querySelector('#input-sciencekeyword') as any;
-      const tagifyInputFree = document.querySelector('#input-freekeyword') as any;
-
-      const tagifyFree = tagifyInputFree?._tagify;
-      const tagifyGCMD = tagifyInputGCMD?._tagify;
-
-      tagifyFree?.removeAllTags();
-      tagifyGCMD?.removeAllTags();
-
-      for (let i = 0; i < subjectNodes.snapshotLength; i++) {
-        const subjectNode = subjectNodes.snapshotItem(i) as Element;
-        const subjectScheme = subjectNode.getAttribute('subjectScheme') || '';
-        const schemeURI = subjectNode.getAttribute('schemeURI') || '';
-        const valueURI = subjectNode.getAttribute('valueURI') || '';
-        const language = subjectNode.getAttribute('xml:lang') || 'en';
-        const keyword = subjectNode.textContent?.trim() || '';
-
-        const tag = { value: keyword, scheme: subjectScheme, schemeURI, id: valueURI, language };
-
-        if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords') {
-          tagifyGCMD?.addTags([tag]);
-        } else {
-          tagifyFree?.addTags([tag]);
-        }
-      }
+      const tagifyGCMD = (document.querySelector('#input-sciencekeyword') as any)?._tagify;
+      const tagifyFree = (document.querySelector('#input-freekeyword') as any)?._tagify;
 
       return {
         gcmd: tagifyGCMD?.value || [],
@@ -214,49 +193,26 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
       language: 'de',
     });
 
-    // Free keyword: no schemeURI/subjectScheme → defaults
+    // Free keyword: no xml:lang attribute → no language property
     expect(tagData.free).toHaveLength(1);
     expect(tagData.free[0]).toMatchObject({
       value: 'climate change',
-      language: 'en',
     });
+    expect(tagData.free[0]).not.toHaveProperty('language');
   });
 
   test('Tagify hidden input contains valid JSON for backend after loading XML keywords', async ({ page }) => {
-    // Use the actual processKeywords function via the module
+    // Inject the production mapping module so processKeywords is available globally
+    await injectScript(page, 'js/mappingXmlToInputFields.js');
+
     await page.evaluate((xmlString) => {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
       const ns = 'http://datacite.org/schema/kernel-4';
       const resolver = (prefix: string) => prefix === 'ns' ? ns : null;
 
-      const subjectNodes = xmlDoc.evaluate('.//ns:subjects/ns:subject', xmlDoc, resolver,
-        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-
-      const tagifyInputGCMD = document.querySelector('#input-sciencekeyword') as any;
-      const tagifyInputFree = document.querySelector('#input-freekeyword') as any;
-      const tagifyFree = tagifyInputFree?._tagify;
-      const tagifyGCMD = tagifyInputGCMD?._tagify;
-
-      tagifyFree?.removeAllTags();
-      tagifyGCMD?.removeAllTags();
-
-      for (let i = 0; i < subjectNodes.snapshotLength; i++) {
-        const subjectNode = subjectNodes.snapshotItem(i) as Element;
-        const subjectScheme = subjectNode.getAttribute('subjectScheme') || '';
-        const schemeURI = subjectNode.getAttribute('schemeURI') || '';
-        const valueURI = subjectNode.getAttribute('valueURI') || '';
-        const language = subjectNode.getAttribute('xml:lang') || 'en';
-        const keyword = subjectNode.textContent?.trim() || '';
-
-        const tag = { value: keyword, scheme: subjectScheme, schemeURI, id: valueURI, language };
-
-        if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords') {
-          tagifyGCMD?.addTags([tag]);
-        } else {
-          tagifyFree?.addTags([tag]);
-        }
-      }
+      // Call the production processKeywords function
+      (window as any).processKeywords(xmlDoc, resolver);
     }, TEST_XML);
 
     // Read the hidden input value that FormData would send

@@ -1,13 +1,28 @@
 import { test, expect } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { navigateToHome, expectNavbarVisible } from '../utils/navigation';
 import { completeMinimalDatasetForm } from '../utils/flows';
 
+/** Console errors that are expected and can be ignored in the E2E environment. */
+const BENIGN_CONSOLE_PATTERNS = [
+  /favicon\.ico/,
+  /Failed to load resource/,
+  /third-party cookie/i,
+];
+
 test.describe('Save after Load – Issue #1043', () => {
   test('can save again after loading a previously saved XML file', async ({ page }) => {
-    // Collect console errors for diagnostics
+    // Collect unexpected console errors for assertion at end of test
     const consoleErrors: string[] = [];
     page.on('console', msg => {
-      if (msg.type() === 'error') consoleErrors.push(msg.text());
+      if (msg.type() === 'error') {
+        const text = msg.text();
+        if (!BENIGN_CONSOLE_PATTERNS.some(p => p.test(text))) {
+          consoleErrors.push(text);
+        }
+      }
     });
 
     await navigateToHome(page);
@@ -66,11 +81,9 @@ test.describe('Save after Load – Issue #1043', () => {
 
     // 4. Load the saved XML file
     // Save the download to a stable path with .xml extension
-    const fs = require('fs');
-    const path = require('path');
-    const tempDir = path.join(require('os').tmpdir(), 'elmo-e2e');
-    fs.mkdirSync(tempDir, { recursive: true });
-    const savedXmlPath = path.join(tempDir, 'e2e-roundtrip-test.xml');
+    const tempDir = join(tmpdir(), 'elmo-e2e');
+    mkdirSync(tempDir, { recursive: true });
+    const savedXmlPath = join(tempDir, 'e2e-roundtrip-test.xml');
     await download.saveAs(savedXmlPath);
 
     await page.locator('#button-form-load').click();
@@ -114,5 +127,8 @@ test.describe('Save after Load – Issue #1043', () => {
     await expect(notificationModal).toBeVisible({ timeout: 10000 });
     await expect(notificationModal.locator('.alert-danger')).toHaveCount(0);
     await expect(notificationModal.locator('.alert-success')).toHaveCount(1);
+
+    // No unexpected JS errors during the entire flow
+    expect(consoleErrors).toEqual([]);
   });
 });
