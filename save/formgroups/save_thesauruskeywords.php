@@ -57,16 +57,16 @@ function processThesaurusKeyword($connection, $entry, $resource_id, $field)
 {
     // Retrieves the values from the keyword array
     $value = $entry['value'];
-    $valueURI = isset($entry['id']) ? $entry['id'] : null;       // Uses the URI if available
-    $scheme = isset($entry['scheme']) ? $entry['scheme'] : $field; // If no scheme, use the field name
+    $valueURI = isset($entry['id']) && $entry['id'] !== '' ? $entry['id'] : null;
+    $scheme = isset($entry['scheme']) && $entry['scheme'] !== '' ? $entry['scheme'] : null;
 
     // Workaround until Utrecht fixed it in the original source
     if ($field === 'MSLKeywords') {
         $scheme = 'EPOS MSL vocabulary';
     }
 
-    $schemeURI = isset($entry['schemeURI']) ? $entry['schemeURI'] : ''; // Optional: URI of the scheme
-    $language = isset($entry['language']) ? $entry['language'] : 'en'; // Default language: English
+    $schemeURI = isset($entry['schemeURI']) && $entry['schemeURI'] !== '' ? $entry['schemeURI'] : null;
+    $language = isset($entry['language']) && $entry['language'] !== '' ? $entry['language'] : null;
 
     // If the value is not empty, process it
     if (!empty($value)) {
