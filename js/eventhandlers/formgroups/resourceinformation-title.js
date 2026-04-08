@@ -63,13 +63,10 @@ $(document).ready(function () {
     if (window.mainTitleTypeId) {
       $select.find(`option[value='${window.mainTitleTypeId}']`).remove();
     }
-    // Pre-select "Alternative Title" by name so the title type is never empty.
-    // Falls back to the first non-empty option if "Alternative Title" is absent.
-    const $altOption = $select.find("option").filter(function () {
-      return $(this).text().trim().toLowerCase() === "alternative title";
-    }).first();
-    if ($altOption.length) {
-      $select.val($altOption.val());
+    // Pre-select "Alternative Title" by ID so the title type is never empty.
+    // Falls back to the first non-empty option if the ID is unavailable.
+    if (window.alternativeTitleTypeId && $select.find(`option[value='${window.alternativeTitleTypeId}']`).length) {
+      $select.val(window.alternativeTitleTypeId);
     } else {
       const $firstOption = $select.find("option[value]").filter(function () {
         return $(this).val() !== "";

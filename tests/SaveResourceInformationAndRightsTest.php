@@ -340,8 +340,8 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
     /**
      * Tests that a title with text but no type gets a default type assigned.
      * With the fix for issue #1045, empty title types are auto-assigned:
-     * - Index 0: "Main Title"
-     * - Index > 0: "Alternative Title"
+     * - First saved title: "Main Title"
+     * - Subsequent saved titles: "Alternative Title"
      * 
      * @return void
      */
@@ -367,7 +367,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         $this->assertIsInt($resource_id, "Should return a valid resource ID (default type assigned for empty titleType)");
         $this->assertGreaterThan(0, $resource_id);
 
-        // Look up expected default type ID for index 0 ("Main Title")
+        // Look up expected default type ID for the first saved title ("Main Title")
         $stmt = $this->connection->prepare("SELECT title_type_id FROM Title_Type WHERE name = 'Main Title' LIMIT 1");
         $stmt->execute();
         $mainTitleRow = $stmt->get_result()->fetch_assoc();
@@ -382,7 +382,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         $row = $result->fetch_assoc();
 
         $this->assertEquals("Title Without Type", $row["text"], "Title text should be saved");
-        $this->assertEquals($mainTitleTypeId, $row["Title_Type_fk"], "Empty title type at index 0 should default to Main Title");
+        $this->assertEquals($mainTitleTypeId, $row["Title_Type_fk"], "First saved title with empty type should default to Main Title");
     }
 
     /**
@@ -543,7 +543,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         $this->assertIsInt($resource_id, "Should return a valid resource ID");
         $this->assertGreaterThan(0, $resource_id);
 
-        // Look up expected default type ID for index > 0 ("Alternative Title")
+        // Look up expected default type ID for subsequent saved titles ("Alternative Title")
         $stmt = $this->connection->prepare("SELECT title_type_id FROM Title_Type WHERE name = 'Alternative Title' LIMIT 1");
         $stmt->execute();
         $altTitleRow = $stmt->get_result()->fetch_assoc();
@@ -568,7 +568,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         $this->assertEquals("Valid Title 2", $titles[1]["text"], "Second valid title should be saved");
         $this->assertEquals(2, $titles[1]["Title_Type_fk"], "Second valid title should have type 2");
         $this->assertEquals("Title With Default Type", $titles[2]["text"], "Title with empty type should be saved with default type");
-        $this->assertEquals($altTitleTypeId, $titles[2]["Title_Type_fk"], "Empty type at index 3 should default to Alternative Title");
+        $this->assertEquals($altTitleTypeId, $titles[2]["Title_Type_fk"], "Subsequent saved title with empty type should default to Alternative Title");
     }
 
     /**
