@@ -380,6 +380,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         $stmt->execute();
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
+        $this->assertNotNull($row, "Expected a title row to be saved for the resource");
 
         $this->assertEquals("Title Without Type", $row["text"], "Title text should be saved");
         $this->assertEquals($mainTitleTypeId, $row["Title_Type_fk"], "First saved title with empty type should default to Main Title");

@@ -32,7 +32,8 @@ const XML_TWO_TITLES = `<?xml version="1.0" encoding="UTF-8"?>
 
 /**
  * Helper: uploads an XML string via the upload modal and waits until
- * the first title input is populated (indicating XML processing is done).
+ * at least two title inputs exist and both have non-empty values,
+ * indicating that XML processing (including secondary title row cloning) is done.
  */
 async function uploadXmlAndWaitForTitles(page: import('@playwright/test').Page, xml: string, fileName: string) {
   await page.locator('#button-form-load').click();

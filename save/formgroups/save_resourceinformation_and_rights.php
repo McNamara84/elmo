@@ -266,11 +266,13 @@ function getDefaultTitleTypeId($connection, $savedCount)
  * Allows saving:
  * - Titles with both text and titleType
  * - Titles with text but no titleType (defaults to "Main Title" for the
- *   first title, "Alternative Title" for subsequent ones)
+ *   first saved title, "Alternative Title" for subsequent ones)
  *
  * Will SKIP without a failure:
  * - Titles with titleType only (text must be present if type is present)
  * - Entirely empty entries (both text and type are empty)
+ * - (submit action only) Titles whose titleType ID does not exist in the
+ *   Title_Type table (validated via isTitleTypeValid())
  *
  * Title types are validated against the Title_Type table in the database.
  *
