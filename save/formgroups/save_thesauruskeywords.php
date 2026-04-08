@@ -82,18 +82,22 @@ function processThesaurusKeyword($connection, $entry, $resource_id, $field)
  *
  * @param mysqli      $connection The database connection.
  * @param string      $value      The value of the keyword.
- * @param string      $scheme     The scheme of the keyword.
- * @param string      $schemeURI  The URI of the scheme.
+ * @param string|null $scheme     The scheme of the keyword.
+ * @param string|null $schemeURI  The URI of the scheme.
  * @param string|null $valueURI   The URI of the value.
- * @param string      $language   The language of the keyword.
+ * @param string|null $language   The language of the keyword.
  *
  * @return int The ID of the thesaurus keyword.
  */
 function getOrCreateThesaurusKeyword($connection, $value, $scheme, $schemeURI, $valueURI, $language)
 {
-    // Checks if the keyword already exists
-    $stmt = $connection->prepare("SELECT thesaurus_keywords_id FROM Thesaurus_Keywords WHERE keyword = ?");
-    $stmt->bind_param("s", $value);
+    // Checks if the keyword with the exact same attributes already exists.
+    // Uses NULL-safe comparison (<=>) so that NULL values match correctly.
+    $stmt = $connection->prepare(
+        "SELECT thesaurus_keywords_id FROM Thesaurus_Keywords
+         WHERE keyword = ? AND scheme <=> ? AND schemeURI <=> ? AND valueURI <=> ? AND language <=> ?"
+    );
+    $stmt->bind_param("sssss", $value, $scheme, $schemeURI, $valueURI, $language);
     $stmt->execute();
     $stmt->store_result();
 
