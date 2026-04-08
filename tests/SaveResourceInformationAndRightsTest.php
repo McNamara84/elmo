@@ -519,6 +519,19 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
             require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
         }
 
+        // Look up title type IDs by name so the test doesn't depend on seed order
+        $stmt = $this->connection->prepare("SELECT title_type_id FROM Title_Type WHERE name = 'Main Title' LIMIT 1");
+        $stmt->execute();
+        $mainRow = $stmt->get_result()->fetch_assoc();
+        $this->assertNotNull($mainRow, "Lookup data must contain a 'Main Title' row in Title_Type");
+        $mainTitleTypeId = (string) $mainRow['title_type_id'];
+
+        $stmt = $this->connection->prepare("SELECT title_type_id FROM Title_Type WHERE name = 'Alternative Title' LIMIT 1");
+        $stmt->execute();
+        $altRow = $stmt->get_result()->fetch_assoc();
+        $this->assertNotNull($altRow, "Lookup data must contain an 'Alternative Title' row in Title_Type");
+        $altTitleTypeId = (string) $altRow['title_type_id'];
+
         $postData = [
             "doi" => "10.5880/GFZ.TITLE.MIXED.TEST",
             "year" => 2023,
@@ -533,23 +546,16 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
                 "Title With Default Type"  // No type → gets "Alternative Title" assigned
             ],
             "titleType" => [
-                "1",  // Valid type
-                "1",  // Invalid (no text to go with)
-                "2",  // Valid type
-                ""    // Empty type → defaults to "Alternative Title"
+                $mainTitleTypeId,  // Main Title type
+                $mainTitleTypeId,  // Invalid (no text to go with)
+                $altTitleTypeId,   // Alternative Title type
+                ""                 // Empty type → defaults to "Alternative Title"
             ]
         ];
 
         $resource_id = saveResourceInformationAndRights($this->connection, $postData);
         $this->assertIsInt($resource_id, "Should return a valid resource ID");
         $this->assertGreaterThan(0, $resource_id);
-
-        // Look up expected default type ID for subsequent saved titles ("Alternative Title")
-        $stmt = $this->connection->prepare("SELECT title_type_id FROM Title_Type WHERE name = 'Alternative Title' LIMIT 1");
-        $stmt->execute();
-        $altTitleRow = $stmt->get_result()->fetch_assoc();
-        $this->assertNotNull($altTitleRow, "Lookup data must contain an 'Alternative Title' row in Title_Type");
-        $altTitleTypeId = (int) $altTitleRow['title_type_id'];
 
         // Verify titles were saved: 2 explicit + 1 with default type = 3 total
         $stmt = $this->connection->prepare("SELECT * FROM Title WHERE Resource_resource_id = ? ORDER BY title_id");
@@ -565,11 +571,11 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         }
 
         $this->assertEquals("Valid Title 1", $titles[0]["text"], "First valid title should be saved");
-        $this->assertEquals(1, $titles[0]["Title_Type_fk"], "First valid title should have type 1");
+        $this->assertEquals((int) $mainTitleTypeId, $titles[0]["Title_Type_fk"], "First valid title should have Main Title type");
         $this->assertEquals("Valid Title 2", $titles[1]["text"], "Second valid title should be saved");
-        $this->assertEquals(2, $titles[1]["Title_Type_fk"], "Second valid title should have type 2");
+        $this->assertEquals((int) $altTitleTypeId, $titles[1]["Title_Type_fk"], "Second valid title should have Alternative Title type");
         $this->assertEquals("Title With Default Type", $titles[2]["text"], "Title with empty type should be saved with default type");
-        $this->assertEquals($altTitleTypeId, $titles[2]["Title_Type_fk"], "Subsequent saved title with empty type should default to Alternative Title");
+        $this->assertEquals((int) $altTitleTypeId, $titles[2]["Title_Type_fk"], "Subsequent saved title with empty type should default to Alternative Title");
     }
 
     /**
