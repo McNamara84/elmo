@@ -8,7 +8,6 @@ import { completeMinimalDatasetForm } from '../utils/flows';
 /** Console errors that are expected and can be ignored in the E2E environment. */
 const BENIGN_CONSOLE_PATTERNS = [
   /favicon\.ico/,
-  /Failed to load resource/,
   /third-party cookie/i,
   /API key not found/i,
   /thesauri availability/i,
