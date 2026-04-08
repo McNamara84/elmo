@@ -197,12 +197,48 @@ function isTitleTypeValid($connection, $title_type_id)
 }
 
 /**
+ * Returns a default title type ID based on the title's position.
+ *
+ * - Index 0 (first title): returns "Main Title" type ID
+ * - Index > 0 (additional titles): returns "Alternative Title" type ID
+ *
+ * Falls back to the first available title type if neither is found.
+ *
+ * @param mysqli $connection The database connection
+ * @param int $index The position of the title (0-based)
+ * @return int The default title type ID
+ */
+function getDefaultTitleTypeId($connection, $index)
+{
+    $targetName = $index === 0 ? 'Main Title' : 'Alternative Title';
+
+    $stmt = $connection->prepare("SELECT title_type_id FROM Title_Type WHERE name = ? LIMIT 1");
+    $stmt->bind_param("s", $targetName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        return (int) $row['title_type_id'];
+    }
+
+    // Fallback: first available title type
+    $stmt = $connection->prepare("SELECT title_type_id FROM Title_Type ORDER BY title_type_id ASC LIMIT 1");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        return (int) $row['title_type_id'];
+    }
+
+    return 1;
+}
+
+/**
  * Saves titles for a resource, handling duplicates.
  * Allows saving:
  * - Titles with both text and titleType
+ * - Titles with text but no titleType (defaults to "Alternative Title")
  *
  * Will SKIP without a failure:
- * - Titles with text only (type must be present)
  * - Titles with titleType only (text must be present if type is present)
  * - Entirely empty entries (both text and type are empty)
  *
@@ -216,40 +252,34 @@ function isTitleTypeValid($connection, $title_type_id)
  */
 function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = 'save_and_download')
 {
-    error_log("saveTitles called with resource_id: $resource_id, title count: " . count($titles));
-    
     $uniqueTitles = [];
     for ($i = 0; $i < count($titles); $i++) {
         $title_text = isset($titles[$i]) ? trim($titles[$i]) : '';
         $title_type_str = isset($titleTypes[$i]) ? trim($titleTypes[$i]) : '';
-        
+
         // Skip entirely empty entries (both text and type are empty)
         if (empty($title_text) && empty($title_type_str)) {
-            error_log("Skipping completely empty title entry at index $i");
             continue;
         }
-        
+
         // Skip if text is empty (text is required)
         if (empty($title_text)) {
-            error_log("Skipping title entry at index $i: text is empty. Title text is required.");
             continue;
         }
-        
-        // Skip if type is empty (type is required)
+
+        // If type is empty but text exists, assign a default title type
         if (empty($title_type_str)) {
-            error_log("Skipping title entry at index $i: type is empty. Title type is required.");
-            continue;
+            $title_type_str = (string) getDefaultTitleTypeId($connection, $i);
         }
-        
+
         // Convert title_type string to integer if present
         $title_type_int = intval($title_type_str);
-        
+
         // (only for submit action): Validate the title type exists in the database
         if ($action === 'submit' && !isTitleTypeValid($connection, $title_type_int)) {
-            error_log("Invalid title type at index $i. Type ID '$title_type_int' does not exist in Title_Type table. Skipping.");
             continue;
         }
-        
+
         // Create unique key for deduplication
         $key = $title_text . '|' . $title_type_int;
         if (!isset($uniqueTitles[$key])) {
@@ -257,12 +287,10 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
                 'text' => $title_text,
                 'type' => $title_type_int
             ];
-            error_log("Added title to save: text='$title_text', type=$title_type_int");
         }
     }
 
     if (empty($uniqueTitles)) {
-        error_log("No valid titles to save");
         return $action !== 'submit';
     }
 
@@ -276,12 +304,10 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
             $title['type'],
             $resource_id
         );
-        
+
         if (!$stmt->execute()) {
-            error_log("Failed to insert title: " . $stmt->error);
             return false;
         }
-        error_log("Successfully inserted title: text='" . $title['text'] . "', type=" . $title['type']);
     }
 
     return true;

@@ -1,14 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { navigateToHome } from '../utils';
 
+// Minimal DataCite XML with two titles – used for load-only tests
 const XML_TWO_TITLES = `<?xml version="1.0" encoding="UTF-8"?>
 <resource xmlns="http://datacite.org/schema/kernel-4">
   <identifier identifierType="DOI">10.1234/title.test</identifier>
   <publicationYear>2025</publicationYear>
   <language>en</language>
   <titles>
-    <title xml:lang="en" titleType="Main Title">test</title>
-    <title xml:lang="en" titleType="Alternative Title">blabla</title>
+    <title xml:lang="en" titleType="Main Title">First Title</title>
+    <title xml:lang="en" titleType="Alternative Title">Second Title</title>
   </titles>
   <creators>
     <creator>
@@ -29,11 +30,36 @@ const XML_TWO_TITLES = `<?xml version="1.0" encoding="UTF-8"?>
   </rightsList>
 </resource>`;
 
+/**
+ * Helper: uploads an XML string via the upload modal and waits until
+ * the first title input is populated (indicating XML processing is done).
+ */
+async function uploadXmlAndWaitForTitles(page: import('@playwright/test').Page, xml: string, fileName: string) {
+  await page.locator('#button-form-load').click();
+  await expect(page.locator('div#modal-uploadxml')).toBeVisible({ timeout: 5_000 });
+
+  await page.setInputFiles('#input-uploadxml-file', {
+    name: fileName,
+    mimeType: 'text/xml',
+    buffer: Buffer.from(xml, 'utf-8'),
+  });
+
+  await page.waitForFunction(
+    () => {
+      const inputs = document.querySelectorAll<HTMLInputElement>('input[name="title[]"]');
+      return inputs.length > 0 && inputs[0].value.length > 0;
+    },
+    { timeout: 20_000 },
+  );
+
+  // Allow time for the second title row to be cloned via click()
+  await page.waitForTimeout(500);
+}
+
 test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
 
-    // Wait for the page to be fully loaded
     await expect(page.locator('#input-resourceinformation-doi')).toBeVisible({ timeout: 15_000 });
 
     // Wait for title type dropdown to be populated from API
@@ -44,112 +70,98 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
   });
 
   test('loads both titles from XML with 2 titles', async ({ page }) => {
-    // Click "Load" button to open upload modal
-    await page.locator('#button-form-load').click();
-    const modal = page.locator('div#modal-uploadxml');
-    await expect(modal).toBeVisible({ timeout: 5_000 });
+    await uploadXmlAndWaitForTitles(page, XML_TWO_TITLES, 'two-titles.xml');
 
-    // Upload the XML file
-    await page.setInputFiles('#input-uploadxml-file', {
-      name: 'two-titles.xml',
-      mimeType: 'text/xml',
-      buffer: Buffer.from(XML_TWO_TITLES, 'utf-8'),
-    });
+    const allTitles = page.locator('input[name="title[]"]');
+    expect(await allTitles.count()).toBe(2);
+    await expect(allTitles.first()).toHaveValue('First Title');
+    await expect(allTitles.nth(1)).toHaveValue('Second Title');
 
-    // Wait for first title to be populated (indicates XML processing started)
-    await page.waitForFunction(
-      () => {
-        const input = document.querySelector<HTMLInputElement>('#input-resourceinformation-title');
-        return input != null && input.value.length > 0;
-      },
-      { timeout: 20_000 },
-    );
-
-    // Small wait for additional title rows to be created
-    await page.waitForTimeout(500);
-
-    // CHECK: First title should be "test"
-    const firstTitle = page.locator('input[name="title[]"]').first();
-    await expect(firstTitle).toHaveValue('test');
-
-    // CHECK: There should be 2 title inputs
-    const allTitleInputs = page.locator('input[name="title[]"]');
-    const titleCount = await allTitleInputs.count();
-    console.log(`Number of title inputs found: ${titleCount}`);
-
-    // Log all title values for debugging
-    for (let i = 0; i < titleCount; i++) {
-      const val = await allTitleInputs.nth(i).inputValue();
-      console.log(`Title ${i}: "${val}"`);
-    }
-
-    // This assertion should catch the bug: we expect 2 title inputs
-    expect(titleCount).toBe(2);
-
-    // CHECK: Second title should be "blabla"
-    const secondTitle = allTitleInputs.nth(1);
-    await expect(secondTitle).toHaveValue('blabla');
-
-    // CHECK: Second title type should be "Alternative Title"
-    const allTitleTypeSelects = page.locator('select[name="titleType[]"]');
-    const selectCount = await allTitleTypeSelects.count();
-    console.log(`Number of titleType selects found: ${selectCount}`);
-
-    if (selectCount >= 2) {
-      const secondTitleType = allTitleTypeSelects.nth(1);
-      const selectedText = await secondTitleType.locator('option:checked').textContent();
-      console.log(`Second title type selected: "${selectedText}"`);
+    // Verify second title type is "Alternative Title"
+    const allTitleTypes = page.locator('select[name="titleType[]"]');
+    if (await allTitleTypes.count() >= 2) {
+      const selectedText = await allTitleTypes.nth(1).locator('option:checked').textContent();
       expect(selectedText?.trim()).toContain('Alternative Title');
     }
   });
 
-  test('loads both titles after user previously added 2 titles manually (exact issue #1045 scenario)', async ({ page }) => {
-    // Step 1: Manually add a second title (simulating what the bug reporter did)
+  test('clears manually added titles before loading XML', async ({ page }) => {
+    // Step 1: Manually add a second title row and fill in values
     await page.locator('#button-resourceinformation-addtitle').click();
-
-    // Verify second title row was created
     const titleInputsBefore = page.locator('input[name="title[]"]');
     expect(await titleInputsBefore.count()).toBe(2);
-
-    // Fill in both titles manually
     await titleInputsBefore.first().fill('manual-first');
     await titleInputsBefore.nth(1).fill('manual-second');
 
-    // Step 2: Now load XML with 2 titles (this is where the bug occurred)
-    await page.locator('#button-form-load').click();
-    const modal = page.locator('div#modal-uploadxml');
-    await expect(modal).toBeVisible({ timeout: 5_000 });
+    // Step 2: Load XML – clearInputFields() must reset the internal
+    // titlesNumber counter via elmo:clearTitles so that the second
+    // title row can be re-added by processTitles().
+    await uploadXmlAndWaitForTitles(page, XML_TWO_TITLES, 'two-titles.xml');
 
-    await page.setInputFiles('#input-uploadxml-file', {
-      name: 'two-titles.xml',
-      mimeType: 'text/xml',
-      buffer: Buffer.from(XML_TWO_TITLES, 'utf-8'),
-    });
+    const allTitles = page.locator('input[name="title[]"]');
+    expect(await allTitles.count()).toBe(2);
+    await expect(allTitles.first()).toHaveValue('First Title');
+    await expect(allTitles.nth(1)).toHaveValue('Second Title');
+  });
 
-    // Wait for first title to be populated from XML
-    await page.waitForFunction(
-      () => {
-        const inputs = document.querySelectorAll<HTMLInputElement>('input[name="title[]"]');
-        return inputs.length > 0 && inputs[0].value.length > 0;
-      },
-      { timeout: 20_000 },
-    );
+  test('adding a second title pre-selects a title type (not empty)', async ({ page }) => {
+    // Click "Add Title" to add a second title row
+    await page.locator('#button-resourceinformation-addtitle').click();
 
-    // Small wait for DOM updates
-    await page.waitForTimeout(500);
+    // The second row's title type dropdown must have a non-empty selection
+    const allTitleTypes = page.locator('select[name="titleType[]"]');
+    expect(await allTitleTypes.count()).toBe(2);
 
-    // CHECK: There should be exactly 2 title inputs
-    const allTitleInputs = page.locator('input[name="title[]"]');
-    const titleCount = await allTitleInputs.count();
-    console.log(`After load - Number of title inputs: ${titleCount}`);
+    const secondTitleTypeValue = await allTitleTypes.nth(1).inputValue();
+    expect(secondTitleTypeValue).not.toBe('');
 
-    for (let i = 0; i < titleCount; i++) {
-      const val = await allTitleInputs.nth(i).inputValue();
-      console.log(`After load - Title ${i}: "${val}"`);
-    }
+    // Verify it selected "Alternative Title"
+    const selectedText = await allTitleTypes.nth(1).locator('option:checked').textContent();
+    expect(selectedText?.trim()).toContain('Alternative Title');
+  });
 
-    expect(titleCount).toBe(2);
-    await expect(allTitleInputs.first()).toHaveValue('test');
-    await expect(allTitleInputs.nth(1)).toHaveValue('blabla');
+  test('save-as with 2 titles produces XML containing both titles (issue #1045)', async ({ page }) => {
+    // Step 1: Enter first title
+    await page.locator('input[name="title[]"]').first().fill('TESTTITLE1');
+
+    // Step 2: Add second title row
+    await page.locator('#button-resourceinformation-addtitle').click();
+    const allTitles = page.locator('input[name="title[]"]');
+    expect(await allTitles.count()).toBe(2);
+    await allTitles.nth(1).fill('TESTTITLE2');
+
+    // The title type should now be pre-selected (no longer empty after our fix)
+    const secondTitleTypeValue = await page.locator('select[name="titleType[]"]').nth(1).inputValue();
+    expect(secondTitleTypeValue).not.toBe('');
+
+    // Step 3: Intercept the save POST to capture the generated XML
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 30_000 }),
+      (async () => {
+        // Open Save As modal
+        await page.locator('#button-form-save').click();
+        await expect(page.locator('#modal-saveas')).toBeVisible({ timeout: 5_000 });
+        await page.locator('#input-saveas-filename').fill('test-two-titles');
+        await page.locator('#button-saveas-save').click();
+      })(),
+    ]);
+
+    // Step 4: Read the downloaded XML and verify both titles are present
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+
+    const fs = await import('node:fs');
+    const xmlContent = fs.readFileSync(downloadPath!, 'utf-8');
+
+    expect(xmlContent).toContain('TESTTITLE1');
+    expect(xmlContent).toContain('TESTTITLE2');
+
+    // Step 5: Load the saved XML back and verify both titles appear in the form
+    await uploadXmlAndWaitForTitles(page, xmlContent, 'test-two-titles.xml');
+
+    const loadedTitles = page.locator('input[name="title[]"]');
+    expect(await loadedTitles.count()).toBe(2);
+    await expect(loadedTitles.first()).toHaveValue('TESTTITLE1');
+    await expect(loadedTitles.nth(1)).toHaveValue('TESTTITLE2');
   });
 });

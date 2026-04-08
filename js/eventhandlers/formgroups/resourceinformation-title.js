@@ -63,7 +63,11 @@ $(document).ready(function () {
     if (window.mainTitleTypeId) {
       $select.find(`option[value='${window.mainTitleTypeId}']`).remove();
     }
-    $select.val("");
+    // Pre-select the first available option so the title type is never empty
+    const $firstOption = $select.find("option[value]").filter(function () {
+      return $(this).val() !== "";
+    }).first();
+    $select.val($firstOption.val() || "");
 
     // Create a remove button for the new row.
     const removeBtn = $("<button/>", {
