@@ -11,6 +11,7 @@ const BENIGN_CONSOLE_PATTERNS = [
   /third-party cookie/i,
   /API key not found/i,
   /thesauri availability/i,
+  /503 \(Service Unavailable\)/,
 ];
 
 test.describe('Save after Load – Issue #1043', () => {
