@@ -1091,6 +1091,7 @@ function processKeywords(xmlDoc, resolver) {
     const subjectScheme = subjectNode.getAttribute("subjectScheme") || "";
     const schemeURI = subjectNode.getAttribute("schemeURI") || "";
     const valueURI = subjectNode.getAttribute("valueURI") || "";
+    const language = subjectNode.getAttribute("xml:lang") || "";
     const keyword = subjectNode.textContent.trim();
 
     const tagData = {
@@ -1099,6 +1100,9 @@ function processKeywords(xmlDoc, resolver) {
       schemeURI: schemeURI,
       id: valueURI,
     };
+    if (language) {
+      tagData.language = language;
+    }
 
     // Route tag to appropriate Tagify instance based on schemeURI
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
@@ -1426,6 +1430,7 @@ if (typeof module !== 'undefined' && module.exports) {
         updateContributorMap,
         getTagifyInstance,
         populateFormWithContributors,
+        processKeywords,
         parseTemporalData,
         getGeoLocationData,
         fillSpatialFields,
