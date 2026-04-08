@@ -63,11 +63,19 @@ $(document).ready(function () {
     if (window.mainTitleTypeId) {
       $select.find(`option[value='${window.mainTitleTypeId}']`).remove();
     }
-    // Pre-select the first available option so the title type is never empty
-    const $firstOption = $select.find("option[value]").filter(function () {
-      return $(this).val() !== "";
+    // Pre-select "Alternative Title" by name so the title type is never empty.
+    // Falls back to the first non-empty option if "Alternative Title" is absent.
+    const $altOption = $select.find("option").filter(function () {
+      return $(this).text().trim().toLowerCase() === "alternative title";
     }).first();
-    $select.val($firstOption.val() || "");
+    if ($altOption.length) {
+      $select.val($altOption.val());
+    } else {
+      const $firstOption = $select.find("option[value]").filter(function () {
+        return $(this).val() !== "";
+      }).first();
+      $select.val($firstOption.val() || "");
+    }
 
     // Create a remove button for the new row.
     const removeBtn = $("<button/>", {

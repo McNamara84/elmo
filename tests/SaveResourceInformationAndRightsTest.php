@@ -370,7 +370,9 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         // Look up expected default type ID for index 0 ("Main Title")
         $stmt = $this->connection->prepare("SELECT title_type_id FROM Title_Type WHERE name = 'Main Title' LIMIT 1");
         $stmt->execute();
-        $mainTitleTypeId = $stmt->get_result()->fetch_assoc()['title_type_id'];
+        $mainTitleRow = $stmt->get_result()->fetch_assoc();
+        $this->assertNotNull($mainTitleRow, "Lookup data must contain a 'Main Title' row in Title_Type");
+        $mainTitleTypeId = $mainTitleRow['title_type_id'];
 
         // Verify title was saved with default type (Main Title)
         $stmt = $this->connection->prepare("SELECT * FROM Title WHERE Resource_resource_id = ?");
@@ -544,7 +546,9 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         // Look up expected default type ID for index > 0 ("Alternative Title")
         $stmt = $this->connection->prepare("SELECT title_type_id FROM Title_Type WHERE name = 'Alternative Title' LIMIT 1");
         $stmt->execute();
-        $altTitleTypeId = (int) $stmt->get_result()->fetch_assoc()['title_type_id'];
+        $altTitleRow = $stmt->get_result()->fetch_assoc();
+        $this->assertNotNull($altTitleRow, "Lookup data must contain an 'Alternative Title' row in Title_Type");
+        $altTitleTypeId = (int) $altTitleRow['title_type_id'];
 
         // Verify titles were saved: 2 explicit + 1 with default type = 3 total
         $stmt = $this->connection->prepare("SELECT * FROM Title WHERE Resource_resource_id = ? ORDER BY title_id");

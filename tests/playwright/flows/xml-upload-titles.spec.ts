@@ -44,16 +44,14 @@ async function uploadXmlAndWaitForTitles(page: import('@playwright/test').Page, 
     buffer: Buffer.from(xml, 'utf-8'),
   });
 
+  // Wait until both title inputs exist and the first one is populated
   await page.waitForFunction(
     () => {
       const inputs = document.querySelectorAll<HTMLInputElement>('input[name="title[]"]');
-      return inputs.length > 0 && inputs[0].value.length > 0;
+      return inputs.length >= 2 && inputs[0].value.length > 0 && inputs[1].value.length > 0;
     },
     { timeout: 20_000 },
   );
-
-  // Allow time for the second title row to be cloned via click()
-  await page.waitForTimeout(500);
 }
 
 test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
@@ -79,10 +77,9 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
 
     // Verify second title type is "Alternative Title"
     const allTitleTypes = page.locator('select[name="titleType[]"]');
-    if (await allTitleTypes.count() >= 2) {
-      const selectedText = await allTitleTypes.nth(1).locator('option:checked').textContent();
-      expect(selectedText?.trim()).toContain('Alternative Title');
-    }
+    expect(await allTitleTypes.count()).toBe(2);
+    const selectedText = await allTitleTypes.nth(1).locator('option:checked').textContent();
+    expect(selectedText?.trim()).toContain('Alternative Title');
   });
 
   test('clears manually added titles before loading XML', async ({ page }) => {

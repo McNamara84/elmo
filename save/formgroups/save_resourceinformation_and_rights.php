@@ -197,12 +197,57 @@ function isTitleTypeValid($connection, $title_type_id)
 }
 
 /**
- * Returns a default title type ID based on the title's position.
+ * Resolves and caches default title type IDs ("Main Title" and "Alternative Title").
+ *
+ * Runs at most two queries on the first call and caches the results for the
+ * lifetime of the request. Subsequent calls return the cached values.
+ *
+ * @param mysqli $connection The database connection
+ * @return array{main: int, alternative: int} Resolved IDs
+ */
+function resolveDefaultTitleTypeIds($connection)
+{
+    static $cache = null;
+    if ($cache !== null) {
+        return $cache;
+    }
+
+    $ids = ['main' => null, 'alternative' => null];
+
+    $stmt = $connection->prepare(
+        "SELECT name, title_type_id FROM Title_Type WHERE name IN ('Main Title', 'Alternative Title')"
+    );
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        if ($row['name'] === 'Main Title') {
+            $ids['main'] = (int) $row['title_type_id'];
+        } elseif ($row['name'] === 'Alternative Title') {
+            $ids['alternative'] = (int) $row['title_type_id'];
+        }
+    }
+
+    // Fallback: first available title type
+    if ($ids['main'] === null || $ids['alternative'] === null) {
+        $stmt = $connection->prepare("SELECT title_type_id FROM Title_Type ORDER BY title_type_id ASC LIMIT 1");
+        $stmt->execute();
+        $fallback = $stmt->get_result()->fetch_assoc();
+        $fallbackId = $fallback ? (int) $fallback['title_type_id'] : 1;
+        $ids['main'] = $ids['main'] ?? $fallbackId;
+        $ids['alternative'] = $ids['alternative'] ?? $fallbackId;
+    }
+
+    $cache = $ids;
+    return $cache;
+}
+
+/**
+ * Returns the default title type ID for a given title position.
  *
  * - Index 0 (first title): returns "Main Title" type ID
  * - Index > 0 (additional titles): returns "Alternative Title" type ID
  *
- * Falls back to the first available title type if neither is found.
+ * Uses cached IDs from resolveDefaultTitleTypeIds().
  *
  * @param mysqli $connection The database connection
  * @param int $index The position of the title (0-based)
@@ -210,33 +255,16 @@ function isTitleTypeValid($connection, $title_type_id)
  */
 function getDefaultTitleTypeId($connection, $index)
 {
-    $targetName = $index === 0 ? 'Main Title' : 'Alternative Title';
-
-    $stmt = $connection->prepare("SELECT title_type_id FROM Title_Type WHERE name = ? LIMIT 1");
-    $stmt->bind_param("s", $targetName);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($row = $result->fetch_assoc()) {
-        return (int) $row['title_type_id'];
-    }
-
-    // Fallback: first available title type
-    $stmt = $connection->prepare("SELECT title_type_id FROM Title_Type ORDER BY title_type_id ASC LIMIT 1");
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) {
-        return (int) $row['title_type_id'];
-    }
-
-    return 1;
+    $ids = resolveDefaultTitleTypeIds($connection);
+    return $index === 0 ? $ids['main'] : $ids['alternative'];
 }
 
 /**
  * Saves titles for a resource, handling duplicates.
  * Allows saving:
  * - Titles with both text and titleType
- * - Titles with text but no titleType (defaults to "Alternative Title")
+ * - Titles with text but no titleType (defaults to "Main Title" for the
+ *   first title, "Alternative Title" for subsequent ones)
  *
  * Will SKIP without a failure:
  * - Titles with titleType only (text must be present if type is present)
@@ -248,6 +276,7 @@ function getDefaultTitleTypeId($connection, $index)
  * @param int $resource_id The resource ID
  * @param array $titles Array of titles
  * @param array $titleTypes Array of title types (as integers from form)
+ * @param string $action The save action ('save_and_download' or 'submit')
  * @return bool True if successful, false otherwise
  */
 function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = 'save_and_download')
