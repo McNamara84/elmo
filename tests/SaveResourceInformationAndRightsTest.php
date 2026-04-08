@@ -535,7 +535,7 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
                 "1",  // Valid type
                 "1",  // Invalid (no text to go with)
                 "2",  // Valid type
-                ""    // Empty type → defaults to "Alternative Title" (2)
+                ""    // Empty type → defaults to "Alternative Title"
             ]
         ];
 

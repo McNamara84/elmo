@@ -199,17 +199,19 @@ function isTitleTypeValid($connection, $title_type_id)
 /**
  * Resolves and caches default title type IDs ("Main Title" and "Alternative Title").
  *
- * Runs at most two queries on the first call and caches the results for the
- * lifetime of the request. Subsequent calls return the cached values.
+ * Runs at most two queries on the first call per connection and caches the
+ * results for the lifetime of the request. Subsequent calls with the same
+ * connection return the cached values.
  *
  * @param mysqli $connection The database connection
- * @return array{main: int, alternative: int} Resolved IDs
+ * @return array{main: int|null, alternative: int|null} Resolved IDs (null when the row does not exist)
  */
 function resolveDefaultTitleTypeIds($connection)
 {
-    static $cache = null;
-    if ($cache !== null) {
-        return $cache;
+    static $cache = [];
+    $connId = spl_object_id($connection);
+    if (isset($cache[$connId])) {
+        return $cache[$connId];
     }
 
     $ids = ['main' => null, 'alternative' => null];
@@ -232,31 +234,31 @@ function resolveDefaultTitleTypeIds($connection)
         $stmt = $connection->prepare("SELECT title_type_id FROM Title_Type ORDER BY title_type_id ASC LIMIT 1");
         $stmt->execute();
         $fallback = $stmt->get_result()->fetch_assoc();
-        $fallbackId = $fallback ? (int) $fallback['title_type_id'] : 1;
+        $fallbackId = $fallback ? (int) $fallback['title_type_id'] : null;
         $ids['main'] = $ids['main'] ?? $fallbackId;
         $ids['alternative'] = $ids['alternative'] ?? $fallbackId;
     }
 
-    $cache = $ids;
-    return $cache;
+    $cache[$connId] = $ids;
+    return $cache[$connId];
 }
 
 /**
  * Returns the default title type ID for a given title position.
  *
- * - Index 0 (first title): returns "Main Title" type ID
- * - Index > 0 (additional titles): returns "Alternative Title" type ID
+ * - First saved title (savedCount === 0): returns "Main Title" type ID
+ * - Subsequent saved titles: returns "Alternative Title" type ID
  *
  * Uses cached IDs from resolveDefaultTitleTypeIds().
  *
  * @param mysqli $connection The database connection
- * @param int $index The position of the title (0-based)
- * @return int The default title type ID
+ * @param int $savedCount Number of titles already collected for saving
+ * @return int|null The default title type ID, or null if no Title_Type rows exist
  */
-function getDefaultTitleTypeId($connection, $index)
+function getDefaultTitleTypeId($connection, $savedCount)
 {
     $ids = resolveDefaultTitleTypeIds($connection);
-    return $index === 0 ? $ids['main'] : $ids['alternative'];
+    return $savedCount === 0 ? $ids['main'] : $ids['alternative'];
 }
 
 /**
@@ -298,7 +300,12 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
 
         // If type is empty but text exists, assign a default title type
         if (empty($title_type_str)) {
-            $title_type_str = (string) getDefaultTitleTypeId($connection, $i);
+            $defaultId = getDefaultTitleTypeId($connection, count($uniqueTitles));
+            if ($defaultId === null) {
+                error_log("Cannot assign default title type: no Title_Type rows exist in database");
+                return false;
+            }
+            $title_type_str = (string) $defaultId;
         }
 
         // Convert title_type string to integer if present
@@ -335,6 +342,7 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
         );
 
         if (!$stmt->execute()) {
+            error_log("Failed to insert title: " . $stmt->error);
             return false;
         }
     }

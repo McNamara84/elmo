@@ -153,7 +153,30 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
     expect(xmlContent).toContain('TESTTITLE1');
     expect(xmlContent).toContain('TESTTITLE2');
 
-    // Step 5: Load the saved XML back and verify both titles appear in the form
+    // Step 5: Dismiss the Save As modal overlay before loading XML
+    const saveModal = page.locator('#modal-saveas');
+    if (await saveModal.isVisible()) {
+      await page.evaluate(() => {
+        const modal = document.querySelector('#modal-saveas');
+        if (modal) {
+          // Use Bootstrap's modal API to hide properly
+          const bsModal = (window as any).bootstrap?.Modal?.getInstance(modal);
+          if (bsModal) {
+            bsModal.hide();
+          } else {
+            (modal as HTMLElement).classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+          }
+        }
+      });
+    }
+    await expect(saveModal).not.toBeVisible({ timeout: 5_000 });
+
+    // Step 6: Load the saved XML back and verify both titles appear in the form
     await uploadXmlAndWaitForTitles(page, xmlContent, 'test-two-titles.xml');
 
     const loadedTitles = page.locator('input[name="title[]"]');
