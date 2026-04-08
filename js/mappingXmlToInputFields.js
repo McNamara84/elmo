@@ -378,10 +378,14 @@ function processContactPersons(xmlDoc) {
       website = getNodeText(contactPersonNode, "//linkage/URL", xmlDoc, null);
     }
 
-    // Find the matching author row based on name
+    // Find the matching author row based on name (case-insensitive, trimmed)
+    const normalizedFamily = familyName.trim().toLowerCase();
+    const normalizedGiven = givenName.trim().toLowerCase();
     let $row = $("div[data-creator-row]")
       .filter(function () {
-        return $(this).find('input[name="familynames[]"]').val() === familyName && $(this).find('input[name="givennames[]"]').val() === givenName;
+        const rowFamily = ($(this).find('input[name="familynames[]"]').val() || "").trim().toLowerCase();
+        const rowGiven = ($(this).find('input[name="givennames[]"]').val() || "").trim().toLowerCase();
+        return rowFamily === normalizedFamily && rowGiven === normalizedGiven;
       })
       .first();
 
@@ -399,6 +403,59 @@ function processContactPersons(xmlDoc) {
     // Populate the contact person fields
     $row.find('input[name="cpEmail[]"]').val(email || "");
     $row.find('input[name="cpOnlineResource[]"]').val(website || "");
+  }
+
+  // If no ISO contact persons were found, try DataCite fallback
+  if (contactPersonNodes.snapshotLength === 0) {
+    processContactPersonsFromDataCite(xmlDoc);
+  }
+}
+
+/**
+ * Fallback: Process contact persons from DataCite contributor elements.
+ * Used when no ISO pointOfContact section is present (e.g. pure DataCite XML).
+ * Note: DataCite schema does not carry email/website for contact persons.
+ * @param {Document} xmlDoc - The parsed XML document
+ */
+function processContactPersonsFromDataCite(xmlDoc) {
+  function dcResolver(prefix) {
+    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+  }
+
+  // Select all contributors, then filter by attribute in JS
+  // (some XPath engines don't support attribute predicates on namespaced elements)
+  const allContributors = xmlDoc.evaluate(
+    './/ns:contributors/ns:contributor',
+    xmlDoc,
+    dcResolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let i = 0; i < allContributors.snapshotLength; i++) {
+    const node = allContributors.snapshotItem(i);
+    if (node.getAttribute("contributorType") !== "ContactPerson") continue;
+
+    const familyName = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
+    const givenName = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
+
+    if (!familyName || !givenName) continue;
+
+    const normalizedFamily = familyName.trim().toLowerCase();
+    const normalizedGiven = givenName.trim().toLowerCase();
+    let $row = $("div[data-creator-row]")
+      .filter(function () {
+        const rowFamily = ($(this).find('input[name="familynames[]"]').val() || "").trim().toLowerCase();
+        const rowGiven = ($(this).find('input[name="givennames[]"]').val() || "").trim().toLowerCase();
+        return rowFamily === normalizedFamily && rowGiven === normalizedGiven;
+      })
+      .first();
+
+    if ($row.length === 0) continue;
+
+    $row.find('input[name="contacts[]"]').prop("checked", true);
+    $row.find(".contact-person-input").show();
+    // Email/website not available in DataCite schema
   }
 }
 
@@ -1383,6 +1440,8 @@ async function loadXmlToForm(xmlDoc) {
   processTitles(xmlDoc, resolver, titleTypeMapping);
   // Processing Creators
   processCreators(xmlDoc, resolver);
+  // Allow DOM to settle after creator row insertion (fixes Firefox timing issue #1046)
+  await new Promise(resolve => setTimeout(resolve, 0));
   // Process Contact Persons
   processContactPersons(xmlDoc);
   // Process Originating Laboratories
@@ -1419,6 +1478,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getNodeText,
         processCreators,
         processContactPersons,
+        processContactPersonsFromDataCite,
         findLabNameById,
         setLabDataInRow,
         processOriginatingLaboratories,
