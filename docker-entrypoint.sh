@@ -91,16 +91,6 @@ if [ "${DB_INIT_MODE}" != "skip" ] && [ "${DB_INIT_MODE}" != "drop_data" ]; then
       -e "ALTER TABLE Thesaurus_Keywords MODIFY COLUMN language VARCHAR(20) NULL DEFAULT NULL;"
     echo "✅  Migration complete."
   fi
-
-  # Normalize legacy placeholder values to NULL so that NULL-safe lookups match correctly.
-  # Old code stored empty strings for missing scheme/schemeURI/valueURI and defaulted language to 'en'.
-  echo "🔧  Normalizing legacy Thesaurus_Keywords placeholder values to NULL…"
-  mysql -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" -e "
-    UPDATE Thesaurus_Keywords SET scheme    = NULL WHERE scheme    = '';
-    UPDATE Thesaurus_Keywords SET schemeURI = NULL WHERE schemeURI = '';
-    UPDATE Thesaurus_Keywords SET valueURI  = NULL WHERE valueURI  = '';
-  "
-  echo "✅  Legacy data normalization complete."
 fi
 
 # Clean up install files (optional)
