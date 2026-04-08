@@ -162,6 +162,9 @@ function validateKeywordEntries($keywordData, $requiredFields = ['value'])
     }
 
     foreach ($keywordData as $entry) {
+        if (!is_array($entry)) {
+            return false;
+        }
         foreach ($requiredFields as $field) {
             if (!isset($entry[$field]) || empty($entry[$field])) {
                 return false;

@@ -96,18 +96,18 @@ test.describe('Save after Load – Issue #1043', () => {
     // Wait for form to be populated (loadXmlToForm is async)
     await expect(page.locator('input[name="title[]"]').first()).not.toHaveValue('', { timeout: 20000 });
 
-    // Force-close upload modal if still open (Toast may not exist in all environments)
+    // Close upload modal via Bootstrap's API if still open
     if (await uploadModal.isVisible().catch(() => false)) {
       await page.evaluate(() => {
         const modalEl = document.getElementById('modal-uploadxml');
         if (modalEl) {
-          modalEl.classList.remove('show');
-          modalEl.setAttribute('aria-hidden', 'true');
-          (modalEl as HTMLElement).style.display = 'none';
+          const bsModal = (window as any).bootstrap?.Modal?.getInstance(modalEl);
+          if (bsModal) {
+            bsModal.hide();
+          }
         }
-        document.body.classList.remove('modal-open');
-        document.querySelectorAll('.modal-backdrop').forEach(node => node.remove());
       });
+      await expect(uploadModal).toBeHidden({ timeout: 5000 });
     }
 
     // 5. Make a small change
