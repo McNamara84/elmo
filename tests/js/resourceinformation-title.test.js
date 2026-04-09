@@ -27,7 +27,7 @@ describe('resourceinformation-title.js', () => {
             <div class="input-group has-validation">
               <div class="form-floating">
                 <select class="form-select input-with-help input-right-no-round-corners"
-                  id="input-resourceinformation-titletype" name="titleType[]" required disabled>
+                  id="input-resourceinformation-titletype" name="titleType[]" required>
                 </select>
                 <label for="input-resourceinformation-titletype">Title Type</label>
               </div>
@@ -78,6 +78,10 @@ describe('resourceinformation-title.js', () => {
   });
 
   afterEach(() => {
+    // Remove document-level event handlers registered by the module to prevent
+    // handler accumulation across tests (the script is eval'd in every beforeEach).
+    $(document).off('elmo:clearTitles');
+    $('#button-resourceinformation-addtitle').off('click');
     jest.restoreAllMocks();
     delete window.maxTitles;
     delete window.mainTitleTypeId;

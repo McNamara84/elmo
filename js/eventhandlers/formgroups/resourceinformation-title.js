@@ -79,7 +79,7 @@ $(document).ready(function () {
     // user clicked "Add" while title types are still loading, or the API
     // returned no types), disable the select to prevent a required empty
     // control from blocking form submission.
-    var hasValidOptions = $select.find("option").filter(function () {
+    const hasValidOptions = $select.find("option").filter(function () {
       return $(this).val() !== "";
     }).length > 0;
     $select.prop("disabled", !hasValidOptions);
