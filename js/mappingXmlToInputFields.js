@@ -754,7 +754,8 @@ function getTagifyInstance(inputElement) {
 }
 
 /**
- * Populate the form with processed contributor data, handling both original and cloned field names
+ * Populate the form with processed contributor data using canonical field names
+ * (cbAffiliation[], cbpRorIds[], OrganisationAffiliation[], hiddenOrganisationRorId[]).
  * @param {Map} personMap - Map containing person contributors
  * @param {Map} orgMap - Map containing organization contributors
  */
