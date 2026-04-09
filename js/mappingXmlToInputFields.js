@@ -771,7 +771,6 @@ function populateFormWithContributors(personMap, orgMap) {
   // Process persons
   for (const person of personMap.values()) {
     const personRow = getOrCreatePersonRow(personIndex++);
-    let isClonedRow = personIndex > 1; // First row is original, others are cloned
 
     // Roles
     const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
@@ -792,38 +791,23 @@ function populateFormWithContributors(personMap, orgMap) {
     personRow.find('input[name="cbPersonLastname[]"]').val(person.familyName);
     personRow.find('input[name="cbPersonFirstname[]"]').val(person.givenName);
 
-    // Affiliations - handle both original and cloned field names
-    let affiliationInput;
-    if (isClonedRow) {
-      // Cloned rows use cbPersonAffiliations[] as the name
-      affiliationInput = personRow.find('input[name="cbPersonAffiliations[]"]')[0];
-    } else {
-      // Original row uses cbAffiliation[] as the name
-      affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
-    }
-
+    // Affiliations
+    const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
     const tagifyAffiliations = getTagifyInstance(affiliationInput);
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
       tagifyAffiliations.addTags(person.affiliations.map((aff) => ({ value: aff })));
     } else {
-      console.warn("No Tagify instance found for affiliation input:", affiliationInput, "in row", isClonedRow ? "cloned" : "original");
+      console.warn("No Tagify instance found for affiliation input:", affiliationInput);
     }
 
-    // ROR IDs - handle both original and cloned field names
-    if (isClonedRow) {
-      // Cloned rows use cbPersonRorIds[] as the name
-      personRow.find('input[name="cbPersonRorIds[]"]').val(person.rorIds.join(","));
-    } else {
-      // Original row uses cbpRorIds[] as the name
-      personRow.find('input[name="cbpRorIds[]"]').val(person.rorIds.join(","));
-    }
+    // ROR IDs
+    personRow.find('input[name="cbpRorIds[]"]').val(person.rorIds.join(","));
   }
 
   // Process organizations
   for (const org of orgMap.values()) {
     const orgRow = getOrCreateOrgRow(orgIndex++);
-    let isClonedRow = orgIndex > 1; // First row is original, others are cloned
 
     // Roles
     const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
@@ -838,32 +822,18 @@ function populateFormWithContributors(personMap, orgMap) {
     // Organization name
     orgRow.find('input[name="cbOrganisationName[]"]').val(org.name);
 
-    // Affiliations - handle both original and cloned field names
-    let affiliationInput;
-    if (isClonedRow) {
-      // Cloned rows use cbOrganisationAffiliations[] as the name
-      affiliationInput = orgRow.find('input[name="cbOrganisationAffiliations[]"]')[0];
-    } else {
-      // Original row uses OrganisationAffiliation[] as the name
-      affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
-    }
-
+    // Affiliations
+    const affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
     const tagifyAffiliations = getTagifyInstance(affiliationInput);
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
       tagifyAffiliations.addTags(org.affiliations.map((aff) => ({ value: aff })));
     } else {
-      console.warn("No Tagify instance found for organization affiliation input:", affiliationInput, "in row", isClonedRow ? "cloned" : "original");
+      console.warn("No Tagify instance found for organization affiliation input:", affiliationInput);
     }
 
-    // ROR IDs - handle both original and cloned field names
-    if (isClonedRow) {
-      // Cloned rows use cbOrganisationRorIds[] as the name
-      orgRow.find('input[name="cbOrganisationRorIds[]"]').val(org.rorIds.join(","));
-    } else {
-      // Original row uses hiddenOrganisationRorId[] as the name
-      orgRow.find('input[name="hiddenOrganisationRorId[]"]').val(org.rorIds.join(","));
-    }
+    // ROR IDs
+    orgRow.find('input[name="hiddenOrganisationRorId[]"]').val(org.rorIds.join(","));
   }
 }
 
