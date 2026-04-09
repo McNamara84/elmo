@@ -663,7 +663,7 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
 
   for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
     const affNode = affiliationNodes.snapshotItem(j);
-    const affiliationName = affNode.textContent;
+    const affiliationName = affNode.textContent ? affNode.textContent.trim().replace(/\s+/g, ' ') : '';
     const rorId = affNode.getAttribute("affiliationIdentifier");
 
     if (affiliationName && !affiliationPairs.some(p => p.name === affiliationName)) {
@@ -707,7 +707,12 @@ function updateContributorMap(map, key, newData) {
       existing.roles.push(newData.roles[0]);
     }
     newData.affiliationPairs.forEach((pair) => {
-      if (!existing.affiliationPairs.some(p => p.name === pair.name)) {
+      const existingPair = existing.affiliationPairs.find(p => p.name === pair.name);
+      if (existingPair) {
+        if (!existingPair.rorId && pair.rorId) {
+          existingPair.rorId = pair.rorId;
+        }
+      } else {
         existing.affiliationPairs.push(pair);
       }
     });

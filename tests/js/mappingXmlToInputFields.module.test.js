@@ -316,6 +316,42 @@ describe('mappingXmlToInputFields module coverage', () => {
             const entry = map.get('key1');
             expect(entry.affiliationPairs.length).toBe(1);
         });
+
+        test('upgrades empty rorId when incoming pair has a value', () => {
+            const map = new Map();
+            map.set('key1', { 
+                name: 'Test', 
+                roles: ['Role1'],
+                affiliationPairs: [{ name: 'Org1', rorId: '' }]
+            });
+            
+            mappingModule.updateContributorMap(map, 'key1', { 
+                name: 'Test', 
+                roles: ['Role1'],
+                affiliationPairs: [{ name: 'Org1', rorId: 'ror123' }]
+            });
+            
+            const entry = map.get('key1');
+            expect(entry.affiliationPairs).toEqual([{ name: 'Org1', rorId: 'ror123' }]);
+        });
+
+        test('does not overwrite existing rorId with incoming value', () => {
+            const map = new Map();
+            map.set('key1', { 
+                name: 'Test', 
+                roles: ['Role1'],
+                affiliationPairs: [{ name: 'Org1', rorId: 'ror_original' }]
+            });
+            
+            mappingModule.updateContributorMap(map, 'key1', { 
+                name: 'Test', 
+                roles: ['Role1'],
+                affiliationPairs: [{ name: 'Org1', rorId: 'ror_different' }]
+            });
+            
+            const entry = map.get('key1');
+            expect(entry.affiliationPairs).toEqual([{ name: 'Org1', rorId: 'ror_original' }]);
+        });
     });
 
     describe('parseTemporalData', () => {
