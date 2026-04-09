@@ -170,17 +170,8 @@ describe('resourceinformation-title.js', () => {
   });
 
   test('add button is disabled when max titles reached', () => {
+    // The handler reads window.maxTitles at click-time, no re-eval needed
     window.maxTitles = 2;
-
-    // Re-initialize the module with the new maxTitles
-    let script = fs.readFileSync(
-      path.resolve(__dirname, '../../js/eventhandlers/formgroups/resourceinformation-title.js'),
-      'utf8'
-    );
-    script = script.replace(/^import.*$/gm, '');
-    script = script.replace('$(document).ready(function () {', '(function () {');
-    script = script.replace(/\n\s*\}\);\s*$/, '\n})();');
-    window.eval(script);
 
     $('#button-resourceinformation-addtitle').trigger('click');
 
@@ -188,16 +179,8 @@ describe('resourceinformation-title.js', () => {
   });
 
   test('remove button removes the row and re-enables add button', () => {
+    // The handler reads window.maxTitles at click-time, no re-eval needed
     window.maxTitles = 2;
-
-    let script = fs.readFileSync(
-      path.resolve(__dirname, '../../js/eventhandlers/formgroups/resourceinformation-title.js'),
-      'utf8'
-    );
-    script = script.replace(/^import.*$/gm, '');
-    script = script.replace('$(document).ready(function () {', '(function () {');
-    script = script.replace(/\n\s*\}\);\s*$/, '\n})();');
-    window.eval(script);
 
     $('#button-resourceinformation-addtitle').trigger('click');
     expect($('#button-resourceinformation-addtitle').prop('disabled')).toBe(true);
@@ -211,16 +194,8 @@ describe('resourceinformation-title.js', () => {
   });
 
   test('elmo:clearTitles resets counter and re-enables add button', () => {
+    // The handler reads window.maxTitles at click-time, no re-eval needed
     window.maxTitles = 2;
-
-    let script = fs.readFileSync(
-      path.resolve(__dirname, '../../js/eventhandlers/formgroups/resourceinformation-title.js'),
-      'utf8'
-    );
-    script = script.replace(/^import.*$/gm, '');
-    script = script.replace('$(document).ready(function () {', '(function () {');
-    script = script.replace(/\n\s*\}\);\s*$/, '\n})();');
-    window.eval(script);
 
     $('#button-resourceinformation-addtitle').trigger('click');
     expect($('#button-resourceinformation-addtitle').prop('disabled')).toBe(true);

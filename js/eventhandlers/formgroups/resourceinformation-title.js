@@ -75,7 +75,7 @@ $(document).ready(function () {
     }
     // Ensure the cloned select is enabled — .clone() may copy a disabled state
     // from the original element that was temporarily disabled during AJAX loading.
-    $select.prop('disabled', false);
+    $select.prop("disabled", false);
 
     // Create a remove button for the new row.
     const removeBtn = $("<button/>", {
