@@ -232,8 +232,7 @@ describe('mappingXmlToInputFields module coverage', () => {
             const newData = { 
                 name: 'Test', 
                 roles: ['DataCurator'],
-                affiliations: ['Org1'],
-                rorIds: ['ror123']
+                affiliationPairs: [{ name: 'Org1', rorId: 'ror123' }]
             };
             
             mappingModule.updateContributorMap(map, 'key1', newData);
@@ -247,15 +246,13 @@ describe('mappingXmlToInputFields module coverage', () => {
             map.set('key1', { 
                 name: 'Test', 
                 roles: ['Role1'],
-                affiliations: [],
-                rorIds: []
+                affiliationPairs: []
             });
             
             mappingModule.updateContributorMap(map, 'key1', { 
                 name: 'Test', 
                 roles: ['Role2'],
-                affiliations: [],
-                rorIds: []
+                affiliationPairs: []
             });
             
             const entry = map.get('key1');
@@ -268,61 +265,92 @@ describe('mappingXmlToInputFields module coverage', () => {
             map.set('key1', { 
                 name: 'Test', 
                 roles: ['Role1'],
-                affiliations: [],
-                rorIds: []
+                affiliationPairs: []
             });
             
             mappingModule.updateContributorMap(map, 'key1', { 
                 name: 'Test', 
                 roles: ['Role1'],
-                affiliations: [],
-                rorIds: []
+                affiliationPairs: []
             });
             
             const entry = map.get('key1');
             expect(entry.roles.filter(r => r === 'Role1').length).toBe(1);
         });
 
-        test('merges affiliations', () => {
+        test('merges affiliationPairs', () => {
             const map = new Map();
             map.set('key1', { 
                 name: 'Test', 
                 roles: ['Role1'],
-                affiliations: ['Org1'],
-                rorIds: []
+                affiliationPairs: [{ name: 'Org1', rorId: '' }]
             });
             
             mappingModule.updateContributorMap(map, 'key1', { 
                 name: 'Test', 
                 roles: ['Role1'],
-                affiliations: ['Org2'],
-                rorIds: []
+                affiliationPairs: [{ name: 'Org2', rorId: 'ror456' }]
             });
             
             const entry = map.get('key1');
-            expect(entry.affiliations).toContain('Org1');
-            expect(entry.affiliations).toContain('Org2');
+            expect(entry.affiliationPairs).toEqual([
+                { name: 'Org1', rorId: '' },
+                { name: 'Org2', rorId: 'ror456' }
+            ]);
         });
 
-        test('merges rorIds', () => {
+        test('does not duplicate existing affiliationPairs', () => {
             const map = new Map();
             map.set('key1', { 
                 name: 'Test', 
                 roles: ['Role1'],
-                affiliations: [],
-                rorIds: ['ror1']
+                affiliationPairs: [{ name: 'Org1', rorId: 'ror1' }]
             });
             
             mappingModule.updateContributorMap(map, 'key1', { 
                 name: 'Test', 
                 roles: ['Role1'],
-                affiliations: [],
-                rorIds: ['ror2']
+                affiliationPairs: [{ name: 'Org1', rorId: 'ror1' }]
             });
             
             const entry = map.get('key1');
-            expect(entry.rorIds).toContain('ror1');
-            expect(entry.rorIds).toContain('ror2');
+            expect(entry.affiliationPairs.length).toBe(1);
+        });
+
+        test('upgrades empty rorId when incoming pair has a value', () => {
+            const map = new Map();
+            map.set('key1', { 
+                name: 'Test', 
+                roles: ['Role1'],
+                affiliationPairs: [{ name: 'Org1', rorId: '' }]
+            });
+            
+            mappingModule.updateContributorMap(map, 'key1', { 
+                name: 'Test', 
+                roles: ['Role1'],
+                affiliationPairs: [{ name: 'Org1', rorId: 'ror123' }]
+            });
+            
+            const entry = map.get('key1');
+            expect(entry.affiliationPairs).toEqual([{ name: 'Org1', rorId: 'ror123' }]);
+        });
+
+        test('does not overwrite existing rorId with incoming value', () => {
+            const map = new Map();
+            map.set('key1', { 
+                name: 'Test', 
+                roles: ['Role1'],
+                affiliationPairs: [{ name: 'Org1', rorId: 'ror_original' }]
+            });
+            
+            mappingModule.updateContributorMap(map, 'key1', { 
+                name: 'Test', 
+                roles: ['Role1'],
+                affiliationPairs: [{ name: 'Org1', rorId: 'ror_different' }]
+            });
+            
+            const entry = map.get('key1');
+            expect(entry.affiliationPairs).toEqual([{ name: 'Org1', rorId: 'ror_original' }]);
         });
     });
 

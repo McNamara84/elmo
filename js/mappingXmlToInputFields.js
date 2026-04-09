@@ -656,25 +656,21 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
   const familyName = getNodeText(contributor, "ns:familyName", xmlDoc, resolver);
   const orcid = getNodeText(contributor, 'ns:nameIdentifier[@schemeURI="https://orcid.org/"]', xmlDoc, resolver);
 
-  // Get affiliations
+  // Get affiliations as aligned pairs of { name, rorId }
   const affiliationNodes = xmlDoc.evaluate("ns:affiliation", contributor, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-  const affiliations = [];
-  const rorIds = [];
+  const affiliationPairs = [];
 
   for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
     const affNode = affiliationNodes.snapshotItem(j);
-    const affiliationName = affNode.textContent;
+    const affiliationName = affNode.textContent ? affNode.textContent.trim().replace(/\s+/g, ' ') : '';
     const rorId = affNode.getAttribute("affiliationIdentifier");
 
-    if (affiliationName && !affiliations.includes(affiliationName)) {
-      affiliations.push(affiliationName);
-      if (rorId) {
-        const cleanRorId = rorId.replace("https://ror.org/", "");
-        if (!rorIds.includes(cleanRorId)) {
-          rorIds.push(cleanRorId);
-        }
-      }
+    if (affiliationName && !affiliationPairs.some(p => p.name === affiliationName)) {
+      affiliationPairs.push({
+        name: affiliationName,
+        rorId: rorId ? rorId.replace("https://ror.org/", "") : ""
+      });
     }
   }
 
@@ -686,16 +682,14 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
       givenName,
       familyName,
       orcid,
-      roles: [normalizeRole(contributorType)], // Use normalized role
-      affiliations,
-      rorIds,
+      roles: [normalizeRole(contributorType)],
+      affiliationPairs,
     });
   } else {
     updateContributorMap(orgMap, contributorName, {
       name: contributorName,
-      roles: [normalizeRole(contributorType)], // Use normalized role
-      affiliations,
-      rorIds,
+      roles: [normalizeRole(contributorType)],
+      affiliationPairs,
     });
   }
 }
@@ -712,14 +706,14 @@ function updateContributorMap(map, key, newData) {
     if (!existing.roles.includes(newData.roles[0])) {
       existing.roles.push(newData.roles[0]);
     }
-    newData.affiliations.forEach((aff) => {
-      if (!existing.affiliations.includes(aff)) {
-        existing.affiliations.push(aff);
-      }
-    });
-    newData.rorIds.forEach((rid) => {
-      if (!existing.rorIds.includes(rid)) {
-        existing.rorIds.push(rid);
+    newData.affiliationPairs.forEach((pair) => {
+      const existingPair = existing.affiliationPairs.find(p => p.name === pair.name);
+      if (existingPair) {
+        if (!existingPair.rorId && pair.rorId) {
+          existingPair.rorId = pair.rorId;
+        }
+      } else {
+        existing.affiliationPairs.push(pair);
       }
     });
   } else {
@@ -760,7 +754,8 @@ function getTagifyInstance(inputElement) {
 }
 
 /**
- * Populate the form with processed contributor data, handling both original and cloned field names
+ * Populate the form with processed contributor data using canonical field names
+ * (cbAffiliation[], cbpRorIds[], OrganisationAffiliation[], hiddenOrganisationRorId[]).
  * @param {Map} personMap - Map containing person contributors
  * @param {Map} orgMap - Map containing organization contributors
  */
@@ -771,7 +766,6 @@ function populateFormWithContributors(personMap, orgMap) {
   // Process persons
   for (const person of personMap.values()) {
     const personRow = getOrCreatePersonRow(personIndex++);
-    let isClonedRow = personIndex > 1; // First row is original, others are cloned
 
     // Roles
     const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
@@ -792,38 +786,28 @@ function populateFormWithContributors(personMap, orgMap) {
     personRow.find('input[name="cbPersonLastname[]"]').val(person.familyName);
     personRow.find('input[name="cbPersonFirstname[]"]').val(person.givenName);
 
-    // Affiliations - handle both original and cloned field names
-    let affiliationInput;
-    if (isClonedRow) {
-      // Cloned rows use cbPersonAffiliations[] as the name
-      affiliationInput = personRow.find('input[name="cbPersonAffiliations[]"]')[0];
-    } else {
-      // Original row uses cbAffiliation[] as the name
-      affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
-    }
-
+    // Affiliations — add tags with both value and id (ROR) for Tagify state consistency
+    const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
     const tagifyAffiliations = getTagifyInstance(affiliationInput);
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
-      tagifyAffiliations.addTags(person.affiliations.map((aff) => ({ value: aff })));
+      tagifyAffiliations.addTags(person.affiliationPairs.map((pair) => ({
+        value: pair.name,
+        id: pair.rorId
+      })));
     } else {
-      console.warn("No Tagify instance found for affiliation input:", affiliationInput, "in row", isClonedRow ? "cloned" : "original");
+      console.warn("No Tagify instance found for affiliation input:", affiliationInput);
     }
 
-    // ROR IDs - handle both original and cloned field names
-    if (isClonedRow) {
-      // Cloned rows use cbPersonRorIds[] as the name
-      personRow.find('input[name="cbPersonRorIds[]"]').val(person.rorIds.join(","));
-    } else {
-      // Original row uses cbpRorIds[] as the name
-      personRow.find('input[name="cbpRorIds[]"]').val(person.rorIds.join(","));
-    }
+    // ROR IDs — aligned with affiliations (empty string for missing ROR IDs)
+    personRow.find('input[name="cbpRorIds[]"]').val(
+      person.affiliationPairs.map((pair) => pair.rorId).join(",")
+    );
   }
 
   // Process organizations
   for (const org of orgMap.values()) {
     const orgRow = getOrCreateOrgRow(orgIndex++);
-    let isClonedRow = orgIndex > 1; // First row is original, others are cloned
 
     // Roles
     const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
@@ -838,32 +822,23 @@ function populateFormWithContributors(personMap, orgMap) {
     // Organization name
     orgRow.find('input[name="cbOrganisationName[]"]').val(org.name);
 
-    // Affiliations - handle both original and cloned field names
-    let affiliationInput;
-    if (isClonedRow) {
-      // Cloned rows use cbOrganisationAffiliations[] as the name
-      affiliationInput = orgRow.find('input[name="cbOrganisationAffiliations[]"]')[0];
-    } else {
-      // Original row uses OrganisationAffiliation[] as the name
-      affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
-    }
-
+    // Affiliations — add tags with both value and id (ROR) for Tagify state consistency
+    const affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
     const tagifyAffiliations = getTagifyInstance(affiliationInput);
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
-      tagifyAffiliations.addTags(org.affiliations.map((aff) => ({ value: aff })));
+      tagifyAffiliations.addTags(org.affiliationPairs.map((pair) => ({
+        value: pair.name,
+        id: pair.rorId
+      })));
     } else {
-      console.warn("No Tagify instance found for organization affiliation input:", affiliationInput, "in row", isClonedRow ? "cloned" : "original");
+      console.warn("No Tagify instance found for organization affiliation input:", affiliationInput);
     }
 
-    // ROR IDs - handle both original and cloned field names
-    if (isClonedRow) {
-      // Cloned rows use cbOrganisationRorIds[] as the name
-      orgRow.find('input[name="cbOrganisationRorIds[]"]').val(org.rorIds.join(","));
-    } else {
-      // Original row uses hiddenOrganisationRorId[] as the name
-      orgRow.find('input[name="hiddenOrganisationRorId[]"]').val(org.rorIds.join(","));
-    }
+    // ROR IDs — aligned with affiliations (empty string for missing ROR IDs)
+    orgRow.find('input[name="hiddenOrganisationRorId[]"]').val(
+      org.affiliationPairs.map((pair) => pair.rorId).join(",")
+    );
   }
 }
 
