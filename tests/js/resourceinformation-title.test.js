@@ -100,8 +100,10 @@ describe('resourceinformation-title.js', () => {
     $('#button-resourceinformation-addtitle').trigger('click');
 
     const rows = $('#group-resourceinformation .row');
+    expect(rows.length).toBe(2);
     const newRow = rows.last();
     const $clonedSelect = newRow.find('select');
+    expect($clonedSelect.length).toBe(1);
 
     // The cloned select must be enabled so the user can pick a title type
     expect($clonedSelect.prop('disabled')).toBe(false);
@@ -113,18 +115,39 @@ describe('resourceinformation-title.js', () => {
     $('#button-resourceinformation-addtitle').trigger('click');
 
     const rows = $('#group-resourceinformation .row');
+    expect(rows.length).toBe(2);
     const newRow = rows.last();
     const $clonedSelect = newRow.find('select');
+    expect($clonedSelect.length).toBe(1);
 
     expect($clonedSelect.prop('disabled')).toBe(false);
+  });
+
+  test('cloned title type select stays disabled when no options are available', () => {
+    // Simulate clicking "Add" while title types are still loading
+    window.titleTypeOptionsHtml = '';
+    $('#input-resourceinformation-titletype').prop('disabled', true);
+
+    $('#button-resourceinformation-addtitle').trigger('click');
+
+    const rows = $('#group-resourceinformation .row');
+    expect(rows.length).toBe(2);
+    const newRow = rows.last();
+    const $clonedSelect = newRow.find('select');
+    expect($clonedSelect.length).toBe(1);
+
+    // Select must stay disabled when there are no options to choose from
+    expect($clonedSelect.prop('disabled')).toBe(true);
   });
 
   test('cloned title type dropdown is visible (unvisible class removed)', () => {
     $('#button-resourceinformation-addtitle').trigger('click');
 
     const rows = $('#group-resourceinformation .row');
+    expect(rows.length).toBe(2);
     const newRow = rows.last();
     const $container = newRow.find('#container-resourceinformation-titletype');
+    expect($container.length).toBe(1);
 
     expect($container.hasClass('unvisible')).toBe(false);
   });
@@ -133,8 +156,10 @@ describe('resourceinformation-title.js', () => {
     $('#button-resourceinformation-addtitle').trigger('click');
 
     const rows = $('#group-resourceinformation .row');
+    expect(rows.length).toBe(2);
     const newRow = rows.last();
     const $clonedSelect = newRow.find('select');
+    expect($clonedSelect.length).toBe(1);
 
     expect($clonedSelect.find('option[value="1"]').length).toBe(0);
   });
@@ -143,8 +168,10 @@ describe('resourceinformation-title.js', () => {
     $('#button-resourceinformation-addtitle').trigger('click');
 
     const rows = $('#group-resourceinformation .row');
+    expect(rows.length).toBe(2);
     const newRow = rows.last();
     const $clonedSelect = newRow.find('select');
+    expect($clonedSelect.length).toBe(1);
 
     expect($clonedSelect.val()).toBe('2');
   });
@@ -154,7 +181,9 @@ describe('resourceinformation-title.js', () => {
     $('#button-resourceinformation-addtitle').trigger('click');
 
     const rows = $('#group-resourceinformation .row');
+    expect(rows.length).toBe(2);
     const newRow = rows.last();
+    expect(newRow.find('input').length).toBeGreaterThan(0);
 
     expect(newRow.find('input').val()).toBe('');
   });
@@ -163,6 +192,7 @@ describe('resourceinformation-title.js', () => {
     $('#button-resourceinformation-addtitle').trigger('click');
 
     const rows = $('#group-resourceinformation .row');
+    expect(rows.length).toBe(2);
     const newRow = rows.last();
 
     expect(newRow.find('.addTitle').length).toBe(0);

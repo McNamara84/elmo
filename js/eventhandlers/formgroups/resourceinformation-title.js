@@ -73,9 +73,13 @@ $(document).ready(function () {
       }).first();
       $select.val($firstOption.val() || "");
     }
-    // Ensure the cloned select is enabled — .clone() may copy a disabled state
-    // from the original element that was temporarily disabled during AJAX loading.
-    $select.prop("disabled", false);
+    // Only enable the cloned select when options were successfully loaded.
+    // If the user clicks "Add" while title types are still loading
+    // (titleTypeOptionsHtml empty/undefined), keep it disabled to prevent
+    // a required select with no options from blocking form submission.
+    if ($select.find("option").length > 0) {
+      $select.prop("disabled", false);
+    }
 
     // Create a remove button for the new row.
     const removeBtn = $("<button/>", {
