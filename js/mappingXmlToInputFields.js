@@ -656,25 +656,21 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
   const familyName = getNodeText(contributor, "ns:familyName", xmlDoc, resolver);
   const orcid = getNodeText(contributor, 'ns:nameIdentifier[@schemeURI="https://orcid.org/"]', xmlDoc, resolver);
 
-  // Get affiliations
+  // Get affiliations as aligned pairs of { name, rorId }
   const affiliationNodes = xmlDoc.evaluate("ns:affiliation", contributor, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-  const affiliations = [];
-  const rorIds = [];
+  const affiliationPairs = [];
 
   for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
     const affNode = affiliationNodes.snapshotItem(j);
     const affiliationName = affNode.textContent;
     const rorId = affNode.getAttribute("affiliationIdentifier");
 
-    if (affiliationName && !affiliations.includes(affiliationName)) {
-      affiliations.push(affiliationName);
-      if (rorId) {
-        const cleanRorId = rorId.replace("https://ror.org/", "");
-        if (!rorIds.includes(cleanRorId)) {
-          rorIds.push(cleanRorId);
-        }
-      }
+    if (affiliationName && !affiliationPairs.some(p => p.name === affiliationName)) {
+      affiliationPairs.push({
+        name: affiliationName,
+        rorId: rorId ? rorId.replace("https://ror.org/", "") : ""
+      });
     }
   }
 
@@ -686,16 +682,14 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
       givenName,
       familyName,
       orcid,
-      roles: [normalizeRole(contributorType)], // Use normalized role
-      affiliations,
-      rorIds,
+      roles: [normalizeRole(contributorType)],
+      affiliationPairs,
     });
   } else {
     updateContributorMap(orgMap, contributorName, {
       name: contributorName,
-      roles: [normalizeRole(contributorType)], // Use normalized role
-      affiliations,
-      rorIds,
+      roles: [normalizeRole(contributorType)],
+      affiliationPairs,
     });
   }
 }
@@ -712,14 +706,9 @@ function updateContributorMap(map, key, newData) {
     if (!existing.roles.includes(newData.roles[0])) {
       existing.roles.push(newData.roles[0]);
     }
-    newData.affiliations.forEach((aff) => {
-      if (!existing.affiliations.includes(aff)) {
-        existing.affiliations.push(aff);
-      }
-    });
-    newData.rorIds.forEach((rid) => {
-      if (!existing.rorIds.includes(rid)) {
-        existing.rorIds.push(rid);
+    newData.affiliationPairs.forEach((pair) => {
+      if (!existing.affiliationPairs.some(p => p.name === pair.name)) {
+        existing.affiliationPairs.push(pair);
       }
     });
   } else {
@@ -791,18 +780,23 @@ function populateFormWithContributors(personMap, orgMap) {
     personRow.find('input[name="cbPersonLastname[]"]').val(person.familyName);
     personRow.find('input[name="cbPersonFirstname[]"]').val(person.givenName);
 
-    // Affiliations
+    // Affiliations — add tags with both value and id (ROR) for Tagify state consistency
     const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
     const tagifyAffiliations = getTagifyInstance(affiliationInput);
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
-      tagifyAffiliations.addTags(person.affiliations.map((aff) => ({ value: aff })));
+      tagifyAffiliations.addTags(person.affiliationPairs.map((pair) => ({
+        value: pair.name,
+        id: pair.rorId
+      })));
     } else {
       console.warn("No Tagify instance found for affiliation input:", affiliationInput);
     }
 
-    // ROR IDs
-    personRow.find('input[name="cbpRorIds[]"]').val(person.rorIds.join(","));
+    // ROR IDs — aligned with affiliations (empty string for missing ROR IDs)
+    personRow.find('input[name="cbpRorIds[]"]').val(
+      person.affiliationPairs.map((pair) => pair.rorId).join(",")
+    );
   }
 
   // Process organizations
@@ -822,18 +816,23 @@ function populateFormWithContributors(personMap, orgMap) {
     // Organization name
     orgRow.find('input[name="cbOrganisationName[]"]').val(org.name);
 
-    // Affiliations
+    // Affiliations — add tags with both value and id (ROR) for Tagify state consistency
     const affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
     const tagifyAffiliations = getTagifyInstance(affiliationInput);
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
-      tagifyAffiliations.addTags(org.affiliations.map((aff) => ({ value: aff })));
+      tagifyAffiliations.addTags(org.affiliationPairs.map((pair) => ({
+        value: pair.name,
+        id: pair.rorId
+      })));
     } else {
       console.warn("No Tagify instance found for organization affiliation input:", affiliationInput);
     }
 
-    // ROR IDs
-    orgRow.find('input[name="hiddenOrganisationRorId[]"]').val(org.rorIds.join(","));
+    // ROR IDs — aligned with affiliations (empty string for missing ROR IDs)
+    orgRow.find('input[name="hiddenOrganisationRorId[]"]').val(
+      org.affiliationPairs.map((pair) => pair.rorId).join(",")
+    );
   }
 }
 
