@@ -73,13 +73,12 @@ $(document).ready(function () {
       }).first();
       $select.val($firstOption.val() || "");
     }
-    // Only enable the cloned select when options were successfully loaded.
-    // If the user clicks "Add" while title types are still loading
-    // (titleTypeOptionsHtml empty/undefined), keep it disabled to prevent
-    // a required select with no options from blocking form submission.
-    if ($select.find("option").length > 0) {
-      $select.prop("disabled", false);
-    }
+    // Explicitly set the disabled state based on whether options are available.
+    // When options were loaded successfully, enable the select so the user can
+    // pick a title type. When no options exist (e.g. the user clicked "Add"
+    // while title types are still loading), disable it to prevent a required
+    // empty select from blocking form submission.
+    $select.prop("disabled", $select.find("option").length === 0);
 
     // Create a remove button for the new row.
     const removeBtn = $("<button/>", {

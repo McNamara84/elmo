@@ -123,8 +123,8 @@ describe('resourceinformation-title.js', () => {
     expect($clonedSelect.prop('disabled')).toBe(false);
   });
 
-  test('cloned title type select stays disabled when no options are available', () => {
-    // Simulate clicking "Add" while title types are still loading
+  test('cloned title type select stays disabled when no options are available and original is disabled', () => {
+    // Simulate clicking "Add" while title types are still loading (original disabled)
     window.titleTypeOptionsHtml = '';
     $('#input-resourceinformation-titletype').prop('disabled', true);
 
@@ -136,7 +136,26 @@ describe('resourceinformation-title.js', () => {
     const $clonedSelect = newRow.find('select');
     expect($clonedSelect.length).toBe(1);
 
-    // Select must stay disabled when there are no options to choose from
+    // Select must be disabled when there are no options to choose from
+    expect($clonedSelect.prop('disabled')).toBe(true);
+  });
+
+  test('cloned title type select becomes disabled when no options are available and original is enabled', () => {
+    // The template select in resourceInformation.html is not disabled by default.
+    // If titleTypeOptionsHtml is empty while the original is enabled, the clone
+    // must still be explicitly disabled to prevent a required empty control.
+    window.titleTypeOptionsHtml = '';
+    $('#input-resourceinformation-titletype').prop('disabled', false);
+
+    $('#button-resourceinformation-addtitle').trigger('click');
+
+    const rows = $('#group-resourceinformation .row');
+    expect(rows.length).toBe(2);
+    const newRow = rows.last();
+    const $clonedSelect = newRow.find('select');
+    expect($clonedSelect.length).toBe(1);
+
+    // Must be disabled even though the original was enabled — no options to pick
     expect($clonedSelect.prop('disabled')).toBe(true);
   });
 
