@@ -159,6 +159,24 @@ describe('resourceinformation-title.js', () => {
     expect($clonedSelect.prop('disabled')).toBe(true);
   });
 
+  test('cloned title type select is disabled when only placeholder option exists', () => {
+    // select.js always includes a placeholder option even if the API returns
+    // no title types — the clone must still be disabled in this case.
+    window.titleTypeOptionsHtml = '<option value="">Choose...</option>';
+    $('#input-resourceinformation-titletype').prop('disabled', false);
+
+    $('#button-resourceinformation-addtitle').trigger('click');
+
+    const rows = $('#group-resourceinformation .row');
+    expect(rows.length).toBe(2);
+    const newRow = rows.last();
+    const $clonedSelect = newRow.find('select');
+    expect($clonedSelect.length).toBe(1);
+
+    // Only a placeholder with value="" — no valid option to select
+    expect($clonedSelect.prop('disabled')).toBe(true);
+  });
+
   test('cloned title type dropdown is visible (unvisible class removed)', () => {
     $('#button-resourceinformation-addtitle').trigger('click');
 
