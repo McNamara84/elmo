@@ -73,6 +73,16 @@ $(document).ready(function () {
       }).first();
       $select.val($firstOption.val() || "");
     }
+    // Explicitly set the disabled state based on whether valid options exist.
+    // A "valid" option has a non-empty value — the placeholder (value="")
+    // added by select.js does not count. When no valid options exist (e.g. the
+    // user clicked "Add" while title types are still loading, or the API
+    // returned no types), disable the select to prevent a required empty
+    // control from blocking form submission.
+    const hasValidOptions = $select.find("option").filter(function () {
+      return $(this).val() !== "";
+    }).length > 0;
+    $select.prop("disabled", !hasValidOptions);
 
     // Create a remove button for the new row.
     const removeBtn = $("<button/>", {
