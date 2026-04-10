@@ -390,8 +390,11 @@ function processContactPersons(xmlDoc) {
       .first();
 
     if ($row.length === 0) {
-      console.warn(`No matching author row found for contact person: ${givenName} ${familyName}`);
-      continue;
+      // No matching author found — add a new author row for the contact person
+      $("#button-author-add").click();
+      $row = $("div[data-creator-row]").last();
+      $row.find('input[name="familynames[]"]').val(familyName);
+      $row.find('input[name="givennames[]"]').val(givenName);
     }
 
     // Mark the row as contact person
@@ -451,7 +454,13 @@ function processContactPersonsFromDataCite(xmlDoc) {
       })
       .first();
 
-    if ($row.length === 0) continue;
+    if ($row.length === 0) {
+      // No matching author found — add a new author row for the contact person
+      $("#button-author-add").click();
+      $row = $("div[data-creator-row]").last();
+      $row.find('input[name="familynames[]"]').val(familyName);
+      $row.find('input[name="givennames[]"]').val(givenName);
+    }
 
     $row.find('input[name="contacts[]"]').prop("checked", true);
     $row.find(".contact-person-input").show();
@@ -1286,8 +1295,9 @@ function processFunders(xmlDoc, resolver) {
     const funderNode = funderNodes.snapshotItem(i);
     // Extract data from XML
     const funderName = getNodeText(funderNode, "ns:funderName", xmlDoc, resolver);
-    const funderId = getNodeText(funderNode, "ns:funderIdentifier", xmlDoc, resolver);
-    const funderIdTyp = funderNode.querySelector("funderIdentifier")?.getAttribute("funderIdentifierType") || "";
+    const funderIdNode = xmlDoc.evaluate("ns:funderIdentifier", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const funderId = funderIdNode ? funderIdNode.textContent.trim() : "";
+    const funderIdTyp = funderIdNode?.getAttribute("funderIdentifierType") || "";
     const awardTitle = getNodeText(funderNode, "ns:awardTitle", xmlDoc, resolver);
     const awardNumberNode = xmlDoc.evaluate("ns:awardNumber", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     const awardNumber = awardNumberNode ? awardNumberNode.textContent.trim() : "";
