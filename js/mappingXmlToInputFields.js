@@ -3,10 +3,19 @@
  * in the dropdown based on the visible text matching the `resourceTypeGeneral` attribute.
  *
  * @param {Document} xmlDoc - The XML document containing the resourceType element.
+ * @param {Function} resolver - The namespace resolver function.
  */
-function processResourceType(xmlDoc) {
-  // Extract the resourceType element
-  const resourceNode = xmlDoc.querySelector("resourceType");
+function processResourceType(xmlDoc, resolver) {
+  // Extract the resourceType element using XPath with namespace fallback
+  // (supports both namespaced and non-namespaced XML documents)
+  const result = xmlDoc.evaluate(
+    ".//ns:resourceType | .//resourceType",
+    xmlDoc,
+    resolver,
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null
+  );
+  const resourceNode = result.singleNodeValue;
   if (!resourceNode) {
     console.error("No resourceType element found in XML");
     return;
@@ -390,8 +399,17 @@ function processContactPersons(xmlDoc) {
       .first();
 
     if ($row.length === 0) {
-      console.warn(`No matching author row found for contact person: ${givenName} ${familyName}`);
-      continue;
+      // No matching author found — add a new author row for the contact person
+      const countBefore = $("div[data-creator-row]").length;
+      $("#button-author-add").click();
+      const countAfter = $("div[data-creator-row]").length;
+      if (countAfter <= countBefore) {
+        console.warn("Could not create new author row for contact person:", familyName, givenName);
+        continue;
+      }
+      $row = $("div[data-creator-row]").last();
+      $row.find('input[name="familynames[]"]').val(familyName);
+      $row.find('input[name="givennames[]"]').val(givenName);
     }
 
     // Mark the row as contact person
@@ -451,7 +469,19 @@ function processContactPersonsFromDataCite(xmlDoc) {
       })
       .first();
 
-    if ($row.length === 0) continue;
+    if ($row.length === 0) {
+      // No matching author found — add a new author row for the contact person
+      const countBefore = $("div[data-creator-row]").length;
+      $("#button-author-add").click();
+      const countAfter = $("div[data-creator-row]").length;
+      if (countAfter <= countBefore) {
+        console.warn("Could not create new author row for contact person:", familyName, givenName);
+        continue;
+      }
+      $row = $("div[data-creator-row]").last();
+      $row.find('input[name="familynames[]"]').val(familyName);
+      $row.find('input[name="givennames[]"]').val(givenName);
+    }
 
     $row.find('input[name="contacts[]"]').prop("checked", true);
     $row.find(".contact-person-input").show();
@@ -914,26 +944,38 @@ function parseTemporalData(dateNode) {
 /**
  * Extract spatial coordinates and description from a geoLocation node.
  * @param {Element} node - The geoLocation XML element.
+ * @param {Document} xmlDoc - The XML document (needed for XPath evaluation).
+ * @param {Function} resolver - The namespace resolver function.
  * @returns {Object} Parsed location data.
  */
-function getGeoLocationData(node) {
-  const place = node.querySelector("geoLocationPlace")?.textContent || "";
-  const boxNode = node.querySelector("geoLocationBox");
-  const pointNode = node.querySelector("geoLocationPoint");
+function getGeoLocationData(node, xmlDoc, resolver) {
+  function getText(contextNode, localName) {
+    const result = xmlDoc.evaluate("ns:" + localName + " | " + localName, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    return result.singleNodeValue?.textContent || "";
+  }
+
+  function getNode(contextNode, localName) {
+    const result = xmlDoc.evaluate("ns:" + localName + " | " + localName, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    return result.singleNodeValue;
+  }
+
+  const place = getText(node, "geoLocationPlace");
+  const boxNode = getNode(node, "geoLocationBox");
+  const pointNode = getNode(node, "geoLocationPoint");
 
   if (boxNode) {
     return {
       place,
-      latitudeMin: boxNode.querySelector("southBoundLatitude")?.textContent || "",
-      latitudeMax: boxNode.querySelector("northBoundLatitude")?.textContent || "",
-      longitudeMin: boxNode.querySelector("westBoundLongitude")?.textContent || "",
-      longitudeMax: boxNode.querySelector("eastBoundLongitude")?.textContent || "",
+      latitudeMin: getText(boxNode, "southBoundLatitude"),
+      latitudeMax: getText(boxNode, "northBoundLatitude"),
+      longitudeMin: getText(boxNode, "westBoundLongitude"),
+      longitudeMax: getText(boxNode, "eastBoundLongitude"),
     };
   }
 
   if (pointNode) {
-    const lat = pointNode.querySelector("pointLatitude")?.textContent || "";
-    const lon = pointNode.querySelector("pointLongitude")?.textContent || "";
+    const lat = getText(pointNode, "pointLatitude");
+    const lon = getText(pointNode, "pointLongitude");
     return {
       place,
       latitudeMin: lat,
@@ -1000,11 +1042,11 @@ function fillTemporalFields($row, temporalData) {
  * @param {Function} resolver - The namespace resolver function.
  */
 function processSpatialTemporalCoverages(xmlDoc, resolver) {
-  const geoLocationNodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Coverage" or @dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const geoLocationNodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation | .//geoLocations/geoLocation", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Coverage" or @dateType="Collected"] | //dates/date[@dateType="Coverage" or @dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
-    const geoData = getGeoLocationData(geoLocationNodes.snapshotItem(i));
+    const geoData = getGeoLocationData(geoLocationNodes.snapshotItem(i), xmlDoc, resolver);
     const temporalData = parseTemporalData(dateNodes.snapshotItem(i));
 
     const $lastRow = $('textarea[name="tscDescription[]"]').last().closest("[tsc-row]");
@@ -1280,16 +1322,17 @@ function processUsedInstruments(xmlDoc, resolver) {
  */
 function processFunders(xmlDoc, resolver) {
   // Fetch all fundingReference nodes
-  const funderNodes = xmlDoc.evaluate(".//ns:fundingReferences/ns:fundingReference", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const funderNodes = xmlDoc.evaluate(".//ns:fundingReferences/ns:fundingReference | .//fundingReferences/fundingReference", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < funderNodes.snapshotLength; i++) {
     const funderNode = funderNodes.snapshotItem(i);
     // Extract data from XML
-    const funderName = getNodeText(funderNode, "ns:funderName", xmlDoc, resolver);
-    const funderId = getNodeText(funderNode, "ns:funderIdentifier", xmlDoc, resolver);
-    const funderIdTyp = funderNode.querySelector("funderIdentifier")?.getAttribute("funderIdentifierType") || "";
-    const awardTitle = getNodeText(funderNode, "ns:awardTitle", xmlDoc, resolver);
-    const awardNumberNode = xmlDoc.evaluate("ns:awardNumber", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const funderName = getNodeText(funderNode, "ns:funderName | funderName", xmlDoc, resolver);
+    const funderIdNode = xmlDoc.evaluate("ns:funderIdentifier | funderIdentifier", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const funderId = funderIdNode ? funderIdNode.textContent.trim() : "";
+    const funderIdTyp = funderIdNode?.getAttribute("funderIdentifierType") || "";
+    const awardTitle = getNodeText(funderNode, "ns:awardTitle | awardTitle", xmlDoc, resolver);
+    const awardNumberNode = xmlDoc.evaluate("ns:awardNumber | awardNumber", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     const awardNumber = awardNumberNode ? awardNumberNode.textContent.trim() : "";
     const awardUri = awardNumberNode?.getAttribute("awardURI") || "";
 
@@ -1410,7 +1453,7 @@ async function loadXmlToForm(xmlDoc) {
     }
   }
 
-  processResourceType(xmlDoc);
+  processResourceType(xmlDoc, resolver);
   // Process titles
   processTitles(xmlDoc, resolver, titleTypeMapping);
   // Processing Creators
@@ -1469,6 +1512,10 @@ if (typeof module !== 'undefined' && module.exports) {
         parseTemporalData,
         getGeoLocationData,
         fillSpatialFields,
-        processUsedInstruments
+        processUsedInstruments,
+        processDescriptions,
+        processRelatedWorks,
+        processFunders,
+        processSpatialTemporalCoverages
     };
 }

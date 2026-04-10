@@ -438,12 +438,17 @@ describe('mappingXmlToInputFields module coverage', () => {
     });
 
     describe('getGeoLocationData', () => {
+        const nsResolver = (prefix) => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
+
         test('returns empty data for node without location info', () => {
             const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString('<geoLocation></geoLocation>', 'text/xml');
-            const geoNode = xmlDoc.querySelector('geoLocation');
+            const xmlDoc = parser.parseFromString(
+                '<ns:geoLocation xmlns:ns="http://datacite.org/schema/kernel-4"></ns:geoLocation>',
+                'text/xml'
+            );
+            const geoNode = xmlDoc.documentElement;
             
-            const result = mappingModule.getGeoLocationData(geoNode);
+            const result = mappingModule.getGeoLocationData(geoNode, xmlDoc, nsResolver);
             expect(result.latitudeMin).toBe('');
             expect(result.longitudeMin).toBe('');
         });
@@ -451,29 +456,29 @@ describe('mappingXmlToInputFields module coverage', () => {
         test('extracts place name', () => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(
-                '<geoLocation><geoLocationPlace>Berlin</geoLocationPlace></geoLocation>',
+                '<ns:geoLocation xmlns:ns="http://datacite.org/schema/kernel-4"><ns:geoLocationPlace>Berlin</ns:geoLocationPlace></ns:geoLocation>',
                 'text/xml'
             );
-            const geoNode = xmlDoc.querySelector('geoLocation');
+            const geoNode = xmlDoc.documentElement;
             
-            const result = mappingModule.getGeoLocationData(geoNode);
+            const result = mappingModule.getGeoLocationData(geoNode, xmlDoc, nsResolver);
             expect(result.place).toBe('Berlin');
         });
 
         test('extracts point coordinates', () => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(
-                `<geoLocation>
-                    <geoLocationPoint>
-                        <pointLatitude>52.5</pointLatitude>
-                        <pointLongitude>13.4</pointLongitude>
-                    </geoLocationPoint>
-                </geoLocation>`,
+                `<ns:geoLocation xmlns:ns="http://datacite.org/schema/kernel-4">
+                    <ns:geoLocationPoint>
+                        <ns:pointLatitude>52.5</ns:pointLatitude>
+                        <ns:pointLongitude>13.4</ns:pointLongitude>
+                    </ns:geoLocationPoint>
+                </ns:geoLocation>`,
                 'text/xml'
             );
-            const geoNode = xmlDoc.querySelector('geoLocation');
+            const geoNode = xmlDoc.documentElement;
             
-            const result = mappingModule.getGeoLocationData(geoNode);
+            const result = mappingModule.getGeoLocationData(geoNode, xmlDoc, nsResolver);
             // For point, lat/lon are duplicated to min and max
             expect(result.latitudeMin).toBe('52.5');
             expect(result.latitudeMax).toBe('52.5');
@@ -484,19 +489,19 @@ describe('mappingXmlToInputFields module coverage', () => {
         test('extracts bounding box coordinates', () => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(
-                `<geoLocation>
-                    <geoLocationBox>
-                        <northBoundLatitude>53</northBoundLatitude>
-                        <southBoundLatitude>52</southBoundLatitude>
-                        <eastBoundLongitude>14</eastBoundLongitude>
-                        <westBoundLongitude>13</westBoundLongitude>
-                    </geoLocationBox>
-                </geoLocation>`,
+                `<ns:geoLocation xmlns:ns="http://datacite.org/schema/kernel-4">
+                    <ns:geoLocationBox>
+                        <ns:northBoundLatitude>53</ns:northBoundLatitude>
+                        <ns:southBoundLatitude>52</ns:southBoundLatitude>
+                        <ns:eastBoundLongitude>14</ns:eastBoundLongitude>
+                        <ns:westBoundLongitude>13</ns:westBoundLongitude>
+                    </ns:geoLocationBox>
+                </ns:geoLocation>`,
                 'text/xml'
             );
-            const geoNode = xmlDoc.querySelector('geoLocation');
+            const geoNode = xmlDoc.documentElement;
             
-            const result = mappingModule.getGeoLocationData(geoNode);
+            const result = mappingModule.getGeoLocationData(geoNode, xmlDoc, nsResolver);
             expect(result.latitudeMin).toBe('52');
             expect(result.latitudeMax).toBe('53');
             expect(result.longitudeMin).toBe('13');
@@ -541,36 +546,38 @@ describe('mappingXmlToInputFields module coverage', () => {
     });
 
     describe('processResourceType', () => {
+        const nsResolver = (prefix) => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
+
         test('handles missing resourceType node', () => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString('<root></root>', 'text/xml');
             
             // Should not throw
             expect(() => {
-                mappingModule.processResourceType(xmlDoc);
+                mappingModule.processResourceType(xmlDoc, nsResolver);
             }).not.toThrow();
         });
 
         test('handles missing resourceTypeGeneral attribute', () => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(
-                '<resource><resourceType>Research Data</resourceType></resource>',
+                '<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4"><ns:resourceType>Research Data</ns:resourceType></ns:resource>',
                 'text/xml'
             );
             
             expect(() => {
-                mappingModule.processResourceType(xmlDoc);
+                mappingModule.processResourceType(xmlDoc, nsResolver);
             }).not.toThrow();
         });
 
         test('selects matching option in dropdown', () => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(
-                '<resource><resourceType resourceTypeGeneral="Dataset">Research Data</resourceType></resource>',
+                '<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4"><ns:resourceType resourceTypeGeneral="Dataset">Research Data</ns:resourceType></ns:resource>',
                 'text/xml'
             );
             
-            mappingModule.processResourceType(xmlDoc);
+            mappingModule.processResourceType(xmlDoc, nsResolver);
             
             const select = document.querySelector('#input-resourceinformation-resourcetype');
             expect(select.options[0].selected).toBe(true);
