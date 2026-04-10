@@ -187,7 +187,7 @@ describe('resourceinformation-title.js', () => {
     const rows = $('#group-resourceinformation .row');
     expect(rows.length).toBe(2);
     const newRow = rows.last();
-    const $container = newRow.find('#container-resourceinformation-titletype');
+    const $container = newRow.find('[id="container-resourceinformation-titletype"]');
     expect($container.length).toBe(1);
 
     expect($container.hasClass('unvisible')).toBe(false);
