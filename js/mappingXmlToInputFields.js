@@ -1469,6 +1469,9 @@ if (typeof module !== 'undefined' && module.exports) {
         parseTemporalData,
         getGeoLocationData,
         fillSpatialFields,
-        processUsedInstruments
+        processUsedInstruments,
+        processDescriptions,
+        processRelatedWorks,
+        processFunders
     };
 }
