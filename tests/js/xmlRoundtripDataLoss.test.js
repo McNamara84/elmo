@@ -311,6 +311,51 @@ describe("awardURI import from namespaced XML", () => {
       "https://gepris.dfg.de/12345"
     );
   });
+
+  test("processFunders also works for non-namespaced XML", () => {
+    document.body.innerHTML = `
+      <div id="group-fundingreference">
+        <div class="row">
+          <input name="funder[]" value="" />
+          <input name="funderId[]" value="" />
+          <input name="funderidtyp[]" value="" />
+          <input name="grantNummer[]" value="" />
+          <input name="grantName[]" value="" />
+          <input name="awardURI[]" value="" />
+        </div>
+      </div>
+      <button id="button-fundingreference-add"></button>`;
+
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
+
+    const xml = `<resource>
+      <fundingReferences>
+        <fundingReference>
+          <funderName>NSF</funderName>
+          <funderIdentifier funderIdentifierType="Crossref Funder ID">https://doi.org/10.13039/100000001</funderIdentifier>
+          <awardNumber awardURI="https://nsf.gov/award/123">NSF-123</awardNumber>
+          <awardTitle>Climate Research</awardTitle>
+        </fundingReference>
+      </fundingReferences>
+    </resource>`;
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    ctx.processFunders(xmlDoc, NS_RESOLVER);
+
+    expect(document.querySelector('input[name="funder[]"]').value).toBe("NSF");
+    expect(document.querySelector('input[name="funderId[]"]').value).toBe(
+      "https://doi.org/10.13039/100000001"
+    );
+    expect(document.querySelector('input[name="funderidtyp[]"]').value).toBe(
+      "Crossref Funder ID"
+    );
+    expect(document.querySelector('input[name="grantNummer[]"]').value).toBe("NSF-123");
+    expect(document.querySelector('input[name="grantName[]"]').value).toBe("Climate Research");
+    expect(document.querySelector('input[name="awardURI[]"]').value).toBe(
+      "https://nsf.gov/award/123"
+    );
+  });
 });
 
 // ─── Contact person email/website from different XML sources ────────────────
@@ -1039,5 +1084,42 @@ describe("geoLocation import via XPath (regression for querySelector bug)", () =
     expect(data.latitudeMax).toBe("");
     expect(data.longitudeMin).toBe("");
     expect(data.longitudeMax).toBe("");
+  });
+
+  test("getGeoLocationData also works for non-namespaced XML", () => {
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
+
+    const xml = `<resource>
+      <geoLocations>
+        <geoLocation>
+          <geoLocationPlace>Munich</geoLocationPlace>
+          <geoLocationBox>
+            <westBoundLongitude>11.3</westBoundLongitude>
+            <eastBoundLongitude>11.8</eastBoundLongitude>
+            <southBoundLatitude>48.0</southBoundLatitude>
+            <northBoundLatitude>48.3</northBoundLatitude>
+          </geoLocationBox>
+        </geoLocation>
+      </geoLocations>
+    </resource>`;
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const geoNode = xmlDoc.evaluate(
+      ".//geoLocations/geoLocation",
+      xmlDoc,
+      NS_RESOLVER,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue;
+
+    expect(geoNode).not.toBeNull();
+    const data = ctx.getGeoLocationData(geoNode, xmlDoc, NS_RESOLVER);
+
+    expect(data.place).toBe("Munich");
+    expect(data.latitudeMin).toBe("48.0");
+    expect(data.latitudeMax).toBe("48.3");
+    expect(data.longitudeMin).toBe("11.3");
+    expect(data.longitudeMax).toBe("11.8");
   });
 });

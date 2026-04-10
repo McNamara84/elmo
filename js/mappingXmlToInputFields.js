@@ -950,12 +950,12 @@ function parseTemporalData(dateNode) {
  */
 function getGeoLocationData(node, xmlDoc, resolver) {
   function getText(contextNode, localName) {
-    const result = xmlDoc.evaluate("ns:" + localName, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    const result = xmlDoc.evaluate("ns:" + localName + " | " + localName, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
     return result.singleNodeValue?.textContent || "";
   }
 
   function getNode(contextNode, localName) {
-    const result = xmlDoc.evaluate("ns:" + localName, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    const result = xmlDoc.evaluate("ns:" + localName + " | " + localName, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
     return result.singleNodeValue;
   }
 
@@ -1042,7 +1042,7 @@ function fillTemporalFields($row, temporalData) {
  * @param {Function} resolver - The namespace resolver function.
  */
 function processSpatialTemporalCoverages(xmlDoc, resolver) {
-  const geoLocationNodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const geoLocationNodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation | .//geoLocations/geoLocation", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
   const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Coverage" or @dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
@@ -1322,17 +1322,17 @@ function processUsedInstruments(xmlDoc, resolver) {
  */
 function processFunders(xmlDoc, resolver) {
   // Fetch all fundingReference nodes
-  const funderNodes = xmlDoc.evaluate(".//ns:fundingReferences/ns:fundingReference", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const funderNodes = xmlDoc.evaluate(".//ns:fundingReferences/ns:fundingReference | .//fundingReferences/fundingReference", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < funderNodes.snapshotLength; i++) {
     const funderNode = funderNodes.snapshotItem(i);
     // Extract data from XML
-    const funderName = getNodeText(funderNode, "ns:funderName", xmlDoc, resolver);
-    const funderIdNode = xmlDoc.evaluate("ns:funderIdentifier", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const funderName = getNodeText(funderNode, "ns:funderName | funderName", xmlDoc, resolver);
+    const funderIdNode = xmlDoc.evaluate("ns:funderIdentifier | funderIdentifier", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     const funderId = funderIdNode ? funderIdNode.textContent.trim() : "";
     const funderIdTyp = funderIdNode?.getAttribute("funderIdentifierType") || "";
-    const awardTitle = getNodeText(funderNode, "ns:awardTitle", xmlDoc, resolver);
-    const awardNumberNode = xmlDoc.evaluate("ns:awardNumber", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const awardTitle = getNodeText(funderNode, "ns:awardTitle | awardTitle", xmlDoc, resolver);
+    const awardNumberNode = xmlDoc.evaluate("ns:awardNumber | awardNumber", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     const awardNumber = awardNumberNode ? awardNumberNode.textContent.trim() : "";
     const awardUri = awardNumberNode?.getAttribute("awardURI") || "";
 
