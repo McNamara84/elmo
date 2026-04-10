@@ -42,8 +42,28 @@ describe('processContactPersons (ISO)', () => {
             <input type="text" name="cpOnlineResource[]" value="" />
           </div>
         </div>
+        <button type="button" id="button-author-add"></button>
       </div>
     `;
+
+    // Wire up click handler to simulate adding a new author row
+    $('#button-author-add').on('click', function () {
+      const $newRow = $(`
+        <div class="row" data-creator-row>
+          <input type="checkbox" name="contacts[]" />
+          <input type="text" name="familynames[]" value="" />
+          <input type="text" name="givennames[]" value="" />
+          <input type="text" name="orcids[]" value="" />
+          <div class="contact-person-input" style="display: none;">
+            <input type="email" name="cpEmail[]" value="" />
+          </div>
+          <div class="contact-person-input" style="display: none;">
+            <input type="text" name="cpOnlineResource[]" value="" />
+          </div>
+        </div>
+      `);
+      $('#group-author').append($newRow);
+    });
 
     global.Tagify = jest.fn().mockImplementation(() => ({
       addTags: jest.fn(),
@@ -175,7 +195,7 @@ describe('processContactPersons (ISO)', () => {
     expect($firstRow.find('input[name="contacts[]"]').prop('checked')).toBe(true);
   });
 
-  test('does not match when names differ completely', () => {
+  test('creates new author row when names differ completely', () => {
     const xmlDoc = makeIsoXml({
       familyName: 'Unknown',
       givenName: 'Person',
@@ -184,10 +204,20 @@ describe('processContactPersons (ISO)', () => {
 
     mappingModule.processContactPersons(xmlDoc);
 
-    // Neither row should be marked as CP
-    $('div[data-creator-row]').each(function () {
-      expect($(this).find('input[name="contacts[]"]').prop('checked')).toBe(false);
-    });
+    // A third author row should have been created
+    const $rows = $('div[data-creator-row]');
+    expect($rows.length).toBe(3);
+
+    // Original rows should not be marked as CP
+    expect($rows.eq(0).find('input[name="contacts[]"]').prop('checked')).toBe(false);
+    expect($rows.eq(1).find('input[name="contacts[]"]').prop('checked')).toBe(false);
+
+    // New row should be marked as CP with correct data
+    const $newRow = $rows.eq(2);
+    expect($newRow.find('input[name="contacts[]"]').prop('checked')).toBe(true);
+    expect($newRow.find('input[name="familynames[]"]').val()).toBe('Unknown');
+    expect($newRow.find('input[name="givennames[]"]').val()).toBe('Person');
+    expect($newRow.find('input[name="cpEmail[]"]').val()).toBe('unknown@example.com');
   });
 
   test('handles XML with no pointOfContact gracefully', () => {
@@ -309,8 +339,27 @@ describe('processContactPersonsFromDataCite (fallback)', () => {
             <input type="text" name="cpOnlineResource[]" value="" />
           </div>
         </div>
+        <button type="button" id="button-author-add"></button>
       </div>
     `;
+
+    // Wire up click handler to simulate adding a new author row
+    $('#button-author-add').on('click', function () {
+      const $newRow = $(`
+        <div class="row" data-creator-row>
+          <input type="checkbox" name="contacts[]" />
+          <input type="text" name="familynames[]" value="" />
+          <input type="text" name="givennames[]" value="" />
+          <div class="contact-person-input" style="display: none;">
+            <input type="email" name="cpEmail[]" value="" />
+          </div>
+          <div class="contact-person-input" style="display: none;">
+            <input type="text" name="cpOnlineResource[]" value="" />
+          </div>
+        </div>
+      `);
+      $('#group-author').append($newRow);
+    });
 
     global.Tagify = jest.fn().mockImplementation(() => ({
       addTags: jest.fn(),
@@ -407,7 +456,7 @@ describe('processContactPersonsFromDataCite (fallback)', () => {
     expect($firstRow.find('input[name="contacts[]"]').prop('checked')).toBe(true);
   });
 
-  test('does nothing when no matching author found in DataCite fallback', () => {
+  test('creates new author row when no matching author found in DataCite fallback', () => {
     const xmlDoc = makeDataCiteXml({
       familyName: 'Unknown',
       givenName: 'Person',
@@ -415,9 +464,18 @@ describe('processContactPersonsFromDataCite (fallback)', () => {
 
     expect(() => mappingModule.processContactPersonsFromDataCite(xmlDoc)).not.toThrow();
 
-    $('div[data-creator-row]').each(function () {
-      expect($(this).find('input[name="contacts[]"]').prop('checked')).toBe(false);
-    });
+    // A second author row should have been created
+    const $rows = $('div[data-creator-row]');
+    expect($rows.length).toBe(2);
+
+    // Original row should not be marked as CP
+    expect($rows.eq(0).find('input[name="contacts[]"]').prop('checked')).toBe(false);
+
+    // New row should be marked as CP with correct data
+    const $newRow = $rows.eq(1);
+    expect($newRow.find('input[name="contacts[]"]').prop('checked')).toBe(true);
+    expect($newRow.find('input[name="familynames[]"]').val()).toBe('Unknown');
+    expect($newRow.find('input[name="givennames[]"]').val()).toBe('Person');
   });
 
   test('does nothing when DataCite XML has no ContactPerson contributor', () => {

@@ -1,17 +1,16 @@
 /**
- * @file Round-trip data loss tests for XML export → import.
+ * @file Round-trip data loss regression tests for XML export → import.
  *
  * These tests verify that data exported as XML by ELMO can be re-imported
- * without information loss. Each test targets a specific known data loss
- * scenario discovered through code analysis.
- *
- * Phase 1: Document and prove each bug with a failing test.
- * Phase 2: Fix the bugs and turn these into regression tests.
+ * without information loss. Each test covers a previously identified data
+ * loss scenario and serves as a regression test.
  *
  * IMPORTANT: jsdom's XPath only works with explicit namespace prefixes (ns:element).
  * The real XSLT export uses default namespace (<resource xmlns="...">) without prefixes.
- * Tests use ns: prefix XML for XPath compatibility, but the bugs documented here
- * affect real browser behavior with default-namespace XML.
+ * Tests use ns: prefix XML for XPath compatibility.
+ * Additionally, jsdom XPath does NOT support attribute predicates on namespaced
+ * elements (e.g. ns:nameIdentifier[@scheme="ORCID"]), so some fields cannot be
+ * tested here; those are covered by Playwright E2E tests.
  */
 
 const fs = require("fs");
@@ -188,29 +187,23 @@ function buildNsPrefixXml(content) {
 const NS_RESOLVER = (prefix) =>
   prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
 
-// ─── BUG 1: funderIdentifierType lost due to querySelector vs XPath ─────────
+// ─── FIX 1: funderIdentifierType now uses XPath instead of querySelector ────
 
-describe("BUG: funderIdentifierType lost on import (querySelector vs namespace)", () => {
-  test("processFunders uses querySelector for funderIdentifier instead of XPath", () => {
-    // Read the source code and verify the problematic line
+describe("funderIdentifierType import via XPath (regression for querySelector bug)", () => {
+  test("processFunders no longer uses querySelector for funderIdentifier", () => {
     const sourceCode = fs.readFileSync(
       path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
       "utf8"
     );
 
-    // The bug: processFunders uses querySelector("funderIdentifier") instead of XPath
-    // All other fields in processFunders use getNodeText (XPath), but funderIdentifier
-    // uses querySelector which is inconsistent and breaks with default-namespace XML.
-    expect(sourceCode).toMatch(/funderNode\.querySelector\(["']funderIdentifier["']\)/);
+    // Verify querySelector is no longer used for funderIdentifier
+    expect(sourceCode).not.toMatch(/funderNode\.querySelector\(["']funderIdentifier["']\)/);
 
-    // Verify other funder fields use XPath via getNodeText or xmlDoc.evaluate:
-    expect(sourceCode).toMatch(/getNodeText\(funderNode,\s*["']ns:funderName["']/);
-    // awardNumber uses xmlDoc.evaluate directly, not getNodeText
-    expect(sourceCode).toMatch(/evaluate\(["']ns:awardNumber["']/);
-    expect(sourceCode).toMatch(/getNodeText\(funderNode,\s*["']ns:awardTitle["']/);
+    // Verify XPath is used instead (via xmlDoc.evaluate)
+    expect(sourceCode).toMatch(/evaluate\(["']ns:funderIdentifier["']/);
   });
 
-  test("funderIdentifierType is empty when funderIdentifier is namespaced (ns: prefix)", () => {
+  test("funderIdentifierType is correctly imported from namespaced XML", () => {
     document.body.innerHTML = `
       <div id="group-fundingreference">
         <div class="row">
@@ -227,7 +220,6 @@ describe("BUG: funderIdentifierType lost on import (querySelector vs namespace)"
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
 
-    // All elements with ns: prefix — funderIdentifier also namespaced
     const xml = buildNsPrefixXml(`
       <ns:fundingReferences>
         <ns:fundingReference>
@@ -241,7 +233,6 @@ describe("BUG: funderIdentifierType lost on import (querySelector vs namespace)"
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
     ctx.processFunders(xmlDoc, NS_RESOLVER);
 
-    // All XPath-based fields work fine:
     expect(document.querySelector('input[name="funder[]"]').value).toBe(
       "Deutsche Forschungsgemeinschaft"
     );
@@ -253,13 +244,13 @@ describe("BUG: funderIdentifierType lost on import (querySelector vs namespace)"
       "https://gepris.dfg.de/12345"
     );
 
-    // BUG: funderIdentifierType is EMPTY because querySelector("funderIdentifier")
-    // does not match <ns:funderIdentifier> (prefixed element)
-    const funderIdTyp = document.querySelector('input[name="funderidtyp[]"]').value;
-    expect(funderIdTyp).toBe("");
+    // FIXED: funderIdentifierType is now correctly extracted via XPath
+    expect(document.querySelector('input[name="funderidtyp[]"]').value).toBe(
+      "Crossref Funder ID"
+    );
   });
 
-  test("funderIdentifierType works when funderIdentifier is not namespaced (old test approach)", () => {
+  test("funderIdentifierType with ROR type is also correctly imported", () => {
     document.body.innerHTML = `
       <div id="group-fundingreference">
         <div class="row">
@@ -276,30 +267,27 @@ describe("BUG: funderIdentifierType lost on import (querySelector vs namespace)"
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
 
-    // Mixed: most elements with ns: prefix, but funderIdentifier WITHOUT prefix
-    const xml = `
-      <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
-        <ns:fundingReferences>
-          <ns:fundingReference>
-            <ns:funderName>Test Fund</ns:funderName>
-            <funderIdentifier funderIdentifierType="Crossref Funder ID">12345</funderIdentifier>
-            <ns:awardNumber awardURI="https://example.com/award">AB123</ns:awardNumber>
-            <ns:awardTitle>Award Title</ns:awardTitle>
-          </ns:fundingReference>
-        </ns:fundingReferences>
-      </ns:resource>`;
+    const xml = buildNsPrefixXml(`
+      <ns:fundingReferences>
+        <ns:fundingReference>
+          <ns:funderName>European Research Council</ns:funderName>
+          <ns:funderIdentifier funderIdentifierType="ROR">https://ror.org/0472cxd90</ns:funderIdentifier>
+          <ns:awardNumber awardURI="https://example.com/award">ERC-123</ns:awardNumber>
+          <ns:awardTitle>Climate Research</ns:awardTitle>
+        </ns:fundingReference>
+      </ns:fundingReferences>`);
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
     ctx.processFunders(xmlDoc, NS_RESOLVER);
 
-    // This PASSES because unnamespaced <funderIdentifier> IS found by querySelector
-    expect(document.querySelector('input[name="funderidtyp[]"]').value).toBe(
-      "Crossref Funder ID"
+    expect(document.querySelector('input[name="funderidtyp[]"]').value).toBe("ROR");
+    expect(document.querySelector('input[name="funderId[]"]').value).toBe(
+      "https://ror.org/0472cxd90"
     );
   });
 });
 
-// ─── BUG 2: awardURI import verification (not a bug — works) ───────────────
+// ─── awardURI import verification ───────────────────────────────────────────
 
 describe("awardURI import from namespaced XML", () => {
   test("awardURI is correctly imported via XPath getAttribute", () => {
@@ -323,7 +311,7 @@ describe("awardURI import from namespaced XML", () => {
       <ns:fundingReferences>
         <ns:fundingReference>
           <ns:funderName>DFG</ns:funderName>
-          <funderIdentifier funderIdentifierType="Crossref Funder ID">501100001659</funderIdentifier>
+          <ns:funderIdentifier funderIdentifierType="Crossref Funder ID">501100001659</ns:funderIdentifier>
           <ns:awardNumber awardURI="https://gepris.dfg.de/12345">DFG-12345</ns:awardNumber>
           <ns:awardTitle>Seismic Monitoring</ns:awardTitle>
         </ns:fundingReference>
@@ -338,9 +326,9 @@ describe("awardURI import from namespaced XML", () => {
   });
 });
 
-// ─── BUG 3: Contact person email/website lost on DataCite-only import ───────
+// ─── Contact person email/website from different XML sources ────────────────
 
-describe("BUG: contact person email/website lost from DataCite-only XML", () => {
+describe("Contact person email/website from DataCite-only XML", () => {
   test("contact person checkbox is set via DataCite fallback (but email/website lost)", () => {
     document.body.innerHTML = `
       <div id="group-author">
@@ -480,10 +468,10 @@ describe("BUG: contact person email/website lost from DataCite-only XML", () => 
   });
 });
 
-// ─── BUG 4: Contact person not imported when not matching any author ────────
+// ─── FIX 3: Contact person no longer dropped when not matching any author ───
 
-describe("BUG: contact person dropped when name doesn't match any author", () => {
-  test("contact person with different name than authors is silently lost", () => {
+describe("Contact person added as new author when name doesn't match (regression)", () => {
+  test("contact person with different name than authors is added as new author row", () => {
     document.body.innerHTML = `
       <div id="group-author">
         <div data-creator-row>
@@ -498,14 +486,24 @@ describe("BUG: contact person dropped when name doesn't match any author", () =>
             <input name="cpOnlineResource[]" value="" />
           </div>
         </div>
-      </div>`;
+      </div>
+      <button id="button-author-add"></button>`;
 
-    const consoleWarns = [];
-    const $ = createJQuery();
-    const ctx = loadMappingModule({
-      $,
-      console: { ...console, warn: (...args) => consoleWarns.push(args.join(" ")) },
+    // Simulate add-author button creating a new row
+    document.getElementById("button-author-add").addEventListener("click", () => {
+      const container = document.getElementById("group-author");
+      const firstRow = container.querySelector("[data-creator-row]");
+      const clone = firstRow.cloneNode(true);
+      clone.querySelectorAll("input").forEach((i) => {
+        if (i.type === "checkbox") i.checked = false;
+        else i.value = "";
+      });
+      clone.querySelector(".contact-person-input").style.display = "none";
+      container.appendChild(clone);
     });
+
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
 
     // Contact person "Müller" is not one of the authors ("Schmidt")
     const xml = buildNsPrefixXml(`
@@ -520,16 +518,25 @@ describe("BUG: contact person dropped when name doesn't match any author", () =>
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
     ctx.processContactPersons(xmlDoc);
 
-    // BUG: Contact person is silently dropped with only a console.warn
-    const checkbox = document.querySelector('input[name="contacts[]"]');
-    expect(checkbox.checked).toBe(false);
+    // FIXED: A new author row is created for the contact person
+    const allRows = document.querySelectorAll("[data-creator-row]");
+    expect(allRows.length).toBe(2);
+
+    // Original author unchanged
+    expect(allRows[0].querySelector('input[name="familynames[]"]').value).toBe("Schmidt");
+    expect(allRows[0].querySelector('input[name="contacts[]"]').checked).toBe(false);
+
+    // New row has contact person data and is marked as contact
+    expect(allRows[1].querySelector('input[name="familynames[]"]').value).toBe("Müller");
+    expect(allRows[1].querySelector('input[name="givennames[]"]').value).toBe("Erika");
+    expect(allRows[1].querySelector('input[name="contacts[]"]').checked).toBe(true);
   });
 });
 
-// ─── BUG 5: Relation type matching depends on visible dropdown text ─────────
+// ─── Relation type matching works with CamelCase ────────────────────────────
 
-describe("BUG: relation type matching relies on option text not value", () => {
-  test("relation type with spaces in option text does not match CamelCase relationType", () => {
+describe("Relation type matching with CamelCase option text", () => {
+  test("relation type CamelCase from XML matches CamelCase dropdown option", () => {
     document.body.innerHTML = `
       <div id="group-relatedwork">
         <div class="row">
@@ -538,8 +545,9 @@ describe("BUG: relation type matching relies on option text not value", () => {
             <option value="DOI">DOI</option>
           </select>
           <select name="relation[]">
-            <option value="1">Is Supplement To</option>
-            <option value="2">Is Cited By</option>
+            <option value="">-- Select --</option>
+            <option value="1">IsCitedBy</option>
+            <option value="3">IsSupplementTo</option>
           </select>
         </div>
       </div>
@@ -556,18 +564,15 @@ describe("BUG: relation type matching relies on option text not value", () => {
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
     ctx.processRelatedWorks(xmlDoc, NS_RESOLVER);
 
-    // Identifier is set correctly
     const idField = document.querySelector('input[name="rIdentifier[]"]');
     expect(idField.value).toBe("10.5555/related");
 
-    // BUG: Relation type matching: code uses $(option).text() === relationType
-    // Option text "Is Supplement To" !== "IsSupplementTo" (CamelCase from XML)
+    // CamelCase option text "IsSupplementTo" matches CamelCase XML relationType
     const relationSelect = document.querySelector('select[name="relation[]"]');
-    const selectedOption = relationSelect.options[relationSelect.selectedIndex];
-    // The first option stays selected (default) because no match was found
-    expect(selectedOption.value).toBe("1");
-    // Verify the text mismatch: the option text has spaces vs CamelCase in XML
-    expect("Is Supplement To").not.toBe("IsSupplementTo");
+    const selectedOption = relationSelect.querySelector("option[selected]") ||
+      Array.from(relationSelect.options).find((o) => o.selected && o.value !== "");
+    expect(selectedOption).toBeTruthy();
+    expect(selectedOption.value).toBe("3");
   });
 });
 
@@ -605,13 +610,13 @@ describe("Multiple funding references import", () => {
       <ns:fundingReferences>
         <ns:fundingReference>
           <ns:funderName>DFG</ns:funderName>
-          <funderIdentifier funderIdentifierType="Crossref Funder ID">501100001659</funderIdentifier>
+          <ns:funderIdentifier funderIdentifierType="Crossref Funder ID">501100001659</ns:funderIdentifier>
           <ns:awardNumber awardURI="https://example.org/1">GRANT-1</ns:awardNumber>
           <ns:awardTitle>First Grant</ns:awardTitle>
         </ns:fundingReference>
         <ns:fundingReference>
           <ns:funderName>ERC</ns:funderName>
-          <funderIdentifier funderIdentifierType="ROR">https://ror.org/0472cxd90</funderIdentifier>
+          <ns:funderIdentifier funderIdentifierType="ROR">https://ror.org/0472cxd90</ns:funderIdentifier>
           <ns:awardNumber awardURI="https://example.org/2">GRANT-2</ns:awardNumber>
           <ns:awardTitle>Second Grant</ns:awardTitle>
         </ns:fundingReference>
@@ -679,10 +684,10 @@ describe("Temporal coverage timezone offset parsing", () => {
   });
 });
 
-// ─── BUG 8: Description language attribute lost on import ───────────────────
+// ─── Known limitation: Description xml:lang not stored in form ──────────────
 
-describe("BUG: description xml:lang attribute is not imported", () => {
-  test("description content is imported but language is lost", () => {
+describe("Description xml:lang attribute limitation", () => {
+  test("description content is imported but language attribute has no form field", () => {
     document.body.innerHTML = `
       <textarea id="input-abstract"></textarea>
       <div id="collapse-abstract" class="accordion-body"></div>`;
@@ -701,7 +706,7 @@ describe("BUG: description xml:lang attribute is not imported", () => {
     // Content is imported correctly
     expect(document.getElementById("input-abstract").value).toBe("Abstrakt auf Deutsch");
 
-    // BUG: No form field stores the description language.
+    // Known limitation: No form field stores the description language.
     // On re-export, it defaults to "en" instead of "de".
     // Verify there is no hidden field for description language:
     expect(document.querySelector('input[name="descriptionLang[]"]')).toBeNull();
@@ -709,10 +714,10 @@ describe("BUG: description xml:lang attribute is not imported", () => {
   });
 });
 
-// ─── BUG 9: Title language attribute lost on import ─────────────────────────
+// ─── Known limitation: Title xml:lang not stored in form ────────────────────
 
-describe("BUG: title xml:lang attribute is not stored in form", () => {
-  test("title content is imported but language is lost", () => {
+describe("Title xml:lang attribute limitation", () => {
+  test("title content is imported but language attribute has no form field", () => {
     document.body.innerHTML = `
       <div class="row">
         <input name="title[]" value="" />
@@ -736,7 +741,7 @@ describe("BUG: title xml:lang attribute is not stored in form", () => {
     // Title text is imported
     expect(document.querySelector('input[name="title[]"]').value).toBe("Titre en français");
 
-    // BUG: xml:lang="fr" is read in code but never stored in any form field.
+    // Known limitation: xml:lang="fr" is read in code but never stored in any form field.
     // On re-export, defaults to "en". No hidden field exists for title language.
     expect(document.querySelector('input[name="titleLang[]"]')).toBeNull();
     expect(document.querySelector('select[name="titleLang[]"]')).toBeNull();
