@@ -909,3 +909,171 @@ describe("Contributor ORCID extraction", () => {
     expect(person.roles).toContain("Data Collector");
   });
 });
+
+// ─── FIX 3: resourceType now uses XPath instead of querySelector ────────────
+
+describe("resourceType import via XPath (regression for querySelector bug)", () => {
+  test("processResourceType no longer uses querySelector for resourceType", () => {
+    const sourceCode = fs.readFileSync(
+      path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
+      "utf8"
+    );
+    // Verify querySelector is no longer used for resourceType on xmlDoc
+    expect(sourceCode).not.toMatch(/xmlDoc\.querySelector\(["']resourceType["']\)/);
+  });
+
+  test("processResourceType correctly reads resourceTypeGeneral from namespaced XML", () => {
+    document.body.innerHTML = `
+      <select id="input-resourceinformation-resourcetype">
+        <option value="1">Dataset</option>
+        <option value="2">Software</option>
+        <option value="3">Collection</option>
+      </select>`;
+
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
+
+    const xml = buildNsPrefixXml(`
+      <ns:resourceType resourceTypeGeneral="Software">Analysis Code</ns:resourceType>`);
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    ctx.processResourceType(xmlDoc, NS_RESOLVER);
+
+    const select = document.getElementById("input-resourceinformation-resourcetype");
+    expect(select.value).toBe("2");
+  });
+
+  test("processResourceType handles Dataset type correctly", () => {
+    document.body.innerHTML = `
+      <select id="input-resourceinformation-resourcetype">
+        <option value="1">Dataset</option>
+        <option value="2">Software</option>
+      </select>`;
+
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
+
+    const xml = buildNsPrefixXml(`
+      <ns:resourceType resourceTypeGeneral="Dataset">Research Data</ns:resourceType>`);
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    ctx.processResourceType(xmlDoc, NS_RESOLVER);
+
+    const select = document.getElementById("input-resourceinformation-resourcetype");
+    expect(select.value).toBe("1");
+  });
+});
+
+// ─── FIX 4: geoLocation data now uses XPath instead of querySelector ────────
+
+describe("geoLocation import via XPath (regression for querySelector bug)", () => {
+  test("getGeoLocationData no longer uses querySelector on XML nodes", () => {
+    const sourceCode = fs.readFileSync(
+      path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
+      "utf8"
+    );
+    // Verify querySelector is no longer used on XML geo nodes
+    expect(sourceCode).not.toMatch(/node\.querySelector\(["']geoLocation/);
+    expect(sourceCode).not.toMatch(/boxNode\.querySelector/);
+    expect(sourceCode).not.toMatch(/pointNode\.querySelector/);
+  });
+
+  test("getGeoLocationData extracts bounding box coordinates from namespaced XML", () => {
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
+
+    const xml = buildNsPrefixXml(`
+      <ns:geoLocations>
+        <ns:geoLocation>
+          <ns:geoLocationPlace>Berlin, Germany</ns:geoLocationPlace>
+          <ns:geoLocationBox>
+            <ns:westBoundLongitude>13.0</ns:westBoundLongitude>
+            <ns:eastBoundLongitude>13.8</ns:eastBoundLongitude>
+            <ns:southBoundLatitude>52.3</ns:southBoundLatitude>
+            <ns:northBoundLatitude>52.7</ns:northBoundLatitude>
+          </ns:geoLocationBox>
+        </ns:geoLocation>
+      </ns:geoLocations>`);
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const geoNode = xmlDoc.evaluate(
+      ".//ns:geoLocations/ns:geoLocation",
+      xmlDoc,
+      NS_RESOLVER,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue;
+
+    expect(geoNode).not.toBeNull();
+    const data = ctx.getGeoLocationData(geoNode, xmlDoc, NS_RESOLVER);
+
+    expect(data.place).toBe("Berlin, Germany");
+    expect(data.latitudeMin).toBe("52.3");
+    expect(data.latitudeMax).toBe("52.7");
+    expect(data.longitudeMin).toBe("13.0");
+    expect(data.longitudeMax).toBe("13.8");
+  });
+
+  test("getGeoLocationData extracts point coordinates from namespaced XML", () => {
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
+
+    const xml = buildNsPrefixXml(`
+      <ns:geoLocations>
+        <ns:geoLocation>
+          <ns:geoLocationPlace>Potsdam</ns:geoLocationPlace>
+          <ns:geoLocationPoint>
+            <ns:pointLatitude>52.3906</ns:pointLatitude>
+            <ns:pointLongitude>13.0645</ns:pointLongitude>
+          </ns:geoLocationPoint>
+        </ns:geoLocation>
+      </ns:geoLocations>`);
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const geoNode = xmlDoc.evaluate(
+      ".//ns:geoLocations/ns:geoLocation",
+      xmlDoc,
+      NS_RESOLVER,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue;
+
+    const data = ctx.getGeoLocationData(geoNode, xmlDoc, NS_RESOLVER);
+
+    expect(data.place).toBe("Potsdam");
+    // Point coordinates should be set for both min and max
+    expect(data.latitudeMin).toBe("52.3906");
+    expect(data.latitudeMax).toBe("52.3906");
+    expect(data.longitudeMin).toBe("13.0645");
+    expect(data.longitudeMax).toBe("13.0645");
+  });
+
+  test("getGeoLocationData returns empty strings when no spatial data present", () => {
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
+
+    const xml = buildNsPrefixXml(`
+      <ns:geoLocations>
+        <ns:geoLocation>
+          <ns:geoLocationPlace>Somewhere</ns:geoLocationPlace>
+        </ns:geoLocation>
+      </ns:geoLocations>`);
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const geoNode = xmlDoc.evaluate(
+      ".//ns:geoLocations/ns:geoLocation",
+      xmlDoc,
+      NS_RESOLVER,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue;
+
+    const data = ctx.getGeoLocationData(geoNode, xmlDoc, NS_RESOLVER);
+
+    expect(data.place).toBe("Somewhere");
+    expect(data.latitudeMin).toBe("");
+    expect(data.latitudeMax).toBe("");
+    expect(data.longitudeMin).toBe("");
+    expect(data.longitudeMax).toBe("");
+  });
+});
