@@ -6,8 +6,15 @@
  * @param {Function} resolver - The namespace resolver function.
  */
 function processResourceType(xmlDoc, resolver) {
-  // Extract the resourceType element using XPath (querySelector fails on namespaced XML)
-  const result = xmlDoc.evaluate(".//ns:resourceType", xmlDoc, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+  // Extract the resourceType element using XPath with namespace fallback
+  // (supports both namespaced and non-namespaced XML documents)
+  const result = xmlDoc.evaluate(
+    ".//ns:resourceType | .//resourceType",
+    xmlDoc,
+    resolver,
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null
+  );
   const resourceNode = result.singleNodeValue;
   if (!resourceNode) {
     console.error("No resourceType element found in XML");
@@ -393,7 +400,13 @@ function processContactPersons(xmlDoc) {
 
     if ($row.length === 0) {
       // No matching author found — add a new author row for the contact person
+      const countBefore = $("div[data-creator-row]").length;
       $("#button-author-add").click();
+      const countAfter = $("div[data-creator-row]").length;
+      if (countAfter <= countBefore) {
+        console.warn("Could not create new author row for contact person:", familyName, givenName);
+        continue;
+      }
       $row = $("div[data-creator-row]").last();
       $row.find('input[name="familynames[]"]').val(familyName);
       $row.find('input[name="givennames[]"]').val(givenName);
@@ -458,7 +471,13 @@ function processContactPersonsFromDataCite(xmlDoc) {
 
     if ($row.length === 0) {
       // No matching author found — add a new author row for the contact person
+      const countBefore = $("div[data-creator-row]").length;
       $("#button-author-add").click();
+      const countAfter = $("div[data-creator-row]").length;
+      if (countAfter <= countBefore) {
+        console.warn("Could not create new author row for contact person:", familyName, givenName);
+        continue;
+      }
       $row = $("div[data-creator-row]").last();
       $row.find('input[name="familynames[]"]').val(familyName);
       $row.find('input[name="givennames[]"]').val(givenName);

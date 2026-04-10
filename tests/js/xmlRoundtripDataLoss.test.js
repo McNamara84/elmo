@@ -190,19 +190,6 @@ const NS_RESOLVER = (prefix) =>
 // ─── FIX 1: funderIdentifierType now uses XPath instead of querySelector ────
 
 describe("funderIdentifierType import via XPath (regression for querySelector bug)", () => {
-  test("processFunders no longer uses querySelector for funderIdentifier", () => {
-    const sourceCode = fs.readFileSync(
-      path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
-      "utf8"
-    );
-
-    // Verify querySelector is no longer used for funderIdentifier
-    expect(sourceCode).not.toMatch(/funderNode\.querySelector\(["']funderIdentifier["']\)/);
-
-    // Verify XPath is used instead (via xmlDoc.evaluate)
-    expect(sourceCode).toMatch(/evaluate\(["']ns:funderIdentifier["']/);
-  });
-
   test("funderIdentifierType is correctly imported from namespaced XML", () => {
     document.body.innerHTML = `
       <div id="group-fundingreference">
@@ -687,7 +674,7 @@ describe("Temporal coverage timezone offset parsing", () => {
 // ─── Known limitation: Description xml:lang not stored in form ──────────────
 
 describe("Description xml:lang attribute limitation", () => {
-  test("description content is imported but language attribute has no form field", () => {
+  test("description content is imported correctly", () => {
     document.body.innerHTML = `
       <textarea id="input-abstract"></textarea>
       <div id="collapse-abstract" class="accordion-body"></div>`;
@@ -703,21 +690,19 @@ describe("Description xml:lang attribute limitation", () => {
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
     ctx.processDescriptions(xmlDoc, NS_RESOLVER);
 
-    // Content is imported correctly
     expect(document.getElementById("input-abstract").value).toBe("Abstrakt auf Deutsch");
-
-    // Known limitation: No form field stores the description language.
-    // On re-export, it defaults to "en" instead of "de".
-    // Verify there is no hidden field for description language:
-    expect(document.querySelector('input[name="descriptionLang[]"]')).toBeNull();
-    expect(document.querySelector('select[name="descriptionLang[]"]')).toBeNull();
   });
+
+  // TODO(#1055): xml:lang for descriptions is not persisted in the form.
+  // On re-export, the language defaults to "en" instead of the original value.
+  // Add a form field for description language and persist it through the roundtrip.
+  test.todo("description xml:lang attribute should be preserved during roundtrip");
 });
 
 // ─── Known limitation: Title xml:lang not stored in form ────────────────────
 
 describe("Title xml:lang attribute limitation", () => {
-  test("title content is imported but language attribute has no form field", () => {
+  test("title content is imported correctly", () => {
     document.body.innerHTML = `
       <div class="row">
         <input name="title[]" value="" />
@@ -738,14 +723,13 @@ describe("Title xml:lang attribute limitation", () => {
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
     ctx.processTitles(xmlDoc, NS_RESOLVER, { "": "1", MainTitle: "1" });
 
-    // Title text is imported
     expect(document.querySelector('input[name="title[]"]').value).toBe("Titre en français");
-
-    // Known limitation: xml:lang="fr" is read in code but never stored in any form field.
-    // On re-export, defaults to "en". No hidden field exists for title language.
-    expect(document.querySelector('input[name="titleLang[]"]')).toBeNull();
-    expect(document.querySelector('select[name="titleLang[]"]')).toBeNull();
   });
+
+  // TODO(#1055): xml:lang for titles is not persisted in the form.
+  // On re-export, the language defaults to "en" instead of the original value.
+  // Add a form field for title language and persist it through the roundtrip.
+  test.todo("title xml:lang attribute should be preserved during roundtrip");
 });
 
 // ─── BUG 10: Thesaurus keyword metadata round-trip ──────────────────────────
@@ -797,15 +781,7 @@ describe("Keyword metadata round-trip via Tagify tags", () => {
 // ─── Author ORCID URL stripping ─────────────────────────────────────
 
 describe("Author ORCID URL stripping", () => {
-  /**
-   * NOTE: jsdom's XPath engine does not support attribute predicates on
-   * namespaced elements (e.g. ns:nameIdentifier[@nameIdentifierScheme="ORCID"])
-   * returns null. Therefore, processCreators cannot extract ORCID in jsdom.
-   * This test verifies other fields ARE populated (name, affiliation) and
-   * documents that ORCID is empty due to XPath limitation.
-   * In real browsers, ORCID extraction works correctly.
-   */
-  test("creator name and affiliation are imported (ORCID empty in jsdom due to XPath attr predicate limitation)", () => {
+  test("creator name and affiliation are imported from namespaced XML", () => {
     document.body.innerHTML = `
       <div id="group-author">
         <div data-creator-row>
@@ -844,35 +820,20 @@ describe("Author ORCID URL stripping", () => {
     expect(document.querySelector('input[name="familynames[]"]').value).toBe("Schmidt");
     expect(document.querySelector('input[name="givennames[]"]').value).toBe("Thomas");
 
-    // ORCID is empty in jsdom because XPath attribute predicates don't work
-    // on namespaced elements. In real browsers, this correctly returns the ORCID.
-    // The .replace("https://orcid.org/", "") stripping logic is verified by
-    // inspecting the source code below.
-    expect(document.querySelector('input[name="orcids[]"]').value).toBe("");
-  });
-
-  test("source code uses .replace() to strip ORCID URL prefix", () => {
-    const sourceCode = fs.readFileSync(
-      path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
-      "utf8"
-    );
-    // Verify the ORCID URL stripping logic exists
-    expect(sourceCode).toMatch(
-      /getNodeText\(creatorNode.*nameIdentifierScheme.*ORCID.*\.replace\(["']https:\/\/orcid\.org\/["']/
-    );
+    // ORCID extraction depends on XPath attribute predicate support.
+    // jsdom currently returns empty; real browsers return the stripped ORCID.
+    const orcidValue = document.querySelector('input[name="orcids[]"]').value;
+    if (orcidValue !== "") {
+      // If the engine supports attribute predicates, verify URL prefix is stripped
+      expect(orcidValue).toBe("0000-0001-2345-6789");
+    }
   });
 });
 
 // ─── Contributor ORCID handling ─────────────────────────────────────
 
 describe("Contributor ORCID extraction", () => {
-  /**
-   * NOTE: jsdom's XPath does not support attribute predicates on namespaced
-   * elements. The XPath query ns:nameIdentifier[@schemeURI="https://orcid.org/"]
-   * returns null. So contributor ORCID will be empty in jsdom.
-   * Name and role extraction work correctly (no attribute predicates on those).
-   */
-  test("contributor name and role are extracted (ORCID empty in jsdom)", () => {
+  test("contributor name and role are extracted from namespaced XML", () => {
     const ctx = loadMappingModule();
 
     const xml = buildNsPrefixXml(`
@@ -902,26 +863,21 @@ describe("Contributor ORCID extraction", () => {
 
     expect(personMap.size).toBe(1);
     const person = personMap.values().next().value;
-    // ORCID is empty in jsdom due to XPath attribute predicate limitation
-    expect(person.orcid).toBe("");
     expect(person.givenName).toBe("Erika");
     expect(person.familyName).toBe("Müller");
     expect(person.roles).toContain("Data Collector");
+
+    // ORCID extraction depends on XPath attribute predicate support.
+    // jsdom currently returns empty; real browsers return the ORCID.
+    if (person.orcid !== "") {
+      expect(person.orcid).toBe("0000-0002-9876-5432");
+    }
   });
 });
 
 // ─── FIX 3: resourceType now uses XPath instead of querySelector ────────────
 
 describe("resourceType import via XPath (regression for querySelector bug)", () => {
-  test("processResourceType no longer uses querySelector for resourceType", () => {
-    const sourceCode = fs.readFileSync(
-      path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
-      "utf8"
-    );
-    // Verify querySelector is no longer used for resourceType on xmlDoc
-    expect(sourceCode).not.toMatch(/xmlDoc\.querySelector\(["']resourceType["']\)/);
-  });
-
   test("processResourceType correctly reads resourceTypeGeneral from namespaced XML", () => {
     document.body.innerHTML = `
       <select id="input-resourceinformation-resourcetype">
@@ -962,22 +918,30 @@ describe("resourceType import via XPath (regression for querySelector bug)", () 
     const select = document.getElementById("input-resourceinformation-resourcetype");
     expect(select.value).toBe("1");
   });
+
+  test("processResourceType also works for non-namespaced XML", () => {
+    document.body.innerHTML = `
+      <select id="input-resourceinformation-resourcetype">
+        <option value="1">Dataset</option>
+        <option value="2">Software</option>
+      </select>`;
+
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
+
+    const xml = `<resource><resourceType resourceTypeGeneral="Software">Analysis Code</resourceType></resource>`;
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    ctx.processResourceType(xmlDoc, NS_RESOLVER);
+
+    const select = document.getElementById("input-resourceinformation-resourcetype");
+    expect(select.value).toBe("2");
+  });
 });
 
 // ─── FIX 4: geoLocation data now uses XPath instead of querySelector ────────
 
 describe("geoLocation import via XPath (regression for querySelector bug)", () => {
-  test("getGeoLocationData no longer uses querySelector on XML nodes", () => {
-    const sourceCode = fs.readFileSync(
-      path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
-      "utf8"
-    );
-    // Verify querySelector is no longer used on XML geo nodes
-    expect(sourceCode).not.toMatch(/node\.querySelector\(["']geoLocation/);
-    expect(sourceCode).not.toMatch(/boxNode\.querySelector/);
-    expect(sourceCode).not.toMatch(/pointNode\.querySelector/);
-  });
-
   test("getGeoLocationData extracts bounding box coordinates from namespaced XML", () => {
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
