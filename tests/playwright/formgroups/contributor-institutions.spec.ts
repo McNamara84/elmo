@@ -107,6 +107,7 @@ function buildTestPageMarkup() {
     <script src="js/roles.js"></script>
     <script src="js/affiliations.js"></script>
     <script src="js/checkMandatoryFields.js"></script>
+    <script src="js/validation/orcidValidation.js"></script>
     <script src="js/autocomplete.js"></script>
     <script type="module" src="js/eventhandlers/formgroups/contributor-organisation.js"></script>
   </body>

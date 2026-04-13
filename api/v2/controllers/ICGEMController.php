@@ -383,36 +383,38 @@ class ICGEMController extends DatasetController
                     
                     case 'G': // Ground data
                         if (!empty($dataSource['details'])) {
-                            $groundDetailElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':groundDetail', null, self::ICGEM_NAMESPACE_URI);
-                            $groundDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':groundDetail', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
                         }
                         break;
                     
                     case 'A': // Altimetry
                         if (!empty($dataSource['details'])) {
-                            $altimetryDetailElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':altimetryDetail', null, self::ICGEM_NAMESPACE_URI);
-                            $altimetryDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':altimetryDetail', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
                         }
                         break;
                     
                     case 'T': // Topographic/Elevation Terrain
+                        if (!empty($dataSource['details'])) {
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':elevationTerrainDetail', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
+                        }
                         if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
-                            $elevTerrainElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':elevationTerrainDetail', null, self::ICGEM_NAMESPACE_URI);
-                            $compDepthElement = $elevTerrainElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', $this->prepare($dataSource['T_Isostasy_compensation_depth'], 'compensationDepth'), self::ICGEM_NAMESPACE_URI);
+                            $compDepthElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', $this->prepare($dataSource['T_Isostasy_compensation_depth'], 'compensationDepth'), self::ICGEM_NAMESPACE_URI);
                             $compDepthElement->addAttribute('uom', 'm');
                         }
                         break;
                     
                     case 'M': // Model
-                        $modelDetailElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelDetail', null, self::ICGEM_NAMESPACE_URI);
+                        if (!empty($dataSource['details'])) {
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':modelDetail', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
+                        }
                         if (!empty($dataSource['M_identifier'])) {
-                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifier', $this->prepare($dataSource['M_identifier'], 'identifier'), self::ICGEM_NAMESPACE_URI);
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifier', $this->prepare($dataSource['M_identifier'], 'identifier'), self::ICGEM_NAMESPACE_URI);
                         }
                         if (!empty($dataSource['M_identifier_type'])) {
-                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifierType', $this->prepare($dataSource['M_identifier_type'], 'identifierType'), self::ICGEM_NAMESPACE_URI);
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifierType', $this->prepare($dataSource['M_identifier_type'], 'identifierType'), self::ICGEM_NAMESPACE_URI);
                         }
                         if (!empty($dataSource['M_name'])) {
-                            $modelDetailElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':name', $this->prepare($dataSource['M_name'], 'name'), self::ICGEM_NAMESPACE_URI);
+                            $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':name', $this->prepare($dataSource['M_name'], 'name'), self::ICGEM_NAMESPACE_URI);
                         }
                         break;
                 }

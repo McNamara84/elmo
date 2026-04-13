@@ -4,12 +4,15 @@
 
 describe('upload.js', () => {
     let $;
+    let uploadModule;
     
-    beforeEach(() => {
+    beforeEach(async () => {
         // Set up jQuery
         $ = require('jquery');
         global.$ = $;
         global.jQuery = $;
+        window.$ = $;
+        window.jQuery = $;
         
         // Set up DOM structure
         document.body.innerHTML = `
@@ -19,211 +22,57 @@ describe('upload.js', () => {
                 <div id="panel-uploadxml-dropfile" class="border">
                     Drop XML file here
                 </div>
+                <div id="upload-spinner-overlay" class="d-none text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+                <div id="xml-upload-status" class="alert d-none"></div>
             </div>
-            <div id="xml-upload-status" class="alert d-none"></div>
         `;
         
         // Mock Bootstrap modal
         $.fn.modal = jest.fn();
-        
-        // Mock loadXmlToForm
-        global.loadXmlToForm = jest.fn().mockResolvedValue(true);
 
-        // Mock DOMParser
-        global.DOMParser = class {
-            parseFromString(str, type) {
-                const doc = document.implementation.createDocument('', '', null);
-                if (str.includes('parsererror') || str === 'invalid') {
-                    const errorEl = document.createElement('parsererror');
-                    doc.appendChild(errorEl);
-                }
-                return doc;
-            }
+        // Mock bootstrap Toast
+        window.bootstrap = {
+            Toast: jest.fn(function (el, opts) {
+                this.el = el;
+                this.opts = opts;
+                this.show = jest.fn();
+            })
         };
+
+        // Mock FileReader
+        global.FileReader = jest.fn(() => ({
+            readAsText: jest.fn(),
+            onload: null,
+            onerror: null
+        }));
+
+        jest.resetModules();
+        uploadModule = require('../../js/upload.js');
+        // Flush microtasks for jQuery 4 $(document).ready()
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        // Install fake timers after setup to prevent real 10s timeouts from leaking
+        jest.useFakeTimers();
     });
 
     afterEach(() => {
+        jest.clearAllTimers();
+        jest.useRealTimers();
         document.body.innerHTML = '';
         jest.clearAllMocks();
         jest.resetModules();
-    });
-
-    describe('showUploadStatus', () => {
-        test('displays success message with correct class', () => {
-            // Define the function for testing
-            function showUploadStatus(message, type) {
-                const statusElement = $('#xml-upload-status');
-                statusElement.removeClass()
-                    .addClass(`alert alert-${type}`)
-                    .removeClass('d-none')
-                    .text(message);
-            }
-
-            showUploadStatus('Test success message', 'success');
-
-            const statusEl = $('#xml-upload-status');
-            expect(statusEl.hasClass('alert-success')).toBe(true);
-            expect(statusEl.hasClass('d-none')).toBe(false);
-            expect(statusEl.text()).toBe('Test success message');
-        });
-
-        test('displays danger message with correct class', () => {
-            function showUploadStatus(message, type) {
-                const statusElement = $('#xml-upload-status');
-                statusElement.removeClass()
-                    .addClass(`alert alert-${type}`)
-                    .removeClass('d-none')
-                    .text(message);
-            }
-
-            showUploadStatus('Error message', 'danger');
-
-            const statusEl = $('#xml-upload-status');
-            expect(statusEl.hasClass('alert-danger')).toBe(true);
-            expect(statusEl.text()).toBe('Error message');
-        });
-
-        test('removes previous classes before adding new ones', () => {
-            function showUploadStatus(message, type) {
-                const statusElement = $('#xml-upload-status');
-                statusElement.removeClass()
-                    .addClass(`alert alert-${type}`)
-                    .removeClass('d-none')
-                    .text(message);
-            }
-
-            // First call with success
-            showUploadStatus('Success', 'success');
-            expect($('#xml-upload-status').hasClass('alert-success')).toBe(true);
-
-            // Second call with danger
-            showUploadStatus('Error', 'danger');
-            expect($('#xml-upload-status').hasClass('alert-danger')).toBe(true);
-            // Note: jQuery removeClass() without args removes all classes in this context
-        });
-    });
-
-    describe('handleXmlFile', () => {
-        test('reads file and calls loadXmlToForm for valid XML', (done) => {
-            const mockXmlContent = '<?xml version="1.0"?><root><element>test</element></root>';
-            const file = new Blob([mockXmlContent], { type: 'text/xml' });
-            file.name = 'test.xml';
-
-            // Create mock FileReader
-            const mockFileReader = {
-                readAsText: jest.fn(),
-                onload: null,
-                onerror: null,
-                result: mockXmlContent
-            };
-
-            global.FileReader = jest.fn(() => mockFileReader);
-
-            function handleXmlFile(file) {
-                const reader = new FileReader();
-                reader.onload = async function (event) {
-                    try {
-                        const parser = new DOMParser();
-                        const xmlDoc = parser.parseFromString(reader.result, 'text/xml');
-
-                        if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
-                            throw new Error('Invalid XML file');
-                        }
-
-                        await loadXmlToForm(xmlDoc);
-                        done();
-                    } catch (error) {
-                        done(error);
-                    }
-                };
-                reader.readAsText(file);
-            }
-
-            handleXmlFile(file);
-
-            // Trigger the onload callback
-            mockFileReader.onload({ target: { result: mockXmlContent } });
-        });
-
-        test('shows error for invalid XML', (done) => {
-            const mockInvalidXml = 'invalid';
-            const file = new Blob([mockInvalidXml], { type: 'text/xml' });
-            
-            let errorShown = false;
-            function showUploadStatus(message, type) {
-                if (type === 'danger') {
-                    errorShown = true;
-                    expect(message).toContain('Error');
-                    done();
-                }
-            }
-
-            const mockFileReader = {
-                readAsText: jest.fn(),
-                onload: null,
-                onerror: null,
-                result: mockInvalidXml
-            };
-
-            global.FileReader = jest.fn(() => mockFileReader);
-
-            function handleXmlFile(file) {
-                const reader = new FileReader();
-                reader.onload = async function (event) {
-                    try {
-                        const parser = new DOMParser();
-                        const xmlDoc = parser.parseFromString(reader.result, 'text/xml');
-
-                        if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
-                            throw new Error('Invalid XML file');
-                        }
-
-                        await loadXmlToForm(xmlDoc);
-                    } catch (error) {
-                        showUploadStatus('Error processing XML file: ' + error.message, 'danger');
-                    }
-                };
-                reader.readAsText(file);
-            }
-
-            handleXmlFile(file);
-            mockFileReader.onload({ target: { result: mockInvalidXml } });
-        });
-
-        test('handles file read error', (done) => {
-            const file = new Blob(['content'], { type: 'text/xml' });
-            
-            function showUploadStatus(message, type) {
-                if (message === 'Error reading file') {
-                    expect(type).toBe('danger');
-                    done();
-                }
-            }
-
-            const mockFileReader = {
-                readAsText: jest.fn(),
-                onload: null,
-                onerror: null
-            };
-
-            global.FileReader = jest.fn(() => mockFileReader);
-
-            function handleXmlFile(file) {
-                const reader = new FileReader();
-                reader.onerror = function () {
-                    showUploadStatus('Error reading file', 'danger');
-                };
-                reader.readAsText(file);
-            }
-
-            handleXmlFile(file);
-            mockFileReader.onerror();
-        });
+        delete window.bootstrap;
+        delete global.FileReader;
+        delete global.$;
+        delete global.jQuery;
+        delete window.$;
+        delete window.jQuery;
     });
 
     describe('drag and drop', () => {
         test('dropzone adds border-primary class on dragover', () => {
-            // Manually trigger jQuery event binding
             const dropZone = $('#panel-uploadxml-dropfile');
             
             dropZone.on('dragover', function (event) {
@@ -261,23 +110,95 @@ describe('upload.js', () => {
         });
     });
 
-    describe('file validation', () => {
-        test('accepts files with .xml extension', () => {
-            const file = { name: 'test.xml', type: 'text/xml' };
-            const isValid = file.type === 'text/xml' || file.name.endsWith('.xml');
-            expect(isValid).toBe(true);
+    describe('isXmlFile', () => {
+        test('accepts files with text/xml type', () => {
+            expect(uploadModule.isXmlFile({ name: 'test.xml', type: 'text/xml' })).toBe(true);
         });
 
-        test('accepts files with text/xml type', () => {
-            const file = { name: 'test', type: 'text/xml' };
-            const isValid = file.type === 'text/xml' || file.name.endsWith('.xml');
-            expect(isValid).toBe(true);
+        test('accepts files with application/xml type', () => {
+            expect(uploadModule.isXmlFile({ name: 'test', type: 'application/xml' })).toBe(true);
+        });
+
+        test('accepts files with .xml extension regardless of type', () => {
+            expect(uploadModule.isXmlFile({ name: 'data.xml', type: '' })).toBe(true);
         });
 
         test('rejects files without .xml extension and wrong type', () => {
-            const file = { name: 'test.txt', type: 'text/plain' };
-            const isValid = file.type === 'text/xml' || file.name.endsWith('.xml');
-            expect(isValid).toBe(false);
+            expect(uploadModule.isXmlFile({ name: 'test.txt', type: 'text/plain' })).toBe(false);
+        });
+
+        test('returns false for undefined', () => {
+            expect(uploadModule.isXmlFile(undefined)).toBe(false);
+        });
+
+        test('returns false for null', () => {
+            expect(uploadModule.isXmlFile(null)).toBe(false);
+        });
+
+        test('handles file with no name property', () => {
+            expect(uploadModule.isXmlFile({ type: 'text/plain' })).toBe(false);
+        });
+
+        test('accepts uppercase .XML extension', () => {
+            expect(uploadModule.isXmlFile({ name: 'DATA.XML', type: '' })).toBe(true);
+        });
+
+        test('accepts mixed case .Xml extension', () => {
+            expect(uploadModule.isXmlFile({ name: 'file.Xml', type: '' })).toBe(true);
+        });
+    });
+
+    describe('translateWithFallback', () => {
+        test('returns fallback when no translate function', () => {
+            expect(uploadModule.translateWithFallback('some.key', 'fallback text')).toBe('fallback text');
+        });
+
+        test('returns translation when available', () => {
+            window.elmo = { translate: jest.fn(() => 'translated') };
+            expect(uploadModule.translateWithFallback('some.key', 'fallback')).toBe('translated');
+            delete window.elmo;
+        });
+
+        test('returns fallback when translate returns empty', () => {
+            window.elmo = { translate: jest.fn(() => '') };
+            expect(uploadModule.translateWithFallback('some.key', 'fallback')).toBe('fallback');
+            delete window.elmo;
+        });
+    });
+
+    describe('buildUploadMessage', () => {
+        test('builds success message with fallback', () => {
+            expect(uploadModule.buildUploadMessage('test.xml', 'success')).toBe('test.xml successfully loaded');
+        });
+
+        test('builds generic error message with fallback', () => {
+            expect(uploadModule.buildUploadMessage('test.xml', 'danger')).toBe('Error loading file: test.xml');
+        });
+
+        test('builds read-error message with errorKey', () => {
+            expect(uploadModule.buildUploadMessage('test.xml', 'danger', 'modals.upload.errorReading')).toBe('Error reading file: test.xml');
+        });
+
+        test('builds processing-error message with errorKey', () => {
+            expect(uploadModule.buildUploadMessage('test.xml', 'danger', 'modals.upload.errorProcessing')).toBe('Error processing XML file: test.xml');
+        });
+
+        test('uses translation for success when available', () => {
+            window.elmo = { translate: jest.fn((key) => {
+                if (key === 'modals.upload.successToast') return 'erfolgreich geladen';
+                return null;
+            })};
+            expect(uploadModule.buildUploadMessage('data.xml', 'success')).toBe('data.xml erfolgreich geladen');
+            delete window.elmo;
+        });
+
+        test('uses translation for specific errorKey when available', () => {
+            window.elmo = { translate: jest.fn((key) => {
+                if (key === 'modals.upload.errorProcessing') return 'Fehler beim Verarbeiten der XML-Datei';
+                return null;
+            })};
+            expect(uploadModule.buildUploadMessage('data.xml', 'danger', 'modals.upload.errorProcessing')).toBe('Fehler beim Verarbeiten der XML-Datei: data.xml');
+            delete window.elmo;
         });
     });
 });

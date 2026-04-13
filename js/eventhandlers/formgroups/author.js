@@ -4,7 +4,7 @@
  * @module author
  */
 
-import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
+import { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } from '../functions.js';
 
 $(document).ready(function () {
   /**
@@ -54,6 +54,8 @@ $(document).ready(function () {
   // Store a clean clone of the original author row
   const originalAuthorRow = authorGroup.children().first().clone();
 
+  let authorIndex = 1; // Monotonically increasing counter for unique IDs
+
   function escapeSelector(value) {
     if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
       return CSS.escape(value);
@@ -62,16 +64,15 @@ $(document).ready(function () {
   }
 
   function addAuthorRow() {
-    const sourceRow = authorGroup.children().first();
-    if (!sourceRow || sourceRow.length === 0) return null;
+    if (!originalAuthorRow || originalAuthorRow.length === 0) return null;
 
-    // New row by cloning the first template
-    // false = do not clone event handlers
-    const newAuthorRow = sourceRow.clone(false);
+    // Clone from the stored original template (not the current first child)
+    // to avoid double-suffixed IDs after drag-and-drop reorder
+    const newAuthorRow = originalAuthorRow.clone(false);
 
-    // Each new row is assigned a sequential number (index)
-    // Example: 1 = first copy, 2 = second copy, etc.
-    const index = authorGroup.children().length;
+    // Each new row is assigned a sequential number from a monotonically
+    // increasing counter to guarantee unique IDs even after row removal.
+    const index = authorIndex++;
 
     // 1. Reset input fields + assign new IDs
     newAuthorRow.find("input, select").each(function () {
@@ -115,6 +116,9 @@ $(document).ready(function () {
 
     // 5. Customize help buttons
     replaceHelpButtonInClonedRows(newAuthorRow);
+
+    // 5b. Apply translations to the cloned row
+    translateClonedRow(newAuthorRow);
 
     // 6. Insert new row in DOM
     authorGroup.append(newAuthorRow);

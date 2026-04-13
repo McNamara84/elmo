@@ -93,6 +93,10 @@ describe('autocomplete.js', () => {
     global.Tagify = MockTagify;
     global.fetch = jest.fn();
 
+    // Provide isValidOrcidChecksum globally (loaded via separate script in production)
+    const orcidValidationScript = fs.readFileSync(path.resolve(__dirname, '../../js/validation/orcidValidation.js'), 'utf8');
+    window.eval(orcidValidationScript);
+
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/autocomplete.js'), 'utf8');
     window.eval(script);
     await flushPromises();
@@ -158,7 +162,7 @@ describe('autocomplete.js', () => {
     affInput._tagify = new MockTagify(affInput, {});
 
     const orcidInput = $('#group-author input[name="orcids[]"]');
-    orcidInput.val('1111-1111-1111-1111').trigger('blur');
+    orcidInput.val('1111-1111-1111-1115').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -240,7 +244,7 @@ describe('autocomplete.js', () => {
     affInput._tagify = new MockTagify(affInput, {});
 
     const orcidInput = $('#group-author input[name="orcids[]"]');
-    orcidInput.val('2222-2222-2222-2222').trigger('blur');
+    orcidInput.val('2222-2222-2222-2229').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -284,7 +288,7 @@ describe('autocomplete.js', () => {
     affInput._tagify = new MockTagify(affInput, {});
 
     const orcidInput = $('#group-author input[name="orcids[]"]');
-    orcidInput.val('3333-3333-3333-3333').trigger('blur');
+    orcidInput.val('3333-3333-3333-3332').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -329,7 +333,7 @@ describe('autocomplete.js', () => {
     affInput._tagify = new MockTagify(affInput, {});
 
     const orcidInput = $('#group-author input[name="orcids[]"]');
-    orcidInput.val('4444-4444-4444-4444').trigger('blur');
+    orcidInput.val('4444-4444-4444-4446').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -355,7 +359,7 @@ describe('autocomplete.js', () => {
     fetch.mockResolvedValueOnce({ json: () => Promise.resolve(data) });
 
     const orcidInput = $('#group-author input[name="orcids[]"]');
-    orcidInput.val('0000-0000-0000-0000').trigger('blur');
+    orcidInput.val('0000-0000-0000-0001').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -391,7 +395,7 @@ describe('autocomplete.js', () => {
     affInput._tagify = new MockTagify(affInput, {});
 
     const orcidInput = $('#group-contributorperson input[name="cbORCID[]"]');
-    orcidInput.val('5555-5555-5555-5555').trigger('blur');
+    orcidInput.val('5555-5555-5555-555X').trigger('blur');
     await flushPromises();
     await flushPromises();
 
@@ -399,5 +403,116 @@ describe('autocomplete.js', () => {
     expect($('#group-contributorperson input[name="cbPersonFirstname[]"]').val()).toBe('Anna');
     expect(affInput._tagify.value).toEqual([{ value: 'Lab B' }]);
     expect(document.getElementById('input-contributor-personrorid').value).toBe('https://ror.org/0anewlab1');
+  });
+
+  test('fillRowFromOrcidRecord fills author row with name and affiliations', () => {
+    const data = {
+      person: {
+        name: {
+          'family-name': { value: 'Einstein' },
+          'given-names': { value: 'Albert' }
+        }
+      },
+      'activities-summary': {
+        employments: {
+          'affiliation-group': [
+            createAffiliationSummary('employment', 'ETH Zurich', '01ror0001')
+          ]
+        },
+        educations: { 'affiliation-group': [] }
+      }
+    };
+
+    const affInput = document.getElementById('input-author-affiliation');
+    affInput._tagify = new MockTagify(affInput, {});
+
+    const row = $('#group-author [data-creator-row]');
+    window.fillRowFromOrcidRecord(row, data, window.AUTHOR_FIELD_MAPPING);
+
+    expect($('#group-author input[name="familynames[]"]').val()).toBe('Einstein');
+    expect($('#group-author input[name="givennames[]"]').val()).toBe('Albert');
+    expect(affInput._tagify.value).toEqual([{ value: 'ETH Zurich' }]);
+    expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/01ror0001');
+  });
+
+  test('fillRowFromOrcidRecord fills contributor row with name and affiliations', () => {
+    const data = {
+      person: {
+        name: {
+          'family-name': { value: 'Curie' },
+          'given-names': { value: 'Marie' }
+        }
+      },
+      'activities-summary': {
+        employments: {
+          'affiliation-group': [
+            createAffiliationSummary('employment', 'Sorbonne', '02ror0002')
+          ]
+        },
+        educations: { 'affiliation-group': [] }
+      }
+    };
+
+    const affInput = document.getElementById('input-contributorpersons-affiliation');
+    affInput._tagify = new MockTagify(affInput, {});
+
+    const row = $('#group-contributorperson [contributor-person-row]');
+    window.fillRowFromOrcidRecord(row, data, window.CONTRIBUTOR_FIELD_MAPPING);
+
+    expect($('#group-contributorperson input[name="cbPersonLastname[]"]').val()).toBe('Curie');
+    expect($('#group-contributorperson input[name="cbPersonFirstname[]"]').val()).toBe('Marie');
+    expect(affInput._tagify.value).toEqual([{ value: 'Sorbonne' }]);
+    expect(document.getElementById('input-contributor-personrorid').value).toBe('https://ror.org/02ror0002');
+  });
+
+  test('fillRowFromOrcidRecord handles missing name gracefully', () => {
+    const data = {
+      person: { name: {} },
+      'activities-summary': {}
+    };
+
+    const row = $('#group-author [data-creator-row]');
+    window.fillRowFromOrcidRecord(row, data, window.AUTHOR_FIELD_MAPPING);
+
+    expect($('#group-author input[name="familynames[]"]').val()).toBe('');
+    expect($('#group-author input[name="givennames[]"]').val()).toBe('');
+  });
+
+  test('fillRowFromOrcidRecord clears tagify when no affiliations present', () => {
+    const affInput = document.getElementById('input-author-affiliation');
+    affInput._tagify = new MockTagify(affInput, {});
+    affInput._tagify.addTags([{ value: 'Old Org' }]);
+    document.getElementById('input-author-rorid').value = 'https://ror.org/old';
+
+    const data = {
+      person: {
+        name: {
+          'family-name': { value: 'Solo' },
+          'given-names': { value: 'Han' }
+        }
+      },
+      'activities-summary': {}
+    };
+
+    const row = $('#group-author [data-creator-row]');
+    window.fillRowFromOrcidRecord(row, data, window.AUTHOR_FIELD_MAPPING);
+
+    expect(affInput._tagify.value).toHaveLength(0);
+    expect(document.getElementById('input-author-rorid').value).toBe('');
+  });
+
+  test('AUTHOR_FIELD_MAPPING and CONTRIBUTOR_FIELD_MAPPING exports are correct', () => {
+    expect(window.AUTHOR_FIELD_MAPPING).toEqual({
+      familyName: 'input[name="familynames[]"]',
+      givenName: 'input[name="givennames[]"]',
+      affiliation: 'input-author-affiliation',
+      rorId: 'input-author-rorid'
+    });
+    expect(window.CONTRIBUTOR_FIELD_MAPPING).toEqual({
+      familyName: 'input[name="cbPersonLastname[]"]',
+      givenName: 'input[name="cbPersonFirstname[]"]',
+      affiliation: 'input-contributorpersons-affiliation',
+      rorId: 'input-contributor-personrorid'
+    });
   });
 });

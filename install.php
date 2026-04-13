@@ -313,7 +313,7 @@ function createDatabaseStructure($connection): array
     `scheme` TEXT(256) NULL,
     `schemeURI` VARCHAR(256) NULL,
     `valueURI` VARCHAR(256) NULL,
-    `language` VARCHAR(20) NOT NULL,
+    `language` VARCHAR(20) NULL DEFAULT NULL,
     PRIMARY KEY (`thesaurus_keywords_id`));",
 
         "Resource_has_Thesaurus_Keywords" => "CREATE TABLE IF NOT EXISTS `Resource_has_Thesaurus_Keywords` (
@@ -567,8 +567,8 @@ function createDatabaseStructure($connection): array
     `Error_Handling_Approach` TEXT NULL,
     `Tide_System` VARCHAR(100) NULL,
     `degree` INT NULL,
-    `radius` FLOAT(9,2) NULL,
-    `earth_gravity_constant` FLOAT NULL,
+    `radius` DOUBLE NULL,
+    `earth_gravity_constant` DOUBLE NULL,
     PRIMARY KEY (`GGM_Properties_id`)
 );",
 
@@ -643,11 +643,11 @@ function createDatabaseStructure($connection): array
 
         "Ellipsoidal_Parameters" => "CREATE TABLE IF NOT EXISTS `Ellipsoidal_Parameters` (
     `ellipsoidal_parameter_id` INT NOT NULL AUTO_INCREMENT,
-    `semimajor_axis_a` FLOAT (9,2) NOT NULL,
-    `semiminor_axis_b` FLOAT (9,2) NULL,
-    `flattening` FLOAT NULL,
-    `reciprocal_flattening` FLOAT NULL,
-    `excentricity` FLOAT NULL,
+    `semimajor_axis_a` DOUBLE NOT NULL,
+    `semiminor_axis_b` DOUBLE NULL,
+    `flattening` DOUBLE NULL,
+    `reciprocal_flattening` DOUBLE NULL,
+    `excentricity` DOUBLE NULL,
     `description` TEXT NULL,
     PRIMARY KEY (`ellipsoidal_parameter_id`)
         );",

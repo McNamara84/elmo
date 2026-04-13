@@ -16,6 +16,7 @@
         "pleaseChoose": "Bitte auswählen",
         "orcid": "ORCID",
         "orcidInvalid": "Bitte geben Sie eine gültige ORCID ein (XXXX-XXXX-XXXX-XXX(X))",
+        "orcidChecksumInvalid": "Die ORCID-Prüfziffer ist ungültig. Bitte prüfen Sie die ORCID auf <a href='https://orcid.org' target='_blank'>orcid.org</a>.",
         "lastName": "Nachname",
         "lastNameInvalid": "Bitte geben Sie einen Nachnamen ein. Nur Buchstaben. Keine Ziffern oder Sonderzeichen (z.B. $, %, _).",
         "firstNameInvalid": "Bitte geben Sie einen Vornamen ein.  Nur Buchstaben. Keine Ziffern oder Sonderzeichen (z.B. $, %, _).",
@@ -198,7 +199,6 @@
     "usedInstruments": {
         "title": "Verwendete Instrumente",
         "placeholder": "Instrumente suchen und auswählen...",
-        "required": "Bitte wählen Sie mindestens ein Instrument aus.",
         "loading": "Instrumentenliste wird geladen...",
         "unavailable": "Instrumentenliste derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
         "selected": "ausgewählte Instrumente"
@@ -302,7 +302,13 @@
         },
         "upload": {
             "title": "XML-Datei auswählen:",
-            "dropZoneInfo": "XML-Datei hier ablegen"
+            "dropZoneInfo": "XML-Datei hier ablegen",
+            "loading": "Datei wird verarbeitet...",
+            "successToast": "erfolgreich geladen",
+            "errorToast": "Fehler beim Laden der Datei",
+            "invalidFileType": "Bitte laden Sie eine XML-Datei hoch.",
+            "errorProcessing": "Fehler beim Verarbeiten der XML-Datei",
+            "errorReading": "Fehler beim Lesen der Datei"
         },
         "changelog": {
             "title": "Änderungsprotokoll",
@@ -335,6 +341,23 @@
             "guideHint": "Wenn Sie weitere Hilfe beim Ausfüllen des Formulars benötigen, finden Sie den <a href='doc/help.php' target='_blank'>ELMO Guide</a> hier.",
             "close": "Schließen"
         }
+    },
+    "orcidSearch": {
+        "modalTitle": "ORCID durchsuchen",
+        "lastName": "Nachname",
+        "firstName": "Vorname",
+        "searchButton": "Suchen",
+        "resultsHeading": "Suchergebnisse",
+        "noResults": "Keine Ergebnisse gefunden.",
+        "columnOrcid": "ORCID",
+        "columnLastName": "Nachname",
+        "columnFirstName": "Vorname",
+        "columnAffiliation": "Affiliation(en)",
+        "accept": "Übernehmen",
+        "searching": "Suche läuft...",
+        "error": "Der ORCID-Dienst ist vorübergehend nicht erreichbar. Bitte versuchen Sie es später erneut.",
+        "searchButtonTitle": "ORCID nach Name suchen",
+        "inputRequired": "Bitte geben Sie mindestens einen Vor- oder Nachnamen ein."
     },
     "welcome": {
         "title": "Willkommen bei ELMO 😊",

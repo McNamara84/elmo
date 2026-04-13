@@ -146,7 +146,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     // Check if the array is empty
                     if (data.length === 0) {
-                        console.log("ELMO currently has no curated keywords.");
                         return;
                     }
 

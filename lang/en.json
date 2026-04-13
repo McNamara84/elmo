@@ -16,6 +16,7 @@
         "pleaseChoose": "Please choose",
         "orcid": "ORCID",
         "orcidInvalid": "Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))",
+        "orcidChecksumInvalid": "The ORCID checksum is invalid. Please verify the ORCID at <a href='https://orcid.org' target='_blank'>orcid.org</a>.",
         "lastName": "Last Name",
         "lastNameInvalid": "Please provide a lastname. Letters only. No digits or special characters (e.g. $, %, _).",
         "firstNameInvalid": "Please provide a firstname. Letters only. No digits or special characters (e.g. $, %, _).",
@@ -197,7 +198,6 @@
     "usedInstruments": {
         "title": "Used Instruments",
         "placeholder": "Search and select instruments...",
-        "required": "Please select at least one instrument.",
         "loading": "Loading instrument list...",
         "unavailable": "Instrument list currently unavailable. Please try again later.",
         "selected": "selected instruments"
@@ -301,7 +301,13 @@
         },
         "upload": {
             "title": "Select XML file:",
-            "dropZoneInfo": "Drop XML file here"
+            "dropZoneInfo": "Drop XML file here",
+            "loading": "Processing file...",
+            "successToast": "successfully loaded",
+            "errorToast": "Error loading file",
+            "invalidFileType": "Please upload an XML file.",
+            "errorProcessing": "Error processing XML file",
+            "errorReading": "Error reading file"
         },
         "changelog": {
             "title": "Changelog",
@@ -334,6 +340,23 @@
             "guideHint": "If you need further help filling in the form, you can find the <a href='doc/help.php' target='_blank'>ELMO Guide</a> here.",
             "close": "Close"
         }
+    },
+    "orcidSearch": {
+        "modalTitle": "Search ORCID",
+        "lastName": "Last Name",
+        "firstName": "First Name",
+        "searchButton": "Search",
+        "resultsHeading": "Search Results",
+        "noResults": "No results found.",
+        "columnOrcid": "ORCID",
+        "columnLastName": "Last Name",
+        "columnFirstName": "First Name",
+        "columnAffiliation": "Affiliation(s)",
+        "accept": "Accept",
+        "searching": "Searching...",
+        "error": "The ORCID service is temporarily unavailable. Please try again later.",
+        "searchButtonTitle": "Search ORCID by name",
+        "inputRequired": "Please enter at least a first or last name."
     },
     "welcome": {
         "title": "Welcome to ELMO 😊",

@@ -430,4 +430,167 @@ final class SaveFundingreferencesTest extends DatabaseTestCase
         $this->assertEquals('ROR', $references[1]['funderidtyp']);
         $this->assertEquals('https://ror.org/04z8jg394', $references[1]['funderid']);
     }
+
+    /**
+     * Bug #767: Duplicate funding references when ALL optional fields are NULL.
+     * Empty strings from the form must be normalized to SQL NULL and deduplicated via <=>.
+     */
+    public function testSaveDuplicateFundingReferenceWithNullFields()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.DUPLICATE.NULL', 'Test Duplicate NULL Funding');
+
+        $postData = [
+            'funder' => ['Only Funder Name', 'Only Funder Name'],
+            'funderId' => ['', ''],
+            'grantNummer' => ['', ''],
+            'grantName' => ['', ''],
+            'awardURI' => ['', '']
+        ];
+
+        saveFundingReferences($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare('SELECT * FROM Funding_Reference WHERE funder = ?');
+        $funder = 'Only Funder Name';
+        $stmt->bind_param('s', $funder);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(1, $rows, 'Bug #767: Duplicate funding reference created when all optional fields are NULL.');
+        $this->assertNull($rows[0]['funderid'], 'Empty funderid should be stored as SQL NULL.');
+        $this->assertNull($rows[0]['grantnumber'], 'Empty grant number should be stored as SQL NULL.');
+        $this->assertNull($rows[0]['grantname'], 'Empty grant name should be stored as SQL NULL.');
+        $this->assertNull($rows[0]['awarduri'], 'Empty award URI should be stored as SQL NULL.');
+    }
+
+    /**
+     * Bug #767: Duplicate detection when only awardUri is NULL but other fields are filled.
+     */
+    public function testSaveDuplicateFundingReferenceWithPartialNullFields()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.PARTIAL.NULL', 'Test Partial NULL Funding');
+
+        $postData = [
+            'funder' => ['Partial Funder', 'Partial Funder'],
+            'funderId' => ['https://doi.org/10.13039/100000001', 'https://doi.org/10.13039/100000001'],
+            'grantNummer' => ['GRANT-123', 'GRANT-123'],
+            'grantName' => ['Test Grant', 'Test Grant'],
+            'awardURI' => ['', '']
+        ];
+
+        saveFundingReferences($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare('SELECT * FROM Funding_Reference WHERE funder = ?');
+        $funder = 'Partial Funder';
+        $stmt->bind_param('s', $funder);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(1, $rows, 'Bug #767: Duplicate created when only awardUri is NULL.');
+        $this->assertNull($rows[0]['awarduri'], 'Empty award URI should be stored as SQL NULL.');
+        $this->assertNotNull($rows[0]['grantnumber'], 'Filled grant number should not be NULL.');
+    }
+
+    /**
+     * Bug #767: Entries that differ only in a nullable field should NOT be considered duplicates.
+     */
+    public function testDifferentFundingReferencesWithOneNullFieldAreNotDuplicates()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.DIFFER.NULL', 'Test Different NULL Funding');
+
+        $postData = [
+            'funder' => ['Same Funder', 'Same Funder'],
+            'funderId' => ['', ''],
+            'grantNummer' => ['GRANT-A', ''],
+            'grantName' => ['', ''],
+            'awardURI' => ['', '']
+        ];
+
+        saveFundingReferences($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare('SELECT COUNT(*) as count FROM Funding_Reference WHERE funder = ?');
+        $funder = 'Same Funder';
+        $stmt->bind_param('s', $funder);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(2, $count, 'Funding references with different grant numbers should be stored separately.');
+    }
+
+    /**
+     * Bug #767: Saving the same funding reference across two resources should reuse the same row.
+     */
+    public function testSaveSameFundingReferenceWithNullFieldsAcrossResources()
+    {
+        $resource_id_1 = $this->createResource('GFZ.TEST.RES1.NULL', 'Test Resource 1 NULL');
+        $resource_id_2 = $this->createResource('GFZ.TEST.RES2.NULL', 'Test Resource 2 NULL');
+
+        $postData = [
+            'funder' => ['Cross Resource Funder'],
+            'funderId' => [''],
+            'grantNummer' => [''],
+            'grantName' => [''],
+            'awardURI' => ['']
+        ];
+
+        saveFundingReferences($this->connection, $postData, $resource_id_1);
+        saveFundingReferences($this->connection, $postData, $resource_id_2);
+
+        $stmt = $this->connection->prepare('SELECT COUNT(*) as count FROM Funding_Reference WHERE funder = ?');
+        $funder = 'Cross Resource Funder';
+        $stmt->bind_param('s', $funder);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(1, $count, 'Bug #767: Same funding reference with NULL fields should be reused across resources.');
+
+        $stmt = $this->connection->prepare(
+            'SELECT COUNT(*) as count FROM Resource_has_Funding_Reference rhf
+             JOIN Funding_Reference fr ON fr.funding_reference_id = rhf.Funding_Reference_funding_reference_id
+             WHERE fr.funder = ?'
+        );
+        $stmt->bind_param('s', $funder);
+        $stmt->execute();
+        $linkCount = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(2, $linkCount, 'The single funding reference should be linked to both resources.');
+    }
+
+    /**
+     * Bug #767: Legacy rows with SQL NULL must be found when saving with empty form fields.
+     * Pre-inserts a row with NULL columns, then verifies the save function matches it via <=>.
+     */
+    public function testFundingReferenceLegacyNullMatchedByFormSave()
+    {
+        $resource_id = $this->createResource('GFZ.TEST.LEGACY.NULL.FR', 'Test Legacy NULL Funding');
+
+        // Pre-insert a row with SQL NULLs (simulating a legacy row)
+        $stmt = $this->connection->prepare(
+            'INSERT INTO Funding_Reference (funder, funderid, funderidtyp, grantnumber, grantname, awarduri)
+             VALUES (?, NULL, NULL, NULL, NULL, NULL)'
+        );
+        $funder = 'Legacy Funder';
+        $stmt->bind_param('s', $funder);
+        $stmt->execute();
+        $legacyId = $stmt->insert_id;
+        $stmt->close();
+
+        // Now save via the form handler with empty strings (which should be normalized to NULL)
+        $postData = [
+            'funder' => ['Legacy Funder'],
+            'funderId' => [''],
+            'grantNummer' => [''],
+            'grantName' => [''],
+            'awardURI' => ['']
+        ];
+        saveFundingReferences($this->connection, $postData, $resource_id);
+
+        // The save function should have found the pre-existing row, not created a new one
+        $stmt = $this->connection->prepare('SELECT funding_reference_id FROM Funding_Reference WHERE funder = ?');
+        $stmt->bind_param('s', $funder);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(1, $rows, 'Legacy row with SQL NULLs should be matched by form save with empty strings.');
+        $this->assertEquals($legacyId, $rows[0]['funding_reference_id'], 'The pre-existing legacy row ID should be reused.');
+    }
 }

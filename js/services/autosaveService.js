@@ -294,8 +294,21 @@ class AutosaveService {
         credentials: 'include'
       });
 
-      if (response.status === 204 || response.status === 404) {
+      if (response.status === 204) {
+        // Clear stale draft ID so the next save creates a fresh draft
+        if (this.draftId) {
+          this.draftId = null;
+          this.removeStoredDraftId();
+        }
         this.updateStatus('idle');
+        return;
+      }
+
+      if (response.status === 404) {
+        // Since the API now returns 204 for "not found", a 404 always
+        // indicates a misconfigured route or unavailable endpoint.
+        const errorMessage = await this.extractErrorMessage(response);
+        this.updateStatus('error', errorMessage || 'Draft endpoint not found');
         return;
       }
 

@@ -270,6 +270,7 @@ function setupTitleTypeDropdown() {
       );
 
       let mainTitleId = "";
+      let alternativeTitleId = "";
 
       if (Array.isArray(data)) {
         data.forEach(function (type) {
@@ -283,6 +284,9 @@ function setupTitleTypeDropdown() {
           if (type.name.toLowerCase() === "main title") {
             mainTitleId = type.id.toString();
           }
+          if (type.name.toLowerCase() === "alternative title") {
+            alternativeTitleId = type.id.toString();
+          }
         });
       }
 
@@ -290,6 +294,7 @@ function setupTitleTypeDropdown() {
         select.val(mainTitleId);
         window.mainTitleTypeId = mainTitleId;
       }
+      window.alternativeTitleTypeId = alternativeTitleId || "";
 
       window.titleTypeOptionsHtml = select.html();
     },
@@ -670,6 +675,7 @@ function populateTitleTypeDropdownWithData(types) {
   addPlaceholder($select);
 
   let mainTitleId = "";
+  let alternativeTitleId = "";
 
   if (Array.isArray(types)) {
     types.forEach(type => {
@@ -682,6 +688,9 @@ function populateTitleTypeDropdownWithData(types) {
       if (type.name.toLowerCase() === "main title") {
         mainTitleId = type.id.toString();
       }
+      if (type.name.toLowerCase() === "alternative title") {
+        alternativeTitleId = type.id.toString();
+      }
     });
   }
 
@@ -689,6 +698,7 @@ function populateTitleTypeDropdownWithData(types) {
     $select.val(mainTitleId);
     window.mainTitleTypeId = mainTitleId;
   }
+  window.alternativeTitleTypeId = alternativeTitleId || "";
   window.titleTypeOptionsHtml = $select.html();
   $select.prop('disabled', false);
 }

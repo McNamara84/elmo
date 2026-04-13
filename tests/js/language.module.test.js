@@ -207,6 +207,27 @@ describe('language module coverage', () => {
             // applyTranslations should work without throwing
             expect(() => languageModule.applyTranslations()).not.toThrow();
         });
+
+        test('returns early without errors when translations are empty object', () => {
+            window.setTranslations({});
+            const originalTitle = document.title;
+            expect(() => languageModule.applyTranslations()).not.toThrow();
+            expect(document.title).toBe(originalTitle);
+            expect(window.resizeTitle).not.toHaveBeenCalled();
+        });
+
+        test('returns early without errors when translations.general is undefined', () => {
+            window.setTranslations({ other: { key: 'value' } });
+            const originalTitle = document.title;
+            expect(() => languageModule.applyTranslations()).not.toThrow();
+            expect(document.title).toBe(originalTitle);
+            expect(window.adjustButtons).not.toHaveBeenCalled();
+        });
+
+        test('returns early without errors when translations are null', () => {
+            window.setTranslations(null);
+            expect(() => languageModule.applyTranslations()).not.toThrow();
+        });
     });
 
     describe('loadTranslations', () => {

@@ -143,4 +143,100 @@ describe('eventhandlers/functions.js', () => {
     window.updateOverlayLabels = undefined;
     expect(() => funcs.updateOverlayLabels()).not.toThrow();
   });
+
+  describe('translateClonedRow', () => {
+    beforeEach(() => {
+      global.translations = { some: 'value' };
+      window.elmo = {
+        translate: jest.fn((key) => {
+          const map = {
+            'label.name': 'Name',
+            'placeholder.search': 'Search…',
+            'title.orcidSearch': 'Search ORCID by name'
+          };
+          return map[key] || null;
+        })
+      };
+    });
+
+    afterEach(() => {
+      delete global.translations;
+      delete window.elmo;
+    });
+
+    test('translates data-translate elements', () => {
+      document.body.innerHTML = `
+        <div id="row">
+          <label data-translate="label.name">Untranslated</label>
+        </div>`;
+      funcs.translateClonedRow($('#row'));
+      expect($('[data-translate]').html()).toBe('Name');
+    });
+
+    test('preserves icon inside data-translate element', () => {
+      document.body.innerHTML = `
+        <div id="row">
+          <label data-translate="label.name"><i class="bi bi-search" aria-hidden="true"></i> Untranslated</label>
+        </div>`;
+      funcs.translateClonedRow($('#row'));
+      const label = $('[data-translate]');
+      expect(label.find('i.bi').length).toBe(1);
+      expect(label.text().trim()).toBe('Name');
+    });
+
+    test('translates data-translate-placeholder attributes', () => {
+      document.body.innerHTML = `
+        <div id="row">
+          <input data-translate-placeholder="placeholder.search" placeholder="Old" />
+        </div>`;
+      funcs.translateClonedRow($('#row'));
+      expect($('input').attr('placeholder')).toBe('Search…');
+    });
+
+    test('translates data-translate-title and sets aria-label', () => {
+      document.body.innerHTML = `
+        <div id="row">
+          <button data-translate-title="title.orcidSearch" title="Old title" aria-label="Old label">
+            <i class="bi bi-search" aria-hidden="true"></i>
+          </button>
+        </div>`;
+      funcs.translateClonedRow($('#row'));
+      const btn = $('button');
+      expect(btn.attr('title')).toBe('Search ORCID by name');
+      expect(btn.attr('aria-label')).toBe('Search ORCID by name');
+    });
+
+    test('does nothing when translations global is undefined', () => {
+      delete global.translations;
+      document.body.innerHTML = `
+        <div id="row">
+          <label data-translate="label.name">Untranslated</label>
+        </div>`;
+      funcs.translateClonedRow($('#row'));
+      expect($('[data-translate]').html()).toBe('Untranslated');
+    });
+
+    test('does nothing when elmo.translate is not a function', () => {
+      window.elmo = {};
+      document.body.innerHTML = `
+        <div id="row">
+          <label data-translate="label.name">Untranslated</label>
+        </div>`;
+      funcs.translateClonedRow($('#row'));
+      expect($('[data-translate]').html()).toBe('Untranslated');
+    });
+
+    test('skips elements when translate returns null', () => {
+      document.body.innerHTML = `
+        <div id="row">
+          <label data-translate="unknown.key">Original</label>
+          <input data-translate-placeholder="unknown.key" placeholder="Old" />
+          <button data-translate-title="unknown.key" title="Old">X</button>
+        </div>`;
+      funcs.translateClonedRow($('#row'));
+      expect($('label').html()).toBe('Original');
+      expect($('input').attr('placeholder')).toBe('Old');
+      expect($('button').attr('title')).toBe('Old');
+    });
+  });
 });

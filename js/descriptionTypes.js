@@ -77,14 +77,24 @@ function initDescriptionTypes() {
         // Store active slugs globally for the help system
         window.ELMO_ACTIVE_DESCRIPTION_TYPES = activeSlugs;
 
-        // Re-apply translations to newly added elements
-        if (typeof window.applyTranslations === 'function') {
-          window.applyTranslations();
+        // Re-apply translations to newly added elements.
+        // Wrapped in try/catch so the promise always resolves – translations
+        // will be re-applied when language.js finishes loading anyway.
+        try {
+          if (typeof window.applyTranslations === 'function') {
+            window.applyTranslations();
+          }
+        } catch (_ignored) {
+          // Non-critical: translations will be applied later
         }
 
         // Sync help icon visibility with current help status
-        if (typeof updateHelpStatus === 'function') {
-          updateHelpStatus();
+        try {
+          if (typeof updateHelpStatus === 'function') {
+            updateHelpStatus();
+          }
+        } catch (_ignored) {
+          // Non-critical
         }
 
         resolve(activeSlugs);

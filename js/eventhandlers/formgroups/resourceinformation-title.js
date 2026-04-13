@@ -63,7 +63,26 @@ $(document).ready(function () {
     if (window.mainTitleTypeId) {
       $select.find(`option[value='${window.mainTitleTypeId}']`).remove();
     }
-    $select.val("");
+    // Pre-select "Alternative Title" by ID so the title type is never empty.
+    // Falls back to the first non-empty option if the ID is unavailable.
+    if (window.alternativeTitleTypeId && $select.find(`option[value='${window.alternativeTitleTypeId}']`).length) {
+      $select.val(window.alternativeTitleTypeId);
+    } else {
+      const $firstOption = $select.find("option[value]").filter(function () {
+        return $(this).val() !== "";
+      }).first();
+      $select.val($firstOption.val() || "");
+    }
+    // Explicitly set the disabled state based on whether valid options exist.
+    // A "valid" option has a non-empty value — the placeholder (value="")
+    // added by select.js does not count. When no valid options exist (e.g. the
+    // user clicked "Add" while title types are still loading, or the API
+    // returned no types), disable the select to prevent a required empty
+    // control from blocking form submission.
+    const hasValidOptions = $select.find("option").filter(function () {
+      return $(this).val() !== "";
+    }).length > 0;
+    $select.prop("disabled", !hasValidOptions);
 
     // Create a remove button for the new row.
     const removeBtn = $("<button/>", {
