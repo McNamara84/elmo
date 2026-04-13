@@ -171,13 +171,45 @@ $(document).ready(function () {
 		altimetryGRA: $('#group-altimetry-gra'),
 	};
 
+	const productCheckboxes = {
+		altimetryMSS: { group: productGroups.altimetryMSS, name: 'mss' },
+		altimetryMDOT: { group: productGroups.altimetryMDOT, name: 'mdot' },
+		altimetryGRA: { group: productGroups.altimetryGRA, name: 'gra' },
+	};
+
 	$(document).on('change', '#altimetryMSS, #altimetryMDOT, #altimetryGRA', function () {
-		const group = productGroups[$(this).attr('id')];
-		if (!group) return;
+		const checkboxId = $(this).attr('id');
+		const config = productCheckboxes[checkboxId];
+		if (!config || !config.group || !config.group.length) return;
+		
 		if ($(this).is(':checked')) {
-			visibilityON(group);
+			visibilityON(config.group);
 		} else {
-			visibilityOFF(group);
+			visibilityOFF(config.group);
+		}
+	});
+
+	$(document).on('change', '#altimetryBathymetry, #altimetryErrors', function () {
+		const checkboxId = $(this).attr('id');
+		const isChecked = $(this).is(':checked');
+		let fieldName = '';
+		
+		if (checkboxId === 'altimetryBathymetry') {
+			fieldName = 'bathymetry';
+		} else if (checkboxId === 'altimetryErrors') {
+			fieldName = 'errors';
+		}
+		
+		if (!fieldName) return;
+		
+		// Enable/disable the field in all visible product groups
+		for (const [id, config] of Object.entries(productCheckboxes)) {
+			if (!config.group || !config.group.length) continue;
+			const inputSelector = `#input-${config.name}-${fieldName}`;
+			const $input = config.group.find(inputSelector);
+			if ($input.length) {
+				$input.prop('disabled', !isChecked);
+			}
 		}
 	});
 
