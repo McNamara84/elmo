@@ -11,6 +11,8 @@ $(document).ready(function () {
 	const characteristicsCard = $('#input-degree').closest('.card');
 	const datasourceGroup = $('#group-datasources');
 	const fileFormatSelect = $('#input-file-format');
+	const refEllipsoidOtherWrapper = $('#ref-ellipsoid-other-wrapper');
+	const refEllipsoidOtherInput = $('#input-reference-ellipsoid-other');
 
 	let previousFileFormatValue = null;
 	let wasAltimetry = false;
@@ -140,6 +142,16 @@ $(document).ready(function () {
 
 		wasAltimetry = isAltimetry;
 	}
+
+	$(document).on('change', '#input-reference-ellipsoid', function () {
+		if ($(this).val() === 'Other') {
+			refEllipsoidOtherWrapper.removeClass('d-none').attr('aria-hidden', 'false');
+			refEllipsoidOtherInput.prop('disabled', false).prop('required', true);
+		} else {
+			refEllipsoidOtherWrapper.addClass('d-none').attr('aria-hidden', 'true');
+			refEllipsoidOtherInput.prop('disabled', true).prop('required', false).val('');
+		}
+	});
 
 	$(document).on('change', '#input-model-type', toggleAltimetrySpecificGroups);
 	$(document).on('change', '#input-file-format', function () {

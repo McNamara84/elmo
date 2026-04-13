@@ -10,9 +10,19 @@
 				<div class="col-12 col-md-6 col-lg-6 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-reference-ellipsoid" name="reference_ellipsoid" required>
+							<select class="form-select input-with-help input-right-no-round-corners" id="input-reference-ellipsoid" name="reference_ellipsoid" required>
+								<option value="" data-translate="general.choose">Choose...</option>
+								<option value="WGS84">WGS84</option>
+								<option value="GRS80">GRS80</option>
+								<option value="Topex">Topex</option>
+								<option value="Other">Other (specify)</option>
+							</select>
 							<label for="input-reference-ellipsoid">Reference ellipsoid <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide reference ellipsoid.</div>
+							<div class="invalid-feedback">Please choose a reference ellipsoid.</div>
+						</div>
+						<div class="form-floating d-none" id="ref-ellipsoid-other-wrapper" aria-hidden="true">
+							<input type="text" class="form-control input-right-no-round-corners" id="input-reference-ellipsoid-other" name="reference_ellipsoid_other" placeholder=" " disabled>
+							<label for="input-reference-ellipsoid-other">Please specify</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
