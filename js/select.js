@@ -412,9 +412,26 @@ function addPlaceholder($select, isGEMDropdown = false) {
   // For GEM dropdowns, don't add placeholder when GEM is enabled. For others, always add.
   if (isGEMDropdown && isGEM) return;
   
+  // Use translated text if translations are already loaded, otherwise fall back to English
+  const translatedText = window.elmo?.translate?.('general.choose') || 'Choose...';
+  
   $select.append(
-    $("<option>", { value: "", text: "Choose...", "data-translate": "general.choose" })
+    $("<option>", { value: "", text: translatedText, "data-translate": "general.choose" })
   );
+}
+
+/**
+ * Updates all placeholder options in dropdown selects with the current translation.
+ * Called when translations are loaded or changed to fix race condition between
+ * dropdown initialization and translation loading.
+ */
+function updateDropdownPlaceholders() {
+  const translatedText = window.elmo?.translate?.('general.choose');
+  if (!translatedText) return;
+  
+  $('option[data-translate="general.choose"]').each(function () {
+    $(this).text(translatedText);
+  });
 }
 
 /**
@@ -790,6 +807,9 @@ function populateIdentifierTypesDropdownWithData(response) {
 
 // Make parallel initialization function available globally
 window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
+
+// Update dropdown placeholders when translations are loaded or changed
+document.addEventListener('translationsLoaded', updateDropdownPlaceholders);
 
 $(document).ready(function () {
   // Use parallel initialization for faster page load
@@ -1209,6 +1229,7 @@ if (typeof module !== 'undefined' && module.exports) {
     populateRelationsDropdownWithData,
     populateIdentifierTypesDropdownWithData,
     addPlaceholder,
+    updateDropdownPlaceholders,
     filterDataByGEM,
     getIdentifierPriority,
     updateIdentifierType,

@@ -132,6 +132,10 @@ describe('select module coverage', () => {
         test('exports updateDataSourceIdsAndNames function', () => {
             expect(typeof selectModule.updateDataSourceIdsAndNames).toBe('function');
         });
+
+        test('exports updateDropdownPlaceholders function', () => {
+            expect(typeof selectModule.updateDropdownPlaceholders).toBe('function');
+        });
     });
 
     describe('debounce', () => {

@@ -271,4 +271,115 @@ describe('select.js', () => {
     expect(options).toEqual(['Error loading data']);
     expect(select.prop('disabled')).toBe(false);
   });
+
+  describe('addPlaceholder', () => {
+    test('uses English fallback when no translations are loaded', () => {
+      delete window.elmo;
+      const select = $('<select id="test-placeholder"></select>').appendTo(document.body);
+      window.addPlaceholder(select);
+      const option = select.find('option[data-translate="general.choose"]');
+      expect(option.text()).toBe('Choose...');
+      expect(option.val()).toBe('');
+    });
+
+    test('uses translated text when translations are already loaded', () => {
+      window.elmo = { translate: jest.fn((key) => key === 'general.choose' ? 'Auswählen...' : undefined) };
+      const select = $('<select id="test-placeholder-de"></select>').appendTo(document.body);
+      window.addPlaceholder(select);
+      const option = select.find('option[data-translate="general.choose"]');
+      expect(option.text()).toBe('Auswählen...');
+    });
+
+    test('falls back to English when translate returns undefined', () => {
+      window.elmo = { translate: jest.fn(() => undefined) };
+      const select = $('<select id="test-placeholder-fallback"></select>').appendTo(document.body);
+      window.addPlaceholder(select);
+      const option = select.find('option[data-translate="general.choose"]');
+      expect(option.text()).toBe('Choose...');
+    });
+
+    test('skips placeholder for GEM dropdown when GEM is enabled', () => {
+      window.ELMO_FEATURES = { showGGMsProperties: true };
+      const select = $('<select id="test-gem"></select>').appendTo(document.body);
+      window.addPlaceholder(select, true);
+      expect(select.find('option').length).toBe(0);
+      delete window.ELMO_FEATURES;
+    });
+
+    test('adds placeholder for GEM dropdown when GEM is disabled', () => {
+      window.ELMO_FEATURES = { showGGMsProperties: false };
+      const select = $('<select id="test-gem-off"></select>').appendTo(document.body);
+      window.addPlaceholder(select, true);
+      expect(select.find('option[data-translate="general.choose"]').length).toBe(1);
+      delete window.ELMO_FEATURES;
+    });
+
+    test('adds placeholder for non-GEM dropdown even when GEM is enabled', () => {
+      window.ELMO_FEATURES = { showGGMsProperties: true };
+      const select = $('<select id="test-nongem"></select>').appendTo(document.body);
+      window.addPlaceholder(select, false);
+      expect(select.find('option[data-translate="general.choose"]').length).toBe(1);
+      delete window.ELMO_FEATURES;
+    });
+  });
+
+  describe('updateDropdownPlaceholders', () => {
+    test('updates all placeholder options with translated text', () => {
+      // Create multiple dropdowns with English placeholders
+      $('<select><option value="" data-translate="general.choose">Choose...</option></select>').appendTo(document.body);
+      $('<select><option value="" data-translate="general.choose">Choose...</option></select>').appendTo(document.body);
+
+      window.elmo = { translate: jest.fn((key) => key === 'general.choose' ? 'Auswählen...' : undefined) };
+
+      window.updateDropdownPlaceholders();
+
+      $('option[data-translate="general.choose"]').each(function () {
+        expect($(this).text()).toBe('Auswählen...');
+      });
+    });
+
+    test('does nothing when translations are not loaded', () => {
+      delete window.elmo;
+      $('<select><option value="" data-translate="general.choose">Choose...</option></select>').appendTo(document.body);
+
+      window.updateDropdownPlaceholders();
+
+      expect($('option[data-translate="general.choose"]').first().text()).toBe('Choose...');
+    });
+
+    test('does nothing when translate returns undefined for the key', () => {
+      window.elmo = { translate: jest.fn(() => undefined) };
+      $('<select><option value="" data-translate="general.choose">Choose...</option></select>').appendTo(document.body);
+
+      window.updateDropdownPlaceholders();
+
+      expect($('option[data-translate="general.choose"]').first().text()).toBe('Choose...');
+    });
+
+    test('is called when translationsLoaded event is dispatched', () => {
+      $('<select><option value="" data-translate="general.choose">Choose...</option></select>').appendTo(document.body);
+
+      window.elmo = { translate: jest.fn((key) => key === 'general.choose' ? 'Choisir...' : undefined) };
+
+      document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: {} }));
+
+      expect($('option[data-translate="general.choose"]').first().text()).toBe('Choisir...');
+    });
+
+    test('updates placeholders correctly after language switch', () => {
+      $('<select><option value="" data-translate="general.choose">Auswählen...</option></select>').appendTo(document.body);
+
+      // Switch to English
+      window.elmo = { translate: jest.fn((key) => key === 'general.choose' ? 'Choose...' : undefined) };
+      document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: {} }));
+
+      expect($('option[data-translate="general.choose"]').first().text()).toBe('Choose...');
+
+      // Switch to French
+      window.elmo.translate = jest.fn((key) => key === 'general.choose' ? 'Choisir...' : undefined);
+      document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: {} }));
+
+      expect($('option[data-translate="general.choose"]').first().text()).toBe('Choisir...');
+    });
+  });
 });
