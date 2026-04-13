@@ -7,7 +7,6 @@ $(document).ready(function () {
 	}
 
 	const altimetryCard = $('#group-ggmsaltimetrymodels').closest('.card');
-	const modelSpecificCard = $('#model-specific-card');
 	const characteristicsCard = $('#input-degree').closest('.card');
 	const datasourceGroup = $('#group-datasources');
 	const fileFormatSelect = $('#input-file-format');
@@ -129,7 +128,6 @@ $(document).ready(function () {
 
 		if (isAltimetry) {
 			visibilityON(altimetryCard);
-			visibilityON(modelSpecificCard);
 			visibilityOFF(characteristicsCard);
 
 			ensureAltimetryModelDatasource();
