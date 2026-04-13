@@ -154,6 +154,22 @@ $(document).ready(function () {
 			applyAltimetryFileFormatDefault(false);
 		}
 	});
-	$(document).on('toggle', '#altimetryMSS', visibilityToggle('#altimetryMSS'));
+
+	const productGroups = {
+		altimetryMSS: $('#group-altimetry-mss'),
+		altimetryMDOT: $('#group-altimetry-mdot'),
+		altimetryGRA: $('#group-altimetry-gra'),
+	};
+
+	$(document).on('change', '#altimetryMSS, #altimetryMDOT, #altimetryGRA', function () {
+		const group = productGroups[$(this).attr('id')];
+		if (!group) return;
+		if ($(this).is(':checked')) {
+			visibilityON(group);
+		} else {
+			visibilityOFF(group);
+		}
+	});
+
 	toggleAltimetrySpecificGroups();
 });

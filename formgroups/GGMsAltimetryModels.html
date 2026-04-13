@@ -96,29 +96,6 @@
 			<h6 class="mb-3">Altimetry-derived products provided:</h6>
             <hr>
 			<div class="row mt-2">
-				<!-- Product Type(s) choice. Shows/hides the form groups -->
-				<div class="form-check">
-					<input class="form-check-input" type="checkbox" name="altimetryModelOptions" id="checkbox-altimetryMSS" value="option1">
-					<label class="form-check-label" for="checkbox-altimetryMSS">Mean sea surface</label>
-				</div>
-				<div class="form-check">
-					<input class="form-check-input" type="checkbox" name="altimetryModelOptions" id="checkbox-altimetryMDOT" value="option2">
-					<label class="form-check-label" for="checkbox-altimetryMDOT">Mean dynamic ocean topography</label>
-				</div>
-				<div class="form-check">
-					<input class="form-check-input" type="checkbox" name="altimetryModelOptions" id="checkbox-altimetryGRA" value="option3">
-					<label class="form-check-label" for="checkbox-altimetryGRA">Gravity over oceans</label>
-				</div>
-				<div class="form-check">
-					<input class="form-check-input" type="checkbox" name="altimetryModelOptions" id="checkbox-altimetryBathymetry" value="option4">
-					<label class="form-check-label" for="checkbox-altimetryBathymetry">Bathymetry</label>
-				</div>
-				<div class="form-check">
-					<input class="form-check-input" type="checkbox" name="altimetryModelOptions" id="checkbox-altimetryErrors" value="option5">
-					<label class="form-check-label" for="checkbox-altimetryErrors">Errors</label>
-				</div>
-			</div>
-			<div class="row mt-2">
 				<div class="col-auto">
 					<input type="checkbox" class="btn-check" id="altimetryMSS" autocomplete="off">
 					<label class="btn btn-outline-primary" for="altimetryMSS">Mean sea surface</label>
@@ -138,6 +115,222 @@
 				<div class="col-auto">
 					<input type="checkbox" class="btn-check" id="altimetryErrors" autocomplete="off">
 					<label class="btn btn-outline-primary" for="altimetryErrors">Errors</label>
+				</div>
+			</div>
+
+			<!-- MSS product group -->
+			<div id="group-altimetry-mss" class="mt-3 d-none" aria-hidden="true">
+				<h6 class="mb-2">Mean sea surface</h6>
+				<div class="row">
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mss-spatial-resolution" name="mss_spatial_resolution" disabled>
+								<label for="input-mss-spatial-resolution">Spatial resolution</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-resolution" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mss-spatial-coverage" name="mss_spatial_coverage" disabled>
+								<label for="input-mss-spatial-coverage">Spatial coverage</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-coverage" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mss-file-name" name="mss_file_name" disabled>
+								<label for="input-mss-file-name">File name</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-file-name" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- MDOT product group -->
+			<div id="group-altimetry-mdot" class="mt-3 d-none" aria-hidden="true">
+				<h6 class="mb-2">Mean dynamic ocean topography</h6>
+				<div class="row">
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mdot-spatial-resolution" name="mdot_spatial_resolution" disabled>
+								<label for="input-mdot-spatial-resolution">Spatial resolution</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-resolution" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mdot-spatial-coverage" name="mdot_spatial_coverage" disabled>
+								<label for="input-mdot-spatial-coverage">Spatial coverage</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-coverage" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mdot-file-name" name="mdot_file_name" disabled>
+								<label for="input-mdot-file-name">File name</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-file-name" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mdot-mss-model" name="mdot_mss_model" disabled>
+								<label for="input-mdot-mss-model">MSS model</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-mdot-mss-model" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mdot-ggm-model" name="mdot_ggm_model" disabled>
+								<label for="input-mdot-ggm-model">GGM model</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-mdot-ggm-model" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- GRA product group -->
+			<div id="group-altimetry-gra" class="mt-3 d-none" aria-hidden="true">
+				<h6 class="mb-2">Gravity over oceans</h6>
+				<div class="row">
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-spatial-resolution" name="gra_spatial_resolution" disabled>
+								<label for="input-gra-spatial-resolution">Spatial resolution</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-resolution" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-spatial-coverage" name="gra_spatial_coverage" disabled>
+								<label for="input-gra-spatial-coverage">Spatial coverage</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-coverage" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-file-name" name="gra_file_name" disabled>
+								<label for="input-gra-file-name">File name</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-file-name" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-calc-method" name="gra_calculation_method" disabled>
+								<label for="input-gra-calc-method">Calculation method</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-calculation-method" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-resolution-arcmin" name="gra_resolution_arcmin" disabled>
+								<label for="input-gra-resolution-arcmin">Resolution (arc-minute)</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-gra-resolution-arcmin" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-geostrophic-velocity" name="gra_geostrophic_velocity" disabled>
+								<label for="input-gra-geostrophic-velocity">Geostrophic velocity</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-geostrophic-velocity" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-geostrophic-velocity-error" name="gra_geostrophic_velocity_error" disabled>
+								<label for="input-gra-geostrophic-velocity-error">Geostrophic velocity error</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-geostrophic-velocity-error" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
