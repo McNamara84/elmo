@@ -117,14 +117,11 @@ const googleMapsStub = String.raw`(() => {
   }
 
   class PinElement {
-    constructor({ glyph = '', glyphColor = '', background = '', borderColor = '' } = {}) {
-      this.glyph = glyph;
+    constructor({ glyphText = '', glyphColor = '', background = '', borderColor = '' } = {}) {
+      this.glyphText = glyphText;
       this.glyphColor = glyphColor;
       this.background = background;
       this.borderColor = borderColor;
-      this.element = document.createElement('div');
-      this.element.className = 'pin-element-stub';
-      this.element.textContent = glyph;
     }
   }
 

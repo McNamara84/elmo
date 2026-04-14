@@ -115,20 +115,22 @@ $xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
-    global $apiKeyGoogleMaps, $showMslLabs;
+    global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslLabs;
 
     header('Content-Type: application/json; charset=utf-8');
 
     switch ($setting) {
         case 'apiKey':
             echo json_encode([
-                'apiKey' => $apiKeyGoogleMaps
+                'apiKey' => $apiKeyGoogleMaps,
+                'mapId' => $mapIdGoogleMaps
             ]);
             break;
 
         case 'all':
             echo json_encode([
                 'apiKey' => $apiKeyGoogleMaps,
+                'mapId' => $mapIdGoogleMaps,
                 'showMslLabs' => $showMslLabs
             ]);
             break;

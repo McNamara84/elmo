@@ -237,7 +237,7 @@ $(document).ready(function () {
    */
   function createLabeledMarker(position, label) {
     var pin = new PinElement({
-      glyph: label,
+      glyphText: label,
       glyphColor: "white",
       background: "#FF0000",
       borderColor: "#CC0000"
@@ -245,7 +245,7 @@ $(document).ready(function () {
     return new AdvancedMarkerElement({
       position: position,
       map: map,
-      content: pin.element
+      content: pin
     });
   }
 
@@ -257,12 +257,12 @@ $(document).ready(function () {
    */
   function updateMarkerLabel(marker, newLabel) {
     var pin = new PinElement({
-      glyph: newLabel,
+      glyphText: newLabel,
       glyphColor: "white",
       background: "#FF0000",
       borderColor: "#CC0000"
     });
-    marker.content = pin.element;
+    marker.content = pin;
   }
 
   /**

@@ -70,12 +70,10 @@ function createGoogleMapsStub() {
 
   class PinElement {
     constructor(opts = {}){
-      this.glyph = opts.glyph || '';
+      this.glyphText = opts.glyphText || '';
       this.glyphColor = opts.glyphColor || '';
       this.background = opts.background || '';
       this.borderColor = opts.borderColor || '';
-      this.element = document.createElement('div');
-      this.element.textContent = this.glyph;
     }
   }
 
