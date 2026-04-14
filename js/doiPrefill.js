@@ -112,6 +112,16 @@ function normalizeRole(contributorType) {
   return (contributorType || '').replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
+/**
+ * Converts a CamelCase relation type (e.g. "IsDocumentedBy") to the spaced
+ * format used in ELMO select options (e.g. "Is Documented By").
+ * @param {string} relationType
+ * @returns {string}
+ */
+function normalizeRelationType(relationType) {
+  return (relationType || '').replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
 function mapTitleTypeFromJson(titleType, mapping) {
   const key = (titleType || '').replace(/\s+/g, '');
   return mapping[key] || mapping[''] || '1';
@@ -527,11 +537,14 @@ function prefillKeywords(subjects) {
 
     const tagData = { value: keyword, scheme: subjectScheme, schemeURI, id: valueURI };
 
-    if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords') {
+    if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords' ||
+      subjectScheme === 'NASA/GCMD Earth Science Keywords') {
       (tagifyGCMD || tagifyFree).addTags([tagData]);
-    } else if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms') {
+    } else if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms' ||
+      subjectScheme === 'NASA/GCMD Platforms') {
       (tagifyPlatforms || tagifyFree).addTags([tagData]);
-    } else if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments') {
+    } else if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments' ||
+      subjectScheme === 'NASA/GCMD Instruments') {
       (tagifyInstruments || tagifyFree).addTags([tagData]);
     } else if (
       schemeURI === 'http://resource.geosciml.org/vocabulary/timescale/gts2020' ||
@@ -572,9 +585,11 @@ function prefillRelatedWorks(relatedIdentifiers) {
     $lastRow.find('input[name="rIdentifier[]"]').val(entry.relatedIdentifier || '');
     $lastRow.find('select[name="rIdentifierType[]"]').val(entry.relatedIdentifierType || '');
 
-    // Match relation by visible text
+    // Match relation by visible text; DataCite uses CamelCase (e.g. "IsDocumentedBy")
+    // while ELMO uses spaced form (e.g. "Is Documented By").
+    const normalizedRelation = normalizeRelationType(entry.relationType);
     $lastRow.find('select[name="relation[]"]:first option').filter(function () {
-      return $(this).text() === entry.relationType;
+      return $(this).text() === normalizedRelation || $(this).text() === entry.relationType;
     }).prop('selected', true);
 
     if (i < entries.length - 1) {
@@ -809,6 +824,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getTagify,
     decodeHtmlEntities,
     normalizeRole,
+    normalizeRelationType,
     mapTitleTypeFromJson,
     prefillResourceInfo,
     prefillLanguage,

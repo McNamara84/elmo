@@ -92,6 +92,27 @@ describe('doiPrefill.js', () => {
     });
   });
 
+  /* ── normalizeRelationType ──────────────────────────────────── */
+
+  describe('normalizeRelationType', () => {
+    test('converts CamelCase relation types to spaced form', () => {
+      expect(mod.normalizeRelationType('IsDocumentedBy')).toBe('Is Documented By');
+      expect(mod.normalizeRelationType('HasPart')).toBe('Has Part');
+      expect(mod.normalizeRelationType('IsPartOf')).toBe('Is Part Of');
+      expect(mod.normalizeRelationType('Continues')).toBe('Continues');
+      expect(mod.normalizeRelationType('IsVersionOf')).toBe('Is Version Of');
+    });
+
+    test('handles already-spaced input', () => {
+      expect(mod.normalizeRelationType('Is Documented By')).toBe('Is Documented By');
+    });
+
+    test('handles empty/null input', () => {
+      expect(mod.normalizeRelationType('')).toBe('');
+      expect(mod.normalizeRelationType(null)).toBe('');
+    });
+  });
+
   /* ── mapTitleTypeFromJson ───────────────────────────────────── */
 
   describe('mapTitleTypeFromJson', () => {
@@ -359,9 +380,13 @@ describe('doiPrefill.js', () => {
       document.body.innerHTML = `
         <input id="input-freekeyword" />
         <input id="input-sciencekeyword" />
+        <input id="input-platforms" />
+        <input id="input-instruments" />
       `;
       attachTagify('#input-freekeyword');
       attachTagify('#input-sciencekeyword');
+      attachTagify('#input-platforms');
+      attachTagify('#input-instruments');
     });
 
     test('routes subjects to free keywords by default', () => {
@@ -387,6 +412,51 @@ describe('doiPrefill.js', () => {
       const tagify = document.querySelector('#input-sciencekeyword')._tagify;
       expect(tagify.addTags).toHaveBeenCalledWith([
         expect.objectContaining({ value: 'Earth Science' }),
+      ]);
+    });
+
+    test('routes GCMD keywords by subjectScheme when no schemeURI (DataCite JSON)', () => {
+      mod.prefillKeywords([
+        {
+          subject: 'EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD',
+          subjectScheme: 'NASA/GCMD Earth Science Keywords',
+        },
+      ]);
+
+      const tagify = document.querySelector('#input-sciencekeyword')._tagify;
+      expect(tagify.addTags).toHaveBeenCalledWith([
+        expect.objectContaining({ value: 'EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD' }),
+      ]);
+      // Must NOT go to free keywords
+      const tagifyFree = document.querySelector('#input-freekeyword')._tagify;
+      expect(tagifyFree.addTags).not.toHaveBeenCalled();
+    });
+
+    test('routes GCMD Platforms by subjectScheme', () => {
+      mod.prefillKeywords([
+        {
+          subject: 'GRACE-FO',
+          subjectScheme: 'NASA/GCMD Platforms',
+        },
+      ]);
+
+      const tagify = document.querySelector('#input-platforms')._tagify;
+      expect(tagify.addTags).toHaveBeenCalledWith([
+        expect.objectContaining({ value: 'GRACE-FO' }),
+      ]);
+    });
+
+    test('routes GCMD Instruments by subjectScheme', () => {
+      mod.prefillKeywords([
+        {
+          subject: 'GRACE-FO ACC',
+          subjectScheme: 'NASA/GCMD Instruments',
+        },
+      ]);
+
+      const tagify = document.querySelector('#input-instruments')._tagify;
+      expect(tagify.addTags).toHaveBeenCalledWith([
+        expect.objectContaining({ value: 'GRACE-FO ACC' }),
       ]);
     });
 
@@ -455,8 +525,11 @@ describe('doiPrefill.js', () => {
             <option value="URL">URL</option>
           </select>
           <select name="relation[]">
-            <option value="1">IsCitedBy</option>
+            <option value="">--</option>
+            <option value="1">Is Cited By</option>
             <option value="2">Cites</option>
+            <option value="3">Is Documented By</option>
+            <option value="4">Has Part</option>
           </select>
         </div>
         <button id="button-relatedwork-add"></button>
@@ -475,6 +548,30 @@ describe('doiPrefill.js', () => {
 
       expect($('input[name="rIdentifier[]"]').val()).toBe('10.1234/related');
       expect($('select[name="rIdentifierType[]"]').val()).toBe('DOI');
+    });
+
+    test('matches CamelCase relation type to spaced option text', () => {
+      mod.prefillRelatedWorks([
+        {
+          relatedIdentifier: '10.1234/doc',
+          relatedIdentifierType: 'DOI',
+          relationType: 'IsDocumentedBy',
+        },
+      ]);
+
+      expect($('select[name="relation[]"]').val()).toBe('3');
+    });
+
+    test('matches multi-word CamelCase relation (HasPart)', () => {
+      mod.prefillRelatedWorks([
+        {
+          relatedIdentifier: '10.1234/part',
+          relatedIdentifierType: 'DOI',
+          relationType: 'HasPart',
+        },
+      ]);
+
+      expect($('select[name="relation[]"]').val()).toBe('4');
     });
 
     test('handles empty array gracefully', () => {
