@@ -21,6 +21,10 @@ test('test', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Filename' }).click();
   await page.getByRole('textbox', { name: 'Filename' }).dblclick();
   await page.getByRole('textbox', { name: 'Filename' }).fill('test_save_with_incoplete_info');
+<<<<<<< HEAD
+=======
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+>>>>>>> adadc221 (playwright)
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   const download = await downloadPromise;
