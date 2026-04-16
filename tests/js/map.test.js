@@ -61,7 +61,13 @@ function createGoogleMapsStub() {
 
   class AdvancedMarkerElement {
     constructor(opts = {}){
-      this.position = opts.position || null;
+      // Real AdvancedMarkerElement normalises LatLng → LatLngLiteral
+      var p = opts.position || null;
+      if (p && typeof p.lat === 'function') {
+        this.position = { lat: p.lat(), lng: p.lng() };
+      } else {
+        this.position = p;
+      }
       this.map = opts.map || null;
       this.content = opts.content || null;
       createdMarkers.push(this);
