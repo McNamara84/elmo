@@ -352,8 +352,10 @@ $(document).ready(function () {
       deleteDrawnOverlaysForRow(rowId);
 
       var position = marker.position;
-      $currentRow.find("[id^=input-stc-latmin]").val(position.lat());
-      $currentRow.find("[id^=input-stc-longmin]").val(position.lng());
+      var lat = typeof position.lat === "function" ? position.lat() : position.lat;
+      var lng = typeof position.lng === "function" ? position.lng() : position.lng;
+      $currentRow.find("[id^=input-stc-latmin]").val(lat);
+      $currentRow.find("[id^=input-stc-longmin]").val(lng);
       $currentRow.find("[id^=input-stc-latmax]").val("");
       $currentRow.find("[id^=input-stc-longmax]").val("");
 
