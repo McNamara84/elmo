@@ -98,13 +98,27 @@ jobs:
             $conn = new mysqli($host, $username, $password, $database);
             return $conn;
         }
-        function getApiKey() {
-            $apiKeyGoogleMaps = '';
-            echo json_encode(['apiKey' => $apiKeyGoogleMaps]);
+        $apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: '';
+        $mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID') ?: '';
+        function getSettings($setting) {
+            global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslLabs;
+            header('Content-Type: application/json; charset=utf-8');
+            switch ($setting) {
+                case 'apiKey':
+                    echo json_encode(['apiKey' => $apiKeyGoogleMaps, 'mapId' => $mapIdGoogleMaps]);
+                    break;
+                case 'all':
+                    echo json_encode(['apiKey' => $apiKeyGoogleMaps, 'mapId' => $mapIdGoogleMaps, 'showMslLabs' => $showMslLabs]);
+                    break;
+                default:
+                    echo json_encode(['error' => 'Unknown setting']);
+                    break;
+            }
+            exit;
         }
         if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
-            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                getApiKey();
+            if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['setting'])) {
+                getSettings($_GET['setting']);
             }
         }
         $connection = connectDb();

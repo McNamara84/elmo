@@ -148,7 +148,7 @@ function saveGGMsDefinition(mysqli $connection, array $postData, int $resourceId
     $mathRepId = lookupForeignKeyId($connection, 'Mathematical_Representation', 'Mathematical_representation_id', 'name', $data['mathematical_representation']);
     $fileFmtId = lookupForeignKeyId($connection, 'File_Format', 'File_format_id', 'name', $data['file_format']);
 
-    if (!$modelTypeId || !$mathRepId || !$fileFmtId) {
+    if ($action === 'submit' && (!$modelTypeId || !$mathRepId || !$fileFmtId)) {
         throw new Exception('Failed to resolve foreign keys for Model_Type, Mathematical_Representation, or File_Format.');
     }
 

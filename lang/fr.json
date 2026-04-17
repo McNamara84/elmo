@@ -16,6 +16,7 @@
         "pleaseChoose": "Veuillez sélectionner",
         "orcid": "ORCID",
         "orcidInvalid": "Veuillez saisir un ORCID valide (XXXX-XXXX-XXXX-XXX(X))",
+        "orcidChecksumInvalid": "La somme de contrôle de l'ORCID est invalide. Veuillez vérifier l'ORCID sur <a href='https://orcid.org' target='_blank'>orcid.org</a>.",
         "lastName": "Nom",
         "lastNameInvalid": "Veuillez saisir un nom. Lettres uniquement. Aucun chiffre ni caractère spécial (p.ex. $, %, _).",
         "firstNameInvalid": "Veuillez saisir un prénom. Lettres uniquement. Aucun chiffre ni caractère spécial (p.ex. $, %, _).",
@@ -198,7 +199,6 @@
     "usedInstruments": {
         "title": "Instruments utilisés",
         "placeholder": "Rechercher et sélectionner des instruments...",
-        "required": "Veuillez sélectionner au moins un instrument.",
         "loading": "Chargement de la liste des instruments...",
         "unavailable": "Liste des instruments actuellement indisponible. Veuillez réessayer plus tard.",
         "selected": "instruments sélectionnés"
@@ -299,7 +299,13 @@
         },
         "upload": {
             "title": "Sélectionner un fichier XML :",
-            "dropZoneInfo": "Déposer le fichier XML ici"
+            "dropZoneInfo": "Déposer le fichier XML ici",
+            "loading": "Traitement du fichier...",
+            "successToast": "chargé avec succès",
+            "errorToast": "Erreur lors du chargement du fichier",
+            "invalidFileType": "Veuillez télécharger un fichier XML.",
+            "errorProcessing": "Erreur lors du traitement du fichier XML",
+            "errorReading": "Erreur lors de la lecture du fichier"
         },
         "changelog": {
             "title": "Journal des modifications",

@@ -232,4 +232,268 @@ describe('usedInstruments.js', () => {
         const input = document.getElementById('input-usedinstruments');
         expect(input._tagify.value[0].value).toBe('SimpleInstrument');
     });
+
+    describe('loadInstrumentsFromAPI', () => {
+        function mockAjaxSuccess(data) {
+            $.ajax = jest.fn(() => {
+                const deferred = $.Deferred();
+                setTimeout(() => deferred.resolve(data), 0);
+                const promise = deferred.promise();
+                promise.done = function (cb) { deferred.done(cb); return this; };
+                promise.fail = function (cb) { deferred.fail(cb); return this; };
+                promise.always = function (cb) { deferred.always(cb); return this; };
+                return promise;
+            });
+        }
+
+        function mockAjaxFailure() {
+            $.ajax = jest.fn(() => {
+                const deferred = $.Deferred();
+                setTimeout(() => deferred.reject({ status: 0, statusText: 'error' }, 'error', 'Network error'), 0);
+                const promise = deferred.promise();
+                promise.done = function (cb) { deferred.done(cb); return this; };
+                promise.fail = function (cb) { deferred.fail(cb); return this; };
+                promise.always = function (cb) { deferred.always(cb); return this; };
+                return promise;
+            });
+        }
+
+        test('resolves with success and dataLoaded when API returns instruments', async () => {
+            loadScript();
+
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Seismometer', instrumentTypes: ['Seismometer'] }
+            ];
+            mockAjaxSuccess(apiData);
+
+            const result = await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+            expect(result).toEqual({ success: true, dataLoaded: true });
+        });
+
+        test('resolves with dataLoaded false when API returns empty array', async () => {
+            loadScript();
+            mockAjaxSuccess([]);
+
+            const result = await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+            expect(result).toEqual({ success: true, dataLoaded: false });
+        });
+
+        test('resolves (never rejects) on AJAX failure', async () => {
+            loadScript();
+            mockAjaxFailure();
+
+            const result = await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+            expect(result).toEqual({ success: false, dataLoaded: false });
+        });
+
+        test('returns cached result on second call', async () => {
+            loadScript();
+
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Seismometer', instrumentTypes: ['Seismometer'] }
+            ];
+            mockAjaxSuccess(apiData);
+
+            await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+            // Second call should not hit AJAX again
+            $.ajax.mockClear();
+            const result = await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+            expect(result).toEqual({ success: true, dataLoaded: true });
+            expect($.ajax).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('addInstrumentsByPid', () => {
+        function loadWithApiData(apiData) {
+            loadScript();
+
+            // Mock $.ajax to return the given data, then call loadInstrumentsFromAPI()
+            // so the module's internal instrumentData array is populated.
+            const mockDeferred = $.Deferred();
+            $.ajax = jest.fn(() => {
+                setTimeout(() => mockDeferred.resolve(apiData), 0);
+                const promise = mockDeferred.promise();
+                promise.done = function (cb) { mockDeferred.done(cb); return this; };
+                promise.fail = function (cb) { mockDeferred.fail(cb); return this; };
+                promise.always = function (cb) { mockDeferred.always(cb); return this; };
+                return promise;
+            });
+
+            return window.usedInstrumentsModule.loadInstrumentsFromAPI();
+        }
+
+        test('adds matched instruments with full API metadata', async () => {
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Broadband Seismometer STS-2', instrumentTypes: ['Seismometer', 'Broadband'] },
+                { pid: '21.11157/0002', pidType: 'Handle', name: 'Gravimeter', instrumentTypes: ['Gravimeter'] }
+            ];
+            await loadWithApiData(apiData);
+
+            window.usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21.11157/0001', pidType: 'Handle' }
+            ]);
+
+            const input = document.getElementById('input-usedinstruments');
+            expect(input._tagify.value).toHaveLength(1);
+            expect(input._tagify.value[0].pid).toBe('21.11157/0001');
+            expect(input._tagify.value[0].name).toBe('Broadband Seismometer STS-2');
+            expect(input._tagify.value[0].value).toBe('Broadband Seismometer STS-2 (Seismometer, Broadband)');
+        });
+
+        test('adds PID-only fallback tags for unmatched PIDs', async () => {
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Known Instrument', instrumentTypes: ['Type'] }
+            ];
+            await loadWithApiData(apiData);
+
+            window.usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21.11157/UNKNOWN', pidType: 'Handle' }
+            ]);
+
+            const input = document.getElementById('input-usedinstruments');
+            expect(input._tagify.value).toHaveLength(1);
+            // Fallback: name equals the PID itself
+            expect(input._tagify.value[0].pid).toBe('21.11157/UNKNOWN');
+            expect(input._tagify.value[0].name).toBe('21.11157/UNKNOWN');
+            expect(input._tagify.value[0].instrumentTypes).toEqual([]);
+        });
+
+        test('handles mix of matched and unmatched PIDs', async () => {
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Seismometer', instrumentTypes: ['Seismometer'] }
+            ];
+            await loadWithApiData(apiData);
+
+            window.usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21.11157/0001', pidType: 'Handle' },
+                { pid: '10.12345/unknown', pidType: 'DOI' }
+            ]);
+
+            const input = document.getElementById('input-usedinstruments');
+            expect(input._tagify.value).toHaveLength(2);
+            expect(input._tagify.value[0].name).toBe('Seismometer');
+            expect(input._tagify.value[1].pid).toBe('10.12345/unknown');
+            expect(input._tagify.value[1].pidType).toBe('DOI');
+            expect(input._tagify.value[1].name).toBe('10.12345/unknown');
+        });
+
+        test('does nothing when called with empty array', async () => {
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Seismometer', instrumentTypes: [] }
+            ];
+            await loadWithApiData(apiData);
+
+            window.usedInstrumentsModule.addInstrumentsByPid([]);
+
+            const input = document.getElementById('input-usedinstruments');
+            expect(input._tagify.value).toHaveLength(0);
+        });
+
+        test('creates correct hidden inputs for matched instruments', async () => {
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Seismometer', instrumentTypes: [] }
+            ];
+            await loadWithApiData(apiData);
+
+            window.usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21.11157/0001', pidType: 'Handle' }
+            ]);
+
+            const container = document.getElementById('usedinstruments-hidden-inputs');
+            const pidInputs = container.querySelectorAll('input[name="instrumentPid[]"]');
+            const pidTypeInputs = container.querySelectorAll('input[name="instrumentPidType[]"]');
+            expect(pidInputs).toHaveLength(1);
+            expect(pidInputs[0].value).toBe('21.11157/0001');
+            expect(pidTypeInputs).toHaveLength(1);
+            expect(pidTypeInputs[0].value).toBe('Handle');
+        });
+    });
+
+    describe('upgradeInstrumentTags', () => {
+        function loadWithApiData(apiData) {
+            loadScript();
+
+            const mockDeferred = $.Deferred();
+            $.ajax = jest.fn(() => {
+                setTimeout(() => mockDeferred.resolve(apiData), 0);
+                const promise = mockDeferred.promise();
+                promise.done = function (cb) { mockDeferred.done(cb); return this; };
+                promise.fail = function (cb) { mockDeferred.fail(cb); return this; };
+                promise.always = function (cb) { mockDeferred.always(cb); return this; };
+                return promise;
+            });
+
+            return window.usedInstrumentsModule.loadInstrumentsFromAPI();
+        }
+
+        test('upgrades PID-only tags with full API metadata', async () => {
+            loadScript();
+
+            // Step 1: Add PID-only tags (no API data loaded yet)
+            window.usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21.11157/0001', pidType: 'Handle' }
+            ]);
+
+            const input = document.getElementById('input-usedinstruments');
+            // Should be PID-only
+            expect(input._tagify.value[0].name).toBe('21.11157/0001');
+
+            // Step 2: Load API data into the same module instance
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Broadband Seismometer STS-2', instrumentTypes: ['Seismometer'] }
+            ];
+            const mockDeferred = $.Deferred();
+            $.ajax = jest.fn(() => {
+                setTimeout(() => mockDeferred.resolve(apiData), 0);
+                const promise = mockDeferred.promise();
+                promise.done = function (cb) { mockDeferred.done(cb); return this; };
+                promise.fail = function (cb) { mockDeferred.fail(cb); return this; };
+                promise.always = function (cb) { mockDeferred.always(cb); return this; };
+                return promise;
+            });
+            await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+
+            // Step 3: Upgrade
+            window.usedInstrumentsModule.upgradeInstrumentTags();
+
+            expect(input._tagify.value).toHaveLength(1);
+            expect(input._tagify.value[0].name).toBe('Broadband Seismometer STS-2');
+            expect(input._tagify.value[0].value).toBe('Broadband Seismometer STS-2 (Seismometer)');
+            expect(input._tagify.value[0].pid).toBe('21.11157/0001');
+        });
+
+        test('leaves already-enriched tags untouched', async () => {
+            const apiData = [
+                { pid: '21.11157/0001', pidType: 'Handle', name: 'Seismometer', instrumentTypes: ['Seismometer'] }
+            ];
+            await loadWithApiData(apiData);
+
+            // Add via addInstrumentsByPid which already matched against API
+            window.usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21.11157/0001', pidType: 'Handle' }
+            ]);
+
+            const input = document.getElementById('input-usedinstruments');
+            expect(input._tagify.value[0].name).toBe('Seismometer');
+
+            // Upgrade should be a no-op
+            window.usedInstrumentsModule.upgradeInstrumentTags();
+            expect(input._tagify.value).toHaveLength(1);
+            expect(input._tagify.value[0].name).toBe('Seismometer');
+        });
+
+        test('does nothing when no API data is loaded', () => {
+            loadScript();
+
+            window.usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21.11157/0001', pidType: 'Handle' }
+            ]);
+
+            const input = document.getElementById('input-usedinstruments');
+            // No API data → upgradeInstrumentTags should not change anything
+            window.usedInstrumentsModule.upgradeInstrumentTags();
+            expect(input._tagify.value).toHaveLength(1);
+            expect(input._tagify.value[0].name).toBe('21.11157/0001');
+        });
+    });
 });

@@ -80,6 +80,19 @@ else
   echo "🏁  Database setup finished."
 fi
 
+# Schema migrations for existing databases (only when keeping data and tables exist)
+if [ "${DB_INIT_MODE}" = "keep_data" ] && db_has_tables; then
+  # Make Thesaurus_Keywords.language nullable (was NOT NULL, all attributes are optional per DataCite schema)
+  IS_NULLABLE=$(mysql -N -s -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" \
+    -e "SELECT IS_NULLABLE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='Thesaurus_Keywords' AND COLUMN_NAME='language';" || echo "")
+  if [ "${IS_NULLABLE}" = "NO" ]; then
+    echo "🔧  Migrating Thesaurus_Keywords.language to nullable…"
+    mysql -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" \
+      -e "ALTER TABLE Thesaurus_Keywords MODIFY COLUMN language VARCHAR(20) NULL DEFAULT NULL;"
+    echo "✅  Migration complete."
+  fi
+fi
+
 # Clean up install files (optional)
 rm -f /var/www/html/install.{php,html} || true
 

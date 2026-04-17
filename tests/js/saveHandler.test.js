@@ -66,7 +66,7 @@ describe('saveHandler.js', () => {
   });
 
   test('generateFilename returns formatted timestamp', async () => {
-    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z'));
+    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z').getTime());
     const handler = new SaveHandler('form-mde','modal-saveas','modal-notification');
     const name = await handler.generateFilename();
     expect(name).toBe('dataset_20240530_123456');

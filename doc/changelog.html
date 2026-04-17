@@ -1,21 +1,52 @@
 <!-- Changelog Content -->
 <div class="accordion" id="accordion-changelog">
+    <!-- Version 2.1.0 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-changelog-version14">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse-changelog-version14" aria-expanded="true"
+                aria-controls="collapse-changelog-version14">
+                Version 2.1.0 - TBD
+            </button>
+        </h2>
+        <div id="collapse-changelog-version14" class="accordion-collapse collapse show"
+            aria-labelledby="heading-changelog-version14" data-bs-parent="#accordion-changelog">
+            <div class="accordion-body">
+                <ul>
+                    <li><strong>Fixes:</strong>
+                        <ul>
+                            <li>Fixed inconsistent placeholder language when auto-detecting browser language</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
     <!-- Version 2.0.8 -->
     <div class="accordion-item">
         <h2 class="accordion-header" id="heading-changelog-version13">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse-changelog-version13" aria-expanded="true"
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse-changelog-version13" aria-expanded="false"
                 aria-controls="collapse-changelog-version13">
-                Version 2.0.8 - TBD
+                Version 2.0.8 - 2026/04/13
             </button>
         </h2>
-        <div id="collapse-changelog-version13" class="accordion-collapse collapse show"
+        <div id="collapse-changelog-version13" class="accordion-collapse collapse"
             aria-labelledby="heading-changelog-version13" data-bs-parent="#accordion-changelog">
             <div class="accordion-body">
                 <ul>
                     <li><strong>Features:</strong>
                         <ul>
-                            <li>ORCID name search for Author and Contributor person form groups. A search button opens a modal to search the ORCID registry by first/last name and populate form fields with the selected result.</li>
+                            <li>ORCID name search for Author and Contributor person form groups</li>
+                            <li>ORCID checksum validation using ISO 7064 Mod 11-2 algorithm</li>
+                            <li>Success notification for XML file uploads</li>
+                        </ul>
+                    </li>
+                    <li><strong>Fixes:</strong>
+                        <ul>
+                            <li>Upload of XML files not working correctly.</li>
+                            <li>Tagify inputs (affiliations, roles) not initialized in cloned rows after drag-and-drop reorder</li>
+                            <li>Corrected the Funding Reference user guide example for the DFG funder name</li>
                         </ul>
                     </li>
                 </ul>

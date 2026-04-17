@@ -205,8 +205,19 @@ final class ValidationFunctionsTest extends TestCase
      */
     public function testValidateKeywordEntriesMissingField(): void
     {
-        $entry = [['value' => 'A', 'id' => '1']];
+        $entry = [['id' => '1', 'scheme' => 's']];
         $this->assertFalse(validateKeywordEntries($entry));
+    }
+
+    /**
+     * Ensures keyword validation passes when only value is present.
+     *
+     * @return void
+     */
+    public function testValidateKeywordEntriesValueOnly(): void
+    {
+        $entry = [['value' => 'A']];
+        $this->assertTrue(validateKeywordEntries($entry));
     }
 
     /**

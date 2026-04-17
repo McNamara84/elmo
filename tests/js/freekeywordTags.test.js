@@ -81,30 +81,25 @@ describe('freekeywordTags.js', () => {
     errSpy.mockRestore();
   });
 
-  test('logs when no keywords returned', () => {
+  test('does not log curated keywords message when empty array returned', () => {
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     loadScript(() => ({
       done(cb) { cb([]); return { fail: jest.fn() }; },
       fail: jest.fn()
     }));
-    expect(logSpy).toHaveBeenCalledWith('ELMO currently has no curated keywords.');
+    expect(logSpy).not.toHaveBeenCalled();
     const input = document.getElementById('input-freekeyword');
     expect(input._tagify.settings.whitelist).toEqual([]);
     logSpy.mockRestore();
   });
 
-  test('warns when API request fails', () => {
+  test('silently ignores API request failures without console warnings', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     loadScript(() => ({
       done() { return { fail: cb => cb({ status: 404, statusText: 'Not Found', responseText: 'err' }, 'error', 'err') }; },
       fail: jest.fn()
     }));
-    expect(warnSpy).toHaveBeenCalledWith('Failed to fetch keywords:', {
-      status: 404,
-      statusText: 'Not Found',
-      responseText: 'err',
-      error: 'err'
-    });
+    expect(warnSpy).not.toHaveBeenCalled();
     warnSpy.mockRestore();
   });
   

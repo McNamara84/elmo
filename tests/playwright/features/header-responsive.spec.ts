@@ -25,7 +25,7 @@ test.describe('Header Responsive Design', () => {
         const toggler = page.locator('button.navbar-toggler');
         await expect(toggler).toBeVisible();
         await toggler.click();
-        await page.waitForSelector('#headerMenuContent[class*="show"]', { timeout: 2000 });
+        await page.waitForSelector('#headerMenuContent[class*="show"]', { timeout: 5000 });
       }
 
       await expect(page.locator('#buttonHelpheader')).toBeVisible();

@@ -214,6 +214,39 @@ describe('descriptionTypes.js', () => {
             expect(slugs).toEqual([]);
         });
 
+        test('resolves even when applyTranslations throws', async () => {
+            window.applyTranslations = jest.fn(() => {
+                throw new TypeError("Cannot read properties of undefined (reading 'logoTitle')");
+            });
+
+            $.ajax.mockImplementation(function (options) {
+                options.success([
+                    { id: 1, name: 'Abstract', slug: 'Abstract' },
+                    { id: 2, name: 'Methods', slug: 'Methods' }
+                ]);
+            });
+
+            const slugs = await module.initDescriptionTypes();
+
+            expect(slugs).toEqual(['Methods']);
+            expect(window.ELMO_ACTIVE_DESCRIPTION_TYPES).toEqual(['Methods']);
+        });
+
+        test('resolves even when updateHelpStatus throws', async () => {
+            window.updateHelpStatus = undefined;
+            global.updateHelpStatus = jest.fn(() => {
+                throw new Error('updateHelpStatus explosion');
+            });
+
+            $.ajax.mockImplementation(function (options) {
+                options.success([{ id: 2, name: 'Methods', slug: 'Methods' }]);
+            });
+
+            const slugs = await module.initDescriptionTypes();
+
+            expect(slugs).toEqual(['Methods']);
+        });
+
         test('renders all 5 dynamic types correctly', async () => {
             $.ajax.mockImplementation(function (options) {
                 options.success([

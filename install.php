@@ -313,7 +313,7 @@ function createDatabaseStructure($connection): array
     `scheme` TEXT(256) NULL,
     `schemeURI` VARCHAR(256) NULL,
     `valueURI` VARCHAR(256) NULL,
-    `language` VARCHAR(20) NOT NULL,
+    `language` VARCHAR(20) NULL DEFAULT NULL,
     PRIMARY KEY (`thesaurus_keywords_id`));",
 
         "Resource_has_Thesaurus_Keywords" => "CREATE TABLE IF NOT EXISTS `Resource_has_Thesaurus_Keywords` (
