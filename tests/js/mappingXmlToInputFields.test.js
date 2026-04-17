@@ -51,13 +51,14 @@ describe("mappingXmlToInputFields helpers", () => {
       </select>`;
 
     const ctx = loadMappingModule();
+    const nsResolver = (prefix) => prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
 
-    const xml = `<resource xmlns=\"http://datacite.org/schema/kernel-4\">
-      <resourceType resourceTypeGeneral=\"Dataset\">Genome Sequencing Data</resourceType>
-    </resource>`;
+    const xml = `<ns:resource xmlns:ns=\"http://datacite.org/schema/kernel-4\">
+      <ns:resourceType resourceTypeGeneral=\"Dataset\">Genome Sequencing Data</ns:resourceType>
+    </ns:resource>`;
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
 
-    ctx.processResourceType(xmlDoc);
+    ctx.processResourceType(xmlDoc, nsResolver);
     const select = document.getElementById("input-resourceinformation-resourcetype");
     expect(select.value).toBe("Dataset");
   });
@@ -216,30 +217,31 @@ describe("mappingXmlToInputFields helpers", () => {
 
   test("getGeoLocationData extracts boxes and points correctly", () => {
     const ctx = loadMappingModule();
+    const nsResolver = (prefix) => prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
     const xml =
-      `<resource xmlns=\"http://datacite.org/schema/kernel-4\">\n` +
-      `  <geoLocations>\n` +
-      `    <geoLocation>\n` +
-      `      <geoLocationBox>\n` +
-      `        <westBoundLongitude>-123.27</westBoundLongitude>\n` +
-      `        <eastBoundLongitude>-123.02</eastBoundLongitude>\n` +
-      `        <southBoundLatitude>49.195</southBoundLatitude>\n` +
-      `        <northBoundLatitude>49.315</northBoundLatitude>\n` +
-      `      </geoLocationBox>\n` +
-      `    </geoLocation>\n` +
-      `    <geoLocation>\n` +
-      `      <geoLocationPoint>\n` +
-      `        <pointLatitude>41.2827</pointLatitude>\n` +
-      `        <pointLongitude>-101.1207</pointLongitude>\n` +
-      `      </geoLocationPoint>\n` +
-      `    </geoLocation>\n` +
-      `  </geoLocations>\n` +
-      `</resource>`;
+      `<ns:resource xmlns:ns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <ns:geoLocations>\n` +
+      `    <ns:geoLocation>\n` +
+      `      <ns:geoLocationBox>\n` +
+      `        <ns:westBoundLongitude>-123.27</ns:westBoundLongitude>\n` +
+      `        <ns:eastBoundLongitude>-123.02</ns:eastBoundLongitude>\n` +
+      `        <ns:southBoundLatitude>49.195</ns:southBoundLatitude>\n` +
+      `        <ns:northBoundLatitude>49.315</ns:northBoundLatitude>\n` +
+      `      </ns:geoLocationBox>\n` +
+      `    </ns:geoLocation>\n` +
+      `    <ns:geoLocation>\n` +
+      `      <ns:geoLocationPoint>\n` +
+      `        <ns:pointLatitude>41.2827</ns:pointLatitude>\n` +
+      `        <ns:pointLongitude>-101.1207</ns:pointLongitude>\n` +
+      `      </ns:geoLocationPoint>\n` +
+      `    </ns:geoLocation>\n` +
+      `  </ns:geoLocations>\n` +
+      `</ns:resource>`;
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
-    const nodes = xmlDoc.querySelectorAll("geoLocation");
-    const first = ctx.getGeoLocationData(nodes[0]);
-    const second = ctx.getGeoLocationData(nodes[1]);
+    const nodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, nsResolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    const first = ctx.getGeoLocationData(nodes.snapshotItem(0), xmlDoc, nsResolver);
+    const second = ctx.getGeoLocationData(nodes.snapshotItem(1), xmlDoc, nsResolver);
 
     expect(first).toEqual({
       place: "",
@@ -260,21 +262,22 @@ describe("mappingXmlToInputFields helpers", () => {
 
   test("getGeoLocationData handles a single point", () => {
     const ctx = loadMappingModule();
+    const nsResolver = (prefix) => prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
     const xml =
-      `<resource xmlns=\"http://datacite.org/schema/kernel-4\">\n` +
-      `  <geoLocations>\n` +
-      `    <geoLocation>\n` +
-      `      <geoLocationPoint>\n` +
-      `        <pointLatitude>12.34</pointLatitude>\n` +
-      `        <pointLongitude>56.78</pointLongitude>\n` +
-      `      </geoLocationPoint>\n` +
-      `    </geoLocation>\n` +
-      `  </geoLocations>\n` +
-      `</resource>`;
+      `<ns:resource xmlns:ns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <ns:geoLocations>\n` +
+      `    <ns:geoLocation>\n` +
+      `      <ns:geoLocationPoint>\n` +
+      `        <ns:pointLatitude>12.34</ns:pointLatitude>\n` +
+      `        <ns:pointLongitude>56.78</ns:pointLongitude>\n` +
+      `      </ns:geoLocationPoint>\n` +
+      `    </ns:geoLocation>\n` +
+      `  </ns:geoLocations>\n` +
+      `</ns:resource>`;
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
-    const node = xmlDoc.querySelector("geoLocation");
-    const data = ctx.getGeoLocationData(node);
+    const node = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const data = ctx.getGeoLocationData(node, xmlDoc, nsResolver);
 
     expect(data).toEqual({
       place: "",
@@ -287,23 +290,24 @@ describe("mappingXmlToInputFields helpers", () => {
 
   test("getGeoLocationData handles a single box", () => {
     const ctx = loadMappingModule();
+    const nsResolver = (prefix) => prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
     const xml =
-      `<resource xmlns=\"http://datacite.org/schema/kernel-4\">\n` +
-      `  <geoLocations>\n` +
-      `    <geoLocation>\n` +
-      `      <geoLocationBox>\n` +
-      `        <westBoundLongitude>-10</westBoundLongitude>\n` +
-      `        <eastBoundLongitude>10</eastBoundLongitude>\n` +
-      `        <southBoundLatitude>-20</southBoundLatitude>\n` +
-      `        <northBoundLatitude>20</northBoundLatitude>\n` +
-      `      </geoLocationBox>\n` +
-      `    </geoLocation>\n` +
-      `  </geoLocations>\n` +
-      `</resource>`;
+      `<ns:resource xmlns:ns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <ns:geoLocations>\n` +
+      `    <ns:geoLocation>\n` +
+      `      <ns:geoLocationBox>\n` +
+      `        <ns:westBoundLongitude>-10</ns:westBoundLongitude>\n` +
+      `        <ns:eastBoundLongitude>10</ns:eastBoundLongitude>\n` +
+      `        <ns:southBoundLatitude>-20</ns:southBoundLatitude>\n` +
+      `        <ns:northBoundLatitude>20</ns:northBoundLatitude>\n` +
+      `      </ns:geoLocationBox>\n` +
+      `    </ns:geoLocation>\n` +
+      `  </ns:geoLocations>\n` +
+      `</ns:resource>`;
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
-    const node = xmlDoc.querySelector("geoLocation");
-    const data = ctx.getGeoLocationData(node);
+    const node = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const data = ctx.getGeoLocationData(node, xmlDoc, nsResolver);
 
     expect(data).toEqual({
       place: "",
@@ -316,30 +320,31 @@ describe("mappingXmlToInputFields helpers", () => {
 
   test("getGeoLocationData handles point then box order", () => {
     const ctx = loadMappingModule();
+    const nsResolver = (prefix) => prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
     const xml =
-      `<resource xmlns=\"http://datacite.org/schema/kernel-4\">\n` +
-      `  <geoLocations>\n` +
-      `    <geoLocation>\n` +
-      `      <geoLocationPoint>\n` +
-      `        <pointLatitude>1</pointLatitude>\n` +
-      `        <pointLongitude>2</pointLongitude>\n` +
-      `      </geoLocationPoint>\n` +
-      `    </geoLocation>\n` +
-      `    <geoLocation>\n` +
-      `      <geoLocationBox>\n` +
-      `        <westBoundLongitude>-5</westBoundLongitude>\n` +
-      `        <eastBoundLongitude>5</eastBoundLongitude>\n` +
-      `        <southBoundLatitude>-6</southBoundLatitude>\n` +
-      `        <northBoundLatitude>6</northBoundLatitude>\n` +
-      `      </geoLocationBox>\n` +
-      `    </geoLocation>\n` +
-      `  </geoLocations>\n` +
-      `</resource>`;
+      `<ns:resource xmlns:ns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <ns:geoLocations>\n` +
+      `    <ns:geoLocation>\n` +
+      `      <ns:geoLocationPoint>\n` +
+      `        <ns:pointLatitude>1</ns:pointLatitude>\n` +
+      `        <ns:pointLongitude>2</ns:pointLongitude>\n` +
+      `      </ns:geoLocationPoint>\n` +
+      `    </ns:geoLocation>\n` +
+      `    <ns:geoLocation>\n` +
+      `      <ns:geoLocationBox>\n` +
+      `        <ns:westBoundLongitude>-5</ns:westBoundLongitude>\n` +
+      `        <ns:eastBoundLongitude>5</ns:eastBoundLongitude>\n` +
+      `        <ns:southBoundLatitude>-6</ns:southBoundLatitude>\n` +
+      `        <ns:northBoundLatitude>6</ns:northBoundLatitude>\n` +
+      `      </ns:geoLocationBox>\n` +
+      `    </ns:geoLocation>\n` +
+      `  </ns:geoLocations>\n` +
+      `</ns:resource>`;
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
-    const nodes = xmlDoc.querySelectorAll("geoLocation");
-    const first = ctx.getGeoLocationData(nodes[0]);
-    const second = ctx.getGeoLocationData(nodes[1]);
+    const nodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, nsResolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    const first = ctx.getGeoLocationData(nodes.snapshotItem(0), xmlDoc, nsResolver);
+    const second = ctx.getGeoLocationData(nodes.snapshotItem(1), xmlDoc, nsResolver);
 
     expect(first).toEqual({
       place: "",
@@ -360,32 +365,33 @@ describe("mappingXmlToInputFields helpers", () => {
 
   test("getGeoLocationData includes geoLocationPlace values", () => {
     const ctx = loadMappingModule();
+    const nsResolver = (prefix) => prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
     const xml =
-      `<resource xmlns=\"http://datacite.org/schema/kernel-4\">\n` +
-      `  <geoLocations>\n` +
-      `    <geoLocation>\n` +
-      `      <geoLocationPlace>Pacific Ocean</geoLocationPlace>\n` +
-      `      <geoLocationPoint>\n` +
-      `        <pointLatitude>-33</pointLatitude>\n` +
-      `        <pointLongitude>151</pointLongitude>\n` +
-      `      </geoLocationPoint>\n` +
-      `    </geoLocation>\n` +
-      `    <geoLocation>\n` +
-      `      <geoLocationPlace>Area 51</geoLocationPlace>\n` +
-      `      <geoLocationBox>\n` +
-      `        <westBoundLongitude>-115.9</westBoundLongitude>\n` +
-      `        <eastBoundLongitude>-115.7</eastBoundLongitude>\n` +
-      `        <southBoundLatitude>37.2</southBoundLatitude>\n` +
-      `        <northBoundLatitude>37.3</northBoundLatitude>\n` +
-      `      </geoLocationBox>\n` +
-      `    </geoLocation>\n` +
-      `  </geoLocations>\n` +
-      `</resource>`;
+      `<ns:resource xmlns:ns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <ns:geoLocations>\n` +
+      `    <ns:geoLocation>\n` +
+      `      <ns:geoLocationPlace>Pacific Ocean</ns:geoLocationPlace>\n` +
+      `      <ns:geoLocationPoint>\n` +
+      `        <ns:pointLatitude>-33</ns:pointLatitude>\n` +
+      `        <ns:pointLongitude>151</ns:pointLongitude>\n` +
+      `      </ns:geoLocationPoint>\n` +
+      `    </ns:geoLocation>\n` +
+      `    <ns:geoLocation>\n` +
+      `      <ns:geoLocationPlace>Area 51</ns:geoLocationPlace>\n` +
+      `      <ns:geoLocationBox>\n` +
+      `        <ns:westBoundLongitude>-115.9</ns:westBoundLongitude>\n` +
+      `        <ns:eastBoundLongitude>-115.7</ns:eastBoundLongitude>\n` +
+      `        <ns:southBoundLatitude>37.2</ns:southBoundLatitude>\n` +
+      `        <ns:northBoundLatitude>37.3</ns:northBoundLatitude>\n` +
+      `      </ns:geoLocationBox>\n` +
+      `    </ns:geoLocation>\n` +
+      `  </ns:geoLocations>\n` +
+      `</ns:resource>`;
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
-    const nodes = xmlDoc.querySelectorAll("geoLocation");
-    const first = ctx.getGeoLocationData(nodes[0]);
-    const second = ctx.getGeoLocationData(nodes[1]);
+    const nodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, nsResolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    const first = ctx.getGeoLocationData(nodes.snapshotItem(0), xmlDoc, nsResolver);
+    const second = ctx.getGeoLocationData(nodes.snapshotItem(1), xmlDoc, nsResolver);
 
     expect(first).toEqual({
       place: "Pacific Ocean",
