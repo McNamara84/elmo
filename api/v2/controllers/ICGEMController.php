@@ -828,11 +828,8 @@ class ICGEMController extends DatasetController
      */
     public function createICGEMxml(int $id): string
     {
-        // 1. Verify that the resource has GGM data
+        // 1. Fetch GGM data (may be null/incomplete during partial saves; validation is done at submit time)
         $ggmData = $this->getGGMData($this->connection, $id);
-        if (empty($ggmData) || empty($ggmData['model_name'])) {
-            throw new Exception("Resource with ID $id does not contain GGM data required for ICGEM XML.");
-        }
         
         // 2. Get DataCite XML as string and clean schema location
         $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, "datacite");
