@@ -97,6 +97,14 @@ function saveGGMsProperties(mysqli $connection, array $postData, int $resourceId
         }
     }
 
+    // Normalize string inputs: empty string from "Choose" dropdowns → NULL
+    $stringFields = ['tide_system', 'errors', 'error_handling_approach'];
+    foreach ($stringFields as $field) {
+        if (isset($postData[$field]) && $postData[$field] === '') {
+            $postData[$field] = null;
+        }
+    }
+
     $integerFields = ['degree'];
     foreach ($integerFields as $field) {
         if (isset($postData[$field]) && $postData[$field] === '') {
