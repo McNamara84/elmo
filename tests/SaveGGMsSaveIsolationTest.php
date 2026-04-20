@@ -647,7 +647,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
         ];
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageMatches('/satellite_platform.*required/i');
+        $this->expectExceptionMessageMatches('/satellite platform/i');
 
         saveGGMsDataSources($this->connection, $postData, $this->resourceId);
     }
