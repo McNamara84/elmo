@@ -364,6 +364,19 @@
         "paragraph2": "Please provide your information and click the ´Submit´ button to send your metadata to the curators of GFZ Data Services. Additionally, we recommend saving a copy of the metadata on your computer for your records.",
         "paragraph3": "For further guidance, please refer to our <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
         "button": "Continue"
+    },
+    "doiPrefill": {
+        "modalTitle": "Pre-fill from DOI",
+        "modalMessage": "The following metadata was found for this DOI. Do you want to pre-fill the form? Existing entries will be overwritten.",
+        "confirm": "Apply",
+        "cancel": "Cancel",
+        "loading": "Looking up DOI…",
+        "versionHint": "Please check and adjust the version number if necessary.",
+        "previewTitle": "Title",
+        "previewAuthors": "Authors",
+        "previewType": "Resource Type",
+        "previewYear": "Publication Year",
+        "previewLicense": "License"
     }
 
 }

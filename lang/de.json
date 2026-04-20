@@ -364,6 +364,17 @@
         "paragraph1": "Willkommen bei ELMO – dem neuen Online-Metadateneditor der GFZ Data Services.",
         "paragraph2": "Bitte geben Sie Ihre Informationen ein und klicken Sie auf „Absenden“, um Ihre Metadaten an die Kuratorinnen und Kuratoren der GFZ Data Services zu übermitteln. Wir empfehlen außerdem, eine Kopie der Metadaten für Ihre Unterlagen auf Ihrem Computer zu speichern.",
         "paragraph3": "Weitere Hinweise finden Sie in unseren <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Veröffentlichungshinweise</a>.",
-        "button": "Weiter"
-    }
+        "button": "Weiter"    },
+    "doiPrefill": {
+        "modalTitle": "Vorausfüllung aus DOI",
+        "modalMessage": "Folgende Metadaten wurden für diesen DOI gefunden. Möchten Sie das Formular vorausfüllen? Vorhandene Einträge werden überschrieben.",
+        "confirm": "Übernehmen",
+        "cancel": "Abbrechen",
+        "loading": "DOI wird abgefragt…",
+        "versionHint": "Bitte prüfen und passen Sie die Versionsnummer ggf. an.",
+        "previewTitle": "Titel",
+        "previewAuthors": "Autoren",
+        "previewType": "Ressourcentyp",
+        "previewYear": "Erscheinungsjahr",
+        "previewLicense": "Lizenz"    }
 }
