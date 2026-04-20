@@ -27,7 +27,7 @@ export default defineConfig({
     },
     {
       name: 'firefox-gem',
-      use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8082/' },
+      use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8080/' },
       testMatch: [
         'formgroups/elmogem-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
@@ -35,7 +35,7 @@ export default defineConfig({
     },
     {
       name: 'firefox-igsn',
-      use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8083/' },
+      use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8080/' },
       testMatch: [
         'formgroups/elmoisgn-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
@@ -43,7 +43,7 @@ export default defineConfig({
     },
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'], baseURL: 'http://localhost:8081/' },
+      use: { ...devices['Desktop Safari'], baseURL: 'http://localhost:8080/' },
       testMatch: [
         'formgroups/elmomsl-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
