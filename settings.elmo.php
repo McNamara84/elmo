@@ -27,6 +27,8 @@ $connection = connectDb();
 $apiKeyElmo = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
 // Google Maps API Key
 $apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
+// Google Maps Map ID (required for AdvancedMarkerElement)
+$mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID') ?: '';
 // API Key for https://timezonedb.com/
 $apiKeyTimezone = getenv('TIMEZONE_API_KEY') ?: 'your_timezone_api_key';
 
@@ -161,20 +163,22 @@ $xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
-    global $apiKeyGoogleMaps, $showMslLabs;
+    global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslLabs;
 
     header('Content-Type: application/json; charset=utf-8');
 
     switch ($setting) {
         case 'apiKey':
             echo json_encode([
-                'apiKey' => $apiKeyGoogleMaps
+                'apiKey' => $apiKeyGoogleMaps,
+                'mapId' => $mapIdGoogleMaps
             ]);
             break;
 
         case 'all':
             echo json_encode([
                 'apiKey' => $apiKeyGoogleMaps,
+                'mapId' => $mapIdGoogleMaps,
                 'showMslLabs' => $showMslLabs
             ]);
             break;
