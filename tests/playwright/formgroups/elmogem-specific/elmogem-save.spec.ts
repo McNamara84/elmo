@@ -37,6 +37,11 @@ test.describe('ELMO-GEM save', () => {
     await page.getByLabel('Model Type *').selectOption('Temporal');
     await page.getByRole('textbox', { name: 'End date' }).fill('2000-11-15');
     await page.getByLabel('Open-search-modal').click();
+    await expect(page.locator('#modal-platforms-datasource')).toBeVisible();
+    await page.waitForFunction(() => {
+      const tree = (window as any).jQuery?.('#jstree-platforms-datasource').jstree(true);
+      return Boolean(tree && tree.get_json('#', { flat: true }).length);
+    });
     await page.getByRole('textbox', { name: 'Search for keywords' }).click();
     await page.getByRole('textbox', { name: 'Search for keywords' }).fill('goce');
     await page.getByRole('treeitem', { name: 'GOCE' }).click();
@@ -84,7 +89,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByTitle('Free Keyword').fill('metagem');
     await page.getByRole('textbox', { name: 'Funder' }).click();
     await page.getByRole('textbox', { name: 'Funder' }).fill('funder1');
-    await page.locator('#input-relatedwork-identifiertype').selectOption('bibcode');
+    await page.locator('#input-relatedwork-identifiertype').selectOption('DOI');
     await page.getByRole('textbox', { name: 'First Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'First Name', exact: true }).fill('sasha');
     await page.locator('#group-contributororganisation').getByTitle('Role(s)').click();
@@ -106,6 +111,11 @@ test.describe('ELMO-GEM save', () => {
     await page.locator('#input-datasource-description').click();
     await page.locator('#input-datasource-description').fill('descrS');
     await page.locator('#button-datasource-platforms-1').click();
+    await expect(page.locator('#modal-platforms-datasource')).toBeVisible();
+    await page.waitForFunction(() => {
+      const tree = (window as any).jQuery?.('#jstree-platforms-datasource').jstree(true);
+      return Boolean(tree && tree.get_json('#', { flat: true }).length);
+    });
     await page.locator('.jstree-icon').first().click();
     await page.locator('[id="https://gcmd.earthdata.nasa.gov/kms/concept/3466eed1-2fbb-49bf-ab0b-dc08731d502b"] > .jstree-icon.jstree-ocl').click();
     await page.locator('[id="https://gcmd.earthdata.nasa.gov/kms/concept/b78f1a1f-2e62-4f21-8031-670f008bdaa5"] > .jstree-icon.jstree-ocl').click();
