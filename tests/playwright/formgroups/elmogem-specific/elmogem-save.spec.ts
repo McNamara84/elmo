@@ -38,10 +38,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('textbox', { name: 'End date' }).fill('2000-11-15');
     await page.getByLabel('Open-search-modal').click();
     await expect(page.locator('#modal-platforms-datasource')).toBeVisible();
-    await page.waitForFunction(() => {
-      const tree = (window as any).jQuery?.('#jstree-platforms-datasource').jstree(true);
-      return Boolean(tree && tree.get_json('#', { flat: true }).length);
-    });
+    await page.locator('#jstree-platforms-datasource .jstree-node').first().waitFor({ state: 'visible' });
     await page.getByRole('textbox', { name: 'Search for keywords' }).click();
     await page.getByRole('textbox', { name: 'Search for keywords' }).fill('goce');
     await page.getByRole('treeitem', { name: 'GOCE' }).click();
@@ -112,10 +109,7 @@ test.describe('ELMO-GEM save', () => {
     await page.locator('#input-datasource-description').fill('descrS');
     await page.locator('#button-datasource-platforms-1').click();
     await expect(page.locator('#modal-platforms-datasource')).toBeVisible();
-    await page.waitForFunction(() => {
-      const tree = (window as any).jQuery?.('#jstree-platforms-datasource').jstree(true);
-      return Boolean(tree && tree.get_json('#', { flat: true }).length);
-    });
+    await page.locator('#jstree-platforms-datasource .jstree-node').first().waitFor({ state: 'visible' });
     await page.locator('.jstree-icon').first().click();
     await page.locator('[id="https://gcmd.earthdata.nasa.gov/kms/concept/3466eed1-2fbb-49bf-ab0b-dc08731d502b"] > .jstree-icon.jstree-ocl').click();
     await page.locator('[id="https://gcmd.earthdata.nasa.gov/kms/concept/b78f1a1f-2e62-4f21-8031-670f008bdaa5"] > .jstree-icon.jstree-ocl').click();
@@ -134,10 +128,10 @@ test.describe('ELMO-GEM save', () => {
     await page.locator('#input-datasource-description-3').fill('only description');
     await page.getByRole('textbox', { name: 'Radius (in km) *' }).click();
     await page.getByRole('textbox', { name: 'Radius (in km) *' }).fill('1234');
-    await page.getByRole('button', { name: 'Speichern unter' }).click();
-    await page.getByRole('textbox', { name: 'Dateiname' }).fill('test_data_isostasy');
+    await page.getByRole('button', { name: 'Save as' }).click();
+    await page.getByRole('textbox', { name: 'Filename' }).fill('test_data_isostasy');
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toContain('.xml');
     const path = await download.path();
