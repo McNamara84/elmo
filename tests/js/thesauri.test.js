@@ -67,7 +67,7 @@ function transformThesauriScript(source) {
   script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
   script = script.replace('export function cleanupTagifyForInput', 'function cleanupTagifyForInput');
   script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
-  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, initTagifyForInput };';
+  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, initTagifyForInput, showLoadingSpinner, hideLoadingSpinner, loadThesaurusOnDemand, loadKeywordsForConfig, loadedConfigs };';
   return script;
 }
 
@@ -662,8 +662,7 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
       jsTreeId: '#jstree-sciencekeyword',
       inputId: '#input-sciencekeyword',
       searchInputId: '#input-sciencekeyword-thesaurussearch',
-      selectedListId: 'selected-keywords-sciencekeyword',
-      stateKey: 'input-sciencekeyword',
+      selectedKeywordsListId: 'selected-keywords-sciencekeyword',
     };
     const response = {
       data: [{
@@ -685,8 +684,7 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
       jsTreeId: '#jstree-sciencekeyword',
       inputId: '#input-sciencekeyword',
       searchInputId: '#input-sciencekeyword-thesaurussearch',
-      selectedListId: 'selected-keywords-sciencekeyword',
-      stateKey: 'input-sciencekeyword',
+      selectedKeywordsListId: 'selected-keywords-sciencekeyword',
     };
     const response = { data: [{ id: 'n1', text: 'Node1', children: [] }] };
 
