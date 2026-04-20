@@ -264,6 +264,7 @@ function processAuthor($connection, $resource_id, $authorData)
 
     if (!empty($authorData['familyname']) && !empty($authorData['givenname'])) {
         // 1. Save or find PERSON
+        // Author_person.orcid is NOT NULL, so empty strings are stored as-is and = suffices
         $stmt = $connection->prepare("SELECT author_person_id FROM Author_person WHERE familyname = ? AND givenname = ? AND orcid = ?");
         $stmt->bind_param("sss", $authorData['familyname'], $authorData['givenname'], $authorData['orcid']);
         $stmt->execute();

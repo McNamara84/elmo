@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { navigateToHome, SELECTORS, simulateSubmitValidation } from '../utils';
 
 const apiKey = process.env.GOOGLE_MAPS_API_KEY ?? 'playwright-test-google-maps-key';
+const mapId = 'playwright-test-map-id';
 
 const googleMapsStub = String.raw`(() => {
   const listeners = new WeakMap();
@@ -90,6 +91,8 @@ const googleMapsStub = String.raw`(() => {
         [topRightKey]: { push() {} }
       };
       element.setAttribute('data-map-ready', 'true');
+      // Expose map instance globally for E2E test interaction
+      window.__elmoMapInstance = this;
     }
     addListener(eventName, callback) {
       return event.addListener(this, eventName, callback);
@@ -99,77 +102,59 @@ const googleMapsStub = String.raw`(() => {
     }
     panTo() {}
     setZoom() {}
+    setOptions() {}
     fitBounds(bounds) {
       this._lastBounds = bounds;
     }
   }
 
-  class Marker {
-    constructor({ position, map = null, label = '' }) {
-      this._position = position;
-      this._map = map;
-      this._label = label;
+  class AdvancedMarkerElement {
+    constructor({ position, map = null, content = null }) {
+      this.position = position;
+      this.map = map;
+      this.content = content;
     }
-    setMap(map) {
-      this._map = map;
-    }
-    setLabel(label) {
-      this._label = label;
-    }
-    getPosition() {
-      return this._position;
+  }
+
+  class PinElement {
+    constructor({ glyphText = '', glyphColor = '', background = '', borderColor = '' } = {}) {
+      this.glyphText = glyphText;
+      this.glyphColor = glyphColor;
+      this.background = background;
+      this.borderColor = borderColor;
     }
   }
 
   class Rectangle {
-    constructor({ bounds, map = null }) {
-      this._bounds = bounds;
-      this._map = map;
+    constructor(opts = {}) {
+      this._bounds = opts.bounds || null;
+      this._map = opts.map || null;
     }
     setMap(map) {
       this._map = map;
+    }
+    setBounds(bounds) {
+      this._bounds = bounds;
     }
     getBounds() {
       return this._bounds;
     }
   }
 
-  class DrawingManager {
-    constructor(options) {
-      this.options = options;
-      this.map = null;
-      window.__elmoDrawingManagerInstances = window.__elmoDrawingManagerInstances || [];
-      window.__elmoDrawingManagerInstances.push(this);
+  // Register gmp-place-autocomplete as a custom element stub
+  if (!customElements.get('gmp-place-autocomplete')) {
+    class PlaceAutocompleteStub extends HTMLElement {
+      constructor() {
+        super();
+      }
+      get locationBias() { return this._locationBias; }
+      set locationBias(val) { this._locationBias = val; }
     }
-    setMap(map) {
-      this.map = map;
-    }
-  }
-
-  class SearchBox {
-    constructor(input) {
-      this.input = input;
-      window.__elmoSearchBoxes = window.__elmoSearchBoxes || [];
-      window.__elmoSearchBoxes.push(this);
-    }
-    setBounds(bounds) {
-      this._bounds = bounds;
-    }
-    addListener(eventName, callback) {
-      return event.addListener(this, eventName, callback);
-    }
-    setTestPlaces(places) {
-      this._places = places;
-      event.trigger(this, 'places_changed');
-    }
-    getPlaces() {
-      return this._places || [];
-    }
+    customElements.define('gmp-place-autocomplete', PlaceAutocompleteStub);
   }
 
   const mapTypeId = { SATELLITE: 'satellite' };
   const controlPosition = { TOP_CENTER: 'TOP_CENTER', TOP_RIGHT: 'TOP_RIGHT' };
-  const overlayType = { RECTANGLE: 'rectangle', MARKER: 'marker' };
 
   const callback = window.google?.maps?.__ib__;
   window.google = window.google || {};
@@ -178,23 +163,20 @@ const googleMapsStub = String.raw`(() => {
 
   maps.event = event;
   maps.Map = Map;
-  maps.Marker = Marker;
   maps.Rectangle = Rectangle;
   maps.LatLng = LatLng;
   maps.LatLngBounds = LatLngBounds;
   maps.MapTypeId = mapTypeId;
   maps.ControlPosition = controlPosition;
-  maps.drawing = { OverlayType: overlayType, DrawingManager };
-  maps.places = { SearchBox };
   maps.importLibrary = async (name) => {
     if (name === 'maps') {
-      return { Map, LatLng, LatLngBounds, Marker, Rectangle, MapTypeId: mapTypeId, ControlPosition: controlPosition };
+      return { Map, LatLng, LatLngBounds, Rectangle, MapTypeId: mapTypeId, ControlPosition: controlPosition };
     }
-    if (name === 'drawing') {
-      return { DrawingManager, OverlayType: overlayType };
+    if (name === 'marker') {
+      return { AdvancedMarkerElement, PinElement };
     }
     if (name === 'places') {
-      return { SearchBox };
+      return {};
     }
     return {};
   };
@@ -210,7 +192,7 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ apiKey }),
+        body: JSON.stringify({ apiKey, mapId }),
       });
     });
 
@@ -316,16 +298,20 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await expect(modal).toBeVisible();
     await expect(page.locator('#panel-stc-map')).toHaveAttribute('data-map-ready', 'true');
 
+    // Wait for the drawing toolbar to become visible (indicates DrawingController is ready)
     await page.waitForFunction(
-      () => Array.isArray((window as any).__elmoDrawingManagerInstances) && (window as any).__elmoDrawingManagerInstances.length > 0
+      () => {
+        const toolbar = document.getElementById('map-drawing-toolbar');
+        return toolbar && toolbar.style.display !== 'none';
+      }
     );
 
+    // DrawingController starts in 'marker' mode by default.
+    // Simulate a click on the map to place a marker.
     await page.evaluate(() => {
-      const [manager] = (window as any).__elmoDrawingManagerInstances || [];
-      const marker = new (window as any).google.maps.Marker({
-        position: new (window as any).google.maps.LatLng(40.7128, -74.0060),
-      });
-      (window as any).google.maps.event.trigger(manager, 'markercomplete', marker);
+      const mapInstance = (window as any).__elmoMapInstance;
+      const latLng = new (window as any).google.maps.LatLng(40.7128, -74.0060);
+      (window as any).google.maps.event.trigger(mapInstance, 'click', { latLng });
     });
 
     const latMin = page.locator('#input-stc-latmin_1');
@@ -338,14 +324,24 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await expect(latMax).toHaveValue('');
     await expect(longMax).toHaveValue('');
 
+    // Switch to rectangle mode by clicking the rectangle toolbar button
+    await page.locator('#btn-draw-rectangle').click();
+
+    // Simulate rectangle drawing: click (start) → mousemove (drag) → mouseup (complete)
     await page.evaluate(() => {
-      const [manager] = (window as any).__elmoDrawingManagerInstances || [];
-      const bounds = new (window as any).google.maps.LatLngBounds(
-        new (window as any).google.maps.LatLng(40.0, -74.5),
-        new (window as any).google.maps.LatLng(41.0, -73.5),
-      );
-      const rectangle = new (window as any).google.maps.Rectangle({ bounds });
-      (window as any).google.maps.event.trigger(manager, 'rectanglecomplete', rectangle);
+      const mapInstance = (window as any).__elmoMapInstance;
+      const LatLng = (window as any).google.maps.LatLng;
+
+      // Start: click sets startLatLng and creates preview rectangle
+      (window as any).google.maps.event.trigger(mapInstance, 'click', {
+        latLng: new LatLng(40.0, -74.5),
+      });
+      // Drag: mousemove updates preview rectangle bounds
+      (window as any).google.maps.event.trigger(mapInstance, 'mousemove', {
+        latLng: new LatLng(41.0, -73.5),
+      });
+      // Release: mouseup completes the rectangle
+      (window as any).google.maps.event.trigger(mapInstance, 'mouseup', {});
     });
 
     await expect(latMax).toHaveValue(/41(?:\.0+)?/);

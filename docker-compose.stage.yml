@@ -37,6 +37,7 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       LOCAL_DEVELOPMENT: "true"
@@ -94,6 +95,7 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       LOCAL_DEVELOPMENT: "true"
@@ -149,6 +151,7 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       LOCAL_DEVELOPMENT: "true"
@@ -204,6 +207,7 @@ services:
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}

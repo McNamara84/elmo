@@ -65,11 +65,51 @@ function visibilityON(elementOrSelector) {
   $el.find('input, select, textarea, button').prop('disabled', false);
 }
 
+/**
+ * Applies the current translations to a freshly cloned row.
+ * Templates captured at document-ready time contain untranslated text;
+ * this function updates data-translate, data-translate-placeholder and
+ * data-translate-title elements so labels, placeholders, titles and
+ * aria-labels match the active language.
+ *
+ * @param {jQuery} row - The cloned row to translate.
+ */
+function translateClonedRow(row) {
+  if (typeof translations === 'undefined' || !translations) return;
+  const translate = window.elmo && window.elmo.translate;
+  if (typeof translate !== 'function') return;
+
+  row.find('[data-translate]').each(function () {
+    const key = $(this).data('translate');
+    const value = translate(key);
+    if (value) {
+      const icon = $(this).find('i.bi').prop('outerHTML');
+      $(this).html(icon ? `${icon} ${value}` : value);
+    }
+  });
+  row.find('[data-translate-placeholder]').each(function () {
+    const key = $(this).data('translate-placeholder');
+    const value = translate(key);
+    if (value) {
+      $(this).attr('placeholder', value);
+    }
+  });
+  row.find('[data-translate-title]').each(function () {
+    const key = $(this).data('translate-title');
+    const value = translate(key);
+    if (value) {
+      $(this).attr('title', value);
+      $(this).attr('aria-label', value);
+    }
+  });
+}
+
 // ...existing code...
 
 export {
   replaceHelpButtonInClonedRows,
   createRemoveButton,
+  translateClonedRow,
   updateOverlayLabels,
   visibilityOFF,
   visibilityON
@@ -80,6 +120,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     replaceHelpButtonInClonedRows,
     createRemoveButton,
+    translateClonedRow,
     updateOverlayLabels,
     visibilityOFF,
     visibilityON
@@ -89,6 +130,7 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof window !== 'undefined') {
   window.replaceHelpButtonInClonedRows = replaceHelpButtonInClonedRows;
   window.createRemoveButton = createRemoveButton;
+  window.translateClonedRow = translateClonedRow;
   window.updateOverlayLabelsWrapper = updateOverlayLabels;
   window.visibilityOFF = visibilityOFF;
   window.visibilityON = visibilityON;

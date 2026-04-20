@@ -93,18 +93,13 @@ describe('freekeywordTags.js', () => {
     logSpy.mockRestore();
   });
 
-  test('warns when API request fails', () => {
+  test('silently ignores API request failures without console warnings', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     loadScript(() => ({
       done() { return { fail: cb => cb({ status: 404, statusText: 'Not Found', responseText: 'err' }, 'error', 'err') }; },
       fail: jest.fn()
     }));
-    expect(warnSpy).toHaveBeenCalledWith('Failed to fetch keywords:', {
-      status: 404,
-      statusText: 'Not Found',
-      responseText: 'err',
-      error: 'err'
-    });
+    expect(warnSpy).not.toHaveBeenCalled();
     warnSpy.mockRestore();
   });
   

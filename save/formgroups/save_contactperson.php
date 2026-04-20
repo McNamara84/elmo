@@ -50,7 +50,10 @@ function saveContactPerson($connection, $postData, $resource_id)
         }
 
         $email = trim($emails[$i] ?? '');
-        $website = isset($websites[$i]) ? preg_replace('#^https?://#', '', $websites[$i]) : '';
+        $website = isset($websites[$i]) ? trim(preg_replace('#^https?://#', '', trim($websites[$i]))) : '';
+        // Normalize empty optional fields to NULL for consistent DB storage and duplicate detection
+        $orcid = $orcid !== '' ? $orcid : null;
+        $website = $website !== '' ? $website : null;
         $affiliation_data = $affiliations[$i] ?? '';
         $rorId_data = $rorIds[$i] ?? '';
 
@@ -62,9 +65,10 @@ function saveContactPerson($connection, $postData, $resource_id)
         // If there's an email (whether or not other fields are filled), save as a contact person
         if (!empty($email)&& !empty($familyname) && !empty($givenname)) {
             // Check if a contact person with the exact data already exists
+            // Using <=> (NULL-safe equal) for orcid and website which can be NULL
             $stmt = $connection->prepare("
                 SELECT contact_person_id FROM Contact_Person 
-                WHERE familyName = ? AND givenname = ? AND orcid = ? AND email = ? AND website = ?
+                WHERE familyName = ? AND givenname = ? AND orcid <=> ? AND email = ? AND website <=> ?
             ");
             $stmt->bind_param("sssss", $familyname, $givenname, $orcid, $email, $website);
             $stmt->execute();

@@ -216,7 +216,7 @@ final class ValidationFunctionsTest extends TestCase
      */
     public function testValidateKeywordEntriesMissingField(): void
     {
-        $entry = [['value' => 'A']];
+        $entry = [['id' => '1', 'scheme' => 's']];
         $this->assertFalse(validateKeywordEntries($entry));
     }
 
@@ -228,6 +228,17 @@ final class ValidationFunctionsTest extends TestCase
     public function testValidateKeywordEntriesWithoutOptionalFields(): void
     {
         $entry = [['value' => 'EARTH SCIENCE > GRAVITY', 'scheme' => 'NASA/GCMD Earth Science Keywords']];
+        $this->assertTrue(validateKeywordEntries($entry));
+    }
+
+    /**
+     * Ensures keyword validation passes when only value is present.
+     *
+     * @return void
+     */
+    public function testValidateKeywordEntriesValueOnly(): void
+    {
+        $entry = [['value' => 'A']];
         $this->assertTrue(validateKeywordEntries($entry));
     }
 

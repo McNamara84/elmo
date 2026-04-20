@@ -43,6 +43,7 @@ describe('contributor-person.js', () => {
 
     window.createRemoveButton = jest.fn(() => $('<button type="button" class="removeButton"></button>'));
     window.replaceHelpButtonInClonedRows = jest.fn();
+    window.translateClonedRow = jest.fn();
     window.setupRolesDropdown = jest.fn();
     window.autocompleteAffiliations = jest.fn();
     window.validateAllMandatoryFields = jest.fn();

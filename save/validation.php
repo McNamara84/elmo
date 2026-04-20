@@ -155,13 +155,16 @@ function isValidOrcidChecksum(string $orcid): bool
  * @param array $requiredFields Array of field names that must be present in each entry
  * @return bool True if all entries contain all required fields with non-empty values
  */
-function validateKeywordEntries($keywordData, $requiredFields = ['value', 'scheme'])
+function validateKeywordEntries($keywordData, $requiredFields = ['value'])
 {
     if (!is_array($keywordData)) {
         return false;
     }
 
     foreach ($keywordData as $entry) {
+        if (!is_array($entry)) {
+            return false;
+        }
         foreach ($requiredFields as $field) {
             if (!isset($entry[$field]) || empty($entry[$field])) {
                 return false;
