@@ -976,6 +976,36 @@ $(document).ready(function () {
     }
 
     /**
+     * Loads thesaurus vocabulary data on demand.
+     * Triggered when a modal is opened for the first time OR when
+     * a Tagify input field receives focus.
+     * Fetches from the ELMO API proxy endpoint (ERNIE-backed) or local JSON for MSL.
+     *
+     * @param {Object} config - The configuration object for the keyword input.
+     */
+    function loadThesaurusOnDemand(config) {
+        const currentState = loadedConfigs.get(config.jsTreeId);
+        if (currentState === 'loading' || currentState === 'loaded') return;
+
+        loadedConfigs.set(config.jsTreeId, 'loading');
+        showLoadingSpinner(config.jsTreeId);
+
+        $.getJSON(config.apiEndpoint, function (data) {
+            loadKeywordsForConfig(config, data);
+            loadedConfigs.set(config.jsTreeId, 'loaded');
+            hideLoadingSpinner(config.jsTreeId);
+        }).fail(function (jqxhr, textStatus, error) {
+            console.error('Failed to load thesaurus:', config.apiEndpoint, textStatus, error);
+            loadedConfigs.set(config.jsTreeId, 'error');
+            $(config.jsTreeId).html(`
+                <div class="alert alert-danger m-2">
+                    ${translations?.keywords?.thesaurus?.unavailable || 'Error loading thesaurus data.'}
+                </div>
+            `);
+        });
+    }
+
+    /**
      * Initializes a keyword input field with Tagify only (no data loading yet).
      * Vocabulary data will be loaded lazily when the modal is opened.
      *
