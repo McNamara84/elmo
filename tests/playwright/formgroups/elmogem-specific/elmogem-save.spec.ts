@@ -39,6 +39,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByLabel('Open-search-modal').click();
     await expect(page.locator('#modal-platforms-datasource')).toBeVisible();
     await page.getByRole('textbox', { name: 'Search for keywords' }).fill('goce');
+    await page.getByRole('treeitem', { name: 'GOCE' }).waitFor({ state: 'visible' });
     await page.getByRole('treeitem', { name: 'GOCE' }).click();
     await page.locator('#modal-platforms-datasource').getByText('OK', { exact: true }).click();
     await page.locator('#button-datasource-add').click();
@@ -107,9 +108,11 @@ test.describe('ELMO-GEM save', () => {
     await page.locator('#input-datasource-description').fill('descrS');
     await page.locator('#button-datasource-platforms-1').click();
     await expect(page.locator('#modal-platforms-datasource')).toBeVisible();
-    await page.getByRole('textbox', { name: 'Search for keywords' }).fill('GFO');
-    await page.getByRole('treeitem', { name: 'GFO-' }).click();
+    await page.getByRole('textbox', { name: 'Search for keywords' }).fill('GFO-1');
+    await page.getByRole('treeitem', { name: 'GFO-1' }).waitFor({ state: 'visible' });
+    await page.getByRole('treeitem', { name: 'GFO-1' }).click();
     await page.getByRole('textbox', { name: 'Search for keywords' }).fill('GEOSAT');
+    await page.getByRole('treeitem', { name: 'GEOSAT', exact: true }).waitFor({ state: 'visible' });
     await page.getByRole('treeitem', { name: 'GEOSAT', exact: true }).click();
     await page.locator('#modal-platforms-datasource').getByText('OK', { exact: true }).click();
     await page.locator('#button-datasource-add').click();
