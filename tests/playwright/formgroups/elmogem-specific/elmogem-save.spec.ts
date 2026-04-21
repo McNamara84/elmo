@@ -38,6 +38,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('textbox', { name: 'End date' }).fill('2000-11-15');
     await page.getByRole('textbox', { name: 'Choose the satellite' }).first().click();
     await page.getByRole('textbox', { name: 'Choose the satellite' }).first().fill('goce');
+    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).first().waitFor({ state: 'visible' });
     await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).first().click();
     await page.locator('#button-datasource-add').click();
     await page.getByLabel('Type*', { exact: true }).selectOption('G');
@@ -105,11 +106,13 @@ test.describe('ELMO-GEM save', () => {
     await page.locator('#input-datasource-description').fill('descrS');
     await page.getByRole('textbox', { name: 'Choose the satellite' }).first().click();
     await page.getByRole('textbox', { name: 'Choose the satellite' }).first().fill('gfo-1');
+    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).first().waitFor({ state: 'visible' });
     await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).first().click();
     await page.locator('#button-datasource-add').click();
     await page.getByRole('textbox', { name: 'Choose the satellite' }).nth(1).click();
     await page.getByRole('textbox', { name: 'Choose the satellite' }).nth(1).fill('geosat');
-    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).click();
+    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).nth(1).waitFor({ state: 'visible' });
+    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).nth(1).click();
     await page.locator('#button-datasource-add').click();
     await page.locator('#input-datasource-type-2').selectOption('T');
     await page.locator('#input-datasource-details-2').selectOption('Isostasy');
