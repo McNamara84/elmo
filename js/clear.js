@@ -114,7 +114,7 @@ function clearInputFields() {
     $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
     $('#group-fundingreference .row[funding-reference-row]:first input').val('');
 
-    // === GGMsProperties fields ===
+    // === GGMs Definition fields (GGMsDefinition.html) ===
     $('#input-model-type').prop('selectedIndex', 0).val('');
     $('#input-mathematical-representation').prop('selectedIndex', 0).val('');
     $('#input-celestial-body').prop('selectedIndex', 0).val('Earth');
@@ -122,9 +122,103 @@ function clearInputFields() {
     $('#input-model-name').val('');
     $('#input-product-type').prop('selectedIndex', 0).val('Gravity Field');
 
+    // === GGMs Characteristics fields (GGMsProperties.html) ===
+    $('#input-tide-system').prop('selectedIndex', 0).val('');
+    $('#input-degree').val('');
+    $('#input-errors').prop('selectedIndex', 0).val('');
+    $('#input-error-handling-approach').val('');
+    $('#input-radius').val('');
+    $('#input-semimajor-axis').val('');
+    $('#input-second-variable').prop('selectedIndex', 0).val('');
+    $('#input-second-variable-value').val('');
+    $('#input-earth-gravity-constant').val('');
+
+    // === GGMs Data Sources ===
+    $('#group-datasources .row[data-source-row]').not(':first').remove();
+    const $firstDsRow = $('#group-datasources .row[data-source-row]:first');
+    $firstDsRow.find('select[name="datasource_type[]"]').val('S');
+    $firstDsRow.find('select[name="datasource_details[]"]').prop('selectedIndex', 0);
+    $firstDsRow.find('textarea[name="datasource_description[]"]').val('');
+    $firstDsRow.find('input[name="dIdentifier[]"]').val('');
+    $firstDsRow.find('input[name="dName[]"]').val('');
+    $firstDsRow.find('input[name="compensation_depth[]"]').val('');
+
+    // === GGMs Model Types (GGMsModelTypes.html) ===
+    // Static
+    $('#checkbox-time-variable').prop('checked', false);
+    $('#input-static-description').val('');
+    // Temporal
+    $('#input-temporal-start').val('');
+    $('#input-temporal-end').val('');
+    $('#select-temporal-frequency-predef').prop('selectedIndex', 0).val('');
+    $('#checkbox-custom-frequency').prop('checked', false);
+    $('#input-temporal-frequency').val('');
+    $('#input-temporal-institution').val('');
+    $('#input-release-number').val('');
+    // Topographic
+    $('#select-topo-layerapproach').prop('selectedIndex', 0).val('');
+    $('#select-topo-domain').prop('selectedIndex', 0).val('');
+    $('#select-topo-approximation').prop('selectedIndex', 0).val('');
+    $('#select-topo-density').prop('selectedIndex', 0).val('');
+    $('#input-topo-density-details').val('');
+    $('#checkbox-separate-density').prop('checked', false);
+    $('#select-topo-density-crust').prop('selectedIndex', 0).val('');
+    $('#input-topo-density-details-crust').val('');
+    $('#select-topo-density-mantle').prop('selectedIndex', 0).val('');
+    $('#input-topo-density-details-mantle').val('');
+
 }
+
+/**
+ * All GGMs/ICGEM-specific field selectors used by clearInputFields().
+ * Exported so Jest and Playwright tests can reference the same source of truth.
+ */
+const GGMS_SELECTORS = {
+    definition: {
+        modelType: '#input-model-type',
+        mathRep: '#input-mathematical-representation',
+        celestialBody: '#input-celestial-body',
+        fileFormat: '#input-file-format',
+        modelName: '#input-model-name',
+    },
+    characteristics: {
+        tideSystem: '#input-tide-system',
+        degree: '#input-degree',
+        errors: '#input-errors',
+        errorHandlingApproach: '#input-error-handling-approach',
+        radius: '#input-radius',
+        semimajorAxis: '#input-semimajor-axis',
+        secondVariable: '#input-second-variable',
+        secondVariableValue: '#input-second-variable-value',
+        earthGravityConstant: '#input-earth-gravity-constant',
+    },
+    modelTypes: {
+        timeVariableCheckbox: '#checkbox-time-variable',
+        staticDescription: '#input-static-description',
+        temporalStart: '#input-temporal-start',
+        temporalEnd: '#input-temporal-end',
+        temporalFreqPredef: '#select-temporal-frequency-predef',
+        customFreqCheckbox: '#checkbox-custom-frequency',
+        temporalFrequency: '#input-temporal-frequency',
+        temporalInstitution: '#input-temporal-institution',
+        releaseNumber: '#input-release-number',
+        topoLayerApproach: '#select-topo-layerapproach',
+        topoDomain: '#select-topo-domain',
+        topoApproximation: '#select-topo-approximation',
+        topoDensity: '#select-topo-density',
+        topoDensityDetails: '#input-topo-density-details',
+        separateDensityCheckbox: '#checkbox-separate-density',
+        topoDensityCrust: '#select-topo-density-crust',
+        topoDensityDetailsCrust: '#input-topo-density-details-crust',
+        topoDensityMantle: '#select-topo-density-mantle',
+        topoDensityDetailsMantle: '#input-topo-density-details-mantle',
+    },
+    dataSources: {
+        rowSelector: '#group-datasources .row[data-source-row]',
+    },
+};
 
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { clearInputFields };
+    module.exports = { clearInputFields, GGMS_SELECTORS };
 }
