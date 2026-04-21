@@ -26,6 +26,8 @@ function clearInputFields() {
     $('div[data-creator-row]:first').find('input').val('');
     $('div[data-creator-row]:first').find('.contact-person-input').hide();
     $('div[data-creator-row]:first').find('input[name="contacts[]"]').prop('checked', false);
+    // Remove the "Please choose at least one contact person" error inserted by submitHandler.js
+    $('#contact-person-error').remove();
 
     // Clear Tagify for affiliations in the first author row
     const firstAffiliationTagify = $('div[data-creator-row]:first').find('input[name="personAffiliation[]"]')[0];
@@ -119,7 +121,9 @@ function clearInputFields() {
     // the delegated handler in ggms-modeltypes.js, which hides the model-specific-card
     // and resets section visibility when the value is empty.
     $('#input-model-type').prop('selectedIndex', 0).val('').trigger('change');
-    $('#input-mathematical-representation').prop('selectedIndex', 0).val('');
+    // .trigger('change') calls updateReferenceSystemVisibility() in ggms-properties.js,
+    // which resets the model properties FG back to the default spherical layout.
+    $('#input-mathematical-representation').prop('selectedIndex', 0).val('').trigger('change');
     $('#input-celestial-body').prop('selectedIndex', 0).val('Earth');
     $('#input-file-format').prop('selectedIndex', 0).val('');
     $('#input-model-name').val('');
@@ -128,7 +132,9 @@ function clearInputFields() {
     // === GGMs Characteristics fields (GGMsProperties.html) ===
     $('#input-tide-system').prop('selectedIndex', 0).val('');
     $('#input-degree').val('');
-    $('#input-errors').prop('selectedIndex', 0).val('');
+    // .trigger('change') calls updateErrorHandlingVisibility() in ggms-properties.js,
+    // which hides the error-handling approach field when errors is reset to empty.
+    $('#input-errors').prop('selectedIndex', 0).val('').trigger('change');
     $('#input-error-handling-approach').val('');
     $('#input-radius').val('');
     $('#input-semimajor-axis').val('');

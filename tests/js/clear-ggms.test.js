@@ -139,13 +139,25 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
             <option value="">Choose...</option>
             <option value="calibrated" selected>calibrated</option>
         </select>
-        <textarea id="input-error-handling-approach" name="error_handling_approach">Approach text</textarea>
-        <input id="input-radius" name="radius" type="text" value="">
-        <input id="input-semimajor-axis" name="semimajor_axis_a" type="text" value="">
-        <select id="input-second-variable" name="second_variable">
-            <option value="">Choose...</option>
-        </select>
-        <input id="input-second-variable-value" name="second_variable_value" type="text" value="">
+        <!-- error-handling-col visibility toggled by updateErrorHandlingVisibility() -->
+        <div id="error-handling-col" style="display: block;">
+            <textarea id="input-error-handling-approach" name="error_handling_approach">Approach text</textarea>
+        </div>
+        <!-- visibility-spherical / visibility-ellipsoidal toggled by updateReferenceSystemVisibility() -->
+        <div class="visibility-spherical" style="display: none;">
+            <input id="input-radius" name="radius" type="text" value="">
+        </div>
+        <div class="visibility-ellipsoidal" style="display: block;">
+            <input id="input-semimajor-axis" name="semimajor_axis_a" type="text" value="">
+        </div>
+        <div class="visibility-ellipsoidal" style="display: block;">
+            <select id="input-second-variable" name="second_variable">
+                <option value="">Choose...</option>
+            </select>
+        </div>
+        <div class="visibility-ellipsoidal" style="display: block;">
+            <input id="input-second-variable-value" name="second_variable_value" type="text" value="">
+        </div>
         <input id="input-earth-gravity-constant" name="earth_gravity_constant" type="decimal" value="3.986e14">
 
         <!-- ── GGMs Data Sources (GGMsDataSources.html) ── -->
@@ -203,6 +215,37 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
             const isModel = val === 'M';
             row.find('.visibility-datasources-identifier').css('display', isModel ? '' : 'none');
             row.find('.visibility-datasources-satellite').css('display', isModel ? 'none' : '');
+        });
+
+        // ── Minimal errors change handler (Bug 4) ──────────────────────────
+        // Mirrors ggms-properties.js updateErrorHandlingVisibility():
+        // hide the error-handling column unless errors === 'calibrated'.
+        $(document).on('change.clearGgmsTest', '#input-errors', function () {
+            const val = $(this).val();
+            const col = $('#error-handling-col');
+            if (val === 'calibrated') {
+                col.show();
+            } else {
+                col.hide();
+            }
+        });
+
+        // ── Minimal math-representation change handler (Bug 5) ────────────
+        // Mirrors ggms-properties.js updateReferenceSystemVisibility():
+        // show spherical and hide ellipsoidal when value is empty.
+        $(document).on('change.clearGgmsTest', '#input-mathematical-representation', function () {
+            const val = $(this).val();
+            const spherical = $('.visibility-spherical');
+            const ellipsoidal = $('.visibility-ellipsoidal');
+            spherical.hide();
+            ellipsoidal.hide();
+            if (!val || val.toLowerCase() === 'spherical harmonics') {
+                spherical.show();
+            } else if (val.toLowerCase() === 'ellipsoidal harmonics') {
+                ellipsoidal.show();
+            } else {
+                spherical.show();
+            }
         });
 
         jest.resetModules();
@@ -332,6 +375,92 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
         test('earth gravity constant is empty', () => {
             clearModule.clearInputFields();
             expect($('#input-earth-gravity-constant').val()).toBe('');
+        });
+    });
+
+    // ── Bug 4: errors → error handling visibility ─────────────────────────
+
+    describe('Bug 4 – trigger(change) fires on #input-errors', () => {
+        test('error-handling column is hidden when errors was calibrated before clear', () => {
+            // Pre-condition: calibrated selected, error handling col visible
+            $('#input-errors').val('calibrated');
+            $('#error-handling-col').show();
+
+            clearModule.clearInputFields();
+
+            // trigger('change') must have fired our stub → col hidden
+            expect($('#error-handling-col').css('display')).toBe('none');
+        });
+
+        test('#input-errors value is empty after clear', () => {
+            $('#input-errors').val('calibrated');
+            clearModule.clearInputFields();
+            expect($('#input-errors').val()).toBe('');
+        });
+
+        test('handler is NOT called without trigger – guard test', () => {
+            $('#input-errors').val('calibrated');
+            $('#error-handling-col').show();
+            // Direct val() without trigger must NOT hide the column
+            $('#input-errors').val('');
+            expect($('#error-handling-col').css('display')).not.toBe('none');
+            // Now trigger to confirm the stub works
+            $('#input-errors').trigger('change');
+            expect($('#error-handling-col').css('display')).toBe('none');
+        });
+    });
+
+    // ── Bug 5: mathematical-representation → spherical / ellipsoidal layout ─
+
+    describe('Bug 5 – trigger(change) fires on #input-mathematical-representation', () => {
+        test('ellipsoidal fields are hidden after clear (was ellipsoidal harmonics)', () => {
+            // Pre-condition: ellipsoidal harmonics selected, ellipsoidal fields visible
+            $('#input-mathematical-representation').val('ellipsoidal harmonics');
+            $('.visibility-ellipsoidal').show();
+            $('.visibility-spherical').hide();
+
+            clearModule.clearInputFields();
+
+            // trigger('change') fires stub → ellipsoidal hidden, spherical shown
+            expect($('.visibility-ellipsoidal').first().css('display')).toBe('none');
+            expect($('.visibility-spherical').first().css('display')).not.toBe('none');
+        });
+
+        test('#input-mathematical-representation value is empty after clear', () => {
+            $('#input-mathematical-representation').val('ellipsoidal harmonics');
+            clearModule.clearInputFields();
+            expect($('#input-mathematical-representation').val()).toBe('');
+        });
+
+        test('handler is NOT called without trigger – guard test', () => {
+            $('#input-mathematical-representation').val('ellipsoidal harmonics');
+            $('.visibility-ellipsoidal').show();
+            // Direct val() without trigger must NOT hide ellipsoidal fields
+            $('#input-mathematical-representation').val('');
+            expect($('.visibility-ellipsoidal').first().css('display')).not.toBe('none');
+            // Trigger now to confirm stub works
+            $('#input-mathematical-representation').trigger('change');
+            expect($('.visibility-ellipsoidal').first().css('display')).toBe('none');
+        });
+    });
+
+    // ── Bug 6: contact-person-error removed on clear ──────────────────────
+
+    describe('Bug 6 – contact-person-error div is removed after clear', () => {
+        test('#contact-person-error is removed when present before clear', () => {
+            // Simulate what submitHandler.js appends on failed validation
+            $('body').append('<div id="contact-person-error" class="text-danger mt-2">Please choose at least one contact person.</div>');
+            expect($('#contact-person-error').length).toBe(1);
+
+            clearModule.clearInputFields();
+
+            expect($('#contact-person-error').length).toBe(0);
+        });
+
+        test('does nothing (no error) when #contact-person-error is absent', () => {
+            expect($('#contact-person-error').length).toBe(0);
+            // Must not throw
+            expect(() => clearModule.clearInputFields()).not.toThrow();
         });
     });
 });
