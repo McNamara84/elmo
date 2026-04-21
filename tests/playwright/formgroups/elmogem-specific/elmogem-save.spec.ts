@@ -38,8 +38,6 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('textbox', { name: 'End date' }).fill('2000-11-15');
     await page.getByLabel('Open-search-modal').click();
     await expect(page.locator('#modal-platforms-datasource')).toBeVisible();
-    await page.locator('#jstree-platforms-datasource .jstree-node').first().waitFor({ state: 'visible' });
-    await page.getByRole('textbox', { name: 'Search for keywords' }).click();
     await page.getByRole('textbox', { name: 'Search for keywords' }).fill('goce');
     await page.getByRole('treeitem', { name: 'GOCE' }).click();
     await page.locator('#modal-platforms-datasource').getByText('OK', { exact: true }).click();
