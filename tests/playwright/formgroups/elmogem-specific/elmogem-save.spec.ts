@@ -1,7 +1,41 @@
 import { test, expect } from '@playwright/test';
 import { navigateToHome } from '../../utils';
 
+const PLATFORMS_MOCK = [
+  {
+    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
+    text: 'Platforms',
+    children: [
+      {
+        id: 'https://gcmd.earthdata.nasa.gov/kms/concept/space-based-mock',
+        text: 'Space-based Platforms',
+        children: [
+          {
+            id: 'https://gcmd.earthdata.nasa.gov/kms/concept/earth-obs-mock',
+            text: 'Earth Observation Satellites',
+            children: [
+              { id: 'mock-goce', text: 'GOCE' },
+              { id: 'mock-gfo1', text: 'GFO-1' },
+              { id: 'mock-geosat', text: 'GEOSAT' },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
+
 test.describe('ELMO-GEM save', () => {
+
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(PLATFORMS_MOCK),
+      });
+    });
+  });
 
   test('saves incomplete model as XML and triggers download', async ({ page }) => {
     await navigateToHome(page);
@@ -111,8 +145,8 @@ test.describe('ELMO-GEM save', () => {
     await page.locator('#button-datasource-add').click();
     await page.getByRole('textbox', { name: 'Choose the satellite' }).nth(1).click();
     await page.getByRole('textbox', { name: 'Choose the satellite' }).nth(1).fill('geosat');
-    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).nth(1).waitFor({ state: 'visible' });
-    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).nth(1).click();
+    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).first().waitFor({ state: 'visible' });
+    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).first().click();
     await page.locator('#button-datasource-add').click();
     await page.locator('#input-datasource-type-2').selectOption('T');
     await page.locator('#input-datasource-details-2').selectOption('Isostasy');
