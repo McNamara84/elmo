@@ -61,9 +61,9 @@ function clearInputFields() {
     $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
     $('#group-contributororganisation .row[contributors-row]:first input').val('');
   
-    // Clear descriptions
-    $('#input-abstract').val('');
-    $('#accordion-description textarea[id^="input-description-"]').val('');
+    // Clear descriptions – covers abstract and all ICGEM description textareas
+    // (textarea.textarea-description is the shared class on all GGMs description fields)
+    $('#accordion-description textarea.textarea-description').val('');
   
     // Clear all Tagify fields
     const tagifySelectors = [
@@ -115,7 +115,10 @@ function clearInputFields() {
     $('#group-fundingreference .row[funding-reference-row]:first input').val('');
 
     // === GGMs Definition fields (GGMsDefinition.html) ===
-    $('#input-model-type').prop('selectedIndex', 0).val('');
+    // .trigger('change') is the correct jQuery idiom after programmatic val() — it fires
+    // the delegated handler in ggms-modeltypes.js, which hides the model-specific-card
+    // and resets section visibility when the value is empty.
+    $('#input-model-type').prop('selectedIndex', 0).val('').trigger('change');
     $('#input-mathematical-representation').prop('selectedIndex', 0).val('');
     $('#input-celestial-body').prop('selectedIndex', 0).val('Earth');
     $('#input-file-format').prop('selectedIndex', 0).val('');
@@ -136,7 +139,9 @@ function clearInputFields() {
     // === GGMs Data Sources ===
     $('#group-datasources .row[data-source-row]').not(':first').remove();
     const $firstDsRow = $('#group-datasources .row[data-source-row]:first');
-    $firstDsRow.find('select[name="datasource_type[]"]').val('S');
+    // .trigger('change') fires the delegated handler in ggms-datasources.js (updateRowState),
+    // which restores satellite-field visibility and hides identifier cols for type S.
+    $firstDsRow.find('select[name="datasource_type[]"]').val('S').trigger('change');
     $firstDsRow.find('select[name="datasource_details[]"]').prop('selectedIndex', 0);
     $firstDsRow.find('textarea[name="datasource_description[]"]').val('');
     $firstDsRow.find('input[name="dIdentifier[]"]').val('');
