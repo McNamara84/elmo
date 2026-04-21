@@ -36,9 +36,9 @@ test.describe('ELMO-GEM save', () => {
     await page.getByLabel('Mathematical representation *').selectOption('Ellipsoidal harmonics');
     await page.getByLabel('Model Type *').selectOption('Temporal');
     await page.getByRole('textbox', { name: 'End date' }).fill('2000-11-15');
-    await page.getByRole('textbox', { name: 'Choose the satellite' }).click();
-    await page.getByRole('textbox', { name: 'Choose the satellite' }).fill('goce');
-    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).click();
+    await page.getByRole('textbox', { name: 'Choose the satellite' }).first().click();
+    await page.getByRole('textbox', { name: 'Choose the satellite' }).first().fill('goce');
+    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).first().click();
     await page.locator('#button-datasource-add').click();
     await page.getByLabel('Type*', { exact: true }).selectOption('G');
     await page.locator('#button-datasource-add').click();
@@ -103,9 +103,9 @@ test.describe('ELMO-GEM save', () => {
     await page.locator('#button-datasource-add').click();
     await page.locator('#input-datasource-description').click();
     await page.locator('#input-datasource-description').fill('descrS');
-    await page.getByRole('textbox', { name: 'Choose the satellite' }).click();
-    await page.getByRole('textbox', { name: 'Choose the satellite' }).fill('gfo-1');
-    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).click();
+    await page.getByRole('textbox', { name: 'Choose the satellite' }).first().click();
+    await page.getByRole('textbox', { name: 'Choose the satellite' }).first().fill('gfo-1');
+    await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).first().click();
     await page.locator('#button-datasource-add').click();
     await page.getByRole('textbox', { name: 'Choose the satellite' }).nth(1).click();
     await page.getByRole('textbox', { name: 'Choose the satellite' }).nth(1).fill('geosat');
