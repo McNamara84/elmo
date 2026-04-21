@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { navigateToHome } from '../../utils';
+import { navigateToHome, fillGEM } from '../../utils';
 
 /**
  * Selectors mirror GGMS_SELECTORS exported from js/clear.js.
@@ -62,81 +62,7 @@ test.describe('GGMs / ICGEM – clearInputFields resets all fields', () => {
 
   test('fills all GGMs fields, clears, and asserts everything is empty / default', async ({ page }) => {
 
-    // Wait for dynamically populated selects (model type, math rep, file format)
-    await page.waitForFunction(
-      () => ((document.querySelector('#input-model-type') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-      { timeout: 10_000 },
-    );
-
-    // ── GGMs Definition ────────────────────────────────────────────────────
-
-    await page.locator(DEF.celestialBody).selectOption('Moon of the Earth');
-    await page.locator(DEF.modelName).fill('TEST_CLEAR_MODEL');
-
-    await page.waitForFunction(
-      () => ((document.querySelector('#input-mathematical-representation') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-      { timeout: 10_000 },
-    );
-    await page.locator(DEF.mathRep).selectOption({ index: 1 });
-
-    await page.waitForFunction(
-      () => ((document.querySelector('#input-file-format') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-      { timeout: 10_000 },
-    );
-    await page.locator(DEF.fileFormat).selectOption({ index: 1 });
-
-    // ── GGMs Characteristics ───────────────────────────────────────────────
-
-    await page.locator(CHAR.tideSystem).selectOption('zero tide');
-    await page.locator(CHAR.degree).fill('300');
-    await page.locator(CHAR.errors).selectOption('calibrated');
-    await page.locator(CHAR.errorHandlingApproach).fill('Calibration approach text');
-    await page.locator(CHAR.earthGravityConstant).fill('3.986004415e14');
-
-    // ── Model Type: Static ─────────────────────────────────────────────────
-
-    await page.locator(DEF.modelType).selectOption('Static');
-    await expect(page.locator('.visibility-modeltype-static')).toBeVisible();
-
-    await page.locator(MT.timeVariableCheckbox).check();
-    // Checking the checkbox reveals the description textarea
-    await expect(page.locator('#time-variable-description-container')).toBeVisible({ timeout: 5_000 });
-    await page.locator(MT.staticDescription).fill('Static time-variable description');
-
-    // ── Model Type: Temporal ───────────────────────────────────────────────
-
-    await page.locator(DEF.modelType).selectOption('Temporal');
-    await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible();
-
-    await page.locator(MT.temporalStart).fill('2002-04-01');
-    await page.locator(MT.temporalEnd).fill('2023-06-30');
-    await page.locator(MT.temporalFreqPredef).selectOption('monthly');
-    await page.locator(MT.temporalInstitution).fill('GFZ');
-    await page.locator(MT.releaseNumber).fill('RL07');
-
-    // ── Model Type: Topographic ────────────────────────────────────────────
-
-    await page.locator(DEF.modelType).selectOption('Topographic');
-    await expect(page.locator('.visibility-modeltype-topographic')).toBeVisible();
-
-    await page.locator(MT.topoLayerApproach).selectOption('single-layer');
-    await page.locator(MT.topoDomain).selectOption('spatial');
-    await page.locator(MT.topoApproximation).selectOption('spherical');
-    await page.locator(MT.topoDensity).selectOption('constant');
-    await page.locator(MT.topoDensityDetails).fill('2670 kg/m³');
-
-    // ── GGMs Data Sources ─────────────────────────────────────────────────
-
-    await page.locator('#button-datasource-add').click();
-    await expect(page.locator(DS_ROW)).toHaveCount(2);
-
-    const secondRow = page.locator(DS_ROW).nth(1);
-    await secondRow.locator('textarea[name="datasource_description[]"]').fill('Second source description');
-    await secondRow.locator('input[name="dName[]"]').fill('GRACE-FO');
-
-    // ── Descriptions ──────────────────────────────────────────────────────
-
-    await page.locator('#input-abstract').fill('Test abstract for clear test');
+    await fillGEM(page);
 
     // ═══════════════════ CLEAR ═══════════════════════════════════════════════
 
