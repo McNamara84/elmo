@@ -156,13 +156,19 @@ function clearInputFields() {
 
     // === GGMs Model Types (GGMsModelTypes.html) ===
     // Static
-    $('#checkbox-time-variable').prop('checked', false);
+    // ggms-modeltypes.js registers this via native addEventListener, so we must
+    // use dispatchEvent (not .trigger()) to reach it. dispatchEvent also fires
+    // any jQuery handlers listening on the same element.
+    const cbTimeVar = document.getElementById('checkbox-time-variable');
+    if (cbTimeVar) { cbTimeVar.checked = false; cbTimeVar.dispatchEvent(new Event('change', { bubbles: true })); }
     $('#input-static-description').val('');
     // Temporal
     $('#input-temporal-start').val('');
     $('#input-temporal-end').val('');
     $('#select-temporal-frequency-predef').prop('selectedIndex', 0).val('');
-    $('#checkbox-custom-frequency').prop('checked', false);
+    // .trigger('change') fires the jQuery handler in ggms-modeltypes.js which
+    // hides #custom-frequency-container and re-enables #select-temporal-frequency-predef.
+    $('#checkbox-custom-frequency').prop('checked', false).trigger('change');
     $('#input-temporal-frequency').val('');
     $('#input-temporal-institution').val('');
     $('#input-release-number').val('');
@@ -172,7 +178,9 @@ function clearInputFields() {
     $('#select-topo-approximation').prop('selectedIndex', 0).val('');
     $('#select-topo-density').prop('selectedIndex', 0).val('');
     $('#input-topo-density-details').val('');
-    $('#checkbox-separate-density').prop('checked', false);
+    // .trigger('change') fires the jQuery handler in ggms-modeltypes.js which
+    // shows #single-density-container and hides #separate-density-container.
+    $('#checkbox-separate-density').prop('checked', false).trigger('change');
     $('#select-topo-density-crust').prop('selectedIndex', 0).val('');
     $('#input-topo-density-details-crust').val('');
     $('#select-topo-density-mantle').prop('selectedIndex', 0).val('');

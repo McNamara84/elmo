@@ -248,6 +248,38 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
             }
         });
 
+        // ── Minimal checkbox stubs (Bug 7) ───────────────────────────────────
+        // Mirrors ggms-modeltypes.js: show/hide the associated container when
+        // the checkbox changes.  Native + jQuery listeners both fire via trigger.
+        document.getElementById('checkbox-time-variable').addEventListener('change', function () {
+            const container = document.getElementById('time-variable-description-container');
+            if (this.checked) {
+                $(container).show().removeClass('d-none');
+            } else {
+                $(container).hide().addClass('d-none');
+            }
+        });
+
+        $('#checkbox-custom-frequency').on('change.clearGgmsTest', function () {
+            if ($(this).is(':checked')) {
+                $('#custom-frequency-container').show().removeClass('d-none');
+                $('#select-temporal-frequency-predef').prop('disabled', true);
+            } else {
+                $('#custom-frequency-container').hide().addClass('d-none');
+                $('#select-temporal-frequency-predef').prop('disabled', false);
+            }
+        });
+
+        $('#checkbox-separate-density').on('change.clearGgmsTest', function () {
+            if ($(this).is(':checked')) {
+                $('#single-density-container').hide();
+                $('#separate-density-container').show().removeClass('d-none');
+            } else {
+                $('#single-density-container').show();
+                $('#separate-density-container').hide().addClass('d-none');
+            }
+        });
+
         jest.resetModules();
         clearModule = require('../../js/clear.js');
     });
@@ -461,6 +493,73 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
             expect($('#contact-person-error').length).toBe(0);
             // Must not throw
             expect(() => clearModule.clearInputFields()).not.toThrow();
+        });
+    });
+
+    // ── Bug 7: checkboxes dispatch events to fire their visibility handlers ──
+
+    describe('Bug 7 – checkboxes fire their visibility handlers on clear', () => {
+        test('#time-variable-description-container is hidden after clear (was visible)', () => {
+            // Pre-condition: checkbox checked, container visible
+            const cb = document.getElementById('checkbox-time-variable');
+            cb.checked = true;
+            cb.dispatchEvent(new Event('change', { bubbles: true }));
+            expect($('#time-variable-description-container').css('display')).not.toBe('none');
+
+            clearModule.clearInputFields();
+
+            expect($('#checkbox-time-variable').is(':checked')).toBe(false);
+            expect($('#time-variable-description-container').css('display')).toBe('none');
+        });
+
+        test('handler is NOT called without dispatchEvent – guard test for time-variable', () => {
+            const cb = document.getElementById('checkbox-time-variable');
+            cb.checked = true;
+            cb.dispatchEvent(new Event('change', { bubbles: true }));
+            expect($('#time-variable-description-container').css('display')).not.toBe('none');
+            // Uncheck without dispatching - container must still be visible
+            cb.checked = false;
+            expect($('#time-variable-description-container').css('display')).not.toBe('none');
+            // Now dispatch to confirm the stub works
+            cb.dispatchEvent(new Event('change', { bubbles: true }));
+            expect($('#time-variable-description-container').css('display')).toBe('none');
+        });
+
+        test('#custom-frequency-container is hidden and predefined select re-enabled after clear', () => {
+            // Pre-condition: custom frequency checkbox checked, container visible, select disabled
+            $('#checkbox-custom-frequency').prop('checked', true).trigger('change');
+            expect($('#custom-frequency-container').css('display')).not.toBe('none');
+            expect($('#select-temporal-frequency-predef').prop('disabled')).toBe(true);
+
+            clearModule.clearInputFields();
+
+            expect($('#checkbox-custom-frequency').is(':checked')).toBe(false);
+            expect($('#custom-frequency-container').css('display')).toBe('none');
+            expect($('#select-temporal-frequency-predef').prop('disabled')).toBe(false);
+        });
+
+        test('#separate-density-container is hidden and single-density shown after clear', () => {
+            // Pre-condition: separate density checkbox checked
+            $('#checkbox-separate-density').prop('checked', true).trigger('change');
+            expect($('#separate-density-container').css('display')).not.toBe('none');
+            expect($('#single-density-container').css('display')).toBe('none');
+
+            clearModule.clearInputFields();
+
+            expect($('#checkbox-separate-density').is(':checked')).toBe(false);
+            expect($('#separate-density-container').css('display')).toBe('none');
+            expect($('#single-density-container').css('display')).not.toBe('none');
+        });
+
+        test('handler is NOT called without trigger – guard test for separate-density', () => {
+            $('#checkbox-separate-density').prop('checked', true).trigger('change');
+            expect($('#separate-density-container').css('display')).not.toBe('none');
+            // Uncheck without trigger – container must still be visible
+            $('#checkbox-separate-density').prop('checked', false);
+            expect($('#separate-density-container').css('display')).not.toBe('none');
+            // Now trigger to confirm stub works
+            $('#checkbox-separate-density').trigger('change');
+            expect($('#separate-density-container').css('display')).toBe('none');
         });
     });
 });
