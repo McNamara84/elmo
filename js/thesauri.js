@@ -664,6 +664,20 @@ $(document).ready(function () {
     const features = window.ELMO_FEATURES || {};
     const showThesauri = features.showThesauri !== false;
     const showMslVocabs = features.showMslVocabs === true;
+    const showGGMsProperties = features.showGGMsProperties === true;
+
+    /**
+     * GGMs-specific root node constraints that narrow each thesaurus tree
+     * when ELMO_FEATURES.showGGMsProperties is enabled.
+     * Set to null to keep a thesaurus unrestricted; set to a concept URI to
+     * limit it to that subtree.
+     * TODO: replace null placeholders with the desired GCMD concept URIs.
+     */
+    const GGM_THESAURUS_ROOT_NODES = {
+        // science_keywords: 'https://gcmd.earthdata.nasa.gov/kms/concept/...', // e.g. "Solid Earth"
+        // platforms: null,
+        // instruments: null,
+    };
 
     // MSL root-Lists (unchanged, separate feature)
     const generalRoots = [
@@ -717,15 +731,26 @@ $(document).ready(function () {
                     modalContainer.innerHTML += generateModal(item.key, config, item.displayName);
                     isFirst = false;
 
+                    // Determine root node: GGMs override takes priority, then the static config value.
+                    const ggmsRootNodeId = showGGMsProperties
+                        ? GGM_THESAURUS_ROOT_NODES[item.key]
+                        : undefined;
+                    const effectiveRootNodeId = ggmsRootNodeId !== undefined
+                        ? ggmsRootNodeId
+                        : config.rootNodeId;
+
                     // Build keywordConfigurations entry for this thesaurus
-                    keywordConfigurations.push({
+                    const entry = {
                         inputId: '#' + config.inputId,
                         apiEndpoint: config.apiEndpoint,
                         jsTreeId: '#' + config.jsTreeId,
                         searchInputId: '#' + config.searchInputId,
                         selectedKeywordsListId: config.selectedListId,
                         modalId: '#' + config.modalId,
-                    });
+                    };
+                    if (effectiveRootNodeId) entry.rootNodeId = effectiveRootNodeId;
+                    if (config.rootNodes) entry.rootNodes = config.rootNodes;
+                    keywordConfigurations.push(entry);
                 });
 
                 // Initialize Tagify for each configuration
