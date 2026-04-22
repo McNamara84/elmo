@@ -671,7 +671,6 @@ $(document).ready(function () {
      * when ELMO_FEATURES.showGGMsProperties is enabled.
      * Set to null to keep a thesaurus unrestricted; set to a concept URI to
      * limit it to that subtree.
-     * TODO: replace null placeholders with the desired GCMD concept URIs.
      */
     const GGM_THESAURUS_ROOT_NODES = {
         science_keywords: [
