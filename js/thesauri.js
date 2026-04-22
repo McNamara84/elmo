@@ -739,15 +739,13 @@ $(document).ready(function () {
                     modalContainer.innerHTML += generateModal(item.key, config, item.displayName);
                     isFirst = false;
 
-                    // Determine root node: GGMs override takes priority, then the static config value.
-                    const ggmsRootNodeId = showGGMsProperties
+                    // Build keywordConfigurations entry for this thesaurus.
+                    // GGMs overrides (array → rootNodes, string → rootNodeId) take priority
+                    // over any static values in THESAURUS_CONFIG when the feature is active.
+                    const ggmsOverride = showGGMsProperties
                         ? GGM_THESAURUS_ROOT_NODES[item.key]
                         : undefined;
-                    const effectiveRootNodeId = ggmsRootNodeId !== undefined
-                        ? ggmsRootNodeId
-                        : config.rootNodeId;
 
-                    // Build keywordConfigurations entry for this thesaurus
                     const entry = {
                         inputId: '#' + config.inputId,
                         apiEndpoint: config.apiEndpoint,
@@ -756,8 +754,17 @@ $(document).ready(function () {
                         selectedKeywordsListId: config.selectedListId,
                         modalId: '#' + config.modalId,
                     };
-                    if (effectiveRootNodeId) entry.rootNodeId = effectiveRootNodeId;
-                    if (config.rootNodes) entry.rootNodes = config.rootNodes;
+
+                    if (Array.isArray(ggmsOverride)) {
+                        entry.rootNodes = ggmsOverride;
+                    } else if (typeof ggmsOverride === 'string') {
+                        entry.rootNodeId = ggmsOverride;
+                    } else {
+                        // No GGMs override — fall back to static config values.
+                        if (config.rootNodes) entry.rootNodes = config.rootNodes;
+                        if (config.rootNodeId) entry.rootNodeId = config.rootNodeId;
+                    }
+
                     keywordConfigurations.push(entry);
                 });
 

@@ -696,3 +696,288 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
   });
 
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GGMs thesaurus root-node limiting
+// Tests that when showGGMsProperties is enabled the science_keywords tree is
+// filtered to only the nodes listed in GGM_THESAURUS_ROOT_NODES, their
+// children are preserved, and nodes NOT in the list are excluded.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('thesauri.js — GGMs root node filtering', () => {
+  let $;
+  let exports;
+
+  // ── mock data ──────────────────────────────────────────────────────────────
+
+  /**
+   * Simulated GCMD science-keywords vocabulary response.
+   *
+   * Tree shape:
+   *   Science Keywords
+   *     EARTH SCIENCE
+   *       SOLID EARTH
+   *         GEODETICS                        ← in GGM list
+   *           ELLIPSOID CHARACTERISTICS      ← child of listed node
+   *         TOPOGRAPHY                       ← NOT in GGM list
+   *       OCEANS
+   *         MARINE GEOPHYSICS
+   *           MARINE GRAVITY FIELD           ← in GGM list
+   *             OCEAN DEPTH                  ← child of listed node
+   *     EARTH SCIENCE SERVICES
+   *       MODELS
+   *         SPHERICAL HARMONIC MODELS        ← in GGM list
+   *         CLIMATE MODELS                   ← NOT in GGM list
+   */
+  const GGM_ROOT_IDS = [
+    'uri:geodetics',
+    'uri:marine-gravity-field',
+    'uri:spherical-harmonic-models',
+  ];
+
+  const mockScienceKeywordsVocabulary = {
+    data: [
+      {
+        id: 'uri:science-keywords', text: 'Science Keywords', children: [
+          {
+            id: 'uri:earth-science', text: 'EARTH SCIENCE', children: [
+              {
+                id: 'uri:solid-earth', text: 'SOLID EARTH', children: [
+                  {
+                    id: 'uri:geodetics', text: 'GEODETICS', children: [
+                      { id: 'uri:ellipsoid', text: 'ELLIPSOID CHARACTERISTICS', children: [] },
+                    ],
+                  },
+                  {
+                    id: 'uri:topography', text: 'TOPOGRAPHY', children: [],
+                  },
+                ],
+              },
+              {
+                id: 'uri:oceans', text: 'OCEANS', children: [
+                  {
+                    id: 'uri:marine-geophysics', text: 'MARINE GEOPHYSICS', children: [
+                      {
+                        id: 'uri:marine-gravity-field', text: 'MARINE GRAVITY FIELD', children: [
+                          { id: 'uri:ocean-depth', text: 'OCEAN DEPTH', children: [] },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'uri:earth-science-services', text: 'EARTH SCIENCE SERVICES', children: [
+              {
+                id: 'uri:models', text: 'MODELS', children: [
+                  { id: 'uri:spherical-harmonic-models', text: 'SPHERICAL HARMONIC MODELS', children: [] },
+                  { id: 'uri:climate-models', text: 'CLIMATE MODELS', children: [] },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  // ── shared setup ──────────────────────────────────────────────────────────
+
+  function setupEnvironment(done, featureFlags = {}) {
+    document.body.innerHTML = `
+      <div id="thesaurusKeywordsFormGroup" style="display: none;">
+        <div class="accordion p-2" id="accordionThesauri"></div>
+      </div>
+      <div id="thesaurusModalsContainer"></div>
+    `;
+
+    $ = require('jquery');
+    global.$ = $;
+    global.jQuery = $;
+    window.$ = $;
+    window.jQuery = $;
+
+    // Minimal jstree mock that tracks nodes loaded into it
+    (function ($) {
+      $.fn.jstree = function (arg) {
+        if (arg === undefined || arg === true) return this.data('jstree');
+        if (typeof arg === 'object') {
+          const inst = {
+            _data: arg.core.data,
+            allNodeIds() {
+              const ids = [];
+              function walk(nodes) {
+                if (!Array.isArray(nodes)) return;
+                nodes.forEach(n => { ids.push(n.id); walk(n.children); });
+              }
+              walk(this._data);
+              return ids;
+            },
+          };
+          this.data('jstree', inst);
+          return this;
+        }
+        return this;
+      };
+    })($);
+
+    global.Tagify = MockTagify;
+    global.translations = {
+      keywords: { thesaurus: { label: 'KW', unavailable: 'err' }, searchPlaceholder: 'Search', selectedKeywords: 'Selected' },
+      general: { loading: 'Loading' },
+    };
+
+    window.ELMO_FEATURES = {
+      showThesauri: true,
+      showMslVocabs: false,
+      showGGMsProperties: featureFlags.showGGMsProperties ?? true,
+    };
+
+    $.getJSON = jest.fn((url, cb) => {
+      if (url === 'api/v2/vocabs/thesauri/availability') {
+        return {
+          done: jest.fn(function (fn) { fn({ science_keywords: { available: true, displayName: 'Science Keywords' } }); return this; }),
+          fail: jest.fn().mockReturnThis(),
+        };
+      }
+      // Vocabulary endpoint — return the mock tree
+      if (typeof cb === 'function') cb(mockScienceKeywordsVocabulary);
+      return { fail: jest.fn().mockReturnThis() };
+    });
+
+    // Patch GGM_THESAURUS_ROOT_NODES inside the evaluated script by injecting
+    // it into the source before eval so the test controls the list.
+    const rawScript = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
+    const patchedScript = rawScript
+      // Replace the hard-coded URI list with our test IDs
+      .replace(
+        /const GGM_THESAURUS_ROOT_NODES\s*=\s*\{[\s\S]*?\};/,
+        `const GGM_THESAURUS_ROOT_NODES = { science_keywords: ${JSON.stringify(GGM_ROOT_IDS)} };`
+      );
+
+    window.eval(transformThesauriScript(patchedScript));
+
+    $(document).ready(() => {
+      document.dispatchEvent(new Event('translationsLoaded'));
+      exports = window.__thesauriTestExports;
+
+      // Trigger lazy load so the tree is actually built
+      const modal = document.querySelector('#modal-sciencekeyword');
+      if (modal) modal.dispatchEvent(new Event('show.bs.modal'));
+
+      done();
+    });
+  }
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    delete global.Tagify;
+    delete global.translations;
+    delete window.ELMO_FEATURES;
+  });
+
+  // ── tests ─────────────────────────────────────────────────────────────────
+
+  describe('with GGMsProperties enabled', () => {
+    beforeEach((done) => setupEnvironment(done));
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      delete global.Tagify;
+      delete global.translations;
+      delete window.ELMO_FEATURES;
+    });
+
+    test('listed root nodes are present in the tree', () => {
+      const tree = $('#jstree-sciencekeyword').jstree(true);
+      const ids = tree.allNodeIds();
+      GGM_ROOT_IDS.forEach(id => {
+        expect(ids).toContain(id);
+      });
+    });
+
+    test('children of listed root nodes are present in the tree', () => {
+      const tree = $('#jstree-sciencekeyword').jstree(true);
+      const ids = tree.allNodeIds();
+      // ELLIPSOID CHARACTERISTICS is a child of GEODETICS (listed)
+      expect(ids).toContain('uri:ellipsoid');
+      // OCEAN DEPTH is a child of MARINE GRAVITY FIELD (listed)
+      expect(ids).toContain('uri:ocean-depth');
+    });
+
+    test('nodes NOT in GGM_ROOT_IDS and not their descendants are excluded', () => {
+      const tree = $('#jstree-sciencekeyword').jstree(true);
+      const ids = tree.allNodeIds();
+      // TOPOGRAPHY is a sibling of GEODETICS but not listed
+      expect(ids).not.toContain('uri:topography');
+      // CLIMATE MODELS is a sibling of SPHERICAL HARMONIC MODELS but not listed
+      expect(ids).not.toContain('uri:climate-models');
+    });
+
+    test('ancestor/container nodes that lead to listed nodes are NOT present (subtrees are detached)', () => {
+      const tree = $('#jstree-sciencekeyword').jstree(true);
+      const ids = tree.allNodeIds();
+      // The tree should start from the listed nodes themselves, not from the full hierarchy
+      expect(ids).not.toContain('uri:science-keywords');
+      expect(ids).not.toContain('uri:earth-science');
+      expect(ids).not.toContain('uri:solid-earth');
+    });
+
+    test('Tagify whitelist only contains paths reachable from listed nodes', () => {
+      const input = document.getElementById('input-sciencekeyword');
+      const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
+
+      // Paths from listed nodes and their children should be present
+      expect(whitelistValues.some(v => v.includes('GEODETICS'))).toBe(true);
+      expect(whitelistValues.some(v => v.includes('ELLIPSOID CHARACTERISTICS'))).toBe(true);
+      expect(whitelistValues.some(v => v.includes('MARINE GRAVITY FIELD'))).toBe(true);
+      expect(whitelistValues.some(v => v.includes('SPHERICAL HARMONIC MODELS'))).toBe(true);
+
+      // Paths from non-listed nodes must NOT appear
+      expect(whitelistValues.some(v => v.includes('TOPOGRAPHY'))).toBe(false);
+      expect(whitelistValues.some(v => v.includes('CLIMATE MODELS'))).toBe(false);
+    });
+
+    test('entry built for science_keywords uses rootNodes (array), not rootNodeId', () => {
+      // Verify the bug is fixed: an array override must not land on rootNodeId
+      const input = document.getElementById('input-sciencekeyword');
+      // The Tagify whitelist being scoped is enough proof, but we also confirm
+      // no fatal "Root node with ID Array(...) not found" path was taken by
+      // checking the tree was actually initialised (it would be null on that error).
+      const tree = $('#jstree-sciencekeyword').jstree(true);
+      expect(tree).toBeDefined();
+      expect(tree).not.toBeNull();
+      // If rootNodeId had received the array, loadKeywordsForConfig would have
+      // logged an error and returned early without building a whitelist.
+      expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('with GGMsProperties disabled', () => {
+    beforeEach((done) => setupEnvironment(done, { showGGMsProperties: false }));
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      delete global.Tagify;
+      delete global.translations;
+      delete window.ELMO_FEATURES;
+    });
+
+    test('full vocabulary tree is loaded without filtering when feature is off', () => {
+      const tree = $('#jstree-sciencekeyword').jstree(true);
+      const ids = tree.allNodeIds();
+      // All nodes including non-GGM ones should be present
+      expect(ids).toContain('uri:topography');
+      expect(ids).toContain('uri:climate-models');
+      expect(ids).toContain('uri:science-keywords');
+    });
+
+    test('Tagify whitelist includes non-GGM paths when feature is off', () => {
+      const input = document.getElementById('input-sciencekeyword');
+      const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
+      expect(whitelistValues.some(v => v.includes('TOPOGRAPHY'))).toBe(true);
+      expect(whitelistValues.some(v => v.includes('CLIMATE MODELS'))).toBe(true);
+    });
+  });
+});
