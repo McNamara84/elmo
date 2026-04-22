@@ -67,7 +67,7 @@ function transformThesauriScript(source) {
   script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
   script = script.replace('export function cleanupTagifyForInput', 'function cleanupTagifyForInput');
   script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
-  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, initTagifyForInput };';
+  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, initTagifyForInput, showLoadingSpinner, hideLoadingSpinner, loadThesaurusOnDemand, loadKeywordsForConfig, loadedConfigs };';
   return script;
 }
 
@@ -337,7 +337,6 @@ describe('thesauri.js', () => {
   });
 
   test('does not reload thesaurus data on subsequent modal opens', () => {
-    // Open modal first time
     openModal('#modal-sciencekeyword');
 
     const callCountAfterFirst = $.getJSON.mock.calls.length;
@@ -427,6 +426,273 @@ describe('thesauri.js', () => {
 
       done();
     });
+  });
+
+});
+
+describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesaurusOnDemand / loadKeywordsForConfig', () => {
+  let $;
+  let exports;
+
+  beforeEach((done) => {
+    document.body.innerHTML = `
+      <div id="thesaurusKeywordsFormGroup" class="card mb-2" style="display: none;">
+        <div class="card-header"><b data-translate="keywords.thesaurus.name"></b></div>
+        <div id="thesaurusKeywordsGroup">
+          <div class="accordion p-2" id="accordionThesauri"></div>
+        </div>
+      </div>
+      <div id="thesaurusModalsContainer"></div>
+    `;
+
+    $ = require('jquery');
+    global.$ = $;
+    global.jQuery = $;
+    window.$ = $;
+    window.jQuery = $;
+
+    (function ($) {
+      class JsTreeMock {
+        constructor($el, opts) {
+          this.$el = $el;
+          this.data = opts.core.data;
+          this.selected = [];
+          this.map = {};
+          const build = (nodes) => nodes && nodes.forEach(n => {
+            this.map[n.id] = n;
+            if (n.children) build(n.children);
+          });
+          build(this.data);
+        }
+        get_selected(full) { return full ? this.selected : this.selected.map(n => n.id); }
+        get_path(node, sep) { return node.text; }
+        get_json(root, opts) { return opts && opts.flat ? Object.values(this.map) : this.data; }
+        select_node(id) { const n = this.map[id]; if (n && !this.selected.includes(n)) this.selected.push(n); }
+        deselect_node(id) { this.selected = this.selected.filter(n => n.id !== id); }
+        search(str) {}
+      }
+      $.fn.jstree = function(arg) {
+        if (arg === undefined || arg === true) return this.data('jstree');
+        if (typeof arg === 'object') { this.data('jstree', new JsTreeMock(this, arg)); return this; }
+        return this;
+      };
+    })($);
+
+    global.Tagify = MockTagify;
+    global.translations = {
+      keywords: {
+        thesaurus: { label: 'Thesaurus keywords', name: 'Thesauri Keywords', unavailable: 'Unavailable' },
+        searchPlaceholder: 'Search...',
+        selectedKeywords: 'Selected Keywords',
+      },
+      general: { loading: 'Loading...' },
+    };
+    window.ELMO_FEATURES = { showThesauri: true, showMslVocabs: false };
+
+    $.getJSON = jest.fn((url, cb) => {
+      const mockDeferred = {
+        done: jest.fn(function(fn) { fn(this._data); return this; }),
+        fail: jest.fn().mockReturnThis(),
+        _data: null,
+      };
+      if (url === 'api/v2/vocabs/thesauri/availability') {
+        mockDeferred._data = {
+          science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
+          platforms: { available: true, displayName: 'GCMD Platforms' },
+          instruments: { available: false, displayName: 'GCMD Instruments' },
+          chronostratigraphy: { available: false },
+          gemet: { available: false },
+        };
+        return mockDeferred;
+      } else if (url.startsWith('api/v2/vocabs/thesauri/')) {
+        const data = { data: [{ id: 'root', text: 'Root', children: [{ id: 'child1', text: 'Child1' }] }] };
+        if (typeof cb === 'function') cb(data);
+        return { fail: jest.fn().mockReturnThis() };
+      }
+      if (typeof cb === 'function') cb({ data: [] });
+      return { fail: jest.fn().mockReturnThis() };
+    });
+
+    const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
+    window.eval(transformThesauriScript(script));
+
+    $(document).ready(() => {
+      document.dispatchEvent(new Event('translationsLoaded'));
+      exports = window.__thesauriTestExports;
+      done();
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    delete global.Tagify;
+    delete global.translations;
+    delete window.ELMO_FEATURES;
+  });
+
+  // ── showLoadingSpinner ────────────────────────────────────────────────────
+
+  test('showLoadingSpinner inserts spinner markup into container', () => {
+    document.body.innerHTML += '<div id="jstree-test-spinner"></div>';
+    exports.showLoadingSpinner('#jstree-test-spinner');
+    const spinner = document.querySelector('#jstree-test-spinner .thesaurus-loading-spinner');
+    expect(spinner).not.toBeNull();
+    expect(spinner.querySelector('.spinner-border')).not.toBeNull();
+  });
+
+  test('showLoadingSpinner does nothing when container does not exist', () => {
+    expect(() => exports.showLoadingSpinner('#does-not-exist')).not.toThrow();
+  });
+
+  test('showLoadingSpinner does not insert duplicate spinners on repeated calls', () => {
+    document.body.innerHTML += '<div id="jstree-test-nodupe"></div>';
+    exports.showLoadingSpinner('#jstree-test-nodupe');
+    exports.showLoadingSpinner('#jstree-test-nodupe');
+    expect(document.querySelectorAll('#jstree-test-nodupe .thesaurus-loading-spinner').length).toBe(1);
+  });
+
+  // ── hideLoadingSpinner ────────────────────────────────────────────────────
+
+  test('hideLoadingSpinner removes spinner element', () => {
+    document.body.innerHTML += '<div id="jstree-test-hide"><div class="thesaurus-loading-spinner">x</div></div>';
+    exports.hideLoadingSpinner('#jstree-test-hide');
+    expect(document.querySelector('#jstree-test-hide .thesaurus-loading-spinner')).toBeNull();
+  });
+
+  test('hideLoadingSpinner does nothing when no spinner is present', () => {
+    document.body.innerHTML += '<div id="jstree-test-hide-empty"></div>';
+    expect(() => exports.hideLoadingSpinner('#jstree-test-hide-empty')).not.toThrow();
+  });
+
+  // ── loadThesaurusOnDemand ─────────────────────────────────────────────────
+
+  test('loadThesaurusOnDemand fetches data and initialises jstree', () => {
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
+      modalId: '#modal-sciencekeyword',
+      inputId: '#input-sciencekeyword',
+      searchInputId: '#input-sciencekeyword-thesaurussearch',
+      selectedListId: 'selected-keywords-sciencekeyword',
+      stateKey: 'input-sciencekeyword',
+    };
+
+    const callsBefore = $.getJSON.mock.calls.length;
+    // Reset state so loadThesaurusOnDemand treats it as fresh
+    exports.loadedConfigs.delete(config.jsTreeId);
+    exports.loadThesaurusOnDemand(config);
+
+    expect($.getJSON.mock.calls.length).toBe(callsBefore + 1);
+    expect(exports.loadedConfigs.get(config.jsTreeId)).toBe('loaded');
+  });
+
+  test('loadThesaurusOnDemand does not re-fetch while loading is in progress', () => {
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
+      stateKey: 'input-sciencekeyword',
+    };
+
+    exports.loadedConfigs.set(config.jsTreeId, 'loading');
+    const callsBefore = $.getJSON.mock.calls.length;
+    exports.loadThesaurusOnDemand(config);
+    expect($.getJSON.mock.calls.length).toBe(callsBefore);
+  });
+
+  test('loadThesaurusOnDemand does not re-fetch when already loaded', () => {
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
+      stateKey: 'input-sciencekeyword',
+    };
+
+    exports.loadedConfigs.set(config.jsTreeId, 'loaded');
+    const callsBefore = $.getJSON.mock.calls.length;
+    exports.loadThesaurusOnDemand(config);
+    expect($.getJSON.mock.calls.length).toBe(callsBefore);
+  });
+
+  test('loadThesaurusOnDemand retries after a previous error (race condition fix)', () => {
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
+      stateKey: 'input-sciencekeyword',
+    };
+
+    // Simulate a prior failed attempt
+    exports.loadedConfigs.set(config.jsTreeId, 'error');
+    const callsBefore = $.getJSON.mock.calls.length;
+    exports.loadThesaurusOnDemand(config);
+    // Must attempt a new fetch rather than bailing out
+    expect($.getJSON.mock.calls.length).toBe(callsBefore + 1);
+  });
+
+  test('loadThesaurusOnDemand sets state to error and renders error message on network failure', () => {
+    // Override $.getJSON to simulate failure
+    $.getJSON = jest.fn((url, cb) => {
+      if (url === 'api/v2/vocabs/thesauri/availability') {
+        return {
+          done: jest.fn(function(fn) { return this; }),
+          fail: jest.fn().mockReturnThis(),
+          _data: null,
+        };
+      }
+      return { fail: jest.fn(fn => { fn({}, 'error', 'Network Error'); return { fail: jest.fn() }; }) };
+    });
+
+    document.body.innerHTML += '<div id="jstree-fail-tree"></div>';
+    const config = {
+      jsTreeId: '#jstree-fail-tree',
+      apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
+      stateKey: 'fail-tree',
+    };
+
+    exports.loadedConfigs.delete(config.jsTreeId);
+    exports.loadThesaurusOnDemand(config);
+
+    expect(exports.loadedConfigs.get(config.jsTreeId)).toBe('error');
+    expect(document.querySelector('#jstree-fail-tree .alert-danger')).not.toBeNull();
+  });
+
+  // ── loadKeywordsForConfig ─────────────────────────────────────────────────
+
+  test('loadKeywordsForConfig populates Tagify whitelist with flattened paths', () => {
+    const input = document.getElementById('input-sciencekeyword');
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      inputId: '#input-sciencekeyword',
+      searchInputId: '#input-sciencekeyword-thesaurussearch',
+      selectedKeywordsListId: 'selected-keywords-sciencekeyword',
+    };
+    const response = {
+      data: [{
+        id: 'parent', text: 'Parent', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '',
+        children: [{ id: 'child', text: 'Child', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '' }]
+      }]
+    };
+
+    exports.loadKeywordsForConfig(config, response);
+
+    const whitelist = input._tagify.settings.whitelist;
+    const values = whitelist.map(w => w.value);
+    expect(values).toContain('Parent');
+    expect(values).toContain('Parent > Child');
+  });
+
+  test('loadKeywordsForConfig does not add duplicate entries on repeated calls', () => {
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      inputId: '#input-sciencekeyword',
+      searchInputId: '#input-sciencekeyword-thesaurussearch',
+      selectedKeywordsListId: 'selected-keywords-sciencekeyword',
+    };
+    const response = { data: [{ id: 'n1', text: 'Node1', children: [] }] };
+
+    exports.loadKeywordsForConfig(config, response);
+    const countAfterFirst = document.getElementById('input-sciencekeyword')._tagify.settings.whitelist.length;
+    exports.loadKeywordsForConfig(config, response);
+    const countAfterSecond = document.getElementById('input-sciencekeyword')._tagify.settings.whitelist.length;
+    expect(countAfterSecond).toBe(countAfterFirst);
   });
 
 });
