@@ -2,10 +2,15 @@ import './playwright-require.cjs';
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Multi-variant Playwright config for ELMO-GEM, ELMO-MSL, and ELMO-PURE.
+ * Multi-variant Playwright config for ELMO-GEM, ELMO-MSL, and ELMO-GENERIC.
  *
- * Each variant is a pair of projects:
- *   <variant>-setup  – writes the correct settings.php values before tests run
+ * Browser pairings:
+ *   gem     → Firefox
+ *   msl     → Safari (webkit)
+ *   generic → Chrome
+ *
+ * Each variant is a dependency pair:
+ *   <variant>-setup  – writes settings.php values and reloads the browser
  *   <variant>        – runs the variant-specific test suite
  *
  * Run a single variant:   npx playwright test --project=gem
@@ -15,6 +20,13 @@ import { defineConfig, devices } from '@playwright/test';
  *   BASE_URL=http://localhost:9000/ npx playwright test --project=msl
  *
  * See https://playwright.dev/docs/test-configuration.
+ *
+ * Test distribution:
+ *   gem     – features, flows (excl. minimal-data-submission), formgroups shared
+ *             (excl. spatial-temporal-coverages), elmogem-specific
+ *   msl     – features, flows (excl. minimal-data-submission), formgroups shared,
+ *             elmomsl-specific
+ *   generic – features, flows (all incl. minimal-data-submission), formgroups shared
  */
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:8080/';
@@ -38,7 +50,7 @@ export default defineConfig({
   },
 
   projects: [
-    // ── ELMO-GEM ────────────────────────────────────────────────────────────
+    // ── ELMO-GEM (Firefox) ──────────────────────────────────────────────────
     // Settings: GGMs Properties on, spatial/temporal coverage off, MSL off
     {
       name: 'gem-setup',
@@ -49,18 +61,23 @@ export default defineConfig({
       name: 'gem',
       dependencies: ['gem-setup'],
       outputDir: 'test-results/gem',
-      use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
+      use: { ...devices['Desktop Firefox'], baseURL: BASE_URL },
       testMatch: [
+        'features/**/*.spec.ts',
+        'flows/**/*.spec.ts',
         'formgroups/*.spec.ts',
         'formgroups/elmogem-specific/**/*.spec.ts',
       ],
-      // Spatial/temporal coverage form group is disabled for GEM
-      testIgnore: ['**/spatial-temporal-coverages.spec.ts'],
+      testIgnore: [
+        // Spatial/temporal coverage form group is disabled for GEM
+        '**/spatial-temporal-coverages.spec.ts',
+        // Submission flow requires generic DataCite settings
+        '**/minimal-data-submission.spec.ts',
+      ],
     },
 
-    // ── ELMO-MSL ────────────────────────────────────────────────────────────
-    // Settings: MSL labs/vocabs/logo on, all general form groups on
-    // This variant runs the full test suite (features + flows + formgroups)
+    // ── ELMO-MSL (Safari) ───────────────────────────────────────────────────
+    // Settings: MSL labs/vocabs/logo on, spatial/temporal on, GGMs off
     {
       name: 'msl-setup',
       testMatch: 'setup/msl.setup.ts',
@@ -70,29 +87,37 @@ export default defineConfig({
       name: 'msl',
       dependencies: ['msl-setup'],
       outputDir: 'test-results/msl',
-      use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
+      use: { ...devices['Desktop Safari'], baseURL: BASE_URL },
       testMatch: [
         'features/**/*.spec.ts',
         'flows/**/*.spec.ts',
         'formgroups/*.spec.ts',
         'formgroups/elmomsl-specific/**/*.spec.ts',
       ],
+      testIgnore: [
+        // Submission flow is only applicable for the generic variant
+        '**/minimal-data-submission.spec.ts',
+      ],
     },
 
-    // ── ELMO-PURE ───────────────────────────────────────────────────────────
-    // Settings: standard DataCite form groups only, no MSL, no GEM extensions
+    // ── ELMO-GENERIC (Chrome) ────────────────────────────────────────────────
+    // Settings: standard DataCite form groups, used instruments on, no MSL/GEM
+    // This is the only variant that covers the full submission flow.
     {
-      name: 'pure-setup',
-      testMatch: 'setup/pure.setup.ts',
+      name: 'generic-setup',
+      testMatch: 'setup/generic.setup.ts',
       use: { baseURL: BASE_URL },
     },
     {
-      name: 'pure',
-      dependencies: ['pure-setup'],
-      outputDir: 'test-results/pure',
+      name: 'generic',
+      dependencies: ['generic-setup'],
+      outputDir: 'test-results/generic',
       use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
-      // MSL-specific tests (elmomsl-specific/) are not matched here
-      testMatch: ['formgroups/*.spec.ts'],
+      testMatch: [
+        'features/**/*.spec.ts',
+        'flows/**/*.spec.ts',
+        'formgroups/*.spec.ts',
+      ],
     },
   ],
 });

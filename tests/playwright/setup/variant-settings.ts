@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 
-export type Variant = 'gem' | 'msl' | 'pure';
+export type Variant = 'gem' | 'msl' | 'generic';
 
 interface VariantConfig {
   showMslLabs: boolean;
@@ -33,7 +33,7 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
     showUsedInstruments: false,
     showSpatialTemporalCoverage: true,
   },
-  pure: {
+  generic: {
     showMslLabs: false,
     showMslVocabs: false,
     showMslLogo: false,
