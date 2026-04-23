@@ -52,9 +52,11 @@ export default defineConfig({
   // Execution order (workers: 1 enforces sequential runs):
   //   generic-setup → generic tests → gem-setup → gem tests → msl-setup → msl tests
   //
-  // Each setup depends on the PREVIOUS VARIANT'S TESTS completing, not just the
-  // previous setup. This guarantees settings.php is switched at the right moment
-  // and tests never run under the wrong variant's configuration.
+  // IMPORTANT: gem-setup and msl-setup are wired as TEARDOWNS of the preceding test
+  // project (not as dependencies). Playwright's 'teardown' always runs after the
+  // parent project completes – even if the parent has test failures. Using
+  // 'dependencies' instead would skip the entire remaining chain whenever a single
+  // test fails (e.g. a pre-existing failure in 'generic' would skip all gem+msl tests).
   projects: [
     // ── 1. ELMO-GENERIC (Chrome) ─────────────────────────────────────────────
     // Settings: standard DataCite, used instruments on, no MSL/GEM extensions.
@@ -68,6 +70,9 @@ export default defineConfig({
     {
       name: 'generic',
       dependencies: ['generic-setup'],
+      // gem-setup is the teardown of 'generic': it always runs after generic
+      // finishes, regardless of pass/fail, and sets settings.php for GEM.
+      teardown: 'gem-setup',
       outputDir: 'test-results/generic',
       use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
       testMatch: [
@@ -79,21 +84,23 @@ export default defineConfig({
 
     // ── 2. ELMO-GEM (Firefox) ────────────────────────────────────────────────
     // Settings: GGMs Properties on, spatial/temporal coverage off, MSL off.
-    // gem-setup depends on 'generic' (tests), so it only runs after all generic
-    // tests are done and settings.php is safe to overwrite.
+    // gem-setup is triggered as the teardown of 'generic' (not via dependencies),
+    // so it runs even when generic has test failures.
     {
       name: 'gem-setup',
       testMatch: 'setup/gem.setup.ts',
-      dependencies: ['generic'],
       use: { baseURL: BASE_URL },
     },
     {
       name: 'gem',
       dependencies: ['gem-setup'],
+      // msl-setup is the teardown of 'gem': runs after gem regardless of failures.
+      teardown: 'msl-setup',
       outputDir: 'test-results/gem',
       use: { ...devices['Desktop Firefox'], baseURL: BASE_URL },
       testMatch: [
         'features/**/*.spec.ts',
+        'flows/**/*.spec.ts',
         'formgroups/*.spec.ts',
         'formgroups/elmogem-specific/**/*.spec.ts',
       ],
@@ -107,12 +114,11 @@ export default defineConfig({
 
     // ── 3. ELMO-MSL (Safari) ─────────────────────────────────────────────────
     // Settings: MSL labs/vocabs/logo on, spatial/temporal on, GGMs off.
-    // msl-setup depends on 'gem' (tests), so it only runs after all gem tests
-    // are done and settings.php is safe to overwrite.
+    // msl-setup is triggered as the teardown of 'gem' (not via dependencies),
+    // so it runs even when gem has test failures.
     {
       name: 'msl-setup',
       testMatch: 'setup/msl.setup.ts',
-      dependencies: ['gem'],
       use: { baseURL: BASE_URL },
     },
     {
