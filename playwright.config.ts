@@ -49,14 +49,15 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  // Execution order (workers: 1 enforces sequential runs):
+  // Execution order (workers: 1 + declaration order enforces sequencing):
   //   generic-setup → generic tests → gem-setup → gem tests → msl-setup → msl tests
   //
-  // IMPORTANT: gem-setup and msl-setup are wired as TEARDOWNS of the preceding test
-  // project (not as dependencies). Playwright's 'teardown' always runs after the
-  // parent project completes – even if the parent has test failures. Using
-  // 'dependencies' instead would skip the entire remaining chain whenever a single
-  // test fails (e.g. a pre-existing failure in 'generic' would skip all gem+msl tests).
+  // KEY DESIGN: setup projects depend on the PREVIOUS VARIANT'S SETUP (not its tests).
+  // Both `generic` and `gem-setup` depend on `generic-setup`, making them the same
+  // topological level. Playwright resolves same-level projects in declaration order,
+  // so all `generic` test files complete before `gem-setup` starts — but a failure
+  // inside `generic` does NOT skip `gem-setup` (it doesn't depend on `generic`).
+  // The same pattern repeats for msl-setup depending on gem-setup, not gem.
   projects: [
     // ── 1. ELMO-GENERIC (Chrome) ─────────────────────────────────────────────
     // Settings: standard DataCite, used instruments on, no MSL/GEM extensions.
@@ -64,15 +65,12 @@ export default defineConfig({
     {
       name: 'generic-setup',
       testMatch: 'setup/generic.setup.ts',
-      // No dependencies – this is the entry point
+      // No dependencies – this is the entry point.
       use: { baseURL: BASE_URL },
     },
     {
       name: 'generic',
       dependencies: ['generic-setup'],
-      // gem-setup is the teardown of 'generic': it always runs after generic
-      // finishes, regardless of pass/fail, and sets settings.php for GEM.
-      teardown: 'gem-setup',
       outputDir: 'test-results/generic',
       use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
       testMatch: [
@@ -84,18 +82,18 @@ export default defineConfig({
 
     // ── 2. ELMO-GEM (Firefox) ────────────────────────────────────────────────
     // Settings: GGMs Properties on, spatial/temporal coverage off, MSL off.
-    // gem-setup is triggered as the teardown of 'generic' (not via dependencies),
-    // so it runs even when generic has test failures.
+    // gem-setup depends on generic-setup (same level as generic). Declaration
+    // order guarantees all generic tests run first. Failures in generic do NOT
+    // skip gem-setup because gem-setup has no direct dependency on generic.
     {
       name: 'gem-setup',
       testMatch: 'setup/gem.setup.ts',
+      dependencies: ['generic-setup'],
       use: { baseURL: BASE_URL },
     },
     {
       name: 'gem',
       dependencies: ['gem-setup'],
-      // msl-setup is the teardown of 'gem': runs after gem regardless of failures.
-      teardown: 'msl-setup',
       outputDir: 'test-results/gem',
       use: { ...devices['Desktop Firefox'], baseURL: BASE_URL },
       testMatch: [
@@ -114,11 +112,12 @@ export default defineConfig({
 
     // ── 3. ELMO-MSL (Safari) ─────────────────────────────────────────────────
     // Settings: MSL labs/vocabs/logo on, spatial/temporal on, GGMs off.
-    // msl-setup is triggered as the teardown of 'gem' (not via dependencies),
-    // so it runs even when gem has test failures.
+    // msl-setup depends on gem-setup (same level as gem). Declaration order
+    // guarantees all gem tests run first. Failures in gem do NOT skip msl-setup.
     {
       name: 'msl-setup',
       testMatch: 'setup/msl.setup.ts',
+      dependencies: ['gem-setup'],
       use: { baseURL: BASE_URL },
     },
     {
