@@ -49,12 +49,42 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
+  // Execution order (workers: 1 enforces sequential runs):
+  //   generic-setup → generic tests → gem-setup → gem tests → msl-setup → msl tests
+  //
+  // Each setup depends on the PREVIOUS VARIANT'S TESTS completing, not just the
+  // previous setup. This guarantees settings.php is switched at the right moment
+  // and tests never run under the wrong variant's configuration.
   projects: [
-    // ── ELMO-GEM (Firefox) ──────────────────────────────────────────────────
-    // Settings: GGMs Properties on, spatial/temporal coverage off, MSL off
+    // ── 1. ELMO-GENERIC (Chrome) ─────────────────────────────────────────────
+    // Settings: standard DataCite, used instruments on, no MSL/GEM extensions.
+    // Runs first; includes the full submission flow (minimal-data-submission).
+    {
+      name: 'generic-setup',
+      testMatch: 'setup/generic.setup.ts',
+      // No dependencies – this is the entry point
+      use: { baseURL: BASE_URL },
+    },
+    {
+      name: 'generic',
+      dependencies: ['generic-setup'],
+      outputDir: 'test-results/generic',
+      use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
+      testMatch: [
+        'features/**/*.spec.ts',
+        'flows/**/*.spec.ts',
+        'formgroups/*.spec.ts',
+      ],
+    },
+
+    // ── 2. ELMO-GEM (Firefox) ────────────────────────────────────────────────
+    // Settings: GGMs Properties on, spatial/temporal coverage off, MSL off.
+    // gem-setup depends on 'generic' (tests), so it only runs after all generic
+    // tests are done and settings.php is safe to overwrite.
     {
       name: 'gem-setup',
       testMatch: 'setup/gem.setup.ts',
+      dependencies: ['generic'],
       use: { baseURL: BASE_URL },
     },
     {
@@ -64,7 +94,6 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'], baseURL: BASE_URL },
       testMatch: [
         'features/**/*.spec.ts',
-        'flows/**/*.spec.ts',
         'formgroups/*.spec.ts',
         'formgroups/elmogem-specific/**/*.spec.ts',
       ],
@@ -76,11 +105,14 @@ export default defineConfig({
       ],
     },
 
-    // ── ELMO-MSL (Safari) ───────────────────────────────────────────────────
-    // Settings: MSL labs/vocabs/logo on, spatial/temporal on, GGMs off
+    // ── 3. ELMO-MSL (Safari) ─────────────────────────────────────────────────
+    // Settings: MSL labs/vocabs/logo on, spatial/temporal on, GGMs off.
+    // msl-setup depends on 'gem' (tests), so it only runs after all gem tests
+    // are done and settings.php is safe to overwrite.
     {
       name: 'msl-setup',
       testMatch: 'setup/msl.setup.ts',
+      dependencies: ['gem'],
       use: { baseURL: BASE_URL },
     },
     {
@@ -97,26 +129,6 @@ export default defineConfig({
       testIgnore: [
         // Submission flow is only applicable for the generic variant
         '**/minimal-data-submission.spec.ts',
-      ],
-    },
-
-    // ── ELMO-GENERIC (Chrome) ────────────────────────────────────────────────
-    // Settings: standard DataCite form groups, used instruments on, no MSL/GEM
-    // This is the only variant that covers the full submission flow.
-    {
-      name: 'generic-setup',
-      testMatch: 'setup/generic.setup.ts',
-      use: { baseURL: BASE_URL },
-    },
-    {
-      name: 'generic',
-      dependencies: ['generic-setup'],
-      outputDir: 'test-results/generic',
-      use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
-      testMatch: [
-        'features/**/*.spec.ts',
-        'flows/**/*.spec.ts',
-        'formgroups/*.spec.ts',
       ],
     },
   ],

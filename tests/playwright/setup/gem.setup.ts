@@ -12,8 +12,14 @@ import { applyVariantSettings } from './variant-settings';
 setup('configure ELMO-GEM variant', async ({ page, baseURL }) => {
   applyVariantSettings('gem');
 
-  // Navigate to reload the app so the browser picks up the new settings.
-  // PHP re-reads settings.php on every request, so no server restart is needed.
+  // A full page navigation is required: PHP re-reads settings.php on every
+  // request, so the browser must load a fresh page to pick up the new values.
   await page.goto(baseURL!);
   await expect(page).toHaveTitle(/ELMO/i);
+
+  // ── Variant verification ──────────────────────────────────────────────────
+  // GGMs Properties form group must be present in the DOM (showGGMsProperties=true)
+  await expect(page.locator('#group-ggmspropertiesessential')).toBeAttached();
+  // MSL Originating Laboratory form group must NOT be in the DOM (showMslLabs=false)
+  await expect(page.locator('#group-originatinglaboratory')).not.toBeAttached();
 });
