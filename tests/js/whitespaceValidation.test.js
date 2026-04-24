@@ -608,7 +608,10 @@ describe('validateTitleField and validateAuthorNameFields integration', () => {
     expect(form.checkValidity()).toBe(true);
   });
 
-  test('validateAllMandatoryFields calls title and author validation', () => {
+  test('validateAllMandatoryFields does NOT mark empty title/author fields as invalid on its own', () => {
+    // validateAllMandatoryFields() must NOT call validateTitleField/validateAuthorNameFields
+    // because that would turn fields red on page load before user interaction.
+    // These functions are called explicitly in submitHandler.handleSubmit() instead.
     const titleInput = document.getElementById('input-resourceinformation-title');
     const lastname = document.getElementById('input-author-lastname');
     const firstname = document.getElementById('input-author-firstname');
@@ -617,8 +620,27 @@ describe('validateTitleField and validateAuthorNameFields integration', () => {
     lastname.value = '   ';
     firstname.value = '   ';
 
-    // validateAllMandatoryFields should trigger all sub-validations
     window.validateAllMandatoryFields();
+
+    // Fields must NOT be marked invalid by validateAllMandatoryFields()
+    expect(titleInput.classList.contains('is-invalid')).toBe(false);
+    expect(lastname.classList.contains('is-invalid')).toBe(false);
+    expect(firstname.classList.contains('is-invalid')).toBe(false);
+  });
+
+  test('validateTitleField and validateAuthorNameFields must be called explicitly before submit', () => {
+    // This mirrors the submitHandler.handleSubmit() flow:
+    // call validateTitleField() and validateAuthorNameFields() before checkValidity()
+    const titleInput = document.getElementById('input-resourceinformation-title');
+    const lastname = document.getElementById('input-author-lastname');
+    const firstname = document.getElementById('input-author-firstname');
+
+    titleInput.value = '   ';
+    lastname.value = '   ';
+    firstname.value = '   ';
+
+    window.validateTitleField();
+    window.validateAuthorNameFields();
 
     expect(titleInput.classList.contains('is-invalid')).toBe(true);
     expect(lastname.classList.contains('is-invalid')).toBe(true);

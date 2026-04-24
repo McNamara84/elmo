@@ -681,12 +681,6 @@ function validateAllMandatoryFields() {
     // Formgroup Autor Institution
     validateAuthorInstitutionRequirements();
 
-    // Formgroup Resource Information - Title
-    validateTitleField();
-
-    // Formgroup Authors - First/Last Name
-    validateAuthorNameFields();
-
     // for the entire form
     removeGreenCheckmarks();
 
