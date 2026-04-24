@@ -438,6 +438,108 @@ if (errorHandlingApproach) {
         errorHandlingApproach.addEventListener(evt, validateErrorHandlingApproachField)
     );
 }
+
+// Select the title input element
+const titleInput = document.getElementById('input-resourceinformation-title');
+// Add event listeners for both input (typing) and blur (leaving the field) if element exists
+if (titleInput) {
+    ['input', 'blur'].forEach(evt =>
+        titleInput.addEventListener(evt, validateTitleField)
+    );
+}
+
+/**
+ * Validates the resource title input field.
+ * - Marks the field as valid if it contains non-whitespace text.
+ * - Marks the field as invalid if it is empty or contains only whitespace.
+ * - Uses setCustomValidity() so that HTML5 checkValidity() also rejects whitespace-only input.
+ */
+function validateTitleField() {
+    const titleInput = document.getElementById('input-resourceinformation-title');
+    if (!titleInput) return true;
+    const value = titleInput.value.trim();
+    const container = titleInput.closest('.input-group') || titleInput.parentElement;
+
+    titleInput.classList.remove('is-valid', 'is-invalid');
+
+    let oldFeedback = container.querySelector('.invalid-feedback[data-translate="resourceInfo.resourceTitleInvalid"]');
+    if (oldFeedback) oldFeedback.remove();
+
+    if (value.length === 0) {
+        titleInput.classList.add('is-invalid');
+        const message = (typeof translations !== 'undefined' && translations.resourceInfo)
+            ? translations.resourceInfo.resourceTitleInvalid
+            : 'Please provide a title.';
+        const feedbackElem = document.createElement('div');
+        feedbackElem.className = 'invalid-feedback';
+        feedbackElem.setAttribute('data-translate', 'resourceInfo.resourceTitleInvalid');
+        feedbackElem.innerText = message;
+        container.appendChild(feedbackElem);
+        titleInput.setCustomValidity(message);
+        return false;
+    } else {
+        titleInput.classList.add('is-valid');
+        titleInput.setCustomValidity("");
+        return true;
+    }
+}
+
+// Select the author name input elements
+const authorLastname = document.getElementById('input-author-lastname');
+const authorFirstname = document.getElementById('input-author-firstname');
+[authorLastname, authorFirstname].forEach(el => {
+    if (el) {
+        ['input', 'blur'].forEach(evt =>
+            el.addEventListener(evt, validateAuthorNameFields)
+        );
+    }
+});
+
+/**
+ * Validates the first author's last name and first name input fields.
+ * - Marks each field as valid if it contains non-whitespace text.
+ * - Marks each field as invalid if it is empty or contains only whitespace.
+ * - Uses setCustomValidity() so that HTML5 checkValidity() also rejects whitespace-only input.
+ */
+function validateAuthorNameFields() {
+    let isValid = true;
+    const fields = [
+        { id: 'input-author-lastname', translationKey: 'general.lastNameInvalid' },
+        { id: 'input-author-firstname', translationKey: 'general.firstNameInvalid' }
+    ];
+
+    fields.forEach(({ id, translationKey }) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        const value = input.value.trim();
+        const container = input.closest('.input-group') || input.parentElement;
+
+        input.classList.remove('is-valid', 'is-invalid');
+
+        let oldFeedback = container.querySelector(`.invalid-feedback[data-translate="${translationKey}"]`);
+        if (oldFeedback) oldFeedback.remove();
+
+        const [section, key] = translationKey.split('.');
+        if (value.length === 0) {
+            input.classList.add('is-invalid');
+            const message = (typeof translations !== 'undefined' && translations[section])
+                ? translations[section][key]
+                : translationKey;
+            const feedbackElem = document.createElement('div');
+            feedbackElem.className = 'invalid-feedback';
+            feedbackElem.setAttribute('data-translate', translationKey);
+            feedbackElem.innerText = message;
+            container.appendChild(feedbackElem);
+            input.setCustomValidity(message);
+            isValid = false;
+        } else {
+            input.classList.add('is-valid');
+            input.setCustomValidity("");
+        }
+    });
+
+    return isValid;
+}
 /**
  * Validates the error handling approach textarea field.
  * - Returns success automatically if the field is not required or not present.
@@ -683,6 +785,9 @@ $(document).on('blur',
     'input[name="tscTimeEnd[]"],' +
     'input[name="rIdentifier[]"],' +
     'input[name="awardURI[]"], ' +
+    'input[name="title[]"], ' +
+    'input[name="familynames[]"], ' +
+    'input[name="givennames[]"], ' +
     'textarea#input-abstract' , +
     'textarea#input-error-handling-approach',
 
@@ -718,6 +823,8 @@ $(document).on('change',
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         validateSpatialTemporalCoverageRequirements,
-        validateAllMandatoryFields
+        validateAllMandatoryFields,
+        validateTitleField,
+        validateAuthorNameFields
     };
 }
