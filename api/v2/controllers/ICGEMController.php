@@ -3,7 +3,7 @@ require_once __DIR__ . '/DatasetController.php';
 
 class ICGEMController extends DatasetController
 {
-    private const ICGEM_NAMESPACE_PREFIX = 'icgv';
+    private const ICGEM_NAMESPACE_PREFIX = 'grav';
     private const ICGEM_NAMESPACE_URI = 'http://icgem.gfz.de/schema';
 
     public function __construct()
@@ -356,9 +356,9 @@ class ICGEMController extends DatasetController
             foreach ($dataSources as $dataSource) {
                 $dsElement = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSource', null, self::ICGEM_NAMESPACE_URI);
                 
-                // Map type code to human-readable name
+                // Map type code to human-readable name and set as attribute
                 $sourceType = $typeMap[$dataSource['type']] ?? $dataSource['type'];
-                $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSourceType', $this->prepare($sourceType, 'inputDataSourceType'), self::ICGEM_NAMESPACE_URI);
+                $dsElement->addAttribute('type', $sourceType);
                 
                 if (!empty($dataSource['description'])) {
                     $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['description'], 'description'), self::ICGEM_NAMESPACE_URI);
@@ -398,8 +398,11 @@ class ICGEMController extends DatasetController
                             $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':elevationTerrainDetail', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
                         }
                         if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
-                            $compDepthElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', $this->prepare($dataSource['T_Isostasy_compensation_depth'], 'compensationDepth'), self::ICGEM_NAMESPACE_URI);
-                            $compDepthElement->addAttribute('uom', 'm');
+                            $uom = 'm';
+                            if (in_array($uom, self::ALLOWED_UOM_VALUES, true)) {
+                                $compDepthElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', $this->prepare($dataSource['T_Isostasy_compensation_depth'], 'compensationDepth'), self::ICGEM_NAMESPACE_URI);
+                                $compDepthElement->addAttribute('uom', $uom);
+                            }
                         }
                         break;
                     
@@ -529,11 +532,12 @@ class ICGEMController extends DatasetController
             foreach ($temporalProperties as $property) {
                 $tmpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalModelProperties', null, self::ICGEM_NAMESPACE_URI);
                 
-                if (!empty($property['start_date'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':startDate', $this->prepare($property['start_date'], 'startDate'), self::ICGEM_NAMESPACE_URI);
-                }
-                if (!empty($property['end_date'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':stopDate', $this->prepare($property['end_date'], 'stopDate'), self::ICGEM_NAMESPACE_URI);
+                $hasStart = !empty($property['start_date']);
+                $hasEnd = !empty($property['end_date']);
+                if ($hasStart || $hasEnd) {
+                    $startPart = $hasStart ? $property['start_date'] : 'unknown';
+                    $endPart = $hasEnd ? $property['end_date'] : 'open';
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalCoverage', htmlspecialchars($startPart . '/' . $endPart), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['generating_institution'])) {
                     $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':generatingInstitution', $this->prepare($property['generating_institution'], 'generatingInstitution'), self::ICGEM_NAMESPACE_URI);
@@ -609,6 +613,8 @@ class ICGEMController extends DatasetController
      * This basically has to list all the variables with enum values in the schema 
      * @var array<string>
      */
+    private const ALLOWED_UOM_VALUES = ['m', 'm/s', 'm/s²'];
+
     private const ENUMERATION_FIELDS = [
         'errorType', 
         'descriptionSection', 
@@ -844,7 +850,7 @@ class ICGEMController extends DatasetController
             '<icgv:envelope xmlns:icgv="' . self::ICGEM_NAMESPACE_URI . '" ' .
             'xmlns:dc="http://datacite.org/schema/kernel-4" ' .
             'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' .
-            'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' http://icgem.gfz.de/schema/schema.xsd"/>'
+            'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' http://icgem.gfz.de/schema/icgemSchemaBase.xsd"/>'
         );
         
         // 4. Parse DataCite XML and append it to envelope
