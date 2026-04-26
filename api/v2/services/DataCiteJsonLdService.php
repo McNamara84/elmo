@@ -130,7 +130,7 @@ class DataCiteJsonLdService
     {
         $text = '';
         foreach ($element->childNodes as $childNode) {
-            if ($childNode instanceof DOMText || $childNode instanceof DOMCdataSection) {
+            if ($childNode instanceof DOMText) {
                 $text .= $childNode->nodeValue;
             }
         }

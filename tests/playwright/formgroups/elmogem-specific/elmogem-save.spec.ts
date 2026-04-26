@@ -16,7 +16,7 @@ test('test', async ({ page }) => {
   await page.getByRole('button', { name: 'Processing procedures' }).click();
   await page.getByRole('textbox', { name: 'Processing procedures' }).click();
   await page.getByRole('textbox', { name: 'Processing procedures' }).fill('test processing procedures');
-  await page.getByRole('button', { name: 'Save as' }).click();
+  await page.locator('#button-form-save').click();
   await expect(page.getByRole('heading', { name: 'Save as XML' })).toBeVisible();
   await page.getByRole('textbox', { name: 'Filename' }).click();
   await page.getByRole('textbox', { name: 'Filename' }).dblclick();
