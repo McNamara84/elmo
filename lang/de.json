@@ -303,13 +303,14 @@
             "thankYouMessage": "Vielen Dank für Ihr Feedback!"
         },
         "upload": {
-            "title": "XML-Datei auswählen:",
-            "dropZoneInfo": "XML-Datei hier ablegen",
+            "modalTitle": "Metadatendatei laden",
+            "title": "XML- oder JSON-LD-Datei auswählen:",
+            "dropZoneInfo": "XML- oder JSON-LD-Datei hier ablegen",
             "loading": "Datei wird verarbeitet...",
             "successToast": "erfolgreich geladen",
             "errorToast": "Fehler beim Laden der Datei",
-            "invalidFileType": "Bitte laden Sie eine XML-Datei hoch.",
-            "errorProcessing": "Fehler beim Verarbeiten der XML-Datei",
+            "invalidFileType": "Bitte laden Sie eine XML- oder JSON-LD-Datei hoch.",
+            "errorProcessing": "Fehler beim Verarbeiten der Metadatendatei",
             "errorReading": "Fehler beim Lesen der Datei"
         },
         "changelog": {

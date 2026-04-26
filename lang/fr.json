@@ -300,13 +300,14 @@
             "thankYouMessage": "Merci pour votre retour !"
         },
         "upload": {
-            "title": "Sélectionner un fichier XML :",
-            "dropZoneInfo": "Déposer le fichier XML ici",
+            "modalTitle": "Charger un fichier de métadonnées",
+            "title": "Sélectionner un fichier XML ou JSON-LD :",
+            "dropZoneInfo": "Déposer le fichier XML ou JSON-LD ici",
             "loading": "Traitement du fichier...",
             "successToast": "chargé avec succès",
             "errorToast": "Erreur lors du chargement du fichier",
-            "invalidFileType": "Veuillez télécharger un fichier XML.",
-            "errorProcessing": "Erreur lors du traitement du fichier XML",
+            "invalidFileType": "Veuillez télécharger un fichier XML ou JSON-LD.",
+            "errorProcessing": "Erreur lors du traitement du fichier de métadonnées",
             "errorReading": "Erreur lors de la lecture du fichier"
         },
         "changelog": {

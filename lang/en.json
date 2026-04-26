@@ -302,13 +302,14 @@
             "thankYouMessage": "Thanks for your feedback!"
         },
         "upload": {
-            "title": "Select XML file:",
-            "dropZoneInfo": "Drop XML file here",
+            "modalTitle": "Load metadata file",
+            "title": "Select XML or JSON-LD file:",
+            "dropZoneInfo": "Drop XML or JSON-LD file here",
             "loading": "Processing file...",
             "successToast": "successfully loaded",
             "errorToast": "Error loading file",
-            "invalidFileType": "Please upload an XML file.",
-            "errorProcessing": "Error processing XML file",
+            "invalidFileType": "Please upload an XML or JSON-LD file.",
+            "errorProcessing": "Error processing metadata file",
             "errorReading": "Error reading file"
         },
         "changelog": {
