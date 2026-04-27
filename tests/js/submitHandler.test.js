@@ -87,6 +87,10 @@ describe('submitHandler.js', () => {
         // Mock applyTranslations function
     global.applyTranslations = jest.fn();
 
+    // Mock whitespace-only validators from checkMandatoryFields.js
+    global.validateTitleField = jest.fn().mockReturnValue(true);
+    global.validateAuthorNameFields = jest.fn().mockReturnValue(true);
+
     // Mock scrollIntoView
     Element.prototype.scrollIntoView = jest.fn();
 
@@ -96,6 +100,8 @@ describe('submitHandler.js', () => {
   afterEach(() => {
     jest.useRealTimers();
     console.error.mockRestore();
+    delete global.validateTitleField;
+    delete global.validateAuthorNameFields;
   });
 
   test('validateEmbargoDate marks invalid when embargo before creation', () => {
