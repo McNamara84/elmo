@@ -952,6 +952,139 @@ describe('thesauri.js — GGMs root node filtering', () => {
       // logged an error and returned early without building a whitelist.
       expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
     });
+
+    // ── overlap / deduplication ─────────────────────────────────────────────
+
+    test('when rootNodes contains both a parent and its child, the child is not promoted to a separate top-level entry', (done) => {
+      // Simulate rootNodes = [GEODETICS, ELLIPSOID_CHARACTERISTICS] — a parent and its own child.
+      // The child must NOT appear at top level alongside its parent; it must only appear
+      // as a child of GEODETICS — otherwise it gets two breadcrumb paths in the whitelist.
+      const overlapIds = ['uri:geodetics', 'uri:ellipsoid']; // parent + its child
+
+      document.body.innerHTML = `
+        <div id="thesaurusKeywordsFormGroup" style="display: none;">
+          <div class="accordion p-2" id="accordionThesauri"></div>
+        </div>
+        <div id="thesaurusModalsContainer"></div>
+      `;
+
+      $.getJSON = jest.fn((url, cb) => {
+        if (url === 'api/v2/vocabs/thesauri/availability') {
+          return {
+            done: jest.fn(function (fn) { fn({ science_keywords: { available: true, displayName: 'Science Keywords' } }); return this; }),
+            fail: jest.fn().mockReturnThis(),
+          };
+        }
+        if (typeof cb === 'function') cb(mockScienceKeywordsVocabulary);
+        return { fail: jest.fn().mockReturnThis() };
+      });
+
+      const rawScript = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
+      const patchedScript = rawScript.replace(
+        /const GGM_THESAURUS_ROOT_NODES\s*=\s*\{[\s\S]*?\};/,
+        `const GGM_THESAURUS_ROOT_NODES = { science_keywords: ${JSON.stringify(overlapIds)} };`
+      );
+      window.eval(transformThesauriScript(patchedScript));
+
+      $(document).ready(() => {
+        document.dispatchEvent(new Event('translationsLoaded'));
+
+        const modal = document.querySelector('#modal-sciencekeyword');
+        if (modal) modal.dispatchEvent(new Event('show.bs.modal'));
+
+        const tree = $('#jstree-sciencekeyword').jstree(true);
+        const topLevelIds = (tree._data || []).map(n => n.id);
+
+        // ELLIPSOID CHARACTERISTICS must NOT appear at the top level — it is already a child of GEODETICS
+        expect(topLevelIds).not.toContain('uri:ellipsoid');
+        // GEODETICS is the only top-level node (it's the ancestor that covers both)
+        expect(topLevelIds).toContain('uri:geodetics');
+
+        // Whitelist should contain ONLY the nested path, not a standalone "ELLIPSOID CHARACTERISTICS"
+        const input = document.getElementById('input-sciencekeyword');
+        const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
+        expect(whitelistValues).toContain('GEODETICS > ELLIPSOID CHARACTERISTICS'); // deep canonical path ✓
+        expect(whitelistValues).not.toContain('ELLIPSOID CHARACTERISTICS');          // standalone duplicate ✗
+
+        done();
+      });
+    }, 5000);
+
+    // ── focus-trigger lazy loading ────────────────────────────────────────
+
+    test('Tagify input focus also produces a filtered tree and whitelist (focus-trigger path)', (done) => {
+      // Reset state so lazy loading has not fired yet for this sub-test.
+      // Re-run setupEnvironment WITHOUT dispatching the modal event so the
+      // vocabulary data has not been loaded when we fire focus.
+      document.body.innerHTML = `
+        <div id="thesaurusKeywordsFormGroup" style="display: none;">
+          <div class="accordion p-2" id="accordionThesauri"></div>
+        </div>
+        <div id="thesaurusModalsContainer"></div>
+      `;
+
+      $.getJSON = jest.fn((url, cb) => {
+        if (url === 'api/v2/vocabs/thesauri/availability') {
+          return {
+            done: jest.fn(function (fn) { fn({ science_keywords: { available: true, displayName: 'Science Keywords' } }); return this; }),
+            fail: jest.fn().mockReturnThis(),
+          };
+        }
+        if (typeof cb === 'function') cb(mockScienceKeywordsVocabulary);
+        return { fail: jest.fn().mockReturnThis() };
+      });
+
+      const rawScript = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
+      const patchedScript = rawScript.replace(
+        /const GGM_THESAURUS_ROOT_NODES\s*=\s*\{[\s\S]*?\};/,
+        `const GGM_THESAURUS_ROOT_NODES = { science_keywords: ${JSON.stringify(GGM_ROOT_IDS)} };`
+      );
+      window.eval(transformThesauriScript(patchedScript));
+
+      $(document).ready(() => {
+        document.dispatchEvent(new Event('translationsLoaded'));
+
+        // Tree must NOT be loaded yet (no modal open)
+        expect($('#jstree-sciencekeyword').jstree(true)).toBeUndefined();
+
+        // Trigger via focus, same as when a user starts typing before opening the modal
+        const input = document.getElementById('input-sciencekeyword');
+        const tagifyWrapper = input.closest('.tagify') || input.parentElement?.querySelector('.tagify') || input;
+        tagifyWrapper.dispatchEvent(new Event('focus', { bubbles: false }));
+
+        // Tree must now be initialised and must be filtered
+        const tree = $('#jstree-sciencekeyword').jstree(true);
+        expect(tree).toBeDefined();
+        const ids = tree.allNodeIds();
+
+        GGM_ROOT_IDS.forEach(id => expect(ids).toContain(id));             // listed roots present
+        expect(ids).toContain('uri:ellipsoid');                             // child of listed root present
+        expect(ids).not.toContain('uri:topography');                        // non-listed sibling absent
+        expect(ids).not.toContain('uri:climate-models');                    // non-listed sibling absent
+
+        done();
+      });
+    }, 5000);
+
+    // ── pre-population round-trip ─────────────────────────────────────────
+
+    test('a value saved in a previous session is present in the filtered whitelist (round-trip compatibility)', () => {
+      // "GEODETICS > ELLIPSOID CHARACTERISTICS" is the correct deep breadcrumb path for a
+      // concept that lives inside one of the GGMs root subtrees. It must appear verbatim in
+      // the filtered Tagify whitelist so that programmatic addTags (used by XML→input mapping)
+      // does not render the tag as invalid.
+      const input = document.getElementById('input-sciencekeyword');
+      const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
+
+      // The deep path (canonical breadcrumb built from the filtered tree) must exist
+      expect(whitelistValues).toContain('GEODETICS > ELLIPSOID CHARACTERISTICS');
+      expect(whitelistValues).toContain('MARINE GRAVITY FIELD > OCEAN DEPTH');
+      expect(whitelistValues).toContain('SPHERICAL HARMONIC MODELS');
+
+      // Simulate what mappingXmlToInputFields does: programmatically add a previously saved tag
+      input._tagify.addTags(['GEODETICS > ELLIPSOID CHARACTERISTICS']);
+      expect(input._tagify.value.some(v => v.value === 'GEODETICS > ELLIPSOID CHARACTERISTICS')).toBe(true);
+    });
   });
 
   describe('with GGMsProperties disabled', () => {
