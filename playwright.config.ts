@@ -2,31 +2,31 @@ import './playwright-require.cjs';
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Multi-variant Playwright config for ELMO-GEM, ELMO-MSL, and ELMO-GENERIC.
+ * DEFAULT config — runs all 4 variants sequentially on a single container.
+ *
+ *   npx playwright test                         ← all variants
+ *   npx playwright test --project=gem           ← only GEM (still requires prior setup)
+ *
+ * For fast parallel single-variant runs use the dedicated configs:
+ *   npx playwright test --config=playwright.generic.config.ts
+ *   npx playwright test --config=playwright.gem.config.ts
+ *   npx playwright test --config=playwright.msl.config.ts
+ *   npx playwright test --config=playwright.igsn.config.ts
  *
  * Browser pairings:
- *   gem     → Firefox
- *   msl     → Safari (webkit)
- *   generic → Chrome
- *
- * Each variant is a dependency pair:
- *   <variant>-setup  – writes settings.php values and reloads the browser
- *   <variant>        – runs the variant-specific test suite
- *
- * Run a single variant:   npx playwright test --project=gem
- * Run all variants:       npx playwright test
- *
- * The BASE_URL env variable overrides the default localhost address, e.g.
- *   BASE_URL=http://localhost:9000/ npx playwright test --project=msl
+ *   generic → Chrome   |   gem → Firefox   |   msl → Safari   |   igsn → Chrome
  *
  * See https://playwright.dev/docs/test-configuration.
  *
  * Test distribution:
- *   gem     – features, flows (excl. minimal-data-submission), formgroups shared
+ *   generic – features, flows (all incl. minimal-data-submission), shared formgroups
+ *   gem     – features, flows (excl. minimal-data-submission), shared formgroups
  *             (excl. spatial-temporal-coverages), elmogem-specific
- *   msl     – features, flows (excl. minimal-data-submission), formgroups shared,
+ *   msl     – features, flows (excl. minimal-data-submission), shared formgroups,
  *             elmomsl-specific
- *   generic – features, flows (all incl. minimal-data-submission), formgroups shared
+ *   igsn    – features, flows (excl. minimal-data-submission), shared formgroups
+ *             (excl. spatial/temporal, free-keywords, related-work, thesauri),
+ *             elmoisgn-specific
  */
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:8080/';
@@ -36,7 +36,7 @@ export default defineConfig({
   // Sequential execution is required: only one variant's settings.php can be
   // active at a time on the single container.
   fullyParallel: false,
-  workers: 1,
+  workers: process.env.CI ? 1 : undefined,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: [
@@ -50,22 +50,16 @@ export default defineConfig({
   },
 
   // Execution order (workers: 1 + declaration order enforces sequencing):
-  //   generic-setup → generic tests → gem-setup → gem tests → msl-setup → msl tests
+  //   generic-setup → generic → gem-setup → gem → igsn-setup → igsn → msl-setup → msl
   //
-  // KEY DESIGN: setup projects depend on the PREVIOUS VARIANT'S SETUP (not its tests).
-  // Both `generic` and `gem-setup` depend on `generic-setup`, making them the same
-  // topological level. Playwright resolves same-level projects in declaration order,
-  // so all `generic` test files complete before `gem-setup` starts — but a failure
-  // inside `generic` does NOT skip `gem-setup` (it doesn't depend on `generic`).
-  // The same pattern repeats for msl-setup depending on gem-setup, not gem.
+  // KEY DESIGN: each setup depends on the PREVIOUS setup (not its test project).
+  // This means a failure inside a test project does NOT skip the next variant's setup.
+  // Declaration order with workers:1 ensures test projects drain before the next setup runs.
   projects: [
     // ── 1. ELMO-GENERIC (Chrome) ─────────────────────────────────────────────
-    // Settings: standard DataCite, used instruments on, no MSL/GEM extensions.
-    // Runs first; includes the full submission flow (minimal-data-submission).
     {
       name: 'generic-setup',
       testMatch: 'setup/generic.setup.ts',
-      // No dependencies – this is the entry point.
       use: { baseURL: BASE_URL },
     },
     {
@@ -81,10 +75,8 @@ export default defineConfig({
     },
 
     // ── 2. ELMO-GEM (Firefox) ────────────────────────────────────────────────
-    // Settings: GGMs Properties on, spatial/temporal coverage off, MSL off.
-    // gem-setup depends on generic-setup (same level as generic). Declaration
-    // order guarantees all generic tests run first. Failures in generic do NOT
-    // skip gem-setup because gem-setup has no direct dependency on generic.
+    // gem-setup depends on generic-setup (same topo-level as generic).
+    // Declaration order drains all generic tests first.
     {
       name: 'gem-setup',
       testMatch: 'setup/gem.setup.ts',
@@ -103,21 +95,46 @@ export default defineConfig({
         'formgroups/elmogem-specific/**/*.spec.ts',
       ],
       testIgnore: [
-        // Spatial/temporal coverage form group is disabled for GEM
         '**/spatial-temporal-coverages.spec.ts',
-        // Submission flow requires generic DataCite settings
         '**/minimal-data-submission.spec.ts',
       ],
     },
 
-    // ── 3. ELMO-MSL (Safari) ─────────────────────────────────────────────────
-    // Settings: MSL labs/vocabs/logo on, spatial/temporal on, GGMs off.
-    // msl-setup depends on gem-setup (same level as gem). Declaration order
-    // guarantees all gem tests run first. Failures in gem do NOT skip msl-setup.
+    // ── 3. ELMO-IGSN (Chrome) ────────────────────────────────────────────────
+    // igsn-setup depends on gem-setup → runs after all gem tests complete.
+    {
+      name: 'igsn-setup',
+      testMatch: 'setup/igsn.setup.ts',
+      dependencies: ['gem-setup'],
+      use: { baseURL: BASE_URL },
+    },
+    {
+      name: 'igsn',
+      dependencies: ['igsn-setup'],
+      outputDir: 'test-results/igsn',
+      use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
+      testMatch: [
+        'features/**/*.spec.ts',
+        'flows/**/*.spec.ts',
+        'formgroups/*.spec.ts',
+        'formgroups/elmoisgn-specific/**/*.spec.ts',
+      ],
+      testIgnore: [
+        '**/spatial-temporal-coverages.spec.ts',
+        '**/free-keywords.spec.ts',
+        '**/related-work.spec.ts',
+        '**/thesauri-keywords.spec.ts',
+        '**/thesauri-keywords-roundtrip.spec.ts',
+        '**/minimal-data-submission.spec.ts',
+      ],
+    },
+
+    // ── 4. ELMO-MSL (Safari) ─────────────────────────────────────────────────
+    // msl-setup depends on igsn-setup → runs after all igsn tests complete.
     {
       name: 'msl-setup',
       testMatch: 'setup/msl.setup.ts',
-      dependencies: ['gem-setup'],
+      dependencies: ['igsn-setup'],
       use: { baseURL: BASE_URL },
     },
     {
@@ -132,7 +149,6 @@ export default defineConfig({
         'formgroups/elmomsl-specific/**/*.spec.ts',
       ],
       testIgnore: [
-        // Submission flow is only applicable for the generic variant
         '**/minimal-data-submission.spec.ts',
       ],
     },

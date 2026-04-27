@@ -1,15 +1,21 @@
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 
-export type Variant = 'gem' | 'msl' | 'generic';
+export type Variant = 'generic' | 'gem' | 'msl' | 'igsn';
 
 interface VariantConfig {
+  // MSL-specific
   showMslLabs: boolean;
   showMslVocabs: boolean;
   showMslLogo: boolean;
+  // GEM-specific
   showGGMsProperties: boolean;
+  // Shared form groups (IGSN turns several off)
   showUsedInstruments: boolean;
   showSpatialTemporalCoverage: boolean;
+  showFreeKeywords: boolean;
+  showRelatedWork: boolean;
+  showThesauri: boolean;
 }
 
 /**
@@ -17,6 +23,17 @@ interface VariantConfig {
  * Values mirror the environment variables used by the CI multi-server setup.
  */
 const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
+  generic: {
+    showMslLabs: false,
+    showMslVocabs: false,
+    showMslLogo: false,
+    showGGMsProperties: false,
+    showUsedInstruments: true,
+    showSpatialTemporalCoverage: true,
+    showFreeKeywords: true,
+    showRelatedWork: true,
+    showThesauri: true,
+  },
   gem: {
     showMslLabs: false,
     showMslVocabs: false,
@@ -24,6 +41,9 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
     showGGMsProperties: true,
     showUsedInstruments: false,
     showSpatialTemporalCoverage: false,
+    showFreeKeywords: true,
+    showRelatedWork: true,
+    showThesauri: true,
   },
   msl: {
     showMslLabs: true,
@@ -32,14 +52,20 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
     showGGMsProperties: false,
     showUsedInstruments: false,
     showSpatialTemporalCoverage: true,
+    showFreeKeywords: true,
+    showRelatedWork: true,
+    showThesauri: true,
   },
-  generic: {
+  igsn: {
     showMslLabs: false,
     showMslVocabs: false,
     showMslLogo: false,
     showGGMsProperties: false,
     showUsedInstruments: true,
     showSpatialTemporalCoverage: true,
+    showFreeKeywords: true,
+    showRelatedWork: true,
+    showThesauri: true,
   },
 };
 
