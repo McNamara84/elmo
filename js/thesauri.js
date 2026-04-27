@@ -697,7 +697,6 @@ $(document).ready(function () {
             'https://gcmd.earthdata.nasa.gov/kms/concept/8fb5ea8a-96ba-47cf-91cd-c7b64fbcd54a', // EARTH SCIENCE SERVICES > MODELS > SPHERICAL HARMONIC MODELS
             'https://gcmd.earthdata.nasa.gov/kms/concept/97576e51-28b5-4ae0-af33-fbb00fd5996b', // EARTH SCIENCE SERVICES > MODELS > MASS CONCENTRATION (MASCON) MODELS
             'https://gcmd.earthdata.nasa.gov/kms/concept/b8615aad-d2eb-45a3-98a7-4adac5bdf5a5', // EARTH SCIENCE SERVICES > MODELS > EARTH SCIENCE REANALYSES/ASSIMILATION MODELS
-            'https://gcmd.earthdata.nasa.gov/kms/concept/bc640e63-70c1-4228-b2dc-6aa1ac6edfa6', // EARTH SCIENCE > SOLID EARTH > GEODETICS > ELLIPSOID CHARACTERISTICS
             'https://gcmd.earthdata.nasa.gov/kms/concept/5498572c-aaed-4c08-8aad-8b297057e9c9', // EARTH SCIENCE > SOLID EARTH > GEODETICS
             'https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa', // EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD
             'https://gcmd.earthdata.nasa.gov/kms/concept/ad09b215-e837-4d9f-acbc-2b45e5b81825'  // EARTH SCIENCE > OCEANS > MARINE GEOPHYSICS > MARINE GRAVITY FIELD
