@@ -46,6 +46,7 @@ services:
       # Mount the entire project directory for live code changes.
       # This is only for development. No way to production.
       - .:/var/www/html
+      - ./docker/php-dev.ini:/usr/local/etc/php/conf.d/99-dev.ini:ro
 
 
 volumes:
