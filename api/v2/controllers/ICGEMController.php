@@ -807,26 +807,6 @@ class ICGEMController extends DatasetController
         }
     }
         /**
-     * Replaces hardcoded local file paths in DataCite XML with proper remote schema URLs.
-     * The XSLT that generates DataCite XML includes hardcoded Windows file paths
-     * which need to be replaced for production environments.
-     *
-     * @param string $dataciteXmlString The DataCite XML string with potentially hardcoded paths.
-     * @return string The cleaned XML with proper schema URLs.
-     */
-    private function cleanDataCiteSchemaLocation(string $dataciteXmlString): string
-    {
-        // Replace hardcoded Windows file paths with the official DataCite schema URL
-        $dataciteXmlString = preg_replace(
-            '/file:.*?DataCiteSchema\d+\.xsd/',
-            'https://schema.datacite.org/meta/kernel-4.7/metadata.xsd',
-            $dataciteXmlString
-        );
-        
-        return $dataciteXmlString;
-    }
-
-    /**
      * Creates an ICGEM-specific XML by combining DataCite and ICGEM metadata in an envelope.
      *
      * @param int $id The ID of the resource.
@@ -841,9 +821,8 @@ class ICGEMController extends DatasetController
             throw new Exception("Resource with ID $id does not contain GGM data required for ICGEM XML.");
         }
         
-        // 2. Get DataCite XML as string and clean schema location
+        // 2. Get DataCite XML as string
         $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, "datacite");
-        $dataciteXmlString = $this->cleanDataCiteSchemaLocation($dataciteXmlString);
         
         // 3. Create envelope root with ICGEM as primary namespace and DataCite as secondary
         $envelope = new SimpleXMLElement(
