@@ -398,11 +398,8 @@ class ICGEMController extends DatasetController
                             $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':elevationTerrainDetail', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
                         }
                         if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
-                            $uom = 'm';
-                            if (in_array($uom, self::ALLOWED_UOM_VALUES, true)) {
-                                $compDepthElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', $this->prepare($dataSource['T_Isostasy_compensation_depth'], 'compensationDepth'), self::ICGEM_NAMESPACE_URI);
-                                $compDepthElement->addAttribute('uom', $uom);
-                            }
+                            $compDepthElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', $this->prepare($dataSource['T_Isostasy_compensation_depth'], 'compensationDepth'), self::ICGEM_NAMESPACE_URI);
+                            $compDepthElement->addAttribute('uom', 'm');
                         }
                         break;
                     
