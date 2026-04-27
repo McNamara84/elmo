@@ -9,7 +9,7 @@
 
 # ELMO - Enhanced Laboratory Metadata Organizer
 
-The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GFZ Helmholtz Centre for Geosciences](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite and ISO schema.
+The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GFZ Helmholtz Centre for Geosciences](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite and ISO schema and supports standardized DataCite JSON-LD for local save and reload workflows.
 
 ## Table of contents
   - [Main Features](#main-features)
@@ -41,6 +41,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Lazy loading of thesaurus data (JSON files loaded only when modals are opened).
 - Configurable feature toggles via `ELMO_FEATURES` JavaScript object for conditional resource loading.
 - Submitting of metadata directly to data curators.
+- Local save and reload of standardized metadata as XML or JSON-LD.
 - Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
