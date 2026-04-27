@@ -203,6 +203,26 @@ function loadKeywordsForConfig(config, response) {
                 console.error('No valid rootNodes found in', config.apiEndpoint);
                 return;
             }
+
+            // Remove any collected node that is already reachable as a descendant of
+            // another collected node (e.g. both GEODETICS and its child ELLIPSOID
+            // CHARACTERISTICS are listed). Keeping a child as a separate top-level
+            // entry would make it appear twice in the tree — once inside its parent
+            // and once as a peer — producing duplicate breadcrumb paths in the whitelist.
+            function isDescendantInSubtree(nodeId, subtreeChildren) {
+                if (!Array.isArray(subtreeChildren)) return false;
+                for (var i = 0; i < subtreeChildren.length; i++) {
+                    if (subtreeChildren[i].id === nodeId) return true;
+                    if (isDescendantInSubtree(nodeId, subtreeChildren[i].children)) return true;
+                }
+                return false;
+            }
+            collected = collected.filter(function (candidate) {
+                return !collected.some(function (other) {
+                    return other !== candidate && isDescendantInSubtree(candidate.id, other.children || []);
+                });
+            });
+
             filteredData = collected;
         } else if (config.rootNodeId) {
             var sel = findNodeById(availableNodes, config.rootNodeId);
