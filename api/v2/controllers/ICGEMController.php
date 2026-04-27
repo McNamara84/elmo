@@ -849,7 +849,7 @@ class ICGEMController extends DatasetController
         $envelope = new SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
             '<icgv:envelope xmlns:icgv="' . self::ICGEM_NAMESPACE_URI . '" ' .
-            'xmlns:dc="http://datacite.org/schema/kernel-4" ' .
+            'xmlns:dace="http://datacite.org/schema/kernel-4" ' .
             'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' .
             'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' http://icgem.gfz.de/schema/icgemSchemaBase.xsd"/>'
         );
@@ -858,6 +858,8 @@ class ICGEMController extends DatasetController
         try {
             $dataciteXml = new SimpleXMLElement($dataciteXmlString);
             $this->simplexmlAppend($envelope, $dataciteXml);
+            // Add dace: prefix to all DataCite elements
+            $this->addNamespacePrefixToChildren($envelope, 'dace', 'http://datacite.org/schema/kernel-4');
         } catch (Exception $e) {
             throw new Exception("Failed to parse DataCite XML: " . $e->getMessage());
         }
@@ -906,6 +908,42 @@ class ICGEMController extends DatasetController
         $toDom = dom_import_simplexml($to);
         $fromDom = dom_import_simplexml($from);
         $toDom->appendChild($toDom->ownerDocument->importNode($fromDom, true));
+    }
+
+    /**
+     * Recursively adds namespace prefix to all elements in a namespace.
+     * 
+     * @param SimpleXMLElement $element The root element to process.
+     * @param string $prefix The namespace prefix to add
+     * @param string $namespaceUri The namespace URI to match (e.g., 'http://datacite.org/schema/kernel-4').
+     */
+    protected function addNamespacePrefixToChildren(SimpleXMLElement $element, string $prefix, string $namespaceUri): void
+    {
+        $dom = dom_import_simplexml($element);
+        $xpath = new \DOMXPath($dom->ownerDocument);
+        
+        // Find all elements in the target namespace without a prefix
+        $nodes = $xpath->query("//*[namespace-uri()='$namespaceUri']", $dom);
+        
+        foreach ($nodes as $node) {
+            if ($node->nodeType === XML_ELEMENT_NODE) {
+                // Create a new element with the prefix in the same namespace
+                $newElement = $dom->ownerDocument->createElementNS($namespaceUri, $prefix . ':' . $node->localName);
+                
+                // Copy all attributes
+                foreach ($node->attributes as $attr) {
+                    $newElement->setAttributeNS($attr->namespaceURI, $attr->prefix ? $attr->prefix . ':' . $attr->localName : $attr->localName, $attr->value);
+                }
+                
+                // Copy all child nodes
+                while ($node->firstChild) {
+                    $newElement->appendChild($node->firstChild);
+                }
+                
+                // Replace the old node
+                $node->parentNode->replaceChild($newElement, $node);
+            }
+        }
     }
         /**
      * Exports an ICGEM-specific XML for a resource and outputs it directly.
