@@ -941,28 +941,32 @@ final class ICGEMControllerTest extends TestCase
         
         $this->assertCount(6, $sources);
         
-        // First source (Satellite)
+        // First source (Satellite) - check type attribute
+        $typeAttr = $sources[0]->attributes()['type'] ?? '';
+        $this->assertEquals('Satellite', (string)$typeAttr);
         $sourceChildren = $sources[0]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Satellite', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('GRACE satellite data', (string)$sourceChildren->description);
         $this->assertEquals('GRACE', (string)$sourceChildren->satelliteValueName);
         $this->assertEquals('https://nasa.gov', (string)$sourceChildren->satelliteSchemeUri);
         
         // Second source (Ground data)
+        $typeAttr = $sources[1]->attributes()['type'] ?? '';
+        $this->assertEquals('Ground data', (string)$typeAttr);
         $sourceChildren = $sources[1]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Ground data', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Ground gravity', (string)$sourceChildren->description);
         $this->assertEquals('Terrestrial data', (string)$sourceChildren->groundDetail);
 
         // Third source (Altimetry)
+        $typeAttr = $sources[2]->attributes()['type'] ?? '';
+        $this->assertEquals('Altimetry', (string)$typeAttr);
         $sourceChildren = $sources[2]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Altimetry', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Satellite altimetry data', (string)$sourceChildren->description);
         $this->assertEquals('Direct observations from altimetry satellites', (string)$sourceChildren->altimetryDetail);
 
         // Fourth source (Model)
+        $typeAttr = $sources[3]->attributes()['type'] ?? '';
+        $this->assertEquals('Model', (string)$typeAttr);
         $sourceChildren = $sources[3]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Model', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Reference model input', (string)$sourceChildren->description);
         $this->assertEquals('Global Gravitational Model', (string)$sourceChildren->modelDetail);
         $this->assertEquals('10.5880/icgem.2024.001', (string)$sourceChildren->identifier);
@@ -970,15 +974,17 @@ final class ICGEMControllerTest extends TestCase
         $this->assertEquals('ICGEM_Global_Model_2024', (string)$sourceChildren->name);
 
         // Fifth source (Terrain detail without compensation depth)
+        $typeAttr = $sources[4]->attributes()['type'] ?? '';
+        $this->assertEquals('Elevation/Terrain', (string)$typeAttr);
         $sourceChildren = $sources[4]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Elevation/Terrain', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Topography input', (string)$sourceChildren->description);
         $this->assertEquals('Bathymetry', (string)$sourceChildren->elevationTerrainDetail);
         $this->assertSame('', (string)$sourceChildren->compensationDepth);
 
         // Sixth source (Terrain detail with compensation depth)
+        $typeAttr = $sources[5]->attributes()['type'] ?? '';
+        $this->assertEquals('Elevation/Terrain', (string)$typeAttr);
         $sourceChildren = $sources[5]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Elevation/Terrain', (string)$sourceChildren->inputDataSourceType);
         $this->assertEquals('Isostasy input', (string)$sourceChildren->description);
         $this->assertEquals('Isostasy', (string)$sourceChildren->elevationTerrainDetail);
         $this->assertEquals('1000', (string)$sourceChildren->compensationDepth);
@@ -1081,8 +1087,8 @@ final class ICGEMControllerTest extends TestCase
         $this->assertCount(1, $tmpElements);
         
         $tmpChildren = $tmpElements[0]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('2002-01-01', (string)$tmpChildren->startDate);
-        $this->assertEquals('2023-12-31', (string)$tmpChildren->stopDate);
+        // Check temporalCoverage in EDTF format
+        $this->assertEquals('2002-01-01/2023-12-31', (string)$tmpChildren->temporalCoverage);
         $this->assertEquals('GFZ Potsdam', (string)$tmpChildren->generatingInstitution);
         $this->assertEquals('Release 01', (string)$tmpChildren->release);
     }
@@ -1507,68 +1513,6 @@ EOT;
         $this->assertEquals('This is the main content', $result);
     }
 
-    /**
-     * Test cleanDataCiteSchemaLocation replaces Windows file paths
-     */
-    public function testCleanDataCiteSchemaLocationReplacesWindowsPaths(): void
-    {
-        $reflection = new \ReflectionClass($this->controller);
-        $method = $reflection->getMethod('cleanDataCiteSchemaLocation');
-        $method->setAccessible(true);
-
-        $xml = <<<EOT
-<?xml version="1.0"?>
-<root xsi:schemaLocation="file:C:\\Users\\user\\Documents\\DataCiteSchema46.xsd">
-  <element>data</element>
-</root>
-EOT;
-
-        $result = $method->invoke($this->controller, $xml);
-
-        $this->assertStringNotContainsString('file:C\\', $result);
-        $this->assertStringNotContainsString('DataCiteSchema46.xsd', $result);
-        $this->assertStringContainsString('https://schema.datacite.org/meta/kernel-4.7/metadata.xsd', $result);
-    }
-
-    /**
-     * Test cleanDataCiteSchemaLocation with multiple file paths
-     */
-    public function testCleanDataCiteSchemaLocationHandlesMultiplePaths(): void
-    {
-        $reflection = new \ReflectionClass($this->controller);
-        $method = $reflection->getMethod('cleanDataCiteSchemaLocation');
-        $method->setAccessible(true);
-
-        $xml = <<<EOT
-<?xml version="1.0"?>
-<root xsi:schemaLocation="file:D:\\path\\to\\DataCiteSchema46.xsd http://example.com file:/path/unix/DataCiteSchema46.xsd">
-</root>
-EOT;
-
-        $result = $method->invoke($this->controller, $xml);
-
-        // All file: paths should be replaced
-        $this->assertStringNotContainsString('file:', $result);
-        $this->assertStringContainsString('https://schema.datacite.org/meta/kernel-4.7/metadata.xsd', $result);
-    }
-
-    /**
-     * Test cleanDataCiteSchemaLocation with no file paths
-     */
-    public function testCleanDataCiteSchemaLocationWithNoFilePaths(): void
-    {
-        $reflection = new \ReflectionClass($this->controller);
-        $method = $reflection->getMethod('cleanDataCiteSchemaLocation');
-        $method->setAccessible(true);
-
-        $xml = '<?xml version="1.0"?><root xsi:schemaLocation="https://schema.datacite.org/meta/kernel-4.7/metadata.xsd"></root>';
-
-        $result = $method->invoke($this->controller, $xml);
-
-        // XML should remain unchanged
-        $this->assertEquals($xml, $result);
-            $this->assertStringContainsString('https://schema.datacite.org', $result);
-    }
 
     /**
      * Test simplexmlAppend appends source element with all its children
