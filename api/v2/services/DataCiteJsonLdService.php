@@ -2,7 +2,7 @@
 
 class DataCiteJsonLdService
 {
-    private const FULL_CONTEXT_URL = 'https://schema.stage.datacite.org/linked-data/context/fullcontext.jsonld';
+    private const DEFAULT_CONTEXT_URL = 'https://schema.stage.datacite.org/linked-data/context/fullcontext.jsonld';
 
     /**
      * Convert a DataCite XML document into compact JSON-LD.
@@ -41,7 +41,7 @@ class DataCiteJsonLdService
             throw new InvalidArgumentException('Expected a DataCite resource root element.');
         }
 
-        $payload = ['@context' => self::FULL_CONTEXT_URL];
+        $payload = ['@context' => $this->getContextUrl()];
         $resourceId = $this->buildResourceId($resource);
         if ($resourceId !== null) {
             $payload['@id'] = $resourceId;
@@ -137,6 +137,16 @@ class DataCiteJsonLdService
 
         $text = trim($text);
         return $text === '' ? null : $text;
+    }
+
+    private function getContextUrl(): string
+    {
+        $configuredUrl = getenv('DATACITE_JSONLD_CONTEXT_URL');
+        if (is_string($configuredUrl) && trim($configuredUrl) !== '') {
+            return trim($configuredUrl);
+        }
+
+        return self::DEFAULT_CONTEXT_URL;
     }
 
     private function buildResourceId(DOMElement $resource): ?string
