@@ -5,17 +5,17 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modal-uploadxml-label">XML hochladen</h5>
+                <h5 class="modal-title" id="modal-uploadxml-label" data-translate="modals.upload.modalTitle">Metadatendatei laden</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>            
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="input-uploadxml-file" class="form-label" data-translate="modals.upload.title">Select XML file:</label>
-                    <input class="form-control" type="file" id="input-uploadxml-file" accept=".xml">
+                    <label for="input-uploadxml-file" class="form-label" data-translate="modals.upload.title">Select XML or JSON-LD file:</label>
+                    <input class="form-control" type="file" id="input-uploadxml-file" accept=".xml,.jsonld,application/xml,text/xml,application/ld+json">
                 </div>
 
                 <div class="drop-zone mb-3 p-5 border rounded text-center" id="panel-uploadxml-dropfile">
-                    <p class="mb-0" data-translate="modals.upload.dropZoneInfo">Drop XML file here</p>
+                    <p class="mb-0" data-translate="modals.upload.dropZoneInfo">Drop XML or JSON-LD file here</p>
                 </div>
                 <div id="upload-spinner-overlay" class="d-none text-center py-4">
                     <div class="spinner-border text-primary" role="status">
@@ -184,7 +184,7 @@
                         </label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="input-saveas-filename">
-                            <span class="input-group-text">.xml</span>
+                            <span class="input-group-text" id="saveas-extension">.xml</span>
                         </div>
                     </div>
                 </form>
