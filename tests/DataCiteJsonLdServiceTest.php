@@ -8,13 +8,28 @@ use PHPUnit\Framework\TestCase;
 
 final class DataCiteJsonLdServiceTest extends TestCase
 {
+  private const DEFAULT_CONTEXT_URL = 'https://schema.stage.datacite.org/linked-data/context/fullcontext.jsonld';
+
     private \DataCiteJsonLdService $service;
+  private string|false $previousContextUrl;
 
     protected function setUp(): void
     {
         require_once __DIR__ . '/../api/v2/services/DataCiteJsonLdService.php';
+    $this->previousContextUrl = getenv('DATACITE_JSONLD_CONTEXT_URL');
+    putenv('DATACITE_JSONLD_CONTEXT_URL');
         $this->service = new \DataCiteJsonLdService();
     }
+
+  protected function tearDown(): void
+  {
+    if ($this->previousContextUrl === false) {
+      putenv('DATACITE_JSONLD_CONTEXT_URL');
+      return;
+    }
+
+    putenv('DATACITE_JSONLD_CONTEXT_URL=' . $this->previousContextUrl);
+  }
 
     public function testConvertsDataCiteXmlToCompactJsonLdArray(): void
     {
@@ -46,7 +61,7 @@ XML;
 
         $result = $this->service->convertXmlStringToArray($xml);
 
-        $this->assertSame('https://schema.stage.datacite.org/linked-data/context/fullcontext.jsonld', $result['@context']);
+        $this->assertSame(self::DEFAULT_CONTEXT_URL, $result['@context']);
         $this->assertSame('https://doi.org/10.9999/example', $result['@id']);
         $this->assertSame('DOI', $result['identifier']['attrs']['identifierType']);
         $this->assertSame('10.9999/example', $result['identifier']['value']);
@@ -81,4 +96,20 @@ XML;
         $this->assertSame('10.9999/example', $decoded['identifier']['value']);
         $this->assertSame('2026', $decoded['publicationYear']['value']);
     }
+
+      public function testUsesContextUrlFromEnvironmentWhenConfigured(): void
+      {
+        putenv('DATACITE_JSONLD_CONTEXT_URL=https://example.org/datacite/context.jsonld');
+
+        $xml = <<<'XML'
+    <?xml version="1.0" encoding="UTF-8"?>
+    <resource xmlns="http://datacite.org/schema/kernel-4">
+      <publicationYear>2026</publicationYear>
+    </resource>
+    XML;
+
+        $result = $this->service->convertXmlStringToArray($xml);
+
+        $this->assertSame('https://example.org/datacite/context.jsonld', $result['@context']);
+      }
 }
