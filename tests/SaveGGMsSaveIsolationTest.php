@@ -30,7 +30,11 @@ require_once __DIR__ . '/../save/formgroups/save_ggms_datasources.php';
  *   save    : Only checks resourceId > 0; null FKs are stored as NULL.
  *
  * save_ggms_properties.php
- *   NO action gate at all — always upserts whatever is supplied (nulls OK).
+ *   submit  : validateGGMPropertiesData() enforces tide_system, degree, errors,
+ *             and earth_gravity_constant (non-empty, not 'Choose'); radius is
+ *             additionally required when mathematical_representation is
+ *             'Spherical harmonics'.
+ *   save    : No field-level validation; empty strings are normalised to NULL.
  *
  * save_ggms_modeltypes.php
  *   NO field-level validation on either action.
@@ -413,24 +417,24 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
     }
 
     /**
-     * Properties: called with action=submit still saves (no submit gate exists here).
+     * Properties: submit with missing required fields → validateGGMPropertiesData throws.
      */
-    public function testPropertiesSubmitActionAlsoSucceedsWithPartialData(): void
+    public function testPropertiesSubmitFailsWhenRequiredFieldMissing(): void
     {
         $postData = [
             'action'                 => 'submit',
             'tide_system'            => 'zero-tide',
-            'degree'                 => '',
-            'errors'                 => '',
+            'degree'                 => '',          // missing
+            'errors'                 => '',          // missing
             'error_handling_approach' => '',
             'radius'                 => '',
-            'earth_gravity_constant' => '',
+            'earth_gravity_constant' => '',          // missing
         ];
 
-        // Should NOT throw — properties has no submit-only validation
-        $result = saveGGMsProperties($this->connection, $postData, $this->resourceId);
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessageMatches('/degree.*required/i');
 
-        $this->assertTrue($result);
+        saveGGMsProperties($this->connection, $postData, $this->resourceId);
     }
 
     // ══════════════════════════════════════════════════════════════════════════

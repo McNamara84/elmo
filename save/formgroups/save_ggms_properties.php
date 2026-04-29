@@ -145,13 +145,24 @@ function saveGGMsProperties(mysqli $connection, array $postData, int $resourceId
         $postData = validateGGMPropertiesData($postData);
     }
 
-    // 2) Normalize optional freetext inputs. turn empty strings tu NULL for optional fields
-    $optionalFreetextInputs = ['radius', 'earth_gravity_constant', 'error_handling_approach'];
-    foreach ($optionalFreetextInputs as $field) {
+    // 2) Normalize inputs: empty strings → NULL (applies on both save and submit paths)
+    $stringFields = ['tide_system', 'errors', 'error_handling_approach'];
+    foreach ($stringFields as $field) {
         if (isset($postData[$field]) && $postData[$field] === '') {
             $postData[$field] = null;
         }
-    }   
+    }
+
+    $numericFields = ['radius', 'earth_gravity_constant'];
+    foreach ($numericFields as $field) {
+        if (isset($postData[$field]) && $postData[$field] === '') {
+            $postData[$field] = null;
+        }
+    }
+
+    if (isset($postData['degree']) && $postData['degree'] === '') {
+        $postData['degree'] = null;
+    }
 
     // 3) Insert new GGM_Properties record
     $insertSql = "INSERT INTO `GGM_Properties` (
