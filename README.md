@@ -1711,9 +1711,20 @@ npx playwright test --headed --project=chromium
 # Run a single test by title
 npx playwright test -g "populates author details"
 
+# Run tests for a specific ELMO variant (local parallel mode with fast feedback)
+npx playwright test --config=playwright.generic.config.ts  # Standard DataCite edition
+npx playwright test --config=playwright.gem.config.ts      # ICGEM Global Geopotential Models
+npx playwright test --config=playwright.msl.config.ts      # MSL Multi-Scale Laboratories edition
+npx playwright test --config=playwright.igsn.config.ts     # IGSN Integrated GeoSample Metadata
+
+# Run all 4 variants sequentially (CI mode - one container, settings switched between variants)
+npx playwright test  # Uses default config (playwright.config.ts with workers:1)
+
 # Show the HTML report after a test run
 npx playwright show-report
 ```
+
+**Note on variant configs:** The per-variant configs (`playwright.*.config.ts`) run tests in parallel (`fullyParallel: true, workers: undefined`) against a single Docker container with that variant's settings applied once via setup. The default config (`playwright.config.ts`) runs all 4 variants sequentially (`workers: 1`), switching `settings.php` between variants. Variant-specific configs are ideal for fast local feedback during development; the default config is used in CI.
 
 #### Troubleshooting
 
