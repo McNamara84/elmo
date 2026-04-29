@@ -30,8 +30,21 @@ function validateGGMPropertiesData(array $data): array
             throw new Exception("Field {$field} is required and must not be empty");
         }
     }
+
+    // Cast numeric fields to their proper types
+    try {
+        $data['degree'] = intval($data['degree']);
+        $data['earth_gravity_constant'] = floatval($data['earth_gravity_constant']);
+        if (isset($data['radius']) && $data['radius'] !== null && $data['radius'] !== '') {
+            $data['radius'] = floatval($data['radius']);
+        }
+    } catch (Exception $e) {
+        throw new Exception('Numeric fields must be valid numbers: ' . $e->getMessage());
+    }
+
     return $data;
 }
+
 
 /**
  * Inserts Ellipsoidal_Parameters record and links it to resource
@@ -115,12 +128,12 @@ function saveGGMsProperties(mysqli $connection, array $postData, int $resourceId
 
     // 1) Validate on submit only
     if ($action === 'submit') {
-        validateGGMPropertiesData($postData);
+        $postData = validateGGMPropertiesData($postData);
     }
 
-    // 2) Normalize numeric inputs. turn empty strings tu NULL for optional fields
-    $numericFields = ['radius', 'earth_gravity_constant', 'error_handling_approach'];
-    foreach ($numericFields as $field) {
+    // 2) Normalize optional freetext inputs. turn empty strings tu NULL for optional fields
+    $optionalFreetextInputs = ['radius', 'earth_gravity_constant', 'error_handling_approach'];
+    foreach ($optionalFreetextInputs as $field) {
         if (isset($postData[$field]) && $postData[$field] === '') {
             $postData[$field] = null;
         }
