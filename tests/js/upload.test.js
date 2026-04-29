@@ -110,7 +110,7 @@ describe('upload.js', () => {
         });
     });
 
-    describe('isXmlFile', () => {
+    describe('file type detection', () => {
         test('accepts files with text/xml type', () => {
             expect(uploadModule.isXmlFile({ name: 'test.xml', type: 'text/xml' })).toBe(true);
         });
@@ -146,6 +146,27 @@ describe('upload.js', () => {
         test('accepts mixed case .Xml extension', () => {
             expect(uploadModule.isXmlFile({ name: 'file.Xml', type: '' })).toBe(true);
         });
+
+        test('accepts JSON-LD files with application/ld+json type', () => {
+            expect(uploadModule.isJsonLdFile({ name: 'dataset.jsonld', type: 'application/ld+json' })).toBe(true);
+        });
+
+        test('accepts JSON-LD files with .jsonld extension', () => {
+            expect(uploadModule.isJsonLdFile({ name: 'dataset.JSONLD', type: '' })).toBe(true);
+        });
+
+        test('detects XML upload format', () => {
+            expect(uploadModule.detectUploadFormat({ name: 'dataset.xml', type: '' })).toBe('xml');
+        });
+
+        test('detects JSON-LD upload format', () => {
+            expect(uploadModule.detectUploadFormat({ name: 'dataset.jsonld', type: '' })).toBe('jsonld');
+        });
+
+        test('accepts supported metadata formats', () => {
+            expect(uploadModule.isSupportedMetadataFile({ name: 'dataset.xml', type: '' })).toBe(true);
+            expect(uploadModule.isSupportedMetadataFile({ name: 'dataset.jsonld', type: '' })).toBe(true);
+        });
     });
 
     describe('translateWithFallback', () => {
@@ -180,7 +201,7 @@ describe('upload.js', () => {
         });
 
         test('builds processing-error message with errorKey', () => {
-            expect(uploadModule.buildUploadMessage('test.xml', 'danger', 'modals.upload.errorProcessing')).toBe('Error processing XML file: test.xml');
+            expect(uploadModule.buildUploadMessage('test.xml', 'danger', 'modals.upload.errorProcessing')).toBe('Error processing metadata file: test.xml');
         });
 
         test('uses translation for success when available', () => {
@@ -194,11 +215,51 @@ describe('upload.js', () => {
 
         test('uses translation for specific errorKey when available', () => {
             window.elmo = { translate: jest.fn((key) => {
-                if (key === 'modals.upload.errorProcessing') return 'Fehler beim Verarbeiten der XML-Datei';
+                if (key === 'modals.upload.errorProcessing') return 'Fehler beim Verarbeiten der Metadatendatei';
                 return null;
             })};
-            expect(uploadModule.buildUploadMessage('data.xml', 'danger', 'modals.upload.errorProcessing')).toBe('Fehler beim Verarbeiten der XML-Datei: data.xml');
+            expect(uploadModule.buildUploadMessage('data.xml', 'danger', 'modals.upload.errorProcessing')).toBe('Fehler beim Verarbeiten der Metadatendatei: data.xml');
             delete window.elmo;
+        });
+    });
+
+    describe('convertJsonLdToXmlDocument', () => {
+        test('converts compact DataCite JSON-LD to a DataCite XML document', () => {
+            const xmlDoc = uploadModule.convertJsonLdToXmlDocument({
+                '@context': 'https://schema.stage.datacite.org/linked-data/context/fullcontext.jsonld',
+                identifier: {
+                    attrs: { identifierType: 'DOI' },
+                    value: '10.1234/example'
+                },
+                titles: {
+                    title: {
+                        attrs: { lang: 'en' },
+                        value: 'Dataset Title'
+                    }
+                },
+                publicationYear: {
+                    value: '2024'
+                }
+            });
+
+            expect(xmlDoc.documentElement.localName).toBe('resource');
+            expect(xmlDoc.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'identifier')[0].textContent).toBe('10.1234/example');
+            expect(xmlDoc.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'title')[0].textContent).toBe('Dataset Title');
+            expect(xmlDoc.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'title')[0].getAttributeNS('http://www.w3.org/XML/1998/namespace', 'lang')).toBe('en');
+        });
+
+        test('derives DOI identifier from @id when identifier is missing', () => {
+            const xmlDoc = uploadModule.convertJsonLdToXmlDocument({
+                '@context': 'https://schema.stage.datacite.org/linked-data/context/fullcontext.jsonld',
+                '@id': 'https://doi.org/10.5678/example',
+                publicationYear: {
+                    value: '2024'
+                }
+            });
+
+            const identifier = xmlDoc.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'identifier')[0];
+            expect(identifier.textContent).toBe('10.5678/example');
+            expect(identifier.getAttribute('identifierType')).toBe('DOI');
         });
     });
 });
