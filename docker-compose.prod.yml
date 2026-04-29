@@ -42,7 +42,6 @@ services:
       GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
-      DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for Standard ELMO (all form groups enabled)
@@ -97,7 +96,6 @@ services:
       GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
-      DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for MSL (MSL-specific vocabularies enabled)

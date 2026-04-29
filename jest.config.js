@@ -22,7 +22,6 @@ module.exports = {
     '!js/map.js',
     '!js/thesauri.js',
     '!js/originatingLaboratories.js',
-    '!js/eventhandlers/doiPrefillHandler.js',
     // Exclude GGMS files (feature-specific, wrapped in document.ready)
     '!js/eventhandlers/formgroups/ggms-definition.js',
     '!js/eventhandlers/formgroups/ggms-modeltypes.js',

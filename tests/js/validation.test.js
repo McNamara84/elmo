@@ -13,8 +13,7 @@ describe('validation.js - Form initialization', () => {
         // Set up DOM
         document.body.innerHTML = `
             <form id="form-mde">
-                <button type="submit" data-action="save-xml" id="btn-save">Save XML</button>
-                <button type="submit" data-action="save-jsonld" id="btn-save-jsonld">Save JSON-LD</button>
+                <button type="submit" data-action="save" id="btn-save">Save</button>
                 <button type="submit" data-action="submit" id="btn-submit">Submit</button>
             </form>
             <div id="modal-saveas"></div>
@@ -43,19 +42,7 @@ describe('validation.js - Form initialization', () => {
             
             $('#btn-save').trigger('click');
             
-            expect(pendingAction).toBe('save-xml');
-        });
-
-        test('tracks pending action on jsonld save button click', () => {
-            let pendingAction = null;
-            
-            $('#btn-save-jsonld').on('click', function () {
-                pendingAction = this.dataset.action;
-            });
-            
-            $('#btn-save-jsonld').trigger('click');
-            
-            expect(pendingAction).toBe('save-jsonld');
+            expect(pendingAction).toBe('save');
         });
 
         test('tracks pending action on submit button click', () => {
@@ -107,7 +94,7 @@ describe('validation.js - Form initialization', () => {
         });
 
         test('determines action from pendingAction when submitter not available', () => {
-            let pendingAction = 'save-xml';
+            let pendingAction = 'save';
             let detectedAction = null;
             
             $('#form-mde').on('submit', function (e) {
@@ -118,23 +105,21 @@ describe('validation.js - Form initialization', () => {
             
             $('#form-mde').trigger('submit');
             
-            expect(detectedAction).toBe('save-xml');
+            expect(detectedAction).toBe('save');
         });
 
-        test('routes xml save action correctly', () => {
+        test('routes save action correctly', () => {
             const saveHandlerMock = { handleSave: jest.fn() };
             const submitHandlerMock = { handleSubmit: jest.fn() };
             
-            let pendingAction = 'save-xml';
+            let pendingAction = 'save';
             
             $('#form-mde').on('submit', function (e) {
                 e.preventDefault();
                 const action = e.originalEvent?.submitter?.dataset.action ?? pendingAction;
                 
-                if (action === 'save-xml') {
-                    saveHandlerMock.handleSave('xml');
-                } else if (action === 'save-jsonld') {
-                    saveHandlerMock.handleSave('jsonld');
+                if (action === 'save') {
+                    saveHandlerMock.handleSave();
                 } else if (action === 'submit') {
                     submitHandlerMock.handleSubmit();
                 }
@@ -143,33 +128,7 @@ describe('validation.js - Form initialization', () => {
             
             $('#form-mde').trigger('submit');
             
-            expect(saveHandlerMock.handleSave).toHaveBeenCalledWith('xml');
-            expect(submitHandlerMock.handleSubmit).not.toHaveBeenCalled();
-        });
-
-        test('routes jsonld save action correctly', () => {
-            const saveHandlerMock = { handleSave: jest.fn() };
-            const submitHandlerMock = { handleSubmit: jest.fn() };
-            
-            let pendingAction = 'save-jsonld';
-            
-            $('#form-mde').on('submit', function (e) {
-                e.preventDefault();
-                const action = e.originalEvent?.submitter?.dataset.action ?? pendingAction;
-                
-                if (action === 'save-xml') {
-                    saveHandlerMock.handleSave('xml');
-                } else if (action === 'save-jsonld') {
-                    saveHandlerMock.handleSave('jsonld');
-                } else if (action === 'submit') {
-                    submitHandlerMock.handleSubmit();
-                }
-                pendingAction = null;
-            });
-            
-            $('#form-mde').trigger('submit');
-            
-            expect(saveHandlerMock.handleSave).toHaveBeenCalledWith('jsonld');
+            expect(saveHandlerMock.handleSave).toHaveBeenCalled();
             expect(submitHandlerMock.handleSubmit).not.toHaveBeenCalled();
         });
 

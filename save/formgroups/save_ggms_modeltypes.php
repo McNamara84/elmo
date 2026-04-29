@@ -25,9 +25,10 @@ require_once __DIR__ . '/save_ggms_definition.php';
 function getGGMAndModelType(mysqli $connection, int $resourceId): array
 {
     // Model_type_id is in GGM_Definition, linked via Resource_has_GGM_Definition
-    $sql = "SELECT gd.Model_type_id
+    $sql = "SELECT gd.Model_type_id, rg.GGM_Properties_GGM_Properties_id
             FROM `Resource_has_GGM_Definition` rhgd
             JOIN `GGM_Definition` gd ON rhgd.GGM_Definition_GGM_Definition_id = gd.GGM_Definition_id
+            LEFT JOIN `Resource_has_GGM_Properties` rg ON rhgd.Resource_resource_id = rg.Resource_resource_id
             WHERE rhgd.Resource_resource_id = ?
             LIMIT 1";
     
@@ -44,8 +45,12 @@ function getGGMAndModelType(mysqli $connection, int $resourceId): array
     if (!$row) {
         throw new Exception('Resource not found');
     }
+    if ($row['GGM_Properties_GGM_Properties_id'] === null) {
+        throw new Exception('No GGM_Properties record found for this resource. Ensure GGMs Definition form is saved first.');
+    }
 
     return [
+        'ggm_id' => (int) $row['GGM_Properties_GGM_Properties_id'],
         'model_type_id' => $row['Model_type_id']
     ];
 }
