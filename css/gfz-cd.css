@@ -617,30 +617,3 @@ header .ms-auto.d-flex {
     height: 32px;
   }
 }
-
-/* ─── DOI Prefill ──────────────────────────────────────────────── */
-
-.doi-lookup-loading {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--bs-secondary);
-  margin-top: 0.25rem;
-}
-
-.prefill-highlight {
-  background-color: rgba(255, 193, 7, 0.15) !important;
-  border-color: var(--bs-warning) !important;
-  transition: background-color 0.3s ease;
-}
-
-.doi-prefill-preview .table {
-  font-size: 0.9rem;
-}
-
-.doi-prefill-preview .table th {
-  width: 140px;
-  color: var(--bs-secondary);
-  font-weight: 600;
-}

@@ -61,9 +61,6 @@ include_once "../settings.php";
                                 data-bs-dismiss="offcanvas">Introduction</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#help-file-exchange" data-bs-dismiss="offcanvas">Save and Load Metadata Files</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="#help-resourceinformation" data-bs-dismiss="offcanvas">Resource
                                 Information</a>
                         </li>
@@ -176,14 +173,6 @@ include_once "../settings.php";
                     language already exists in the language selection drop-down menu at the top right. However, the
                     form must be filled out in english. There is also
                     a switch for changing from light mode to dark mode for better contrast ratios.</p>
-            </div>
-            <div class="section-divider"></div>
-            <hr>
-            <div id="help-file-exchange" class="section-content">
-                <h3>Save and Load Metadata Files</h3>
-                <p>Use <strong>Save as XML</strong> to download the current form state as an XML file. This preserves the existing local save workflow and remains the recommended format when you need the full XML-based export.</p>
-                <p>Use <strong>Save as JSON-LD</strong> to download standardized DataCite metadata as JSON-LD. The JSON-LD export and import are limited to fields that can be represented in the DataCite linked-data model. ELMO-specific details that are not part of that model are intentionally omitted and may remain empty after a JSON-LD roundtrip.</p>
-                <p>The <strong>Load</strong> dialog accepts both XML and JSON-LD files. JSON-LD uploads are converted into the internal DataCite XML structure before the existing field-mapping logic populates the form.</p>
             </div>
             <div class="section-divider"></div>
             <hr>

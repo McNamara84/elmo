@@ -392,7 +392,7 @@ async function downloadAndSaveXml(
   });
 
   // Wait for Save button and click
-  const saveButton = page.locator('#button-form-save');
+  const saveButton = page.getByRole('button', { name: 'Save' });
   await saveButton.waitFor({ state: 'visible', timeout: 5000 });
   await saveButton.click();
 

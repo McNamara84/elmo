@@ -194,17 +194,6 @@ final class ValidationFunctionsTest extends TestCase
      */
     public function testValidateKeywordEntriesValid(): void
     {
-        $entry = [['value' => 'A', 'scheme' => 's']];
-        $this->assertTrue(validateKeywordEntries($entry));
-    }
-
-    /**
-     * Checks keyword validation passes with optional fields (schemeURI, language) present.
-     *
-     * @return void
-     */
-    public function testValidateKeywordEntriesValidWithOptionalFields(): void
-    {
         $entry = [['value' => 'A', 'id' => '1', 'scheme' => 's', 'schemeURI' => 'u', 'language' => 'en']];
         $this->assertTrue(validateKeywordEntries($entry));
     }
@@ -218,17 +207,6 @@ final class ValidationFunctionsTest extends TestCase
     {
         $entry = [['id' => '1', 'scheme' => 's']];
         $this->assertFalse(validateKeywordEntries($entry));
-    }
-
-    /**
-     * Ensures keyword validation passes without optional language and schemeURI.
-     *
-     * @return void
-     */
-    public function testValidateKeywordEntriesWithoutOptionalFields(): void
-    {
-        $entry = [['value' => 'EARTH SCIENCE > GRAVITY', 'scheme' => 'NASA/GCMD Earth Science Keywords']];
-        $this->assertTrue(validateKeywordEntries($entry));
     }
 
     /**

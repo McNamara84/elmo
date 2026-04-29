@@ -1,8 +1,5 @@
 <?php
-if (!defined('UNIT_TESTING') && !defined('INCLUDED_FROM_TEST')) {
-    require_once __DIR__ . '/../../../settings.php';
-}
-require_once __DIR__ . '/../services/DataCiteJsonLdService.php';
+require_once __DIR__ . '/../../../settings.php';
 
 class DatasetController
 {
@@ -1280,7 +1277,7 @@ class DatasetController
         $scheme = strtolower($vars['scheme']);
 
         // Check for valid schema formats
-        $validSchemes = ['datacite', 'iso', 'jsonld'];
+        $validSchemes = ['datacite', 'iso'];
         if (!in_array($scheme, $validSchemes)) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid metadata scheme. Supported schemes are: ' . implode(', ', $validSchemes)]);
@@ -1288,31 +1285,27 @@ class DatasetController
         }
 
         try {
-            if ($scheme === 'jsonld') {
-                $result = $this->transformResourceToJsonLd($id);
-                $filename = "dataset_{$id}_jsonld.jsonld";
-                $contentType = 'application/ld+json; charset=utf-8';
-            } else {
-                $result = $this->transformAndSaveOrDownloadXml($id, $scheme, false);
-                $filename = "dataset_{$id}_{$scheme}.xml";
-                $contentType = 'application/xml; charset=utf-8';
-            }
+            $result = $this->transformAndSaveOrDownloadXml($id, $scheme, $download);
 
             if ($download) {
                 // Ensure no output has been sent before headers
-                if (ob_get_level()) {
+                if (ob_get_level())
                     ob_end_clean();
-                }
 
-                header('Content-Type: ' . $contentType);
+                $filename = "dataset_{$id}_{$scheme}.xml";
+
+                // Binary Transfer
+                header('Content-Type: application/octet-stream');
                 header('Content-Disposition: attachment; filename="' . $filename . '"');
                 header('Content-Length: ' . strlen($result));
+                header('Content-Transfer-Encoding: binary');
+                header('Connection: close');
 
                 echo $result;
                 flush();
                 exit();
             } else {
-                header('Content-Type: ' . $contentType);
+                header('Content-Type: application/xml; charset=utf-8');
                 echo $result;
             }
         } catch (Exception $e) {

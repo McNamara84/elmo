@@ -266,10 +266,8 @@
         "clearTooltip": "Delete all entries or content.",
         "load": "Load",
         "loadTooltip": "Load saved data or content.",
-        "saveAs": "Save as XML",
-        "saveAsTooltip": "Save the current data or content as an XML file.",
-        "saveAsJsonLd": "Save as JSON-LD",
-        "saveAsJsonLdTooltip": "Save the current data or content as a JSON-LD file.",
+        "saveAs": "Save as",
+        "saveAsTooltip": "Save the current data or content under a new file name.",
         "submit": "Submit",
         "submitTooltip": "Transmit the entered data or content.",
         "legalNotice": "Legal Notice",
@@ -302,14 +300,13 @@
             "thankYouMessage": "Thanks for your feedback!"
         },
         "upload": {
-            "modalTitle": "Load metadata file",
-            "title": "Select XML or JSON-LD file:",
-            "dropZoneInfo": "Drop XML or JSON-LD file here",
+            "title": "Select XML file:",
+            "dropZoneInfo": "Drop XML file here",
             "loading": "Processing file...",
             "successToast": "successfully loaded",
             "errorToast": "Error loading file",
-            "invalidFileType": "Please upload an XML or JSON-LD file.",
-            "errorProcessing": "Error processing metadata file",
+            "invalidFileType": "Please upload an XML file.",
+            "errorProcessing": "Error processing XML file",
             "errorReading": "Error reading file"
         },
         "changelog": {
@@ -320,7 +317,6 @@
         "save": {
             "title": "Save Metadata",
             "saveAs": "Save as XML",
-            "saveAsJsonLd": "Save as JSON-LD",
             "filename": "Filename",
             "save": "Save"
         },
@@ -339,7 +335,7 @@
             "title": "Submission not possible",
             "greeting": "Dear user,",
             "body": "it appears that you want to submit data. Unfortunately, you have not filled in all the required fields.",
-            "saveHint": "If you have already agreed with the data curation team that your submission is not yet complete, you can press <strong>Save as XML</strong> and then send the generated XML file to <a href='mailto:{email}'>{email}</a> by email.",
+            "saveHint": "If you have already agreed with the data curation team that your submission is not yet complete, you can press <strong>Save as</strong> and then send the generated XML file to <a href='mailto:{email}'>{email}</a> by email.",
             "fixHint": "Otherwise, please complete the fields marked in red and try again.",
             "guideHint": "If you need further help filling in the form, you can find the <a href='doc/help.php' target='_blank'>ELMO Guide</a> here.",
             "close": "Close"
@@ -368,19 +364,6 @@
         "paragraph2": "Please provide your information and click the ´Submit´ button to send your metadata to the curators of GFZ Data Services. Additionally, we recommend saving a copy of the metadata on your computer for your records.",
         "paragraph3": "For further guidance, please refer to our <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
         "button": "Continue"
-    },
-    "doiPrefill": {
-        "modalTitle": "Pre-fill from DOI",
-        "modalMessage": "The following metadata was found for this DOI. Do you want to pre-fill the form? Existing entries will be overwritten.",
-        "confirm": "Apply",
-        "cancel": "Cancel",
-        "loading": "Looking up DOI…",
-        "versionHint": "Please check and adjust the version number if necessary.",
-        "previewTitle": "Title",
-        "previewAuthors": "Authors",
-        "previewType": "Resource Type",
-        "previewYear": "Publication Year",
-        "previewLicense": "License"
     }
 
 }

@@ -93,10 +93,6 @@ describe('upload module coverage', () => {
     });
 
     describe('module exports', () => {
-        test('exports handleMetadataFile function', () => {
-            expect(typeof uploadModule.handleMetadataFile).toBe('function');
-        });
-
         test('exports handleXmlFile function', () => {
             expect(typeof uploadModule.handleXmlFile).toBe('function');
         });
@@ -115,22 +111,6 @@ describe('upload module coverage', () => {
 
         test('exports isXmlFile function', () => {
             expect(typeof uploadModule.isXmlFile).toBe('function');
-        });
-
-        test('exports isJsonLdFile function', () => {
-            expect(typeof uploadModule.isJsonLdFile).toBe('function');
-        });
-
-        test('exports isSupportedMetadataFile function', () => {
-            expect(typeof uploadModule.isSupportedMetadataFile).toBe('function');
-        });
-
-        test('exports detectUploadFormat function', () => {
-            expect(typeof uploadModule.detectUploadFormat).toBe('function');
-        });
-
-        test('exports convertJsonLdToXmlDocument function', () => {
-            expect(typeof uploadModule.convertJsonLdToXmlDocument).toBe('function');
         });
 
         test('exports translateWithFallback function', () => {
@@ -631,7 +611,7 @@ describe('upload module coverage', () => {
             const toastEl = document.getElementById('toast-upload-feedback');
             expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
             const messageEl = document.getElementById('toast-upload-feedback-message');
-            expect(messageEl.textContent).toBe('Error processing metadata file: broken.xml');
+            expect(messageEl.textContent).toBe('Error processing XML file: broken.xml');
             // Loading state should be reset
             expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
             
@@ -660,7 +640,7 @@ describe('upload module coverage', () => {
             const toastEl = document.getElementById('toast-upload-feedback');
             expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
             const messageEl = document.getElementById('toast-upload-feedback-message');
-            expect(messageEl.textContent).toBe('Error processing metadata file: fail.xml');
+            expect(messageEl.textContent).toBe('Error processing XML file: fail.xml');
             // Loading state should be reset
             expect($('#input-uploadxml-file').prop('disabled')).toBe(false);
         });
@@ -693,76 +673,6 @@ describe('upload module coverage', () => {
             expect(messageEl.textContent).toContain('bad.xml');
 
             global.DOMParser = originalDOMParser;
-        });
-    });
-
-    describe('handleMetadataFile with JSON-LD', () => {
-        let mockFileReader;
-
-        beforeEach(() => {
-            window.loadXmlToForm = jest.fn().mockResolvedValue(true);
-
-            mockFileReader = {
-                readAsText: jest.fn(),
-                onload: null,
-                onerror: null
-            };
-            global.FileReader = jest.fn(() => mockFileReader);
-        });
-
-        afterEach(() => {
-            delete window.loadXmlToForm;
-        });
-
-        test('processes valid JSON-LD and forwards converted XML to the mapper', async () => {
-            const jsonLd = JSON.stringify({
-                '@context': 'https://schema.stage.datacite.org/linked-data/context/fullcontext.jsonld',
-                identifier: {
-                    attrs: { identifierType: 'DOI' },
-                    value: '10.1234/example'
-                },
-                titles: {
-                    title: {
-                        value: 'Dataset Title'
-                    }
-                },
-                publicationYear: {
-                    value: '2024'
-                }
-            });
-            const mockFile = new Blob([jsonLd], { type: 'application/ld+json' });
-            mockFile.name = 'dataset.jsonld';
-
-            uploadModule.handleMetadataFile(mockFile);
-            await mockFileReader.onload({
-                target: { result: jsonLd }
-            });
-
-            expect(window.loadXmlToForm).toHaveBeenCalledTimes(1);
-
-            const xmlDoc = window.loadXmlToForm.mock.calls[0][0];
-            expect(xmlDoc.documentElement.localName).toBe('resource');
-            expect(xmlDoc.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'title')[0].textContent).toBe('Dataset Title');
-            expect($.fn.modal).toHaveBeenCalledWith('hide');
-
-            const messageEl = document.getElementById('toast-upload-feedback-message');
-            expect(messageEl.textContent).toContain('dataset.jsonld');
-        });
-
-        test('shows processing error toast for invalid JSON-LD', async () => {
-            const invalidJson = '{not valid json';
-            const mockFile = new Blob([invalidJson], { type: 'application/ld+json' });
-            mockFile.name = 'broken.jsonld';
-
-            uploadModule.handleMetadataFile(mockFile);
-            await mockFileReader.onload({
-                target: { result: invalidJson }
-            });
-
-            const toastEl = document.getElementById('toast-upload-feedback');
-            const messageEl = document.getElementById('toast-upload-feedback-message');
-            expect(toastEl.classList.contains('text-bg-danger')).toBe(true);
-            expect(messageEl.textContent).toBe('Error processing metadata file: broken.jsonld');
         });
     });
 
