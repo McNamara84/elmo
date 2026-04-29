@@ -1,25 +1,25 @@
 {
   "dependencies": {
-    "@yaireo/tagify": "^4.36.0",
+    "@yaireo/tagify": "^4.37.1",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "jquery": "^4.0.0",
     "jquery-ui": "^1.14.2",
     "jstree": "^3.3.17",
     "mark.js": "^8.11.1",
-    "swagger-ui-dist": "^5.32.1"
+    "swagger-ui-dist": "^5.32.5"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.1",
+    "@axe-core/playwright": "^4.11.2",
     "@babel/preset-env": "^7.29.2",
-    "@playwright/test": "^1.58.2",
-    "@types/node": "^25.5.0",
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.6.0",
     "babel-jest": "^30.3.0",
-    "fast-xml-parser": "^5.5.9",
+    "fast-xml-parser": "^5.7.2",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
     "nyc": "^18.0.0",
-    "playwright": "^1.58.2"
+    "playwright": "^1.59.1"
   },
   "scripts": {
     "test": "jest",
