@@ -7,25 +7,22 @@
 [Describe the steps needed to test this]
 
 ## Checklist
-
-### Code Quality
 - [ ] My code follows the style guide.
 - [ ] I have self-reviewed my code.
 - [ ] I added comments for hard-to-understand code.
-- [ ] My changes do not create new warnings in the browser console.
-
-### Documentation
 - [ ] If applicable, PHP code is documented using PHPDoc.
 - [ ] If applicable, JavaScript code is documented using JSDoc.
-- [ ] If needed, the ELMO Guide ('./doc/help.html') has been updated.
+- [ ] If needed, the ELMO Guide has been updated.
 - [ ] If needed, the README has been updated.
-- [ ] If needed, the API documentation ('./api/v2/docs') has been updated.
-- [ ] If a new feature was added or a bug fixed, the changelog ('./doc/changelog.html') has been updated.
-
-### Testing
-- [ ] If needed, Playwright tests have been updated or added.
-- [ ] If needed, unit tests have been updated or added.
-- [ ] If needed, jest tests have been updated or added.
+- [ ] If needed, the API documentation has been updated.
+- [ ] If a new feature was added or a bug fixed, the changelog has been updated.
+- [ ] My changes do not create new warnings in the test browser console.
+- [ ] I have added unit tests that cover my code.
+- [ ] All new and existing unit tests pass locally.
+- [ ] All new and existing automated unit tests pass in the pull request.
+- [ ] If applicable, Playwright tests have been updated and new tests added.
+- [ ] All new and existing automated Playwright tests pass in the pull request.
+- [ ] I ensured the changes meet accessibility guidelines.
 
 
 ## Known Issues

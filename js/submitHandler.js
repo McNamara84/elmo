@@ -298,8 +298,6 @@ class SubmitHandler {
             this.autosaveService.flushPending();
         }
         validateEmbargoDate();
-        validateTitleField();
-        validateAuthorNameFields();
         const temporalCoverageValid = validateAllTemporalCoverageRows();
         if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid) {
             this.$form.addClass('was-validated');

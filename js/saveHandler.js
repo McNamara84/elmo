@@ -4,21 +4,6 @@
  * @requires jquery
  */
 
-const SAVE_FORMATS = {
-    xml: {
-        extension: 'xml',
-        modalTitleKey: 'saveAs',
-        fallbackTitle: 'Save as XML',
-        logLabel: 'xml file locally'
-    },
-    jsonld: {
-        extension: 'jsonld',
-        modalTitleKey: 'saveAsJsonLd',
-        fallbackTitle: 'Save as JSON-LD',
-        logLabel: 'json-ld file locally'
-    }
-};
-
 class SaveHandler {
     /**
      * Initialize save handler
@@ -33,12 +18,7 @@ class SaveHandler {
             saveAs: new bootstrap.Modal($(`#${saveAsModalId}`)[0]),
             notification: new bootstrap.Modal($(`#${notificationModalId}`)[0])
         };
-        this.modalElements = {
-            title: document.getElementById('label-saveas-modal'),
-            extension: document.getElementById('saveas-extension')
-        };
         this.autosaveService = autosaveService;
-        this.currentFormat = 'xml';
         this.initializeEventListeners();
     }
 
@@ -80,11 +60,8 @@ class SaveHandler {
 
     /**
      * Handle save action
-     * @param {string} [format='xml'] - Download format
      */
-    async handleSave(format = 'xml') {
-        this.setCurrentFormat(format);
-        this.updateSaveAsModal();
+    async handleSave() {
         this.showNotification('info',
             translations.alerts.processingHeading,
             translations.alerts.preparingDownload);
@@ -128,16 +105,14 @@ class SaveHandler {
         }
 
         this.modals.saveAs.hide();
-        await this.saveAndDownload(filename, this.currentFormat);
+        await this.saveAndDownload(filename);
     }
 
     /**
      * Save data and trigger download
      * @param {string} filename - Chosen filename
-     * @param {string} [format=this.currentFormat] - Download format
      */
-    async saveAndDownload(filename, format = this.currentFormat) {
-        const formatConfig = this.getFormatConfig(format);
+    async saveAndDownload(filename) {
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
         }
@@ -167,7 +142,6 @@ class SaveHandler {
             const formData = new FormData(this.$form[0]);
             formData.append('filename', filename);
             formData.append('action', 'save_and_download');
-            formData.append('download_format', formatConfig.extension);
 
             const response = await fetch('save/save_data.php', {
                 method: 'POST',
@@ -180,7 +154,7 @@ class SaveHandler {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = this.resolveDownloadFilename(response, filename, formatConfig.extension);
+            a.download = `${filename}.xml`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -191,7 +165,7 @@ class SaveHandler {
             }
 
             // Log successful save
-            await logEvent('save', `user successfully saved ${formatConfig.logLabel}`);
+            await logEvent('save', 'user successfully saved xml file locally');
 
             this.showNotification('success',
                 translations.alerts.successHeading,
@@ -200,69 +174,12 @@ class SaveHandler {
             console.error('Error saving dataset:', error);
 
             // Log failed save
-            await logEvent('save', `user FAILED to save ${formatConfig.logLabel}`);
+            await logEvent('save', 'user FAILED to save xml file locally');
 
             this.showNotification('danger',
                 translations.alerts.errorHeading,
                 translations.alerts.saveError);
         }
-    }
-
-    /**
-     * Normalize and store the current save format.
-     * @param {string} format - Requested format
-     */
-    setCurrentFormat(format) {
-        this.currentFormat = this.getFormatConfig(format).extension;
-    }
-
-    /**
-     * Return the config for a supported format.
-     * @param {string} format - Requested format
-     * @returns {{extension: string, modalTitleKey: string, fallbackTitle: string, logLabel: string}}
-     */
-    getFormatConfig(format) {
-        return SAVE_FORMATS[format] || SAVE_FORMATS.xml;
-    }
-
-    /**
-     * Update modal title and visible filename suffix for the active format.
-     */
-    updateSaveAsModal() {
-        const formatConfig = this.getFormatConfig(this.currentFormat);
-        const translatedTitle = translations?.modals?.save?.[formatConfig.modalTitleKey] || formatConfig.fallbackTitle;
-
-        if (this.modalElements.title) {
-            this.modalElements.title.textContent = translatedTitle;
-        }
-
-        if (this.modalElements.extension) {
-            this.modalElements.extension.textContent = `.${formatConfig.extension}`;
-        }
-    }
-
-    /**
-     * Resolve the downloaded filename from the response headers or format.
-     * @param {Response} response - Fetch response
-     * @param {string} filename - User-chosen base filename
-     * @param {string} extension - Fallback extension
-     * @returns {string}
-     */
-    resolveDownloadFilename(response, filename, extension) {
-        const contentDisposition = response?.headers?.get?.('Content-Disposition')
-            || response?.headers?.get?.('content-disposition')
-            || '';
-        const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
-        if (encodedMatch && encodedMatch[1]) {
-            return decodeURIComponent(encodedMatch[1]);
-        }
-
-        const plainMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
-        if (plainMatch && plainMatch[1]) {
-            return plainMatch[1];
-        }
-
-        return `${filename}.${extension}`;
     }
 
     /**

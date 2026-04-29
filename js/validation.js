@@ -38,10 +38,8 @@ $(() => {
 
     const action = e.originalEvent?.submitter?.dataset.action ?? pendingAction;
 
-    if (action === 'save-xml') {
-      saveHandler.handleSave('xml');
-    } else if (action === 'save-jsonld') {
-      saveHandler.handleSave('jsonld');
+    if (action === 'save') {
+      saveHandler.handleSave();
     } else if (action === 'submit') {
       submitHandler.handleSubmit();
     }
