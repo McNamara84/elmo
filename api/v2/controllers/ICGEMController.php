@@ -327,8 +327,11 @@ class ICGEMController extends DatasetController
      * @param SimpleXMLElement $shm The sphericalHarmonicModel XML element.
      * @param array<string, mixed> $ggmData The GGM data.
      */
-    protected function insertErrors(SimpleXMLElement $shm, array $ggmData): void
+    protected function insertErrors(SimpleXMLElement $shm, ?array $ggmData): void
     {
+        if (!$ggmData) {
+            return;
+        }
         if (!empty($ggmData['errors'])) {
             $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':errors', $this->prepare($ggmData['errors'], 'errorType'), self::ICGEM_NAMESPACE_URI);
         }
