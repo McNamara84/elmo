@@ -52,7 +52,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('button', { name: 'Processing procedures' }).click();
     await page.getByRole('textbox', { name: 'Processing procedures' }).click();
     await page.getByRole('textbox', { name: 'Processing procedures' }).fill('test processing procedures');
-    await page.getByRole('button', { name: 'Save as' }).click();
+    await page.getByRole('button', { name: 'Save as XML' }).click();
     await expect(page.getByRole('heading', { name: 'Save as XML' })).toBeVisible();
     await page.getByRole('textbox', { name: 'Filename' }).click();
     await page.getByRole('textbox', { name: 'Filename' }).dblclick();
@@ -86,7 +86,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('textbox', { name: 'Reference ellipsoid:' }).fill('12345');
     await page.getByRole('textbox', { name: 'Earth gravity constant *' }).click();
     await page.getByRole('textbox', { name: 'Earth gravity constant *' }).fill('123456');
-    await page.getByRole('button', { name: 'Save as' }).click();
+    await page.getByRole('button', { name: 'Save as XML' }).click();
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_datase_with_data_sources');
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -122,7 +122,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('textbox', { name: 'First Name', exact: true }).fill('sasha');
     await page.locator('#group-contributororganisation').getByTitle('Role(s)').click();
     await page.getByRole('option', { name: 'Rights Holder' }).first().click();
-    await page.getByRole('button', { name: 'Save as' }).click();
+    await page.getByRole('button', { name: 'Save as XML' }).click();
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_data_sparse');
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -159,7 +159,7 @@ test.describe('ELMO-GEM save', () => {
     await page.locator('#input-datasource-description-3').fill('only description');
     await page.getByRole('textbox', { name: 'Radius (in km) *' }).click();
     await page.getByRole('textbox', { name: 'Radius (in km) *' }).fill('1234');
-    await page.getByRole('button', { name: 'Save as' }).click();
+    await page.getByRole('button', { name: 'Save as XML' }).click();
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_data_isostasy');
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
