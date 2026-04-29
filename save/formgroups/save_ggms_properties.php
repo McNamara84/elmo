@@ -31,6 +31,14 @@ function validateGGMPropertiesData(array $data): array
         }
     }
 
+    // radius is required for Spherical harmonics models
+    if (($data['mathematical_representation'] ?? '') === 'Spherical harmonics') {
+        $radiusValue = $data['radius'] ?? null;
+        if ($radiusValue === null || $radiusValue === '' || $radiusValue === 'Choose') {
+            throw new Exception('Field radius is required for Spherical harmonics models');
+        }
+    }
+
     // Cast numeric fields to their proper types
     try {
         $data['degree'] = intval($data['degree']);
@@ -58,6 +66,12 @@ function validateGGMPropertiesData(array $data): array
  */
 function insertEllipsoidalParameters(mysqli $connection, array $data, int $resourceId): ?int
 {
+    // On submit, only insert ellipsoidal parameters for Ellipsoidal harmonics models
+    $action = $data['action'] ?? 'save_and_download';
+    if ($action === 'submit' && ($data['mathematical_representation'] ?? '') !== 'Ellipsoidal harmonics') {
+        return null;
+    }
+
     // Only proceed if we have semimajor axis data
     if (empty($data['semimajor_axis_a'])) {
         return null;
