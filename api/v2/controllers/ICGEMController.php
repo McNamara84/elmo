@@ -614,8 +614,6 @@ class ICGEMController extends DatasetController
      * This basically has to list all the variables with enum values in the schema 
      * @var array<string>
      */
-    private const ALLOWED_UOM_VALUES = ['m', 'm/s', 'm/s²'];
-
     private const ENUMERATION_FIELDS = [
         'errorType', 
         'descriptionSection', 
@@ -824,7 +822,7 @@ class ICGEMController extends DatasetController
         // 3. Create envelope root with ICGEM as primary namespace and DataCite as secondary
         $envelope = new SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:envelope xmlns:icgv="' . self::ICGEM_NAMESPACE_URI . '" ' .
+            '<grav:envelope xmlns:grav="' . self::ICGEM_NAMESPACE_URI . '" ' .
             'xmlns:dace="http://datacite.org/schema/kernel-4" ' .
             'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' .
             'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' http://icgem.gfz.de/schema/icgemSchemaBase.xsd"/>'

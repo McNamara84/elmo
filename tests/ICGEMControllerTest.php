@@ -703,7 +703,7 @@ final class ICGEMControllerTest extends TestCase
         // Create XML element with ICGEM namespace
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         // Call the insert method using reflection since it's protected
@@ -739,7 +739,7 @@ final class ICGEMControllerTest extends TestCase
     {
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         // Call with null data
@@ -767,7 +767,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -795,7 +795,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -825,7 +825,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -927,7 +927,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:globalGravityProduct xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -997,7 +997,7 @@ final class ICGEMControllerTest extends TestCase
     {
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:globalGravityProduct xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1031,7 +1031,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1072,7 +1072,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1106,7 +1106,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1142,7 +1142,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1171,7 +1171,7 @@ final class ICGEMControllerTest extends TestCase
     {
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1231,7 +1231,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:globalGravityProduct xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1292,7 +1292,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:globalGravityProduct xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
         
         $reflection = new \ReflectionClass($this->controller);
