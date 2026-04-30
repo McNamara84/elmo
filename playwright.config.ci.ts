@@ -24,7 +24,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], video: 'off', baseURL: 'http://localhost:8000/' },
       testMatch: [
         'features/**/*.spec.ts',
-        'flows/**/*.spec.ts',
+        'flows/**/!(icgem-roundtrip).spec.ts',
         'formgroups/*.spec.ts',
       ],
     },
@@ -33,6 +33,7 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8001/' },
       testMatch: [
         'formgroups/elmogem-specific/**/*.spec.ts',
+        'flows/icgem-roundtrip.spec.ts',
         'features/elmo-performance.spec.ts',
       ],
     },
