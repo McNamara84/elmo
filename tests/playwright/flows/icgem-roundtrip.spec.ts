@@ -491,7 +491,7 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
 
   // ── ICGEM Model Types – Temporal section ─────────────────────────────────
 
-  if (data.modelType.toLowerCase() === 'temporal' && data.temporalStart) {
+  if (data.modelType.toLowerCase() === 'temporal') {
     // Wait for temporal section to become visible (change event on model-type triggers jQuery handler)
     await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible({ timeout: 10_000 });
 

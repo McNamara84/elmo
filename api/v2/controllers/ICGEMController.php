@@ -531,12 +531,12 @@ class ICGEMController extends DatasetController
         if ($temporalProperties) {
             foreach ($temporalProperties as $property) {
                 $tmpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalModelProperties', null, self::ICGEM_NAMESPACE_URI);
-                
+
+                // Build ISO 8601 interval: "YYYY-MM-DD/YYYY-MM-DD" or "YYYY-MM-DD/open"
                 if (!empty($property['start_date'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':startDate', $this->prepare($property['start_date'], 'startDate'), self::ICGEM_NAMESPACE_URI);
-                }
-                if (!empty($property['end_date'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':stopDate', $this->prepare($property['end_date'], 'stopDate'), self::ICGEM_NAMESPACE_URI);
+                    $endPart = !empty($property['end_date']) ? $property['end_date'] : 'open';
+                    $coverage = $property['start_date'] . '/' . $endPart;
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalCoverage', $this->prepare($coverage, 'temporalCoverage'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['generating_institution'])) {
                     $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':generatingInstitution', $this->prepare($property['generating_institution'], 'generatingInstitution'), self::ICGEM_NAMESPACE_URI);
@@ -545,7 +545,8 @@ class ICGEMController extends DatasetController
                     $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':release', $this->prepare($property['release'], 'release'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['temporal_resolution_days'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolution', $this->prepare($property['temporal_resolution_days'], 'temporalResolution'), self::ICGEM_NAMESPACE_URI);
+                    $resElement = $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolution', $this->prepare($property['temporal_resolution_days'], 'temporalResolution'), self::ICGEM_NAMESPACE_URI);
+                    $resElement->addAttribute('uom', 'd');
                 }
             }
         }
