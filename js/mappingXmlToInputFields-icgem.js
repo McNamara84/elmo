@@ -237,8 +237,8 @@ function populateIcgemDefinition(data) {
 function populateIcgemProperties(data) {
   const { scalars, ellipsoidal } = data;
 
-  // Tide system: XML stores "tide-free", form expects "tide free"
-  if (scalars.tideSystem) $('#input-tide-system').val(scalars.tideSystem.replace(/-/g, ' '));
+  // Tide system: XML values ("Zero-tide", "Mean-tide", "Tide-free") match option values directly
+  if (scalars.tideSystem) $('#input-tide-system').val(scalars.tideSystem);
 
   if (scalars.degreeOrderMax) $('#input-degree').val(scalars.degreeOrderMax);
 

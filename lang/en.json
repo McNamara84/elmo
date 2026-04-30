@@ -234,9 +234,9 @@
         "tideSystem": "Tide system",
         "tideSystemInvalid": "Please choose tide system.",
         "tideSystemOptions": {
-            "zeroTide": "zero tide",
-            "meanTide": "mean tide",
-            "tideFree": "tide free"
+            "zeroTide": "Zero-tide",
+            "meanTide": "Mean-tide",
+            "tideFree": "Tide-free"
         },
         "errors": "Errors",
         "errorsInvalid": "Please choose error type.",
