@@ -122,7 +122,7 @@ function handleXmlFile(file) {
             }
 
             // If this is an ICGEM file uploaded to regular ELMO (not ELMOGEM), warn the user
-            const isIcgemFile = typeof detectXmlSchema === 'function' && detectXmlSchema(xmlDoc) === 'icgem';
+            const isIcgemFile = window.icgemModule?.detectXmlSchema(xmlDoc) === 'icgem';
             const isElmoGem = window.ELMO_FEATURES && window.ELMO_FEATURES.showGGMsProperties;
             // For ICGEM files that are uploaded to generic ELMO (not ELMOGEM), show a warning and prevent loading
             if (isIcgemFile && !isElmoGem) {

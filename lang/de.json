@@ -312,7 +312,7 @@
         },
         "icgemWrongApp": {
             "title": "ICGEM-Metadatendatei erkannt",
-            "body": "Sehr geehrte Nutzende,\nes scheint, als wollten Sie eine ICGEM-Metadatendatei auf ELMO hochladen. Dies ist zwar möglich, aber nicht in dieser Version. Bitte besuchen Sie ELMOGEM (https://icgem.gfz.de/elmogem), um die Metadatenübermittlung für das gravitationsbezogene Produkt abzuschließen.",
+            "body": "Sehr geehrte Nutzende,\n\nes scheint, als wollten Sie eine ICGEM-Metadatendatei auf ELMO hochladen. Dies ist zwar möglich, aber nicht in dieser Version. Bitte besuchen Sie ELMOGEM (https://icgem.gfz.de/elmogem), um die Metadatenübermittlung für das gravitationsbezogene Produkt abzuschließen.",
             "close": "Schließen"
         },
         "changelog": {
