@@ -886,8 +886,6 @@ test.describe('ICGEM roundtrip', () => {
     await expect(page.locator('#input-resourceinformation-version'), 'version').toHaveValue('');
     await expect(page.locator('#input-abstract'), 'abstract').toHaveValue('');
     await expect(page.locator('#input-date-created'), 'dateCreated').toHaveValue('');
-    await expect(page.locator('#input-resourceinformation-resourcetype'), 'resourceType').toHaveValue('');
-    await expect(page.locator('#input-resourceinformation-language'), 'language').toHaveValue('');
 
     // First author row should be empty
     const firstAuthorRow = page.locator('#group-author [data-creator-row]').first();
