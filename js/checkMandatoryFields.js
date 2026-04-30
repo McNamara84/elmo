@@ -850,6 +850,7 @@ if (typeof module !== 'undefined' && module.exports) {
         validateSpatialTemporalCoverageRequirements,
         validateAllMandatoryFields,
         validateTitleField,
-        validateAuthorNameFields
+        validateAuthorNameFields,
+        validateTopographicModelTypeRequirements
     };
 }
