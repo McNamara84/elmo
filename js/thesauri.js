@@ -203,6 +203,26 @@ function loadKeywordsForConfig(config, response) {
                 console.error('No valid rootNodes found in', config.apiEndpoint);
                 return;
             }
+
+            // Remove any collected node that is already reachable as a descendant of
+            // another collected node (e.g. both GEODETICS and its child ELLIPSOID
+            // CHARACTERISTICS are listed). Keeping a child as a separate top-level
+            // entry would make it appear twice in the tree — once inside its parent
+            // and once as a peer — producing duplicate breadcrumb paths in the whitelist.
+            function isDescendantInSubtree(nodeId, subtreeChildren) {
+                if (!Array.isArray(subtreeChildren)) return false;
+                for (var i = 0; i < subtreeChildren.length; i++) {
+                    if (subtreeChildren[i].id === nodeId) return true;
+                    if (isDescendantInSubtree(nodeId, subtreeChildren[i].children)) return true;
+                }
+                return false;
+            }
+            collected = collected.filter(function (candidate) {
+                return !collected.some(function (other) {
+                    return other !== candidate && isDescendantInSubtree(candidate.id, other.children || []);
+                });
+            });
+
             filteredData = collected;
         } else if (config.rootNodeId) {
             var sel = findNodeById(availableNodes, config.rootNodeId);
@@ -664,6 +684,26 @@ $(document).ready(function () {
     const features = window.ELMO_FEATURES || {};
     const showThesauri = features.showThesauri !== false;
     const showMslVocabs = features.showMslVocabs === true;
+    const showGGMsProperties = features.showGGMsProperties === true;
+
+    /**
+     * GGMs-specific root node constraints that narrow each thesaurus tree
+     * when ELMO_FEATURES.showGGMsProperties is enabled.
+     * Set to null to keep a thesaurus unrestricted; set to a concept URI to
+     * limit it to that subtree.
+     */
+    const GGM_THESAURUS_ROOT_NODES = {
+        science_keywords: [
+            'https://gcmd.earthdata.nasa.gov/kms/concept/8fb5ea8a-96ba-47cf-91cd-c7b64fbcd54a', // EARTH SCIENCE SERVICES > MODELS > SPHERICAL HARMONIC MODELS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/97576e51-28b5-4ae0-af33-fbb00fd5996b', // EARTH SCIENCE SERVICES > MODELS > MASS CONCENTRATION (MASCON) MODELS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/b8615aad-d2eb-45a3-98a7-4adac5bdf5a5', // EARTH SCIENCE SERVICES > MODELS > EARTH SCIENCE REANALYSES/ASSIMILATION MODELS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/5498572c-aaed-4c08-8aad-8b297057e9c9', // EARTH SCIENCE > SOLID EARTH > GEODETICS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa', // EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD
+            'https://gcmd.earthdata.nasa.gov/kms/concept/ad09b215-e837-4d9f-acbc-2b45e5b81825'  // EARTH SCIENCE > OCEANS > MARINE GEOPHYSICS > MARINE GRAVITY FIELD
+        ]
+        // platforms: null,
+        // instruments: null,
+    };
 
     // MSL root-Lists (unchanged, separate feature)
     const generalRoots = [
@@ -717,15 +757,33 @@ $(document).ready(function () {
                     modalContainer.innerHTML += generateModal(item.key, config, item.displayName);
                     isFirst = false;
 
-                    // Build keywordConfigurations entry for this thesaurus
-                    keywordConfigurations.push({
+                    // Build keywordConfigurations entry for this thesaurus.
+                    // GGMs overrides (array → rootNodes, string → rootNodeId) take priority
+                    // over any static values in THESAURUS_CONFIG when the feature is active.
+                    const ggmsOverride = showGGMsProperties
+                        ? GGM_THESAURUS_ROOT_NODES[item.key]
+                        : undefined;
+
+                    const entry = {
                         inputId: '#' + config.inputId,
                         apiEndpoint: config.apiEndpoint,
                         jsTreeId: '#' + config.jsTreeId,
                         searchInputId: '#' + config.searchInputId,
                         selectedKeywordsListId: config.selectedListId,
                         modalId: '#' + config.modalId,
-                    });
+                    };
+
+                    if (Array.isArray(ggmsOverride)) {
+                        entry.rootNodes = ggmsOverride;
+                    } else if (typeof ggmsOverride === 'string') {
+                        entry.rootNodeId = ggmsOverride;
+                    } else {
+                        // No GGMs override — fall back to static config values.
+                        if (config.rootNodes) entry.rootNodes = config.rootNodes;
+                        if (config.rootNodeId) entry.rootNodeId = config.rootNodeId;
+                    }
+
+                    keywordConfigurations.push(entry);
                 });
 
                 // Initialize Tagify for each configuration

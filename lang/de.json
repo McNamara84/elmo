@@ -267,8 +267,10 @@
         "clearTooltip": "Alle Einträge oder Inhalte löschen.",
         "load": "Laden",
         "loadTooltip": "Gespeicherte Daten oder Inhalte laden.",
-        "saveAs": "Speichern unter",
-        "saveAsTooltip": "Aktuelle Daten oder Inhalte unter neuem Dateinamen speichern.",
+        "saveAs": "Als XML speichern",
+        "saveAsTooltip": "Aktuelle Daten oder Inhalte als XML-Datei speichern.",
+        "saveAsJsonLd": "Als JSON-LD speichern",
+        "saveAsJsonLdTooltip": "Aktuelle Daten oder Inhalte als JSON-LD-Datei speichern.",
         "submit": "Absenden",
         "submitTooltip": "Eingegebene Daten oder Inhalte übermitteln.",
         "legalNotice": "Impressum",
@@ -301,13 +303,14 @@
             "thankYouMessage": "Vielen Dank für Ihr Feedback!"
         },
         "upload": {
-            "title": "XML-Datei auswählen:",
-            "dropZoneInfo": "XML-Datei hier ablegen",
+            "modalTitle": "Metadatendatei laden",
+            "title": "XML- oder JSON-LD-Datei auswählen:",
+            "dropZoneInfo": "XML- oder JSON-LD-Datei hier ablegen",
             "loading": "Datei wird verarbeitet...",
             "successToast": "erfolgreich geladen",
             "errorToast": "Fehler beim Laden der Datei",
-            "invalidFileType": "Bitte laden Sie eine XML-Datei hoch.",
-            "errorProcessing": "Fehler beim Verarbeiten der XML-Datei",
+            "invalidFileType": "Bitte laden Sie eine XML- oder JSON-LD-Datei hoch.",
+            "errorProcessing": "Fehler beim Verarbeiten der Metadatendatei",
             "errorReading": "Fehler beim Lesen der Datei"
         },
         "icgemWrongApp": {
@@ -323,6 +326,7 @@
         "save": {
             "title": "Metadaten speichern",
             "saveAs": "Als XML speichern",
+            "saveAsJsonLd": "Als JSON-LD speichern",
             "filename": "Dateiname",
             "save": "Speichern"
         },
@@ -341,7 +345,7 @@
             "title": "Übermittlung nicht möglich",
             "greeting": "Liebe Nutzerin, lieber Nutzer,",
             "body": "es scheint, als möchten Sie Daten übermitteln. Leider haben Sie nicht alle Pflichtfelder ausgefüllt.",
-            "saveHint": "Falls Sie bereits mit dem Datenkuratierungsteam vereinbart haben, dass Ihre Einreichung noch nicht vollständig ist, können Sie auf <strong>Speichern unter</strong> klicken und die erzeugte XML-Datei per E-Mail an <a href='mailto:{email}'>{email}</a> senden.",
+            "saveHint": "Falls Sie bereits mit dem Datenkuratierungsteam vereinbart haben, dass Ihre Einreichung noch nicht vollständig ist, können Sie auf <strong>Als XML speichern</strong> klicken und die erzeugte XML-Datei per E-Mail an <a href='mailto:{email}'>{email}</a> senden.",
             "fixHint": "Andernfalls füllen Sie bitte die rot markierten Felder aus und versuchen Sie es erneut.",
             "guideHint": "Wenn Sie weitere Hilfe beim Ausfüllen des Formulars benötigen, finden Sie den <a href='doc/help.php' target='_blank'>ELMO Guide</a> hier.",
             "close": "Schließen"

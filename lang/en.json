@@ -266,8 +266,10 @@
         "clearTooltip": "Delete all entries or content.",
         "load": "Load",
         "loadTooltip": "Load saved data or content.",
-        "saveAs": "Save as",
-        "saveAsTooltip": "Save the current data or content under a new file name.",
+        "saveAs": "Save as XML",
+        "saveAsTooltip": "Save the current data or content as an XML file.",
+        "saveAsJsonLd": "Save as JSON-LD",
+        "saveAsJsonLdTooltip": "Save the current data or content as a JSON-LD file.",
         "submit": "Submit",
         "submitTooltip": "Transmit the entered data or content.",
         "legalNotice": "Legal Notice",
@@ -300,13 +302,14 @@
             "thankYouMessage": "Thanks for your feedback!"
         },
         "upload": {
-            "title": "Select XML file:",
-            "dropZoneInfo": "Drop XML file here",
+            "modalTitle": "Load metadata file",
+            "title": "Select XML or JSON-LD file:",
+            "dropZoneInfo": "Drop XML or JSON-LD file here",
             "loading": "Processing file...",
             "successToast": "successfully loaded",
             "errorToast": "Error loading file",
-            "invalidFileType": "Please upload an XML file.",
-            "errorProcessing": "Error processing XML file",
+            "invalidFileType": "Please upload an XML or JSON-LD file.",
+            "errorProcessing": "Error processing metadata file",
             "errorReading": "Error reading file"
         },
         "icgemWrongApp": {
@@ -322,6 +325,7 @@
         "save": {
             "title": "Save Metadata",
             "saveAs": "Save as XML",
+            "saveAsJsonLd": "Save as JSON-LD",
             "filename": "Filename",
             "save": "Save"
         },
@@ -340,7 +344,7 @@
             "title": "Submission not possible",
             "greeting": "Dear user,",
             "body": "it appears that you want to submit data. Unfortunately, you have not filled in all the required fields.",
-            "saveHint": "If you have already agreed with the data curation team that your submission is not yet complete, you can press <strong>Save as</strong> and then send the generated XML file to <a href='mailto:{email}'>{email}</a> by email.",
+            "saveHint": "If you have already agreed with the data curation team that your submission is not yet complete, you can press <strong>Save as XML</strong> and then send the generated XML file to <a href='mailto:{email}'>{email}</a> by email.",
             "fixHint": "Otherwise, please complete the fields marked in red and try again.",
             "guideHint": "If you need further help filling in the form, you can find the <a href='doc/help.php' target='_blank'>ELMO Guide</a> here.",
             "close": "Close"

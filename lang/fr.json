@@ -267,8 +267,10 @@
         "clearTooltip": "Supprimer toutes les entrées ou le contenu.",
         "load": "Charger",
         "loadTooltip": "Charger les données ou le contenu sauvegardés.",
-        "saveAs": "Enregistrer sous",
-        "saveAsTooltip": "Enregistrer les données ou le contenu actuels sous un nouveau nom de fichier.",
+        "saveAs": "Enregistrer en XML",
+        "saveAsTooltip": "Enregistrer les données ou le contenu actuels dans un fichier XML.",
+        "saveAsJsonLd": "Enregistrer en JSON-LD",
+        "saveAsJsonLdTooltip": "Enregistrer les données ou le contenu actuels dans un fichier JSON-LD.",
         "submit": "Soumettre",
         "submitTooltip": "Transmettre les données ou le contenu saisis.",
         "legalNotice": "Mentions légales",
@@ -298,13 +300,14 @@
             "thankYouMessage": "Merci pour votre retour !"
         },
         "upload": {
-            "title": "Sélectionner un fichier XML :",
-            "dropZoneInfo": "Déposer le fichier XML ici",
+            "modalTitle": "Charger un fichier de métadonnées",
+            "title": "Sélectionner un fichier XML ou JSON-LD :",
+            "dropZoneInfo": "Déposer le fichier XML ou JSON-LD ici",
             "loading": "Traitement du fichier...",
             "successToast": "chargé avec succès",
             "errorToast": "Erreur lors du chargement du fichier",
-            "invalidFileType": "Veuillez télécharger un fichier XML.",
-            "errorProcessing": "Erreur lors du traitement du fichier XML",
+            "invalidFileType": "Veuillez télécharger un fichier XML ou JSON-LD.",
+            "errorProcessing": "Erreur lors du traitement du fichier de métadonnées",
             "errorReading": "Erreur lors de la lecture du fichier"
         },
         "icgemWrongApp": {
@@ -320,6 +323,7 @@
         "save": {
             "title": "Enregistrer les métadonnées",
             "saveAs": "Enregistrer en XML",
+            "saveAsJsonLd": "Enregistrer en JSON-LD",
             "filename": "Nom du fichier",
             "save": "Enregistrer"
         },
@@ -338,7 +342,7 @@
             "title": "Soumission impossible",
             "greeting": "Cher utilisateur, chère utilisatrice,",
             "body": "il semble que vous souhaitiez soumettre des données. Malheureusement, vous n'avez pas rempli tous les champs obligatoires.",
-            "saveHint": "Si vous avez déjà convenu avec l'équipe de curation des données que votre soumission n'est pas encore complète, vous pouvez cliquer sur <strong>Enregistrer sous</strong> et envoyer le fichier XML généré par e-mail à <a href='mailto:{email}'>{email}</a>.",
+            "saveHint": "Si vous avez déjà convenu avec l'équipe de curation des données que votre soumission n'est pas encore complète, vous pouvez cliquer sur <strong>Enregistrer en XML</strong> et envoyer le fichier XML généré par e-mail à <a href='mailto:{email}'>{email}</a>.",
             "fixHint": "Sinon, veuillez compléter les champs marqués en rouge et réessayer.",
             "guideHint": "Si vous avez besoin d'aide pour remplir le formulaire, vous pouvez consulter le <a href='doc/help.php' target='_blank'>Guide ELMO</a> ici.",
             "close": "Fermer"

@@ -9,7 +9,7 @@
             <div class="col-12 col-md-6 col-lg-3 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
-                        <select class="form-select input-with-help input-right-no-round-corners" id="input-tide-system" name="tide_system" required>
+                        <select class="form-select input-with-help input-right-no-round-corners js-required-on-submit" id="input-tide-system" name="tide_system" required>
                             <option value="" data-translate="general.choose">Choose...</option>
                             <option value="Zero-tide" data-translate="technical.tideSystemOptions.zeroTide">Zero-tide</option>
                             <option value="Mean-tide" data-translate="technical.tideSystemOptions.meanTide">Mean-tide</option>
@@ -29,7 +29,7 @@
             <div class="col-12 col-md-6 col-lg-3 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
-                        <input type="number" class="form-control input-with-help input-right-no-round-corners" id="input-degree" name="degree" min="0" step="1" required>
+                        <input type="number" class="form-control input-with-help input-right-no-round-corners js-required-on-submit" id="input-degree" name="degree" min="0" step="1" required>
                         <label for="input-degree"><span data-translate="technical.degree">Degree</span> <span class="text-danger">*</span></label>
                         <div class="invalid-feedback" data-translate="technical.degreeInvalid">Please provide degree.</div>
                     </div>
@@ -42,7 +42,7 @@
             <div class="col-12 col-md-4 col-lg-6 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
-                        <select class="form-select input-with-help input-right-no-round-corners" id="input-errors" name="errors" required>
+                        <select class="form-select input-with-help input-right-no-round-corners js-required-on-submit" id="input-errors" name="errors" required>
                             <option value="" data-translate="general.choose">Choose...</option>
                             <option value="calibrated" data-translate="technical.errorOptions.calibrated">calibrated</option>
                             <option value="formal" data-translate="technical.errorOptions.formal">formal</option>
@@ -76,8 +76,7 @@
                     <div class="form-floating">
                         <input type="text" class="form-control input-with-help input-right-no-round-corners" 
                                id="input-radius" 
-                               name="radius" pattern="^[0-9]+(\.[0-9]+)?([eEdD][+]?[0-9]+)?$" inputmode="decimal"
-                               required>
+                               name="radius" pattern="^[0-9]+(\.[0-9]+)?([eEdD][+]?[0-9]+)?$" inputmode="decimal">
                         <label for="input-radius">
                             <span data-translate="technical.radius">Radius (in km)</span>
                             <span class="text-danger">*</span> 
@@ -152,7 +151,7 @@
             <div class="col-12 col-md-6 col-lg-6 p-1">
                 <div class="input-group has-validation">
                     <div class="form-floating">
-                        <input type="decimal" class="form-control" id="input-earth-gravity-constant" name="earth_gravity_constant" step="any" 
+                        <input type="decimal" class="form-control js-required-on-submit" id="input-earth-gravity-constant" name="earth_gravity_constant" step="any" 
                         min="0" 
                         pattern="^[0-9]+(\.[0-9]+)?([eEdD][+]?[0-9]+)?$" required>
                         <label for="input-earth-gravity-constant"><span data-translate="technical.earthGravityConstant">Earth gravity constant</span> <span class="text-danger">*</span></label>

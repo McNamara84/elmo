@@ -13,7 +13,8 @@ info:
     All `/update/` endpoints require authentication using an API key. Contact the administrator to obtain an API key.
 
     ### Binary Data
-    Some endpoints return binary data (XML files) for download. These responses use the `application/octet-stream` content type.
+    Some endpoints return downloadable XML or JSON-LD files. These responses use `application/xml`
+    or `application/ld+json` depending on the selected export scheme.
 
     ### Rate Limiting
     Rate limiting may apply to prevent abuse.
@@ -891,8 +892,8 @@ paths:
       tags:
         - dataset
       security: []
-      summary: View dataset as XML
-      description: View a dataset as XML in the specified metadata scheme
+      summary: View dataset as XML or JSON-LD
+      description: View a dataset in the specified metadata scheme. `datacite` and `iso` return XML, `jsonld` returns compact DataCite JSON-LD.
       operationId: exportDataset
       parameters:
         - name: id
@@ -908,7 +909,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [datacite, iso]
+            enum: [datacite, iso, jsonld]
       responses:
         "200":
           description: Successful operation
@@ -918,6 +919,10 @@ paths:
                 type: string
                 format: binary
                 description: XML content of the dataset
+            application/ld+json:
+              schema:
+                type: object
+                description: Compact DataCite JSON-LD representation of the dataset
         "400":
           description: Invalid ID or scheme provided
           content:
@@ -935,8 +940,8 @@ paths:
       tags:
         - dataset
       security: []
-      summary: Download dataset as XML
-      description: Download a dataset as XML file in the specified metadata scheme
+      summary: Download dataset as XML or JSON-LD
+      description: Download a dataset in the specified metadata scheme. `datacite` and `iso` return XML, `jsonld` returns compact DataCite JSON-LD.
       operationId: exportDatasetDownload
       parameters:
         - name: id
@@ -952,16 +957,21 @@ paths:
           required: true
           schema:
             type: string
-            enum: [datacite, iso]
+            enum: [datacite, iso, jsonld]
       responses:
         "200":
           description: Successful operation
           content:
-            application/octet-stream:
+            application/xml:
               schema:
                 type: string
                 format: binary
                 description: XML file for download
+            application/ld+json:
+              schema:
+                type: string
+                format: binary
+                description: JSON-LD file for download
         "400":
           description: Invalid ID or scheme provided
           content:
