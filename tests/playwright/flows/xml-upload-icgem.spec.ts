@@ -3,7 +3,7 @@
 1.1 we make sure that all the contents of the example data file are parsed
 1.2 we input the info into the form
 2. the form clicks save 
-2.1 we make sure that the saved file has exactly the same content as iggem-grav.xml 
+2.1 we make sure that the saved file has exactly the same content as icgem-metadata-schema-dataset.xml 
 3. we click clear
 3.1 we assert that absolutely all fields of the form are empty
 4. we upload the example data file 

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icgem.gfz.de/schema http://icgem.gfz.de/schema/icgemSchemaBase.xsd">
   <dace:resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.7/metadata.xsd">
-  <dace:identifier identifierType="DOI">10.5880/GFZ.GRACEFO_06_GSM</dace:identifier>
   <dace:creators>
     <dace:creator>
       <dace:creatorName nameType="Personal">Torkhov, Aleksandr</dace:creatorName>

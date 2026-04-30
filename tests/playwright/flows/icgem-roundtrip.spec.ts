@@ -28,7 +28,7 @@ import { XMLParser } from 'fast-xml-parser';
 
 // ─── File paths ────────────────────────────────────────────────────────────────
 
-const REFERENCE_XML_PATH = path.join(__dirname, './outputDataReference/iggem-grav.xml');
+const REFERENCE_XML_PATH = path.join(__dirname, './outputDataReference/icgem-metadata-schema-dataset.xml');
 const XML_ACTUAL_DIR = path.join(__dirname, './outputDataActual');
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -492,14 +492,8 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
   // ── ICGEM Model Types – Temporal section ─────────────────────────────────
 
   if (data.modelType.toLowerCase() === 'temporal' && data.temporalStart) {
-    // Wait for temporal section to become visible
-    await page.waitForFunction(
-      () => {
-        const el = document.querySelector<HTMLElement>('.visibility-modeltype-temporal');
-        return el !== null && !el.classList.contains('d-none');
-      },
-      { timeout: 5_000 },
-    ).catch(() => { /* best-effort */ });
+    // Wait for temporal section to become visible (change event on model-type triggers jQuery handler)
+    await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible({ timeout: 10_000 });
 
     await page.locator('#input-temporal-start').fill(data.temporalStart);
 
@@ -976,8 +970,8 @@ test.describe('ICGEM roundtrip', () => {
     await expect(page.locator('#input-abstract'), 'abstract').toHaveValue(parsedData.abstract);
     await expect(page.locator('#input-date-created'), 'dateCreated').toHaveValue(parsedData.dateCreated);
 
-    // DOI is not filled – expect empty
-    await expect(page.locator('#input-resourceinformation-doi'), 'doi').toHaveValue('');
+    // DOI is populated from XML by the upload handler
+    await expect(page.locator('#input-resourceinformation-doi'), 'doi').toHaveValue(parsedData.doi);
 
     // Author: first personal creator
     if (parsedData.personalCreators.length > 0) {
