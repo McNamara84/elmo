@@ -311,9 +311,7 @@
         },
         "icgemWrongApp": {
             "title": "ICGEM Metadata File Detected",
-            "body": "Dear user,
-                        
-                        it looks like you are uploading an ICGEM metadata file to ELMO. This is possible, but not in this version. Please go to ELMOGEM (https://icgem.gfz.de/elmogem) to complete the metadata delivery for the gravity-related product.",
+            "body": "Dear user,\nit looks like you are uploading an ICGEM metadata file to ELMO. This is possible, but not in this version. Please go to ELMOGEM (https://icgem.gfz.de/elmogem) to complete the metadata delivery for the gravity-related product.",
             "close": "Close"
         },
         "changelog": {
