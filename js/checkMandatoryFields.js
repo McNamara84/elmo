@@ -713,6 +713,7 @@ function validateAllMandatoryFields() {
 
 };
 
+// used to remove the green checkmarks from optional fields
 const optionalFieldsSelector = [
     // Resource Information
     'input[name="doi"]',
