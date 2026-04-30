@@ -1391,18 +1391,6 @@ function detectIcgemPrefix(xmlDoc) {
 }
 
 /**
- * Namespace resolver for ICGEM XPath expressions.
- * Maps the 'icgv' prefix to the ICGEM schema URI, regardless of the actual
- * prefix used in the source document.
- * @param {string} prefix
- * @returns {string|null}
- */
-function icgemResolver(prefix) {
-  if (prefix === 'icgv') return ICGEM_NAMESPACE_URI;
-  return null;
-}
-
-/**
  * Returns the trimmed text content of the first matching ICGEM child element.
  * @param {Document} xmlDoc
  * @param {Node} contextNode - The node to search within
@@ -1414,7 +1402,7 @@ function icgemText(xmlDoc, contextNode, localName) {
   const node = xmlDoc.evaluate(
     `.//icgv:${localName} | .//${localName}`,
     contextNode,
-    icgemResolver,
+    null,
     XPathResult.FIRST_ORDERED_NODE_TYPE,
     null
   ).singleNodeValue;

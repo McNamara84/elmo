@@ -121,6 +121,17 @@ function handleXmlFile(file) {
                 throw new Error('Invalid XML file');
             }
 
+            // If this is an ICGEM file uploaded to regular ELMO (not ELMOGEM), warn the user
+            const isIcgemFile = typeof detectXmlSchema === 'function' && detectXmlSchema(xmlDoc) === 'icgem';
+            const isElmoGem = window.ELMO_FEATURES && window.ELMO_FEATURES.showGGMsProperties;
+            // For ICGEM files that are uploaded to generic ELMO (not ELMOGEM), show a warning and prevent loading
+            if (isIcgemFile && !isElmoGem) {
+                setUploadLoadingState(false);
+                $('#modal-uploadxml').modal('hide');
+                $('#modal-icgem-wrong-app').modal('show');
+                return;
+            }
+
             // Load XML data into form
             await loadXmlToForm(xmlDoc);
 

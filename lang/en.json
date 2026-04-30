@@ -309,6 +309,13 @@
             "errorProcessing": "Error processing XML file",
             "errorReading": "Error reading file"
         },
+        "icgemWrongApp": {
+            "title": "ICGEM Metadata File Detected",
+            "body": "Dear user,
+                        
+                        it looks like you are uploading an ICGEM metadata file to ELMO. This is possible, but not in this version. Please go to ELMOGEM (https://icgem.gfz.de/elmogem) to complete the metadata delivery for the gravity-related product.",
+            "close": "Close"
+        },
         "changelog": {
             "title": "Changelog",
             "aboutText": "The foundations for the ELMO metadata editor were laid in 2024 by students at the University of Applied Sciences Potsdam in collaboration with the GFZ Helmholtz Centre for Geosciences Potsdam. The GFZ development team then continued to optimize it. The ELMO metadata editor is published under the GNU General Public License, Version 2.",

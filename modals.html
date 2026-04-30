@@ -1,5 +1,30 @@
 </form>
 </main>
+<!-- ICGEM Wrong Application Modal -->
+<div class="modal fade" id="modal-icgem-wrong-app" tabindex="-1" aria-labelledby="modal-icgem-wrong-app-label"
+    aria-describedby="modal-icgem-wrong-app-description" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-icgem-wrong-app-label"
+                    data-translate="modals.icgemWrongApp.title">ICGEM Metadata File Detected</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning mb-0" role="alert">
+                    <p class="mb-0" id="modal-icgem-wrong-app-description"
+                        data-translate="modals.icgemWrongApp.body">Dear user,
+                        
+                        it looks like you are uploading an ICGEM metadata file to ELMO. This is possible, but not in this version. Please go to ELMOGEM (https://icgem.gfz.de/elmogem) to complete the metadata delivery for the gravity-related product.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                    data-translate="modals.icgemWrongApp.close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Upload Modal -->
 <div class="modal fade" id="modal-uploadxml" tabindex="-1" aria-labelledby="modal-uploadxml-label" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
