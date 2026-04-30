@@ -562,11 +562,11 @@ class ICGEMController extends DatasetController
     {
         if ($staticProperties) {
             foreach ($staticProperties as $property) {
-                $smpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':staticModelProperties', null, self::ICGEM_NAMESPACE_URI);
-                
-                if (!empty($property['info_time_variable_coefficients'])) {
-                    $smpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':infoTimeVariableCoefficients', $this->prepare($property['info_time_variable_coefficients'], 'infoTimeVariableCoefficients'), self::ICGEM_NAMESPACE_URI);
+                if (empty($property['info_time_variable_coefficients'])) {
+                    continue;
                 }
+                $smpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':staticModelProperties', null, self::ICGEM_NAMESPACE_URI);
+                $smpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':infoTimeVariableCoefficients', $this->prepare($property['info_time_variable_coefficients'], 'infoTimeVariableCoefficients'), self::ICGEM_NAMESPACE_URI);
             }
         }
     }
