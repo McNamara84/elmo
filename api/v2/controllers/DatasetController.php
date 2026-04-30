@@ -1157,6 +1157,13 @@ class DatasetController
             throw new Exception("Error during XSLT transformation.");
         }
 
+        // Post-process DataCite XML to strip empty elements that violate nonemptycontentStringType.
+        // The XSLT emits e.g. <givenName/>, <affiliation/>, <nameIdentifier/> even when source
+        // values are null/empty; DataCite schema (minLength=1) rejects those.
+        if ($format === 'datacite') {
+            $newXml = $this->stripEmptyDataciteElements($newXml);
+        }
+
         if ($download) {
             // Set headers for download and output the file
             header('Content-Type: application/xml');
@@ -1168,6 +1175,58 @@ class DatasetController
             // Return the XML string
             return $newXml;
         }
+    }
+
+    /**
+     * Removes empty elements from a DataCite XML string that would violate the
+     * nonemptycontentStringType constraint (minLength=1).
+     *
+     * The XSLT transformation outputs optional elements like <givenName>, <familyName>,
+     * <affiliation>, and <nameIdentifier> unconditionally, even when the source value
+     * is null or an empty string. DataCite schema requires all of these to have
+     * non-empty text content. This method strips them after the fact so the XSLT
+     * (which carries a "do not modify" comment as it was MapForce-generated) does not
+     * need to be changed.
+     *
+     * Also removes empty <geoLocationPoint> elements (no pointLongitude/pointLatitude
+     * children) which arise when a SpatialTemporalCoverage row has only a description
+     * but no coordinates.
+     *
+     * @param string $xml Raw DataCite XML string.
+     * @return string Cleaned DataCite XML string.
+     */
+    private function stripEmptyDataciteElements(string $xml): string
+    {
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($xml)) {
+            return $xml; // Return unchanged if unparseable
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+        
+        // Elements whose text content must be non-empty per nonemptycontentStringType.
+        // Remove the element entirely when content is blank/whitespace-only.
+        $leafElements = ['givenName', 'familyName', 'nameIdentifier', 'affiliation'];
+        foreach ($leafElements as $tag) {
+            $nodes = $xpath->query("//dc:{$tag}"); 
+            foreach ($nodes as $node) {
+                if (trim($node->textContent) === '') {
+                    $node->parentNode->removeChild($node);
+                }
+            }
+        }
+
+        // Remove <geoLocationPoint> that has no coordinate children — happens when
+        // a coverage row carries only a description (no lat/lon values).
+        $emptyPoints = $xpath->query('//dc:geoLocationPoint[not(dc:pointLongitude) or not(dc:pointLatitude)]');
+        foreach ($emptyPoints as $node) {
+            $node->parentNode->removeChild($node);
+        }
+
+        return $dom->saveXML();
     }
 
     /**
