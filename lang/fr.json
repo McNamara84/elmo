@@ -309,7 +309,7 @@
         },
         "icgemWrongApp": {
             "title": "Fichier de métadonnées ICGEM détecté",
-            "body": "Cher utilisateur, Il semble que vous souhaitiez télécharger un fichier de métadonnées ICGEM sur ELMO. Cela est certes possible, mais pas avec cette version. Veuillez vous rendre sur ELMOGEM (https://icgem.gfz.de/elmogem) pour finaliser la transmission des métadonnées relatives au produit gravimétrique.",
+            "body": "Cher utilisateur,\nil semble que vous souhaitiez télécharger un fichier de métadonnées ICGEM sur ELMO. Cela est certes possible, mais pas avec cette version. Veuillez vous rendre sur ELMOGEM (https://icgem.gfz.de/elmogem) pour finaliser la transmission des métadonnées relatives au produit gravimétrique.",
             "close": "Fermer"
         },
         "changelog": {
