@@ -284,8 +284,17 @@ function populateIcgemModelTypes(data) {
   }
 
   // Temporal model
-  if (temporalModel.startDate) $('#input-temporal-start').val(temporalModel.startDate);
-  if (temporalModel.stopDate) $('#input-temporal-end').val(temporalModel.stopDate);
+  // temporalCoverage is an ISO 8601 interval: "YYYY-MM-DD/YYYY-MM-DD" or "YYYY-MM-DD/open".
+  // Split on "/" and only ingest each part if it looks like a date.
+  const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+  if (temporalModel.temporalCoverage) {
+    const [rawStart, rawEnd] = temporalModel.temporalCoverage.split('/');
+    if (rawStart && ISO_DATE.test(rawStart.trim())) $('#input-temporal-start').val(rawStart.trim());
+    if (rawEnd   && ISO_DATE.test(rawEnd.trim()))   $('#input-temporal-end').val(rawEnd.trim());
+  }
+  // Fallback: explicit startDate/stopDate elements (older schema variants)
+  if (temporalModel.startDate && ISO_DATE.test(temporalModel.startDate)) $('#input-temporal-start').val(temporalModel.startDate);
+  if (temporalModel.stopDate  && ISO_DATE.test(temporalModel.stopDate))  $('#input-temporal-end').val(temporalModel.stopDate);
   if (temporalModel.generatingInstitution) $('#input-temporal-institution').val(temporalModel.generatingInstitution);
   if (temporalModel.release) $('#input-release-number').val(temporalModel.release);
 
