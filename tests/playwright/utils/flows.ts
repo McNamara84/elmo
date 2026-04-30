@@ -497,7 +497,7 @@ export async function fillGEM(page: Page) {
   await page.locator('#input-file-format').selectOption({ index: 1 });
 
   // ── Characteristics ───────────────────────────────────────────────────────
-  await page.locator('#input-tide-system').selectOption('zero tide');
+  await page.locator('#input-tide-system').selectOption('Zero-tide');
   await page.locator('#input-degree').fill('300');
   await page.locator('#input-errors').selectOption('calibrated');
   await page.locator('#input-error-handling-approach').fill('Calibration approach text');
