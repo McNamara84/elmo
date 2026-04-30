@@ -315,7 +315,20 @@ function populateIcgemModelTypes(data) {
     if (topo.forwardModellingDomain) $('#select-topo-domain').val(topo.forwardModellingDomain.toLowerCase());
     if (topo.approximation) $('#select-topo-approximation').val(topo.approximation.toLowerCase());
 
-    for (const density of (topo.densityInformation || [])) {
+    const densities = topo.densityInformation || [];
+
+    // Determine mode upfront: separate if any entry uses Crust or Mantle domain
+    const isSeparate = densities.some(d => {
+      const dom = (d.densityInformationDomain || '').toLowerCase();
+      return dom === 'crust' || dom === 'mantle';
+    });
+
+    if (isSeparate) {
+      $('#checkbox-separate-density').prop('checked', true);
+      $('#separate-density-container').removeClass('d-none');
+    }
+
+    for (const density of densities) {
       const domain = (density.densityInformationDomain || '').toLowerCase();
       const infoType = reverseDensityType(density.densityInformationType || '');
       const description = density.densityInformationDescription || '';
@@ -324,13 +337,9 @@ function populateIcgemModelTypes(data) {
         $('#select-topo-density').val(infoType);
         if (description) $('#input-topo-density-details').val(description);
       } else if (domain === 'crust') {
-        $('#checkbox-separate-density').prop('checked', true);
-        $('#separate-density-container').removeClass('d-none');
         $('#select-topo-density-crust').val(infoType);
         if (description) $('#input-topo-density-details-crust').val(description);
       } else if (domain === 'mantle') {
-        $('#checkbox-separate-density').prop('checked', true);
-        $('#separate-density-container').removeClass('d-none');
         $('#select-topo-density-mantle').val(infoType);
         if (description) $('#input-topo-density-details-mantle').val(description);
       }
