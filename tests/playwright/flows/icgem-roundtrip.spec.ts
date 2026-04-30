@@ -821,9 +821,8 @@ test.describe('ICGEM roundtrip', () => {
     assertField(getNode(hcm!, 'degreeOrderMax'), parsedData.degree, 'degreeOrderMax');
     assertField(getNode(hcm!, 'earthGravityConstant'), parsedData.earthGravityConstant, 'earthGravityConstant');
 
-    // Errors: form stores "no" (lowercase), reference XML has "No"
-    // The test compares exactly – if this fails, update the reference file to use "no"
-    assertField(getNode(hcm!, 'errors'), parsedData.errors.toLowerCase(), 'errors');
+    // Errors: saved XML preserves the original capitalisation from the form option text ("No")
+    assertField(getNode(hcm!, 'errors'), parsedData.errors, 'errors');
 
     // Radius (may be absent if math representation is not Spherical harmonics)
     const savedRadius = extractText(getNode(hcm!, 'radius'));

@@ -346,14 +346,6 @@ function handleMetadataFile(file) {
                 ? parseJsonLdDocument(event.target.result)
                 : parseXmlDocument(event.target.result);
 
-            // Load metadata into form using the existing XML mapper
-            await getLoadXmlToFormHandler()(xmlDoc);
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(event.target.result, 'text/xml');
-
-            if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
-                throw new Error('Invalid XML file');
-            }
 
             // If this is an ICGEM file uploaded to regular ELMO (not ELMOGEM), warn the user
             const isIcgemFile = window.icgemModule?.detectXmlSchema(xmlDoc) === 'icgem';
