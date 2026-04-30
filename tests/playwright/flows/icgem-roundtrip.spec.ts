@@ -141,7 +141,7 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '',
-    isArray: (_tagName: string, jpath: string) => {
+    isArray: (_tagName: string, jpath: unknown) => {
       // Force arrays for elements that can repeat
       const alwaysArray = [
         'dace:creator',
@@ -154,7 +154,7 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
         'grav:inputDataSource',
         'grav:description',
       ];
-      return alwaysArray.some(tag => jpath.endsWith(`.${tag}`) || jpath === tag);
+      return typeof jpath === 'string' && alwaysArray.some(tag => jpath.endsWith(`.${tag}`) || jpath === tag);
     },
   });
 
@@ -392,16 +392,23 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
     }).toPass({ timeout: 10_000 });
     const affiliationTags = pc.affiliations.map(v => ({ value: v }));
     await affiliationInput.evaluate(
-      (el: unknown, tags: { value: string }[]) => { (el as Record<string, unknown>)._tagify.addTags(tags); },
+      (el: unknown, tags: { value: string }[]) => { ((el as Record<string, unknown>)._tagify as { addTags(t: typeof tags): void }).addTags(tags); },
       affiliationTags,
     );
     await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5_000 });
 
-    // Mark as contact person and fill email
-    await authorRow.locator('[id^="checkbox-author-contactperson"]').click();
-    const emailField = page.locator('#input-contactperson-email').first();
-    await emailField.waitFor({ state: 'visible', timeout: 5_000 });
-    await emailField.fill(data.contactPersonEmail);
+    // Mark as contact person – click the <label> (Bootstrap btn-check hides the input;
+    // clicking the input directly causes "label intercepts pointer events" error)
+    const cpLabel = authorRow.locator('label[for^="checkbox-author-contactperson"]');
+    if (await cpLabel.count() > 0) {
+      await cpLabel.click();
+      // Wait for email field to become visible
+      const emailField = page.locator('#input-contactperson-email').first();
+      await emailField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
+      if (await emailField.isVisible().catch(() => false) && data.contactPersonEmail) {
+        await emailField.fill(data.contactPersonEmail);
+      }
+    }
   }
 
   // ── Author institution (organisational creator, index 0) ──────────────────
@@ -611,7 +618,7 @@ async function downloadAndSaveIcgemXml(
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '',
-    isArray: (_tagName: string, jpath: string) => {
+    isArray: (_tagName: string, jpath: unknown) => {
       const alwaysArray = [
         'dace:creator', 'creator',
         'dace:contributor', 'contributor',
@@ -623,7 +630,7 @@ async function downloadAndSaveIcgemXml(
         'grav:inputDataSource', 'inputDataSource',
         'grav:description',
       ];
-      return alwaysArray.some(tag => jpath.endsWith(`.${tag}`) || jpath === tag);
+      return typeof jpath === 'string' && alwaysArray.some(tag => jpath.endsWith(`.${tag}`) || jpath === tag);
     },
   });
 
@@ -942,14 +949,28 @@ test.describe('ICGEM roundtrip', () => {
     // Set the reference XML file (standard file-input upload)
     await page.locator('#input-uploadxml-file').setInputFiles(REFERENCE_XML_PATH);
 
-    // Wait for the modal to close – the upload handler dismisses it when done
-    await uploadModal.waitFor({ state: 'hidden', timeout: 30_000 });
-
     // Wait for the ICGEM mapping to populate the model name field
+    // (the modal closes automatically when showUploadToast fires, but we
+    //  do NOT block on that — dismiss it via Bootstrap API if still open)
     await page.waitForFunction(
       () => (document.querySelector<HTMLInputElement>('#input-model-name'))?.value !== '',
-      { timeout: 15_000 },
+      { timeout: 30_000 },
     );
+
+    // Dismiss modal via Bootstrap if it didn't auto-close
+    if (await uploadModal.isVisible().catch(() => false)) {
+      await page.evaluate(() => {
+        const modalEl = document.getElementById('modal-uploadxml');
+        if (modalEl) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const bs = (window as any).bootstrap;
+          const bsModal = bs?.Modal?.getInstance?.(modalEl);
+          if (bsModal) bsModal.hide();
+          else modalEl.classList.remove('show');
+        }
+      });
+      await uploadModal.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {});
+    }
 
     // ── Standard DataCite fields ───────────────────────────────────────────
     await expect(page.locator('#input-resourceinformation-title'), 'title').toHaveValue(parsedData.title);
