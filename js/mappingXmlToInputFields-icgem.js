@@ -300,13 +300,10 @@ function populateIcgemModelTypes(data) {
 
   if (temporalModel.temporalResolution) {
     const days = parseInt(temporalModel.temporalResolution, 10);
-    const predefMap = { 1: 'daily', 7: 'weekly', 30: 'monthly', 91: 'quarterly', 365: 'yearly' };
-    if (predefMap[days]) {
-      $('#select-temporal-frequency-predef').val(predefMap[days]);
-    } else if (!isNaN(days)) {
+    if (!isNaN(days)) {
       $('#checkbox-custom-frequency').prop('checked', true);
       $('#custom-frequency-container').removeClass('d-none');
-      $('#input-temporal-frequency').val(temporalModel.temporalResolution);
+      $('#input-temporal-frequency').val(days);
     }
   }
 
