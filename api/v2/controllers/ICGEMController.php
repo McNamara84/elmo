@@ -359,9 +359,9 @@ class ICGEMController extends DatasetController
             foreach ($dataSources as $dataSource) {
                 $dsElement = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSource', null, self::ICGEM_NAMESPACE_URI);
                 
-                // Map type code to human-readable name
+                // Map type code to human-readable name; store as XML attribute to match schema
                 $sourceType = $typeMap[$dataSource['type']] ?? $dataSource['type'];
-                $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSourceType', $this->prepare($sourceType, 'inputDataSourceType'), self::ICGEM_NAMESPACE_URI);
+                $dsElement->addAttribute('type', $this->prepare($sourceType, 'inputDataSourceType'));
                 
                 if (!empty($dataSource['description'])) {
                     $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['description'], 'description'), self::ICGEM_NAMESPACE_URI);
