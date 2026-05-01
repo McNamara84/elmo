@@ -161,7 +161,7 @@ $(document).ready(function () {
       validateSpatialTemporalCoverageRequirements();
       validateContributorOrganisationRequirements();
       validateContributorPersonRequirements();
-      validateTopographicModelTypeRequirements();
+  
 
       form.querySelectorAll('.js-required-on-submit').forEach(el => {
         el.setAttribute('required', 'required');

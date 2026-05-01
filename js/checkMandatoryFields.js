@@ -708,8 +708,10 @@ function validateAllMandatoryFields() {
     // for the entire form
     removeGreenCheckmarks();
 
-    // Validate error handling approach field
+    // ICGEM special Validate error handling approach field
     validateErrorHandlingApproachField();
+    // ICGEM special Validate topographic model type requirements
+    validateTopographicModelTypeRequirements();
 
 };
 
