@@ -1081,8 +1081,7 @@ final class ICGEMControllerTest extends TestCase
         $this->assertCount(1, $tmpElements);
         
         $tmpChildren = $tmpElements[0]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('2002-01-01', (string)$tmpChildren->startDate);
-        $this->assertEquals('2023-12-31', (string)$tmpChildren->stopDate);
+        $this->assertEquals('2002-01-01/2023-12-31', (string)$tmpChildren->temporalCoverage);
         $this->assertEquals('GFZ Potsdam', (string)$tmpChildren->generatingInstitution);
         $this->assertEquals('Release 01', (string)$tmpChildren->release);
     }
