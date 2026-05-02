@@ -1,23 +1,43 @@
 /**
  * ICGEM Roundtrip Test Suite
  *
- * Validates the full form cycle for ICGEM (Global Gravity Model) metadata:
- *   1.1  Parse all fields from the reference XML in Node.js context and assert
- *        every field was successfully extracted.
- *   1.2 + 2.1  Fill the GEM form from parsed data, save, and verify the
- *        downloaded XML matches the expected values field-by-field.
- *   3 + 3.1  Fill the form, then clear it and assert every field is empty /
- *        reset to the default state.
- *   4 + 5  Upload the reference XML file and verify all form fields match the
- *        parsed reference data.
+ * Validates the full form cycle for ICGEM (Global Gravity Model) metadata.
  *
- * Runs under playwright.gem.config.ts (showGGMsProperties=true).
+ * ── Test steps ────────────────────────────────────────────────────────────────
+ *   step 1  Parse all fields from the reference XML in Node.js context and
+ *           assert every field was successfully extracted.
+ *   step 2  Fill the GEM form from parsed data, save it.
+ *   step 3  Verify the downloaded XML matches the expected values field-by-field.
+ *   step 4  Clear the form and assert every field is empty.
+ *   step 5  Upload the downloaded XML back into the GEM and verify that the
+ *           fields match the reference.
  *
- * NOTE on normalization: the ICGEM XML schema uses mixed-case for some values
- * (e.g. `<grav:errors>No</grav:errors>`) while the form stores lowercase
- * option values ("no").  This test compares saved-output values directly
- * against parsedData values, so any such mismatch will be flagged.  Fix the
- * reference XML (or the save/load code) to make the test green.
+ * ── Helper / utility usage by step ───────────────────────────────────────────
+ *   parseIcgemXmlFile()         step 1
+ *   fillIcgemForm()             step 2, step 5 (indirectly via upload)
+ *   downloadAndSaveIcgemXml()   step 2 → produces artifact consumed by step 3
+ *   extractEnvelope()           step 3
+ *   extractResource()           step 3
+ *   extractGravProduct()        step 3
+ *   extractHcm()                step 3
+ *   toArray()                   step 1, step 3
+ *   extractText()               step 1, step 3
+ *   findKey()                   step 1, step 3
+ *   getNode()                   step 1, step 3
+ *   navigateToHome()            step 2, step 4, step 5
+ *
+ * ── Test cases ────────────────────────────────────────────────────────────────
+ *   Each entry in TEST_CASES drives a full independent roundtrip run so the
+ *   suite can be extended by adding a new object to that array without touching
+ *   any test or helper code.
+ *
+ * ── Runs under ────────────────────────────────────────────────────────────────
+ *   playwright.gem.config.ts  (showGGMsProperties=true)
+ *
+ * ── NOTE on normalisation ─────────────────────────────────────────────────────
+ *   Reference XML files MUST be produced by ELMOGEM (save/download), not
+ *   hand-authored.  Step 3 compares the downloaded XML values verbatim against
+ *   the parsed reference values, so any casing difference will cause a false failure.
  */
 
 import { test, expect, type Page } from '@playwright/test';
@@ -26,9 +46,32 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { XMLParser } from 'fast-xml-parser';
 
-// ─── File paths ────────────────────────────────────────────────────────────────
+// ─── Test cases ────────────────────────────────────────────────────────────────
+//
+// Add a new entry here to run the full 5-step roundtrip against a different
+// reference XML file.  No other code needs to change.
 
-const REFERENCE_XML_PATH = path.join(__dirname, './outputDataReference/icgem-metadata-schema-dataset.xml');
+interface IcgemTestCase {
+  /** Human-readable label used in test titles and output filenames. */
+  label: string;
+  /** Absolute path to the reference XML file. */
+  referenceXmlPath: string;
+}
+
+const TEST_CASES: IcgemTestCase[] = [
+  {
+    label: 'icgem-metadata-schema-dataset',
+    referenceXmlPath: path.join(__dirname, './outputDataReference/icgem-metadata-schema-dataset.xml'),
+  },
+  // ── Add more test cases below ──────────────────────────────────────────────
+  // {
+  //   label: 'icgem-static-model',
+  //   referenceXmlPath: path.join(__dirname, './outputDataReference/icgem-static-model.xml'),
+  // },
+];
+
+// ─── Shared output directory ───────────────────────────────────────────────────
+
 const XML_ACTUAL_DIR = path.join(__dirname, './outputDataActual');
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
