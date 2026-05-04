@@ -70,6 +70,8 @@ const TEST_CASES: IcgemTestCase[] = [
   // },
 ];
 
+const REFERENCE_XML_PATH = path.join(__dirname, './outputDataReference/icgem-metadata-schema-dataset.xml');
+
 // ─── Shared output directory ───────────────────────────────────────────────────
 
 const XML_ACTUAL_DIR = path.join(__dirname, './outputDataActual');
