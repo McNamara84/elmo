@@ -124,10 +124,16 @@ function handleXmlFile(file) {
             // Load XML data into form
             await loadXmlToForm(xmlDoc);
 
-            // Show success toast and always close modal on success
+            // Show success toast; close modal only when toast is available.
+            // Register a shown.bs.modal fallback first: Bootstrap's hide() is a silent
+            // no-op when the opening animation is still running (_isTransitioning === true).
             setUploadLoadingState(false);
-            showUploadToast(file.name, 'success');
-            $('#modal-uploadxml').modal('hide');
+            if (showUploadToast(file.name, 'success')) {
+                const $modal = $('#modal-uploadxml');
+                $modal.one('shown.bs.modal.upload', function () { $modal.modal('hide'); });
+                $modal.one('hidden.bs.modal.upload', function () { $modal.off('shown.bs.modal.upload'); });
+                $modal.modal('hide');
+            }
 
         } catch (error) {
             console.error('Error:', error);
