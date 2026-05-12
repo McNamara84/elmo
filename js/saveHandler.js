@@ -164,12 +164,12 @@ class SaveHandler {
                 await this.autosaveService.markManualSave();
             }
 
-            // Log successful save
-            await logEvent('save', 'user successfully saved xml file locally');
-
             this.showNotification('success',
                 translations.alerts.successHeading,
                 translations.alerts.savingSuccess);
+
+            // Log successful save (fire-and-forget, must not delay the notification)
+            logEvent('save', 'user successfully saved xml file locally');
         } catch (error) {
             console.error('Error saving dataset:', error);
 
