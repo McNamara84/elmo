@@ -218,6 +218,8 @@ The following third-party dependencies are included in header.php and footer.htm
   Is used to display the thesauri as a hierarchical tree structure.
 - [Swagger UI 5](https://github.com/swagger-api/swagger-ui/releases)<br>
   For displaying the dynamic and interactive API documentation in accordance with OpenAPI standard 3.1.
+- [Node.js](https://nodejs.org/)<br>
+  Runtime environment for running JavaScript tooling and scripts. Used for npm package management, running Jest and Playwright tests, and build automation. The version is specified in the .nvmrc file. 
 
  ### Managing Javascript dependencies
  ELMO uses npm package manager. Files 'package.json' lists your project's dependencies and their allowed version ranges. It's the human-readable configuration. 'package-lock.json' lists all dependencies, even transitive ones (dependencies of dependencies). 'package.json' defines acceptable ranges of versions, while 'package-lock.json' locks the prescise package versions for reproducability. 
