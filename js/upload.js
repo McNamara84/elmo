@@ -124,11 +124,10 @@ function handleXmlFile(file) {
             // Load XML data into form
             await loadXmlToForm(xmlDoc);
 
-            // Show success toast; close modal only when toast is available
+            // Show success toast and always close modal on success
             setUploadLoadingState(false);
-            if (showUploadToast(file.name, 'success')) {
-                $('#modal-uploadxml').modal('hide');
-            }
+            showUploadToast(file.name, 'success');
+            $('#modal-uploadxml').modal('hide');
 
         } catch (error) {
             console.error('Error:', error);
