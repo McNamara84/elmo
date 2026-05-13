@@ -439,7 +439,33 @@ if (errorHandlingApproach) {
     );
 }
 /**
- * Validates the error handling approach textarea field.
+ * ICGEM special: Marks topographic-specific selects (layerApproach, forwardModellingDomain) as
+ * required-on-submit only when the topographic section is currently visible.
+ * Called from the Submit button handler in buttons.js.
+ */
+function validateTopographicModelTypeRequirements() {
+    const topoSection = document.querySelector('.visibility-modeltype-topographic');
+    const layerApproach = document.getElementById('select-topo-layerapproach');
+    const domain = document.getElementById('select-topo-domain');
+
+    if (!topoSection || !layerApproach || !domain) {
+        return;
+    }
+
+    const isVisible = !topoSection.classList.contains('d-none');
+
+    if (isVisible) {
+        layerApproach.classList.add('js-required-on-submit');
+        domain.classList.add('js-required-on-submit');
+    } else {
+        layerApproach.classList.remove('js-required-on-submit');
+        layerApproach.removeAttribute('required');
+        domain.classList.remove('js-required-on-submit');
+        domain.removeAttribute('required');
+    }
+}
+/**
+ * ICGEM special: Validates the error handling approach textarea field.
  * - Returns success automatically if the field is not required or not present.
  * - Marks the field as valid if it contains text and is required.
  * - Marks the field as invalid if it is required but empty or contains only whitespace.
@@ -473,8 +499,6 @@ function validateErrorHandlingApproachField() {
     let oldFeedback = inputGroup.querySelector('.invalid-feedback.custom-error-handling');
     if (oldFeedback) oldFeedback.remove();
     errorHandlingApproach.setCustomValidity("");
-
-
 
     // Field is required, so validate content
     if (value.trim().length === 0) {
@@ -582,11 +606,14 @@ function validateAllMandatoryFields() {
     // for the entire form
     removeGreenCheckmarks();
 
-    // Validate error handling approach field
+    // ICGEM special Validate error handling approach field
     validateErrorHandlingApproachField();
+    // ICGEM special Validate topographic model type requirements
+    validateTopographicModelTypeRequirements();
 
 };
 
+// used to remove the green checkmarks from optional fields
 const optionalFieldsSelector = [
     // Resource Information
     'input[name="doi"]',
@@ -718,6 +745,9 @@ $(document).on('change',
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         validateSpatialTemporalCoverageRequirements,
-        validateAllMandatoryFields
+        validateAllMandatoryFields,
+        validateTitleField,
+        validateAuthorNameFields,
+        validateTopographicModelTypeRequirements
     };
 }
