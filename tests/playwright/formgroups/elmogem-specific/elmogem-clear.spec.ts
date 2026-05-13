@@ -1,6 +1,23 @@
 import { test, expect } from '@playwright/test';
 import { navigateToHome, fillGEM } from '../../utils';
 
+const MODEL_TYPES_MOCK = [
+  { id: 1, name: 'Static', description: 'Static model' },
+  { id: 2, name: 'Temporal', description: 'Temporal model' },
+  { id: 3, name: 'Topographic', description: 'Topographic model' },
+  { id: 4, name: 'Simulated', description: 'Simulated model' },
+];
+
+const MATH_REPS_MOCK = [
+  { id: 1, name: 'Spherical harmonics', description: 'Spherical harmonics' },
+  { id: 2, name: 'Ellipsoidal harmonics', description: 'Ellipsoidal harmonics' },
+];
+
+const FILE_FORMATS_MOCK = [
+  { id: 1, name: 'icgem1.0', description: 'icgem1.0 format' },
+  { id: 2, name: 'icgem2.0', description: 'icgem2.0 format' },
+];
+
 /**
  * Selectors mirror GGMS_SELECTORS exported from js/clear.js.
  * Keep in sync when adding new ICGEM fields.
@@ -56,6 +73,27 @@ const DS_ROW = '#group-datasources .row[data-source-row]';
 
 test.describe('GGMs / ICGEM – clearInputFields resets all fields', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/v2/vocabs/modeltypes', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(MODEL_TYPES_MOCK),
+      });
+    });
+    await page.route('**/api/v2/vocabs/mathreps', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(MATH_REPS_MOCK),
+      });
+    });
+    await page.route('**/api/v2/vocabs/icgemformats', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(FILE_FORMATS_MOCK),
+      });
+    });
     await navigateToHome(page);
     await expect(page.locator('#group-ggmspropertiesessential')).toBeVisible();
   });
