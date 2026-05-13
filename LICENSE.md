@@ -1,7 +1,5 @@
 # GNU GENERAL PUBLIC LICENSE Version 2
 
-Copyright (C) 2025 Holger Ehrmann, Jana Franz, Ali Mohammed / GFZ Data Services
-
                     GNU GENERAL PUBLIC LICENSE
                        Version 2, June 1991
 
