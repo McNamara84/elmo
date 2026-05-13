@@ -881,19 +881,8 @@ class ICGEMController extends DatasetController
         $formatsEl = $dc->createElementNS($ns, 'formats');
         $formatEl  = $dc->createElementNS($ns, 'format');
         $formatEl->appendChild($dc->createTextNode($fileFormat));
-        $formatsEl->appendChild($dc->createTextNode("\n    "));
         $formatsEl->appendChild($formatEl);
-        $formatsEl->appendChild($dc->createTextNode("\n  "));
-
-        // The trailing "\n" text node before </resource> provides the line break;
-        // extend it with indentation so <formats> aligns with sibling elements.
-        $lastChild = $dc->documentElement->lastChild;
-        if ($lastChild instanceof \DOMText) {
-            $lastChild->nodeValue .= '  ';
-        }
-
         $dc->documentElement->appendChild($formatsEl);
-        $dc->documentElement->appendChild($dc->createTextNode("\n"));
 
         return $dc->saveXML();
     }
@@ -975,11 +964,16 @@ class ICGEMController extends DatasetController
         $this->insertContactPersons($icgempart, $id);
         
         // 12. Format and return the combined envelope XML
-        $dom = dom_import_simplexml($envelope)->ownerDocument;
+        // Re-parse stripping all existing whitespace-only text nodes (inherited from
+        // the XSLT-generated DataCite XML) so that formatOutput can re-indent the
+        // merged document consistently from scratch.
+        $rawXml = dom_import_simplexml($envelope)->ownerDocument->saveXML();
+        $dom = new DOMDocument();
+        $dom->preserveWhiteSpace = false;
+        $dom->loadXML($rawXml);
         $dom->formatOutput = true;
         $xml = $dom->saveXML();
-        
-        // Ensure no leading whitespace that would break XML declaration
+
         return ltrim($xml);
     }
 
