@@ -880,8 +880,19 @@ class ICGEMController extends DatasetController
         $ns = 'http://datacite.org/schema/kernel-4';
         $formatsEl = $dc->createElementNS($ns, 'formats');
         $formatEl  = $dc->createElementNS($ns, 'format', htmlspecialchars($fileFormat, ENT_XML1, 'UTF-8'));
+        $formatsEl->appendChild($dc->createTextNode("\n    "));
         $formatsEl->appendChild($formatEl);
+        $formatsEl->appendChild($dc->createTextNode("\n  "));
+
+        // The trailing "\n" text node before </resource> provides the line break;
+        // extend it with indentation so <formats> aligns with sibling elements.
+        $lastChild = $dc->documentElement->lastChild;
+        if ($lastChild instanceof \DOMText) {
+            $lastChild->nodeValue .= '  ';
+        }
+
         $dc->documentElement->appendChild($formatsEl);
+        $dc->documentElement->appendChild($dc->createTextNode("\n"));
 
         return $dc->saveXML();
     }
