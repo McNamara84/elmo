@@ -13,7 +13,7 @@ describe('headerResponsiveDesign.js', () => {
         // Mock translations
         global.translations = {
             general: {
-                logoTitle: 'Enhanced Laboratory Metadata Organizer',
+                logoTitle: 'Enhanced Linked Metadata Organizer',
                 logoTitleShort: 'ELMO'
             },
             buttons: {
@@ -74,7 +74,7 @@ describe('headerResponsiveDesign.js', () => {
             window.innerWidth = 1920;
             resizeTitle();
             
-            expect($('#headtitle').text()).toBe('Enhanced Laboratory Metadata Organizer');
+            expect($('#headtitle').text()).toBe('Enhanced Linked Metadata Organizer');
             expect($('#headtitle').css('font-size')).toBe('20px');
         });
 
@@ -180,7 +180,7 @@ describe('headerResponsiveDesign.js', () => {
     describe('getNestedValue helper', () => {
         test('returns nested value correctly', () => {
             const result = getNestedValue(translations, 'general.logoTitle');
-            expect(result).toBe('Enhanced Laboratory Metadata Organizer');
+            expect(result).toBe('Enhanced Linked Metadata Organizer');
         });
 
         test('returns undefined for missing path', () => {
