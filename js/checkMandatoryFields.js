@@ -853,8 +853,7 @@ if (typeof module !== 'undefined' && module.exports) {
         validateAllMandatoryFields,
         validateTitleField,
         validateAuthorNameFields,
-        validateTopographicModelTypeRequirements
-        validateAllMandatoryFields,
+        validateTopographicModelTypeRequirements,
         validateTitleField,
         validateAuthorNameFields
     };
