@@ -45,6 +45,7 @@ Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., 
 - Lazy loading of thesaurus data (JSON files loaded only when modals are opened).
 - Configurable feature toggles via `ELMO_FEATURES` JavaScript object for conditional resource loading.
 - Submitting of metadata directly to data curators.
+- Local save and reload of standardized metadata as XML or JSON-LD.
 - Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
@@ -154,6 +155,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
   - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `XML_SUBMIT_ADDRESS_GEM` for the standard, MSL, and GEM variants respectively.
+  - `DATACITE_JSONLD_CONTEXT_URL`: Optional environment variable for overriding the `@context` URL used in JSON-LD exports. If unset, ELMO falls back to the DataCite stage linked-data context.
   - `$showContributorPersons`: Specifies whether the form group Contributor Persons should be displayed (true/false).
   - `$showContributorInstitutions`: Specifies whether the form group Contributor Institutions should be displayed (true/false).
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
@@ -1394,6 +1396,25 @@ The following table gives a quick overview on the occurences of the form fields 
   ## Architecture and Data Flow
   </summary>
 
+### JSON-LD Export and Import
+
+The JSON-LD workflow intentionally reuses the existing XML path instead of maintaining a separate field-mapping implementation.
+
+**Export flow**
+1. The frontend save flow submits the form as usual and passes `download_format=jsonld` to `save/save_data.php`.
+2. The save pipeline persists the current form state first, just like the XML workflow.
+3. `DatasetController::transformResourceToJsonLd()` generates the canonical DataCite XML export.
+4. `DataCiteJsonLdService` reads that XML and maps it to the compact DataCite JSON-LD shape with `attrs` and `value` keys.
+5. The download response is returned as `application/ld+json`.
+
+**Import flow**
+1. `js/upload.js` accepts XML and JSON-LD files through the same upload modal.
+2. JSON-LD uploads are parsed and converted back into a DataCite XML DOM.
+3. The converted XML is then handed to `loadXmlToForm()`.
+4. As a result, JSON-LD imports reuse the existing XML field-mapping logic and inherit most of the established XML import coverage.
+
+This design keeps the canonical transformation in one place: DataCite XML remains the internal interchange format, while JSON-LD is treated as an additional export and import representation built around that XML.
+
 The `saveGGMsDataSources` function orchestrates a multi-step pipeline that transforms frontend form data into structured database records, often triggering "side effects" to maintain data integrity across the system.
 
 **ASCII Data Flow Diagram**
@@ -1707,9 +1728,20 @@ npx playwright test --headed --project=chromium
 # Run a single test by title
 npx playwright test -g "populates author details"
 
+# Run tests for a specific ELMO variant (local parallel mode with fast feedback)
+npx playwright test --config=playwright.generic.config.ts  # Standard DataCite edition
+npx playwright test --config=playwright.gem.config.ts      # ICGEM Global Geopotential Models
+npx playwright test --config=playwright.msl.config.ts      # MSL Multi-Scale Laboratories edition
+npx playwright test --config=playwright.igsn.config.ts     # IGSN Integrated GeoSample Metadata
+
+# Run all 4 variants sequentially (CI mode - one container, settings switched between variants)
+npx playwright test  # Uses default config (playwright.config.ts with workers:1)
+
 # Show the HTML report after a test run
 npx playwright show-report
 ```
+
+**Note on variant configs:** The per-variant configs (`playwright.*.config.ts`) run tests in parallel (`fullyParallel: true, workers: undefined`) against a single Docker container with that variant's settings applied once via setup. The default config (`playwright.config.ts`) runs all 4 variants sequentially (`workers: 1`), switching `settings.php` between variants. Variant-specific configs are ideal for fast local feedback during development; the default config is used in CI.
 
 #### Troubleshooting
 
