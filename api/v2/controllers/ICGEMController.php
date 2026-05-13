@@ -3,7 +3,7 @@ require_once __DIR__ . '/DatasetController.php';
 
 class ICGEMController extends DatasetController
 {
-    private const ICGEM_NAMESPACE_PREFIX = 'icgv';
+    private const ICGEM_NAMESPACE_PREFIX = 'grav';
     private const ICGEM_NAMESPACE_URI = 'http://icgem.gfz.de/schema';
 
     public function __construct()
@@ -359,9 +359,9 @@ class ICGEMController extends DatasetController
             foreach ($dataSources as $dataSource) {
                 $dsElement = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSource', null, self::ICGEM_NAMESPACE_URI);
                 
-                // Map type code to human-readable name
+                // Map type code to human-readable name and set as attribute
                 $sourceType = $typeMap[$dataSource['type']] ?? $dataSource['type'];
-                $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSourceType', $this->prepare($sourceType, 'inputDataSourceType'), self::ICGEM_NAMESPACE_URI);
+                $dsElement->addAttribute('type', $sourceType);
                 
                 if (!empty($dataSource['description'])) {
                     $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['description'], 'description'), self::ICGEM_NAMESPACE_URI);
@@ -532,11 +532,12 @@ class ICGEMController extends DatasetController
             foreach ($temporalProperties as $property) {
                 $tmpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalModelProperties', null, self::ICGEM_NAMESPACE_URI);
                 
-                if (!empty($property['start_date'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':startDate', $this->prepare($property['start_date'], 'startDate'), self::ICGEM_NAMESPACE_URI);
-                }
-                if (!empty($property['end_date'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':stopDate', $this->prepare($property['end_date'], 'stopDate'), self::ICGEM_NAMESPACE_URI);
+                $hasStart = !empty($property['start_date']);
+                $hasEnd = !empty($property['end_date']);
+                if ($hasStart || $hasEnd) {
+                    $startPart = $hasStart ? $property['start_date'] : 'unknown';
+                    $endPart = $hasEnd ? $property['end_date'] : 'open';
+                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalCoverage', htmlspecialchars($startPart . '/' . $endPart), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['generating_institution'])) {
                     $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':generatingInstitution', $this->prepare($property['generating_institution'], 'generatingInstitution'), self::ICGEM_NAMESPACE_URI);
@@ -545,7 +546,8 @@ class ICGEMController extends DatasetController
                     $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':release', $this->prepare($property['release'], 'release'), self::ICGEM_NAMESPACE_URI);
                 }
                 if (!empty($property['temporal_resolution_days'])) {
-                    $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolution', $this->prepare($property['temporal_resolution_days'], 'temporalResolution'), self::ICGEM_NAMESPACE_URI);
+                    $resElement = $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolution', $this->prepare($property['temporal_resolution_days'], 'temporalResolution'), self::ICGEM_NAMESPACE_URI);
+                    $resElement->addAttribute('uom', 'd');
                 }
             }
         }
@@ -560,11 +562,11 @@ class ICGEMController extends DatasetController
     {
         if ($staticProperties) {
             foreach ($staticProperties as $property) {
-                $smpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':staticModelProperties', null, self::ICGEM_NAMESPACE_URI);
-                
-                if (!empty($property['info_time_variable_coefficients'])) {
-                    $smpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':infoTimeVariableCoefficients', $this->prepare($property['info_time_variable_coefficients'], 'infoTimeVariableCoefficients'), self::ICGEM_NAMESPACE_URI);
+                if (empty($property['info_time_variable_coefficients'])) {
+                    continue;
                 }
+                $smpElement = $shm->addChild(self::ICGEM_NAMESPACE_PREFIX . ':staticModelProperties', null, self::ICGEM_NAMESPACE_URI);
+                $smpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':infoTimeVariableCoefficients', $this->prepare($property['info_time_variable_coefficients'], 'infoTimeVariableCoefficients'), self::ICGEM_NAMESPACE_URI);
             }
         }
     }
@@ -762,7 +764,7 @@ class ICGEMController extends DatasetController
         $stmt->close();
 
         if (!empty($descriptions)) {
-            $descriptionsXml = $xml->addChild('descriptions');
+            $descriptionsXml = $xml->addChild('descriptions', null, self::ICGEM_NAMESPACE_URI);
             
             // Normalize all valid types for robust comparison
             $normalizedValidTypes = array_map(
@@ -802,27 +804,71 @@ class ICGEMController extends DatasetController
             }
         }
     }
-        /**
-     * Replaces hardcoded local file paths in DataCite XML with proper remote schema URLs.
-     * The XSLT that generates DataCite XML includes hardcoded Windows file paths
-     * which need to be replaced for production environments.
-     *
-     * @param string $dataciteXmlString The DataCite XML string with potentially hardcoded paths.
-     * @return string The cleaned XML with proper schema URLs.
-     */
-    private function cleanDataCiteSchemaLocation(string $dataciteXmlString): string
-    {
-        // Replace hardcoded Windows file paths with the official DataCite schema URL
-        $dataciteXmlString = preg_replace(
-            '/file:.*?DataCiteSchema\d+\.xsd/',
-            'https://schema.datacite.org/meta/kernel-4.7/metadata.xsd',
-            $dataciteXmlString
-        );
-        
-        return $dataciteXmlString;
-    }
 
     /**
+     * Inserts contact persons from the Authors form-group into the envelope under the
+     * xs:any extension point, using the DataCite namespace (dace:).
+     *
+     * Each contact person is serialised as a dace:contributor with
+     * contributorType="ContactPerson", preserving family/given name, ORCID, e-mail,
+     * website, and affiliations so the information is never lost during ETL.
+     *
+     * @param SimpleXMLElement $icgempart The globalGravityProduct element.
+     * @param int $id The resource ID.
+     */
+    protected function insertContactPersons(SimpleXMLElement $icgempart, int $id): void
+    {
+        $contactPersons = $this->getContactPersons($this->connection, $id);
+        if (empty($contactPersons)) {
+            return;
+        }
+
+        $daceNs = 'http://datacite.org/schema/kernel-4';
+        $contributors = $icgempart->addChild('dace:contributors', null, $daceNs);
+
+        foreach ($contactPersons as $cp) {
+            $contributor = $contributors->addChild('dace:contributor', null, $daceNs);
+            $contributor->addAttribute('contributorType', 'ContactPerson');
+
+            $givenName  = trim($cp['givenname']  ?? '');
+            $familyName = trim($cp['familyname'] ?? '');
+            $fullName   = trim("$givenName $familyName");
+
+            if ($fullName !== '') {
+                $contributor->addChild('dace:contributorName', htmlspecialchars($fullName), $daceNs);
+            }
+            if ($givenName !== '') {
+                $contributor->addChild('dace:givenName', htmlspecialchars($givenName), $daceNs);
+            }
+            if ($familyName !== '') {
+                $contributor->addChild('dace:familyName', htmlspecialchars($familyName), $daceNs);
+            }
+            if (!empty($cp['orcid'])) {
+                $orcidEl = $contributor->addChild('dace:nameIdentifier', htmlspecialchars($cp['orcid']), $daceNs);
+                $orcidEl->addAttribute('nameIdentifierScheme', 'ORCID');
+                $orcidEl->addAttribute('schemeURI', 'https://orcid.org');
+            }
+            if (!empty($cp['email'])) {
+                $emailEl = $contributor->addChild('dace:nameIdentifier', htmlspecialchars($cp['email']), $daceNs);
+                $emailEl->addAttribute('nameIdentifierScheme', 'email');
+            }
+            if (!empty($cp['website'])) {
+                $webEl = $contributor->addChild('dace:nameIdentifier', htmlspecialchars($cp['website']), $daceNs);
+                $webEl->addAttribute('nameIdentifierScheme', 'URL');
+            }
+            foreach ($cp['Affiliations'] ?? [] as $aff) {
+                if (!empty($aff['name'])) {
+                    $affEl = $contributor->addChild('dace:affiliation', htmlspecialchars($aff['name']), $daceNs);
+                    if (!empty($aff['rorId'])) {
+                        $affEl->addAttribute('affiliationIdentifier', $aff['rorId']);
+                        $affEl->addAttribute('affiliationIdentifierScheme', 'ROR');
+                    }
+                }
+            }
+        }
+    }
+
+        /**
      * Creates an ICGEM-specific XML by combining DataCite and ICGEM metadata in an envelope.
      *
      * @param int $id The ID of the resource.
@@ -834,23 +880,24 @@ class ICGEMController extends DatasetController
         // 1. Fetch GGM data (may be null/incomplete during partial saves; validation is done at submit time)
         $ggmData = $this->getGGMData($this->connection, $id);
         
-        // 2. Get DataCite XML as string and clean schema location
+        // 2. Get DataCite XML as string
         $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, "datacite");
-        $dataciteXmlString = $this->cleanDataCiteSchemaLocation($dataciteXmlString);
         
         // 3. Create envelope root with ICGEM as primary namespace and DataCite as secondary
         $envelope = new SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:envelope xmlns:icgv="' . self::ICGEM_NAMESPACE_URI . '" ' .
-            'xmlns:dc="http://datacite.org/schema/kernel-4" ' .
+            '<grav:envelope xmlns:grav="' . self::ICGEM_NAMESPACE_URI . '" ' .
+            'xmlns:dace="http://datacite.org/schema/kernel-4" ' .
             'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' .
-            'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' http://icgem.gfz.de/schema/schema.xsd"/>'
+            'xsi:schemaLocation="' . self::ICGEM_NAMESPACE_URI . ' http://icgem.gfz.de/schema/icgemSchemaBase.xsd"/>'
         );
         
         // 4. Parse DataCite XML and append it to envelope
         try {
             $dataciteXml = new SimpleXMLElement($dataciteXmlString);
             $this->simplexmlAppend($envelope, $dataciteXml);
+            // Add dace: prefix to all DataCite elements
+            $this->addNamespacePrefixToChildren($envelope, 'dace', 'http://datacite.org/schema/kernel-4');
         } catch (Exception $e) {
             throw new Exception("Failed to parse DataCite XML: " . $e->getMessage());
         }
@@ -881,8 +928,11 @@ class ICGEMController extends DatasetController
         
         // 10. Insert descriptions (THIRD per XSD sequence)
         $this->insertDescriptions($icgempart, $id);
+
+        // 11. Insert contact persons (xs:any extension point – DataCite namespace)
+        $this->insertContactPersons($icgempart, $id);
         
-        // 11. Format and return the combined envelope XML
+        // 12. Format and return the combined envelope XML
         $dom = dom_import_simplexml($envelope)->ownerDocument;
         $dom->formatOutput = true;
         $xml = $dom->saveXML();
@@ -899,6 +949,42 @@ class ICGEMController extends DatasetController
         $toDom = dom_import_simplexml($to);
         $fromDom = dom_import_simplexml($from);
         $toDom->appendChild($toDom->ownerDocument->importNode($fromDom, true));
+    }
+
+    /**
+     * Recursively adds namespace prefix to all elements in a namespace.
+     * 
+     * @param SimpleXMLElement $element The root element to process.
+     * @param string $prefix The namespace prefix to add
+     * @param string $namespaceUri The namespace URI to match (e.g., 'http://datacite.org/schema/kernel-4').
+     */
+    protected function addNamespacePrefixToChildren(SimpleXMLElement $element, string $prefix, string $namespaceUri): void
+    {
+        $dom = dom_import_simplexml($element);
+        $xpath = new \DOMXPath($dom->ownerDocument);
+        
+        // Find all elements in the target namespace without a prefix
+        $nodes = $xpath->query("//*[namespace-uri()='$namespaceUri']", $dom);
+        
+        foreach ($nodes as $node) {
+            if ($node->nodeType === XML_ELEMENT_NODE) {
+                // Create a new element with the prefix in the same namespace
+                $newElement = $dom->ownerDocument->createElementNS($namespaceUri, $prefix . ':' . $node->localName);
+                
+                // Copy all attributes
+                foreach ($node->attributes as $attr) {
+                    $newElement->setAttributeNS($attr->namespaceURI, $attr->prefix ? $attr->prefix . ':' . $attr->localName : $attr->localName, $attr->value);
+                }
+                
+                // Copy all child nodes
+                while ($node->firstChild) {
+                    $newElement->appendChild($node->firstChild);
+                }
+                
+                // Replace the old node
+                $node->parentNode->replaceChild($newElement, $node);
+            }
+        }
     }
         /**
      * Exports an ICGEM-specific XML for a resource and outputs it directly.
