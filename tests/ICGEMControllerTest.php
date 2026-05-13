@@ -1566,12 +1566,20 @@ EOT;
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
         $method->setAccessible(true);
-        $result = $method->invoke($this->controller, $dataciteXml, 'text/xml; charset="utf-8"');
+        $result = $method->invoke($this->controller, $dataciteXml, 'format & type: <binary>');
 
-        // Verify escaped characters are in XML
-        $this->assertStringContainsString('&quot;', $result);
-        $this->assertStringNotContainsString('charset="utf-8"', $result);
-        $this->assertStringContainsString('charset=&quot;utf-8&quot;', $result);
+        // < and & must be escaped in XML text content to produce valid XML
+        $this->assertStringContainsString('&amp;', $result);
+        $this->assertStringContainsString('&lt;', $result);
+        $this->assertStringNotContainsString('<binary>', $result);
+
+        // Verify the XML is valid and the value round-trips correctly
+        $doc = new \DOMDocument();
+        $doc->loadXML($result);
+        $xpath = new \DOMXPath($doc);
+        $xpath->registerNamespace('dc', 'http://datacite.org/schema/kernel-4');
+        $format = $xpath->query('//dc:formats/dc:format');
+        $this->assertEquals('format & type: <binary>', $format[0]->textContent);
     }
 
     /**

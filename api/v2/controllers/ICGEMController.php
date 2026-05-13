@@ -879,7 +879,8 @@ class ICGEMController extends DatasetController
 
         $ns = 'http://datacite.org/schema/kernel-4';
         $formatsEl = $dc->createElementNS($ns, 'formats');
-        $formatEl  = $dc->createElementNS($ns, 'format', htmlspecialchars($fileFormat, ENT_XML1, 'UTF-8'));
+        $formatEl  = $dc->createElementNS($ns, 'format');
+        $formatEl->appendChild($dc->createTextNode($fileFormat));
         $formatsEl->appendChild($dc->createTextNode("\n    "));
         $formatsEl->appendChild($formatEl);
         $formatsEl->appendChild($dc->createTextNode("\n  "));
