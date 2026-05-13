@@ -13,7 +13,7 @@ authors:
   - family-names: "Rethfeldt"
     given-names: "Nina"
     orcid: "https://orcid.org/0009-0006-5992-0559"
-title: "ELMO - Enhanced Laboratory Metadata Organizer"
+title: "ELMO - Enhanced Linked Metadata Organizer"
 version: 2.0.1
 #doi: 10.5880/GFZ.XXXXXX
 date-released: 2025-03-13
