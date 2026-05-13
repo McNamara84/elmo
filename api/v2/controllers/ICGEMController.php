@@ -801,7 +801,6 @@ class ICGEMController extends DatasetController
             }
         }
     }
-
     /**
      * Inserts contact persons from the Authors form-group into the envelope under the
      * xs:any extension point, using the DataCite namespace (dace:).
@@ -865,6 +864,28 @@ class ICGEMController extends DatasetController
         }
     }
 
+    /**
+     * Injects a DataCite <formats><format> element into a DataCite XML string.
+     * Used because the XSLT cannot be modified to map GGM file format to DataCite element 14.
+     *
+     * @param string $dataciteXmlString The DataCite XML string produced by XSLT.
+     * @param string $fileFormat        The file format value (e.g. "icgem2.0").
+     * @return string The modified DataCite XML string.
+     */
+    private function injectFormatsIntoDataCiteXml(string $dataciteXmlString, string $fileFormat): string
+    {
+        $dc = new DOMDocument();
+        $dc->loadXML($dataciteXmlString);
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $formatsEl = $dc->createElementNS($ns, 'formats');
+        $formatEl  = $dc->createElementNS($ns, 'format', htmlspecialchars($fileFormat, ENT_XML1, 'UTF-8'));
+        $formatsEl->appendChild($formatEl);
+        $dc->documentElement->appendChild($formatsEl);
+
+        return $dc->saveXML();
+    }
+
         /**
      * Creates an ICGEM-specific XML by combining DataCite and ICGEM metadata in an envelope.
      *
@@ -882,6 +903,15 @@ class ICGEMController extends DatasetController
         
         // 2. Get DataCite XML as string
         $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, "datacite");
+        $dataciteXmlString = $this->cleanDataCiteSchemaLocation($dataciteXmlString);
+        
+        // 2a. Inject file format into DataCite if available
+        if (!empty($ggmData['file_format_name'])) {
+            $dataciteXmlString = $this->injectFormatsIntoDataCiteXml(
+                $dataciteXmlString,
+                $ggmData['file_format_name']
+            );
+        }
         
         // 3. Create envelope root with ICGEM as primary namespace and DataCite as secondary
         $envelope = new SimpleXMLElement(
