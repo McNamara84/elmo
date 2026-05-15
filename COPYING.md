@@ -1,7 +1,7 @@
 ## License 
 GNU General Public License, Version 3, 29 June 2007
 
-Copyright © 2026 tha Authors; GFZ Helmholtz Centre for Geosciences, Potsdam, Germany
+Copyright © 2026 the Authors; GFZ Helmholtz Centre for Geosciences, Potsdam, Germany
 
 ELMO – Enhanced Linked Metadata Editor is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
 as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
