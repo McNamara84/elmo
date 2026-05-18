@@ -9,7 +9,7 @@
         "language": "Langue"
     },
     "general": {
-        "logoTitle": "ELMO - Enhanced Laboratory Metadata Organizer 2.0",
+        "logoTitle": "ELMO - Enhanced Linked Metadata Organizer 2.0",
         "logoTitleShort": "ELMO 2.0",
         "choose": "Sélectionner...",
         "valid": "Valide",
@@ -318,7 +318,7 @@
         "changelog": {
             "title": "Journal des modifications",
             "aboutText": "Les bases de l'éditeur de métadonnées ELMO ont été développées en 2024 par des étudiants de l'Université des sciences appliquées Potsdam en collaboration avec le Centre Helmholtz pour les sciences de la Terre (GFZ) Potsdam. L'équipe de développement du GFZ a ensuite poursuivi son optimisation. L'éditeur de métadonnées ELMO est publié sous licence GNU General Public License, version 2.",
-            "aboutHeading": "À propos d'ELMO - Enhanced Laboratory Metadata Organizer"
+            "aboutHeading": "À propos d'ELMO - Enhanced Linked Metadata Organizer"
         },
         "save": {
             "title": "Enregistrer les métadonnées",

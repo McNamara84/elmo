@@ -1,6 +1,6 @@
 openapi: 3.1.1
 info:
-  title: ELMO - Enhanced Laboratory Metadata Organizer
+  title: ELMO - Enhanced Linked Metadata Organizer
   description: |-
     This is the ELMO API V2 from GFZ Data Services. The API allows management and retrieval of metadata for scientific datasets.
 

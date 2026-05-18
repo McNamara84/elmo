@@ -1178,6 +1178,20 @@ class DatasetController
     }
 
     /**
+     * Transforms the DataCite XML export into compact JSON-LD.
+     *
+     * @param int $id The identifier of the resource.
+     * @return string JSON-LD representation of the DataCite export.
+     */
+    public function transformResourceToJsonLd(int $id): string
+    {
+        $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
+        $service = new DataCiteJsonLdService();
+
+        return $service->convertXmlStringToJsonLd($dataciteXml);
+    }
+
+    /**
      * Removes empty elements from a DataCite XML string that would violate the
      * nonemptycontentStringType constraint (minLength=1).
      *
@@ -1227,20 +1241,6 @@ class DatasetController
         }
 
         return $dom->saveXML();
-    }
-
-    /**
-     * Transforms the DataCite XML export into compact JSON-LD.
-     *
-     * @param int $id The identifier of the resource.
-     * @return string JSON-LD representation of the DataCite export.
-     */
-    public function transformResourceToJsonLd(int $id): string
-    {
-        $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
-        $service = new DataCiteJsonLdService();
-
-        return $service->convertXmlStringToJsonLd($dataciteXml);
     }
     
     /**
