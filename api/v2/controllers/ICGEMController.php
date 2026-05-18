@@ -670,6 +670,12 @@ class ICGEMController extends DatasetController
             $trimmed = preg_replace('/\s+/', ' ', $trimmed) ?? $trimmed;
         }
         
+        // Normalize line endings in description fields to LF-only (strip CR to avoid double-encoding)
+        if ($fieldName === 'description') {
+            $trimmed = str_replace("\r\n", "\n", $trimmed);
+            $trimmed = str_replace("\r", "\n", $trimmed);
+        }
+
         // Capitalize if this is an enumeration field
         if (in_array($fieldName, self::ENUMERATION_FIELDS, true)) {
             $trimmed = ucfirst($trimmed);
