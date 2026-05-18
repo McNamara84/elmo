@@ -154,6 +154,7 @@ function toArray<T>(v: T | T[] | null | undefined): T[] {
 function extractText(v: unknown): string {
   if (typeof v === 'string') return v;
   if (typeof v === 'number') return String(v);
+  if (Array.isArray(v)) return extractText(v[0]);
   if (v && typeof v === 'object' && '#text' in (v as object)) {
     return String((v as Record<string, unknown>)['#text']);
   }
@@ -888,7 +889,10 @@ test.describe('ICGEM roundtrip', () => {
       const ref = parsedData.dataSources[i];
       const actual = savedDsSources[i] as Record<string, unknown>;
       expect(String(actual['type'] ?? ''), `[FIELD: dataSources[${i}].type]`).toBe(ref.type);
-      expect(extractText(getNode(actual, 'description')), `[FIELD: dataSources[${i}].description]`).toBe(ref.description);
+      const actual_description = extractText(getNode(actual, 'description'));
+      console.log(`Data source ${i} description:`, actual_description, `(expected: ${ref.description})`);
+      expect(actual_description, `[FIELD: dataSources[${i}].description]`).toBe(ref.description);
+      
       if (ref.satelliteValueName) {
         expect(
           extractText(getNode(actual, 'satelliteValueName')),
