@@ -548,8 +548,6 @@ class ICGEMController extends DatasetController
                 if (!empty($property['temporal_resolution_days'])) {
                     $resElement = $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolution', $this->prepare($property['temporal_resolution_days'], 'temporalResolution'), self::ICGEM_NAMESPACE_URI);
                     $resElement->addAttribute('uom', 'd');
-                    $resElement = $tmpElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':temporalResolution', $this->prepare($property['temporal_resolution_days'], 'temporalResolution'), self::ICGEM_NAMESPACE_URI);
-                    $resElement->addAttribute('uom', 'd');
                 }
             }
         }
