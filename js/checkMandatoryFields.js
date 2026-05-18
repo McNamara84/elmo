@@ -746,8 +746,6 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         validateSpatialTemporalCoverageRequirements,
         validateAllMandatoryFields,
-        validateTitleField,
-        validateAuthorNameFields,
         validateTopographicModelTypeRequirements
     };
 }
