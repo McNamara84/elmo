@@ -363,8 +363,9 @@ class ICGEMController extends DatasetController
                 $sourceType = $typeMap[$dataSource['type']] ?? $dataSource['type'];
                 $dsElement->addAttribute('type', $this->prepare($sourceType, 'inputDataSourceType'));
                 
-                if (!empty($dataSource['description'])) {
-                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['description'], 'description'), self::ICGEM_NAMESPACE_URI);
+                // Always add description if the key exists, even if empty
+                if (array_key_exists('description', $dataSource)) {
+                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare((string)($dataSource['description'] ?? ''), 'description'), self::ICGEM_NAMESPACE_URI);
                 }
                 
                 // Handle different source types
