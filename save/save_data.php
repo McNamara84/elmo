@@ -38,17 +38,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 /**
- * Generates and outputs XML for a dataset
+ * Generates and outputs a download for a dataset
  * 
- * Attempts to generate XML via API call first, falls back to in-memory generation if needed.
+ * Supports XML and JSON-LD generation based on the requested download format.
  * If filename is provided in $_POST, triggers file download.
  * 
- * @param int $resource_id The resource ID to generate XML for
+ * @param int $resource_id The resource ID to generate output for
  * @return void Outputs XML or error response, may exit
- * @throws Exception If critical errors occur during XML generation
+ * @throws Exception If critical errors occur during generation
  */
-if (!function_exists('generateAndOutputXml')) {
-function generateAndOutputXml($resource_id)
+if (!function_exists('generateAndOutputDownload')) {
+function generateAndOutputDownload($resource_id)
 {
     global $connection, $showGGMsProperties;
     
@@ -65,44 +65,54 @@ function generateAndOutputXml($resource_id)
         return;
     }
 
-    $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
-    error_log("[SAVE] Starting XML generation for resource_id=$resource_id, filename=$filename");
+    $baseFilename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']);
+    $downloadFormat = strtolower($_POST['download_format'] ?? 'xml');
+    error_log("[SAVE] Starting generation for resource_id=$resource_id, format=$downloadFormat");
 
     try {
         $controller = new DatasetController();
-        $ICGEMcontroller = new ICGEMController();
-        $xmlString = $showGGMsProperties
-            ? $ICGEMcontroller->createICGEMxml($resource_id)
-            : $controller->envelopeXmlAsString($connection, $resource_id);
+
+        if ($downloadFormat === 'jsonld') {
+            $payload = $controller->transformResourceToJsonLd((int) $resource_id);
+            $filename = $baseFilename . '.jsonld';
+            $contentType = 'application/ld+json';
+        } else {
+            $ICGEMcontroller = new ICGEMController();
+            $payload = $showGGMsProperties
+                ? $ICGEMcontroller->createICGEMxml($resource_id)
+                : $controller->envelopeXmlAsString($connection, $resource_id);
+            $filename = $baseFilename . '.xml';
+            $contentType = 'application/xml';
+        }
     } catch (\Throwable $e) {
-        error_log("[SAVE] XML generation threw: " . $e->getMessage());
+        error_log("[SAVE] Generation threw: " . $e->getMessage());
         throw new \RuntimeException(
-            "XML generation failed for resource $resource_id: " . $e->getMessage(),
+            "Download generation failed for resource $resource_id: " . $e->getMessage(),
             0,
             $e
         );
     }
 
-    if (!$xmlString) {
-        error_log("[SAVE] XML generation returned empty for resource_id=$resource_id");
-        throw new \RuntimeException("XML generation returned empty result for resource $resource_id");
+    if (!$payload) {
+        error_log("[SAVE] Generation returned empty for resource_id=$resource_id");
+        throw new \RuntimeException("Download generation returned empty result for resource $resource_id");
     }
 
-    error_log("[SAVE] XML generated successfully, length=" . strlen($xmlString) . " bytes");
+    error_log("[SAVE] Payload generated successfully, length=" . strlen($payload) . " bytes");
 
     // Flush any stale output buffers before sending the response
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
 
-    // Set headers and send the XML body with explicit Content-Length
-    header('Content-Type: application/xml');
+    // Set headers and send the body with explicit Content-Length
+    header('Content-Type: ' . $contentType);
     header('Content-Disposition: attachment; filename="' . $filename . '"');
-    header('Content-Length: ' . strlen($xmlString));
-    echo $xmlString;
+    header('Content-Length: ' . strlen($payload));
+    echo $payload;
     flush();
 }
-} // end function_exists('generateAndOutputXml')
+} // end function_exists('generateAndOutputDownload')
 
 /**
  * Existing functions dont alwys throw an exception, but sometimes just return false. This won't interrupt the save process
@@ -205,17 +215,17 @@ try {
     
     error_log("[💿SAVE]: Transaction committed successfully for resource ID: " . $resource_id);
     
-    // ===== ONLY AFTER SUCCESSFUL COMMIT: Generate XML =====
+    // ===== ONLY AFTER SUCCESSFUL COMMIT: Generate download =====
     try {
-        generateAndOutputXml($resource_id);
+        generateAndOutputDownload($resource_id);
     } catch (\Throwable $e) {
-        error_log("[SAVE] XML generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
-        // Flush any buffers from the failed XML attempt
+        error_log("[SAVE] Download generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
+        // Flush any buffers from the failed generation attempt
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
         http_response_code(500);
-        $errorJson = json_encode(['error' => 'Data saved but XML generation failed: ' . $e->getMessage()]);
+        $errorJson = json_encode(['error' => 'Data saved but download generation failed: ' . $e->getMessage()]);
         header('Content-Type: application/json');
         header('Content-Length: ' . strlen($errorJson));
         echo $errorJson;

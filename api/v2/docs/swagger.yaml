@@ -13,7 +13,8 @@ info:
     All `/update/` endpoints require authentication using an API key. Contact the administrator to obtain an API key.
 
     ### Binary Data
-    Some endpoints return binary data (XML files) for download. These responses use the `application/octet-stream` content type.
+    Some endpoints return downloadable XML or JSON-LD files. These responses use `application/xml`
+    or `application/ld+json` depending on the selected export scheme.
 
     ### Rate Limiting
     Rate limiting may apply to prevent abuse.
@@ -50,6 +51,8 @@ tags:
     description: Operations for managing autosave drafts within a user session
   - name: admin
     description: Administrative operations for cache management (requires API key)
+  - name: doi
+    description: DOI lookup operations via the DataCite REST API
 paths:
   /update/timezones:
     get:
@@ -889,8 +892,8 @@ paths:
       tags:
         - dataset
       security: []
-      summary: View dataset as XML
-      description: View a dataset as XML in the specified metadata scheme
+      summary: View dataset as XML or JSON-LD
+      description: View a dataset in the specified metadata scheme. `datacite` and `iso` return XML, `jsonld` returns compact DataCite JSON-LD.
       operationId: exportDataset
       parameters:
         - name: id
@@ -906,7 +909,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [datacite, iso]
+            enum: [datacite, iso, jsonld]
       responses:
         "200":
           description: Successful operation
@@ -916,6 +919,10 @@ paths:
                 type: string
                 format: binary
                 description: XML content of the dataset
+            application/ld+json:
+              schema:
+                type: object
+                description: Compact DataCite JSON-LD representation of the dataset
         "400":
           description: Invalid ID or scheme provided
           content:
@@ -933,8 +940,8 @@ paths:
       tags:
         - dataset
       security: []
-      summary: Download dataset as XML
-      description: Download a dataset as XML file in the specified metadata scheme
+      summary: Download dataset as XML or JSON-LD
+      description: Download a dataset in the specified metadata scheme. `datacite` and `iso` return XML, `jsonld` returns compact DataCite JSON-LD.
       operationId: exportDatasetDownload
       parameters:
         - name: id
@@ -950,16 +957,21 @@ paths:
           required: true
           schema:
             type: string
-            enum: [datacite, iso]
+            enum: [datacite, iso, jsonld]
       responses:
         "200":
           description: Successful operation
           content:
-            application/octet-stream:
+            application/xml:
               schema:
                 type: string
                 format: binary
                 description: XML file for download
+            application/ld+json:
+              schema:
+                type: string
+                format: binary
+                description: JSON-LD file for download
         "400":
           description: Invalid ID or scheme provided
           content:
@@ -1935,6 +1947,156 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /doi/lookup/{doi}:
+    get:
+      tags:
+        - doi
+      security: []
+      summary: Look up DOI metadata from DataCite
+      description: |-
+        Queries the DataCite REST API for the given DOI and returns the metadata attributes
+        relevant for ELMO form pre-filling. Acts as a server-side proxy to avoid CORS issues.
+        Returns a filtered subset of DataCite attributes (titles, creators, contributors, etc.).
+      operationId: doiLookup
+      parameters:
+        - name: doi
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The full DOI string (e.g. "10.14454/qdd3-ps68")
+          example: "10.14454/qdd3-ps68"
+      responses:
+        "200":
+          description: DOI lookup result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  found:
+                    type: boolean
+                    description: Whether the DOI was found on DataCite
+                  attributes:
+                    type: object
+                    description: Filtered DataCite metadata attributes (only present when found is true)
+                    properties:
+                      doi:
+                        type: string
+                        example: "10.14454/qdd3-ps68"
+                      titles:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            title:
+                              type: string
+                            titleType:
+                              type: string
+                              nullable: true
+                      creators:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            givenName:
+                              type: string
+                            familyName:
+                              type: string
+                            nameType:
+                              type: string
+                            nameIdentifiers:
+                              type: array
+                              items:
+                                type: object
+                            affiliation:
+                              type: array
+                              items:
+                                type: object
+                      publicationYear:
+                        type: integer
+                        example: 2023
+                      types:
+                        type: object
+                        properties:
+                          resourceTypeGeneral:
+                            type: string
+                      language:
+                        type: string
+                        example: "en"
+                      version:
+                        type: string
+                        nullable: true
+                required:
+                  - found
+        "400":
+          description: Invalid DOI format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: DataCite API unreachable or returned an error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /doi/contacts:
+    get:
+      tags:
+        - doi
+      security: []
+      summary: Look up contact person data by ORCID or name
+      description: |-
+        Searches the local Contact_Person table for email and website by ORCID (preferred)
+        or by family name and given name (fallback). Returns null values when no match is found.
+        This is a best-effort lookup since DataCite does not store contact details.
+      operationId: doiContacts
+      parameters:
+        - name: orcid
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ORCID identifier of the contact person
+          example: "0000-0002-1825-0097"
+        - name: familyname
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Family name for name-based lookup
+          example: "Doe"
+        - name: givenname
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Given name for name-based lookup
+          example: "Jane"
+      responses:
+        "200":
+          description: Contact person lookup result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    nullable: true
+                    description: Email address if found, null otherwise
+                    example: "jane.doe@example.org"
+                  website:
+                    type: string
+                    nullable: true
+                    description: Website URL if found, null otherwise
+                    example: "https://example.org/~jdoe"
+                required:
+                  - email
+                  - website
 components:
   securitySchemes:
     ApiKeyAuth:

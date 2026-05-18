@@ -147,7 +147,7 @@ $(document).ready(function () {
     }
 
     // For Save: no validation
-    $('#button-form-save').on('click', function () {
+    $('#button-form-save, #button-form-save-jsonld').on('click', function () {
       resetSubmitOnlyFields();
     });
 
