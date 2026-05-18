@@ -1,4 +1,13 @@
 <?php
+// Send hardening HTTP response headers as early as possible.
+// These mitigate clickjacking (X-Frame-Options), MIME sniffing (X-Content-Type-Options)
+// and limit referrer leakage to third parties (Referrer-Policy).
+if (!headers_sent()) {
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+}
+
 // Automatically detect available language files
 $langFiles = glob(__DIR__ . '/lang/*.json');
 $langCodes = array_map(fn($file) => basename($file, '.json'), $langFiles);

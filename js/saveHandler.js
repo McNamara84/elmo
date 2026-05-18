@@ -190,12 +190,12 @@ class SaveHandler {
                 await this.autosaveService.markManualSave();
             }
 
-            // Log successful save
-            await logEvent('save', `user successfully saved ${formatConfig.logLabel}`);
-
             this.showNotification('success',
                 translations.alerts.successHeading,
                 translations.alerts.savingSuccess);
+
+            // Log successful save (fire-and-forget, must not delay the notification)
+            logEvent('save', `user successfully saved ${formatConfig.logLabel}`);
         } catch (error) {
             console.error('Error saving dataset:', error);
 

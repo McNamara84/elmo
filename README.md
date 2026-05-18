@@ -7,9 +7,13 @@
 [![JS Coverage](https://codecov.io/gh/McNamara84/elmo/branch/main/graph/badge.svg?flag=javascript)](https://codecov.io/gh/McNamara84/elmo)
 [![Playwright Tests](https://github.com/McNamara84/elmo/actions/workflows/playwright.yml/badge.svg)](https://github.com/McNamara84/elmo/actions/workflows/playwright.yml)
 
-# ELMO - Enhanced Laboratory Metadata Organizer
+# ELMO - Enhanced Linked Metadata Organizer
 
-The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GFZ Helmholtz Centre for Geosciences](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite and ISO schema and supports standardized DataCite JSON-LD for local save and reload workflows.
+The Enhanced Linked Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GFZ Helmholtz Centre for Geosciences](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite and ISO schema.
+
+# Citation
+
+Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., Elger, K: (2026) ELMO – Enhanced Linked Metadata Organizer. GFZ Data Services, https://doi.org/10.5880/GFZ.LIS.2026.001
 
 ## Table of contents
   - [Main Features](#main-features)
@@ -210,7 +214,7 @@ The following third-party dependencies are included in header.php and footer.htm
   For the design, responsiveness and dark mode.
 - [Bootstrap Icons 1](https://github.com/twbs/icons/releases)<br>
   For the icons used.
-- [jQuery 3](https://github.com/jquery/jquery/releases)<br>
+- [jQuery 4](https://github.com/jquery/jquery/releases)<br>
   For the event handlers in JavaScript and to simplify the JavaScript code.
 - [jQuery UI 1](https://github.com/jquery/jquery-ui/releases)<br>
   Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
@@ -220,8 +224,21 @@ The following third-party dependencies are included in header.php and footer.htm
   Is used to display the thesauri as a hierarchical tree structure.
 - [Swagger UI 5](https://github.com/swagger-api/swagger-ui/releases)<br>
   For displaying the dynamic and interactive API documentation in accordance with OpenAPI standard 3.1.
+- [Node.js](https://nodejs.org/)<br>
+  Runtime environment for running JavaScript tooling and scripts. Used for npm package management, running Jest and Playwright tests, and build automation. The version is specified in the .nvmrc file. 
 
-To install them: npm install
+ ### Managing Javascript dependencies
+ ELMO uses npm package manager. Files 'package.json' lists your project's dependencies and their allowed version ranges. It's the human-readable configuration. 'package-lock.json' lists all dependencies, even transitive ones (dependencies of dependencies). 'package.json' defines acceptable ranges of versions, while 'package-lock.json' locks the prescise package versions for reproducability. 
+ Here are the workflows that npm enables:
+
+#### Detecting vulnerabilities:
+npm audit 
+npm audit fix 
+
+#### Installing the newest versions:
+npm outdated 
+npm install
+
 </details>
 
 
