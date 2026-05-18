@@ -1515,6 +1515,127 @@ EOT;
 
 
     /**
+     * Test injectFormatsIntoDataCiteXml adds formats element with correct namespace
+     */
+    public function testInjectFormatsIntoDataCiteXmlAddsFormatsElement(): void
+    {
+        $dataciteXml = <<<EOT
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+    <identifier identifierType="DOI">10.5880/example</identifier>
+    <creators>
+        <creator>
+            <creatorName>John Doe</creatorName>
+        </creator>
+    </creators>
+</resource>
+EOT;
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
+        $method->setAccessible(true);
+        $result = $method->invoke($this->controller, $dataciteXml, 'icgem2.0');
+
+        // Parse result and verify formats element exists
+        $doc = new \DOMDocument();
+        $doc->loadXML($result);
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new \DOMXPath($doc);
+        $xpath->registerNamespace('dc', $ns);
+        
+        $formats = $xpath->query('//dc:formats');
+        $this->assertCount(1, $formats);
+        
+        $format = $xpath->query('//dc:formats/dc:format');
+        $this->assertCount(1, $format);
+        $this->assertEquals('icgem2.0', $format[0]->textContent);
+    }
+
+    /**
+     * Test injectFormatsIntoDataCiteXml escapes special characters in format value
+     */
+    public function testInjectFormatsIntoDataCiteXmlEscapesSpecialCharacters(): void
+    {
+        $dataciteXml = <<<EOT
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+    <identifier identifierType="DOI">10.5880/example</identifier>
+</resource>
+EOT;
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
+        $method->setAccessible(true);
+        $result = $method->invoke($this->controller, $dataciteXml, 'format & type: <binary>');
+
+        // < and & must be escaped in XML text content to produce valid XML
+        $this->assertStringContainsString('&amp;', $result);
+        $this->assertStringContainsString('&lt;', $result);
+        $this->assertStringNotContainsString('<binary>', $result);
+
+        // Verify the XML is valid and the value round-trips correctly
+        $doc = new \DOMDocument();
+        $doc->loadXML($result);
+        $xpath = new \DOMXPath($doc);
+        $xpath->registerNamespace('dc', 'http://datacite.org/schema/kernel-4');
+        $format = $xpath->query('//dc:formats/dc:format');
+        $this->assertEquals('format & type: <binary>', $format[0]->textContent);
+    }
+
+    /**
+     * Test injectFormatsIntoDataCiteXml with empty format string
+     */
+    public function testInjectFormatsIntoDataCiteXmlWithEmptyFormat(): void
+    {
+        $dataciteXml = <<<EOT
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+    <identifier identifierType="DOI">10.5880/example</identifier>
+</resource>
+EOT;
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
+        $method->setAccessible(true);
+        $result = $method->invoke($this->controller, $dataciteXml, '');
+
+        // Should still add formats element, but with empty format child
+        $doc = new \DOMDocument();
+        $doc->loadXML($result);
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new \DOMXPath($doc);
+        $xpath->registerNamespace('dc', $ns);
+        
+        $format = $xpath->query('//dc:formats/dc:format');
+        $this->assertCount(1, $format);
+        $this->assertEquals('', $format[0]->textContent);
+    }
+
+    /**
+     * Test injectFormatsIntoDataCiteXml preserves default namespace (not prefixed)
+     */
+    public function testInjectFormatsIntoDataCiteXmlPreservesDefaultNamespace(): void
+    {
+        $dataciteXml = <<<EOT
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+    <identifier identifierType="DOI">10.5880/example</identifier>
+</resource>
+EOT;
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
+        $method->setAccessible(true);
+        $result = $method->invoke($this->controller, $dataciteXml, 'application/xml');
+
+        // Formats should NOT have a namespace prefix (should use default namespace)
+        $this->assertStringContainsString('<formats>', $result);
+        $this->assertStringContainsString('<format>', $result);
+        $this->assertStringNotContainsString('<dc:formats>', $result);
+        $this->assertStringNotContainsString('<dc:format>', $result);
+    }
+
+    /**
      * Test simplexmlAppend appends source element with all its children
      */
     public function testSimplexmlAppendAppendsChildElements(): void
