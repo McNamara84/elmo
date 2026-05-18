@@ -8,6 +8,8 @@ ELMO – Enhanced Linked Metadata Editor is free software: you can redistribute 
 
 ELMO – Enhanced Linked Metadata Editor is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
+For the full license text and detailed information, see the [official GNU GPL v3 page](https://www.gnu.org/licenses/gpl-3.0.en.html?v3=true).
+
 You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
 
 ## Contact
