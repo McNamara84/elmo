@@ -722,9 +722,9 @@ for (const testCase of TEST_CASES) {
     fs.mkdirSync(XML_ACTUAL_DIR, { recursive: true });
   });
 
-  // ── 1.1: parse validation ────────────────────────────────────────────────
+  // ── Step 1: parse validation ────────────────────────────────────────────
 
-  test('1.1 – parse: all expected fields extracted from reference XML', () => {
+  test('Step 1 – parse: all expected fields extracted from reference XML', () => {
     // DataCite
     // Note: DOI is parsed but not used in form-fill tests (will remain empty)
     expect(parsedData.title, 'title').not.toBe('');
@@ -797,9 +797,9 @@ for (const testCase of TEST_CASES) {
     console.log('  Data sources count:', parsedData.dataSources.length);
   });
 
-  // ── 1.2 + 2.1: fill form → save → verify XML ────────────────────────────
+  // ── Step 2: fill form → save → verify XML ──────────────────────────────
 
-  test('1.2 + 2.1 – fill form from parsed data, save, and verify saved XML', async ({ page }) => {
+  test('Step 2 – fill form from parsed data, save, and verify saved XML', async ({ page }) => {
     await navigateToHome(page);
     await fillIcgemForm(page, parsedData);
 
@@ -819,7 +819,11 @@ for (const testCase of TEST_CASES) {
 
     // Helper: assert a single field with a meaningful label
     function assertField(actualRaw: unknown, expectedValue: string, fieldLabel: string): void {
-      const actual = extractText(actualRaw);
+      let actual = extractText(actualRaw);
+      // Strip XML carriage return entities that may be present in saved XML but not in reference
+      if (fieldLabel === 'abstract' || fieldLabel === 'ggmAbstract') {
+        actual = actual.replace(/&#13;/g, '');
+      }
       expect(actual, `[FIELD: ${fieldLabel}]`).toBe(expectedValue);
     }
 
@@ -904,9 +908,9 @@ for (const testCase of TEST_CASES) {
     console.log('✓ 1.2 + 2.1 – form fill and save XML verification passed');
   });
 
-  // ── 3 + 3.1: fill form → clear → assert all fields empty ─────────────────
+  // ── Step 3: fill form → clear → assert all fields empty ────────────────
 
-  test('3 + 3.1 – fill form, clear, assert all fields empty', async ({ page }) => {
+  test('Step 3 – fill form, clear, assert all fields empty', async ({ page }) => {
     await navigateToHome(page);
     await fillIcgemForm(page, parsedData);
 
@@ -973,9 +977,9 @@ for (const testCase of TEST_CASES) {
     console.log('✓ 3 + 3.1 – clear-form verification passed');
   });
 
-  // ── 4 + 5: upload XML → assert form values ────────────────────────────────
+  // ── Step 4: upload XML → assert form values ───────────────────────────
 
-  test('4 + 5 – upload ICGEM XML, assert form values match parsed data', async ({ page }) => {
+  test('Step 4 – upload ICGEM XML, assert form values match parsed data', async ({ page }) => {
     await navigateToHome(page);
 
     // Open the upload modal via the Load button
