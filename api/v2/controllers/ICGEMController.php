@@ -811,7 +811,6 @@ class ICGEMController extends DatasetController
             }
         }
     }
-
     /**
      * Inserts contact persons from the Authors form-group into the envelope under the
      * xs:any extension point, using the DataCite namespace (dace:).
@@ -875,6 +874,50 @@ class ICGEMController extends DatasetController
         }
     }
 
+    /**
+     * Removes the xsi:schemaLocation attribute from the DataCite XML root element.
+     * This prevents namespace/schema conflicts when the DataCite XML is embedded
+     * inside the ICGEM envelope, which carries its own xsi:schemaLocation.
+     *
+     * @param string $dataciteXmlString The DataCite XML string.
+     * @return string The XML string with schemaLocation removed from the root.
+     */
+    private function cleanDataCiteSchemaLocation(string $dataciteXmlString): string
+    {
+        $dom = new DOMDocument();
+        if (!$dom->loadXML($dataciteXmlString)) {
+            return $dataciteXmlString;
+        }
+        $dom->documentElement->removeAttributeNS(
+            'http://www.w3.org/2001/XMLSchema-instance',
+            'schemaLocation'
+        );
+        return $dom->saveXML();
+    }
+
+    /**
+     * Injects a DataCite <formats><format> element into a DataCite XML string.
+     * Used because the XSLT cannot be modified to map GGM file format to DataCite element 14.
+     *
+     * @param string $dataciteXmlString The DataCite XML string produced by XSLT.
+     * @param string $fileFormat        The file format value (e.g. "icgem2.0").
+     * @return string The modified DataCite XML string.
+     */
+    private function injectFormatsIntoDataCiteXml(string $dataciteXmlString, string $fileFormat): string
+    {
+        $dc = new DOMDocument();
+        $dc->loadXML($dataciteXmlString);
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $formatsEl = $dc->createElementNS($ns, 'formats');
+        $formatEl  = $dc->createElementNS($ns, 'format');
+        $formatEl->appendChild($dc->createTextNode($fileFormat));
+        $formatsEl->appendChild($formatEl);
+        $dc->documentElement->appendChild($formatsEl);
+
+        return $dc->saveXML();
+    }
+
         /**
      * Creates an ICGEM-specific XML by combining DataCite and ICGEM metadata in an envelope.
      *
@@ -889,6 +932,15 @@ class ICGEMController extends DatasetController
         
         // 2. Get DataCite XML as string
         $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, "datacite");
+        $dataciteXmlString = $this->cleanDataCiteSchemaLocation($dataciteXmlString);
+        
+        // 2a. Inject file format into DataCite if available
+        if (!empty($ggmData['file_format_name'])) {
+            $dataciteXmlString = $this->injectFormatsIntoDataCiteXml(
+                $dataciteXmlString,
+                $ggmData['file_format_name']
+            );
+        }
         
         // 3. Create envelope root with ICGEM as primary namespace and DataCite as secondary
         $envelope = new SimpleXMLElement(
@@ -940,11 +992,16 @@ class ICGEMController extends DatasetController
         $this->insertContactPersons($icgempart, $id);
         
         // 12. Format and return the combined envelope XML
-        $dom = dom_import_simplexml($envelope)->ownerDocument;
+        // Re-parse stripping all existing whitespace-only text nodes (inherited from
+        // the XSLT-generated DataCite XML) so that formatOutput can re-indent the
+        // merged document consistently from scratch.
+        $rawXml = dom_import_simplexml($envelope)->ownerDocument->saveXML();
+        $dom = new DOMDocument();
+        $dom->preserveWhiteSpace = false;
+        $dom->loadXML($rawXml);
         $dom->formatOutput = true;
         $xml = $dom->saveXML();
-        
-        // Ensure no leading whitespace that would break XML declaration
+
         return ltrim($xml);
     }
 
