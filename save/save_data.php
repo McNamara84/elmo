@@ -71,9 +71,16 @@ function generateAndOutputXml($resource_id)
     try {
         $controller = new DatasetController();
         $ICGEMcontroller = new ICGEMController();
-        $xmlString = $showGGMsProperties
-            ? $ICGEMcontroller->createICGEMxml($resource_id)
-            : $controller->envelopeXmlAsString($connection, $resource_id);
+        if ($showGGMsProperties) {
+            try {
+                $xmlString = $ICGEMcontroller->createICGEMxml($resource_id);
+            } catch (\Throwable $e) {
+                error_log("[SAVE] ICGEM XML failed, fallback to standard XML for resource_id=$resource_id: " . $e->getMessage());
+                $xmlString = $controller->envelopeXmlAsString($connection, $resource_id);
+            }
+        } else {
+            $xmlString = $controller->envelopeXmlAsString($connection, $resource_id);
+        }
     } catch (\Throwable $e) {
         error_log("[SAVE] XML generation threw: " . $e->getMessage());
         throw new \RuntimeException(
