@@ -51,7 +51,7 @@
       </dace:contributor>
     </dace:contributors>
     <dace:dates>
-      <dace:date dateType="Created"/>
+      <dace:date dateType="Created">2020-01-01</dace:date>
     </dace:dates>
     <dace:language>en</dace:language>
     <dace:relatedIdentifiers>
@@ -61,7 +61,6 @@
     <dace:rightsList>
       <dace:rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</dace:rights>
     </dace:rightsList>
-    <dace:descriptions/>
     <dace:geoLocations/>
     <dace:fundingReferences>
       <dace:fundingReference>
@@ -73,6 +72,24 @@
     <dace:formats>
       <dace:format>icgem1.0</dace:format>
     </dace:formats>
+    <dace:descriptions>
+      <dace:description descriptionType="Abstract" xml:lang="en">Spherical harmonic coefficients representing an estimate of Earth's mean gravity field during the specified timespan derived from GRACE-FO mission measurements. These coefficients represent the full magnitude of land hydrology, ice, and solid Earth processes. Further, they represent atmospheric and oceanic processes not captured in the accompanying GAC product. &#13;
+  &#13;
+  --------------------------------------------------------------------------------------------- &#13;
+  &#13;
+  Version History: &#13;
+  &#13;
+  19 September 2024: &#13;
+  Release of Version 6.3. This is an update of Version 6.1 of the same data set (see changelog for details). Note that Version 6.2 was skipped to ensure consistent version numbering within the GRACE-FO Science Data System. &#13;
+  &#13;
+  27 April 2022: &#13;
+  Release of Version 6.1. This is an update of Version 6.0 of the same data set (see changelog for details). &#13;
+  &#13;
+  12 June 2019: &#13;
+  Initial release of the data (Version 6.0). &#13;
+  &#13;
+  All changes and updates are documented in the changelog available via the data download section (ftp://isdcftp.gfz-potsdam.de/grace-fo/Level-2/GFZ).</dace:description>
+  </dace:descriptions>
   </dace:resource>
   <grav:globalGravityProduct>
     <grav:harmonicCoefficientsModel>
@@ -130,6 +147,24 @@
       <grav:identifierType>DOI</grav:identifierType>
       <grav:name>GOCO7</grav:name>
     </grav:inputDataSource>
+    <grav:descriptions>
+      <grav:description section="Abstract">Spherical harmonic coefficients representing an estimate of Earth's mean gravity field during the specified timespan derived from GRACE-FO mission measurements. These coefficients represent the full magnitude of land hydrology, ice, and solid Earth processes. Further, they represent atmospheric and oceanic processes not captured in the accompanying GAC product. &#13;
+  &#13;
+  --------------------------------------------------------------------------------------------- &#13;
+  &#13;
+  Version History: &#13;
+  &#13;
+  19 September 2024: &#13;
+  Release of Version 6.3. This is an update of Version 6.1 of the same data set (see changelog for details). Note that Version 6.2 was skipped to ensure consistent version numbering within the GRACE-FO Science Data System. &#13;
+  &#13;
+  27 April 2022: &#13;
+  Release of Version 6.1. This is an update of Version 6.0 of the same data set (see changelog for details). &#13;
+  &#13;
+  12 June 2019: &#13;
+  Initial release of the data (Version 6.0). &#13;
+  &#13;
+  All changes and updates are documented in the changelog available via the data download section (ftp://isdcftp.gfz-potsdam.de/grace-fo/Level-2/GFZ).</grav:description>
+    </grav:descriptions>
     <dace:contributors>
       <dace:contributor contributorType="ContactPerson">
         <dace:contributorName>Lena Maeda</dace:contributorName>

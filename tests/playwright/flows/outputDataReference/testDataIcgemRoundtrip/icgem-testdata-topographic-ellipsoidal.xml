@@ -44,7 +44,7 @@
   </dace:subjects>
   <dace:contributors/>
   <dace:dates>
-    <dace:date dateType="Created"/>
+    <dace:date dateType="Created">2020-01-01</dace:date>
   </dace:dates>
   <dace:language>en</dace:language>
   <dace:relatedIdentifiers>
@@ -54,7 +54,9 @@
   <dace:rightsList>
     <dace:rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</dace:rights>
   </dace:rightsList>
-  <dace:descriptions/>
+  <dace:descriptions>
+    <dace:description descriptionType="Abstract" xml:lang="en">Topographic model representing the gravitational potential of surface topography computed using ellipsoidal harmonics.</dace:description>
+  </dace:descriptions>
   <dace:geoLocations/>
   <dace:fundingReferences>
     <dace:fundingReference>
@@ -109,5 +111,8 @@
       <grav:description>d3</grav:description>
       <grav:elevationTerrainDetail>Bathymetry</grav:elevationTerrainDetail>
     </grav:inputDataSource>
+    <grav:descriptions>
+      <grav:description section="Abstract">Topographic model representing the gravitational potential of surface topography computed using ellipsoidal harmonics.</grav:description>
+    </grav:descriptions>
   </grav:globalGravityProduct>
 </grav:envelope>
