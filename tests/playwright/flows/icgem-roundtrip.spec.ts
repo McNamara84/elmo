@@ -440,7 +440,10 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
       (el: unknown, tags: { value: string }[]) => { ((el as Record<string, unknown>)._tagify as { addTags(t: typeof tags): void }).addTags(tags); },
       affiliationTags,
     );
-    await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5_000 });
+    // Only wait for tagify tags if affiliations were actually added
+    if (affiliationTags.length > 0) {
+      await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5_000 });
+    }
 
     // Mark as contact person – click the <label> (Bootstrap btn-check hides the input;
     // clicking the input directly causes "label intercepts pointer events" error)
