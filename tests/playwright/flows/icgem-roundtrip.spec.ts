@@ -24,7 +24,7 @@
  *   extractText()               step 1, step 3
  *   findKey()                   step 1, step 3
  *   getNode()                   step 1, step 3
- *   navigateToHome()            step 2, step 4, step 5
+ *   navigateToHome()            step 2, step 4
  *
  * ── Test cases ────────────────────────────────────────────────────────────────
  *   Each entry in TEST_CASES drives a full independent roundtrip run so the
@@ -716,7 +716,7 @@ for (const testCase of TEST_CASES) {
 
   test.describe(`ICGEM roundtrip – ${testCase.label}`, () => {
 
-  test.beforeEach(() => {
+  test.beforeAll(() => {
     if (!fs.existsSync(testCase.referenceXmlPath)) {
       throw new Error(`[PREREQUISITE] Reference XML missing: ${testCase.referenceXmlPath}`);
     }
@@ -991,9 +991,15 @@ for (const testCase of TEST_CASES) {
     console.log('✓ 3 + 3.1 – clear-form verification passed');
   });
 
-  // ── Step 4: upload XML → assert form values ───────────────────────────
+  // ── Step 4: fill form → save → upload saved XML → assert form values ────
 
-  test('Step 4 – upload ICGEM XML, assert form values match parsed data', async ({ page }) => {
+  test('Step 4 – upload saved XML, assert form values match', async ({ page }) => {
+    const savedXmlPath = path.join(XML_ACTUAL_DIR, `${testCase.label}.xml`);
+    if (!fs.existsSync(savedXmlPath)) {
+      throw new Error(`[PREREQUISITE] Saved XML not found – run Step 2 first: ${savedXmlPath}`);
+    }
+
+    // Upload the saved XML produced by Step 2
     await navigateToHome(page);
 
     // Open the upload modal via the Load button
@@ -1004,8 +1010,8 @@ for (const testCase of TEST_CASES) {
     const uploadModal = page.locator('#modal-uploadxml');
     await uploadModal.waitFor({ state: 'visible', timeout: 5_000 });
 
-    // Set the reference XML file (standard file-input upload)
-    await page.locator('#input-uploadxml-file').setInputFiles(testCase.referenceXmlPath);
+    // Upload the SAVED XML (produced by Step 2), not the reference XML
+    await page.locator('#input-uploadxml-file').setInputFiles(savedXmlPath);
 
     // Wait for the ICGEM mapping to populate the model name field
     // (the modal closes automatically when showUploadToast fires, but we
@@ -1160,7 +1166,7 @@ for (const testCase of TEST_CASES) {
       }
     }
 
-    console.log('✓ 4 + 5 – upload and form-value verification passed');
+    console.log('✓ 4 – fill/save/upload roundtrip and form-value verification passed');
   });
   }); // closes test.describe
 } // closes for (const testCase of TEST_CASES)
