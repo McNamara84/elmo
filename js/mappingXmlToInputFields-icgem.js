@@ -141,9 +141,14 @@ function parseIcgemXml(xmlDoc) {
 
   const dataSources = [];
   if (ggpNode) {
-    const dsSnap = xpAll('icgv:inputDataSource | inputDataSource', ggpNode);
-    for (let i = 0; i < dsSnap.snapshotLength; i++) {
-      dataSources.push(leafChildren(dsSnap.snapshotItem(i)));
+    // Use DOM child traversal instead of XPath to avoid namespace-resolution edge cases.
+    // localName comparison is namespace-agnostic and works regardless of prefix.
+    for (let i = 0; i < ggpNode.childNodes.length; i++) {
+      const child = ggpNode.childNodes[i];
+      if (child.nodeType !== 1 || child.localName !== 'inputDataSource') continue;
+      const dsData = leafChildren(child);
+      dsData.inputDataSourceType = child.getAttribute('type');
+      dataSources.push(dsData);
     }
   }
 
@@ -357,14 +362,6 @@ function populateIcgemDataSources(data) {
   const { dataSources } = data;
   if (dataSources.length === 0) return;
 
-  const typeNameToCode = {
-    'satellite': 'S',
-    'ground data': 'G',
-    'altimetry': 'A',
-    'elevation/terrain': 'T',
-    'model': 'M'
-  };
-
   for (let i = 0; i < dataSources.length; i++) {
     const ds = dataSources[i];
 
@@ -373,13 +370,13 @@ function populateIcgemDataSources(data) {
     }
 
     const $row = $('[data-source-row]').last();
-    const typeCode = typeNameToCode[(ds.inputDataSourceType || '').toLowerCase()] || 'S';
-
-    $row.find('select[name="datasource_type[]"]').val(typeCode).trigger('change');
+    const $typeSelect = $row.find('select[name="datasource_type[]"]');
+    selectOptionByText($typeSelect, ds.inputDataSourceType);
+    $typeSelect.trigger('change');
 
     if (ds.description) $row.find('textarea[name="datasource_description[]"]').val(ds.description);
 
-    if (typeCode === 'S') {
+    if (ds.inputDataSourceType === 'Satellite') {
       if (ds.satelliteValueName) {
         const platformInput = $row.find('input[name="satellite_platform[]"]')[0];
         const tag = {
@@ -394,16 +391,16 @@ function populateIcgemDataSources(data) {
           $(platformInput).val(JSON.stringify([tag]));
         }
       }
-    } else if (typeCode === 'G') {
+    } else if (ds.inputDataSourceType === 'Ground data') {
       if (ds.groundDetail) $row.find('select[name="datasource_details[]"]').val(ds.groundDetail);
-    } else if (typeCode === 'A') {
+    } else if (ds.inputDataSourceType === 'Altimetry') {
       if (ds.altimetryDetail) $row.find('select[name="datasource_details[]"]').val(ds.altimetryDetail);
-    } else if (typeCode === 'T') {
+    } else if (ds.inputDataSourceType === 'Elevation/Terrain') {
       if (ds.elevationTerrainDetail) {
         $row.find('select[name="datasource_details[]"]').val(ds.elevationTerrainDetail).trigger('change');
       }
       if (ds.compensationDepth) $row.find('input[name="compensation_depth[]"]').val(ds.compensationDepth);
-    } else if (typeCode === 'M') {
+    } else if (ds.inputDataSourceType === 'Model') {
       if (ds.modelDetail) $row.find('select[name="datasource_details[]"]').val(ds.modelDetail);
       if (ds.identifier) $row.find('input[name="dIdentifier[]"]').val(ds.identifier);
       if (ds.identifierType) {
