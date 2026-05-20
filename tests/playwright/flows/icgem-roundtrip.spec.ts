@@ -48,8 +48,8 @@ import { XMLParser } from 'fast-xml-parser';
 
 // ─── Test cases ────────────────────────────────────────────────────────────────
 //
-// Add a new entry here to run the full 5-step roundtrip against a different
-// reference XML file.  No other code needs to change.
+// Drop a new .xml file into outputDataReference/testDataIcgemRoundtrip/ and it
+// will be picked up automatically — no code changes needed.
 
 interface IcgemTestCase {
   /** Human-readable label used in test titles and output filenames. */
@@ -58,17 +58,18 @@ interface IcgemTestCase {
   referenceXmlPath: string;
 }
 
-const TEST_CASES: IcgemTestCase[] = [
-  {
-    label: 'icgem-testdata-datasources',
-    referenceXmlPath: path.join(__dirname, './outputDataReference/icgem-testdata-datasources.xml'),
-  },
-  {
-    label: 'icgem-testdata-temporal',
-    referenceXmlPath: path.join(__dirname, './outputDataReference/icgem-testdata-temporal.xml'),
-  },
-  // ── Add more test cases below ──────────────────────────────────────────────
-];
+const ICGEM_ROUNDTRIP_DIR = path.join(__dirname, './outputDataReference/testDataIcgemRoundtrip');
+
+// Automatically discover every .xml file in the roundtrip folder.
+// Drop a new file there and it will be picked up without any code change.
+const TEST_CASES: IcgemTestCase[] = fs
+  .readdirSync(ICGEM_ROUNDTRIP_DIR)
+  .filter((f) => f.endsWith('.xml'))
+  .sort()
+  .map((f) => ({
+    label: f.replace(/\.xml$/, ''),
+    referenceXmlPath: path.join(ICGEM_ROUNDTRIP_DIR, f),
+  }));
 
 // ─── Shared output directory ───────────────────────────────────────────────────
 
@@ -730,7 +731,8 @@ for (const testCase of TEST_CASES) {
     expect(parsedData.title, 'title').not.toBe('');
     expect(parsedData.publicationYear, 'publicationYear').not.toBe('');
     expect(parsedData.language, 'language').not.toBe('');
-    expect(parsedData.version, 'version').not.toBe('');
+    // version, abstract, dateCreated are optional – not all ICGEM records include them
+    if (parsedData.version) expect(parsedData.version, 'version').not.toBe('');
     expect(parsedData.abstract, 'abstract').not.toBe('');
     expect(parsedData.dateCreated, 'dateCreated').not.toBe('');
     expect(parsedData.rightsIdentifier, 'rightsIdentifier').not.toBe('');
@@ -742,7 +744,10 @@ for (const testCase of TEST_CASES) {
       expect(c.lastName, `personalCreators[${i}].lastName`).not.toBe('');
       expect(c.firstName, `personalCreators[${i}].firstName`).not.toBe('');
       if (c.orcid) expect(c.orcid, `personalCreators[${i}].orcid`).not.toBe(''); // ORCID is optional
-      expect(c.affiliations.length, `personalCreators[${i}].affiliations.length`).toBeGreaterThan(0);
+      // affiliations are optional – some records list creators without affiliation
+      if (c.affiliations.length > 0) {
+        for (const aff of c.affiliations) expect(aff, `personalCreators[${i}].affiliation`).not.toBe('');
+      }
     }
     if (parsedData.orgCreators.length > 0) {
       for (const [i, c] of parsedData.orgCreators.entries()) {
@@ -759,8 +764,8 @@ for (const testCase of TEST_CASES) {
     expect(parsedData.subjects.length, 'subjects.length').toBeGreaterThan(0);
     for (const [i, s] of parsedData.subjects.entries()) {
       expect(s.text, `subjects[${i}].text`).not.toBe('');
-      expect(s.scheme, `subjects[${i}].scheme`).not.toBe('');
-      expect(s.valueURI, `subjects[${i}].valueURI`).not.toBe('');
+      if (s.scheme) expect(s.scheme, `subjects[${i}].scheme`).not.toBe('');
+      if (s.scheme) expect(s.valueURI, `subjects[${i}].valueURI`).not.toBe('');
     }
 
     // ICGEM core
@@ -772,10 +777,16 @@ for (const testCase of TEST_CASES) {
     expect(parsedData.tideSystem, 'tideSystem').not.toBe('');
     expect(parsedData.degree, 'degree').not.toBe('');
     expect(parsedData.errors, 'errors').not.toBe('');
-    expect(parsedData.radius, 'radius').not.toBe('');
+    // radius only applies to Spherical harmonics models
+    if (parsedData.mathRepresentation.toLowerCase().includes('spherical')) {
+      expect(parsedData.radius, 'radius').not.toBe('');
+    }
     expect(parsedData.earthGravityConstant, 'earthGravityConstant').not.toBe('');
-    expect(parsedData.temporalStart, 'temporalStart').not.toBe('');
-    expect(parsedData.temporalResolution, 'temporalResolution').not.toBe('');
+    // temporal fields only apply to Temporal model type
+    if (parsedData.modelType.toLowerCase() === 'temporal') {
+      expect(parsedData.temporalStart, 'temporalStart').not.toBe('');
+      expect(parsedData.temporalResolution, 'temporalResolution').not.toBe('');
+    }
 
     // Data sources
     expect(parsedData.dataSources.length, 'dataSources.length').toBeGreaterThan(0);
