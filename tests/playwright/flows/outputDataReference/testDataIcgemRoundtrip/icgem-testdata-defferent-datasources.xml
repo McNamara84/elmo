@@ -1,0 +1,142 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icgem.gfz.de/schema http://icgem.gfz.de/schema/icgemSchemaBase.xsd">
+  <dace:resource>
+    <dace:identifier identifierType="DOI">10.1594/pangaea.923106</dace:identifier>
+    <dace:creators>
+      <dace:creator>
+        <dace:creatorName nameType="Personal">Heuer, Verena B</dace:creatorName>
+        <dace:givenName>Verena B</dace:givenName>
+        <dace:familyName>Heuer</dace:familyName>
+        <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1856-116X</dace:nameIdentifier>
+      </dace:creator>
+      <dace:creator>
+        <dace:creatorName nameType="Personal">Maeda, Lena</dace:creatorName>
+        <dace:givenName>Lena</dace:givenName>
+        <dace:familyName>Maeda</dace:familyName>
+      </dace:creator>
+      <dace:creator>
+        <dace:creatorName nameType="Organizational">RIFS</dace:creatorName>
+        <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/01vvnmw35">Research Institute for Sustainability at GFZ</dace:affiliation>
+      </dace:creator>
+    </dace:creators>
+    <dace:titles>
+      <dace:title xml:lang="en">Methane isotopic composition of IODP Hole 370-C0023A</dace:title>
+    </dace:titles>
+    <dace:publisher xml:lang="en">GFZ Data Services</dace:publisher>
+    <dace:publicationYear>2020</dace:publicationYear>
+    <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
+    <dace:subjects>
+      <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
+      <dace:subject>Hole A</dace:subject>
+      <dace:subject>IODP Expedition 370</dace:subject>
+      <dace:subject>Site C0023</dace:subject>
+      <dace:subject>Sample ID</dace:subject>
+      <dace:subject>Sample code/label</dace:subject>
+      <dace:subject>Depth, top/min</dace:subject>
+      <dace:subject>Depth, bottom/max</dace:subject>
+      <dace:subject>δ13C, methane</dace:subject>
+      <dace:subject>Drilling/drill rig</dace:subject>
+      <dace:subject>J-CORES sample ID</dace:subject>
+      <dace:subject>DSDP/ODP/IODP sample designation</dace:subject>
+      <dace:subject>Exp370</dace:subject>
+      <dace:subject>Chikyu</dace:subject>
+      <dace:subject>Integrated Ocean Drilling Program / International Ocean Discovery Program (IODP)</dace:subject>
+    </dace:subjects>
+    <dace:contributors>
+      <dace:contributor contributorType="ContactPerson">
+        <dace:contributorName>Maeda, Lena</dace:contributorName>
+        <dace:givenName>Lena</dace:givenName>
+        <dace:familyName>Maeda</dace:familyName>
+      </dace:contributor>
+    </dace:contributors>
+    <dace:dates>
+      <dace:date dateType="Created"/>
+    </dace:dates>
+    <dace:language>en</dace:language>
+    <dace:relatedIdentifiers>
+      <dace:relatedIdentifier relatedIdentifierType="DOI" relationType="Is Part Of">10.1594/pangaea.923088</dace:relatedIdentifier>
+      <dace:relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.1126/science.abd7934</dace:relatedIdentifier>
+    </dace:relatedIdentifiers>
+    <dace:rightsList>
+      <dace:rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</dace:rights>
+    </dace:rightsList>
+    <dace:descriptions/>
+    <dace:geoLocations/>
+    <dace:fundingReferences>
+      <dace:fundingReference>
+        <dace:funderName>rifs</dace:funderName>
+        <dace:awardNumber awardURI="https://miro.com/app/dashboard/">57</dace:awardNumber>
+        <dace:awardTitle>Horizon 2020 Framework Programme for Research and Innovation - Space 3. Work Programme - Earth Observation Topics</dace:awardTitle>
+      </dace:fundingReference>
+    </dace:fundingReferences>
+    <dace:formats>
+      <dace:format>icgem1.0</dace:format>
+    </dace:formats>
+  </dace:resource>
+  <grav:globalGravityProduct>
+    <grav:harmonicCoefficientsModel>
+      <grav:modelName>Model_5_topographic_separate_density</grav:modelName>
+      <grav:publicationYear>2020</grav:publicationYear>
+      <grav:modelType>Topographic</grav:modelType>
+      <grav:mathematicalRepresentation>Ellipsoidal harmonics</grav:mathematicalRepresentation>
+      <grav:celestialBody>Venus</grav:celestialBody>
+      <grav:fileFormat>icgem1.0</grav:fileFormat>
+      <grav:tideSystem>Mean-tide</grav:tideSystem>
+      <grav:degreeOrderMax>233</grav:degreeOrderMax>
+      <grav:earthGravityConstant>23456000</grav:earthGravityConstant>
+      <grav:errors>Calibrated</grav:errors>
+      <grav:errorHandling>calibration factor</grav:errorHandling>
+      <grav:topographicModelProperties>
+        <grav:layerApproach>Single-layer</grav:layerApproach>
+        <grav:forwardModellingDomain>Spatial</grav:forwardModellingDomain>
+        <grav:approximation>Ellipsoidal</grav:approximation>
+        <grav:densityInformation>
+          <grav:densityInformationDomain>Whole</grav:densityInformationDomain>
+          <grav:densityInformationType>Constant</grav:densityInformationType>
+        </grav:densityInformation>
+        <grav:densityInformation>
+          <grav:densityInformationDomain>Mantle</grav:densityInformationDomain>
+          <grav:densityInformationType>Density model</grav:densityInformationType>
+          <grav:densityInformationDescription>MANTLE_2233</grav:densityInformationDescription>
+        </grav:densityInformation>
+        <grav:densityInformation>
+          <grav:densityInformationDomain>Crust</grav:densityInformationDomain>
+          <grav:densityInformationType>Constant</grav:densityInformationType>
+          <grav:densityInformationDescription>Constant = 12</grav:densityInformationDescription>
+        </grav:densityInformation>
+      </grav:topographicModelProperties>
+      <grav:ellipsoidalParameters>
+        <grav:semimajorAxisA>12300</grav:semimajorAxisA>
+        <grav:semiminorAxisB>13200000</grav:semiminorAxisB>
+      </grav:ellipsoidalParameters>
+    </grav:harmonicCoefficientsModel>
+    <grav:inputDataSource type="Ground data">
+      <grav:description>d1</grav:description>
+      <grav:groundDetail>Terrestrial</grav:groundDetail>
+    </grav:inputDataSource>
+    <grav:inputDataSource type="Altimetry">
+      <grav:description>d2</grav:description>
+      <grav:altimetryDetail>Direct observations from altimetry satellites</grav:altimetryDetail>
+    </grav:inputDataSource>
+    <grav:inputDataSource type="Elevation/Terrain">
+      <grav:description>d3</grav:description>
+      <grav:elevationTerrainDetail>Bathymetry</grav:elevationTerrainDetail>
+    </grav:inputDataSource>
+    <grav:inputDataSource type="Model">
+      <grav:description>d4</grav:description>
+      <grav:modelDetail>Global Gravitational Model</grav:modelDetail>
+      <grav:identifier>10.5880/GFZ.GRACEFO_06_GSM</grav:identifier>
+      <grav:identifierType>DOI</grav:identifierType>
+      <grav:name>GOCO7</grav:name>
+    </grav:inputDataSource>
+    <dace:contributors>
+      <dace:contributor contributorType="ContactPerson">
+        <dace:contributorName>Lena Maeda</dace:contributorName>
+        <dace:givenName>Lena</dace:givenName>
+        <dace:familyName>Maeda</dace:familyName>
+        <dace:nameIdentifier nameIdentifierScheme="email">maeda@a.com</dace:nameIdentifier>
+      </dace:contributor>
+    </dace:contributors>
+  </grav:globalGravityProduct>
+</grav:envelope>
