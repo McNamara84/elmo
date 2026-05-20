@@ -328,10 +328,7 @@ function populateIcgemModelTypes(data) {
       return dom === 'crust' || dom === 'mantle';
     });
 
-    if (isSeparate) {
-      $('#checkbox-separate-density').prop('checked', true);
-      $('#separate-density-container').removeClass('d-none');
-    }
+    $('#checkbox-separate-density').prop('checked', isSeparate).trigger('change');
 
     for (const density of densities) {
       const domain = (density.densityInformationDomain || '').toLowerCase();
@@ -402,7 +399,7 @@ function populateIcgemDataSources(data) {
       if (ds.compensationDepth) $row.find('input[name="compensation_depth[]"]').val(ds.compensationDepth);
     } else if (ds.inputDataSourceType === 'Model') {
       if (ds.modelDetail) $row.find('select[name="datasource_details[]"]').val(ds.modelDetail);
-      if (ds.identifier) $row.find('input[name="dIdentifier[]"]').val(ds.identifier);
+      if (ds.identifier) $row.find('input[name="dIdentifier[]"]').val(ds.identifier).trigger('input');
       if (ds.identifierType) {
         const $idTypeSelect = $row.find('select[name="dIdentifierType[]"]');
         if (!selectOptionByText($idTypeSelect, ds.identifierType)) {
