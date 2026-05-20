@@ -376,7 +376,7 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
   );
 
   // ── Standard DataCite fields ───────────────────────────────────────────────
-  // DOI is not filled – will remain empty
+  await page.locator('#input-resourceinformation-doi').fill(data.doi);
   await page.locator('#input-resourceinformation-title').fill(data.title);
   await page.locator('#input-resourceinformation-publicationyear').fill(data.publicationYear);
 
