@@ -714,7 +714,7 @@ function extractHcm(ggp: Record<string, unknown>): Record<string, unknown> | nul
 for (const testCase of TEST_CASES) {
   const parsedData = parseIcgemXmlFile(testCase.referenceXmlPath);
 
-  test.describe(`ICGEM roundtrip – ${testCase.label}`, () => {
+  test.describe.serial(`ICGEM roundtrip – ${testCase.label}`, () => {
 
   test.beforeAll(() => {
     if (!fs.existsSync(testCase.referenceXmlPath)) {
