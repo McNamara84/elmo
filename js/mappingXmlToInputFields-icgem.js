@@ -465,6 +465,19 @@ function loadIcgemXmlToForm(xmlDoc) {
   populateIcgemModelTypes(data);
   populateIcgemDataSources(data);
   populateIcgemDescriptions(data);
+
+  // Process DataCite keywords from <dace:subjects> elements
+  // This ensures keywords are properly ingested during ICGEM uploads
+  if (typeof window.processKeywords === 'function') {
+    // Create a resolver that maps "ns" to the DataCite namespace
+    function dataciteResolver(prefix) {
+      if (prefix === 'ns') {
+        return 'http://datacite.org/schema/kernel-4';
+      }
+      return null;
+    }
+    window.processKeywords(xmlDoc, dataciteResolver);
+  }
 }
 
 // Expose as browser module
