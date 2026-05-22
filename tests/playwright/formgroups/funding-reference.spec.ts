@@ -235,4 +235,28 @@ test.describe('Funding Reference form group', () => {
       await expect(rows).toHaveCount(initialCount);
     }
   });
+
+  test('clears hidden funder values when the visible funder input is cleared', async ({ page }) => {
+    const firstRow = page.locator(`${SELECTORS.formGroups.fundingReference} [funding-reference-row]`).first();
+    const funderInput = firstRow.locator('.inputFunder');
+    const funderIdInput = firstRow.locator('.inputFunderId');
+    const funderIdTypeInput = firstRow.locator('.inputFunderIdTyp');
+
+    await funderInput.click();
+    await funderInput.type('Muskelsvindfonden');
+
+    const dropdown = page.locator('ul.ui-autocomplete').filter({ hasText: 'Muskelsvindfonden' }).first();
+    await expect(dropdown).toBeVisible();
+    await dropdown.locator('li', { hasText: 'Muskelsvindfonden' }).first().click();
+
+    await expect(funderInput).toHaveValue('Muskelsvindfonden');
+    await expect(funderIdInput).toHaveValue('1100011641');
+    await expect(funderIdTypeInput).toHaveValue('crossref');
+
+    await funderInput.fill('');
+
+    await expect(funderInput).toHaveValue('');
+    await expect(funderIdInput).toHaveValue('');
+    await expect(funderIdTypeInput).toHaveValue('');
+  });
 });
