@@ -243,14 +243,14 @@ test.describe('Funding Reference form group', () => {
     const funderIdTypeInput = firstRow.locator('.inputFunderIdTyp');
 
     await funderInput.click();
-    await funderInput.type('Muskelsvindfonden');
+    await funderInput.type('Gordon');
 
-    const dropdown = page.locator('ul.ui-autocomplete').filter({ hasText: 'Muskelsvindfonden' }).first();
+    const dropdown = page.locator('ul.ui-autocomplete').filter({ hasText: 'Gordon and Betty Moore Foundation' }).first();
     await expect(dropdown).toBeVisible();
-    await dropdown.locator('li', { hasText: 'Muskelsvindfonden' }).first().click();
+    await dropdown.locator('li', { hasText: 'Gordon and Betty Moore Foundation' }).first().click();
 
-    await expect(funderInput).toHaveValue('Muskelsvindfonden');
-    await expect(funderIdInput).toHaveValue('1100011641');
+    await expect(funderInput).toHaveValue('Gordon and Betty Moore Foundation');
+    await expect(funderIdInput).toHaveValue('100000012');
     await expect(funderIdTypeInput).toHaveValue('crossref');
 
     await funderInput.fill('');
