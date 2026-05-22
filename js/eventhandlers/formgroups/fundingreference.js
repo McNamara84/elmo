@@ -30,6 +30,20 @@ function escapeSelector(value) {
 $(document).ready(function () {
   const fundingreferenceGroup = $("#group-fundingreference");
 
+  function clearFunderHiddenFields(row) {
+    const $row = $(row);
+    $row.find('.inputFunderId').val('');
+    $row.find('.inputFunderIdTyp').val('');
+  }
+
+  fundingreferenceGroup.on('input blur', '.inputFunder', function () {
+    if ($(this).val().trim() !== '') {
+      return;
+    }
+
+    clearFunderHiddenFields($(this).closest('[funding-reference-row]'));
+  });
+
   function initialiseAutocomplete(input) {
     if (typeof setUpAutocompleteFunder === 'function' && input) {
       setUpAutocompleteFunder(input);
